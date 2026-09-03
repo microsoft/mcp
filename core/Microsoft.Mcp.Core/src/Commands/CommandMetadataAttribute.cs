@@ -31,7 +31,7 @@ public sealed class CommandMetadataAttribute : Attribute
     /// </summary>
     public required string Title { get; init; }
 
-    /// <summary>The Azure API plane used by the tool. Default: unspecified.</summary>
+    /// <summary>The API plane the tool acts against. Default: unspecified.</summary>
     public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.Unspecified;
 
     /// <summary>Whether the tool may perform destructive updates. Default: true.</summary>

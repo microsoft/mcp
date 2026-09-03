@@ -14,7 +14,7 @@ namespace Microsoft.Mcp.Core.Commands;
 public sealed class ToolMetadata
 {
     /// <summary>
-    /// Gets or sets the Azure API plane used by the tool.
+    /// Gets or sets the API plane the tool acts against.
     /// </summary>
     [JsonIgnore]
     public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.Unspecified;
