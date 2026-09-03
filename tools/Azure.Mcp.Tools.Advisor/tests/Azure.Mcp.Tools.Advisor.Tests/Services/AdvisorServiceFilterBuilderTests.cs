@@ -42,8 +42,6 @@ public class AdvisorServiceFilterBuilderTests
     public void BuildAdditionalFilter_WhitespaceFields_ReturnsStatusClauseOnly()
     {
         var filters = new RecommendationFilters(
-            Category: "  ",
-            Impact: "",
             ResourceType: "\t",
             Resource: " ",
             Search: "");
@@ -54,7 +52,7 @@ public class AdvisorServiceFilterBuilderTests
     [Fact]
     public void BuildAdditionalFilter_Category_UsesCaseInsensitiveEquality()
     {
-        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Category: "Security"));
+        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Category: AdvisorRecommendationCategory.Security));
 
         Assert.Equal($"{StatusClause} and tostring(properties.category) =~ 'Security'", result);
     }
@@ -62,7 +60,7 @@ public class AdvisorServiceFilterBuilderTests
     [Fact]
     public void BuildAdditionalFilter_Impact_UsesCaseInsensitiveEquality()
     {
-        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Impact: "High"));
+        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Impact: AdvisorRecommendationImpact.High));
 
         Assert.Equal($"{StatusClause} and tostring(properties.impact) =~ 'High'", result);
     }
@@ -116,8 +114,8 @@ public class AdvisorServiceFilterBuilderTests
     public void BuildAdditionalFilter_MultipleFields_JoinedWithAnd()
     {
         var filters = new RecommendationFilters(
-            Category: "Security",
-            Impact: "High",
+            Category: AdvisorRecommendationCategory.Security,
+            Impact: AdvisorRecommendationImpact.High,
             Search: "tls");
 
         var result = AdvisorService.BuildAdditionalFilter(filters);
@@ -136,8 +134,6 @@ public class AdvisorServiceFilterBuilderTests
         // BaseAzureResourceService rejects additionalFilter strings containing '|'
         // as a KQL-injection guard. Verify our builder never emits one.
         var filters = new RecommendationFilters(
-            Category: "Sec|urity",
-            Impact: "Hi|gh",
             RecommendationTypeId: "Type|Id",
             ResourceType: "Microsoft.Storage|fake",
             Resource: "my|storage",
@@ -204,7 +200,7 @@ public class AdvisorServiceFilterBuilderTests
     public void BuildAdditionalFilter_RecommendationTypeIds_SkipsMetadataInstanceClauses()
     {
         var result = AdvisorService.BuildAdditionalFilter(
-            new RecommendationFilters(Category: "Security"),
+            new RecommendationFilters(Category: AdvisorRecommendationCategory.Security),
             ["Type-A"]);
 
         Assert.Equal(

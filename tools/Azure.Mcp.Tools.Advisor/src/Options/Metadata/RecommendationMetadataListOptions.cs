@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Advisor.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Metadata;
@@ -18,10 +19,10 @@ public sealed class RecommendationMetadataListOptions
     public string? ResourceType { get; set; }
 
     [Option(Description = "Optional recommendation impact filter. Allowed values are High, Medium, or Low. Matched case-insensitively; unfiltered results are ordered High, Medium, then Low.")]
-    public string? Impact { get; set; }
+    public AdvisorRecommendationImpact? Impact { get; set; }
 
     [Option(Description = "Optional exact Advisor category filter. Allowed values are Cost, HighAvailability, Security, Performance, and OperationalExcellence. Matched case-insensitively.")]
-    public string? Category { get; set; }
+    public AdvisorRecommendationCategory? Category { get; set; }
 
     [Option(Description = "Optional exact recommendation subcategory filter, matched case-insensitively. " +
         "Known catalog values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, MonitoringAndAlerting, NetworkOptimization, Other, Personalized, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +

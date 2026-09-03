@@ -18,7 +18,7 @@ public sealed class AppSettingsUpdateOptions : ISubscriptionOption
     public string? SettingValue { get; set; }
 
     [Option(Description = "The type of update to perform on the application setting. Valid values are: add, set, delete.")]
-    public required string SettingUpdateType { get; set; }
+    public required AppSettingUpdateType SettingUpdateType { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

@@ -259,8 +259,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal("Security", captured!.Category);
-        Assert.Equal("High", captured.Impact);
+        Assert.Equal(Models.AdvisorRecommendationCategory.Security, captured!.Category);
+        Assert.Equal(Models.AdvisorRecommendationImpact.High, captured.Impact);
         Assert.Equal(Models.RecommendationStatus.Postponed, captured.Status);
         Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured.RecommendationTypeId);
         Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
@@ -294,8 +294,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal("Security", captured!.Category);
-        Assert.Equal("High", captured.Impact);
+        Assert.Equal(Models.AdvisorRecommendationCategory.Security, captured!.Category);
+        Assert.Equal(Models.AdvisorRecommendationImpact.High, captured.Impact);
         Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
         Assert.Equal("mystorage", captured.Resource);
         Assert.Equal("encryption", captured.Search);
@@ -559,7 +559,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         await Service.Received(1).ListRecommendationsAsync(
             "sub123",
             Arg.Any<string?>(),
-            Arg.Is<Models.RecommendationFilters>(filters => filters.Category == "Security"),
+            Arg.Is<Models.RecommendationFilters>(filters => filters.Category == Models.AdvisorRecommendationCategory.Security),
             Arg.Any<int>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());

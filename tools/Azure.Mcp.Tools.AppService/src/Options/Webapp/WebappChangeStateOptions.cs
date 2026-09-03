@@ -12,7 +12,7 @@ public sealed class WebappChangeStateOptions : ISubscriptionOption
     public required string App { get; set; }
 
     [Option(Description = "The state change action to perform. Valid values are: start, stop, restart.")]
-    public required string StateChange { get; set; }
+    public required WebappStateChange StateChange { get; set; }
 
     [Option(Description = "When state-change is restart, indicates whether to perform a soft restart.")]
     public bool SoftRestart { get; set; } = false;

@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -39,35 +40,13 @@ public sealed class RecommendationSummaryCommand(ILogger<RecommendationSummaryCo
     private readonly IAdvisorService _advisorService = advisorService;
     private readonly ILogger<RecommendationSummaryCommand> _logger = logger;
 
-    public override void ValidateOptions(RecommendationSummaryOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (options.GroupBy != null)
-        {
-            // --group-by is optional; when omitted we default to 'category' in ExecuteAsync.
-            var normalized = options.GroupBy.Trim();
-            if (string.IsNullOrEmpty(normalized) ||
-                !AdvisorService.AllowedGroupBy.Contains(normalized, StringComparer.OrdinalIgnoreCase))
-            {
-                validationResult.Errors.Add(
-                    $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", AdvisorService.AllowedGroupBy)}.");
-            }
-        }
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationSummaryOptions options, CancellationToken cancellationToken)
     {
-        // Validator in RegisterOptions guarantees that when --group-by is supplied it is one of
-        // AllowedGroupBy (case-insensitive). When omitted, default to 'category' — the most useful
-        // high-level "key themes" view. Normalize to lowercase so the service receives the canonical bucket name.
-        var groupBy = string.IsNullOrWhiteSpace(options.GroupBy)
-            ? AdvisorService.GroupByCategory
-            : options.GroupBy.Trim().ToLowerInvariant();
+        var groupBy = options.GroupBy ?? AdvisorRecommendationGroupBy.Category;
 
         try
         {
-            var filters = new Models.RecommendationFilters(
+            var filters = new RecommendationSummaryFilters(
                 Category: options.Category,
                 Impact: options.Impact,
                 ResourceType: options.ResourceType,

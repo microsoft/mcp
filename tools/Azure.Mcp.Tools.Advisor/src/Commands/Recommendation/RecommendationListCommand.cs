@@ -64,8 +64,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 out _);
 
             var filters = new Models.RecommendationFilters(
-                Category: options.Category?.Trim(),
-                Impact: options.Impact?.Trim(),
+                Category: options.Category,
+                Impact: options.Impact,
                 Status: options.Status,
                 RecommendationTypeId: RecommendationFilterValidator.NormalizeRecommendationTypeId(options.RecommendationTypeId),
                 ResourceType: options.ResourceType?.Trim(),

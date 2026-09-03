@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Models;
+using Azure.Mcp.Tools.AppService.Options.Database;
 using Azure.Mcp.Tools.AppService.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -16,12 +17,12 @@ namespace Azure.Mcp.Tools.AppService.Tests.Commands.Database;
 public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<DatabaseAddCommand, IAppServiceService>
 {
     [Theory]
-    [InlineData("SqlServer", "test-server.database.windows.net", "test-db", null, null)]
-    [InlineData("MySQL", "mysql-server.mysql.database.azure.com", "mysql-db", "Server=custom-server;Database=custom-db;", null)]
-    [InlineData("PostgreSQL", "postgres-server.postgres.database.azure.com", "postgres-db", null, "tenant123")]
-    [InlineData("CosmosDB", "cosmos-account.documents.azure.com", "cosmos-db", "AccountEndpoint=https://cosmos-account.documents.azure.com:443/;AccountKey=key;", "tenant456")]
+    [InlineData(DatabaseConnectionType.SqlServer, "test-server.database.windows.net", "test-db", null, null)]
+    [InlineData(DatabaseConnectionType.MySQL, "mysql-server.mysql.database.azure.com", "mysql-db", "Server=custom-server;Database=custom-db;", null)]
+    [InlineData(DatabaseConnectionType.PostgreSQL, "postgres-server.postgres.database.azure.com", "postgres-db", null, "tenant123")]
+    [InlineData(DatabaseConnectionType.CosmosDB, "cosmos-account.documents.azure.com", "cosmos-db", "AccountEndpoint=https://cosmos-account.documents.azure.com:443/;AccountKey=key;", "tenant456")]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(
-        string databaseType,
+        DatabaseConnectionType databaseType,
         string databaseServer,
         string databaseName,
         string? connectionString,
@@ -34,7 +35,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
 
         var expectedConnection = new DatabaseConnectionInfo
         {
-            DatabaseType = databaseType,
+            DatabaseType = databaseType.ToString(),
             DatabaseServer = databaseServer,
             DatabaseName = databaseName,
             ConnectionString = connectionString ?? $"Generated connection string for {databaseType}",
@@ -47,7 +48,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         Service.AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<DatabaseConnectionType>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -70,7 +71,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
 
         // Verify the service returns expected data
         Assert.NotNull(connectionInfo);
-        Assert.Equal(databaseType, connectionInfo.DatabaseType);
+        Assert.Equal(databaseType.ToString(), connectionInfo.DatabaseType);
         Assert.Equal(databaseServer, connectionInfo.DatabaseServer);
         Assert.Equal(databaseName, connectionInfo.DatabaseName);
 
@@ -105,7 +106,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         await Service.DidNotReceive().AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<DatabaseConnectionType>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -184,14 +185,14 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
         var subscription = "sub123";
         var resourceGroup = "rg1";
         var appName = "test-app";
-        var databaseType = "SqlServer";
+        var databaseType = DatabaseConnectionType.SqlServer;
         var databaseServer = "test-server.database.windows.net";
         var databaseName = "test-db";
 
         Service.AddDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<DatabaseConnectionType>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -205,7 +206,7 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--app", appName,
-            "--database-type", databaseType,
+            "--database-type", databaseType.ToString(),
             "--database-server", databaseServer,
             "--database", databaseName);
 

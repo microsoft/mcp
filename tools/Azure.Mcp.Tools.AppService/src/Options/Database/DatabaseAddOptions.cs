@@ -12,7 +12,7 @@ public sealed class DatabaseAddOptions : ISubscriptionOption
     public required string App { get; set; }
 
     [Option(Description = "The type of database (e.g., SqlServer, MySQL, PostgreSQL, CosmosDB).")]
-    public required string DatabaseType { get; set; }
+    public required DatabaseConnectionType DatabaseType { get; set; }
 
     [Option(Description = "The server name or endpoint for the database (e.g., myserver.database.windows.net).")]
     public required string DatabaseServer { get; set; }

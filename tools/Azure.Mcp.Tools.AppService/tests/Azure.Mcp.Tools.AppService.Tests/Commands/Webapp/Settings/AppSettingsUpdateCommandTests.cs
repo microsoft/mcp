@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
+using Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -16,13 +17,13 @@ namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp.Settings;
 public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<AppSettingsUpdateCommand, IAppServiceService>
 {
     [Theory]
-    [InlineData("add", "Setting1", "Value1", "Application setting 'Setting1' added successfully.")]
-    [InlineData("add", "Setting1", "Value1", "Failed to add application setting 'Setting1' because it already exists.")]
-    [InlineData("set", "Setting1", "Value1", "Application setting 'Setting1' set successfully.")]
-    [InlineData("delete", "Setting1", null, "Application setting 'Setting1' deleted successfully.")]
-    [InlineData("delete", "NonExistingSetting", null, "Application setting 'NonExistingSetting' doesn't exist, deletion is skipped.")]
+    [InlineData(AppSettingUpdateType.Add, "Setting1", "Value1", "Application setting 'Setting1' added successfully.")]
+    [InlineData(AppSettingUpdateType.Add, "Setting1", "Value1", "Failed to add application setting 'Setting1' because it already exists.")]
+    [InlineData(AppSettingUpdateType.Set, "Setting1", "Value1", "Application setting 'Setting1' set successfully.")]
+    [InlineData(AppSettingUpdateType.Delete, "Setting1", null, "Application setting 'Setting1' deleted successfully.")]
+    [InlineData(AppSettingUpdateType.Delete, "NonExistingSetting", null, "Application setting 'NonExistingSetting' doesn't exist, deletion is skipped.")]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(
-        string settingUpdateType,
+        AppSettingUpdateType settingUpdateType,
         string settingName,
         string? settingValue,
         string expectedValue)
@@ -38,7 +39,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             "--resource-group", "rg1",
             "--app", "test-app",
             "--setting-name", settingName,
-            "--setting-update-type", settingUpdateType
+            "--setting-update-type", settingUpdateType.ToString()
         ];
         if (settingValue != null)
         {
@@ -88,7 +89,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<AppSettingUpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
@@ -113,17 +114,17 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<AppSettingUpdateType>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
     [Theory]
-    [InlineData("add", "Setting1", "Value1")]
-    [InlineData("set", "Setting1", "Value1")]
-    [InlineData("delete", "Setting1", null)]
-    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(string settingUpdateType, string settingName, string? settingValue)
+    [InlineData(AppSettingUpdateType.Add, "Setting1", "Value1")]
+    [InlineData(AppSettingUpdateType.Set, "Setting1", "Value1")]
+    [InlineData(AppSettingUpdateType.Delete, "Setting1", null)]
+    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(AppSettingUpdateType settingUpdateType, string settingName, string? settingValue)
     {
         // Arrange
         Service.UpdateAppSettingsAsync("sub123", "rg1", "test-app", settingName, settingUpdateType,
@@ -135,7 +136,7 @@ public class AppSettingsUpdateCommandTests : SubscriptionCommandUnitTestsBase<Ap
             "--resource-group", "rg1",
             "--app", "test-app",
             "--setting-name", settingName,
-            "--setting-update-type", settingUpdateType
+            "--setting-update-type", settingUpdateType.ToString()
         ];
         if (settingValue != null)
         {

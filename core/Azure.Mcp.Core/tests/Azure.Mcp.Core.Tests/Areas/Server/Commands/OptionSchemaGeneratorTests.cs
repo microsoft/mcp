@@ -17,6 +17,13 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
 public class OptionSchemaGeneratorTests
 {
+    private enum SchemaSampleLevel
+    {
+        Critical,
+        Error,
+        Informational
+    }
+
     [Fact]
     public void CreateInputSchema_WithNoOptions_ProducesEmptyStrictObjectSchema()
     {
@@ -161,6 +168,43 @@ public class OptionSchemaGeneratorTests
         var members = typeUnion.Select(n => (string?)n).ToList();
         Assert.Contains("integer", members);
         Assert.Contains("null", members);
+    }
+
+    [Fact]
+    public void CreatePropertySchema_MapsEnumToStringWithAllowedValues()
+    {
+        var schema = Assert.IsType<JsonObject>(OptionSchemaGenerator.CreatePropertySchema(typeof(SchemaSampleLevel), "desc"));
+
+        Assert.Equal("string", (string?)schema["type"]);
+        Assert.Equal(
+            ["Critical", "Error", "Informational"],
+            Assert.IsType<JsonArray>(schema["enum"]).Select(value => (string?)value));
+    }
+
+    [Fact]
+    public void CreatePropertySchema_MapsNullableEnumToStringAndNullWithAllowedValues()
+    {
+        var schema = Assert.IsType<JsonObject>(OptionSchemaGenerator.CreatePropertySchema(typeof(SchemaSampleLevel?), "desc"));
+
+        Assert.Equal(
+            ["string", "null"],
+            Assert.IsType<JsonArray>(schema["type"]).Select(value => (string?)value));
+        Assert.Equal(
+            ["Critical", "Error", "Informational", null],
+            Assert.IsType<JsonArray>(schema["enum"]).Select(value => (string?)value));
+    }
+
+    [Fact]
+    public void CreatePropertySchema_MapsEnumArrayItemsToStringWithAllowedValues()
+    {
+        var schema = Assert.IsType<JsonObject>(OptionSchemaGenerator.CreatePropertySchema(typeof(SchemaSampleLevel[]), "desc"));
+        var items = Assert.IsType<JsonObject>(schema["items"]);
+
+        Assert.Equal("array", (string?)schema["type"]);
+        Assert.Equal("string", (string?)items["type"]);
+        Assert.Equal(
+            ["Critical", "Error", "Informational"],
+            Assert.IsType<JsonArray>(items["enum"]).Select(value => (string?)value));
     }
 
     [Fact]

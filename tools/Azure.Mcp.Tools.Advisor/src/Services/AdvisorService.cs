@@ -36,19 +36,6 @@ public class AdvisorService(IAzureService azureService)
         ["Low"] = 2,
     };
 
-    internal const string GroupByRecommendationType = "recommendation-type";
-    internal const string GroupByCategory = "category";
-    internal const string GroupByImpact = "impact";
-    internal const string GroupByResourceType = "resource-type";
-
-    internal static readonly IReadOnlyList<string> AllowedGroupBy =
-    [
-        GroupByRecommendationType,
-        GroupByCategory,
-        GroupByImpact,
-        GroupByResourceType,
-    ];
-
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
         string subscription,
         string? resourceGroup,
@@ -218,9 +205,9 @@ public class AdvisorService(IAzureService azureService)
     // This adds a catalog lookup and can produce a broad recommendationTypeId predicate.
     internal static bool HasMetadataFilters(RecommendationFilters? filters) =>
         HasMetadataOnlyFilters(filters) ||
-            (!string.IsNullOrWhiteSpace(filters?.Category) ||
-            !string.IsNullOrWhiteSpace(filters?.Impact) ||
-            !string.IsNullOrWhiteSpace(filters?.ResourceType));
+            filters?.Category is not null ||
+            filters?.Impact is not null ||
+            !string.IsNullOrWhiteSpace(filters?.ResourceType);
 
     /// <summary>
     /// Resolves metadata-backed filters against metadata first and returns matching recommendation type IDs.
@@ -507,14 +494,12 @@ public class AdvisorService(IAzureService azureService)
             query += $" | where tostring(properties.supportedResourceType) =~ '{EscapeKqlString(filters.ResourceType.Trim())}'";
         }
 
-        if (!string.IsNullOrWhiteSpace(filters?.Impact))
+        if (filters?.Impact is { } impact)
         {
-            query += $" | where tostring(properties.recommendationImpact) =~ '{EscapeKqlString(filters.Impact.Trim())}'";
+            query += $" | where tostring(properties.recommendationImpact) =~ '{impact}'";
         }
 
-        var category = string.IsNullOrWhiteSpace(filters?.Category)
-            ? null
-            : filters.Category.Trim();
+        var category = filters?.Category?.ToString();
         var subCategory = string.IsNullOrWhiteSpace(filters?.SubCategory)
             ? null
             : filters.SubCategory.Trim();
@@ -729,13 +714,16 @@ public class AdvisorService(IAzureService azureService)
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
-        string groupBy,
-        RecommendationFilters? filters = null,
+        AdvisorRecommendationGroupBy groupBy,
+        RecommendationSummaryFilters? filters = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
+        if (!Enum.IsDefined(groupBy))
+        {
+            throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, null);
+        }
 
         var subscriptionResource = await ValidateScopeAsync(subscription, resourceGroup, tenant, cancellationToken);
         var allTenants = await AzureService.GetTenants(cancellationToken);
@@ -770,10 +758,10 @@ public class AdvisorService(IAzureService azureService)
 
         var totalRecommendations = allGroups.Sum(g => g.Count);
 
-        return new(groupBy, totalRecommendations, allGroups);
+        return new(groupBy.ToValue(), totalRecommendations, allGroups);
     }
 
-    internal static string BuildSummarizeQuery(string groupBy, string? resourceGroup, RecommendationFilters? filters)
+    internal static string BuildSummarizeQuery(AdvisorRecommendationGroupBy groupBy, string? resourceGroup, RecommendationSummaryFilters? filters)
     {
         var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
 
@@ -782,7 +770,7 @@ public class AdvisorService(IAzureService azureService)
             query += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
         }
 
-        var additionalFilter = BuildAdditionalFilter(filters);
+        var additionalFilter = BuildSummaryFilter(filters);
         if (!string.IsNullOrEmpty(additionalFilter))
         {
             query += $" and {additionalFilter}";
@@ -796,21 +784,51 @@ public class AdvisorService(IAzureService azureService)
         return query;
     }
 
-    internal static string MapGroupByToKqlField(string groupBy) => groupBy.ToLowerInvariant() switch
+    internal static string MapGroupByToKqlField(AdvisorRecommendationGroupBy groupBy) => groupBy switch
     {
-        GroupByCategory =>
+        AdvisorRecommendationGroupBy.Category =>
             "iff(isempty(tostring(properties.category)), 'Unknown', tostring(properties.category))",
-        GroupByImpact =>
+        AdvisorRecommendationGroupBy.Impact =>
             "iff(isempty(tostring(properties.impact)), 'Unknown', tostring(properties.impact))",
-        GroupByRecommendationType =>
+        AdvisorRecommendationGroupBy.RecommendationType =>
             "iff(isempty(tostring(properties.shortDescription.problem)), 'Unknown', tostring(properties.shortDescription.problem))",
-        GroupByResourceType =>
+        AdvisorRecommendationGroupBy.ResourceType =>
             "iff(isempty(extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId))), 'Unknown', " +
             "extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId)))",
-        _ => throw new ArgumentException(
-            $"Unsupported group-by value '{groupBy}'. Allowed values: {string.Join(", ", AllowedGroupBy)}.",
-            nameof(groupBy)),
+        _ => throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, null),
     };
+
+    internal static string BuildSummaryFilter(RecommendationSummaryFilters? filters)
+    {
+        var clauses = new List<string> { ActiveRecommendationClause };
+
+        if (!string.IsNullOrWhiteSpace(filters?.Category))
+        {
+            clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters?.Impact))
+        {
+            clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters?.ResourceType))
+        {
+            clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.ResourceType)}'");
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters?.Resource))
+        {
+            clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.Resource)}'");
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters?.Search))
+        {
+            clauses.Add($"tostring(properties.shortDescription.problem) contains '{SanitizeForKql(filters.Search)}'");
+        }
+
+        return string.Join(" and ", clauses);
+    }
 
     internal static string? BuildAdditionalFilter(
         RecommendationFilters? filters,
@@ -829,14 +847,14 @@ public class AdvisorService(IAzureService azureService)
             var resolvedTypeIds = recommendationTypeIds?.ToList();
             var metadataWasResolved = resolvedTypeIds is not null;
 
-            if (!metadataWasResolved && !string.IsNullOrWhiteSpace(filters.Category))
+            if (!metadataWasResolved && filters.Category is { } category)
             {
-                clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
+                clauses.Add($"tostring(properties.category) =~ '{category}'");
             }
 
-            if (!metadataWasResolved && !string.IsNullOrWhiteSpace(filters.Impact))
+            if (!metadataWasResolved && filters.Impact is { } impact)
             {
-                clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
+                clauses.Add($"tostring(properties.impact) =~ '{impact}'");
             }
 
             if (!string.IsNullOrWhiteSpace(filters.RecommendationTypeId))

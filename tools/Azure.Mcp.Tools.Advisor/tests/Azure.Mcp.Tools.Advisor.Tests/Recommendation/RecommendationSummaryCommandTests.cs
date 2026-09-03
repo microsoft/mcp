@@ -30,6 +30,7 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
     [Theory]
     [InlineData("--subscription sub1 --group-by category", true)]
     [InlineData("--subscription sub1 --group-by impact", true)]
+    [InlineData("--subscription sub1 --category Sustainability --impact Critical", true)]
     [InlineData("--subscription sub1", true)]                              // --group-by optional, defaults to category
     [InlineData("", false)]                                                // missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
@@ -39,8 +40,8 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
             Service.SummarizeRecommendationsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<string>(),
-                Arg.Any<RecommendationFilters?>(),
+                Arg.Any<AdvisorRecommendationGroupBy>(),
+                Arg.Any<RecommendationSummaryFilters?>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(EmptySummary());
@@ -58,12 +59,12 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("nonsense", response.Message);
-        Assert.Contains("Allowed values", response.Message);
+        Assert.Contains("Must be one of", response.Message);
         await Service.DidNotReceive().SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -71,12 +72,12 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
     [Fact]
     public async Task ExecuteAsync_GroupByOmitted_DefaultsToCategory()
     {
-        string? captured = null;
+        AdvisorRecommendationGroupBy? captured = null;
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Do<string>(g => captured = g),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Do<AdvisorRecommendationGroupBy>(g => captured = g),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
@@ -84,7 +85,7 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         var response = await ExecuteCommandAsync("--subscription", "sub1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("category", captured);
+        Assert.Equal(AdvisorRecommendationGroupBy.Category, captured);
     }
 
     [Theory]
@@ -93,12 +94,12 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
     [InlineData("  category  ")]
     public async Task ExecuteAsync_GroupBy_NormalizedToLowercaseTrimmed(string raw)
     {
-        string? captured = null;
+        AdvisorRecommendationGroupBy? captured = null;
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Do<string>(g => captured = g),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Do<AdvisorRecommendationGroupBy>(g => captured = g),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
@@ -106,18 +107,18 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         var response = await ExecuteCommandAsync("--subscription", "sub1", "--group-by", raw);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal("category", captured);
+        Assert.Equal(AdvisorRecommendationGroupBy.Category, captured);
     }
 
     [Fact]
     public async Task ExecuteAsync_ForwardsFiltersToService()
     {
-        RecommendationFilters? captured = null;
+        RecommendationSummaryFilters? captured = null;
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Do<RecommendationFilters?>(f => captured = f),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Do<RecommendationSummaryFilters?>(f => captured = f),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
@@ -142,12 +143,12 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
     [Fact]
     public async Task ExecuteAsync_OmittedFilters_AreNull()
     {
-        RecommendationFilters? captured = null;
+        RecommendationSummaryFilters? captured = null;
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Do<RecommendationFilters?>(f => captured = f),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Do<RecommendationSummaryFilters?>(f => captured = f),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
@@ -177,8 +178,8 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
@@ -200,8 +201,8 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("boom"));
@@ -229,8 +230,8 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
@@ -268,8 +269,8 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
@@ -301,8 +302,8 @@ public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBas
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<AdvisorRecommendationGroupBy>(),
+            Arg.Any<RecommendationSummaryFilters?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);

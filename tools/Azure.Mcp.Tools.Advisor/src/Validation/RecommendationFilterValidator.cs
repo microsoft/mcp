@@ -9,30 +9,14 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 
 internal static class RecommendationFilterValidator
 {
-    private static readonly string[] AllowedCategories =
-    [
-        "Cost",
-        "HighAvailability",
-        "Security",
-        "Performance",
-        "OperationalExcellence",
-    ];
-
-    private static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
-
-    private static readonly string[] AllowedStatuses =
-    [
-        nameof(RecommendationStatus.New),
-        nameof(RecommendationStatus.Postponed),
-        nameof(RecommendationStatus.Dismissed),
-        nameof(RecommendationStatus.Completed),
-    ];
-
     internal static void Validate(RecommendationListOptions options, ValidationResult validationResult)
     {
-        ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);
-        ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
-        ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
+        if (options.Status is { } status && !Enum.IsDefined(status))
+        {
+            validationResult.Errors.Add(
+                $"Invalid --status value '{status}'. Allowed values: {string.Join(", ", Enum.GetNames<RecommendationStatus>())}.");
+        }
+
         ValidateOptionalValue("--resource-type", options.ResourceType, validationResult);
         ValidateOptionalValue("--resource", options.Resource, validationResult);
         ValidateOptionalValue("--search", options.Search, validationResult);
@@ -62,25 +46,6 @@ internal static class RecommendationFilterValidator
         Guid.TryParseExact(recommendationTypeId?.Trim(), "D", out var parsed)
             ? parsed.ToString("D")
             : null;
-
-    private static void ValidateAllowedValue(
-        string optionName,
-        string? value,
-        IReadOnlyCollection<string> allowedValues,
-        ValidationResult validationResult)
-    {
-        if (value is null)
-        {
-            return;
-        }
-
-        var normalized = value.Trim();
-        if (normalized.Length == 0 || !allowedValues.Contains(normalized, StringComparer.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add(
-                $"Invalid {optionName} value '{value}'. Allowed values: {string.Join(", ", allowedValues)}.");
-        }
-    }
 
     private static void ValidateOptionalValue(
         string optionName,

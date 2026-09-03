@@ -50,8 +50,8 @@ public class AdvisorServiceMetadataJoinTests
     public void HasMetadataOnlyFilters_InstanceOnlyFilters_ReturnsFalse()
     {
         var filters = new RecommendationFilters(
-            Category: "Security",
-            Impact: "High",
+            Category: AdvisorRecommendationCategory.Security,
+            Impact: AdvisorRecommendationImpact.High,
             ResourceType: "Microsoft.Storage/storageAccounts",
             Resource: "mystorage",
             Search: "encryption");
@@ -78,19 +78,19 @@ public class AdvisorServiceMetadataJoinTests
     public void SecurityQueryWithMetadataOnlyFilters_UsesMetadata()
     {
         var filters = new RecommendationFilters(
-            Category: "Security",
+            Category: AdvisorRecommendationCategory.Security,
             SubCategory: "ZoneResiliency");
 
         Assert.True(AdvisorService.HasMetadataFilters(filters));
     }
 
     [Theory]
-    [InlineData("Security", null, null, true)]
-    [InlineData(null, "High", null, true)]
+    [InlineData(AdvisorRecommendationCategory.Security, null, null, true)]
+    [InlineData(null, AdvisorRecommendationImpact.High, null, true)]
     [InlineData(null, null, "Microsoft.Storage/storageAccounts", true)]
     public void HasMetadataFilters_MetadataBackedFilters_UsesMetadataForAllCategories(
-        string? category,
-        string? impact,
+        AdvisorRecommendationCategory? category,
+        AdvisorRecommendationImpact? impact,
         string? resourceType,
         bool expected)
     {
@@ -105,7 +105,9 @@ public class AdvisorServiceMetadataJoinTests
     public void SecurityCategoryRequiresMetadataLookup()
     {
         Assert.True(AdvisorService.HasMetadataFilters(
-            new RecommendationFilters(Category: "Security", Impact: "High")));
+            new RecommendationFilters(
+                Category: AdvisorRecommendationCategory.Security,
+                Impact: AdvisorRecommendationImpact.High)));
     }
     [Fact]
     public void HasMetadataFilters_CombinedFilters_ReturnsTrue()

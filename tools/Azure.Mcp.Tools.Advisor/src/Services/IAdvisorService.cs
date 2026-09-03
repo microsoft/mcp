@@ -19,8 +19,8 @@ public interface IAdvisorService
     Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
-        string groupBy,
-        RecommendationFilters? filters = null,
+        AdvisorRecommendationGroupBy groupBy,
+        RecommendationSummaryFilters? filters = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
