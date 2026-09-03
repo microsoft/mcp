@@ -13,4 +13,5 @@ internal static class TestConstants
     public const string WellSource = "wks";
     public const string WellEntityType = "master-data--Well";
     public const string WellKind = "osdu:wks:master-data--Well:1.0.0";
+    public const string SupersedingWellKind = "osdu:wks:master-data--Well:2.0.0";
 }

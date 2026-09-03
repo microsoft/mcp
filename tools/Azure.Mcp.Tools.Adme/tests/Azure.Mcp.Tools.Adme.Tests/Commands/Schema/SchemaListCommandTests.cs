@@ -26,6 +26,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
                     SchemaIdentity = new SchemaIdentity { Id = TestConstants.WellKind },
                     Status = "PUBLISHED",
                     Scope = "SHARED",
+                    SupersededBy = new SchemaIdentity { Id = TestConstants.SupersedingWellKind },
                 }
             ],
             Offset = 2,
@@ -71,6 +72,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
         Assert.Equal(expected.Count, result.Count);
         Assert.Equal(expected.TotalCount, result.TotalCount);
         Assert.Equal(expected.SchemaInfos.Single().SchemaIdentity?.Id, result.SchemaInfos.Single().SchemaIdentity?.Id);
+        Assert.Equal(expected.SchemaInfos.Single().SupersededBy?.Id, result.SchemaInfos.Single().SupersededBy?.Id);
         await Service.Received(1).ListSchemasAsync(
             TestConstants.Endpoint,
             TestConstants.DataPartition,

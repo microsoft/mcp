@@ -17,7 +17,6 @@ public sealed class SchemaRecordedTests(
 {
     private const string SchemaListTool = "adme_schema_list";
     private const string SchemaGetTool = "adme_schema_get";
-    private const string WellSchemaIdPrefix = "osdu:wks:master-data--Well:";
     private const string NonexistentKind = "osdu:wks:made-up--DoesNotExist:9.9.9";
 
     /// <summary>Verifies that the server exposes the schema tools.</summary>
@@ -43,9 +42,13 @@ public sealed class SchemaRecordedTests(
 
         Assert.NotEmpty(infos.EnumerateArray());
         Assert.All(infos.EnumerateArray(), info =>
-            Assert.StartsWith(
-                WellSchemaIdPrefix,
-                info.GetProperty("schemaIdentity").GetProperty("id").GetString()));
+        {
+            var identity = info.GetProperty("schemaIdentity");
+            Assert.Contains(
+                $":{TestConstants.WellSource}:{TestConstants.WellEntityType}:",
+                identity.GetProperty("id").GetString());
+            Assert.Equal(TestConstants.WellEntityType, identity.GetProperty("entityType").GetString());
+        });
     }
 
     /// <summary>Verifies that latest-version filtering returns one schema version.</summary>
