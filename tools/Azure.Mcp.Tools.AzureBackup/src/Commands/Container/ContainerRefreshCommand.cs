@@ -89,6 +89,8 @@ public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> log
             context.Response.Results = ResponseResult.Create(
                 result,
                 AzureBackupJsonContext.Default.ContainerRefreshCommandResult);
+            context.Response.Status = HttpStatusCode.Accepted;
+            context.Response.Message = "Accepted";
         }
         catch (Exception ex)
         {

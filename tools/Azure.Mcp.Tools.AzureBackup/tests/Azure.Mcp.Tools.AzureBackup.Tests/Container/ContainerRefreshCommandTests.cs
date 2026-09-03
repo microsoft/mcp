@@ -53,9 +53,9 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
             "--resource-group", "rg");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(HttpStatusCode.Accepted, response.Status);
 
-        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ContainerRefreshCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ContainerRefreshCommandResult, HttpStatusCode.Accepted);
         Assert.Equal("Accepted", result.Status);
         Assert.Equal("v", result.Vault);
         Assert.Equal("Azure", result.Fabric);
@@ -86,9 +86,9 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
             "--filter", customFilter);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(HttpStatusCode.Accepted, response.Status);
 
-        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ContainerRefreshCommandResult);
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ContainerRefreshCommandResult, HttpStatusCode.Accepted);
         Assert.Equal(customFilter, result.Filter);
     }
 
@@ -132,7 +132,7 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
 
         if (shouldSucceed)
         {
-            Assert.Equal(HttpStatusCode.OK, response.Status);
+            Assert.Equal(HttpStatusCode.Accepted, response.Status);
         }
         else
         {
