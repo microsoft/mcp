@@ -33,10 +33,37 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List all recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> | none |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor recommendation records in resource group <resource-group> in subscription <subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> | none |
-| advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> | none |
-| advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> | none |
+| advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription <subscription> | none |
+| advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription <subscription> | none |
 | advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription <subscription> | none |
+| advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor recommendations in the Reservations subcategory in subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor recommendation records and affected resources for Service Health tracking ID QNY1-HB8 in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8, VN1S-1V8, and XV1P-9X8 whose retirement date is on or after September 19, 2026 | none |
+| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for Service Health tracking ID QNY1-HB8 without setting a subcategory | none |
+| advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is on or before March 31, 2027 | none |
+| advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is after March 31, 2027 | none |
+| advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is on or after March 31, 2027 | none |
+| advisor_recommendation_list | Find Advisor recommendations for resource <resource-id> without metadata filters | none |
+| advisor_recommendation_list | Search individual active Azure Advisor recommendation records whose problem text mentions "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Show individual active Azure Advisor high-impact Security recommendation records affecting storage accounts in subscription <subscription> | none |
+| advisor_recommendation_list | List the top 5 individual active Azure Advisor Cost recommendation records affecting storage accounts whose problem text mentions "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Find individual active Azure Advisor high-impact Security recommendation records whose problem text mentions "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource <resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription <subscription> | none |
+| advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription <subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in subscription <subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in subscription <subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in subscription <subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> | none |
@@ -975,6 +1002,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_resource_get | Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_check-resync-readiness | Check whether resilience drill <drill_name> in service group <service_group> is ready to resync | none |
+| resilience_drill_check-resync-readiness | Run a resync readiness check for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location> | none |
+| resilience_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations> | none |
+| resilience_drill_resource_add-or-update | Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes | none |
+| resilience_drill_resource_add-or-update | Update or exclude the resources of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_start | Start resilience drill <drill_name> in service group <service_group> in Failover mode | none |
 | resilience_drill_start | Run resilience drill <drill_name> in service group <service_group> as a TestFailover | none |
 | resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |

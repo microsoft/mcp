@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
         the operation ID.
         """,
     Destructive = true,
-    Idempotent = false,
+    Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,

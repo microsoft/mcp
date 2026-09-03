@@ -55,7 +55,10 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<DrillEndCommand>();
         services.AddSingleton<DrillUpdateCommand>();
         services.AddSingleton<DrillDeleteCommand>();
+        services.AddSingleton<DrillCheckResyncReadinessCommand>();
+        services.AddSingleton<DrillValidateForExecutionCommand>();
         services.AddSingleton<DrillResourceGetCommand>();
+        services.AddSingleton<DrillAddOrUpdateResourcesCommand>();
         services.AddSingleton<DrillRunGetCommand>();
         services.AddSingleton<DrillRunAddNotesCommand>();
         services.AddSingleton<DrillRunFailoverCommand>();
@@ -143,7 +146,7 @@ public class ResilienceManagementSetup : IAreaSetup
         recoveryJobResources.AddCommand<RecoveryJobResourceGetCommand>(serviceProvider);
 
         // Create drill subgroup
-        var drills = new CommandGroup("drill", "Resilience drill operations - Commands for creating, listing, getting, updating, starting, ending, and deleting resilience drills for an Azure service group.");
+        var drills = new CommandGroup("drill", "Resilience drill operations - Commands for creating, listing, getting, updating, starting, ending, deleting, validating, and checking resync readiness of resilience drills for an Azure service group.");
         resilienceManagement.AddSubGroup(drills);
 
         drills.AddCommand<DrillCreateCommand>(serviceProvider);
@@ -152,13 +155,15 @@ public class ResilienceManagementSetup : IAreaSetup
         drills.AddCommand<DrillEndCommand>(serviceProvider);
         drills.AddCommand<DrillUpdateCommand>(serviceProvider);
         drills.AddCommand<DrillDeleteCommand>(serviceProvider);
-
+        drills.AddCommand<DrillCheckResyncReadinessCommand>(serviceProvider);
+        drills.AddCommand<DrillValidateForExecutionCommand>(serviceProvider);
 
         // Create resource subgroup under drill
-        var drillResources = new CommandGroup("resource", "Resilience drill resource operations - Commands for listing and getting the resources (targets) of a resilience drill.");
+        var drillResources = new CommandGroup("resource", "Resilience drill resource operations - Commands for listing, getting, and adding or updating the resources (targets) of a resilience drill.");
         drills.AddSubGroup(drillResources);
 
         drillResources.AddCommand<DrillResourceGetCommand>(serviceProvider);
+        drillResources.AddCommand<DrillAddOrUpdateResourcesCommand>(serviceProvider);
 
         // Create run subgroup under drill
         var drillRuns = new CommandGroup("run", "Resilience drill run operations - Commands for listing and getting the runs of a resilience drill.");
