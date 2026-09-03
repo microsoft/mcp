@@ -99,8 +99,8 @@
     <PackageVersion Include="Microsoft.Identity.Client.Broker" Version="4.87.0" />
     <PackageVersion Include="Microsoft.Identity.Web" Version="4.6.0" />
     <PackageVersion Include="Microsoft.Identity.Web.Azure" Version="4.6.0" />
-    <PackageVersion Include="ModelContextProtocol" Version="2.1.0" />
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.1.0" />
+    <PackageVersion Include="ModelContextProtocol" Version="2.2.0" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
     <PackageVersion Include="MySqlConnector" Version="2.6.1" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />    
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME
+// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -256,6 +256,67 @@ public class ResilienceManagementCommandTests(
             });
 
         Assert.True(result.AssertProperty("success").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Should_check_drill_resync_readiness()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_check-resync-readiness",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName }
+            });
+
+        var readiness = result.AssertProperty("readiness");
+        Assert.False(string.IsNullOrEmpty(readiness.AssertProperty("operationId").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_validate_drill_for_execution()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_validate-for-execution",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "source-locations", new[] { "westus2-az1" } }
+            });
+
+        var validation = result.AssertProperty("validation");
+        Assert.False(string.IsNullOrEmpty(validation.AssertProperty("operationId").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_mark_drill_run_stage_complete()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("markCompleteServiceGroup", "MARKCOMPLETESERVICEGROUP");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("markCompleteDrill", "MARKCOMPLETEDRILL");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("markCompleteDrillRun", "MARKCOMPLETEDRILLRUN");
+
+        var result = await CallToolAsync(
+            "resilience_drill_run_mark-complete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "drill-run", drillRun },
+                { "stage", "FaultInjection" }
+            });
+
+        var markComplete = result.AssertProperty("result");
+        Assert.False(string.IsNullOrEmpty(markComplete.AssertProperty("operationId").GetString()));
     }
 
     [Fact]
@@ -802,6 +863,60 @@ public class ResilienceManagementCommandTests(
             .AssertProperty("inclusionState")
             .GetString();
         Assert.Equal("Excluded", inclusionState);
+    }
+
+    [Fact]
+    public async Task Should_add_or_update_drill_resources()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+
+        var listedResources = await CallToolAsync(
+            "resilience_drill_resource_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName }
+            });
+        var firstResource = listedResources.AssertProperty("drillResources").EnumerateArray().First();
+        var targetName = firstResource.AssertProperty("id").GetString()?.Split('/').Last();
+        Assert.False(string.IsNullOrEmpty(targetName));
+
+        var resourceResult = await CallToolAsync(
+            "resilience_drill_resource_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "name", targetName }
+            });
+        var azureResourceId = resourceResult
+            .AssertProperty("drillResource")
+            .AssertProperty("properties")
+            .AssertProperty("resourceId")
+            .GetString();
+        Assert.False(string.IsNullOrEmpty(azureResourceId));
+
+        var includePayload = new JsonArray
+        {
+            new JsonObject { ["id"] = azureResourceId }
+        };
+
+        var result = await CallToolAsync(
+            "resilience_drill_resource_add-or-update",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "fault-duration-minutes", "10" },
+                { "include-resources", includePayload.ToJsonString() }
+            });
+
+        var operationId = result.AssertProperty("result").AssertProperty("operationId").GetString();
+        Assert.False(string.IsNullOrEmpty(operationId));
     }
 
     [Fact]

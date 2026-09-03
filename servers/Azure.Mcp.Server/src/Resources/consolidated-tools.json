@@ -47,7 +47,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recovery plans for Azure service groups.",
+      "description": "Create, update, delete, or validate Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recovery plans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -55,7 +55,7 @@
         },
         "idempotent": {
           "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+          "description": "This tool includes operations that may produce additional effects when run multiple times with the same arguments."
         },
         "openWorld": {
           "value": false,
@@ -81,7 +81,9 @@
         "resilience_usageplan_enrollment_create",
         "resilience_recoveryplan_create",
         "resilience_recoveryplan_delete",
-        "resilience_recoveryplan_resource_update"
+        "resilience_recoveryplan_resource_update",
+        "resilience_drill_resource_add-or-update",
+        "resilience_drill_run_mark-complete"
       ]
     },
     {
@@ -185,15 +187,15 @@
     },
     {
       "name": "check_azure_resilience_management_readiness",
-      "description": "Check whether an Azure Resilience Management recovery plan and its protected resources are ready for recovery operations in an Azure service group.",
+      "description": "Check whether Azure Resilience Management recovery plans or drills are ready for recovery or drill run operations in an Azure service group.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not delete or modify the recovery plan or its protected resources."
+          "description": "This tool does not delete or modify recovery plans, drills, or their protected resources."
         },
         "idempotent": {
           "value": false,
-          "description": "Each invocation creates a new readiness job with a unique operation identifier."
+          "description": "Each invocation creates a new readiness check operation with a unique operation identifier."
         },
         "openWorld": {
           "value": false,
@@ -201,7 +203,7 @@
         },
         "readOnly": {
           "value": false,
-          "description": "This tool creates a readiness job while leaving the recovery plan and its protected resources unchanged."
+          "description": "This tool creates a readiness check operation while leaving the recovery plan, drill, and protected resources unchanged."
         },
         "secret": {
           "value": false,
@@ -213,7 +215,41 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_checkreadiness"
+        "resilience_recoveryplan_checkreadiness",
+        "resilience_drill_check-resync-readiness"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_management_drill_for_execution",
+      "description": "Validate an Azure resilience drill for execution from specified physical source locations and return the validation operation ID.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool validates drill readiness without deleting or modifying drill definitions or resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "This tool starts a new validation operation each time it runs."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a validation operation and therefore is not read-only."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_validate-for-execution"
       ]
     },
     {
@@ -995,7 +1031,7 @@
     },
     {
       "name": "list_azure_advisor_recommendations",
-      "description": "Get or summarize Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources. Supports filtering by category, impact, resource type, resource, and free-text search, and aggregating recommendations into grouped summaries.",
+      "description": "Get or summarize Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources. Individual recommendation results use the standard ARM resource shape and include the stable recommendation ID in the name field. Supports filtering by category, impact, resource type, resource, and free-text search, and aggregating recommendations into grouped summaries.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1025,6 +1061,39 @@
       "mappedToolList": [
         "advisor_recommendation_list",
         "advisor_recommendation_summary"
+      ]
+    },
+    {
+      "name": "update_azure_advisor_recommendation_state",
+      "description": "Update the customer-provided status of one Azure Advisor recommendation in a subscription. Mark an Advisor recommendation as Completed. Dismiss it because the risk is acceptable by using RiskIsAcceptable, or select another explicit reason. Postpone it until a future date and time, or reactivate it by setting it to New. Requires subscription context from a subscription ID, subscription name, or configured default, plus the recommendation stable ID, also called recommendation ID. If no dismissal reason is supplied or the user's intent cannot be mapped to a supported reason, use Other. State changes are rejected for Security category and platform-resolved recommendations. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool modifies the customer-provided state of an existing Azure Advisor recommendation."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments sets the recommendation to the same requested state."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Advisor recommendations."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool updates recommendation state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation_update"
       ]
     },
     {
@@ -1124,6 +1193,41 @@
       },
       "mappedToolList": [
         "advisor_recommendation_apply"
+      ]
+    },
+    {
+      "name": "get_azure_optimization_recommendations",
+      "description": "Get Azure optimization recommendations. List top Azure Advisor cost-saving recommendations for a subscription ranked by impact and currency-normalized annual savings, get alternative compute resize/SKU options for a virtual machine or virtual machine scale set with optional include/exclude filters, and explain a recommendation with current-versus-target-SKU utilization time-series projected from Azure Monitor.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "optimization_recommendation_list",
+        "optimization_recommendation_alternatives",
+        "optimization_recommendation_explain"
       ]
     },
     {
@@ -1602,7 +1706,7 @@
     },
     {
       "name": "get_azure_ai_resources_details",
-      "description": "Get details about Azure AI resources including listing and querying AI Search services, knowledge base and source information.",
+      "description": "Get details about Azure AI Search (also known as Azure Cognitive Search) services, indexes, knowledge sources, and knowledge bases. List all Cognitive Search services in a subscription; list or get details of indexes in a search service; list or get details of knowledge sources in a search service; list or get details of knowledge bases in a search service; or query an Azure AI Search index for specific content.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -4435,6 +4539,7 @@
         "azurebackup_governance_soft-delete",
         "azurebackup_disasterrecovery_enable-crr",
         "azurebackup_protecteditem_undelete",
+        "azurebackup_protecteditem_update-protection",
         "azurebackup_security_configure-encryption",
         "azurebackup_security_enable-mua",
         "azurebackup_security_disable-mua",

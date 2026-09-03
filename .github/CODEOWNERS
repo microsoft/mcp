@@ -283,10 +283,10 @@
 # ServiceOwners:                       @agrimayadav @pachaturvedi
 
 # PRLabel: %tools-IoTHub
-tools/Azure.Mcp.Tools.IoTHub/         @rrao @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.IoTHub/         @adarsh1 @riteshrao @sasundaram @microsoft/azure-mcp
 
 # ServiceLabel: %tools-IoTHub
-# ServiceOwners:                       @rrao @microsoft/azure-mcp
+# ServiceOwners:                       @adarsh1 @riteshrao @sasundaram @microsoft/azure-mcp
 
 # PRLabel: %tools-KeyVault
 /tools/Azure.Mcp.Tools.KeyVault/       @JonathanCrd @vcolin7 @microsoft/azure-mcp
@@ -332,6 +332,13 @@ tools/Azure.Mcp.Tools.IoTHub/         @rrao @microsoft/azure-mcp
 
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @mattkohnms @ramnov
+
+# PRLabel: %tools-Optimization
+/tools/Azure.Mcp.Tools.Optimization/   @sanjaytholanim @liangchenmicrosoft
+
+# ServiceLabel: %tools-Optimization
+# ServiceOwners:                       @sanjaytholanim @liangchenmicrosoft
+
 
 # PRLabel: %tools-Policy
 /tools/Azure.Mcp.Tools.Policy/         @msalaman @microsoft/azure-mcp

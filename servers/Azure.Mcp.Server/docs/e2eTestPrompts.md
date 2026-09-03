@@ -33,10 +33,37 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List all recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> | none |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor recommendation records in resource group <resource-group> in subscription <subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription <subscription> | none |
-| advisor_recommendation_list | List Cost recommendations for storage accounts in subscription <subscription> | none |
-| advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> | none |
+| advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription <subscription> | none |
+| advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription <subscription> | none |
 | advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription <subscription> | none |
+| advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor recommendations in the Reservations subcategory in subscription <subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor recommendation records and affected resources for Service Health tracking ID QNY1-HB8 in subscription <subscription> | none |
+| advisor_recommendation_list | Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8, VN1S-1V8, and XV1P-9X8 whose retirement date is on or after September 19, 2026 | none |
+| advisor_recommendation_list | List Advisor recommendations in subscription <subscription> for Service Health tracking ID QNY1-HB8 without setting a subcategory | none |
+| advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is on or before March 31, 2027 | none |
+| advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is after March 31, 2027 | none |
+| advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is on or after March 31, 2027 | none |
+| advisor_recommendation_list | Find Advisor recommendations for resource <resource-id> without metadata filters | none |
+| advisor_recommendation_list | Search individual active Azure Advisor recommendation records whose problem text mentions "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Show individual active Azure Advisor high-impact Security recommendation records affecting storage accounts in subscription <subscription> | none |
+| advisor_recommendation_list | List the top 5 individual active Azure Advisor Cost recommendation records affecting storage accounts whose problem text mentions "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Find individual active Azure Advisor high-impact Security recommendation records whose problem text mentions "encryption" in subscription <subscription> | none |
+| advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource <resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription <subscription> | none |
+| advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription <subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in subscription <subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in subscription <subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in subscription <subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> | none |
@@ -183,10 +210,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | investigation-required |
 | azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | investigation-required |
-| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Configure immutability state Unlocked with type AsPerPolicy on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Set immutability to Unlocked with policy-based type on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Enable time-based immutability on vault <vault_name> with 90 days retention in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Turn on soft delete with 14 day retention on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Enable soft delete with 30 days retention for vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn with 14 days retention for vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -197,6 +226,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | investigation-required |
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Add a weekly retention of 4 weeks on Sundays to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Add a monthly retention of 12 months on the 1st of every month to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -205,6 +237,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
+| azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected | investigation-required |
+| azurebackup_protecteditem_update-protection | Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name> | investigation-required |
+| azurebackup_protecteditem_update-protection | Update the selective disk configuration on VM <item_name> in vault <vault_name> under resource group <resource_group> to exclude LUNs 0,2 | investigation-required |
+| azurebackup_protecteditem_update-protection | Reset the disk exclusion settings for the protected VM <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_undelete | Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
@@ -441,6 +478,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | cosmos_database_container_item_vector-search | Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to "<text_to_search>" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select> | context-required |
 | cosmos_database_container_schema_infer | Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_schema_infer | Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types | none |
+
+## Azure Optimization
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | none |
+| optimization_recommendation_list | What are my cost optimization recommendations? | none |
+| optimization_recommendation_alternatives | Show me alternative resize options for the VM <resource_id> | none |
+| optimization_recommendation_alternatives | What other SKUs could I resize <resource_id> to, excluding AMD processors? | none |
+| optimization_recommendation_explain | Explain the recommendation <recommendation_type_id> for resource <resource_id> and show its utilization | none |
+| optimization_recommendation_explain | Why is <resource_id> recommended for resizing to <target_sku>? | none |
 
 ## Azure Data Explorer
 
@@ -965,10 +1013,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_resource_get | Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_check-resync-readiness | Check whether resilience drill <drill_name> in service group <service_group> is ready to resync | none |
+| resilience_drill_check-resync-readiness | Run a resync readiness check for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location> | none |
+| resilience_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations> | none |
+| resilience_drill_resource_add-or-update | Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes | none |
+| resilience_drill_resource_add-or-update | Update or exclude the resources of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_start | Start resilience drill <drill_name> in service group <service_group> in Failover mode | none |
 | resilience_drill_start | Run resilience drill <drill_name> in service group <service_group> as a TestFailover | none |
 | resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
+| resilience_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
 | resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |

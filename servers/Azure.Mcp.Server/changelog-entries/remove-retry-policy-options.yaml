@@ -1,3 +1,0 @@
-changes:
-  - section: Breaking Changes
-    description: Removed custom retry policy options from ACR, Advisor, AKS, App Configuration, Application Insights, and App Service tools.
