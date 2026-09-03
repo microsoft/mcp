@@ -13,6 +13,11 @@ namespace Azure.Mcp.Tools.StorageSync.Tests;
 public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override CustomDefaultMatcher? TestMatcher => new()
+    {
+        IgnoredQueryParameters = "api-version"
+    };
+
     public override List<UriRegexSanitizer> UriRegexSanitizers => [
         .. base.UriRegexSanitizers,
         new(new()

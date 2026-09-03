@@ -29,6 +29,16 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<CloudEndpointCreateCommand> _logger = logger;
 
+    public override void ValidateOptions(CloudEndpointCreateOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (options.ChangeEnumerationIntervalDays is < 1 or > 20)
+        {
+            validationResult.Errors.Add("Change enumeration interval days must be between 1 and 20.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CloudEndpointCreateOptions options, CancellationToken cancellationToken)
     {
         try
@@ -44,6 +54,7 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
                 options.CloudEndpointName,
                 options.StorageAccountResourceId,
                 options.AzureFileShareName,
+                options.ChangeEnumerationIntervalDays,
                 options.Tenant,
                 cancellationToken);
 
