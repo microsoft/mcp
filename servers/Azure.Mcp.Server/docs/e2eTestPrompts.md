@@ -675,7 +675,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | functions_project_get | Set up a new Azure Functions project in Python | none |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app | none |
 | functions_project_get | Use an Azure Functions project template to create boilerplate for a Java app using JDK 21 | none |
+| functions_project_get | Set up a new Azure Functions project in Go | none |
 | functions_template_get | Get the available triggers and bindings for C# Azure Functions. | none |
+| functions_template_get | Show me all the Go Azure Function templates | none |
 | functions_template_get | Show me all the Python Azure Function templates | none |
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes | none |
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java | none |
