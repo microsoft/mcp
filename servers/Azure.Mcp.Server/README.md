@@ -1185,6 +1185,10 @@ Example prompts that generate Azure CLI commands:
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
 * "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'
 * Create a 4 TIB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'
+* "Create an expansion job to increase the storage capacity of my AMLFS filesystem 'my-filesystem' to 128 TiB in resource group 'my-rg'"
+* "Get the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
+* "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
+* "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
 ### 📊 Azure Monitor
 
@@ -1340,7 +1344,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
 - 🚀 **Azure Managed Grafana** - Monitoring dashboards
-- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
+- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Logging, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
