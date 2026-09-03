@@ -2369,6 +2369,38 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    [--embedding-dimensions <n>]
 ```
 
+### Azure Optimization Operations
+
+#### Optimization Recommendations
+
+```bash
+# List top Azure Advisor cost-saving recommendations for a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation list --subscription <subscription> \
+                                       [--top <top>] \
+                                       [--tenant <tenant>]
+
+# Get alternative compute resize/SKU options for a VM or VM scale set
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation alternatives --subscription <subscription> \
+                                               --resource-id <resource-id> \
+                                               [--new-skus <new-skus>] \
+                                               [--new-vm-series <new-vm-series>] \
+                                               [--new-processor-types <new-processor-types>] \
+                                               [--exclude-skus <exclude-skus>] \
+                                               [--exclude-vm-series <exclude-vm-series>] \
+                                               [--exclude-processor-types <exclude-processor-types>] \
+                                               [--tenant <tenant>]
+
+# Explain a recommendation with current-versus-target utilization projections
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation explain --subscription <subscription> \
+                                          --resource-id <resource-id> \
+                                          [--target-sku <target-sku>] \
+                                          [--view <Detail|Trend|Both>] \
+                                          [--tenant <tenant>]
+```
+
 ### Azure Data Explorer Operations
 
 ```bash

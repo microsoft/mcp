@@ -306,6 +306,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.MySql/tests/Azure.Mcp.Tools.MySql.Tests/Azure.Mcp.Tools.MySql.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Optimization/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Optimization/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Optimization/src/Azure.Mcp.Tools.Optimization.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Optimization/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Optimization/tests/Azure.Mcp.Tools.Optimization.Tests/Azure.Mcp.Tools.Optimization.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Policy/src/Azure.Mcp.Tools.Policy.csproj" />
