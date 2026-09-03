@@ -5,6 +5,12 @@ pr:
       - feature/*
       - hotfix/*
       - release/*
+  paths:
+    exclude:
+      - '**/CHANGELOG.md'
+      - '**/changelog-entries/**'
+      - 'docs/changelog-entries.md'
+      - 'docs/design/changelog-management-system.md'
 
 trigger: none
 
