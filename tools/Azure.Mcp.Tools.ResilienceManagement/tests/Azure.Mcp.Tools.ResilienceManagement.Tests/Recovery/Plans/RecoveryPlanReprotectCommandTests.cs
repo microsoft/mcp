@@ -18,7 +18,11 @@ public sealed class RecoveryPlanReprotectCommandTests : CommandUnitTestsBase<Rec
     [Fact]
     public async Task ExecuteAsync_AllowsAllQualifiedResourcesWhenSelectionOmitted()
     {
-        var expected = new RecoveryPlanReprotectResult("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222");
+        var expected = new RecoveryPlanReprotectResult(
+            "11111111-1111-1111-1111-111111111111",
+            "22222222-2222-2222-2222-222222222222",
+            "Accepted",
+            "Reprotect was accepted.");
         Service.ReprotectRecoveryPlanAsync("sg1", "plan1", null, null, Arg.Any<CancellationToken>()).Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1");
@@ -30,7 +34,11 @@ public sealed class RecoveryPlanReprotectCommandTests : CommandUnitTestsBase<Rec
     [Fact]
     public async Task ExecuteAsync_ForwardsSelectedResources()
     {
-        var expected = new RecoveryPlanReprotectResult("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222");
+        var expected = new RecoveryPlanReprotectResult(
+            "11111111-1111-1111-1111-111111111111",
+            "22222222-2222-2222-2222-222222222222",
+            "Accepted",
+            "Reprotect was accepted.");
         Service.ReprotectRecoveryPlanAsync(
             "sg1",
             "plan1",

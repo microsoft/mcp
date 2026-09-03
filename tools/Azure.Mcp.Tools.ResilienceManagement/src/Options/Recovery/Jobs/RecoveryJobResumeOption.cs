@@ -14,7 +14,7 @@ public sealed class RecoveryJobResumeOptions
     [Option(Name = "recoveryplan", Description = "The name of the recoveryplan containing the paused recovery job.")]
     public required string RecoveryPlan { get; set; }
 
-    [Option(Description = "The name of the paused recovery job to resume.")]
+    [Option(Name = "recoveryjob", Description = "The name of the paused recoveryjob to resume.")]
     public required string RecoveryJob { get; set; }
 
     [Option(Description = "Optional user-provided input for the paused recovery action, up to 100 characters.")]

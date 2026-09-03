@@ -440,7 +440,8 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 groups[0].PreActions![0].Type == RecoveryPlanGroupActionKind.CustomRunbook),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions =>
                 actions != null &&
-                actions[0].Type == RecoveryPlanGroupActionKind.ManualAction),
+                actions[0].Type == RecoveryPlanGroupActionKind.ManualAction &&
+                actions[0].TimeoutInMinutes == 30),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions.Count == 0),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
@@ -451,7 +452,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
-            "--default-group-pre-actions", "[{\"type\":\"ManualAction\",\"name\":\"Confirm-failover\",\"description\":\"Wait for approval\",\"timeoutInMinutes\":60}]",
+            "--default-group-pre-actions", "[{\"type\":\"ManualAction\",\"name\":\"Confirm-failover\",\"description\":\"Wait for approval\",\"timeoutInMinutes\":30}]",
             "--default-group-post-actions", "[]",
             "--additional-groups", $"[{{\"orderId\":1,\"description\":\"Second recovery group\",\"preActions\":[{{\"type\":\"CustomRunbook\",\"name\":\"Prepare-database\",\"timeoutInMinutes\":30,\"actionResourceId\":\"{runbookId}\",\"parameters\":{{\"mode\":\"safe\"}}}}]}}]");
 

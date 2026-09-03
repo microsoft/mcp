@@ -14,7 +14,7 @@ public sealed class RecoveryJobRetryOptions
     [Option(Name = "recoveryplan", Description = "The name of the recoveryplan containing the failed recovery job.")]
     public required string RecoveryPlan { get; set; }
 
-    [Option(Description = "The name of the failed recovery job to retry.")]
+    [Option(Name = "recoveryjob", Description = "The name of the failed recoveryjob to retry.")]
     public required string RecoveryJob { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

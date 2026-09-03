@@ -3,4 +3,4 @@
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Models;
 
-public sealed record RecoveryPlanReprotectResult(string OperationId, string JobId);
+public sealed record RecoveryPlanReprotectResult(string OperationId, string? JobId, string Status, string Message);

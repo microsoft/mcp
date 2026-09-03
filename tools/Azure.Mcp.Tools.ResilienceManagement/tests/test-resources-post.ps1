@@ -42,12 +42,19 @@ $lifecycleEnrollmentName = $DeploymentOutputs['LIFECYCLEENROLLMENTNAME']
 $lifecycleServiceGroupName = $DeploymentOutputs['LIFECYCLESERVICEGROUPNAME']
 $planLifecycleEnrollmentName = $DeploymentOutputs['PLANLIFECYCLEENROLLMENTNAME']
 $planLifecycleServiceGroupName = $DeploymentOutputs['PLANLIFECYCLESERVICEGROUPNAME']
+$workflowEnrollmentName = $DeploymentOutputs['WORKFLOWENROLLMENTNAME']
+$workflowServiceGroupName = $DeploymentOutputs['WORKFLOWSERVICEGROUPNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
+$workflowRecoveryPlanName = $DeploymentOutputs['WORKFLOWRECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
 $deleteDrillName = $DeploymentOutputs['DELETEDRILLNAME']
 $storageAccountId = $DeploymentOutputs['STORAGEACCOUNTID']
+$automationAccountName = $DeploymentOutputs['AUTOMATIONACCOUNTNAME']
+$automationAccountId = $DeploymentOutputs['AUTOMATIONACCOUNTID']
+$failoverRunbookName = $DeploymentOutputs['FAILOVERRUNBOOKNAME']
+$reprotectRunbookName = $DeploymentOutputs['REPROTECTRUNBOOKNAME']
 $location = $DeploymentOutputs['LOCATION']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
@@ -59,6 +66,10 @@ $serviceGroupResilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilien
 $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
 $lifecycleServiceGroupResilienceBase = "$lifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement"
 $planLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$planLifecycleServiceGroupName"
+$workflowServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$workflowServiceGroupName"
+$workflowServiceGroupResilienceBase = "$workflowServiceGroupId/providers/Microsoft.AzureResilienceManagement"
+$failoverRunbookId = "$automationAccountId/runbooks/$failoverRunbookName"
+$reprotectRunbookId = "$automationAccountId/runbooks/$reprotectRunbookName"
 
 function Invoke-ResilienceRestPut {
     param(
@@ -144,7 +155,8 @@ function Wait-ResilienceProvisioning {
             $errorDetails = ($response.Content | ConvertFrom-Json).properties.errorDetails
             $errorMessage = if ($errorDetails) {
                 " ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
-            } else {
+            }
+            else {
                 ''
             }
             throw "Provisioning of $Path ended in state '$state'.$errorMessage"
@@ -158,16 +170,92 @@ function Wait-ResilienceProvisioning {
 
 function Add-RecoveryContributorRole {
     param(
-        [string] $Scope
+        [string] $Scope,
+        [int] $TimeoutSeconds = 900
     )
 
     $roleName = 'Azure Resilience Management Recovery Contributor'
-    $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction SilentlyContinue
-    if (!$assignment) {
-        Write-Host "Assigning $roleName to test identity at $Scope"
-        New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName | Out-Null
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction Stop
+            if ($assignment) {
+                return
+            }
+
+            Write-Host "Assigning $roleName to test identity at $Scope"
+            New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction Stop | Out-Null
+            return
+        }
+        catch {
+            if ($_.Exception.Response.StatusCode -notin @(403, 404)) {
+                throw
+            }
+
+            Write-Host "  role assignment authorization is still propagating"
+            Start-Sleep -Seconds 15
+        }
+    }
+
+    throw "Timed out assigning $roleName to test identity at $Scope."
+}
+
+function Add-DrillsAdministratorRole {
+    param(
+        [string] $Scope,
+        [int] $TimeoutSeconds = 900
+    )
+
+    $roleDefinitionId = 'c914561b-1575-4601-af9c-a1356bf59818'
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionId $roleDefinitionId -ErrorAction Stop
+            if ($assignment) {
+                return
+            }
+
+            Write-Host "Assigning Azure Resilience Management Drills Administrator to test identity at $Scope"
+            New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionId $roleDefinitionId -ErrorAction Stop | Out-Null
+            return
+        }
+        catch {
+            if ($_.Exception.Response.StatusCode -notin @(403, 404)) {
+                throw
+            }
+
+            Write-Host "  role assignment authorization is still propagating"
+            Start-Sleep -Seconds 15
+        }
+    }
+
+    throw "Timed out assigning the Drills Administrator role to test identity at $Scope."
+}
+
+function Publish-TestRunbook {
+    param(
+        [string] $Name
+    )
+
+    $runbookPath = Join-Path ([System.IO.Path]::GetTempPath()) "$Name.ps1"
+    try {
+        [System.IO.File]::WriteAllText($runbookPath, "Write-Output 'Completed'`r`n")
+        Import-AzAutomationRunbook `
+            -ResourceGroupName $ResourceGroupName `
+            -AutomationAccountName $automationAccountName `
+            -Name $Name `
+            -Type PowerShell `
+            -Path $runbookPath `
+            -Published `
+            -Force | Out-Null
+    }
+    finally {
+        Remove-Item $runbookPath -Force -ErrorAction SilentlyContinue
     }
 }
+
+Publish-TestRunbook -Name $failoverRunbookName
+Publish-TestRunbook -Name $reprotectRunbookName
 
 # 1) Create the tenant-scoped service group.
 $serviceGroupPath = "$serviceGroupId`?api-version=$serviceGroupApiVersion"
@@ -207,9 +295,21 @@ Invoke-ResilienceRestPut -Path $planLifecycleServiceGroupPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $planLifecycleServiceGroupPath -WaitForAuthorization
 
+$workflowServiceGroupPath = "$workflowServiceGroupId`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $workflowServiceGroupPath -Body @{
+    properties = @{
+        displayName = $workflowServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $workflowServiceGroupPath -WaitForAuthorization
+
 Add-RecoveryContributorRole -Scope $serviceGroupId
 Add-RecoveryContributorRole -Scope $lifecycleServiceGroupId
 Add-RecoveryContributorRole -Scope $planLifecycleServiceGroupId
+Add-DrillsAdministratorRole -Scope "/subscriptions/$subscriptionId"
 
 # 2) Add the resource group as a member of the service group so its resources
 #    (e.g. the storage account) surface as goal/recovery resource targets.
@@ -231,6 +331,13 @@ $planLifecycleMembershipPath = "/subscriptions/$subscriptionId/resourceGroups/$R
 Invoke-ResilienceRestPut -Path $planLifecycleMembershipPath -Body @{
     properties = @{
         targetId = $planLifecycleServiceGroupId
+    }
+} | Out-Null
+
+$workflowMembershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-workflow-rg-member`?api-version=$membershipApiVersion"
+Invoke-ResilienceRestPut -Path $workflowMembershipPath -Body @{
+    properties = @{
+        targetId = $workflowServiceGroupId
     }
 } | Out-Null
 
@@ -259,6 +366,14 @@ Invoke-ResilienceRestPut -Path $planLifecycleEnrollmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $planLifecycleEnrollmentPath
 
+$workflowEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$workflowEnrollmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $workflowEnrollmentPath -Body @{
+    properties = @{
+        serviceGroupId = $workflowServiceGroupId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $workflowEnrollmentPath
+
 # 4) Create a goal template on the service group.
 $goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
@@ -270,7 +385,7 @@ Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
         regionalRecoveryTimeObjective  = 'PT30M'
     }
 } | Out-Null
-Wait-ResilienceProvisioning -Path $goalTemplatePath
+Wait-ResilienceProvisioning -Path $goalTemplatePath -WaitForAuthorization
 
 # 5) Assign the goal template to the service group.
 $goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
@@ -283,8 +398,9 @@ if ($existingGoalAssignment.StatusCode -eq 404) {
             goalTemplateId     = $goalTemplateId
         }
     } | Out-Null
-    Wait-ResilienceProvisioning -Path $goalAssignmentPath
-} elseif ($existingGoalAssignment.StatusCode -eq 200) {
+    Wait-ResilienceProvisioning -Path $goalAssignmentPath -WaitForAuthorization
+}
+elseif ($existingGoalAssignment.StatusCode -eq 200) {
     $goalAssignment = $existingGoalAssignment.Content | ConvertFrom-Json
     if ($goalAssignment.properties.goalAssignmentType -ne 'Resiliency' -or
         $goalAssignment.properties.goalTemplateId -ne $goalTemplateId -or
@@ -292,7 +408,8 @@ if ($existingGoalAssignment.StatusCode -eq 404) {
         throw "Existing goal assignment '$goalAssignmentName' does not match the requested test configuration."
     }
     Write-Host "Goal assignment '$goalAssignmentName' already exists with the requested configuration."
-} else {
+}
+else {
     throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
 }
 
@@ -322,8 +439,9 @@ if ($existingRecoveryPlan.StatusCode -eq 404) {
             }
         }
     } | Out-Null
-    Wait-ResilienceProvisioning -Path $recoveryPlanPath
-} elseif ($existingRecoveryPlan.StatusCode -eq 200) {
+    Wait-ResilienceProvisioning -Path $recoveryPlanPath -WaitForAuthorization
+}
+elseif ($existingRecoveryPlan.StatusCode -eq 200) {
     $recoveryPlan = $existingRecoveryPlan.Content | ConvertFrom-Json
     if ($recoveryPlan.properties.provisioningState -ne 'Succeeded') {
         $errorDetails = $recoveryPlan.properties.errorDetails
@@ -336,14 +454,15 @@ if ($existingRecoveryPlan.StatusCode -eq 404) {
         throw "Existing recoveryplan '$recoveryPlanName' does not have a valid default recovery group."
     }
     Write-Host "Recoveryplan '$recoveryPlanName' already exists with the requested configuration."
-} else {
+}
+else {
     throw "GET $recoveryPlanPath failed with status $($existingRecoveryPlan.StatusCode): $($existingRecoveryPlan.Content)"
 }
 
 # 7) Run a readiness check on the recoveryplan so it has a recorded validation status.
 $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName/checkReadiness`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPost -Path $checkReadinessPath -OperationId (New-Guid).Guid | Out-Null
-Wait-ResilienceProvisioning -Path $recoveryPlanPath
+Wait-ResilienceProvisioning -Path $recoveryPlanPath -WaitForAuthorization
 
 # Capture the recovery job created by the readiness check (and its first resource, if any) so the
 # recovery job/resource live tests can read them from deployment outputs. The job appears
@@ -377,6 +496,120 @@ else {
     Write-Warning "No recovery job appeared after the readiness check; RECOVERYJOBNAME was not set."
 }
 
+# Prepare an isolated CustomRunbook plan for successful failover, resume, and reprotect recordings.
+$workflowRecoveryPlanPath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName`?api-version=$resilienceApiVersion"
+if ((Invoke-AzRestMethod -Method GET -Path $workflowRecoveryPlanPath).StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $workflowRecoveryPlanPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            planDescription       = 'Recovery action workflow live test.'
+            planType              = 'Zonal'
+            recoveryGroupsSetting = @{
+                defaultGroup     = @{
+                    properties = @{
+                        description   = 'Workflow recovery group'
+                        groupUniqueId = (New-Guid).Guid
+                        orderId       = 0
+                        preActions    = @(
+                            @{
+                                type             = 'ManualAction'
+                                name             = 'Confirmfailover'
+                                description      = 'Approve the recorded failover workflow.'
+                                timeoutInMinutes = 30
+                            }
+                        )
+                        postActions   = @()
+                    }
+                }
+                additionalGroups = @()
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $workflowRecoveryPlanPath -WaitForAuthorization
+}
+
+$workflowRecoveryPlan = (Invoke-AzRestMethod -Method GET -Path $workflowRecoveryPlanPath).Content | ConvertFrom-Json
+$workflowPlanPrincipalId = $workflowRecoveryPlan.identity.principalId
+$automationJobOperatorRoleId = '4fe576fe-1146-4730-92eb-48519fa6bf9f'
+$automationRole = Get-AzRoleAssignment -ObjectId $workflowPlanPrincipalId -Scope $automationAccountId -RoleDefinitionId $automationJobOperatorRoleId -ErrorAction SilentlyContinue
+if (!$automationRole) {
+    New-AzRoleAssignment -ObjectId $workflowPlanPrincipalId -Scope $automationAccountId -RoleDefinitionId $automationJobOperatorRoleId | Out-Null
+}
+
+$workflowResourcesPath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName/recoveryResources`?api-version=$resilienceApiVersion"
+$workflowResource = $null
+$deadline = (Get-Date).AddSeconds(600)
+while (-not $workflowResource -and (Get-Date) -lt $deadline) {
+    $workflowResources = ((Invoke-AzRestMethod -Method GET -Path $workflowResourcesPath).Content | ConvertFrom-Json).value
+    $workflowResource = $workflowResources | Where-Object { $_.properties.resourceId -eq $automationAccountId } | Select-Object -First 1
+    if (-not $workflowResource) {
+        Write-Host "  waiting for the Automation account recovery resource to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+if (-not $workflowResource) {
+    throw "No recovery resource was created for Automation account $automationAccountId."
+}
+
+$workflowGroupId = $workflowRecoveryPlan.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId
+$workflowResourceUpdates = @(
+    @{
+        id         = $workflowResource.id
+        properties = @{
+            recoveryResourceUniqueId          = $workflowResource.name
+            inclusionState                    = 'Included'
+            recoveryGroupId                   = $workflowGroupId
+            selectedProtectionSolutionType    = 'CustomRunbook'
+            selectedProtectionSolutionSetting = @{
+                protectionSolutionType = 'CustomRunbook'
+                failoverAction         = @{ resourceId = $failoverRunbookId }
+                reprotectAction        = @{ resourceId = $reprotectRunbookId }
+            }
+        }
+    }
+)
+foreach ($resource in $workflowResources | Where-Object { $_.id -ne $workflowResource.id }) {
+    $workflowResourceUpdates += @{
+        id         = $resource.id
+        properties = @{
+            recoveryResourceUniqueId = $resource.name
+            inclusionState           = 'Excluded'
+        }
+    }
+}
+
+$workflowUpdatePath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName/updateResources`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPost -Path $workflowUpdatePath -OperationId (New-Guid).Guid -Body @{
+    resourcesToUpdate = $workflowResourceUpdates
+    resourcesToRemove = @()
+} | Out-Null
+Wait-ResilienceProvisioning -Path $workflowRecoveryPlanPath -WaitForAuthorization
+
+$workflowFinalizePath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName/finalize`?api-version=$resilienceApiVersion"
+$workflowFinalizeResponse = $null
+$workflowFinalizeOperationId = (New-Guid).Guid
+for ($attempt = 0; $attempt -lt 40; $attempt++) {
+    $workflowFinalizeResponse = az rest --method POST --url "https://management.azure.com$workflowFinalizePath" --headers "operation-id=$workflowFinalizeOperationId" --output json 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        break
+    }
+    if ($workflowFinalizeResponse -notmatch '\b409\b|Conflict') {
+        throw "POST $workflowFinalizePath failed: $workflowFinalizeResponse"
+    }
+
+    Write-Host "  recoveryplan update is still active; waiting to finalize..."
+    Start-Sleep -Seconds 15
+}
+if ($LASTEXITCODE -ne 0) {
+    throw "Recoveryplan $workflowRecoveryPlanName could not be finalized after waiting for the resource update."
+}
+Wait-ResilienceProvisioning -Path $workflowRecoveryPlanPath -WaitForAuthorization
+
+$DeploymentOutputs['WORKFLOWRECOVERYRESOURCEID'] = $workflowResource.id
+New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
+
 # 8) Create a drill. The service creates its drillResources from the service-group membership.
 $drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
 $recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
@@ -407,7 +640,7 @@ if ($existingDrill.StatusCode -eq 404) {
             }
         }
     } | Out-Null
-    Wait-ResilienceProvisioning -Path $drillPath
+    Wait-ResilienceProvisioning -Path $drillPath -WaitForAuthorization
 }
 elseif ($existingDrill.StatusCode -eq 200) {
     $drill = $existingDrill.Content | ConvertFrom-Json
@@ -451,7 +684,7 @@ if ((Invoke-AzRestMethod -Method GET -Path $deleteRecoveryPlanPath).StatusCode -
             }
         }
     } | Out-Null
-    Wait-ResilienceProvisioning -Path $deleteRecoveryPlanPath
+    Wait-ResilienceProvisioning -Path $deleteRecoveryPlanPath -WaitForAuthorization
 }
 
 $deleteDrillPath = "$lifecycleServiceGroupResilienceBase/drills/$deleteDrillName`?api-version=$resilienceApiVersion"
@@ -482,7 +715,7 @@ if ((Invoke-AzRestMethod -Method GET -Path $deleteDrillPath).StatusCode -eq 404)
             }
         }
     } | Out-Null
-    Wait-ResilienceProvisioning -Path $deleteDrillPath
+    Wait-ResilienceProvisioning -Path $deleteDrillPath -WaitForAuthorization
 }
 
 # Wait for the drill resource created from the storage-account service-group member.
@@ -522,9 +755,9 @@ if ($drillResource.properties.faultProperties) {
 
 $addResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/addOrUpdateResources`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPost -Path $addResourcesPath -OperationId (New-Guid).Guid -Body @{
-    faultDurationInMin = 1
+    faultDurationInMin      = 1
     forceInclusionAndUpdate = 'Enable'
-    resourceLists = @{
+    resourceLists           = @{
         includeResources = @($includeResource)
         excludeResources = @()
         updateResources  = @()
@@ -586,6 +819,9 @@ if (-not $drillRun) {
 }
 
 $DeploymentOutputs['DRILLRUNNAME'] = $drillRun.name
+$DeploymentOutputs['MARKCOMPLETESERVICEGROUP'] = $serviceGroupName
+$DeploymentOutputs['MARKCOMPLETEDRILL'] = $drillName
+$DeploymentOutputs['MARKCOMPLETEDRILLRUN'] = $drillRun.name
 
 # Capture a run target for the drill run resource live tests.
 $drillRunResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillRuns/$($drillRun.name)/drillRunTargets`?api-version=$resilienceApiVersion"

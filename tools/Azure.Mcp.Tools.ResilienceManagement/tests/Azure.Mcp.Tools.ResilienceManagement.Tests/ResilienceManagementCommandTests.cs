@@ -1129,7 +1129,7 @@ public class ResilienceManagementCommandTests(
             { "tenant", Settings.TenantId },
             { "service-group", serviceGroup },
             { "recoveryplan", recoveryPlan },
-            { "recovery-job", "22222222-2222-2222-2222-222222222222" }
+            { "recoveryjob", "22222222-2222-2222-2222-222222222222" }
         };
         if (toolName == "resilience_recoveryjob_resume")
         {
@@ -1144,6 +1144,97 @@ public class ResilienceManagementCommandTests(
         Assert.NotNull(result);
         Assert.Equal(404, result.Value.AssertProperty("status").GetInt32());
         Assert.Contains("not found", result.Value.AssertProperty("message").GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_retry_failed_recovery_job_and_validate_terminal_result()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var recoveryJob = RegisterOrRetrieveDeploymentOutputVariable("recoveryJobName", "RECOVERYJOBNAME");
+
+        JsonElement failedJob = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+        Assert.Equal("Failed", failedJob.AssertProperty("properties").AssertProperty("status").GetString());
+
+        var retryResult = await CallToolAsync(
+            "resilience_recoveryjob_retry",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "recoveryjob", recoveryJob }
+            });
+
+        Assert.True(Guid.TryParse(retryResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", retryResult.AssertProperty("status").GetString());
+        JsonElement terminalJob = await WaitForRecoveryJobTerminalStateAsync(serviceGroup, recoveryPlan, recoveryJob);
+        Assert.Contains(
+            terminalJob.AssertProperty("properties").AssertProperty("status").GetString(),
+            TerminalRecoveryJobStatuses);
+    }
+
+    [Fact]
+    public async Task Should_failover_resume_and_reprotect_with_terminal_results()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("workflowServiceGroupName", "WORKFLOWSERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("workflowRecoveryPlanName", "WORKFLOWRECOVERYPLANNAME");
+        var recoveryResourceId = RegisterOrRetrieveDeploymentOutputVariable("workflowRecoveryResourceId", "WORKFLOWRECOVERYRESOURCEID");
+        HashSet<string> existingJobs = await GetRecoveryJobNamesAsync(serviceGroup, recoveryPlan);
+
+        var failoverResult = await CallToolAsync(
+            "resilience_recoveryplan_failover",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "selected-resource-ids", new[] { recoveryResourceId } },
+                { "user-consent", "Allowed" }
+            });
+
+        Assert.True(Guid.TryParse(failoverResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", failoverResult.AssertProperty("status").GetString());
+        string failoverJob = await WaitForNewRecoveryJobAsync(serviceGroup, recoveryPlan, existingJobs);
+        JsonElement pausedJob = await WaitForRecoveryJobStatusAsync(serviceGroup, recoveryPlan, failoverJob, "Paused");
+        Assert.Equal("Paused", pausedJob.AssertProperty("properties").AssertProperty("status").GetString());
+
+        var resumeResult = await CallToolAsync(
+            "resilience_recoveryjob_resume",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "recoveryjob", failoverJob },
+                { "description", "Approve recorded failover workflow." }
+            });
+
+        Assert.True(Guid.TryParse(resumeResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", resumeResult.AssertProperty("status").GetString());
+        JsonElement completedFailover = await WaitForRecoveryJobTerminalStateAsync(serviceGroup, recoveryPlan, failoverJob);
+        Assert.Contains(
+            completedFailover.AssertProperty("properties").AssertProperty("status").GetString(),
+            SuccessfulRecoveryJobStatuses);
+        existingJobs.Add(failoverJob);
+
+        var reprotectResult = await CallToolAsync(
+            "resilience_recoveryplan_reprotect",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "selected-resource-ids", new[] { recoveryResourceId } }
+            });
+
+        Assert.True(Guid.TryParse(reprotectResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", reprotectResult.AssertProperty("status").GetString());
+        string reprotectJob = await WaitForNewRecoveryJobAsync(serviceGroup, recoveryPlan, existingJobs);
+        JsonElement completedReprotect = await WaitForRecoveryJobTerminalStateAsync(serviceGroup, recoveryPlan, reprotectJob);
+        Assert.Contains(
+            completedReprotect.AssertProperty("properties").AssertProperty("status").GetString(),
+            SuccessfulRecoveryJobStatuses);
     }
 
     [Fact]
@@ -1181,6 +1272,118 @@ public class ResilienceManagementCommandTests(
         Assert.False(string.IsNullOrEmpty(job.AssertProperty("name").GetString()));
     }
 
+    private static readonly string[] TerminalRecoveryJobStatuses =
+    [
+        "NotApplicable",
+        "Completed",
+        "CompletedWithWarnings",
+        "Failed",
+        "Skipped",
+        "Cancelled"
+    ];
+
+    private static readonly string[] SuccessfulRecoveryJobStatuses =
+    [
+        "Completed",
+        "CompletedWithWarnings"
+    ];
+
+    private async Task<JsonElement> GetRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob)
+    {
+        var result = await CallToolAsync(
+            "resilience_recoveryjob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "name", recoveryJob }
+            });
+
+        return result.AssertProperty("recoveryJob");
+    }
+
+    private async Task<HashSet<string>> GetRecoveryJobNamesAsync(string serviceGroup, string recoveryPlan)
+    {
+        var result = await CallToolAsync(
+            "resilience_recoveryjob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan }
+            });
+
+        return result.AssertProperty("recoveryJobs")
+            .EnumerateArray()
+            .Select(job => job.AssertProperty("name").GetString()!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<string> WaitForNewRecoveryJobAsync(string serviceGroup, string recoveryPlan, HashSet<string> existingJobs)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            HashSet<string> currentJobs = await GetRecoveryJobNamesAsync(serviceGroup, recoveryPlan);
+            string? newJob = currentJobs.FirstOrDefault(job => !existingJobs.Contains(job));
+            if (newJob is not null)
+            {
+                return newJob;
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"No new recovery job appeared after {maxAttempts} attempts.");
+        return string.Empty;
+    }
+
+    private async Task<JsonElement> WaitForRecoveryJobTerminalStateAsync(string serviceGroup, string recoveryPlan, string recoveryJob)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement job = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+            string? status = job.AssertProperty("properties").AssertProperty("status").GetString();
+            if (TerminalRecoveryJobStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                return job;
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"Recovery job '{recoveryJob}' did not reach a terminal state after {maxAttempts} attempts.");
+        return default;
+    }
+
+    private async Task<JsonElement> WaitForRecoveryJobStatusAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string expectedStatus)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement job = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+            string? status = job.AssertProperty("properties").AssertProperty("status").GetString();
+            if (string.Equals(status, expectedStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                return job;
+            }
+            if (TerminalRecoveryJobStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                Assert.Fail($"Recovery job '{recoveryJob}' reached terminal state '{status}' before expected state '{expectedStatus}'.");
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"Recovery job '{recoveryJob}' did not reach state '{expectedStatus}' after {maxAttempts} attempts.");
+        return default;
+    }
+
     [Fact]
     public async Task Should_list_recovery_job_resources()
     {
@@ -1209,7 +1412,7 @@ public class ResilienceManagementCommandTests(
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "recoveryplan", recoveryPlan },
-                { "recovery-job", recoveryJob }
+                { "recoveryjob", recoveryJob }
             });
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryJobResources").ValueKind);

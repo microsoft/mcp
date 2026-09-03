@@ -17,6 +17,31 @@ public sealed class ResilienceManagementServiceTests
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
+    [Theory]
+    [InlineData("Recovery job retry")]
+    [InlineData("Recovery job resume")]
+    [InlineData("Recovery plan finalize")]
+    public void ThrowIfProviderError_RejectsSuccessfulResponseContainingError(string operationDescription)
+    {
+        ArmResponseErrorResponseResult result = ArmResilienceManagementModelFactory.ArmResponseErrorResponseResult(
+            new ResponseError("ProviderFailure", "The provider could not complete the operation."));
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.ThrowIfProviderError(result, operationDescription));
+
+        Assert.Contains(operationDescription, exception.Message, StringComparison.Ordinal);
+        Assert.Contains("ProviderFailure", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("The provider could not complete the operation.", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ThrowIfProviderError_AllowsSuccessfulResponseWithoutBody()
+    {
+        ArmResponseErrorResponseResult result = ArmResilienceManagementModelFactory.ArmResponseErrorResponseResult(null!);
+
+        ResilienceManagementService.ThrowIfProviderError(result, "Recovery job retry");
+    }
+
     [Fact]
     public void GetRecoveryJobResourceId_UsesAbsoluteJobIdExactly()
     {

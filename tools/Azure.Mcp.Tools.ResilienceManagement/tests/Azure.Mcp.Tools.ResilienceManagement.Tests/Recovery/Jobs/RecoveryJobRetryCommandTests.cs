@@ -20,7 +20,7 @@ public sealed class RecoveryJobRetryCommandTests : CommandUnitTestsBase<Recovery
     [Fact]
     public async Task ExecuteAsync_RejectsRecoveryJobThatIsNotAGuid()
     {
-        var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recovery-job", "not-a-guid");
+        var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recoveryjob", "not-a-guid");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("GUID in D format", response.Message, StringComparison.Ordinal);
@@ -29,10 +29,13 @@ public sealed class RecoveryJobRetryCommandTests : CommandUnitTestsBase<Recovery
     [Fact]
     public async Task ExecuteAsync_ForwardsFailedJobAndReturnsOperationId()
     {
-        var expected = new RecoveryJobRetryResult("11111111-1111-1111-1111-111111111111");
+        var expected = new RecoveryJobRetryResult(
+            "11111111-1111-1111-1111-111111111111",
+            "Accepted",
+            "Recovery job retry was accepted.");
         Service.RetryRecoveryJobAsync("sg1", "plan1", RecoveryJob, null, Arg.Any<CancellationToken>()).Returns(expected);
 
-        var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recovery-job", RecoveryJob);
+        var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recoveryjob", RecoveryJob);
 
         RecoveryJobRetryResult result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryJobRetryResult);
         Assert.Equal(expected, result);
@@ -44,7 +47,7 @@ public sealed class RecoveryJobRetryCommandTests : CommandUnitTestsBase<Recovery
         Service.RetryRecoveryJobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.PreconditionFailed, "provider details"));
 
-        var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recovery-job", RecoveryJob);
+        var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recoveryjob", RecoveryJob);
 
         Assert.Equal(HttpStatusCode.PreconditionFailed, response.Status);
         Assert.Contains("Failed state", response.Message, StringComparison.Ordinal);

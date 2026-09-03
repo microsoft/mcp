@@ -3975,7 +3975,8 @@ azmcp resilience recoveryplan delete --service-group <service-group> \
                                       --recoveryplan <recoveryplan>
 
 # Start failover for qualified recoveryplan resources. Provide source locations, selected full recovery-resource IDs, or both.
-# Returns operation and recovery job IDs for tracking. Validate qualification and readiness first when unknown.
+# Returns after the request is accepted with an operation ID and a recovery job ID when available.
+# Use recoveryjob get to find and monitor the job. Validate qualification and readiness first when unknown.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan failover --service-group <service-group> \
                                         --recoveryplan <recoveryplan> \
@@ -3990,7 +3991,8 @@ azmcp resilience recoveryplan finalize --service-group <service-group> \
                                         --recoveryplan <recoveryplan>
 
 # Start reprotection after failover for all qualified resources, or limit it to selected full recovery-resource IDs.
-# Returns operation and recovery job IDs for tracking.
+# Returns after the request is accepted with an operation ID and a recovery job ID when available.
+# Use recoveryjob get to find and monitor the job.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan reprotect --service-group <service-group> \
                                          --recoveryplan <recoveryplan> \
@@ -4046,24 +4048,25 @@ azmcp resilience recoveryjob get --service-group <service-group> \
                                  --recoveryplan <recoveryplan> \
                                  [--name <name>]
 
-# Retry an existing recovery job in the Failed state. Returns an operation ID for tracking.
+# Retry an existing recoveryjob in the Failed state. Returns after acceptance; use recoveryjob get to monitor the job.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryjob retry --service-group <service-group> \
                                    --recoveryplan <recoveryplan> \
-                                   --recovery-job <recovery-job>
+                                   --recoveryjob <recoveryjob>
 
-# Resume an existing recovery job in the Paused state, optionally providing input for the paused action.
+# Resume an existing recoveryjob in the Paused state, optionally providing input for the paused action.
+# Returns after acceptance; use recoveryjob get to monitor the job.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryjob resume --service-group <service-group> \
                                     --recoveryplan <recoveryplan> \
-                                    --recovery-job <recovery-job> \
+                                    --recoveryjob <recoveryjob> \
                                     [--description <description>]
 
-# Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
+# Get a resource (target) of a recoveryjob, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryjob resource get --service-group <service-group> \
                                           --recoveryplan <recoveryplan> \
-                                          --recovery-job <recovery-job> \
+                                          --recoveryjob <recoveryjob> \
                                           [--name <name>]
 
 # Create or update a resilience drill in a service group

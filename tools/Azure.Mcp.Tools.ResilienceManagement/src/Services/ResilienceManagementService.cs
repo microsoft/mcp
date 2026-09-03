@@ -542,9 +542,13 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             operationId,
             content,
             cancellationToken);
-        await WaitForRecoveryPlanLroCompletionAsync(operation, RecoveryPlanOperationTimeout, cancellationToken);
+        string? jobId = operation.HasCompleted ? operation.Value.JobId : null;
 
-        return new RecoveryPlanFailoverResult(operationId, operation.Value.JobId);
+        return new RecoveryPlanFailoverResult(
+            operationId,
+            jobId,
+            "Accepted",
+            CreateRecoveryPlanActionTrackingMessage("Failover", jobId));
     }
 
     public Task<RecoveryPlanFinalizeResult> FinalizeRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default)
@@ -582,6 +586,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             }
         }
 
+        ThrowIfProviderError(operation.Value, "Recovery plan finalize");
+
         return new RecoveryPlanFinalizeResult(operationId);
     }
 
@@ -607,9 +613,13 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             operationId,
             content,
             cancellationToken);
-        await WaitForRecoveryPlanLroCompletionAsync(operation, RecoveryPlanOperationTimeout, cancellationToken);
+        string? jobId = operation.HasCompleted ? operation.Value.JobId : null;
 
-        return new RecoveryPlanReprotectResult(operationId, operation.Value.JobId);
+        return new RecoveryPlanReprotectResult(
+            operationId,
+            jobId,
+            "Accepted",
+            CreateRecoveryPlanActionTrackingMessage("Reprotect", jobId));
     }
 
     public Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, CancellationToken cancellationToken = default)
@@ -1575,9 +1585,15 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             WaitUntil.Started,
             operationId,
             cancellationToken);
-        await WaitForRecoveryPlanLroCompletionAsync(operation, RecoveryPlanOperationTimeout, cancellationToken);
+        if (operation.HasCompleted)
+        {
+            ThrowIfProviderError(operation.Value, "Recovery job retry");
+        }
 
-        return new RecoveryJobRetryResult(operationId);
+        return new RecoveryJobRetryResult(
+            operationId,
+            "Accepted",
+            $"Recovery job retry was accepted. Use 'resilience recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
     }
 
     public Task<RecoveryJobResumeResult> ResumeRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? description = null, string? tenant = null, CancellationToken cancellationToken = default)
@@ -1601,9 +1617,41 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             operationId,
             new RecoveryActionContent { Description = description },
             cancellationToken);
-        await WaitForRecoveryPlanLroCompletionAsync(operation, RecoveryPlanOperationTimeout, cancellationToken);
+        if (operation.HasCompleted)
+        {
+            ThrowIfProviderError(operation.Value, "Recovery job resume");
+        }
 
-        return new RecoveryJobResumeResult(operationId);
+        return new RecoveryJobResumeResult(
+            operationId,
+            "Accepted",
+            $"Recovery job resume was accepted. Use 'resilience recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
+    }
+
+    private static string CreateRecoveryPlanActionTrackingMessage(string action, string? jobId)
+    {
+        return jobId is null
+            ? $"{action} was accepted. Use 'resilience recoveryjob get' to list recovery jobs, then provide --recoveryjob to monitor the new job."
+            : $"{action} was accepted. Use 'resilience recoveryjob get --recoveryjob {jobId}' to monitor progress.";
+    }
+
+    internal static void ThrowIfProviderError(ArmResponseErrorResponseResult result, string operationDescription)
+    {
+        ResponseError? error;
+        try
+        {
+            error = result.BodyError;
+        }
+        catch (NullReferenceException)
+        {
+            // The generated SDK getter dereferences a missing response body for successful empty responses.
+            return;
+        }
+
+        if (error is not null)
+        {
+            throw new InvalidOperationException($"{operationDescription} failed with provider error '{error.Code}': {error.Message}");
+        }
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListRecoveryJobResourcesAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? tenant = null, CancellationToken cancellationToken = default)

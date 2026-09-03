@@ -38,10 +38,28 @@ public sealed class RecoveryPlanFailoverCommandTests : CommandUnitTestsBase<Reco
         Assert.Contains("Unspecified or Allowed", response.Message, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("/providers/Contoso.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Contoso.AzureResilienceManagement/recoveryPlans/plan1/providers/Microsoft.AzureResilienceManagement/recoveryResources/12345678-9012-3456-7890-123456789012")]
+    public async Task ExecuteAsync_RejectsSelectedResourceWithInvalidAncestorType(string recoveryResourceId)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--selected-resource-ids", recoveryResourceId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("under the requested service group and recoveryplan", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task ExecuteAsync_ForwardsRequestAndReturnsOperationAndJobIds()
     {
-        var expected = new RecoveryPlanFailoverResult("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222");
+        var expected = new RecoveryPlanFailoverResult(
+            "11111111-1111-1111-1111-111111111111",
+            "22222222-2222-2222-2222-222222222222",
+            "Accepted",
+            "Failover was accepted.");
         Service.FailoverRecoveryPlanAsync(
             "sg1",
             "plan1",
