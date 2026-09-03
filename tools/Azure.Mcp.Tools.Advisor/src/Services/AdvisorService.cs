@@ -337,7 +337,7 @@ public class AdvisorService(IAzureService azureService)
         "| project properties";
 
     private static string FormatKqlStringList(IEnumerable<string> values) =>
-        string.Join(", ", values.Select(value => $"'{SanitizeForKql(value)}'"));
+        string.Join(", ", values.Select(value => $"'{RecommendationQueryBuilder.SanitizeForKql(value)}'"));
 
     private static List<string> NormalizeFilterValues(IEnumerable<string>? values) =>
         values is null

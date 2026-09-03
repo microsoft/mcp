@@ -98,7 +98,7 @@ internal static class RecommendationQueryBuilder
             .Replace("\\", "\\\\")
             .Replace("'", "''");
 
-    private static string SanitizeForKql(string value) =>
+    internal static string SanitizeForKql(string value) =>
         EscapeKqlString(value.Trim());
 
     private static string FormatKqlStringList(IEnumerable<string> values) =>
