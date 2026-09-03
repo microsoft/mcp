@@ -512,7 +512,8 @@ if ((Invoke-AzRestMethod -Method GET -Path $workflowRecoveryPlanPath).StatusCode
                         description   = 'Workflow recovery group'
                         groupUniqueId = (New-Guid).Guid
                         orderId       = 0
-                        preActions    = @(
+                        preActions    = @()
+                        postActions   = @(
                             @{
                                 type             = 'ManualAction'
                                 name             = 'Confirmfailover'
@@ -520,7 +521,6 @@ if ((Invoke-AzRestMethod -Method GET -Path $workflowRecoveryPlanPath).StatusCode
                                 timeoutInMinutes = 30
                             }
                         )
-                        postActions   = @()
                     }
                 }
                 additionalGroups = @()
