@@ -136,6 +136,29 @@ public sealed class OptimizationCommandTests(ITestOutputHelper output, TestProxy
             return string.Empty;
         }
 
-        return RegisterOrRetrieveVariable("vmResourceId", id.GetString()!);
+        var resourceId = RegisterOrRetrieveVariable("vmResourceId", id.GetString()!);
+
+        // The recorded variable retains the record-time subscription id, but recorded request bodies
+        // are sanitized to Settings.SubscriptionId. Rewrite the subscription segment so the KQL query
+        // built from this resource id matches the recording during playback (no-op during recording).
+        return NormalizeSubscriptionId(resourceId);
+    }
+
+    private string NormalizeSubscriptionId(string resourceId)
+    {
+        const string prefix = "/subscriptions/";
+        if (!resourceId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return resourceId;
+        }
+
+        var rest = resourceId[prefix.Length..];
+        var slashIndex = rest.IndexOf('/');
+        if (slashIndex < 0)
+        {
+            return resourceId;
+        }
+
+        return prefix + Settings.SubscriptionId + rest[slashIndex..];
     }
 }
