@@ -99,7 +99,7 @@ For an existing plan, read it first and preserve omitted values. If it retains a
 
 1. Get the plan and verify that an operation is awaiting finalization.
 2. Call `mcp_azure_mcp_ser_resilience_recoveryplan_finalize`.
-3. Return the operation ID and describe the result as accepted until completion is observed.
+3. Return the operation ID and terminal plan state. A successful result is completed because the tool waits for the ARM operation and validates the terminal plan state before returning.
 4. Do not describe finalize as failover commit.
 
 ## Monitor, Retry, or Resume a Recovery Job

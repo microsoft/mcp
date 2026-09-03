@@ -1,6 +1,6 @@
 ---
 name: resilience-recovery-operations
-description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, recovery plans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; run or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs.'
+description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, recovery plans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; run or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs; implement, add, test, or record a Resilience Management tool.'
 argument-hint: 'Describe the resilience operation and provide known service group, plan, drill, job, subscription, or resource identifiers'
 user-invocable: true
 disable-model-invocation: false
@@ -92,7 +92,7 @@ Use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI 
 - Surface service error codes, blocking reasons, attention reasons, and recommendations.
 - A timeout means completion is unknown; do not report failure or success without a subsequent get.
 - `AutomationRunbookExistenceCheckUnavailable` blocks readiness-dependent recovery operations until runbook accessibility is corrected.
-- A playback/test-proxy 404 is test infrastructure, not Azure resource absence; do not mutate Azure to work around it.
+- A test-proxy 404 that reports no matching recording is a playback infrastructure failure; do not mutate Azure to work around it. An Azure 404 intentionally preserved in a recording can validly represent a missing plan, job, or other resource.
 - When an MCP call fails, retry only when the failure is transient and the operation is safe to repeat. Never switch to Azure CLI or direct REST to bypass the MCP failure.
 
 ## Tool Development Standards
