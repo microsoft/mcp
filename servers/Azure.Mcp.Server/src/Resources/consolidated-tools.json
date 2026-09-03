@@ -1064,6 +1064,39 @@
       ]
     },
     {
+      "name": "review_azure_advisor_chaos_readiness",
+      "description": "Review whether one Azure Advisor-recommended virtual machine scale set is ready for an Azure Chaos Studio Compute Zone Down experiment. Verifies an exact active Advisor recommendation using its type ID and VMSS ARM resource ID, then checks VMSS eligibility, discovers covering Chaos workspaces, identifies compatible recommended scenarios and exact configurations, inspects validation state and scenario run history, and reports deterministic setup, permission, selection, validation, or active-run blockers. Optional workspace, scenario, and configuration ARM IDs must come from a previous review result. This tool is read-only and never creates or changes Chaos resources, permissions, validations, runs, experiments, or Advisor approval plans.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only read operations and does not create or modify Azure resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation repeatedly with the same inputs performs the same readiness checks without side effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to one Advisor-recommended VMSS and its related Azure Chaos Studio resources."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool reads VMSS and Chaos Studio state without modifying it."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_recommendation_chaos-review"
+      ]
+    },
+    {
       "name": "list_azure_advisor_recommendation_metadata",
       "description": "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use it even when no recommendation instances exist: discover available types for greenfield environments, filter by supported resource type during brownfield onboarding, or find service-retirement metadata by Service Health tracking ID and retirement date. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, and retirement date filters, ordered High, Medium, then Low impact.",
       "toolMetadata": {

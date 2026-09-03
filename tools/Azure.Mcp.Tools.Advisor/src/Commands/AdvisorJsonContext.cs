@@ -2,12 +2,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
+using Azure.Mcp.Tools.Advisor.Models.Chaos;
 using Azure.Mcp.Tools.Advisor.Services.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Commands;
 
 [JsonSerializable(typeof(MetadataGetCommand.MetadataGetResult))]
 [JsonSerializable(typeof(RecommendationMetadataListCommand.RecommendationMetadataListResult))]
+[JsonSerializable(typeof(RecommendationChaosReviewCommand.RecommendationChaosReviewResult))]
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
 [JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
 [JsonSerializable(typeof(List<string>))]
@@ -27,6 +29,13 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(Models.RecommendationMetadata))]
 [JsonSerializable(typeof(Models.RecommendationGroup))]
 [JsonSerializable(typeof(Models.RecommendationSummary))]
+[JsonSerializable(typeof(ChaosRemediationStatus))]
+[JsonSerializable(typeof(ChaosTargetReview))]
+[JsonSerializable(typeof(ChaosWorkspaceCandidate))]
+[JsonSerializable(typeof(ChaosScenarioCandidate))]
+[JsonSerializable(typeof(ChaosConfigurationCandidate))]
+[JsonSerializable(typeof(ChaosValidationStatus))]
+[JsonSerializable(typeof(ChaosRunSummary))]
 [JsonSerializable(typeof(string))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

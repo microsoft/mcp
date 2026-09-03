@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the read-only `azmcp advisor recommendation chaos-review` tool to verify an exact active Advisor recommendation and review Compute Zone Down Chaos readiness for its virtual machine scale set, including eligibility, compatible Chaos resources, validation state, permissions, and run blockers."
