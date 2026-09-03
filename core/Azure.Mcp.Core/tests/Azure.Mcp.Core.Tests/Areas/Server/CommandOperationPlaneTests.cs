@@ -7,12 +7,12 @@ using Xunit;
 namespace Azure.Mcp.Core.Tests.Areas.Server;
 
 /// <summary>
-/// Enforces that every registered command declares an operation plane.
+/// Enforces that every registered tool declares an operation plane.
 /// </summary>
 /// <remarks>
 /// There is deliberately no allowlist. <see cref="ToolOperationPlane.Unspecified"/> is an unset
-/// marker rather than a valid answer, so a new command must be classified before it can ship.
-/// A command that calls no Azure service is <see cref="ToolOperationPlane.NotApplicable"/>, which
+/// marker rather than a valid answer, so a new tool must be classified before it can ship.
+/// A tool that calls no service is <see cref="ToolOperationPlane.NotApplicable"/>, which
 /// is an explicit classification and satisfies this test.
 /// See <c>docs/design/operation-plane-metadata.md</c> for the classification rule.
 /// </remarks>
@@ -30,9 +30,9 @@ public class CommandOperationPlaneTests
             .ToList();
 
         Assert.True(unclassified.Count == 0,
-            $"{unclassified.Count} command(s) do not declare an OperationPlane. Set OperationPlane on the " +
-            $"[CommandMetadata] attribute. Classify by the command's deliverable: the call that produces what " +
-            $"the user asked for. An ARM call made only to locate the target does not count. See " +
+            $"{unclassified.Count} tool(s) do not declare an OperationPlane. Set OperationPlane on the " +
+            $"[CommandMetadata] attribute. Classify by the API the tool acts against to produce the result " +
+            $"the user asked for. An ARM call made only as setup, to locate the target, does not count. See " +
             $"docs/design/operation-plane-metadata.md.\n" +
             string.Join("\n", unclassified));
     }

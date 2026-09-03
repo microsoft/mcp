@@ -41,11 +41,11 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
 
     /// <summary>
     /// Publishing resolves the topic through ARM to read its endpoint before sending. That lookup is
-    /// addressing, not a deliverable, so the command is Data rather than Both. See
+    /// setup, not the tool's action, so the tool is Data rather than Both. See
     /// docs/design/operation-plane-metadata.md.
     /// </summary>
     [Fact]
-    public void Command_OperationPlane_IgnoresArmLookupUsedOnlyForAddressing()
+    public void Command_OperationPlane_IgnoresArmLookupUsedOnlyForSetup()
     {
         Assert.Equal(ToolOperationPlane.Data, Command.Metadata.OperationPlane);
         Assert.NotEqual(ToolOperationPlane.Both, Command.Metadata.OperationPlane);

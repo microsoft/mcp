@@ -1,4 +1,4 @@
-# Azure Operation-Plane Metadata
+# Operation-Plane Metadata
 
 Related issue: [microsoft/mcp#1616](https://github.com/microsoft/mcp/issues/1616)
 
@@ -8,9 +8,7 @@ Proposed.
 
 ## Context
 
-Azure MCP commands can call Azure management APIs, service data APIs, or both. The existing tool metadata describes behavioral characteristics such as whether a command is read-only or destructive, but it does not identify the Azure API plane used by a command.
-
-The strongly typed option conversion moves command identity and behavioral hints to `CommandMetadataAttribute`. The `[Option]` attributes introduced by that conversion only describe command-line parameters and therefore do not solve operation-plane classification.
+MCP tools in this repository can call management APIs, service data APIs, or both. The existing tool metadata describes behavioral characteristics such as whether a tool is read-only or destructive, but it does not identify the API plane a tool acts against.
 
 Documentation generation needs this classification in `tools list` JSON so it can accurately describe the coverage of individual tools and tool families.
 
@@ -29,7 +27,7 @@ public enum ToolOperationPlane
 }
 ```
 
-Commands declare their classification alongside their existing metadata:
+Tools declare their classification alongside their existing metadata:
 
 ```csharp
 [CommandMetadata(
@@ -48,47 +46,47 @@ Commands declare their classification alongside their existing metadata:
 
 ### Classification
 
-A command's plane is determined by its **deliverable call**: the request that produces the result the user asked for.
+A tool's plane is the plane of the API it acts against to produce the result the user asked for.
 
 | Value | Meaning |
 |---|---|
 | `Data` | The tool performs its action(s) against a service data-plane API. |
-| `Control` | The deliverable is a call against Azure Resource Manager or another management-plane API. |
-| `Both` | The command has two genuine user-facing deliverables, one on each plane. |
-| `NotApplicable` | The command does not perform an Azure service-plane operation, such as `tools list`, `server start`, or a local-only utility. |
-| `Unspecified` | The command has not been classified. This is an unset marker, not a valid answer. |
+| `Control` | The tool performs its action(s) against Azure Resource Manager or another management-plane API. |
+| `Both` | The tool performs two distinct user-facing actions, one on each plane. |
+| `NotApplicable` | The tool performs no service-plane operation, such as `tools list`, `server start`, or a local-only utility. |
+| `Unspecified` | The tool has not been classified. This is an unset marker, not a valid answer. |
 
-`NotApplicable` is a deliberate classification meaning "reviewed, and no Azure plane applies". `Unspecified` means "not yet reviewed" and fails validation for Azure service commands.
+`NotApplicable` is a deliberate classification meaning "reviewed, and no service plane applies". `Unspecified` means "not yet reviewed" and fails validation.
 
-#### Addressing does not count
+#### Setup does not count
 
-Resolving a subscription, tenant, resource ID, or service endpoint is **addressing**, not a deliverable. It never contributes a plane.
+Resolving a subscription, tenant, resource ID, or service endpoint is **setup** the tool does before it can act. It never contributes a plane.
 
-This exclusion is what makes the annotation useful. Nearly every data-plane command resolves its target through ARM before it can issue the workload call, so if addressing counted as control-plane work, almost every command would be `Both` and the label would stop discriminating.
+This exclusion is what makes the annotation useful. Nearly every data-plane tool resolves its target through ARM before it can issue the workload call, so if setup counted as control-plane work, almost every tool would be `Both` and the label would stop discriminating.
 
-`azmcp eventgrid events publish` is the worked example. It calls ARM to look up the topic and read its endpoint, then sends the events to that endpoint. The ARM traffic exists only to find where to publish, so the command is `Data`.
+`azmcp eventgrid events publish` is the worked example. It calls ARM to look up the topic and read its endpoint, then sends the events to that endpoint. The ARM traffic exists only to find where to publish, so the tool is `Data`.
 
 Applying the rule:
 
-| Command | Deliverable | Plane |
+| Tool | What the tool acts against | Plane |
 |---|---|---|
 | `eventgrid topic list` | The ARM enumeration is the answer. | `Control` |
 | `eventgrid subscription list` | The ARM enumeration is the answer. | `Control` |
-| `eventgrid events publish` | The publish is the answer; the ARM lookup is addressing. | `Data` |
+| `eventgrid events publish` | The publish is the answer; the ARM lookup is setup. | `Data` |
 
 #### When `Both` applies
 
-`Both` is reserved for a command that performs two distinct operations the user asked for, on different planes. Creating a topic and publishing a seed event to it in a single call would qualify: the user wants the topic *and* the event, and neither call is addressing for the other.
+`Both` is reserved for a tool that performs two distinct actions the user asked for, on different planes. Creating a topic and publishing a seed event to it in a single call would qualify: the user wants the topic *and* the event, and neither call is setup for the other.
 
-`Both` is expected to be rare. A command that merely reaches ARM on its way to a data-plane call is `Data`, not `Both`.
+`Both` is expected to be rare. A tool that merely reaches ARM on its way to a data-plane call is `Data`, not `Both`.
 
 ### Default
 
 `OperationPlane` defaults to `Unspecified`, which is an unset marker rather than a shipping state.
 
-Defaulting to `Data` would silently misclassify the many ARM-based commands. Making the default an unset marker instead means a command that is never classified fails loudly rather than publishing a wrong answer.
+Defaulting to `Data` would silently misclassify the many ARM-based tools. Making the default an unset marker instead means a tool that is never classified fails loudly rather than publishing a wrong answer.
 
-`CommandOperationPlaneTests.AllCommands_DeclareAnOperationPlane` enforces this: it walks every registered command and fails on any that is still `Unspecified`. There is no allowlist, so a new command must be classified before it can ship. A command that calls no Azure service is `NotApplicable`, which is an explicit classification and satisfies the test.
+`CommandOperationPlaneTests.AllCommands_DeclareAnOperationPlane` enforces this: it walks every registered tool and fails on any that is still `Unspecified`. There is no allowlist, so a new tool must be classified before it can ship. A tool that calls no service is `NotApplicable`, which is an explicit classification and satisfies the test.
 
 ## JSON representation
 
@@ -112,13 +110,13 @@ Metadata without `operationPlane` also deserializes as `Unspecified`.
 
 ## Scope
 
-This change adds the annotation and surfaces it per command in the CLI output JSON, which is what documentation generation consumes.
+This change adds the annotation and surfaces it per tool in the CLI output JSON, which is what documentation generation consumes.
 
 It deliberately does not add the plane to MCP tool definitions. Operation plane is not a standard MCP `ToolAnnotations` hint, and no MCP client consumes it today. If a runtime consumer appears, the value can be published later under a namespaced `_meta` key such as `azure.com/operation-plane`, which keeps clients from interpreting it as part of the MCP specification.
 
 ## Aggregating a tool family
 
-Tool families are not aggregated at runtime. A documentation generator holding the per-command values applies these rules itself:
+Tool families are not aggregated at runtime. A documentation generator holding the per-tool values applies these rules itself:
 
 | Child classifications | Aggregate |
 |---|---|
@@ -138,8 +136,8 @@ Keeping aggregation in the consumer avoids duplicating the rule across the names
 Delivered in this change:
 
 1. The enum, the attribute property, and the CLI JSON serialization.
-2. A classification for every command in the repository, applying the deliverable rule.
-3. A test rejecting `Unspecified`, so a new command cannot be added without a classification.
+2. A classification for every tool in the repository.
+3. A test rejecting `Unspecified`, so a new tool cannot be added without a classification.
 
 Left to a consumer:
 
@@ -149,7 +147,7 @@ Classifying everything in one pass, rather than incrementally, keeps `Unspecifie
 
 ## Compatibility
 
-- Command syntax and option binding do not change.
+- Tool syntax and option binding do not change.
 - The CLI JSON change is additive.
 - Consumers that ignore unknown JSON properties continue to work.
 - Older serialized metadata remains readable, and unknown future values degrade to `Unspecified`.
