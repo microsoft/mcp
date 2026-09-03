@@ -19,9 +19,6 @@ updates:
       - "/servers/Fabric.Mcp.Server/vscode"
       - "/servers/Template.Mcp.Server/vscode"
       - "/eng/vsix-tools"
-      - "/eng/common/tsp-client"
-      - "/eng/common/spelling"
-      - "/eng/common/scripts/eval"
     schedule:
       interval: "weekly"
     # Configure security updates without enabling routine npm version updates
