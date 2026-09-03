@@ -145,9 +145,14 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     /// <param name="response">The command response containing the optional telemetry message.</param>
     private static void CaptureTelemetryFailureMessage(CommandContext context, CommandResponse response)
     {
-        var isError = response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous;
-        if (isError && !string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
+        if (!string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
         {
+            // If failure telemetry is present, ensure activity captures it and detect inconsistent success status (#3504)
+            var isSuccess = response.Status >= HttpStatusCode.OK && response.Status < HttpStatusCode.Ambiguous;
+            if (isSuccess)
+            {
+                response.Status = HttpStatusCode.InternalServerError;
+            }
             context.Activity?.SetTag(TagName.ToolFailureMessage, response.TelemetryFailureMessage);
         }
     }
