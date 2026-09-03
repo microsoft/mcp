@@ -342,6 +342,20 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--tracking-ids <tracking-id1> <tracking-id2> ...] \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
 
+# Perform a read-only Compute Zone Down Chaos readiness review for one Advisor-recommended VMSS.
+# Verifies an exact active Advisor recommendation using its type ID and VMSS ARM resource ID. Optional workspace, scenario,
+# and configuration ARM IDs must come from a previous review result and resolve ambiguous candidates.
+# Returns eligibility, missing setup or permissions, compatible candidates, validation state, and run history.
+# This command never creates or modifies Chaos resources, permissions, validations, runs, or Advisor approval plans.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation chaos-review --subscription <subscription> \
+                                          --recommendation-type-id <recommendation-type-id> \
+                                          --resource <vmss-resource-id> \
+                                          [--workspace <workspace-resource-id>] \
+                                          [--scenario <scenario-resource-id>] \
+                                          [--configuration <configuration-resource-id>] \
+                                          [--tenant <tenant>]
+
 # Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
 # --group-by is optional and defaults to 'category' when omitted
 # Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded

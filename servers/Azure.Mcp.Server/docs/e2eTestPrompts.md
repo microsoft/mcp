@@ -30,6 +30,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_list | Show Advisor service retirements on or after March 31, 2026 | none |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template | context-required |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account | context-required |
+| advisor_recommendation_chaos-review | Review Compute Zone Down Chaos readiness for Advisor recommendation type <recommendation-type-id> affecting VMSS <resource-id> in subscription <subscription> | none |
+| advisor_recommendation_chaos-review | Check whether Advisor-recommended VMSS <resource-id> is ready for a Chaos Studio zone-down experiment using recommendation type <recommendation-type-id> in subscription <subscription> | none |
+| advisor_recommendation_chaos-review | Show missing Chaos workspace, scenario, configuration, validation, permission, or active-run blockers for Advisor recommendation type <recommendation-type-id> on VMSS <resource-id> in subscription <subscription> | none |
+| advisor_recommendation_chaos-review | Continue the Advisor Chaos readiness review for VMSS <resource-id> using workspace <workspace-resource-id>, scenario <scenario-resource-id>, and configuration <configuration-resource-id> in subscription <subscription> with recommendation type <recommendation-type-id> | none |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription <subscription> | none |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription <subscription> | none |
