@@ -75,6 +75,12 @@ public interface IResilienceManagementService
 
     Task<DrillInfo> GetDrillAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default);
 
+    Task<DrillResyncReadinessResult> CheckDrillResyncReadinessAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<DrillValidateForExecutionResult> ValidateDrillForExecutionAsync(string serviceGroup, string drill, IEnumerable<string> sourceLocations, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<DrillAddOrUpdateResourcesResult> AddOrUpdateDrillResourcesAsync(string serviceGroup, string drill, AddOrUpdateResourcesContent content, string? tenant = null, CancellationToken cancellationToken = default);
+
     Task<string> StartDrillAsync(string serviceGroup, string drill, string mode, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<string> EndDrillAsync(string serviceGroup, string drill, string attestation, string attestationNotes, string? tenant = null, CancellationToken cancellationToken = default);
@@ -90,6 +96,8 @@ public interface IResilienceManagementService
     Task<DrillResourceInfo> GetDrillResourceAsync(string serviceGroup, string drill, string drillResource, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ResourceSummary>> ListDrillRunsAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<DrillRunMarkCompleteResult> MarkDrillRunCompleteAsync(string serviceGroup, string drill, string drillRun, string stage, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<JsonElement> GetDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default);
 

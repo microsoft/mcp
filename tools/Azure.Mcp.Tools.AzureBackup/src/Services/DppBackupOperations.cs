@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -423,9 +423,52 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var collection = vaultResource.GetDataProtectionBackupInstances();
 
         var items = new List<ProtectedItemInfo>();
-        await foreach (var instance in collection.GetAllAsync(cancellationToken))
+
+        // BUG-B fix: DPP backup instances sometimes deserialize to an "unknown" polymorphic
+        // subtype whose base-properties converter throws (ArgumentNullException /
+        // ArgumentException / FormatException / InvalidOperationException) inside
+        // MoveNextAsync. Previously the whole listing failed with an MCP-classified
+        // exception. Now we skip past the bad item and continue - matching the pattern
+        // already used by ListPoliciesAsync above - so a single unsupported instance
+        // does not blank out the entire list. Cap consecutive failures so a page-level
+        // deserialization loop can not spin forever.
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
         {
-            items.Add(MapToProtectedItemInfo(instance.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    items.Add(MapToProtectedItemInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (
+                    ex is FormatException
+                    or ArgumentNullException
+                    or ArgumentException
+                    or InvalidOperationException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         return items;
@@ -536,18 +579,49 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
-        // List soft-deleted backup instances and find the one matching the datasource ID
+        // List soft-deleted backup instances and find the one matching the datasource ID.
+        // Wrap the enumerator so a single soft-deleted item with an unknown polymorphic
+        // discriminator (introduced by a newer service version) does not blank out the
+        // whole search. Matches the resilient-enumerator pattern used by
+        // ListPoliciesAsync and ListProtectedItemsAsync.
         var deletedCollection = vaultResource.GetDeletedDataProtectionBackupInstances();
 
         DeletedDataProtectionBackupInstanceResource? matchedInstance = null;
-        await foreach (var deletedInstance in deletedCollection.GetAllAsync(cancellationToken))
+        var enumerator = deletedCollection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
         {
-            var deletedDatasourceId = deletedInstance.Data?.Properties?.DataSourceInfo?.ResourceId?.ToString();
-            if (string.Equals(deletedDatasourceId, datasourceId, StringComparison.OrdinalIgnoreCase))
+            while (true)
             {
-                matchedInstance = deletedInstance;
-                break;
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    var deletedInstance = enumerator.Current;
+                    var deletedDatasourceId = deletedInstance.Data?.Properties?.DataSourceInfo?.ResourceId?.ToString();
+                    if (string.Equals(deletedDatasourceId, datasourceId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchedInstance = deletedInstance;
+                        break;
+                    }
+                    consecutiveFailures = 0;
+                }
+                catch (Exception ex) when (ex is FormatException or ArgumentException or ArgumentNullException or InvalidOperationException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
             }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         if (matchedInstance is null)
@@ -694,9 +768,39 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var collection = instanceResource.GetDataProtectionBackupRecoveryPoints();
 
         var points = new List<RecoveryPointInfo>();
-        await foreach (var rp in collection.GetAllAsync(cancellationToken: cancellationToken))
+        // The DPP recovery-point deserializer may throw on unknown polymorphic
+        // discriminators introduced by newer service versions. Skip the offending
+        // item instead of blanking out the entire recovery-point list. Matches the
+        // pattern used by ListPoliciesAsync and ListProtectedItemsAsync.
+        var enumerator = collection.GetAllAsync(cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
         {
-            points.Add(MapToRecoveryPointInfo(rp.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    points.Add(MapToRecoveryPointInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (Exception ex) when (ex is FormatException or ArgumentException or ArgumentNullException or InvalidOperationException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
         return points;
@@ -843,19 +947,30 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         // CloudInternalError on the DPP backend, which is indistinguishable from a real
         // platform failure - so we avoid the call entirely when CRR is already enabled.
         var vault = await vaultResource.GetAsync(cancellationToken);
-        if (vault.Value.Data.Properties?.FeatureSettings?.CrossRegionRestoreState == CrossRegionRestoreState.Enabled)
+        var existingFeatureSettings = vault.Value.Data.Properties?.FeatureSettings;
+        if (existingFeatureSettings?.CrossRegionRestoreState == CrossRegionRestoreState.Enabled)
         {
             return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
+
+        // Preserve any sibling feature-setting fields (e.g. CrossSubscriptionRestoreState) that
+        // the newer DPP api-version requires to be present on the PATCH payload. Sending a bare
+        // FeatureSettings PATCH with only CrossRegionRestoreState populated is rejected as an
+        // incomplete PATCH after the Azure.ResourceManager.DataProtectionBackup upgrade.
+        var featureSettings = new BackupVaultFeatureSettings
+        {
+            CrossRegionRestoreState = CrossRegionRestoreState.Enabled
+        };
+        if (existingFeatureSettings?.CrossSubscriptionRestoreState is { } crossSubState)
+        {
+            featureSettings.CrossSubscriptionRestoreState = crossSubState;
         }
 
         var patchData = new DataProtectionBackupVaultPatch
         {
             Properties = new DataProtectionBackupVaultPatchProperties
             {
-                FeatureSettings = new BackupVaultFeatureSettings
-                {
-                    CrossRegionRestoreState = CrossRegionRestoreState.Enabled
-                }
+                FeatureSettings = featureSettings
             }
         };
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
@@ -878,13 +993,15 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, CancellationToken cancellationToken)
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(immutabilityState), immutabilityState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -894,10 +1011,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         {
             Properties = new DataProtectionBackupVaultPatchProperties
             {
-                SecuritySettings = new BackupVaultSecuritySettings
-                {
-                    ImmutabilityState = new BackupVaultImmutabilityState(immutabilityState)
-                }
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
             }
         };
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
@@ -906,45 +1020,90 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
     }
 
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for an immutability update.
+    /// Extracted for regression testing. DPP has no ImmutabilityConfiguration
+    /// (Type / DurationInDays); those parameters are RSV-only and are intentionally
+    /// ignored here. Only the top-level <c>ImmutabilityState</c> is populated because
+    /// the DPP api-version does not expose a nested <c>ImmutabilitySettings.State</c>
+    /// on the security-settings surface.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        _ = immutabilityType;
+        _ = immutabilityDurationDays;
+
+        var dppState = immutabilityState switch
+        {
+            AzureBackupImmutabilityState.Disabled => BackupVaultImmutabilityState.Disabled,
+            AzureBackupImmutabilityState.Unlocked => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Enabled => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Locked => BackupVaultImmutabilityState.Locked,
+            _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            ImmutabilityState = dppState,
+        };
+    }
+
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? softDeleteRetentionDays,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(softDeleteState), softDeleteState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
-        var softDeleteSettings = new BackupVaultSoftDeleteSettings
-        {
-            State = new BackupVaultSoftDeleteState(softDeleteState)
-        };
-
-        if (double.TryParse(softDeleteRetentionDays, out var retentionDays))
-        {
-            softDeleteSettings.RetentionDurationInDays = retentionDays;
-        }
-
         var patchData = new DataProtectionBackupVaultPatch
         {
             Properties = new DataProtectionBackupVaultPatchProperties
             {
-                SecuritySettings = new BackupVaultSecuritySettings
-                {
-                    SoftDeleteSettings = softDeleteSettings
-                }
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
             }
         };
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing. Retention is always sent — RP rejects
+    /// state-only patches on newer api-versions.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var dppState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => BackupVaultSoftDeleteState.On,
+            AzureBackupSoftDeleteState.Off => BackupVaultSoftDeleteState.Off,
+            AzureBackupSoftDeleteState.AlwaysOn => BackupVaultSoftDeleteState.AlwaysOn,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            SoftDeleteSettings = new BackupVaultSoftDeleteSettings
+            {
+                State = dppState,
+                RetentionDurationInDays = softDeleteRetentionDays,
+            },
+        };
     }
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(

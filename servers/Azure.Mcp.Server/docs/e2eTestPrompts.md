@@ -183,10 +183,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | investigation-required |
 | azurebackup_governance_find-unprotected | Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup | investigation-required |
-| azurebackup_governance_immutability | Configure immutability state on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_immutability | Set immutability to Enabled on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_soft-delete | Configure soft delete on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn for vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Configure immutability state Unlocked with type AsPerPolicy on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Set immutability to Unlocked with policy-based type on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_immutability | Enable time-based immutability on vault <vault_name> with 90 days retention in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Turn on soft delete with 14 day retention on Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Enable soft delete with 30 days retention for vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn with 14 days retention for vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -197,6 +199,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | investigation-required |
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Add a weekly retention of 4 weeks on Sundays to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Add a monthly retention of 12 months on the 1st of every month to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -205,6 +210,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
+| azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected | investigation-required |
+| azurebackup_protecteditem_update-protection | Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name> | investigation-required |
+| azurebackup_protecteditem_update-protection | Update the selective disk configuration on VM <item_name> in vault <vault_name> under resource group <resource_group> to exclude LUNs 0,2 | investigation-required |
+| azurebackup_protecteditem_update-protection | Reset the disk exclusion settings for the protected VM <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_undelete | Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
@@ -876,6 +886,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented | investigation-required |
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id> | none |
+| monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
+| monitor_metrics_batchquery | Compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period> | none |
+| monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
@@ -962,10 +975,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_resource_get | Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_check-resync-readiness | Check whether resilience drill <drill_name> in service group <service_group> is ready to resync | none |
+| resilience_drill_check-resync-readiness | Run a resync readiness check for resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location> | none |
+| resilience_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations> | none |
+| resilience_drill_resource_add-or-update | Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes | none |
+| resilience_drill_resource_add-or-update | Update or exclude the resources of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_start | Start resilience drill <drill_name> in service group <service_group> in Failover mode | none |
 | resilience_drill_start | Run resilience drill <drill_name> in service group <service_group> as a TestFailover | none |
 | resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
+| resilience_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
 | resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
