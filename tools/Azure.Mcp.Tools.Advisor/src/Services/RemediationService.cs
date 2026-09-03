@@ -14,9 +14,9 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public sealed class RemediationService(IAzureService azureService)
     : BaseAzureService(azureService), IRemediationService
 {
-    // NOTE: The Microsoft.Advisor/remediationTypes ARM API is a proposed contract and not yet live.
-    // Confirm the final api-version with the Advisor / ARM API Modeling team before shipping.
-    private const string ApiVersion = "2025-01-01-preview";
+    // Advisor Remediation ARM API: GET /providers/Microsoft.Advisor/remediations/{recommendationTypeId}.
+    // Provider-level GET requiring an ARM bearer token + api-version (no RBAC role assignment).
+    private const string ApiVersion = "2026-08-12-preview";
 
     public async Task<RemediationPackage> GetRemediationAsync(
         string recommendationTypeId,
@@ -61,6 +61,6 @@ public sealed class RemediationService(IAzureService azureService)
     internal static string BuildRemediationUrl(string managementEndpoint, string recommendationTypeId)
     {
         var queryString = $"api-version={ApiVersion}";
-        return $"{managementEndpoint}/providers/Microsoft.Advisor/remediationTypes/{Uri.EscapeDataString(recommendationTypeId)}?{queryString}";
+        return $"{managementEndpoint}/providers/Microsoft.Advisor/remediations/{Uri.EscapeDataString(recommendationTypeId)}?{queryString}";
     }
 }

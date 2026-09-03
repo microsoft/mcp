@@ -15,10 +15,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Remediation;
     Name = "get",
     Title = "Get Advisor Recommendation Remediation",
     Description = "Get the Azure Advisor remediation package for a specific recommendation type id. " +
-        "Returns remediation metadata, safety flags (destructive, reversible, grounded, confidence), " +
-        "human-readable methods with parameters, ordered steps, and verification, and ready-to-run inline " +
-        "artifacts (Azure CLI, PowerShell, Bicep, and ARM template). " +
-        "Use when an agent needs the step-by-step guidance or an executable script to fix a recommendation.",
+        "Depending on the recommendation, the package returns one of three output types: remediation guidance " +
+        "(manual, human-readable steps), a hybrid of manual steps plus executable artifacts, or executable " +
+        "artifacts (Azure CLI, PowerShell, Bicep, and ARM template). Also includes remediation metadata, " +
+        "safety flags (destructive, reversible, grounded, confidence), methods with parameters, ordered steps, " +
+        "and verification. Use when an agent needs step-by-step guidance and/or an executable script to fix a recommendation.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -69,7 +70,7 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.NotFound =>
-            "No remediation was found for the specified recommendation type. Verify the recommendation type id.",
+            "No remediation was found for the specified recommendation type id. Verify the recommendation type id.",
         _ => base.GetErrorMessage(ex)
     };
 

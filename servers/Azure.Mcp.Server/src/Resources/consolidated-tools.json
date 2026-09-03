@@ -994,7 +994,7 @@
     },
     {
       "name": "get_azure_advisor_remediation",
-      "description": "Get an executable remediation package for a specific Azure Advisor recommendation. Returns the ordered remediation steps plus ready-to-run artifacts (CLI, PowerShell, Bicep, ARM) that fix the flagged resource. Supports filtering the returned artifacts by type.",
+      "description": "Get the Azure Advisor remediation package for a specific recommendation type id. Depending on the recommendation, the package returns one of three output types: remediation guidance (manual, human-readable steps), a hybrid of manual steps plus executable artifacts, or executable artifacts (Azure CLI, PowerShell, Bicep, and ARM template). Also includes remediation metadata, safety flags, methods with parameters, ordered steps, and verification.",
       "toolMetadata": {
         "destructive": {
           "value": false,

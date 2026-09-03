@@ -376,9 +376,11 @@ azmcp advisor metadata list [--language <language>] \
 azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
                            [--language <language>]
 
-# Get an executable remediation package for a specific Advisor recommendation. Returns the ordered
-# remediation steps plus ready-to-run artifacts (CLI, PowerShell, Bicep, ARM) that fix the flagged
-# resource.
+# Get the Azure Advisor remediation package for a specific recommendation type id. Depending on the
+# recommendation, the package returns one of three output types: remediation guidance (manual, human-
+# readable steps), a hybrid of manual steps plus executable artifacts, or executable artifacts (Azure
+# CLI, PowerShell, Bicep, ARM template). Also includes remediation metadata, safety flags, methods with
+# parameters, ordered steps, and verification.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
 ```

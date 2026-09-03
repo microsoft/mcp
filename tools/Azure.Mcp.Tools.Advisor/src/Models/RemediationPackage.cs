@@ -6,8 +6,8 @@ using System.Text.Json.Serialization;
 namespace Azure.Mcp.Tools.Advisor.Models;
 
 /// <summary>
-/// ARM resource envelope returned by the proposed
-/// <c>GET /providers/Microsoft.Advisor/remediationTypes/{recommendationTypeId}</c> operation.
+/// ARM resource envelope returned by the
+/// <c>GET /providers/Microsoft.Advisor/remediations/{recommendationTypeId}</c> operation.
 /// </summary>
 public sealed record RemediationPackage
 {

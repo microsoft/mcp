@@ -9,7 +9,7 @@ public interface IRemediationService
 {
     /// <summary>
     /// Retrieves the remediation package for a recommendation type from the
-    /// Microsoft.Advisor/remediationTypes ARM API.
+    /// Microsoft.Advisor/remediations ARM API.
     /// </summary>
     /// <param name="recommendationTypeId">The recommendation type id (GUID) used in the ARM resource path.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>

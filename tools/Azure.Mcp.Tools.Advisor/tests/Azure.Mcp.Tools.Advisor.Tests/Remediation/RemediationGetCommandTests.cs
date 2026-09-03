@@ -15,16 +15,16 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Remediation;
 
 public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCommand, IRemediationService>
 {
-    private const string RecommendationId = "18745007-438b-4c68-bfa3-b6576d85a831";
+    private const string RecommendationTypeId = "18745007-438b-4c68-bfa3-b6576d85a831";
 
     private static RemediationPackage CreateSamplePackage() => new()
     {
-        Id = $"/providers/Microsoft.Advisor/remediationTypes/{RecommendationId}",
-        Name = RecommendationId,
-        Type = "Microsoft.Advisor/remediationTypes",
+        Id = $"/providers/Microsoft.Advisor/remediations/{RecommendationTypeId}",
+        Name = RecommendationTypeId,
+        Type = "Microsoft.Advisor/remediations",
         Properties = new RemediationProperties
         {
-            RecommendationTypeId = RecommendationId,
+            RecommendationTypeId = RecommendationTypeId,
             OutputType = "executable",
             Destructive = false,
             Reversible = true,
@@ -101,13 +101,13 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
             Arg.Any<CancellationToken>())
             .Returns(CreateSamplePackage());
 
-        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RemediationGetResult);
 
         Assert.NotNull(result.Remediation);
-        Assert.Equal(RecommendationId, result.Remediation.Name);
-        Assert.Equal("Microsoft.Advisor/remediationTypes", result.Remediation.Type);
+        Assert.Equal(RecommendationTypeId, result.Remediation.Name);
+        Assert.Equal("Microsoft.Advisor/remediations", result.Remediation.Type);
         Assert.NotNull(result.Remediation.Properties);
         Assert.Equal("executable", result.Remediation.Properties!.OutputType);
         Assert.NotNull(result.Remediation.Properties.Destructive);
@@ -130,10 +130,10 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
             Arg.Any<CancellationToken>())
             .Returns(CreateSamplePackage());
 
-        await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
+        await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         await Service.Received(1).GetRemediationAsync(
-            RecommendationId,
+            RecommendationTypeId,
             Arg.Any<CancellationToken>());
     }
 
@@ -173,7 +173,7 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Not found", null, HttpStatusCode.NotFound));
 
-        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("No remediation was found", response.Message);
@@ -187,7 +187,7 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Unauthorized", null, HttpStatusCode.Unauthorized));
 
-        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
         Assert.Contains("Service unavailable or network connectivity issues", response.Message);
@@ -201,7 +201,7 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationId);
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
