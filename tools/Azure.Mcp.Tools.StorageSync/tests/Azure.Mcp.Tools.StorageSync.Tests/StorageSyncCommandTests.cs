@@ -61,6 +61,15 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         })
     ];
 
+    // This response header contains the recording tenant and caller object IDs.
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => [
+        .. base.HeaderRegexSanitizers,
+        new(new("x-ms-operation-identifier")
+        {
+            Value = "sanitized"
+        })
+    ];
+
     [Fact]
     public async Task Should_get_storage_sync_service()
     {
