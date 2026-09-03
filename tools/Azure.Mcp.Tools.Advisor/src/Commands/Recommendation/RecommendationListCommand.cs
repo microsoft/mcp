@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
         "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
         "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
+        "Each result uses the standard ARM resource shape; its name is the stable recommendation ID accepted by tools that operate on a recommendation. " +
         "--top caps the number of returned items (default 50, max 100).",
     Destructive = false,
     Idempotent = true,

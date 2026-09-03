@@ -24,6 +24,15 @@ public interface IAdvisorService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
+    Task<Recommendation> UpdateRecommendationAsync(
+        string subscription,
+        string recommendationId,
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime = null,
+        RecommendationDismissReason? recommendationDismissReason = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
     Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
         string language,
         RecommendationMetadataFilters? filters,

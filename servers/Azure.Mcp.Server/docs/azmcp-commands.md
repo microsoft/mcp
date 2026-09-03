@@ -328,6 +328,7 @@ azmcp server info
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
+# Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
                                   [--top <top>] \
@@ -341,6 +342,20 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--sub-category <sub-category>] \
                                   [--tracking-ids <tracking-id1> <tracking-id2> ...] \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
+
+# Update the customer-provided state of an Advisor recommendation. Subscription context can come from --subscription,
+# which accepts an Azure subscription ID or name, or from the configured default subscription. --recommendation-id
+# is the stable ID, also called recommendation ID. Set the state to New, Postponed,
+# Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed,
+# an omitted reason or natural-language intent that cannot be mapped to a supported reason defaults to Other. New reactivates
+# a postponed or dismissed recommendation. Security and platform-resolved recommendations cannot
+# be updated. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation update --subscription <subscription> \
+                                    --recommendation-id <recommendation-id> \
+                                    --recommendation-status <New|Postponed|Dismissed|Completed> \
+                                    [--postponed-until-date-time <date-time-with-offset>] \
+                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
 
 # Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
 # --group-by is optional and defaults to 'category' when omitted
