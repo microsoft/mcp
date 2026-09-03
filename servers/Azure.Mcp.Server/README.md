@@ -1278,6 +1278,9 @@ Example prompts that generate Azure CLI commands:
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "List all resilience drills in service group 'my-service-group'"
+* "List all resources targeted by drill 'my-drill' in service group 'my-service-group'"
+* "Get drill resource 'my-resource' for drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
@@ -1350,7 +1353,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, and drills
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, drills, and drill resources
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
