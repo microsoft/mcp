@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the 'azmcp resilience drill run mark-complete' command to mark a drill run stage complete and disable further retries on it."

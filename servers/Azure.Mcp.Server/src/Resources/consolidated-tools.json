@@ -47,14 +47,14 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, delete, or validate Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recovery plans for Azure service groups.",
+      "description": "Create, update, delete, or validate Azure Resilience Management resources, including usage plans, usage plan enrollments, recovery plans, and drills for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
           "description": "This tool may delete or modify existing resources in its environment."
         },
         "idempotent": {
-          "value": true,
+          "value": false,
           "description": "This tool includes operations that may produce additional effects when run multiple times with the same arguments."
         },
         "openWorld": {
@@ -82,8 +82,172 @@
         "resilience_recoveryplan_create",
         "resilience_recoveryplan_delete",
         "resilience_recoveryplan_resource_update",
-        "resilience_drill_resource_add-or-update",
+        "resilience_drill_resource_add-or-update"
+      ]
+    },
+    {
+      "name": "mark_azure_resilience_drill_run_stage_complete",
+      "description": "Mark a stage of an Azure Resilience Management drill run as complete so the drill run can proceed without further retries for that stage.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool changes drill run execution by disabling further retries for the specified stage."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "This operation is intended for a stage that has not already been marked complete."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run stage."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies the execution state of the specified drill run stage."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
         "resilience_drill_run_mark-complete"
+      ]
+    },
+    {
+      "name": "add_notes_to_azure_resilience_drill_run",
+      "description": "Add notes to a run of an Azure Resilience Management drill in an Azure service group.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool appends notes without deleting the drill run or its resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation appends a new note to the drill run."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies the drill run by appending notes."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_add-notes"
+      ]
+    },
+    {
+      "name": "failover_azure_resilience_drill_run",
+      "description": "Start failover for an Azure Resilience Management drill run from one or more physical Azure zones, optionally limiting the operation to selected resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool initiates failover operations that can change the availability and location of selected resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new asynchronous failover operation for the drill run."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run and resources."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a failover operation and can modify resource state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_failover"
+      ]
+    },
+    {
+      "name": "resume_azure_resilience_drill_run",
+      "description": "Resume an Azure Resilience Management failover drill run paused after fault injection so it can proceed to the failover stage.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool advances a paused drill workflow into failover, which can change resource availability and location."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "The operation is valid only while the drill run is paused and starts a new asynchronous resume operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool changes the drill run workflow state and starts the failover stage."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_resume"
+      ]
+    },
+    {
+      "name": "reprotect_azure_resilience_drill_run",
+      "description": "Initiate reprotection for failed-over resources in an Azure Resilience Management drill run.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool changes protection and replication state for resources participating in the drill run."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each valid invocation starts a new asynchronous reprotection operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts reprotection and modifies resource protection state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_reprotect"
       ]
     },
     {
