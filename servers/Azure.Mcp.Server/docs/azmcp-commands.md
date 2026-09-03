@@ -4073,17 +4073,45 @@ azmcp resilience drill update --service-group <service-group> \
 azmcp resilience drill delete --service-group <service-group> \
                               --drill <drill>
 
+# Start a resync and readiness check to confirm a resilience drill is ready to run
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill check-resync-readiness --service-group <service-group> \
+                                              --drill <drill>
+
+# Validate whether a resilience drill is eligible for execution from the specified source locations
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill validate-for-execution --service-group <service-group> \
+                                              --drill <drill> \
+                                              --source-locations <source-locations>
+
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill resource get --service-group <service-group> \
                                     --drill <drill> \
                                     [--name <name>]
 
+# Add, update, or exclude the resources (targets) of a drill
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill resource add-or-update --service-group <service-group> \
+                                              --drill <drill> \
+                                              --fault-duration-minutes <fault-duration-minutes> \
+                                              [--include-resources <include-resources>] \
+                                              [--update-resources <update-resources>] \
+                                              [--exclude-resources <exclude-resources>] \
+                                              [--force-inclusion-and-update <force-inclusion-and-update>]
+
 # Get a run of a drill, or list all runs of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill run get --service-group <service-group> \
                                --drill <drill> \
                                [--name <name>]
+
+# Mark a drill run stage complete, disabling further retries on that stage
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run mark-complete --service-group <service-group> \
+                                         --drill <drill> \
+                                         --drill-run <drill-run> \
+                                         --stage <stage>
 
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
