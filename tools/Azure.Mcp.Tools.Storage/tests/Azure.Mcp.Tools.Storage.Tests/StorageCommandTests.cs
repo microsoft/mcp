@@ -123,6 +123,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact()]
     public async Task Should_get_storage_account_details_with_tenant_name()
     {
+        await ResolvePrincipalSettingsAsync();
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
         var result = await CallToolAsync(
@@ -177,6 +178,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact()]
     public async Task Should_list_storage_accounts_by_subscription_name_with_tenant_name()
     {
+        await ResolvePrincipalSettingsAsync();
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
         var result = await CallToolAsync(
@@ -446,6 +448,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_list_storage_tables_with_tenant_name()
     {
+        await ResolvePrincipalSettingsAsync();
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
         var result = await CallToolAsync(

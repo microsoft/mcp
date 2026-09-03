@@ -112,6 +112,7 @@ public sealed class SignalRCommandTests(ITestOutputHelper output, TestProxyFixtu
     [Fact]
     public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_name()
     {
+        await ResolvePrincipalSettingsAsync();
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
         var result = await CallToolAsync(
@@ -126,6 +127,7 @@ public sealed class SignalRCommandTests(ITestOutputHelper output, TestProxyFixtu
     [Fact]
     public async Task Should_get_signalr_runtimes_by_subscription_with_resource_group()
     {
+        await ResolvePrincipalSettingsAsync();
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
         var result = await CallToolAsync(

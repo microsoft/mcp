@@ -76,6 +76,7 @@ public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
     [Fact]
     public async Task Should_list_redis_caches_by_subscription_id_with_tenant_name()
     {
+        await ResolvePrincipalSettingsAsync();
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
         var result = await CallToolAsync(

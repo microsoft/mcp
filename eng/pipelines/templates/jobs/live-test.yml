@@ -73,6 +73,7 @@ jobs:
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
           -Path $(PathToTest) `
+          -NoBuild `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
         exit $LastExitCode
@@ -104,6 +105,7 @@ jobs:
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
           -Path $(PathToTest) `
+          -NoBuild `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
         exit $LastExitCode

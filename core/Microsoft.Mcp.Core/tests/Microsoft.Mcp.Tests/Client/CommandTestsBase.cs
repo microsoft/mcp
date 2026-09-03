@@ -18,6 +18,8 @@ namespace Microsoft.Mcp.Tests.Client;
 public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture)
     : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
+    private LiveTestSettingsFixture? _settingsFixture;
+
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
     protected McpClient Client { get; private set; } = default!;
@@ -74,18 +76,34 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         TestMode = Settings.TestMode;
     }
 
-    private static async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
+    private async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
     {
         try
         {
             var settingsFixture = new LiveTestSettingsFixture();
             await settingsFixture.InitializeAsync().ConfigureAwait(false);
+            _settingsFixture = settingsFixture;
             return settingsFixture.Settings;
         }
         catch (FileNotFoundException)
         {
             return null;
         }
+    }
+
+    protected async Task ResolvePrincipalSettingsAsync()
+    {
+        if (TestMode == TestMode.Playback)
+        {
+            return;
+        }
+
+        if (_settingsFixture == null)
+        {
+            throw new InvalidOperationException("Live test settings must be initialized before resolving principal settings.");
+        }
+
+        await _settingsFixture.ResolvePrincipalSettingsAsync(TestContext.Current.CancellationToken).ConfigureAwait(false);
     }
 
     private Dictionary<string, string?> GetEnvironmentVariables(TestProxyFixture? proxy)

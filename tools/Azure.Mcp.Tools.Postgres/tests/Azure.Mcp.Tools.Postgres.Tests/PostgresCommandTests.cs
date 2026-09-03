@@ -43,6 +43,7 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
             }
 
             Output.WriteLine("Initializing test data...");
+            await ResolvePrincipalSettingsAsync();
             await CreateTestDataAsync();
             _testDataInitialized = true;
             Output.WriteLine("Test data initialized successfully");
