@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 using Azure.Mcp.Tools.Adme.Services;
@@ -86,7 +87,7 @@ public sealed class SchemaServiceTests
     }
 
     [Fact]
-    public async Task ListSchemasAsync_OmitsOptionalFiltersWhenUnset()
+    public async Task ListSchemasAsync_OmitsOptionalParametersWhenUnset()
     {
         var handler = JsonHandler(HttpStatusCode.OK, """{"schemaInfos":[],"offset":0,"count":0,"totalCount":0}""");
         var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
@@ -104,15 +105,13 @@ public sealed class SchemaServiceTests
             null,
             null,
             false,
-            0,
-            100,
+            null,
+            null,
             TestContext.Current.CancellationToken);
 
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
-        Assert.Equal(3, query.Count);
+        Assert.Single(query);
         Assert.Equal(TestConstants.WellEntityType, query["entityType"]);
-        Assert.Equal("0", query["offset"]);
-        Assert.Equal("100", query["limit"]);
     }
 
     [Theory]
@@ -141,14 +140,14 @@ public sealed class SchemaServiceTests
         var handler = JsonHandler(HttpStatusCode.NotFound, "sensitive backend details");
         var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => service.GetSchemaAsync(
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.GetSchemaAsync(
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             "osdu:wks:missing:1.0.0",
             null,
             TestContext.Current.CancellationToken));
 
-        Assert.Equal(HttpStatusCode.NotFound, exception.StatusCode);
+        Assert.Equal((int)HttpStatusCode.NotFound, exception.Status);
         Assert.DoesNotContain("sensitive backend details", exception.Message);
     }
 

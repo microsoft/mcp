@@ -36,6 +36,8 @@ public sealed class SchemaRecordedTests(
         var arguments = CreateArguments();
         arguments["entity-type"] = TestConstants.WellEntityType;
         arguments["source"] = TestConstants.WellSource;
+        arguments["offset"] = 0;
+        arguments["limit"] = 100;
 
         var result = await CallToolResultsAsync(SchemaListTool, arguments);
         var infos = result.GetProperty("schemaInfos");
@@ -59,6 +61,8 @@ public sealed class SchemaRecordedTests(
         allArguments["authority"] = TestConstants.WellAuthority;
         allArguments["entity-type"] = TestConstants.WellEntityType;
         allArguments["source"] = TestConstants.WellSource;
+        allArguments["offset"] = 0;
+        allArguments["limit"] = 100;
         var latestArguments = new Dictionary<string, object?>(allArguments)
         {
             ["latest-version"] = true,
@@ -79,6 +83,7 @@ public sealed class SchemaRecordedTests(
     {
         var arguments = CreateArguments();
         arguments["source"] = TestConstants.WellSource;
+        arguments["offset"] = 0;
         arguments["limit"] = 5;
 
         var result = await CallToolResultsAsync(SchemaListTool, arguments);
@@ -96,6 +101,7 @@ public sealed class SchemaRecordedTests(
         arguments["entity-type"] = TestConstants.WellEntityType;
         arguments["schema-version-major"] = 1;
         arguments["schema-version-minor"] = 0;
+        arguments["offset"] = 0;
         arguments["limit"] = 3;
 
         var result = await CallToolResultsAsync(SchemaListTool, arguments);
@@ -116,6 +122,7 @@ public sealed class SchemaRecordedTests(
     {
         var allArguments = CreateArguments();
         allArguments["source"] = TestConstants.WellSource;
+        allArguments["offset"] = 0;
         allArguments["limit"] = 100;
         var publishedArguments = new Dictionary<string, object?>(allArguments)
         {

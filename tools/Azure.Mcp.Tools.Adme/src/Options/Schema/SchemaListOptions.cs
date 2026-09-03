@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Adme.Models.Schema;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Adme.Models.Schema;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Adme.Options.Schema;
@@ -39,10 +39,10 @@ public sealed class SchemaListOptions
     [Option(Description = "Return only the newest version of each schema entity, collapsing duplicates across scopes. When filtering by version, supply components in order: major, then minor, then patch.")]
     public bool LatestVersion { get; set; }
 
-    [Option(Description = "The starting offset for paging. Defaults to 0; compare with the response's totalCount to decide whether to fetch further pages.")]
-    public int Offset { get; set; }
+    [Option(Description = "The starting offset for paging; compare with the response's totalCount to decide whether to fetch further pages.")]
+    public int? Offset { get; set; }
 
-    [Option(Description = "The number of schema descriptors to return in one page, from 0 through 100. Defaults to 100.")]
+    [Option(Description = "The number of schema descriptors to return in one page.")]
     public int? Limit { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]

@@ -41,6 +41,7 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
     {
         base.ValidateOptions(options, validationResult);
         AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceHelper.ValidateKind(options.Kind, validationResult);
     }
 
     /// <summary>

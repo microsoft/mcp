@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Globalization;
 using System.Text.Json;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -58,8 +57,8 @@ public sealed class SchemaService(
         int? schemaVersionMinor,
         int? schemaVersionPatch,
         bool latestVersion,
-        int offset,
-        int limit,
+        int? offset,
+        int? limit,
         CancellationToken cancellationToken)
     {
         var query = new List<KeyValuePair<string, string>>();
@@ -75,8 +74,8 @@ public sealed class SchemaService(
         {
             AdmeServiceHelper.Add(query, "latestVersion", "true");
         }
-        AdmeServiceHelper.Add(query, "offset", offset.ToString(CultureInfo.InvariantCulture));
-        AdmeServiceHelper.Add(query, "limit", limit.ToString(CultureInfo.InvariantCulture));
+        AdmeServiceHelper.Add(query, "offset", AdmeServiceHelper.Format(offset));
+        AdmeServiceHelper.Add(query, "limit", AdmeServiceHelper.Format(limit));
 
         return AdmeServiceHelper.SendAsync(
             _credentialProvider,

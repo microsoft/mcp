@@ -50,6 +50,26 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
     {
         base.ValidateOptions(options, validationResult);
         AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+
+        if (options.LatestVersion && options.SchemaVersionMinor.HasValue && !options.SchemaVersionMajor.HasValue)
+        {
+            validationResult.Errors.Add("--schema-version-minor requires --schema-version-major when --latest-version is true.");
+        }
+
+        if (options.LatestVersion && options.SchemaVersionPatch.HasValue && !options.SchemaVersionMinor.HasValue)
+        {
+            validationResult.Errors.Add("--schema-version-patch requires --schema-version-minor when --latest-version is true.");
+        }
+
+        if (options.Offset < 0)
+        {
+            validationResult.Errors.Add("--offset must not be negative.");
+        }
+
+        if (options.Limit < 0)
+        {
+            validationResult.Errors.Add("--limit must not be negative.");
+        }
     }
 
     /// <summary>
@@ -74,7 +94,7 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
                 options.SchemaVersionPatch,
                 options.LatestVersion,
                 options.Offset,
-                options.Limit ?? 100,
+                options.Limit,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.SchemaListResponse);
         }

@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
+using Azure;
 using Azure.Identity;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
 using Azure.Mcp.Tools.Adme.Services;
@@ -62,6 +64,52 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
         Assert.Contains("az login", response.Message);
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest, "ADME rejected the client request")]
+    [InlineData(HttpStatusCode.Unauthorized, "ADME authentication failed")]
+    [InlineData(HttpStatusCode.Forbidden, "ADME authorization failed")]
+    public async Task Execute_WhenAdmeReturnsError_UsesStatusSpecificMessage(
+        HttpStatusCode statusCode,
+        string expectedMessage)
+    {
+        Service.GetSchemaAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)statusCode, expectedMessage));
+
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--kind", TestConstants.WellKind);
+
+        Assert.Equal(statusCode, response.Status);
+        Assert.StartsWith(expectedMessage, response.Message);
+    }
+
+    [Fact]
+    public async Task Execute_WhenNetworkRequestFails_UsesServiceUnavailableMessage()
+    {
+        Service.GetSchemaAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("connection reset"));
+
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--kind", TestConstants.WellKind);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
+        Assert.StartsWith("Service unavailable or network connectivity issues", response.Message);
+        Assert.Contains("connection reset", response.Message);
+    }
+
     [Fact]
     public async Task Execute_WithoutKind_DoesNotCallService()
     {
@@ -76,6 +124,19 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Execute_WithMalformedKind_ReturnsBadRequestWithoutCallingService()
+    {
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--kind", "test");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceiveWithAnyArgs().GetSchemaAsync(
+            default!, default!, default!, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]

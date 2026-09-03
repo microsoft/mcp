@@ -37,7 +37,7 @@ public interface ISchemaService
         int? schemaVersionMinor,
         int? schemaVersionPatch,
         bool latestVersion,
-        int offset,
-        int limit,
+        int? offset,
+        int? limit,
         CancellationToken cancellationToken);
 }

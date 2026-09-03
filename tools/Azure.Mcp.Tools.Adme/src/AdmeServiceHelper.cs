@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Serialization.Metadata;
+using Azure;
 using Azure.Core;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Commands;
@@ -51,6 +53,30 @@ internal static class AdmeServiceHelper
         }
     }
 
+    public static void ValidateKind(string kind, ValidationResult validationResult)
+    {
+        var components = kind.Split(':');
+        var hasValidComponents = components.Length == 4
+            && components.All(component => !string.IsNullOrWhiteSpace(component))
+            && components.All(component => !component.Any(char.IsWhiteSpace))
+            && components.All(component => !component.Contains('*', StringComparison.Ordinal));
+        var versionComponents = components.Length == 4
+            ? components[^1].Split('.')
+            : [];
+        var hasValidVersion = versionComponents.Length == 3
+            && versionComponents.All(component => int.TryParse(
+                component,
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out _));
+
+        if (!hasValidComponents || !hasValidVersion)
+        {
+            validationResult.Errors.Add(
+                "--kind must be a fully-qualified kind in the format 'authority:source:type:major.minor.patch'.");
+        }
+    }
+
     /// <summary>
     /// Validates an ADME service endpoint URI.
     /// </summary>
@@ -86,10 +112,9 @@ internal static class AdmeServiceHelper
         using var response = await client.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            throw new HttpRequestException(
-                $"ADME schema request failed with {(int)response.StatusCode} {response.ReasonPhrase}.",
-                inner: null,
-                statusCode: response.StatusCode);
+            throw new RequestFailedException(
+                (int)response.StatusCode,
+                GetRequestFailureMessage(response.StatusCode, response.ReasonPhrase));
         }
 
         return await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
@@ -98,6 +123,14 @@ internal static class AdmeServiceHelper
                 inner: null,
                 statusCode: response.StatusCode);
     }
+
+    private static string GetRequestFailureMessage(HttpStatusCode statusCode, string? reasonPhrase) => statusCode switch
+    {
+        HttpStatusCode.BadRequest => $"ADME rejected the client request with {(int)statusCode} {reasonPhrase}.",
+        HttpStatusCode.Unauthorized => $"ADME authentication failed with {(int)statusCode} {reasonPhrase}.",
+        HttpStatusCode.Forbidden => $"ADME authorization failed with {(int)statusCode} {reasonPhrase}.",
+        _ => $"ADME request failed with {(int)statusCode} {reasonPhrase}."
+    };
 
     public static string? Format(int? value) =>
         value?.ToString(CultureInfo.InvariantCulture);

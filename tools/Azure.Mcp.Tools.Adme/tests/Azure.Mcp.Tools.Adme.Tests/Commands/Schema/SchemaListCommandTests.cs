@@ -92,7 +92,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
     }
 
     [Fact]
-    public async Task Execute_WithNoFilters_PreservesNullStatusAndAppliesPagingDefaults()
+    public async Task Execute_WithNoFilters_PreservesNullOptionalValues()
     {
         Service.ListSchemasAsync(
             TestConstants.Endpoint,
@@ -107,8 +107,8 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             null,
             null,
             false,
-            0,
-            100,
+            null,
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new SchemaListResponse { SchemaInfos = [] });
 
@@ -131,8 +131,8 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             null,
             null,
             false,
-            0,
-            100,
+            null,
+            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -158,8 +158,8 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
                 Arg.Any<int?>(),
                 Arg.Any<int?>(),
                 Arg.Any<bool>(),
-                Arg.Any<int>(),
-                Arg.Any<int>(),
+                Arg.Any<int?>(),
+                Arg.Any<int?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
@@ -200,6 +200,26 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
         var response = await ExecuteCommandAsync(
             "--endpoint", endpoint,
             "--data-partition", dataPartition);
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(
+            default!, default!, default, default, default, default, default, default,
+            default, default, default, default, default, default, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData("--latest-version --schema-version-minor 0")]
+    [InlineData("--latest-version --schema-version-major 1 --schema-version-patch 0")]
+    [InlineData("--offset -1")]
+    [InlineData("--limit -1")]
+    public async Task Execute_WithApiRejectedOptions_DoesNotCallService(string invalidArguments)
+    {
+        var response = await ExecuteCommandAsync(
+            [
+                "--endpoint", TestConstants.Endpoint,
+                "--data-partition", TestConstants.DataPartition,
+                .. invalidArguments.Split(' '),
+            ]);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(
