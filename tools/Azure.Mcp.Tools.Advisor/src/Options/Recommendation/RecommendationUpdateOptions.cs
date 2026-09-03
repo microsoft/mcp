@@ -9,10 +9,13 @@ namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 public sealed class RecommendationUpdateOptions : ISubscriptionOption
 {
+    [Option(Description = "The name of the Azure service group that contains the recommendation. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
+    public string? ServiceGroup { get; set; }
+
     [Option(Description = "The stable ID of the Advisor recommendation to update. The REST API and this command also call this value the recommendation ID.")]
     public required string RecommendationId { get; set; }
 
-    [Option(Description = "The new recommendation state: New, Postponed, Dismissed, or Completed. Use New to reactivate a postponed or dismissed recommendation.")]
+    [Option(Description = "The new recommendation state: New, Postponed, Dismissed, or Completed. Use New to reactivate a postponed, dismissed, or completed recommendation.")]
     public required RecommendationStatus RecommendationStatus { get; set; }
 
     [Option(Description = "The date and time until which the recommendation is postponed, in ISO 8601 format with a timezone offset. Required when --recommendation-status is Postponed and must represent a future instant.")]

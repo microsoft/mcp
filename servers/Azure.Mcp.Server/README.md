@@ -955,7 +955,9 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 * "List my Advisor recommendations"
 * "Mark an Advisor recommendation as completed"
+* "Mark an Advisor recommendation as completed in service group 'my-service-group'"
 * "Dismiss an Advisor recommendation because the risk is acceptable"
+* "Postpone an Advisor recommendation in service group 'my-service-group' until December 31, 2026"
 * "Postpone an Advisor recommendation until December 31, 2026"
 * "Apply Advisor recommendations to IaaC files"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"

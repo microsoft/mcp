@@ -29,12 +29,12 @@ public class AdvisorSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Advisor command group
-        var advisor = new CommandGroup(Name, "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions OR Apply Azure Advisor recommendations to your IaaC files (ARM, Terraform). Use when you need subscription-scoped visibility into Advisor recommendations OR want to apply Advisor recommendations to your IaaC files. Requires Azure subscription context for querying Advisor recommendations.", Title);
+        var advisor = new CommandGroup(Name, "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions, update recommendation state in a subscription or service group, or apply Azure Advisor recommendations to your IaaC files (ARM, Terraform). Use when you need visibility into Advisor recommendations, want to manage their customer-provided state, or want to apply Advisor recommendations to your IaaC files.", Title);
 
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List and summarize active recommendations, update a recommendation's customer-provided state to New, Postponed, Dismissed, or Completed, or apply recommendation guidance to infrastructure-as-code files.");
+            "Advisor recommendations - List and summarize active subscription recommendations, update a subscription- or service-group-scoped recommendation's customer-provided state to New, Postponed, Dismissed, or Completed, or apply recommendation guidance to infrastructure-as-code files.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(

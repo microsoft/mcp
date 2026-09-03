@@ -38,9 +38,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription <subscription> | none |
 | advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in subscription <subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in service group <service-group> | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in subscription <subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in service group <service-group> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in subscription <subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in service group <service-group> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in subscription <subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in service group <service-group> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> | none |
