@@ -263,6 +263,14 @@ public interface IRsvBackupOperations
         string? tenant,
         CancellationToken cancellationToken);
 
+
+    Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
+        string? tenant,
+        CancellationToken cancellationToken);
     Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName,
         string resourceGroup,

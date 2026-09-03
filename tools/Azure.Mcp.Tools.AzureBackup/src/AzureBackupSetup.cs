@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
+using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
@@ -48,6 +49,8 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectableItemListCommand>();
 
         services.AddSingleton<BackupStatusCommand>();
+
+        services.AddSingleton<ContainerGetCommand>();
 
         services.AddSingleton<JobGetCommand>();
 
@@ -118,6 +121,10 @@ public sealed class AzureBackupSetup : IAreaSetup
         var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);
         backup.AddCommand<BackupStatusCommand>(serviceProvider);
+
+        var container = new CommandGroup("container", "Container operations - Manage RSV protection containers: look up an existing container to check whether a storage account, VM, or workload server has been registered with the vault. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
+        azureBackup.AddSubGroup(container);
+        container.AddCommand<ContainerGetCommand>(serviceProvider);
 
         var job = new CommandGroup("job", "Backup job operations - Get job details or list all jobs in a vault.");
         azureBackup.AddSubGroup(job);

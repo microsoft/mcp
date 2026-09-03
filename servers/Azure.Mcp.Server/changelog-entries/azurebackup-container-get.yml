@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp azurebackup container get` command to look up a single Recovery Services vault (RSV) protection container by fully qualified `--container` name or by `--storage-account` (bare name or ARM resource ID). When a bare storage account name is provided the container name is derived automatically under the vault's `--resource-group`. When the container is not registered the response is HTTP 200 with `registered: false` and `container: null` so callers can drive idempotent register/refresh flows without treating 'not registered yet' as an error. Only Recovery Services vaults (RSV) are supported; Backup vaults (DPP) return HTTP 400."

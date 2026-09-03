@@ -2087,6 +2087,54 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         return items;
     }
 
+    public async Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName, string resourceGroup, string subscription, string containerName,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(containerName), containerName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+
+        try
+        {
+            var response = await rgResource.GetBackupProtectionContainerAsync(vaultName, FabricName, containerName, cancellationToken);
+            return MapContainer(response.Value.Data);
+        }
+        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+        {
+            // Not registered - callers rely on null to signal the idempotency case.
+            return null;
+        }
+    }
+
+    private static BackupContainerInfo MapContainer(BackupProtectionContainerData data)
+    {
+        var props = data.Properties;
+        string? sourceResourceId = null;
+        int? protectedItemCount = null;
+
+        if (props is StorageContainer storage)
+        {
+            sourceResourceId = storage.SourceResourceId?.ToString();
+            protectedItemCount = (int?)storage.ProtectedItemCount;
+        }
+
+        return new BackupContainerInfo(
+            Name: data.Name,
+            FriendlyName: props?.FriendlyName,
+            ContainerType: props?.GetType().Name,
+            BackupManagementType: props?.BackupManagementType?.ToString(),
+            SourceResourceId: sourceResourceId,
+            RegistrationStatus: props?.RegistrationStatus,
+            HealthStatus: props?.HealthStatus,
+            ProtectedItemCount: protectedItemCount);
+    }
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.
     /// The REST API filter expects specific types like "SAPHanaDatabase" but users

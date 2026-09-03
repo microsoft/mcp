@@ -4,6 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
+using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
@@ -22,6 +23,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(VaultGetCommand.VaultGetCommandResult))]
 [JsonSerializable(typeof(VaultCreateCommand.VaultCreateCommandResult))]
 [JsonSerializable(typeof(VaultUpdateCommand.VaultUpdateCommandResult))]
+[JsonSerializable(typeof(ContainerGetCommand.ContainerGetCommandResult))]
+[JsonSerializable(typeof(BackupContainerInfo))]
 [JsonSerializable(typeof(PolicyGetCommand.PolicyGetCommandResult))]
 [JsonSerializable(typeof(PolicyCreateCommand.PolicyCreateCommandResult))]
 [JsonSerializable(typeof(PolicyUpdateCommand.PolicyUpdateCommandResult))]

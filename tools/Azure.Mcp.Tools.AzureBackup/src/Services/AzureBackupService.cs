@@ -314,6 +314,22 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             : await dppOps.ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
+    public async Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string containerName, string? vaultType, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+
+        if (VaultTypeResolver.IsDpp(resolvedType))
+        {
+            throw new NotSupportedException(
+                "Backup vaults (DPP) do not use protection containers. This command is only supported for Recovery Services vaults (RSV).");
+        }
+
+        return await rsvOps.GetContainerAsync(vaultName, resourceGroup, subscription, containerName, tenant, cancellationToken);
+    }
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
         string jobId, string? vaultType, string? tenant,
