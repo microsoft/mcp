@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
-    private const string RecommendationUpdateApiVersion = "2026-03-01-preview";
+    private const string RecommendationUpdateApiVersion = "2026-08-01-preview";
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =

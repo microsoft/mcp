@@ -18,15 +18,12 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Name = "update",
     Title = "Update Advisor Recommendation State",
     Description = """
-        Update the customer-provided status of one Azure Advisor recommendation in a subscription or Azure service group.
-        Mark an Advisor recommendation as Completed. Dismiss an Advisor recommendation because the risk is acceptable by using RiskIsAcceptable, or select another explicit dismissal reason.
-        Postpone an Advisor recommendation until a requested future date and time. Reactivate a postponed, dismissed, or completed recommendation by setting it to New.
-        For subscription-scoped recommendations, use --subscription with an Azure subscription ID or name, or omit it to use the configured default subscription.
-        For service-group-scoped recommendations, use --service-group with the service group's name. Do not specify both --subscription and --service-group.
-        Use --tenant when the target subscription or service group is in a non-default tenant. Requires --recommendation-id, which is the recommendation's stable ID.
-        If no dismissal reason is supplied or the user's intent cannot be mapped to a supported reason, uses Other.
-        State changes are rejected for Security category recommendations, and recommendations already marked as resolved by the Advisor platform.
-        Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
+        Mark one Azure Advisor recommendation as completed, dismiss it because the risk is acceptable, postpone it until a future date, or reactivate it by setting New.
+        Snooze an Advisor recommendation in a subscription until a future date and time, or postpone an Advisor recommendation in a subscription or Azure service group. Update, change, or set the customer-provided recommendation status or state to New, Postponed, Dismissed, or Completed.
+        Common user requests may say mark done, ignore, reopen, or reset to New. Requires the stable recommendation ID and either --subscription or --service-group, but not both; the configured default subscription is used when neither is supplied.
+        Use --tenant when the target subscription or service group is in a non-default tenant. Dismissed accepts an explicit reason and defaults to Other.
+        State changes are rejected for Security category and platform-resolved recommendations. Returns the updated ARM recommendation resource.
+        Use this state-changing tool instead of list or summary when the user wants to modify or snooze one recommendation.
         """,
     Destructive = true,
     Idempotent = true,
