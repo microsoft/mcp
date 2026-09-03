@@ -40,6 +40,17 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         query = BuildQuery(query, table, limit);
         KqlQueryValidator.ValidateQuerySafety(query);
 
+        if (AzureService.CloudConfiguration.CloudType == AzureCloudConfiguration.AzureCloud.CustomCloud)
+        {
+            var resourceIdentifier = ResourceIdentifier.Parse(resourceId);
+            return await QueryCustomLogsAsync(
+                $"v1/{resourceIdentifier.ToString().TrimStart('/')}/query",
+                query,
+                TimeSpan.FromHours(hours ?? 24),
+                tenant,
+                cancellationToken);
+        }
+
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
         options.Audience = GetLogsQueryAudience();
@@ -96,6 +107,17 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(query), query));
         KqlQueryValidator.ValidateQuerySafety(query);
+        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
+
+        if (AzureService.CloudConfiguration.CloudType == AzureCloudConfiguration.AzureCloud.CustomCloud)
+        {
+            return await QueryCustomLogsAsync(
+                $"v1/workspaces/{Uri.EscapeDataString(workspaceId)}/query",
+                query,
+                TimeSpan.FromDays(timeSpanDays),
+                tenant,
+                cancellationToken);
+        }
 
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
@@ -103,8 +125,6 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
 
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         var client = new LogsQueryClient(credential, options);
-
-        var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
 
         var response = await client.QueryWorkspaceAsync(
             workspaceId,
@@ -229,6 +249,16 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
 
         try
         {
+            if (AzureService.CloudConfiguration.CloudType == AzureCloudConfiguration.AzureCloud.CustomCloud)
+            {
+                return await QueryCustomLogsAsync(
+                    $"v1/workspaces/{Uri.EscapeDataString(workspaceId)}/query",
+                    query,
+                    TimeSpan.FromHours(hours ?? 24),
+                    tenant,
+                    cancellationToken);
+            }
+
             var credential = await GetCredential(tenant, cancellationToken);
             var options = AddDefaultPolicies(new LogsQueryClientOptions());
             options.Audience = GetLogsQueryAudience();
@@ -482,13 +512,7 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
     private string GetLogActivityEndpointString(string subscriptionId)
     {
         string subscriptionPath = $"subscriptions/{subscriptionId}/providers/Microsoft.Insights/eventtypes/management/values";
-        return AzureService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
-            _ => $"https://management.azure.com/{subscriptionPath}"
-        };
+        return $"{AzureService.CloudConfiguration.ArmEnvironment.Endpoint.AbsoluteUri.TrimEnd('/')}/{subscriptionPath}";
     }
 
     private LogsQueryAudience GetLogsQueryAudience()
@@ -498,8 +522,89 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => LogsQueryAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => LogsQueryAudience.AzureChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => LogsQueryAudience.AzureGovernment,
-            _ => LogsQueryAudience.AzurePublicCloud
+            _ => throw new NotSupportedException("Log Analytics queries are not supported for custom clouds until the Log Analytics SDK supports custom endpoints.")
         };
+    }
+
+    private async Task<List<JsonNode>> QueryCustomLogsAsync(
+        string relativePath,
+        string query,
+        TimeSpan timeRange,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        var credential = await GetCredential(tenant, cancellationToken);
+        var accessToken = await credential.GetTokenAsync(
+            new TokenRequestContext([AzureService.CloudConfiguration.LogAnalyticsScope]),
+            cancellationToken);
+
+        var endpoint = new Uri($"{AzureService.CloudConfiguration.LogAnalyticsEndpoint.AbsoluteUri.TrimEnd('/')}/{relativePath}");
+        var uriBuilder = new UriBuilder(endpoint);
+        uriBuilder.Query = $"timespan={Uri.EscapeDataString(System.Xml.XmlConvert.ToString(timeRange))}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, uriBuilder.Uri);
+        request.Headers.Authorization = new("Bearer", accessToken.Token);
+        request.Content = new StringContent(
+            new JsonObject { ["query"] = query }.ToJsonString(),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        using var response = await AzureService.GetClient().SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var statusCode = (int)response.StatusCode;
+            throw new RequestFailedException(statusCode, $"Log Analytics query request failed with status {statusCode}.");
+        }
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+        return ParseCustomQueryResults(document.RootElement);
+    }
+
+    private static List<JsonNode> ParseCustomQueryResults(JsonElement root)
+    {
+        if (!root.TryGetProperty("tables", out var tables) || tables.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException("The Log Analytics response did not contain a valid tables array.");
+        }
+
+        if (tables.GetArrayLength() == 0)
+        {
+            return [];
+        }
+
+        var table = tables[0];
+        if (!table.TryGetProperty("columns", out var columns) ||
+            !table.TryGetProperty("rows", out var rows) ||
+            columns.ValueKind != JsonValueKind.Array ||
+            rows.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException("The Log Analytics response table was missing columns or rows.");
+        }
+
+        var columnNames = columns.EnumerateArray().Select(column =>
+        {
+            if (!column.TryGetProperty("name", out var name) || name.ValueKind != JsonValueKind.String ||
+                string.IsNullOrEmpty(name.GetString()))
+            {
+                throw new InvalidOperationException("The Log Analytics response contained an invalid column.");
+            }
+
+            return name.GetString()!;
+        }).ToArray();
+        var results = new List<JsonNode>();
+        foreach (var row in rows.EnumerateArray())
+        {
+            var rowObject = new JsonObject();
+            for (var index = 0; index < columnNames.Length && index < row.GetArrayLength(); index++)
+            {
+                rowObject[columnNames[index]] = JsonNode.Parse(row[index].GetRawText());
+            }
+
+            results.Add(rowObject);
+        }
+
+        return results;
     }
 
 }

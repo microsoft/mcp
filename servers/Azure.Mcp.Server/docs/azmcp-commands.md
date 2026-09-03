@@ -260,7 +260,8 @@ The `azmcp server start` command supports the following options:
 | `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
 | `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
-| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
+| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or `custom`. |
+| `--custom-cloud-config` | No | | Path to a JSON file describing a custom cloud. Required when `--cloud custom` is used. |
 | `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
 | `--structured-output-mode` | No | Disabled | Enables `outputSchema` and `structuredContent` in `all`, `namespace`, `consolidated`, and `single` modes. `duplicated` retains the complete original `content`; `compact` returns concise `content`. Both return the complete structured result. Enable this only when the client supports these fields. |
 | `--disable-proxy-tools` | No | `false` | Disable tools that are proxied from sources configured in `/Resources/registry.json`. |
@@ -306,7 +307,7 @@ The `azmcp server start` command supports the following options:
 > - `AzureCloud` (default): Azure public cloud
 > - `AzureChinaCloud`: Azure China (operated by 21Vianet)
 > - `AzureUSGovernment`: Azure US Government
-> - Custom URL: A custom authority host URL starting with `https://`
+> - `custom`: Uses endpoint metadata from the file passed to `--custom-cloud-config`; custom ARM and Resource Graph operations are supported.
 >
 > **Example usage:**
 > ```bash

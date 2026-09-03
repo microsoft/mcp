@@ -4,7 +4,7 @@ The Azure MCP Server supports connecting to Azure sovereign clouds (national clo
 
 ## Overview
 
-By default, the Azure MCP Server authenticates against the Azure Public Cloud (`login.microsoftonline.com`). To connect to a sovereign cloud, you can specify the cloud environment using the `--cloud` option, configuration files, or environment variables. Only the well-known cloud names listed below are supported; URL-like values or custom authority hosts are not accepted.
+By default, the Azure MCP Server authenticates against the Azure Public Cloud (`login.microsoftonline.com`). To connect to a sovereign cloud, you can specify the cloud environment using the `--cloud` option, configuration files, or environment variables. A configuration-driven `custom` mode is also available for ARM operations.
 
 ## Supported Cloud Environments
 
@@ -33,6 +33,29 @@ You can configure the cloud environment using one of the following methods. The 
 | 5 | IConfiguration | `Cloud` |
 | 6 | Environment variable | `AZURE_CLOUD` (direct fallback) |
 | Default | Fallback | `AzurePublicCloud` |
+
+### Custom cloud
+
+Set `--cloud custom` and provide a local JSON file with the endpoints for the cloud. The file must contain HTTPS values for `authorityHost`, `armEndpoint`, `logAnalyticsEndpoint`, and `applicationInsightsEndpoint`, plus `resourceManagerAudience` and the exact OAuth `logAnalyticsScope` expected by the cloud:
+
+```json
+{
+  "authorityHost": "https://login.contoso.example",
+  "armEndpoint": "https://management.contoso.example",
+  "resourceManagerAudience": "https://management.contoso.example/",
+  "logAnalyticsEndpoint": "https://logs.contoso.example",
+  "logAnalyticsScope": "https://logs.contoso.example/.default",
+  "applicationInsightsEndpoint": "https://insights.contoso.example"
+}
+```
+
+Start the server with:
+
+```bash
+azmcp server start --cloud custom --custom-cloud-config ./custom-cloud.json
+```
+
+Custom ARM and Resource Graph operations use the configured ARM endpoint and audience. Log Analytics queries use the configured endpoint and scope through the Log Analytics Query REST API. Application Insights Profiler and other tools that require additional service-specific cloud mappings are not available in custom mode yet.
 
 > **Note:** IConfiguration in .NET includes multiple providers in order: `appsettings.json`, `appsettings.{Environment}.json`, user secrets (development), environment variables, and command line arguments. This means environment variables set via `AZURE_CLOUD` will be found at priority 2 through the IConfiguration system before the direct fallback at priority 6.
 

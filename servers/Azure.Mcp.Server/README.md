@@ -919,6 +919,12 @@ azmcp server start --cloud AzureChinaCloud
 
 # Environment variable (PowerShell)
 $env:AZURE_CLOUD = "AzureUSGovernment"
+```
+
+Custom ARM and Resource Graph endpoints can be configured with a local JSON file:
+
+```bash
+azmcp server start --cloud custom --custom-cloud-config ./custom-cloud.json
 azmcp server start
 ```
 

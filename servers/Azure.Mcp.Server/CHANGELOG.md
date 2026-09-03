@@ -2,6 +2,12 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## Unreleased
+
+### Features Added
+
+- Added configuration-driven `custom` cloud support for ARM, Resource Graph, and direct Log Analytics queries using `--custom-cloud-config` and a configured `logAnalyticsScope`.
+
 ## 3.0.0-beta.41 (2026-09-03)
 
 ### Features Added
