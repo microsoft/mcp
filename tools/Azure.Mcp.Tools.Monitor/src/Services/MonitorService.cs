@@ -553,7 +553,9 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         if (!response.IsSuccessStatusCode)
         {
             var statusCode = (int)response.StatusCode;
-            throw new RequestFailedException(statusCode, $"Log Analytics query request failed with status {statusCode}.");
+            var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
+            var errorDetail = !string.IsNullOrWhiteSpace(responseText) ? responseText : response.ReasonPhrase ?? "Unknown Error";
+            throw new RequestFailedException(statusCode, $"Log Analytics query request failed with status {statusCode}: {errorDetail}");
         }
 
         await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
