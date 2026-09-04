@@ -103,6 +103,22 @@ extends:
           MaxParallel: 4
           HostArchitecture: arm64
 
+    - stage: VSIXPack
+      displayName: "VSIX pack"
+      dependsOn:
+      - Initialize
+      - Build
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+      pool:
+        name: $(LINUXPOOL)
+        image: $(LINUXVMIMAGE)
+        os: linux
+      variables:
+      - template: /eng/pipelines/templates/variables/image.yml
+      - template: /eng/pipelines/templates/variables/globals.yml
+      jobs:
+      - template: /eng/pipelines/templates/jobs/vsix/pack-vsix-pr.yml
+
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test
         displayName: 'Live test'
