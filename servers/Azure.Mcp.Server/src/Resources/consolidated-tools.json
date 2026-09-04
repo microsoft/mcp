@@ -47,7 +47,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recovery plans for Azure service groups.",
+      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -81,7 +81,9 @@
         "resilience_usageplan_enrollment_create",
         "resilience_recoveryplan_create",
         "resilience_recoveryplan_delete",
-        "resilience_recoveryplan_resource_update"
+        "resilience_recoveryplan_resource_update",
+        "resilience_drill_resource_add-or-update",
+        "resilience_drill_run_mark-complete"
       ]
     },
     {
@@ -350,7 +352,7 @@
     },
     {
       "name": "check_azure_resilience_management_readiness",
-      "description": "Check whether an Azure Resilience Management recoveryplan and its protected resources are ready for recovery operations in an Azure service group.",
+      "description": "Check whether an Azure Resilience Management recoveryplan or drill and its protected resources are ready for recovery operations or drill execution in an Azure service group.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -378,7 +380,9 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_checkreadiness"
+        "resilience_recoveryplan_checkreadiness",
+        "resilience_drill_check-resync-readiness",
+        "resilience_drill_validate-for-execution"
       ]
     },
     {
@@ -811,6 +815,7 @@
         "monitor_healthmodels_get",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
+        "monitor_metrics_batchquery",
         "monitor_resource_log_query",
         "monitor_table_list",
         "monitor_table_type_list",
@@ -4565,7 +4570,7 @@
     },
     {
       "name": "update_azure_backup_settings",
-      "description": "Update Azure Backup settings including vault configuration, governance policies for soft delete, immutability, and cross-region restore.",
+      "description": "Update Azure Backup settings including vault and protected item configuration, governance policies for soft delete, immutability, and cross-region restore.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -4595,6 +4600,7 @@
       "mappedToolList": [
         "azurebackup_vault_update",
         "azurebackup_policy_update",
+        "azurebackup_protecteditem_update-protection",
         "azurebackup_governance_immutability",
         "azurebackup_governance_soft-delete",
         "azurebackup_disasterrecovery_enable-crr",

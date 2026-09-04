@@ -1210,7 +1210,9 @@ public class ResilienceManagementCommandTests(
         var recoveryJob = RegisterOrRetrieveDeploymentOutputVariable("recoveryJobName", "RECOVERYJOBNAME");
 
         JsonElement failedJob = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
-        Assert.Equal("Failed", failedJob.AssertProperty("properties").AssertProperty("status").GetString());
+        JsonElement failedJobProperties = failedJob.AssertProperty("properties");
+        Assert.Equal("Failed", failedJobProperties.AssertProperty("status").GetString());
+        string? initialLastModifiedAt = failedJob.AssertProperty("systemData").AssertProperty("lastModifiedAt").GetString();
 
         var retryResult = await CallToolAsync(
             "resilience_recoveryjob_retry",
@@ -1224,10 +1226,10 @@ public class ResilienceManagementCommandTests(
 
         Assert.True(Guid.TryParse(retryResult.AssertProperty("operationId").GetString(), out _));
         Assert.Equal("Accepted", retryResult.AssertProperty("status").GetString());
-        JsonElement terminalJob = await WaitForRecoveryJobTerminalStateAsync(serviceGroup, recoveryPlan, recoveryJob);
-        Assert.Contains(
-            terminalJob.AssertProperty("properties").AssertProperty("status").GetString(),
-            TerminalRecoveryJobStatuses);
+        JsonElement terminalJob = await WaitForRecoveryJobRetryTerminalStateAsync(serviceGroup, recoveryPlan, recoveryJob, initialLastModifiedAt);
+        JsonElement terminalJobProperties = terminalJob.AssertProperty("properties");
+        Assert.NotEqual(initialLastModifiedAt, terminalJob.AssertProperty("systemData").AssertProperty("lastModifiedAt").GetString());
+        Assert.Contains(terminalJobProperties.AssertProperty("status").GetString(), TerminalRecoveryJobStatuses);
     }
 
     [Fact]
@@ -1436,6 +1438,33 @@ public class ResilienceManagementCommandTests(
         }
 
         Assert.Fail($"Recovery job '{recoveryJob}' did not reach a terminal state after {maxAttempts} attempts.");
+        return default;
+    }
+
+    private async Task<JsonElement> WaitForRecoveryJobRetryTerminalStateAsync(
+        string serviceGroup,
+        string recoveryPlan,
+        string recoveryJob,
+        string? initialLastModifiedAt)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement job = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+            JsonElement properties = job.AssertProperty("properties");
+            string? lastModifiedAt = job.AssertProperty("systemData").AssertProperty("lastModifiedAt").GetString();
+            string? status = properties.AssertProperty("status").GetString();
+            if (!string.Equals(lastModifiedAt, initialLastModifiedAt, StringComparison.Ordinal) &&
+                TerminalRecoveryJobStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                return job;
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"Recovery job '{recoveryJob}' did not start a retry and reach a terminal state after {maxAttempts} attempts.");
         return default;
     }
 
