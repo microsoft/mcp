@@ -333,6 +333,13 @@
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @mattkohnms @ramnov
 
+# PRLabel: %tools-Optimization
+/tools/Azure.Mcp.Tools.Optimization/   @sanjaytholanim @liangchenmicrosoft
+
+# ServiceLabel: %tools-Optimization
+# ServiceOwners:                       @sanjaytholanim @liangchenmicrosoft
+
+
 # PRLabel: %tools-Policy
 /tools/Azure.Mcp.Tools.Policy/         @msalaman @microsoft/azure-mcp
 

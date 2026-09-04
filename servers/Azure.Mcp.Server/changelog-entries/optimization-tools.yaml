@@ -1,0 +1,7 @@
+changes:
+  - section: "Features Added"
+    description: |
+      Added the Optimization toolset for Azure Advisor cost-optimization recommendations:
+      - optimization recommendation list: List top cost-saving recommendations for a subscription, ranked by impact and currency-normalized annual savings.
+      - optimization recommendation alternatives: Get alternative resize/SKU options for a VM or VM Scale Set, with inclusion/exclusion filters.
+      - optimization recommendation explain: Explain a recommendation and project current-versus-target-SKU utilization time-series from Azure Monitor.
