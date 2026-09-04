@@ -1,0 +1,53 @@
+jobs:
+- job: PackVSIXForPR
+  displayName: "Pack VSIX"
+  steps:
+  - checkout: self
+    fetchDepth: 0
+
+  - pwsh: |
+      $changedFiles = & ./eng/common/scripts/get-changedfiles.ps1 -DiffFilterType ''
+      $hasVsixDependencyChanges = @($changedFiles | Where-Object {
+        $_ -match '^servers/[^/]+/vscode/package(-lock)?\.json$'
+      }).Count -gt 0
+      Write-Host "##vso[task.setvariable variable=RunVsixPackaging]$($hasVsixDependencyChanges.ToString().ToLowerInvariant())"
+    displayName: "Detect VSIX dependency changes"
+
+  - download: current
+    artifact: build_info
+    displayName: "Download build_info"
+    condition: eq(variables['RunVsixPackaging'], 'true')
+
+  - download: current
+    displayName: "Download binaries"
+    condition: eq(variables['RunVsixPackaging'], 'true')
+
+  - task: UseNode@1
+    displayName: "Install Node.js 24"
+    condition: eq(variables['RunVsixPackaging'], 'true')
+    inputs:
+      version: "24.x"
+
+  - task: Powershell@2
+    displayName: "Prepare binaries for VSIX"
+    condition: eq(variables['RunVsixPackaging'], 'true')
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Compress-ForSigning.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -ArtifactsPath '$(Pipeline.Workspace)'
+        -ArtifactPrefix 'binaries_'
+        -OutputPath '$(Pipeline.Workspace)/binaries'
+        -PrepareForVsix
+
+  - task: Powershell@2
+    displayName: "Pack VSIX"
+    condition: eq(variables['RunVsixPackaging'], 'true')
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Vsix.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
