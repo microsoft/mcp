@@ -2454,13 +2454,14 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```bash
 # Hierarchical list command for MySQL resources
-# Without parameters: lists all MySQL servers in the resource group
-# With --server: lists all databases on that server
-# With --server and --database: lists all tables in that database
+# Without parameters: lists all MySQL servers in the subscription
+# With --resource-group: lists servers in that resource group
+# With --server: lists all databases on that server (--user required)
+# With --server and --database: lists all tables in that database (--user required)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql list --subscription <subscription> \
-                 --resource-group <resource-group> \
-                 --user <user> \
+                 [--resource-group <resource-group>] \
+                 [--user <user>] \
                  [--server <server>] \
                  [--database <database>]
 
@@ -2486,14 +2487,12 @@ azmcp mysql table schema get --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server config get --subscription <subscription> \
                               --resource-group <resource-group> \
-                              --user <user> \
                               --server <server>
 
 # Retrieve a specific parameter of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param get --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --user <user> \
                              --server <server> \
                              --param <parameter>
 
@@ -2501,7 +2500,6 @@ azmcp mysql server param get --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param set --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --user <user> \
                              --server <server> \
                              --param <parameter> \
                              --value <value>
