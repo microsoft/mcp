@@ -558,6 +558,8 @@ azmcp appconfig kv delete --subscription <subscription> \
                           [--label <label>]
 
 # Get key-value settings in an App Configuration store
+# Use --key to retrieve a single key-value, or --key-filter for wildcard matches (e.g., 'App*'). --key and --key-filter are mutually exclusive.
+# Use --label to scope to a specific label, or --label-filter for wildcard label matches. --label and --label-filter are mutually exclusive.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv get --subscription <subscription> \
                        --account <account> \
