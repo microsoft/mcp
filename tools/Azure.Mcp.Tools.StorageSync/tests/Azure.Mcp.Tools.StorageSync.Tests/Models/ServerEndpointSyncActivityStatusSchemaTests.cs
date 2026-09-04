@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.ResourceManager.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Models;
+using Azure.ResourceManager.StorageSync.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.StorageSync.Tests.Models;
