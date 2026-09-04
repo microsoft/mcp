@@ -2072,6 +2072,35 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
+    #region Container Tests (RSV)
+
+    [Fact]
+    public async Task ContainerListAvailable_RsvVault_ListsAvailableContainers_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_list-available",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var containers = result.AssertProperty("containers");
+        Assert.Equal(JsonValueKind.Array, containers.ValueKind);
+
+        foreach (var container in containers.EnumerateArray())
+        {
+            container.AssertProperty("name");
+            container.AssertProperty("friendlyName");
+            container.AssertProperty("containerType");
+        }
+    }
+
+    #endregion
+
     #region Backup Status Tests
 
     /// <summary>
