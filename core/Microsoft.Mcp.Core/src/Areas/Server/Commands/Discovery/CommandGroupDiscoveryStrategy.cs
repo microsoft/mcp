@@ -3,7 +3,6 @@
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -13,12 +12,15 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 /// This strategy converts Azure CLI command groups into MCP servers, allowing them to be accessed via the MCP protocol.
 /// </summary>
 /// <param name="commandFactory">The command factory used to access available command groups.</param>
-/// <param name="options">Options for configuring the service behavior.</param>
+/// <param name="configuration">Runtime configuration for the server.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class CommandGroupDiscoveryStrategy(ICommandFactory commandFactory, IOptions<ServiceStartOptions> options, ILogger<CommandGroupDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class CommandGroupDiscoveryStrategy(
+    ICommandFactory commandFactory,
+    IOptions<ServerRuntimeConfiguration> configuration,
+    ILogger<CommandGroupDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly ICommandFactory _commandFactory = commandFactory;
-    private readonly IOptions<ServiceStartOptions> _options = options;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
 
     /// <summary>
     /// Gets or sets the entry point to use for the command group servers.
@@ -31,13 +33,13 @@ public sealed class CommandGroupDiscoveryStrategy(ICommandFactory commandFactory
     {
         var providers = _commandFactory.RootGroup.SubGroup
             .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-            .Where(group => _options.Value.Namespace == null ||
-                           _options.Value.Namespace.Length == 0 ||
-                           _options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+            .Where(group => _configuration.Value.Namespace == null ||
+                           _configuration.Value.Namespace.Length == 0 ||
+                           _configuration.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
             .Select(group => new CommandGroupServerProvider(group)
             {
-                ReadOnly = _options.Value.ReadOnly ?? false,
-                Transport = _options.Value.Transport ?? TransportTypes.StdIo,
+                ReadOnly = _configuration.Value.ReadOnly,
+                Transport = _configuration.Value.Transport,
                 EntryPoint = EntryPoint,
             })
             .Cast<IMcpServerProvider>();

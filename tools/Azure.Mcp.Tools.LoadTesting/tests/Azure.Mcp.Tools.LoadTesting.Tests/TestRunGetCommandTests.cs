@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.Tests;
 
-public class TestRunGetCommandTests : CommandUnitTestsBase<TestRunGetCommand, ILoadTestingService>
+public class TestRunGetCommandTests : SubscriptionCommandUnitTestsBase<TestRunGetCommand, ILoadTestingService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -34,7 +33,6 @@ public class TestRunGetCommandTests : CommandUnitTestsBase<TestRunGetCommand, IL
             Arg.Is("run1"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -62,7 +60,6 @@ public class TestRunGetCommandTests : CommandUnitTestsBase<TestRunGetCommand, IL
             Arg.Is("run1"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new TestRun());
 
@@ -80,7 +77,6 @@ public class TestRunGetCommandTests : CommandUnitTestsBase<TestRunGetCommand, IL
             Arg.Is("run1"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -110,7 +106,6 @@ public class TestRunGetCommandTests : CommandUnitTestsBase<TestRunGetCommand, IL
             Arg.Is("testId"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -138,7 +133,6 @@ public class TestRunGetCommandTests : CommandUnitTestsBase<TestRunGetCommand, IL
             Arg.Is("testId"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

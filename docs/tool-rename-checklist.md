@@ -72,7 +72,7 @@ A tool rename is a **breaking change** for any MCP client or agent that hard-cod
 
 ### 6. Spelling
 
-- [ ] Run the spelling check and add any new technical terms to `.vscode/cspell.json` if needed:
+- [ ] Run the spelling check. Add project-specific technical terms to that project's `cspell.yaml`, and add cross-cutting terms to the `.vscode/cspell.json`:
   ```powershell
   .\eng\common\spelling\Invoke-Cspell.ps1
   ```

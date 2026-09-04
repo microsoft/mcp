@@ -1,0 +1,81 @@
+# Spell-check overrides for this toolset/server.
+# Inherits the global config at the repo root.
+#
+# Add words that only appear in this folder here, in alphabetical order.
+# Cross-cutting terms should go in the root cspell.yaml instead.
+version: "0.2"
+import:
+  - ../../.vscode/cspell.json
+words:
+  - aiohttp
+  - aiokafka
+  - aiopg
+  - aiplatform
+  - asax
+  - asctime
+  - asgi
+  - asgiref
+  - aspnetclassic
+  - asyncpg
+  - authenticationsettings
+  - azuresdktrainingdatatme
+  - boto
+  - botocore
+  - configurator
+  - ecommerce
+  - enduser
+  - entityframework
+  - eventtypes
+  - existingwebtest
+  - genai
+  - gunicorn
+  - healthz
+  - hget
+  - hset
+  - httpx
+  - ikey
+  - ilogger
+  - inspectable
+  - instrumentable
+  - instrumentor
+  - instrumentors
+  - jsonify
+  - langchain
+  - levelname
+  - lpush
+  - metadatavalues
+  - metricnames
+  - metricnamespace
+  - multistep
+  - mysqlclient
+  - netcore
+  - newwebtest
+  - opencensus
+  - otel
+  - owin
+  - psutil
+  - psycopg
+  - pydantic
+  - pymemcache
+  - pymongo
+  - pymssql
+  - pymysql
+  - pyproject
+  - rediss
+  - remoulade
+  - runserver
+  - setdefault
+  - sqlalchemy
+  - sqlclient
+  - starlette
+  - tavily
+  - telemetryclient
+  - tortoiseorm
+  - unconfigured
+  - uvicorn
+  - versionsuffix
+  - vertexai
+  - webconfig
+  - winexe
+  - workerservice
+  - wsgi

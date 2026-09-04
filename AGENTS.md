@@ -143,7 +143,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 3. **Node.js**: [Latest Node.js LTS](https://nodejs.org/en/download) (ensure `node` and `npm` are in PATH)
 4. **PowerShell**: [PowerShell 7.0+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (required for build/test scripts)
-5. **.NET SDK**: .NET 10.0.201 (configured in `global.json`)
+5. **.NET SDK**: .NET 10 SDK (configured in `global.json`)
 6. **Azure PowerShell**: For live tests - [Install Azure PowerShell](https://learn.microsoft.com/powershell/azure/install-azure-powershell)
 7. **Azure Bicep**: For test infrastructure - [Install Azure Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install#install-manually)
 
@@ -323,6 +323,8 @@ Command unit tests should extend `SubscriptionCommandUnitTestsBase<TCommand, TSe
 ### Live Testing Requirements
 Azure service commands require live tests to validate functionality against actual Azure resources. Live tests must be recorded for playback using `RecordedCommandTestsBase`. See `/docs/recorded-tests.md` for the full recording workflow, sanitizer configuration, and migration guide.
 
+Tests for tools marked `LocalRequired = true` need special handling in classes extending `RecordedCommandTestsBase`. Start each such test with `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true`; the helper verifies that the tool is unavailable in remote HTTP mode before local-only behavior is tested in other transports.
+
 ### Live Test Infrastructure
 Azure service commands require Bicep templates for test resources:
 ```powershell
@@ -343,6 +345,10 @@ az login
 # Test resource deployment with proper RBAC
 eng/common/TestResources/New-TestResources.ps1 -TestResourcesDirectory tools/Azure.Mcp.Tools.Storage
 ```
+
+### Testing with vally
+
+When testing the MCP server with vally, assume that the user has already been authenticated.  Assume that `az login` has been called. DO NOT call `subscription_list`.
 
 ## Code Style and Standards
 
@@ -381,9 +387,6 @@ public class AccountGetOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }
 
 // Commands use two-generic base: SubscriptionCommand<TOptions, TResult>
@@ -442,7 +445,7 @@ protected override int GetStatusCode(Exception ex) => ex switch
 try
 {
     // Command execution logic
-    var results = await service.GetResourcesAsync(options.Subscription!, options.RetryPolicy);
+    var results = await service.GetResourcesAsync(options.Subscription!, cancellationToken);
     context.Response.Results = ResponseResult.Create(new(results ?? []), ServiceJsonContext.Default.CommandResult);
 }
 catch (Exception ex)
@@ -461,16 +464,19 @@ Choose the appropriate base class based on operations:
 
 **For Azure Resource Read Operations (recommended):**
 ```csharp
-public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
+public class StorageService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IStorageService
 {
-    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(string subscription, string? resourceGroup, RetryPolicyOptions? retryPolicy)
+    public async Task<ResourceQueryResults<StorageAccount>> ListAccountsAsync(
+        string subscription,
+        string? resourceGroup,
+        CancellationToken cancellationToken = default)
     {
         return await ExecuteResourceQueryAsync(
             "Microsoft.Storage/storageAccounts",
             resourceGroup,
             subscription,
-            retryPolicy,
+            null,
             ConvertToStorageAccountModel,
             cancellationToken: cancellationToken);
     }
@@ -479,11 +485,9 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
 **For Azure Resource Write Operations:**
 ```csharp
-public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IStorageService
+public class StorageService(IAzureService azureService)
+    : BaseAzureService(azureService), IStorageService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-
     public async Task<StorageAccountResult> CreateStorageAccount(
         string account,
         string resourceGroup,
@@ -493,9 +497,9 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         // Use subscriptionResource for write operations
     }
 }
@@ -511,6 +515,21 @@ internal partial class StorageJsonContext : JsonSerializerContext;
 
 // Usage in commands
 context.Response.Results = ResponseResult.Create(new(results), StorageJsonContext.Default.StorageAccountGetCommandResult);
+```
+
+### Long-running operations
+
+Long-running operations (at this time) don't offer the ability to configure polling intervals, and even if they were
+able to there is a limit on how small of a polling interval can be used. Due to this, to prevent long-running operations
+with a significant number of polls from wasting CPU time waiting during testing, all long-running operations should use
+a two call pattern. The first call is the service method starting the polling operation, that should pass
+`WaitUntil.Started` to simply begin the operation. Then waiting for completion should call
+`BaseAzureService.WaitForLroCompletionAsync` to wait for completion in a way that testing can ignore the polling
+interval to prevent CPU wait loops that aren't necessary when playback testing.
+
+```csharp
+var lroOperation = Service.LroAsync(WaitUntil.Started, cancellationToken);
+await WaitForLroCompletionAsync(lroOperation, cancellationToken);
 ```
 
 ## Adding New Commands and Services
@@ -631,7 +650,6 @@ All new toolsets must be AOT-compatible or excluded from native builds:
 ### Caching and Performance
 - Use `ICacheService` for expensive Azure operations
 - Implement `BaseAzureResourceService` for efficient Resource Graph queries
-- Follow retry policy patterns with `RetryPolicyOptions`
 
 ## Remote MCP Server Architecture
 
@@ -727,7 +745,8 @@ When adding new commands:
 # Check spelling across codebase
 .\eng\common\spelling\Invoke-Cspell.ps1
 
-# Add new technical terms to .vscode/cspell.json if needed
+# Add project-specific terms to that project's cspell.yaml.
+# Add cross-cutting terms to .vscode/cspell.json.
 ```
 
 ## Git Workflow and Automation

@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.Tests;
 
-public class TestGetCommandTests : CommandUnitTestsBase<TestGetCommand, ILoadTestingService>
+public class TestGetCommandTests : SubscriptionCommandUnitTestsBase<TestGetCommand, ILoadTestingService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -34,7 +33,6 @@ public class TestGetCommandTests : CommandUnitTestsBase<TestGetCommand, ILoadTes
             Arg.Is("testId1"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -61,7 +59,6 @@ public class TestGetCommandTests : CommandUnitTestsBase<TestGetCommand, ILoadTes
             Arg.Is("testId1"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new Test());
 
@@ -83,7 +80,6 @@ public class TestGetCommandTests : CommandUnitTestsBase<TestGetCommand, ILoadTes
             Arg.Is("testId1"),
             Arg.Is("resourceGroup123"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

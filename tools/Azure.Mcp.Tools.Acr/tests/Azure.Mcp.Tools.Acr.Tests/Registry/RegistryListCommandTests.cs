@@ -8,8 +8,6 @@ using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Models;
 using Azure.Mcp.Tools.Acr.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,8 +31,6 @@ public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<Registr
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Ensure environment variable fallback does not interfere with validation tests
-        TestEnvironment.ClearAzureSubscriptionId();
         // Arrange
         if (shouldSucceed)
         {
@@ -42,7 +38,6 @@ public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<Registr
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<AcrRegistryInfo>(
                 [
@@ -74,7 +69,6 @@ public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<Registr
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -92,7 +86,7 @@ public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<Registr
     {
         // Arrange
         var expectedRegistries = new ResourceQueryResults<AcrRegistryInfo>([new("registry1", null, null, null, null)], false);
-        Service.ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedRegistries);
 
         // Act
@@ -101,14 +95,14 @@ public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<Registr
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await Service.Received(1).ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_EmptyList_ReturnsEmptyResults()
     {
         // Arrange
-        Service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<AcrRegistryInfo>([], false));
 
         // Act
@@ -125,7 +119,7 @@ public class RegistryListCommandTests : SubscriptionCommandUnitTestsBase<Registr
     {
         // Arrange
         var registry = new AcrRegistryInfo("myregistry", "eastus", "myregistry.azurecr.io", "Basic", "Basic");
-        Service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<AcrRegistryInfo>([registry], false));
 
         // Act

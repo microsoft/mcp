@@ -5,7 +5,7 @@ using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 
@@ -34,7 +34,7 @@ public sealed class ExtensionSetup : IAreaSetup
         bool exposeExternalProcessCommands = ShouldExposeExternalProcessCommands(serviceProvider);
 
         string description = exposeExternalProcessCommands
-            ? "Extension commands for CLI tooling related to Azure. Includes running Azure Quick Review (azqr) for compliance reports, generating Azure CLI commands from user intent, and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func)."
+            ? "Extension commands for CLI tooling related to Azure. Includes running Azure Quick Review (azqr) to scan a subscription for compliance issues and generate compliance and security reports with compliance recommendations, generating Azure CLI commands from user intent, and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func)."
             : "Extension commands for CLI tooling related to Azure. Includes generating Azure CLI commands from user intent and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func).";
 
         var extension = new CommandGroup(Name, description, Title);
@@ -58,16 +58,16 @@ public sealed class ExtensionSetup : IAreaSetup
     /// risk: processes run under the server's host identity (not the caller's context), and malicious or
     /// excessive requests could exhaust resources leading to denial-of-service.
     /// </summary>
-    /// <param name="serviceProvider">The service provider to resolve ServiceStartOptions from.</param>
+    /// <param name="serviceProvider">The service provider to resolve ServerRuntimeConfiguration from.</param>
     /// <returns>True if external process commands should be exposed; false otherwise.</returns>
     private static bool ShouldExposeExternalProcessCommands(IServiceProvider serviceProvider)
     {
-        if (serviceProvider.GetService<ServiceStartOptions>() is ServiceStartOptions startOptions)
+        if (serviceProvider.GetService<ServerRuntimeConfiguration>() is ServerRuntimeConfiguration configuration)
         {
-            return !startOptions.IsHttpMode;
+            return !configuration.IsHttpMode;
         }
 
-        // ServiceStartOptions is unavailable in the first DI container (CLI routing), where all commands
+        // ServerRuntimeConfiguration is unavailable in the first DI container (CLI routing), where all commands
         // are exposed. See: ConfigureServices method in https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/src/Program.cs
         return true;
     }

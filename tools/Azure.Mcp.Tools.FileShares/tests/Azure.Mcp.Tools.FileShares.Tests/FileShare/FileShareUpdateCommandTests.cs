@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Models;
-using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,7 +14,7 @@ namespace Azure.Mcp.Tools.FileShares.Tests.FileShare;
 /// <summary>
 /// Unit tests for FileShareUpdateCommand.
 /// </summary>
-public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateCommand, IFileSharesService>
+public class FileShareUpdateCommandTests : SubscriptionCommandUnitTestsBase<FileShareUpdateCommand, IFileSharesService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -36,15 +34,13 @@ public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateC
             "--nfs-encryption-in-transit", "Disabled"
         ]);
 
-        var options = Command.GetType()
-            .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(Command, [parseResult]) as FileShareCreateOrUpdateOptions;
+        var options = Command.BindOptions(parseResult);
 
         Assert.NotNull(options);
         Assert.Equal("Disabled", options!.NfsEncryptionInTransit);
         Assert.Equal("test-sub", options.Subscription);
         Assert.Equal("test-rg", options.ResourceGroup);
-        Assert.Equal("test-share", options.FileShareName);
+        Assert.Equal("test-share", options.Name);
     }
 
     [Fact]
@@ -56,9 +52,7 @@ public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateC
             "--name", "test-share"
         ]);
 
-        var options = Command.GetType()
-            .GetMethod("BindOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(Command, [parseResult]) as FileShareCreateOrUpdateOptions;
+        var options = Command.BindOptions(parseResult);
 
         Assert.NotNull(options);
         Assert.Null(options!.NfsEncryptionInTransit);
@@ -105,13 +99,11 @@ public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateC
                 Arg.Any<string[]>(),
                 Arg.Any<Dictionary<string, string>>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedShare);
         }
 
-        var parseResult = CommandDefinition.Parse(args);
-        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
+        var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? System.Net.HttpStatusCode.OK : System.Net.HttpStatusCode.BadRequest, response.Status);
     }
@@ -149,19 +141,15 @@ public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateC
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedShare);
 
-        var parseResult = CommandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
             "--name", "share1",
             "--nfs-root-squash", "RootSquash",
-            "--nfs-encryption-in-transit", "Enabled"
-        ]);
-
-        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
+            "--nfs-encryption-in-transit", "Enabled");
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
         await Service.Received(1).PatchFileShareAsync(
@@ -177,7 +165,6 @@ public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateC
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -214,25 +201,17 @@ public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateC
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedShare);
 
-        var parseResult = CommandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--name", "share1"
-        ]);
+            "--name", "share1");
 
-        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
+        var result = ValidateAndDeserializeResponse(response, FileSharesJsonContext.Default.FileShareUpdateCommandResult);
 
-        Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
-        var result = System.Text.Json.JsonSerializer.Deserialize(json, FileSharesJsonContext.Default.FileShareUpdateCommandResult);
-        Assert.NotNull(result);
-        Assert.NotNull(result!.FileShare);
+        Assert.NotNull(result.FileShare);
         Assert.Equal("share1", result.FileShare.Name);
     }
 
@@ -252,17 +231,13 @@ public class FileShareUpdateCommandTests : CommandUnitTestsBase<FileShareUpdateC
             Arg.Any<string[]>(),
             Arg.Any<Dictionary<string, string>>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = CommandDefinition.Parse([
+        var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--resource-group", "rg",
-            "--name", "share1"
-        ]);
-
-        var response = await Command.ExecuteAsync(Context, parseResult, TestContext.Current.CancellationToken);
+            "--name", "share1");
 
         Assert.Equal(System.Net.HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);

@@ -30,14 +30,15 @@ public sealed class AzApiDocsService : IAzApiDocsService
         string writableScopes = GetWritableScopes(typesResult);
         string hclSchema = FormatAsHcl(resourceTypeName, resolvedApiVersion, parentResourceType, writableScopes, complexTypes);
 
-        return new AzApiDocsResult
+        return new()
         {
             ResourceType = resourceTypeName,
             ApiVersion = resolvedApiVersion,
             Schema = hclSchema,
             ParentResourceType = parentResourceType,
             WritableScopes = writableScopes,
-            Summary = $"AzAPI resource schema for {fullName}"
+            Summary = $"AzAPI resource schema for {fullName}",
+            Examples = null
         };
     }
 

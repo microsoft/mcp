@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.Tests;
 
-public class TestRunCreateOrUpdateCommandTests : CommandUnitTestsBase<TestRunCreateOrUpdateCommand, ILoadTestingService>
+public class TestRunCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBase<TestRunCreateOrUpdateCommand, ILoadTestingService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -39,7 +38,6 @@ public class TestRunCreateOrUpdateCommandTests : CommandUnitTestsBase<TestRunCre
             Arg.Is("displayName"),
             Arg.Is((string?)null),
             Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -70,7 +68,6 @@ public class TestRunCreateOrUpdateCommandTests : CommandUnitTestsBase<TestRunCre
             Arg.Is((string?)null),
             Arg.Is((string?)null),
             Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new TestRun());
 
@@ -99,7 +96,6 @@ public class TestRunCreateOrUpdateCommandTests : CommandUnitTestsBase<TestRunCre
             Arg.Is("displayName"),
             Arg.Is((string?)null),
             Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -134,7 +130,6 @@ public class TestRunCreateOrUpdateCommandTests : CommandUnitTestsBase<TestRunCre
             Arg.Is((string?)null),
             Arg.Is((string?)null),
             Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -168,7 +163,6 @@ public class TestRunCreateOrUpdateCommandTests : CommandUnitTestsBase<TestRunCre
             Arg.Is((string?)null),
             Arg.Is((string?)null),
             Arg.Is(false),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

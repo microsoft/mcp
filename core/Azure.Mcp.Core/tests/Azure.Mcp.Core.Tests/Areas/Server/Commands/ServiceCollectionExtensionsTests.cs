@@ -47,7 +47,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo
         };
@@ -60,12 +60,11 @@ public class ServiceCollectionExtensionsTests
         var provider = services.BuildServiceProvider();
 
         // Verify base discovery strategies
-        Assert.NotNull(provider.GetService<CommandGroupDiscoveryStrategy>());
+        Assert.Null(provider.GetService<CommandGroupDiscoveryStrategy>());
         Assert.NotNull(provider.GetService<RegistryDiscoveryStrategy>());
 
         // Verify base tool loaders
         Assert.NotNull(provider.GetService<CommandFactoryToolLoader>());
-        Assert.NotNull(provider.GetService<RegistryToolLoader>());
 
         // Verify runtime
         Assert.NotNull(provider.GetService<IMcpRuntime>());
@@ -77,7 +76,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "single"
@@ -103,7 +102,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "namespace"
@@ -118,12 +117,11 @@ public class ServiceCollectionExtensionsTests
         // Verify the correct tool loader is registered
         // In namespace mode, we now use CompositeToolLoader that includes NamespaceToolLoader
         Assert.NotNull(provider.GetService<IToolLoader>());
-        Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
+        var compositeToolLoader = Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
 
-        // Verify discovery strategy is registered
-        // In namespace mode, we only use RegistryDiscoveryStrategy (for external MCP servers)
-        Assert.NotNull(provider.GetService<IMcpDiscoveryStrategy>());
-        Assert.IsType<RegistryDiscoveryStrategy>(provider.GetService<IMcpDiscoveryStrategy>());
+        // Verify CompositeToolLoader contains ServerToolLoader
+        // In namespace mode, we use ServerToolLoader for external MCP servers
+        Assert.Contains(compositeToolLoader._toolLoaders, tl => tl is ServerToolLoader);
     }
 
     [Fact]
@@ -131,7 +129,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             // No mode specified - should use default "namespace" mode
@@ -145,7 +143,11 @@ public class ServiceCollectionExtensionsTests
 
         // Verify the correct tool loader is registered
         Assert.NotNull(provider.GetService<IToolLoader>());
-        Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
+        var compositeToolLoader = Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
+
+        // Verify CompositeToolLoader contains ServerToolLoader
+        // Current default mode is namespace mode, it uses ServerToolLoader for external MCP servers
+        Assert.Contains(compositeToolLoader._toolLoaders, tl => tl is ServerToolLoader);
     }
 
     [Fact]
@@ -153,7 +155,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             // Define proxy as "single" to prevent CompositeDiscoveryStrategy error
@@ -179,7 +181,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
         };
@@ -207,7 +209,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             ReadOnly = true
@@ -218,14 +220,13 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var registeredOptions = provider.GetService<ServiceStartOptions>();
-        var wrappedOptions = provider.GetService<IOptions<ServiceStartOptions>>()?.Value;
+        var registeredOptions = provider.GetService<ServerRuntimeConfiguration>();
+        var wrappedOptions = provider.GetService<IOptions<ServerRuntimeConfiguration>>()?.Value;
 
         // Verify both registrations point to the same instance
         Assert.NotNull(registeredOptions);
         Assert.NotNull(wrappedOptions);
-        Assert.Same(options, registeredOptions);
-        Assert.Same(options, wrappedOptions);
+        Assert.Same(registeredOptions, wrappedOptions);
         Assert.True(registeredOptions.ReadOnly);
     }
 
@@ -234,7 +235,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             ReadOnly = true
@@ -245,13 +246,13 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var provider = services.BuildServiceProvider();
-        var registeredOptions = provider.GetService<ServiceStartOptions>();
+        var registeredOptions = provider.GetService<ServerRuntimeConfiguration>();
 
         Assert.NotNull(registeredOptions);
         Assert.True(registeredOptions.ReadOnly);
 
-        // Verify the option is also available as IOptions<ServiceStartOptions>
-        var optionsMonitor = provider.GetService<IOptions<ServiceStartOptions>>();
+        // Verify the option is also available as IOptions<ServerRuntimeConfiguration>
+        var optionsMonitor = provider.GetService<IOptions<ServerRuntimeConfiguration>>();
         Assert.NotNull(optionsMonitor);
         Assert.True(optionsMonitor.Value.ReadOnly);
     }
@@ -261,7 +262,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Namespace = ["keyvault", "storage"]
@@ -293,7 +294,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Namespace = [serviceArea]
@@ -319,7 +320,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "invalid-mode"
@@ -340,7 +341,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = null
@@ -361,7 +362,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo,
             Mode = "all"
@@ -387,7 +388,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo
         };
@@ -412,7 +413,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = SetupBaseServices();
-        var options = new ServiceStartOptions
+        var options = new ServerStartOptions
         {
             Transport = TransportTypes.StdIo
         };

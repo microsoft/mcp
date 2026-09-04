@@ -86,11 +86,11 @@ namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 /// </remarks>
 internal class CustomChainedCredential : TokenCredential
 {
-    private readonly Lazy<TokenCredential> _credential;
+    internal Lazy<TokenCredential> Credential { get; }
 
     internal CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
     {
-        _credential = new Lazy<TokenCredential>(
+        Credential = new Lazy<TokenCredential>(
             () => CreateCredential(tenantId, logger, forceBrowserFallback),
             LazyThreadSafetyMode.ExecutionAndPublication);
     }
@@ -101,19 +101,19 @@ internal class CustomChainedCredential : TokenCredential
     internal static IAzureCloudConfiguration? CloudConfiguration { get; set; }
 
     /// <summary>
-    /// Active transport type ("stdio" or "http"). Set by <see cref="Microsoft.Mcp.Core.Areas.Server.Commands.ServiceStartCommand"/>
+    /// Active transport type ("stdio" or "http"). Set by <see cref="Microsoft.Mcp.Core.Areas.Server.Commands.ServerStartCommand"/>
     /// before the credential chain is first used. Empty when not running as a server (e.g. direct CLI invocation).
     /// </summary>
     internal static string ActiveTransport { get; set; } = string.Empty;
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        return _credential.Value.GetToken(requestContext, cancellationToken);
+        return Credential.Value.GetToken(requestContext, cancellationToken);
     }
 
     public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        return _credential.Value.GetTokenAsync(requestContext, cancellationToken);
+        return Credential.Value.GetTokenAsync(requestContext, cancellationToken);
     }
 
     private const string AuthenticationRecordEnvVarName = "AZURE_MCP_AUTHENTICATION_RECORD";
@@ -122,12 +122,13 @@ internal class CustomChainedCredential : TokenCredential
     private const string ClientIdEnvVarName = "AZURE_MCP_CLIENT_ID";
     private const string TokenCredentialsEnvVarName = "AZURE_TOKEN_CREDENTIALS";
 
-    private static bool ShouldUseOnlyBrokerCredential()
-    {
-        return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
-    }
+    private static bool ShouldUseOnlyBrokerCredential() =>
+        EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
 
-    private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null, bool forceBrowserFallback = false)
+    private static TokenCredential CreateCredential(
+        string? tenantId,
+        ILogger<CustomChainedCredential>? logger = null,
+        bool forceBrowserFallback = false)
     {
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
@@ -223,7 +224,7 @@ internal class CustomChainedCredential : TokenCredential
         return new ChainedTokenCredential([.. creds]);
     }
 
-    private static string TokenCacheName = "azure-mcp-msal.cache";
+    private const string TokenCacheName = "azure-mcp-msal.cache";
 
     private static TokenCredential CreateBrowserCredential(string? tenantId, AuthenticationRecord? authRecord)
     {

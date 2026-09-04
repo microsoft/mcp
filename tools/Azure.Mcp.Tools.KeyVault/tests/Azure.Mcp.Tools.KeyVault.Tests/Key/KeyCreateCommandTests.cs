@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Keys;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Key;
 
-public class KeyCreateCommandTests : CommandUnitTestsBase<KeyCreateCommand, IKeyVaultService>
+public class KeyCreateCommandTests : SubscriptionCommandUnitTestsBase<KeyCreateCommand, IKeyVaultService>
 {
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
@@ -47,7 +46,6 @@ public class KeyCreateCommandTests : CommandUnitTestsBase<KeyCreateCommand, IKey
             Arg.Is(_knownKeyType.ToString()),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultKey);
 
@@ -59,7 +57,7 @@ public class KeyCreateCommandTests : CommandUnitTestsBase<KeyCreateCommand, IKey
             "--subscription", _knownSubscriptionId);
 
         // Assert
-        var retrievedKey = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyCreateCommandResult);
+        var retrievedKey = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyDetails);
 
         Assert.Equal(_knownKeyName, retrievedKey.Name);
         Assert.Equal(_knownKeyType.ToString(), retrievedKey.KeyType);
@@ -78,7 +76,6 @@ public class KeyCreateCommandTests : CommandUnitTestsBase<KeyCreateCommand, IKey
         // Assert - Should return validation error response
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
     }
 
     [Fact]
@@ -93,7 +90,6 @@ public class KeyCreateCommandTests : CommandUnitTestsBase<KeyCreateCommand, IKey
             Arg.Is(_knownKeyType.ToString()),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

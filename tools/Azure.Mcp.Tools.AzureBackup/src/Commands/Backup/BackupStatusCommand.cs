@@ -47,7 +47,6 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
                 options.Subscription!,
                 options.Location,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -69,7 +68,10 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource not found. Verify the datasource ARM resource ID.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed checking backup status. Details: {reqEx.Message}",
+            "Authorization failed checking backup status. " +
+            "This tool requires the 'Microsoft.RecoveryServices/locations/backupStatus/action' permission " +
+            "(included in 'Backup Reader' role at subscription scope). " +
+            "Alternatively, use 'vault_get' + 'protecteditem_get' to check protection status.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

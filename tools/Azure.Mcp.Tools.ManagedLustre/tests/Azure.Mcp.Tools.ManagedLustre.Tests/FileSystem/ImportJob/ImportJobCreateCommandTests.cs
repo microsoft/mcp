@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.ImportJob;
 
-public class ImportJobCreateCommandTests : CommandUnitTestsBase<ImportJobCreateCommand, IManagedLustreService>
+public class ImportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<ImportJobCreateCommand, IManagedLustreService>
 {
     private const string Sub = "sub123";
     private const string Rg = "rg1";
@@ -46,7 +46,6 @@ public class ImportJobCreateCommandTests : CommandUnitTestsBase<ImportJobCreateC
                 Arg.Any<string[]?>(),
                 Arg.Any<long?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(JobName);
         }
@@ -85,7 +84,6 @@ public class ImportJobCreateCommandTests : CommandUnitTestsBase<ImportJobCreateC
             Arg.Any<string[]?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(jobName);
 
@@ -99,7 +97,7 @@ public class ImportJobCreateCommandTests : CommandUnitTestsBase<ImportJobCreateC
         await Service.Received(1).CreateImportJobAsync(
             Sub, Rg, Name, jobName, conflictMode,
             Arg.Any<string[]>(),
-            Arg.Any<long?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<long?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -109,7 +107,7 @@ public class ImportJobCreateCommandTests : CommandUnitTestsBase<ImportJobCreateC
         Service.CreateImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<long?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name}";
 
@@ -128,7 +126,7 @@ public class ImportJobCreateCommandTests : CommandUnitTestsBase<ImportJobCreateC
         Service.CreateImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string[]?>(), Arg.Any<long?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(JobName);
 
         // Act

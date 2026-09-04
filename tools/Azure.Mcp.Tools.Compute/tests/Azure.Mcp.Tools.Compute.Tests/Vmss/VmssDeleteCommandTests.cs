@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vmss;
 
-public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IComputeService>
+public class VmssDeleteCommandTests : SubscriptionCommandUnitTestsBase<VmssDeleteCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -44,7 +43,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
                 Arg.Any<string>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -73,7 +71,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             Arg.Is(_knownSubscription),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -100,7 +97,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             Arg.Is(_knownSubscription),
             Arg.Is<bool?>(true),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -120,7 +116,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             _knownSubscription,
             true,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -134,7 +129,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -164,7 +158,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
@@ -191,7 +184,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -216,7 +208,6 @@ public class VmssDeleteCommandTests : CommandUnitTestsBase<VmssDeleteCommand, IC
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 

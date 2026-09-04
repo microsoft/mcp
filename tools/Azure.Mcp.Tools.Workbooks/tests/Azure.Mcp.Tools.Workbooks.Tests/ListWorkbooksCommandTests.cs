@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.Tests;
 
-public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksCommand, IWorkbooksService>
+public class ListWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<ListWorkbooksCommand, IWorkbooksService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -90,7 +89,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -131,7 +129,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -159,7 +156,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
@@ -188,7 +184,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -207,7 +202,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Is("test-tenant"),
             Arg.Any<CancellationToken>());
     }
@@ -224,7 +218,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -242,44 +235,7 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Is<string?>(t => t == null),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var listResult = new WorkbookListResult([], 0, null);
-        Service.ListWorkbooksAsync(
-            Arg.Any<IReadOnlyList<string>?>(),
-            Arg.Any<IReadOnlyList<string>?>(),
-            Arg.Any<WorkbookFilters?>(),
-            Arg.Any<int>(),
-            Arg.Any<bool>(),
-            Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(listResult);
-
-        // Act
-        await ExecuteCommandAsync(
-            "--subscription", "test-subscription",
-            "--resource-group", "test-resource-group",
-            "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).ListWorkbooksAsync(
-            Arg.Is<IReadOnlyList<string>?>(s => s != null && s.Contains("test-subscription")),
-            Arg.Is<IReadOnlyList<string>?>(rg => rg != null && rg.Contains("test-resource-group")),
-            Arg.Any<WorkbookFilters?>(),
-            Arg.Any<int>(),
-            Arg.Any<bool>(),
-            Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -337,7 +293,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -390,7 +345,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -413,7 +367,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -449,7 +402,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -472,7 +424,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -509,7 +460,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -532,7 +482,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -569,7 +518,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -594,7 +542,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -630,7 +577,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -652,7 +598,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -671,7 +616,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -693,7 +637,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -714,7 +657,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -736,7 +678,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -772,7 +713,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Is(true), // includeTotalCount
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -800,7 +740,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Is(25), // maxResults
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -818,7 +757,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Is(25),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -839,7 +777,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Is(expectedFormat),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -857,7 +794,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Is(expectedFormat),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -875,7 +811,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -893,7 +828,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -912,7 +846,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -930,7 +863,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -951,7 +883,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -970,7 +901,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -988,7 +918,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1007,7 +936,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1028,7 +956,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Is(expectedMaxResults),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1046,7 +973,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Is(expectedMaxResults),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1066,7 +992,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Is(expectedMaxResults),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1084,7 +1009,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Is(expectedMaxResults),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1103,7 +1027,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1121,7 +1044,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Is(true),  // Default should be true
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1164,7 +1086,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1193,7 +1114,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1217,7 +1137,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Is(expectedFormat),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1235,7 +1154,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Is(expectedFormat),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1253,7 +1171,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Is(OutputFormat.Standard),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1271,7 +1188,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Is(OutputFormat.Standard),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1289,7 +1205,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Is(true), // should default to true
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);
@@ -1305,7 +1220,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Is(true),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -1325,7 +1239,6 @@ public class ListWorkbooksCommandTests : CommandUnitTestsBase<ListWorkbooksComma
             Arg.Any<int>(),
             Arg.Any<bool>(),
             Arg.Any<OutputFormat>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(listResult);

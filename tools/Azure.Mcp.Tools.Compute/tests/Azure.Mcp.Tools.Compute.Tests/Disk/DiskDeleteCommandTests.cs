@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,7 +15,7 @@ namespace Azure.Mcp.Tools.Compute.Tests.Disk;
 /// <summary>
 /// Unit tests for the DiskDeleteCommand.
 /// </summary>
-public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IComputeService>
+public class DiskDeleteCommandTests : SubscriptionCommandUnitTestsBase<DiskDeleteCommand, IComputeService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -41,7 +40,6 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -71,7 +69,6 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -101,7 +98,6 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -157,7 +153,6 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException("Conflict"));
 
@@ -192,7 +187,6 @@ public class DiskDeleteCommandTests : CommandUnitTestsBase<DiskDeleteCommand, IC
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

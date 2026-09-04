@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -69,7 +68,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Is(workbookId),
             Arg.Is("Updated Test Workbook"),
             Arg.Is("{\"version\":\"Notebook/1.0\",\"updated\":true}"),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
@@ -112,7 +110,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Is(workbookId),
             Arg.Is("New Display Name Only"),
             Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
@@ -153,7 +150,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Is(workbookId),
             Arg.Is((string?)null),
             Arg.Is(newSerializedContent),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
@@ -197,7 +193,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
@@ -213,7 +208,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Is(workbookId),
             Arg.Is(displayName),
             Arg.Is(serializedContent),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Is<string?>(t => t == null),
             Arg.Any<CancellationToken>());
     }
@@ -228,7 +222,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkbookInfo?>(null));
@@ -251,7 +244,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
@@ -331,7 +323,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Is(workbookId),
             Arg.Is("Updated Complex Workbook"),
             Arg.Is(complexSerializedData),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
@@ -378,7 +369,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
@@ -394,101 +384,7 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Is(workbookId),
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Is(tenantId),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
-
-        var updatedWorkbook = new WorkbookInfo(
-            WorkbookId: workbookId,
-            DisplayName: "Test Workbook",
-            Description: "Test Description",
-            Category: "workbook",
-            Location: "eastus",
-            Kind: "shared",
-            Tags: "{}",
-            SerializedData: "{\"version\":\"Notebook/1.0\"}",
-            Version: "1.0",
-            TimeModified: DateTimeOffset.UtcNow,
-            UserId: "user1",
-            SourceId: "azure monitor"
-        );
-
-        Service.UpdateWorkbookAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(updatedWorkbook);
-
-        // Act
-        await ExecuteCommandAsync(
-            "--workbook-id", workbookId,
-            "--display-name", "Test Workbook",
-            "--auth-method", "1");
-
-        // Assert
-        await Service.Received(1).UpdateWorkbookAsync(
-            Arg.Is(workbookId),
-            Arg.Is("Test Workbook"),
-            Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithRetryOptions_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
-
-        var updatedWorkbook = new WorkbookInfo(
-            WorkbookId: workbookId,
-            DisplayName: "Test Workbook",
-            Description: "Test Description",
-            Category: "workbook",
-            Location: "eastus",
-            Kind: "shared",
-            Tags: "{}",
-            SerializedData: "{\"version\":\"Notebook/1.0\"}",
-            Version: "1.0",
-            TimeModified: DateTimeOffset.UtcNow,
-            UserId: "user1",
-            SourceId: "azure monitor"
-        );
-
-        Service.UpdateWorkbookAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(updatedWorkbook);
-
-        // Act
-        await ExecuteCommandAsync(
-            "--workbook-id", workbookId,
-            "--display-name", "Test Workbook",
-            "--retry-max-retries", "5",
-            "--retry-delay", "2.5");
-
-        // Assert
-        await Service.Received(1).UpdateWorkbookAsync(
-            Arg.Is(workbookId),
-            Arg.Is("Test Workbook"),
-            Arg.Is((string?)null),
-            Arg.Is<RetryPolicyOptions?>(x => x != null && x.MaxRetries == 5 && System.Math.Abs(x.DelaySeconds.GetValueOrDefault() - 2.5) < 1e-6),
-            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -503,7 +399,6 @@ public class UpdateWorkbooksCommandTests : CommandUnitTestsBase<UpdateWorkbooksC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);

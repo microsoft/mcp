@@ -88,9 +88,8 @@ public class McpHelperTests
             Meta = isMetaNull ? null : []
         };
         var toolId = "TestToolId";
-        JsonObject meta = [new(McpHelper.ToolIdMetaKey, toolId)];
 
-        var enrichedResult = McpHelper.InjectToolIdMetadata(result, meta);
+        var enrichedResult = McpHelper.InjectToolIdMetadata(result, toolId);
 
         Assert.NotNull(enrichedResult.Meta);
         Assert.True(enrichedResult.Meta.TryGetPropertyValue(McpHelper.ToolIdMetaKey, out var toolIdNode));
@@ -104,17 +103,12 @@ public class McpHelperTests
     [InlineData(false)]
     [InlineData(true)]
     [InlineData(123)]
-    public void InjectToolIdMetadata_JsonObject_DoesNothingOnWrongType(object? toolIdValue)
+    public void GetToolIdFromMeta_ReturnsNullOnWrongType(object? toolIdValue)
     {
-        var result = new CallToolResult
-        {
-            Meta = []
-        };
         JsonObject meta = [new(McpHelper.ToolIdMetaKey, JsonValue.Create(toolIdValue))];
 
-        var enrichedResult = McpHelper.InjectToolIdMetadata(result, meta);
+        var toolId = McpHelper.GetToolIdFromMeta(meta);
 
-        Assert.NotNull(enrichedResult.Meta);
-        Assert.False(enrichedResult.Meta.TryGetPropertyValue(McpHelper.ToolIdMetaKey, out var _));
+        Assert.Null(toolId);
     }
 }

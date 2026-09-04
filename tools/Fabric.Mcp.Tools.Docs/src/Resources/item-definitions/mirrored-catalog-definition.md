@@ -74,6 +74,9 @@ Describes the source catalog connection and scope configuration.
 | Name | Description |
 |---|---|
 | `DremioIcebergCatalog` | Represents a Dremio Iceberg Catalog source. |
+| `AzureMonitorMirroredCatalog` | Represents an Azure Monitor (Log Analytics) Iceberg Catalog source. |
+| `AWSIcebergCatalog` | Represents an AWS Glue (Iceberg REST) catalog source. |
+| `MirroredGoogleLakehouseRuntimeCatalog` | Represents a Google BigLake (Iceberg REST) catalog source. |
 
 ### SourceTypeProperties
 

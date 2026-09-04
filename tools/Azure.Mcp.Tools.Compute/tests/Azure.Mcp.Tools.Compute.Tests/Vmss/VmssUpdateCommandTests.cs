@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vmss;
 
-public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IComputeService>
+public class VmssUpdateCommandTests : SubscriptionCommandUnitTestsBase<VmssUpdateCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -67,7 +66,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(updateResult);
         }
@@ -114,7 +112,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -159,7 +156,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             Arg.Any<string?>(),
             Arg.Is(string.Empty),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -167,7 +163,7 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             "--vmss-name", _knownVmssName,
             "--resource-group", _knownResourceGroup,
             "--subscription", _knownSubscription,
-            "--tags");
+            "--tags", "");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).UpdateVmssAsync(
@@ -182,7 +178,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             Arg.Any<string?>(),
             string.Empty,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -213,7 +208,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -248,7 +242,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -282,7 +275,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(quotaException);
 
@@ -325,7 +317,6 @@ public class VmssUpdateCommandTests : CommandUnitTestsBase<VmssUpdateCommand, IC
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 

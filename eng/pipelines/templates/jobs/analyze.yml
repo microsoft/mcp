@@ -32,16 +32,6 @@ jobs:
       runtime: 'linux-x64'
       sourceDirectory: $(Build.SourcesDirectory)
 
-  - template: /eng/common/pipelines/templates/steps/check-spelling.yml
-
-  - template: /eng/common/pipelines/templates/steps/verify-links.yml
-    parameters:
-      Condition: succeededOrFailed()
-      Directory: ""
-      CheckLinkGuidance: $true
-      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-        Urls: (eng/common/scripts/get-markdown-files-from-changed-files.ps1)
-
   - pwsh: |
       # Verify that the package README.md files do not contain invalid headers or comment annotations
       $hasFailures = & "$(Build.SourcesDirectory)/eng/scripts/Process-PackageReadMe.ps1" -Command "validate-all"

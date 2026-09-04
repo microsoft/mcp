@@ -5,8 +5,6 @@ using System.Text.Json;
 using Microsoft.Mcp.Core.Areas.Server;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
-using NSubstitute;
-using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 
@@ -120,21 +118,15 @@ public sealed class MockMcpClientBuilder
     /// <returns>A mock <see cref="McpClient"/> instance.</returns>
     public McpClient Build()
     {
-        var mockClient = Substitute.For<McpClient>();
-
-        // Setup tools/list response
-        mockClient.SendRequestAsync(
-            Arg.Is<JsonRpcRequest>(req => req.Method == "tools/list"),
-            TestContext.Current.CancellationToken)
-            .Returns(callInfo => HandleListToolsRequest(callInfo.Arg<JsonRpcRequest>()));
-
-        // Setup tools/call response
-        mockClient.SendRequestAsync(
-            Arg.Is<JsonRpcRequest>(req => req.Method == "tools/call"),
-            TestContext.Current.CancellationToken)
-            .Returns(callInfo => HandleCallToolRequest(callInfo.Arg<JsonRpcRequest>()));
-
-        return mockClient;
+        // The MCP 2026-07-28 beta SDK sealed McpClient with a private protected abstract member,
+        // so it can no longer be proxied by NSubstitute. Build a real client over a loopback
+        // transport instead, dispatching tools/list and tools/call to the registered handlers.
+        return LoopbackMcpClient.Create(request => request.Method switch
+        {
+            RequestMethods.ToolsList => HandleListToolsRequest(request).GetAwaiter().GetResult(),
+            RequestMethods.ToolsCall => HandleCallToolRequest(request).GetAwaiter().GetResult(),
+            _ => null
+        });
     }
 
     /// <summary>
@@ -144,8 +136,9 @@ public sealed class MockMcpClientBuilder
     {
         var tools = _tools.Values.Select(mockTool => mockTool.Tool).ToList();
 
-        var result = new ListToolsResult { Tools = tools };
-        var json = JsonSerializer.SerializeToNode(result, ServerJsonContext.Default.ListToolsResult);
+        // Serialize tools list using source-generated context, then wrap in a result envelope
+        var toolsNode = JsonSerializer.SerializeToNode(tools, ServerJsonContext.Default.IEnumerableTool);
+        var json = new System.Text.Json.Nodes.JsonObject { ["tools"] = toolsNode };
 
         return Task.FromResult(new JsonRpcResponse
         {

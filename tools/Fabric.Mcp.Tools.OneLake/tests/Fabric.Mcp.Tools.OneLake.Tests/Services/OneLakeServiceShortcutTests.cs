@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-#pragma warning disable xUnit1051
-
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Fabric.Mcp.Tools.OneLake.Tests.TestSupport;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Services;
 
@@ -52,7 +51,7 @@ public class OneLakeServiceShortcutTests
         using var httpClient = new HttpClient(handler);
         var service = new OneLakeService(httpClient, new FakeTokenCredential());
 
-        var result = await service.CreateShortcutAsync(WorkspaceId, ItemId, expectedShortcut, "CreateOrOverwrite");
+        var result = await service.CreateShortcutAsync(WorkspaceId, ItemId, expectedShortcut, ShortcutConflictPolicy.CreateOrOverwrite, TestContext.Current.CancellationToken);
 
         Assert.NotNull(capturedRequest);
         Assert.Equal(HttpMethod.Post, capturedRequest!.Method);
@@ -96,7 +95,7 @@ public class OneLakeServiceShortcutTests
         using var httpClient = new HttpClient(handler);
         var service = new OneLakeService(httpClient, new FakeTokenCredential());
 
-        var result = await service.CreateShortcutAsync(WorkspaceId, ItemId, shortcut);
+        var result = await service.CreateShortcutAsync(WorkspaceId, ItemId, shortcut, null, TestContext.Current.CancellationToken);
 
         Assert.Same(shortcut, result);
     }

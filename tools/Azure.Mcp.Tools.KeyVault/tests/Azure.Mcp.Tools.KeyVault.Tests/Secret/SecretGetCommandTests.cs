@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Secret;
 
-public class SecretGetCommandTests : CommandUnitTestsBase<SecretGetCommand, IKeyVaultService>
+public class SecretGetCommandTests : SubscriptionCommandUnitTestsBase<SecretGetCommand, IKeyVaultService>
 {
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
@@ -31,7 +30,6 @@ public class SecretGetCommandTests : CommandUnitTestsBase<SecretGetCommand, IKey
             Arg.Is(_knownSecretName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultSecret);
 
@@ -61,7 +59,6 @@ public class SecretGetCommandTests : CommandUnitTestsBase<SecretGetCommand, IKey
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -87,7 +84,6 @@ public class SecretGetCommandTests : CommandUnitTestsBase<SecretGetCommand, IKey
             Arg.Is(_knownVaultName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSecrets);
 
@@ -115,7 +111,6 @@ public class SecretGetCommandTests : CommandUnitTestsBase<SecretGetCommand, IKey
             Arg.Is(_knownVaultName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

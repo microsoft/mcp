@@ -3,21 +3,16 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Datadog;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 
-public partial class DatadogService(ITenantService tenantService, ILogger<DatadogService> logger)
-    : BaseAzureService(tenantService), IDatadogService
+public partial class DatadogService(IAzureService azureService)
+    : BaseAzureService(azureService), IDatadogService
 {
-    private readonly ILogger<DatadogService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<List<string>> ListMonitoredResources(string resourceGroup, string subscription, string datadogResource, CancellationToken cancellationToken = default)
     {
-        var tenantId = await ResolveTenantIdAsync(null, cancellationToken);
-        var armClient = await CreateArmClientAsync(tenantIdOrName: tenantId, retryPolicy: null, armClientOptions: null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenantIdOrName: null, armClientOptions: null, cancellationToken);
 
         var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
 

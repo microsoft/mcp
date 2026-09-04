@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Net;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
@@ -12,7 +10,7 @@ namespace Microsoft.Mcp.Core.Tests.Commands;
 
 /// <summary>
 /// Tests for <see cref="CommandValidationException"/> defaults and for the way
-/// <see cref="BaseCommand{TOptions}.HandleException"/> maps the exception's
+/// <see cref="BaseCommand{TOptions, TResult}.HandleException"/> maps the exception's
 /// <see cref="CommandValidationException.StatusCode"/> into the command response.
 /// These lock in the BadRequest (400) default so it does not regress back to 500.
 /// </summary>
@@ -25,21 +23,13 @@ public sealed class CommandValidationExceptionTests
         Name = "test-validation",
         Title = "Test Validation Command",
         Description = "A command used only to exercise HandleException in tests.")]
-    private sealed class ValidationTestCommand : BaseCommand<EmptyOptions>
+    private sealed class ValidationTestCommand : BaseCommand<EmptyOptions, string>
     {
-        protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
         public override Task<CommandResponse> ExecuteAsync(
-            CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+            CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
             => Task.FromResult(context.Response);
 
         public void InvokeHandleException(CommandContext context, Exception ex) => HandleException(context, ex);
-    }
-
-    private static CommandContext CreateContext()
-    {
-        var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        return new CommandContext(serviceProvider);
     }
 
     // ---------- Exception default tests ----------
@@ -79,7 +69,7 @@ public sealed class CommandValidationExceptionTests
     public void HandleException_MapsDefaultStatusCode_ToBadRequest()
     {
         var command = new ValidationTestCommand();
-        var context = CreateContext();
+        var context = new CommandContext();
 
         command.InvokeHandleException(context, new CommandValidationException("Validation failed."));
 
@@ -92,7 +82,7 @@ public sealed class CommandValidationExceptionTests
     public void HandleException_HonorsExplicitStatusCode()
     {
         var command = new ValidationTestCommand();
-        var context = CreateContext();
+        var context = new CommandContext();
 
         command.InvokeHandleException(
             context,
@@ -107,13 +97,13 @@ public sealed class CommandValidationExceptionTests
     public void HandleException_FormatsMissingOptionsMessage()
     {
         var command = new ValidationTestCommand();
-        var context = CreateContext();
+        var context = new CommandContext();
 
         command.InvokeHandleException(
             context,
             new CommandValidationException(
                 "ignored",
-                missingOptions: new[] { "--resource-group", "--account" }));
+                missingOptions: ["--resource-group", "--account"]));
 
         Assert.Equal(HttpStatusCode.BadRequest, context.Response.Status);
         Assert.Equal("Missing Required options: --resource-group, --account", context.Response.Message);

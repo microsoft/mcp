@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem;
 
-public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreateCommand, IManagedLustreService>
+public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<FileSystemCreateCommand, IManagedLustreService>
 {
     private const string Sub = "sub123";
     private const string Rg = "rg1";
@@ -73,7 +73,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expected);
         }
@@ -141,7 +140,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -185,7 +183,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -259,7 +256,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -303,7 +299,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -333,7 +328,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 
@@ -379,7 +373,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
@@ -425,7 +418,6 @@ public class FileSystemCreateCommandTests : CommandUnitTestsBase<FileSystemCreat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
 

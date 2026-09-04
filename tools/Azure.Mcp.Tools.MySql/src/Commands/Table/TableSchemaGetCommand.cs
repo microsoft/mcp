@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.MySql.Commands.Database;
-using Azure.Mcp.Tools.MySql.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.MySql.Options.Table;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Table;
@@ -23,35 +22,17 @@ namespace Azure.Mcp.Tools.MySql.Commands.Table;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
+public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>(subscriptionResolver)
 {
     private readonly IMySqlService _mysqlService = mysqlService;
+    private readonly ILogger<TableSchemaGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(MySqlOptionDefinitions.Table);
-    }
-
-    protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Table.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var schema = await _mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!, cancellationToken);
+            var schema = await _mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Database, options.Table, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), MySqlJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)
@@ -62,5 +43,5 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger,
         return context.Response;
     }
 
-    internal record TableSchemaGetCommandResult(List<string> Schema);
+    public sealed record TableSchemaGetCommandResult(List<string> Schema);
 }

@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Azure.Mcp.Tools.Deploy.Schemas;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Deploy.Options.Architecture;
 
-public class DiagramGenerateOptions : GlobalOptions
+public sealed class DiagramGenerateOptions
 {
-    [JsonPropertyName(BaseToolLoader.RawMcpToolInputOptionName)]
-    public string? RawMcpToolInput { get; set; }
+    [Option(Description = DeployAppTopologySchema.Schema)]
+    public required string RawMcpToolInput { get; set; }
 }

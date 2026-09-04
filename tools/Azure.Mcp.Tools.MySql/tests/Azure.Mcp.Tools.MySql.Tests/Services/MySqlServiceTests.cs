@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.MySql.Services;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -15,46 +11,34 @@ namespace Azure.Mcp.Tools.MySql.Tests.Services;
 
 public class MySqlServiceTests
 {
-    private readonly IResourceGroupService _resourceGroupService;
-    private readonly ISubscriptionService _subscriptionService;
-    private readonly ITenantService _tenantService;
-    private readonly ILogger<MySqlService> _logger;
+    private readonly IAzureService _azureService;
     private readonly MySqlService _mysqlService;
 
     public MySqlServiceTests()
     {
-        _resourceGroupService = Substitute.For<IResourceGroupService>();
-        _subscriptionService = Substitute.For<ISubscriptionService>();
-        _tenantService = Substitute.For<ITenantService>();
-        _logger = Substitute.For<ILogger<MySqlService>>();
+        _azureService = Substitute.For<IAzureService>();
 
-        _mysqlService = new MySqlService(_resourceGroupService, _subscriptionService, _tenantService, _logger);
+        _mysqlService = new MySqlService(_azureService);
     }
 
     [Fact]
-    public void Constructor_WithNullResourceGroupService_ThrowsArgumentNullException()
+    public void Constructor_WithNullAzureService_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new MySqlService(null!, _subscriptionService, _tenantService, _logger));
-    }
-
-    [Fact]
-    public void Constructor_WithNullSubscriptionService_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => new MySqlService(_resourceGroupService, null!, _tenantService, _logger));
+        Assert.Throws<ArgumentNullException>(() => new MySqlService(null!));
     }
 
     [Fact]
     public void Constructor_WithValidDependencies_CreatesInstance()
     {
-        var service = new MySqlService(_resourceGroupService, _subscriptionService, _tenantService, _logger);
+        var service = new MySqlService(_azureService);
         Assert.NotNull(service);
     }
 
     [Fact]
-    public async Task ListServersAsync_WhenResourceGroupServiceThrows_RethrowsException()
+    public async Task ListServersAsync_WhenAzureServiceThrows_RethrowsException()
     {
         var exception = new InvalidOperationException("Resource group not found");
-        _resourceGroupService.GetResourceGroupResource("sub123", "rg1", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
+        _azureService.GetResourceGroupResource("sub123", "rg1", Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
 
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mysqlService.ListServersAsync("sub123", "rg1", TestContext.Current.CancellationToken));
@@ -63,10 +47,10 @@ public class MySqlServiceTests
     }
 
     [Fact]
-    public async Task ListServersInSubscriptionAsync_WhenSubscriptionServiceThrows_RethrowsException()
+    public async Task ListServersInSubscriptionAsync_WhenAzureServiceThrows_RethrowsException()
     {
         var exception = new InvalidOperationException("Subscription not found");
-        _subscriptionService.GetSubscription("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
+        _azureService.GetSubscription("sub123", Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
 
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _mysqlService.ListServersInSubscriptionAsync("sub123", TestContext.Current.CancellationToken));
@@ -77,7 +61,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task ListServersAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _resourceGroupService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
@@ -89,7 +73,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task GetServerConfigAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _resourceGroupService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
@@ -101,7 +85,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task GetServerParameterAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _resourceGroupService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
@@ -113,7 +97,7 @@ public class MySqlServiceTests
     [Fact]
     public async Task SetServerParameterAsync_WhenResourceGroupNotFound_ThrowsKeyNotFoundException()
     {
-        _resourceGroupService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        _azureService.GetResourceGroupResource("sub123", "missing-rg", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Azure.ResourceManager.Resources.ResourceGroupResource?>(null));
 
         var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>

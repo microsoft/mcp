@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Policy.Commands;
 using Azure.Mcp.Tools.Policy.Commands.Assignment;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Policy.Tests.Assignment;
 
-public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssignmentListCommand, IPolicyService>
+public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<PolicyAssignmentListCommand, IPolicyService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -54,7 +53,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -97,7 +95,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(assignments);
 
@@ -119,7 +116,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
@@ -139,7 +135,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -153,7 +148,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
             "test-sub",
             scope,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -165,7 +159,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -177,7 +170,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
             "test-sub",
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -189,7 +181,6 @@ public class PolicyAssignmentListCommandTests : CommandUnitTestsBase<PolicyAssig
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 

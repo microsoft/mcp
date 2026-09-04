@@ -2,32 +2,23 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
-using Microsoft.Mcp.Tests.Helpers;
 using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
-public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, IStorageService>
+public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<AccountGetCommand, IStorageService>
 {
-    public SubscriptionCommandTests()
-    {
-        Services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
-    }
 
     [Fact]
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
+        SubscriptionResolver.ResolveSubscription(Arg.Any<string?>()).Returns("env-subs");
 
         // Act
         var parseResult = CommandDefinition.Parse([]);
@@ -40,8 +31,8 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
     public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
-        var subscription = CommandHelper.GetDefaultSubscription()!;
+        var subscription = "env-subs";
+        SubscriptionResolver.ResolveSubscription(Arg.Any<string?>()).Returns(subscription);
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
         [
@@ -54,7 +45,6 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
@@ -70,7 +60,6 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             subscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -78,8 +67,8 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
     public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption()
     {
         // Arrange
-        TestEnvironment.SetAzureSubscriptionId("env-subs");
-        var ignoredSubscription = CommandHelper.GetDefaultSubscription()!;
+        var ignoredSubscription = "env-subs";
+        SubscriptionResolver.ResolveSubscription(null).Returns(ignoredSubscription);
         var expectedSubscription = "option-subs";
 
         var expectedAccounts = new ResourceQueryResults<StorageAccountInfo>(
@@ -93,7 +82,6 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             Arg.Is(expectedSubscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
@@ -109,14 +97,12 @@ public class SubscriptionCommandTests : CommandUnitTestsBase<AccountGetCommand, 
             expectedSubscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         await Service.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             ignoredSubscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 }

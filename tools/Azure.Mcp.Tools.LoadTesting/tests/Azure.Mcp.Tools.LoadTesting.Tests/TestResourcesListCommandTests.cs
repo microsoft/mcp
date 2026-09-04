@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.Tests;
 
-public class TestResourceListCommandTests : CommandUnitTestsBase<TestResourceListCommand, ILoadTestingService>
+public class TestResourceListCommandTests : SubscriptionCommandUnitTestsBase<TestResourceListCommand, ILoadTestingService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -33,7 +32,6 @@ public class TestResourceListCommandTests : CommandUnitTestsBase<TestResourceLis
             Arg.Is("resourceGroup123"),
             Arg.Is((string?)null),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
@@ -60,7 +58,6 @@ public class TestResourceListCommandTests : CommandUnitTestsBase<TestResourceLis
             Arg.Is("resourceGroup123"),
             Arg.Is("testResourceName"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
@@ -84,7 +81,6 @@ public class TestResourceListCommandTests : CommandUnitTestsBase<TestResourceLis
             Arg.Is("resourceGroup123"),
             Arg.Is("loadTestName"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
              .Returns([]);
 
@@ -106,7 +102,6 @@ public class TestResourceListCommandTests : CommandUnitTestsBase<TestResourceLis
             Arg.Is("resourceGroup123"),
             Arg.Is("loadTestName"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

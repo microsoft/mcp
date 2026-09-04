@@ -3,19 +3,18 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
 using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Grafana.Tests;
 
-public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceListCommand, IGrafanaService>
+public sealed class WorkspaceListCommandTests : SubscriptionCommandUnitTestsBase<WorkspaceListCommand, IGrafanaService>
 {
     [Fact]
     public void Constructor_Should_Initialize_Command_Properly()
@@ -62,7 +61,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
             )
         ], false);
 
-        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
         // Act
@@ -80,7 +79,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoWorkspacesExist()
     {
         // Arrange
-        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<GrafanaWorkspace>([], false));
 
         // Act
@@ -113,7 +112,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
             )
         ], false);
 
-        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), "tenant456", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync("sub123", Arg.Any<string?>(), "tenant456", Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
         // Act
@@ -131,7 +130,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         var subscriptionId = "sub123";
 
-        Service.ListWorkspacesAsync(subscriptionId, Arg.Any<string?>(), null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync(subscriptionId, Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -148,7 +147,7 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
     {
         // Arrange
         const string resourceGroup = "test-rg";
-        Service.ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<GrafanaWorkspace>([], false));
 
         // Act
@@ -156,6 +155,6 @@ public sealed class WorkspaceListCommandTests : CommandUnitTestsBase<WorkspaceLi
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListWorkspacesAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

@@ -123,9 +123,9 @@ public sealed class OptionBinderTests
     {
         [Option(Description = "The name of the item.")]
         public string? Name { get; set; }
-        [OptionContainer]
+        [OptionContainer<NetworkSettings>]
         public NetworkSettings? Optional { get; set; }
-        [OptionContainer]
+        [OptionContainer<NetworkSettings>]
         public required NetworkSettings Required { get; set; }
     }
 
@@ -133,7 +133,7 @@ public sealed class OptionBinderTests
     {
         [Option(Description = "The name of the item.")]
         public string? Name { get; set; }
-        [OptionContainer]
+        [OptionContainer<RequiredNetworkSettings>]
         public required RequiredNetworkSettings Required { get; set; }
     }
 
@@ -168,7 +168,7 @@ public sealed class OptionBinderTests
     private sealed class InvalidAttributesCombinationOptions
     {
         [Option(Description = "Invalid attribute combination.")]
-        [OptionContainer]
+        [OptionContainer<NetworkSettings>]
         public NetworkSettings? Invalid { get; set; }
     }
 
@@ -180,8 +180,14 @@ public sealed class OptionBinderTests
 
     private sealed class InvalidOptionContainerAttributeOptions
     {
-        [OptionContainer]
+        [OptionContainer<string>]
         public string? Invalid { get; set; }
+    }
+
+    private sealed class MismatchedOptionContainerOptions
+    {
+        [OptionContainer<NetworkSettings>]
+        public RequiredNetworkSettings? Invalid { get; set; }
     }
 
     #endregion
@@ -224,7 +230,7 @@ public sealed class OptionBinderTests
         Assert.True(tagsOption.AllowMultipleArgumentsPerToken);
 
         var nullableTagsOption = command.Options.Single(o => o.Name == "--nullable-tags");
-        Assert.Equal(ArgumentArity.ZeroOrMore, nullableTagsOption.Arity);
+        Assert.Equal(ArgumentArity.OneOrMore, nullableTagsOption.Arity);
         Assert.True(nullableTagsOption.AllowMultipleArgumentsPerToken);
     }
 
@@ -275,7 +281,7 @@ public sealed class OptionBinderTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => OptionBinder.RegisterOptions<InvalidAttributesCombinationOptions>(command));
 
-        Assert.Contains("Properties can only be attributed with [Option] or [OptionContainer], not both.", ex.Message);
+        Assert.Contains("Properties can only be attributed with [Option] or [OptionContainer<TContainer>], not both.", ex.Message);
     }
 
     [Fact]
@@ -286,7 +292,7 @@ public sealed class OptionBinderTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => OptionBinder.RegisterOptions<InvalidOptionAttributeOptions>(command));
 
-        Assert.Contains("Complex properties cannot use [Option] attribute. Use [OptionContainer] instead.", ex.Message);
+        Assert.Contains("Complex properties cannot use [Option] attribute. Use [OptionContainer<TContainer>] instead.", ex.Message);
     }
 
     [Fact]
@@ -297,7 +303,18 @@ public sealed class OptionBinderTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => OptionBinder.RegisterOptions<InvalidOptionContainerAttributeOptions>(command));
 
-        Assert.Contains("Non-complex properties cannot use [OptionContainer] attribute. Use [Option] instead.", ex.Message);
+        Assert.Contains("Non-complex properties cannot use [OptionContainer<TContainer>] attribute. Use [Option] instead.", ex.Message);
+    }
+
+    [Fact]
+    public void RegisterOptions_MismatchedOptionContainerType_Throws()
+    {
+        var command = new Command("test");
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => OptionBinder.RegisterOptions<MismatchedOptionContainerOptions>(command));
+
+        Assert.Contains("does not match property type", ex.Message);
     }
 
     #endregion
@@ -467,7 +484,7 @@ public sealed class OptionBinderTests
         var parseResult = command.Parse("--color Invalid");
         var ex = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<EnumOptions>(parseResult));
 
-        Assert.Contains("Argument 'Invalid' not recognized. Must be one of:", ex.Message);
+        Assert.Contains("Invalid --color 'Invalid'. Must be one of:", ex.Message);
     }
 
     [Fact]
@@ -737,6 +754,14 @@ public sealed class OptionBinderTests
 
         Assert.True(annotations.HasFlag(DynamicallyAccessedMemberTypes.PublicProperties));
         Assert.True(annotations.HasFlag(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor));
+    }
+
+    [Fact]
+    public void OptionContainerAttribute_GenericType_PreservesBindingMembers()
+    {
+        var containerType = typeof(OptionContainerAttribute<>).GetGenericArguments()[0];
+
+        AssertHasRequiredMemberAnnotations(containerType);
     }
 
     private static void AssertHasRequiredMemberAnnotations(MemberInfo member)

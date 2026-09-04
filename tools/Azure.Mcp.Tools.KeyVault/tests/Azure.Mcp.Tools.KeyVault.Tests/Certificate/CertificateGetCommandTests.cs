@@ -2,17 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Certificate;
 
-public class CertificateGetCommandTests : CommandUnitTestsBase<CertificateGetCommand, IKeyVaultService>
+public class CertificateGetCommandTests : SubscriptionCommandUnitTestsBase<CertificateGetCommand, IKeyVaultService>
 {
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
@@ -31,7 +30,6 @@ public class CertificateGetCommandTests : CommandUnitTestsBase<CertificateGetCom
             Arg.Is(_knownCertificateName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -47,7 +45,6 @@ public class CertificateGetCommandTests : CommandUnitTestsBase<CertificateGetCom
             Arg.Is(_knownCertificateName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         // Should handle the exception
@@ -65,7 +62,6 @@ public class CertificateGetCommandTests : CommandUnitTestsBase<CertificateGetCom
             Arg.Is(_knownCertificateName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -91,7 +87,6 @@ public class CertificateGetCommandTests : CommandUnitTestsBase<CertificateGetCom
             Arg.Is(_knownVaultName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedCertificates);
 
@@ -119,7 +114,6 @@ public class CertificateGetCommandTests : CommandUnitTestsBase<CertificateGetCom
             Arg.Is(_knownVaultName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

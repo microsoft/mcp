@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
+using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
@@ -82,7 +83,9 @@ public static class OptionBinder
                 parentInstances ??= [];
                 if (!parentInstances.TryGetValue(handler.Descriptor.ParentProperty, out var parent))
                 {
-                    parent = CreateInstance(handler.Descriptor.ParentProperty.PropertyType);
+                    var parentType = handler.Descriptor.ParentType
+                        ?? throw new InvalidOperationException("Nested option descriptor is missing its parent type.");
+                    parent = CreateInstance(parentType);
                     parentInstances[handler.Descriptor.ParentProperty] = parent;
                 }
                 handler.Descriptor.TargetProperty.SetValue(parent, value);
@@ -123,11 +126,8 @@ public static class OptionBinder
         return instance;
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2067:UnrecognizedReflectionPattern",
-        Justification = "Nested option types are rooted by the application via property references.")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
-        Justification = "Nested option types use parameterless constructors rooted by the application.")]
-    private static object CreateInstance(Type type)
+    private static object CreateInstance(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type)
     {
         return Activator.CreateInstance(type)
             ?? throw new InvalidOperationException($"Failed to create instance of nested options type '{type.Name}'. Ensure it has a public parameterless constructor.");

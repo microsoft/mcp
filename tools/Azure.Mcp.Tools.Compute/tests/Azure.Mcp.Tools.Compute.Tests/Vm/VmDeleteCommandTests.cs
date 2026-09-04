@@ -2,18 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vm;
 
-public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, IComputeService>
+public class VmDeleteCommandTests : SubscriptionCommandUnitTestsBase<VmDeleteCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -44,7 +43,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
                 Arg.Any<string>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -72,7 +70,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             Arg.Is(_knownSubscription),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -99,7 +96,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             Arg.Is(_knownSubscription),
             Arg.Is<bool?>(true),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -119,7 +115,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             _knownSubscription,
             true,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -133,7 +128,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -163,7 +157,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
@@ -190,7 +183,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -215,7 +207,6 @@ public class VmDeleteCommandTests : CommandUnitTestsBase<VmDeleteCommand, ICompu
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 

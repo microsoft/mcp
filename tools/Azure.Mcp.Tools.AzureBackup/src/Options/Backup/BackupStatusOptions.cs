@@ -11,7 +11,7 @@ public sealed class BackupStatusOptions : ISubscriptionOption
     [Option(Description = AzureBackupOptionDefinitions.DatasourceId)]
     public required string DatasourceId { get; set; }
 
-    [Option(Description = AzureBackupOptionDefinitions.LocationName)]
+    [Option(Description = AzureBackupOptionDefinitions.Location)]
     public required string Location { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
@@ -19,7 +19,4 @@ public sealed class BackupStatusOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

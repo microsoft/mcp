@@ -86,6 +86,31 @@ The Azure MCP Server requires configuration based on the client type. Below are 
 }
 ```
 
+#### For Google Antigravity IDE
+
+> **Requires Node.js (Latest LTS version)**
+
+1. In the editor's agent side panel, select **...** > **MCP Servers** > **Manage MCP Servers** > **View raw config**.
+2. Add the following configuration to the `mcpServers` object in `~/.gemini/config/mcp_config.json` (global) or `.agents/mcp_config.json` (workspace):
+
+```json
+{
+  "mcpServers": {
+    "azure-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure/mcp@latest",
+        "server",
+        "start"
+      ]
+    }
+  }
+}
+```
+
+For more information, see the [Google Antigravity MCP documentation](https://antigravity.google/docs/mcp).
+
 #### For Claude Desktop
 
 Download the `.mcpb` file for your platform/architecture from **Assets** section of the latest release in our [GitHub Releases](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-) page:

@@ -2,18 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager.CloudHealth.Models;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
-using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -23,21 +12,14 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests;
 
-public sealed class MonitorCommandTests : RecordedCommandTestsBase
+public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    private LogAnalyticsHelper? _logHelper;
-    private const string TestLogType = "TestLogs_CL";
-    private readonly ServiceProvider _httpClientProvider;
-    private readonly MemoryCache _memoryCache;
-    private readonly ITenantService _tenantService;
-    private readonly IMonitorService _monitorService;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<MonitorService> _logger;
-    private string? _storageAccountName;
     private string? _appInsightsName;
     private string? _bingWebTestName;
     private string? _healthModelParentName;
     private string? _healthModelChildName;
+    private string? _storageAccountName;
 
     private static readonly string[] s_validHealthStates =
     [
@@ -56,23 +38,6 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         "x-ms-served-by",
         "X-MSEdge-Ref"
     ];
-
-    public MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-        : base(output, fixture, liveServerFixture)
-    {
-        _memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var cacheService = new SingleUserCliCacheService(_memoryCache);
-        _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
-        _httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
-        var tokenProvider = new PlaybackAwareTokenCredentialProvider(() => TestMode, NullLoggerFactory.Instance);
-        var cloudConfiguration = new AzureCloudConfiguration(new ConfigurationBuilder().Build());
-        _tenantService = new TenantService(tokenProvider, cacheService, _httpClientFactory, cloudConfiguration, NullLogger<TenantService>.Instance);
-        var subscriptionService = new SubscriptionService(cacheService, _tenantService, NullLogger<SubscriptionService>.Instance);
-        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, _tenantService);
-        var resourceResolverService = new ResourceResolverService(subscriptionService, _tenantService);
-        _logger = NullLogger<MonitorService>.Instance;
-        _monitorService = new MonitorService(subscriptionService, _tenantService, resourceGroupService, resourceResolverService, _httpClientFactory, _logger);
-    }
 
     public override List<UriRegexSanitizer> UriRegexSanitizers { get; } =
     [
@@ -109,7 +74,7 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         .. s_sanitizedHeaders.Select(h => new HeaderRegexSanitizer(new HeaderRegexSanitizerBody(h)))
     ];
 
-    public override CustomDefaultMatcher? TestMatcher => new CustomDefaultMatcher()
+    public override CustomDefaultMatcher? TestMatcher => new()
     {
         CompareBodies = false
     };
@@ -124,28 +89,6 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
         _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
         _healthModelChildName = $"{Settings.ResourceBaseName}-hm-b";
-
-        if (TestMode == TestMode.Playback)
-        {
-            return;
-        }
-
-        _logHelper = new LogAnalyticsHelper(
-            Settings.ResourceBaseName,
-            Settings.SubscriptionId,
-            _monitorService,
-            _tenantService,
-            _httpClientFactory,
-            Settings.TenantId,
-            TestLogType,
-            NullLogger.Instance);
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        await base.DisposeAsync();
-        _httpClientProvider.Dispose();
-        _memoryCache.Dispose();
     }
 
     // [Fact]
@@ -551,6 +494,79 @@ public sealed class MonitorCommandTests : RecordedCommandTestsBase
     //         // Don't fail the test if storage activity generation fails
     //     }
     // }
+
+    #region Metrics Integration Tests
+
+    [Fact]
+    public async Task Should_Batch_Query_Metrics()
+    {
+        // The command defaults start/end time to "now" when not supplied, which would produce a different
+        // query string URI on every run and break playback matching. Registering the computed values as
+        // variables pins the values used at record time so they're replayed exactly during playback.
+        var startTime = RegisterOrRetrieveVariable("startTime", DateTime.UtcNow.AddHours(-24).ToString("o"));
+        var endTime = RegisterOrRetrieveVariable("endTime", DateTime.UtcNow.ToString("o"));
+
+        var result = await CallToolAsync(
+            "monitor_metrics_batchquery",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "resource-type", "Microsoft.Storage/storageAccounts" },
+                { "resources", _storageAccountName },
+                { "metric-namespace", "Microsoft.Storage/storageAccounts" },
+                { "metric-names", "UsedCapacity" },
+                { "start-time", startTime },
+                { "end-time", endTime }
+            });
+
+        var resultsArray = result.AssertProperty("results");
+        Assert.Equal(JsonValueKind.Array, resultsArray.ValueKind);
+        var resources = resultsArray.EnumerateArray().ToList();
+        Assert.NotEmpty(resources);
+
+        var firstResource = resources[0];
+
+        var resourceId = firstResource.AssertProperty("resourceId");
+        Assert.Equal(JsonValueKind.String, resourceId.ValueKind);
+        Assert.Contains(_storageAccountName!, resourceId.GetString(), StringComparison.OrdinalIgnoreCase);
+
+        var metrics = firstResource.AssertProperty("metrics");
+        Assert.Equal(JsonValueKind.Array, metrics.ValueKind);
+        var metricsList = metrics.EnumerateArray().ToList();
+        Assert.NotEmpty(metricsList);
+
+        var firstMetric = metricsList[0];
+
+        var name = firstMetric.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, name.ValueKind);
+        Assert.Equal("UsedCapacity", name.GetString());
+
+        var unit = firstMetric.AssertProperty("unit");
+        Assert.Equal(JsonValueKind.String, unit.ValueKind);
+        Assert.False(string.IsNullOrEmpty(unit.GetString()));
+
+        var timeSeries = firstMetric.AssertProperty("timeSeries");
+        Assert.Equal(JsonValueKind.Array, timeSeries.ValueKind);
+        var timeSeriesList = timeSeries.EnumerateArray().ToList();
+        Assert.NotEmpty(timeSeriesList);
+
+        var firstTimeSeries = timeSeriesList[0];
+
+        var start = firstTimeSeries.AssertProperty("start");
+        Assert.Equal(JsonValueKind.String, start.ValueKind);
+        Assert.True(DateTime.TryParse(start.GetString(), out _));
+
+        var end = firstTimeSeries.AssertProperty("end");
+        Assert.Equal(JsonValueKind.String, end.ValueKind);
+        Assert.True(DateTime.TryParse(end.GetString(), out _));
+
+        var interval = firstTimeSeries.AssertProperty("interval");
+        Assert.Equal(JsonValueKind.String, interval.ValueKind);
+        Assert.StartsWith("PT", interval.GetString());
+    }
+
+    #endregion
 
     #region WebTests Integration Tests
 

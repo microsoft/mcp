@@ -3,7 +3,6 @@
 
 using System.Text.Json.Serialization;
 using Azure.Core;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Microsoft.Mcp.Core.Options;
 
@@ -13,24 +12,24 @@ namespace Microsoft.Mcp.Core.Options;
 /// </summary>
 public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<RetryPolicyOptions>
 {
-    [JsonPropertyName(OptionDefinitions.RetryPolicy.DelayName)]
-    [Option(Name = "delay", Description = "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.")]
+    [JsonPropertyName("retry-delay")]
+    [Option(Name = "delay", Description = "Initial delay in seconds. For exponential backoff, this value is used as the base.")]
     public double? DelaySeconds { get; set; }
 
-    [JsonPropertyName(OptionDefinitions.RetryPolicy.MaxDelayName)]
-    [Option(Name = "max-delay", Description = "Maximum delay in seconds between retries, regardless of the retry strategy.")]
+    [JsonPropertyName("retry-max-delay")]
+    [Option(Name = "max-delay", Description = "Maximum delay in seconds, regardless of the retry strategy.")]
     public double? MaxDelaySeconds { get; set; }
 
-    [JsonPropertyName(OptionDefinitions.RetryPolicy.MaxRetriesName)]
-    [Option(Name = "max-retries", Description = "Maximum number of retry attempts for failed operations before giving up.")]
+    [JsonPropertyName("retry-max-retries")]
+    [Option(Name = "max-retries", Description = "Maximum number of retry attempts.")]
     public int? MaxRetries { get; set; }
 
-    [JsonPropertyName(OptionDefinitions.RetryPolicy.ModeName)]
+    [JsonPropertyName("retry-mode")]
     [Option(Name = "mode", Description = "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.")]
     public RetryMode? Mode { get; set; }
 
-    [JsonPropertyName(OptionDefinitions.RetryPolicy.NetworkTimeoutName)]
-    [Option(Name = "network-timeout", Description = "Network operation timeout in seconds. Operations taking longer than this will be cancelled.")]
+    [JsonPropertyName("retry-network-timeout")]
+    [Option(Name = "network-timeout", Description = "Network operation timeout in seconds.")]
     public double? NetworkTimeoutSeconds { get; set; }
 
     // Derived flags indicating which options were explicitly provided by the caller.

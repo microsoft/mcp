@@ -1,29 +1,39 @@
-[
-  "airunway-aks-setup",
-  "appinsights-instrumentation",
-  "azure-ai",
-  "azure-aigateway",
-  "azure-cloud-migrate",
-  "azure-compliance",
-  "azure-compute",
-  "azure-cost",
-  "azure-deploy",
-  "azure-diagnostics",
-  "azure-enterprise-infra-planner",
-  "azure-kubernetes",
-  "azure-kusto",
-  "azure-messaging",
-  "azure-prepare",
-  "azure-quotas",
-  "azure-rbac",
-  "azure-reliability",
-  "azure-resource-lookup",
-  "azure-resource-visualizer",
-  "azure-storage",
-  "azure-upgrade",
-  "azure-validate",
-  "entra-agent-id",
-  "entra-app-registration",
-  "microsoft-foundry",
-  "python-appservice-deploy"
-]
+{
+  "skills": {
+    "azure-kusto-graph-skills": [
+      "azure-kusto-graph",
+      "azure-kusto-irql",
+      "azure-kusto-irql-graph"
+    ],
+    "azure-skills": [
+      "airunway-aks-setup",
+      "appinsights-instrumentation",
+      "azure-ai",
+      "azure-aigateway",
+      "azure-app-onboard",
+      "azure-app-onboard-prereq",
+      "azure-cloud-migrate",
+      "azure-compliance",
+      "azure-compute",
+      "azure-cost",
+      "azure-deploy",
+      "azure-diagnostics",
+      "azure-enterprise-infra-planner",
+      "azure-kubernetes",
+      "azure-kusto",
+      "azure-messaging",
+      "azure-prepare",
+      "azure-quotas",
+      "azure-reliability",
+      "azure-resource-lookup",
+      "azure-resource-visualizer",
+      "azure-storage",
+      "azure-upgrade",
+      "azure-validate",
+      "entra-agent-id",
+      "entra-app-registration",
+      "microsoft-foundry",
+      "python-appservice-deploy"
+    ]
+  }
+}

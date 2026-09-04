@@ -1,22 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
-public class MarketplaceService(ITenantService tenantService)
-    : BaseAzureService(tenantService), IMarketplaceService
+public class MarketplaceService(IAzureService azureService)
+    : BaseAzureService(azureService), IMarketplaceService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-
     private const string ApiVersion = "2025-05-01";
 
     /// <summary>
@@ -31,7 +28,6 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="skuId">Filter by SKU ID.</param>
     /// <param name="includeServiceInstructionTemplates">Include service instruction templates.</param>
     /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
-    /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A JSON node containing the product information.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
     /// <exception cref="Exception">Thrown when parsing the product response fails.</exception>
@@ -45,18 +41,17 @@ public class MarketplaceService(ITenantService tenantService)
         string? skuId = null,
         bool? includeServiceInstructionTemplates = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(productId), productId),
             (nameof(subscription), subscription));
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productUrl = BuildProductUrl(managementEndpoint, subscription, productId, includeStopSoldPlans, language,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
-        return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy, cancellationToken);
+        return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, cancellationToken);
     }
 
     /// <summary>
@@ -71,7 +66,6 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="nextCursor">Pagination cursor.</param>
     /// <param name="expand">OData expand expression to include related data.</param>
     /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
-    /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A list of ProductSummary objects containing the marketplace products.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
     /// <exception cref="Exception">Thrown when parsing the products response fails.</exception>
@@ -85,15 +79,14 @@ public class MarketplaceService(ITenantService tenantService)
         string? nextCursor = null,
         string? expand = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var managementEndpoint = _tenantService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         string productsUrl = BuildProductsListUrl(managementEndpoint, subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
-        return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, retryPolicy, cancellationToken);
+        return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, cancellationToken);
     }
 
     private static string BuildProductsListUrl(
@@ -139,10 +132,10 @@ public class MarketplaceService(ITenantService tenantService)
         return $"{managementEndpoint}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products?{queryString}";
     }
 
-    private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, CancellationToken cancellationToken)
     {
         var productsListResponse = await ExecuteMarketplaceRequestAsync(
-            url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant, cancellationToken);
+            url, MarketplaceJsonContext.Default.ProductsListResponse, tenant, cancellationToken);
 
         return new()
         {
@@ -190,12 +183,11 @@ public class MarketplaceService(ITenantService tenantService)
         return $"{managementEndpoint}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";
     }
 
-    private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, CancellationToken cancellationToken)
     {
         var productDetails = await ExecuteMarketplaceRequestAsync(
             url,
             MarketplaceJsonContext.Default.ProductDetails,
-            retryPolicy,
             tenant,
             cancellationToken
         );
@@ -205,16 +197,13 @@ public class MarketplaceService(ITenantService tenantService)
     private async Task<T> ExecuteMarketplaceRequestAsync<T>(
         string url,
         JsonTypeInfo<T> jsonTypeInfo,
-        RetryPolicyOptions? retryPolicy,
         string? tenant,
         CancellationToken cancellationToken
     )
     {
         // Use Azure Core pipeline approach consistently
-        using var httpClient = TenantService.GetClient();
-        var clientOptions = ConfigureRetryPolicy(
-            AddDefaultPolicies(new MarketplaceClientOptions()),
-            retryPolicy);
+        using var httpClient = AzureService.GetClient();
+        var clientOptions = AddDefaultPolicies(new MarketplaceClientOptions());
         clientOptions.Transport = new HttpClientTransport(httpClient);
 
         var pipeline = HttpPipelineBuilder.Build(clientOptions);

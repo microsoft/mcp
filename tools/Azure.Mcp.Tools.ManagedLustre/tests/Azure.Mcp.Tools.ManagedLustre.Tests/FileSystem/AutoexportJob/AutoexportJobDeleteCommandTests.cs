@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.AutoexportJob;
 
-public class AutoexportJobDeleteCommandTests : CommandUnitTestsBase<AutoexportJobDeleteCommand, IManagedLustreService>
+public class AutoexportJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<AutoexportJobDeleteCommand, IManagedLustreService>
 {
     private readonly string _subscription = "sub123";
     private readonly string _resourceGroup = "rg1";
@@ -32,7 +32,6 @@ public class AutoexportJobDeleteCommandTests : CommandUnitTestsBase<AutoexportJo
         Service.DeleteAutoexportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
@@ -53,7 +52,6 @@ public class AutoexportJobDeleteCommandTests : CommandUnitTestsBase<AutoexportJo
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -86,7 +84,6 @@ public class AutoexportJobDeleteCommandTests : CommandUnitTestsBase<AutoexportJo
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Autoexport job not found"));
 
@@ -112,7 +109,6 @@ public class AutoexportJobDeleteCommandTests : CommandUnitTestsBase<AutoexportJo
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 

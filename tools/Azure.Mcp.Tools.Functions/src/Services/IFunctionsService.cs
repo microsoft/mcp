@@ -9,9 +9,14 @@ public interface IFunctionsService
 {
     Task<LanguageListResult> GetLanguageListAsync(CancellationToken cancellationToken = default);
 
-    Task<ProjectTemplateResult> GetProjectTemplateAsync(string language, CancellationToken cancellationToken = default);
+    Task<ProjectTemplateResult> GetProjectTemplateAsync(SupportedLanguages language, CancellationToken cancellationToken = default);
 
-    Task<TemplateListResult> GetTemplateListAsync(string language, CancellationToken cancellationToken = default);
+    Task<TemplateListResult> GetTemplateListAsync(SupportedLanguages language, CancellationToken cancellationToken = default);
 
-    Task<FunctionTemplateResult> GetFunctionTemplateAsync(string language, string template, string? runtimeVersion, TemplateOutput output = TemplateOutput.New, CancellationToken cancellationToken = default);
+    Task<FunctionTemplateResult> GetFunctionTemplateAsync(
+        SupportedLanguages language,
+        string template,
+        string? runtimeVersion,
+        TemplateOutput output = TemplateOutput.New,
+        CancellationToken cancellationToken = default);
 }

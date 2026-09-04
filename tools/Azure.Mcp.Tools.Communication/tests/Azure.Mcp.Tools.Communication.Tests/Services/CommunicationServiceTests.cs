@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -11,15 +11,15 @@ namespace Azure.Mcp.Tools.Communication.Tests.Services;
 
 public class CommunicationServiceTests
 {
-    private readonly ITenantService _mockTenantService;
+    private readonly IAzureService _mockAzureService;
     private readonly ILogger<CommunicationService> _mockLogger;
     private readonly CommunicationService _service;
 
     public CommunicationServiceTests()
     {
-        _mockTenantService = Substitute.For<ITenantService>();
+        _mockAzureService = Substitute.For<IAzureService>();
         _mockLogger = Substitute.For<ILogger<CommunicationService>>();
-        _service = new CommunicationService(_mockTenantService, _mockLogger);
+        _service = new CommunicationService(_mockAzureService, _mockLogger);
     }
 
     [Fact]
@@ -29,14 +29,14 @@ public class CommunicationServiceTests
         string endpoint = string.Empty;
         string sender = "sender@example.com";
         string? senderName = string.Empty;
-        string[] to = new[] { "recipient@example.com" };
+        string[] to = ["recipient@example.com"];
         string subject = "Test Subject";
         string message = "Test Message";
 
         // Act & Assert
         // Updated to use Assert.ThrowsAsync for async methods
         var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _service.SendEmailAsync(endpoint, sender, senderName, to, subject, message, false, null, null, null, null, null, TestContext.Current.CancellationToken));
+            () => _service.SendEmailAsync(endpoint, sender, senderName, to, subject, message, false, null, null, null, null, TestContext.Current.CancellationToken));
 
         Assert.Contains("endpoint", exception.Message, StringComparison.OrdinalIgnoreCase);
     }

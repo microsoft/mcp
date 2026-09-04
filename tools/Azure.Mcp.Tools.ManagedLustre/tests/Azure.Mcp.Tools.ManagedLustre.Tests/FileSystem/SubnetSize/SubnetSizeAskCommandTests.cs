@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
-using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.SubnetSize;
 
-public class FileSystemSubnetSizeCommandTests : CommandUnitTestsBase<SubnetSizeAskCommand, IManagedLustreService>
+public class FileSystemSubnetSizeCommandTests : SubscriptionCommandUnitTestsBase<SubnetSizeAskCommand, IManagedLustreService>
 {
     private readonly string _knownSubscriptionId = "sub123";
 
@@ -33,7 +33,6 @@ public class FileSystemSubnetSizeCommandTests : CommandUnitTestsBase<SubnetSizeA
             Arg.Is("AMLFS-Durable-Premium-40"),
             Arg.Is(480),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(21);
 
@@ -61,7 +60,6 @@ public class FileSystemSubnetSizeCommandTests : CommandUnitTestsBase<SubnetSizeA
             Arg.Any<string>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>()).Returns(10);
 
         // Act
@@ -88,7 +86,6 @@ public class FileSystemSubnetSizeCommandTests : CommandUnitTestsBase<SubnetSizeA
             Arg.Any<string>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(10);
 
@@ -123,7 +120,6 @@ public class FileSystemSubnetSizeCommandTests : CommandUnitTestsBase<SubnetSizeA
             Arg.Any<string>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 

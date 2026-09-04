@@ -14,6 +14,10 @@ param cosmosLocation string = location
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+@description('Admin password for the SQL VM used in testing.')
+@secure()
+param sqlVmAdminPwd string = 'P${newGuid()}!'
+
 // Recovery Services Vault (RSV) - GeoRedundant for CRR support
 resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   name: '${baseName}-rsv'
@@ -282,4 +286,190 @@ resource appCosmosDbBackupContributorRoleAssignment 'Microsoft.Authorization/rol
 output cosmosDbAccountId string = cosmosDbAccount.id
 output cosmosDbAccountName string = cosmosDbAccount.name
 output cosmosDbAccountLocation string = cosmosLocation
+
+// ─── SQL VM for ARM-Level Discovery Testing ───
+// Lowest-cost config: Standard_B2als_v2 + SQL 2022 Developer (free license) + no public IP.
+// The find-unprotected command discovers this VM via ARM Resource Graph as an unprotected resource.
+// No RSV container registration is needed — ARM-level discovery finds VMs directly.
+
+resource testVnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
+  name: '${baseName}-vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/24'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource sqlVmNic 'Microsoft.Network/networkInterfaces@2024-01-01' = {
+  name: '${baseName}-sqlvm-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: testVnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+  name: '${baseName}-sqlvm'
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_B2als_v2'
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftSQLServer'
+        offer: 'sql2022-ws2022'
+        sku: 'sqldev-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+    }
+    osProfile: {
+      computerName: take('${replace(baseName, '-', '')}sq', 15)
+      adminUsername: 'mcptestadmin'
+      adminPassword: sqlVmAdminPwd
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: sqlVmNic.id
+        }
+      ]
+    }
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+output sqlVmId string = sqlVm.id
+output sqlVmName string = sqlVm.name
 output resourceGroupLocation string = location
+
+// ─── Private Endpoint Test Resources (PR 4) ───
+// Dedicated VNet + PE-compatible subnet and a fresh RSV with no protected items,
+// no CRR. Required by the `azurebackup vault privateendpoint` command group
+// because RSV rejects PE creation on a vault that has protected items.
+resource peVnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
+  name: '${baseName}-pe-vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.10.0.0/24'
+      ]
+    }
+    subnets: [
+      {
+        // Must have privateEndpointNetworkPolicies=Disabled so PEs can bind.
+        name: 'pe-subnet'
+        properties: {
+          addressPrefix: '10.10.0.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+// Fresh RSV for PE lifecycle tests. LRS + no CRR so the vault has no protected
+// items and is eligible for Private Endpoint creation (RSV requires 0 items).
+resource rsvPeVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
+  name: '${baseName}-rsv-pe'
+  location: location
+  sku: {
+    name: 'RS0'
+    tier: 'Standard'
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource rsvPeBackupConfig 'Microsoft.RecoveryServices/vaults/backupconfig@2024-04-01' = {
+  parent: rsvPeVault
+  name: 'vaultconfig'
+  properties: {
+    // LocallyRedundant is fine here — the PE tests do not exercise CRR, and PE
+    // for SQL/HANA in IaasVM is incompatible with CRR per Learn.
+    storageModelType: 'LocallyRedundant'
+  }
+}
+
+// Backup Contributor on the fresh PE vault for the test app.
+resource appBackupContributorRoleAssignmentPe 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(backupContributorRoleDefinition.id, testApplicationOid, rsvPeVault.id)
+  scope: rsvPeVault
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: backupContributorRoleDefinition.id
+    description: 'Backup Contributor for ${testApplicationOid} on RSV PE vault'
+  }
+}
+
+// Network Contributor on the PE subnet so the test app can create the
+// Microsoft.Network/privateEndpoints resource that binds to it.
+resource networkContributorRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: '4d97b98b-1d4f-4787-a291-c67834d212e7' // Network Contributor
+}
+
+resource appNetworkContributorRoleAssignmentPeVnet 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(networkContributorRoleDef.id, testApplicationOid, peVnet.id)
+  scope: peVnet
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: networkContributorRoleDef.id
+    description: 'Network Contributor for ${testApplicationOid} on PE VNet'
+  }
+}
+
+output rsvPeVaultName string = rsvPeVault.name
+output peSubnetId string = peVnet.properties.subnets[0].id

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
@@ -322,8 +322,8 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithNullNamespace_ReturnsAllServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = null };
-        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = null };
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -339,8 +339,8 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithEmptyNamespace_ReturnsAllServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = [] };
-        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = [] };
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -356,8 +356,8 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithMatchingNamespace_ReturnsFilteredServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["documentation"] };
-        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = ["documentation"] };
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -371,15 +371,15 @@ public class RegistryDiscoveryStrategyTests
         Assert.Contains("documentation", serverIds);
 
         // All returned servers should match the namespace filter
-        Assert.All(serverIds, id => Assert.Contains(id, options.Namespace, StringComparer.OrdinalIgnoreCase));
+        Assert.All(serverIds, id => Assert.Contains(id, configuration.Namespace, StringComparer.OrdinalIgnoreCase));
     }
 
     [Fact]
     public async Task DiscoverServersAsync_WithNonMatchingNamespace_ReturnsEmptyResult()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["nonexistent"] };
-        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = ["nonexistent"] };
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -393,8 +393,8 @@ public class RegistryDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithMultipleNamespaces_ReturnsMatchingServers()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["documentation", "another"] };
-        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = ["documentation", "another"] };
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
@@ -409,15 +409,15 @@ public class RegistryDiscoveryStrategyTests
 
         // All returned servers should match at least one namespace in the filter
         Assert.All(serverIds, id =>
-            Assert.Contains(id, options.Namespace!, StringComparer.OrdinalIgnoreCase));
+            Assert.Contains(id, configuration.Namespace!, StringComparer.OrdinalIgnoreCase));
     }
 
     [Fact]
     public async Task DiscoverServersAsync_NamespaceFilteringIsCaseInsensitive()
     {
         // Arrange
-        var options = new ServiceStartOptions { Namespace = ["DOCUMENTATION"] };
-        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = ["DOCUMENTATION"] };
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy(configuration);
 
         // Act
         var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);

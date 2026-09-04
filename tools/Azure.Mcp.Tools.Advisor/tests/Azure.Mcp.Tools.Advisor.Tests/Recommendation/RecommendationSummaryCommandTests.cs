@@ -2,20 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.Tests.Recommendation;
 
-public class RecommendationSummaryCommandTests : CommandUnitTestsBase<RecommendationSummaryCommand, IAdvisorService>
+public class RecommendationSummaryCommandTests : SubscriptionCommandUnitTestsBase<RecommendationSummaryCommand, IAdvisorService>
 {
     private static RecommendationSummary EmptySummary(string groupBy = "category") =>
         new(GroupBy: groupBy, TotalRecommendations: 0, Groups: []);
@@ -41,9 +39,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
             Service.SummarizeRecommendationsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<string>(),
                 Arg.Any<RecommendationFilters?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(EmptySummary());
         }
@@ -62,8 +60,12 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Assert.Contains("nonsense", response.Message);
         Assert.Contains("Allowed values", response.Message);
         await Service.DidNotReceive().SummarizeRecommendationsAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string>(), Arg.Any<RecommendationFilters?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -73,9 +75,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Do<string>(g => captured = g),
             Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
 
@@ -95,9 +97,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Do<string>(g => captured = g),
             Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
 
@@ -114,9 +116,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Do<RecommendationFilters?>(f => captured = f),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
 
@@ -144,9 +146,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Do<RecommendationFilters?>(f => captured = f),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
 
@@ -175,9 +177,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
 
@@ -198,9 +200,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("boom"));
 
@@ -227,9 +229,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
 
@@ -266,9 +268,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
 
@@ -299,9 +301,9 @@ public class RecommendationSummaryCommandTests : CommandUnitTestsBase<Recommenda
         Service.SummarizeRecommendationsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(summary);
 

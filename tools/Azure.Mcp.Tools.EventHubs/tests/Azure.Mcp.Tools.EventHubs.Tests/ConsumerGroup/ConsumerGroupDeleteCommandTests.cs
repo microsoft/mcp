@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.ConsumerGroup;
 
-public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGroupDeleteCommand, IEventHubsService>
+public class ConsumerGroupDeleteCommandTests : SubscriptionCommandUnitTestsBase<ConsumerGroupDeleteCommand, IEventHubsService>
 {
     [Theory]
     [InlineData("", false)]
@@ -32,7 +31,6 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -64,7 +62,6 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             "test-rg",
             "test-subscription",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -87,7 +84,6 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             "test-rg",
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -102,7 +98,6 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Consumer group 'test-consumer-group' could not be found"));
 
@@ -130,7 +125,6 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
@@ -164,7 +158,6 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             resourceGroup,
             subscriptionId,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -186,7 +179,6 @@ public class ConsumerGroupDeleteCommandTests : CommandUnitTestsBase<ConsumerGrou
             resourceGroup,
             subscriptionId,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

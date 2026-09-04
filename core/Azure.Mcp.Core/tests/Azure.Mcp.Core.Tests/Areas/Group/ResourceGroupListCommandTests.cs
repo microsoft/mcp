@@ -3,18 +3,17 @@
 
 using System.Net;
 using Azure.Mcp.Core.Areas.Group.Commands;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tests.Helpers;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Group;
 
-public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListCommand, IResourceGroupService>
+public class ResourceGroupListCommandTests : SubscriptionCommandUnitTestsBase<GroupListCommand, IAzureService>
 {
     [Fact]
     public async Task ExecuteAsync_WithValidSubscription_ReturnsResourceGroups()
@@ -30,7 +29,6 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         Service.GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
@@ -55,7 +53,6 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         await Service.Received(1).GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -73,7 +70,6 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         Service.GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Is(tenantId),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
@@ -86,7 +82,6 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         await Service.Received(1).GetResourceGroups(
             Arg.Is(subscriptionId),
             Arg.Is(tenantId),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -98,7 +93,6 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         Service.GetResourceGroups(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -119,7 +113,6 @@ public class ResourceGroupListCommandTests : CommandUnitTestsBase<GroupListComma
         Service.GetResourceGroups(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

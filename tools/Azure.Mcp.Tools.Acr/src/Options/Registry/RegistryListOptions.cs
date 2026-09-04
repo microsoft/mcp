@@ -16,10 +16,4 @@ public class RegistryListOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
-    [Option(Description = "The name of the Azure Container Registry.")]
-    public string? Registry { get; set; }
 }

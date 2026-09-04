@@ -31,7 +31,13 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_check_platform_landing_zone_exists()
     {
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
+        {
+            return;
+        }
+
         Assert.SkipWhen(Settings.IsAzureUSGovernment, "Azure Migrate platform landing zone API returns 500 in Azure US Government");
+
         var result = await CallToolAsync(
             "azuremigrate_platformlandingzone_request",
             new()
@@ -55,7 +61,13 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_update_platform_landing_zone_parameters()
     {
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
+        {
+            return;
+        }
+
         Assert.SkipWhen(Settings.IsAzureUSGovernment, "Azure Migrate platform landing zone API returns 500 in Azure US Government");
+
         var result = await CallToolAsync(
             "azuremigrate_platformlandingzone_request",
             new()
@@ -86,7 +98,13 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_get_parameter_status()
     {
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
+        {
+            return;
+        }
+
         Assert.SkipWhen(Settings.IsAzureUSGovernment, "Azure Migrate platform landing zone API returns 500 in Azure US Government");
+
         var result = await CallToolAsync(
             "azuremigrate_platformlandingzone_request",
             new()
@@ -107,7 +125,13 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_handle_invalid_action()
     {
+        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
+        {
+            return;
+        }
+
         Assert.SkipWhen(Settings.IsAzureUSGovernment, "Azure Migrate platform landing zone API returns 500 in Azure US Government");
+
         try
         {
             await CallToolAsync(
@@ -127,4 +151,5 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
             Assert.Contains("Invalid action", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
     }
+
 }

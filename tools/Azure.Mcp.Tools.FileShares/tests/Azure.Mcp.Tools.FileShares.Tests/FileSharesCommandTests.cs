@@ -6,6 +6,7 @@ using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
+using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.Tests;
 
@@ -177,7 +178,6 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
                 { "name", "test-available-name-" + Guid.NewGuid().ToString().Substring(0, 8) },
                 { "location", Location }
             });
@@ -463,8 +463,7 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "file-share-name", FileShare1Name },
-                    { "snapshot-name", testSnapshotName },
-                    { "description", "Updated snapshot description" }
+                    { "snapshot-name", testSnapshotName }
                 });
 
             var snapshot = result.AssertProperty("snapshot");
@@ -480,11 +479,11 @@ public class FileSharesCommandTests(ITestOutputHelper output, TestProxyFixture f
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "file-share-name", FileShare1Name },
-                    { "name", testSnapshotName }
+                    { "snapshot-name", testSnapshotName }
                 });
 
-            var deleteResult = result.AssertProperty("message");
-            Assert.NotEqual(JsonValueKind.Null, deleteResult.ValueKind);
+            var deleteResult = result.AssertProperty("deleted");
+            Assert.Equal(JsonValueKind.True, deleteResult.ValueKind);
         }
     }
 

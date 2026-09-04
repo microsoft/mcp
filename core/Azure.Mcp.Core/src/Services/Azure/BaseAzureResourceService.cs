@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -18,13 +16,9 @@ namespace Azure.Mcp.Core.Services.Azure;
 /// Base class for Azure services that need to query Azure Resource Graph for resource management operations.
 /// Provides common methods for executing resource queries against Azure Resource Manager resources.
 /// </summary>
-public abstract class BaseAzureResourceService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService)
-    : BaseAzureService(tenantService)
+public abstract class BaseAzureResourceService(IAzureService azureService)
+    : BaseAzureService(azureService)
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     /// <summary>
     /// Gets the tenant resource for the specified subscription.
     /// </summary>
@@ -39,7 +33,7 @@ public abstract class BaseAzureResourceService(
         }
 
         // Get all tenants and find the matching one (GetTenants already has caching)
-        var allTenants = await TenantService.GetTenants(cancellationToken);
+        var allTenants = await AzureService.GetTenants(cancellationToken);
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == tenantId.Value);
 
         if (tenantResource == null)
@@ -57,7 +51,10 @@ public abstract class BaseAzureResourceService(
     /// <param name="resourceGroupName">The name of the resource group to validate.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the resource group exists; otherwise, false.</returns>
-    private async Task<bool> ValidateResourceGroupExistsAsync(SubscriptionResource subscriptionResource, string resourceGroupName, CancellationToken cancellationToken = default)
+    private static async Task<bool> ValidateResourceGroupExistsAsync(
+        SubscriptionResource subscriptionResource,
+        string resourceGroupName,
+        CancellationToken cancellationToken = default)
     {
         var resourceGroupCollection = subscriptionResource.GetResourceGroups();
         var result = await resourceGroupCollection.ExistsAsync(resourceGroupName, cancellationToken).ConfigureAwait(false);
@@ -71,7 +68,6 @@ public abstract class BaseAzureResourceService(
     /// <param name="resourceType">The Azure resource type to query for (e.g., "Microsoft.Sql/servers/databases")</param>
     /// <param name="resourceGroup">The resource group name to filter by (null to query all resource groups)</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="tableName">Optional table name to query (default: "resources")</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
@@ -83,7 +79,6 @@ public abstract class BaseAzureResourceService(
         string resourceType,
         string? resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
         string? additionalFilter = null,
@@ -103,7 +98,7 @@ public abstract class BaseAzureResourceService(
 
         var results = new List<T>();
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource!.Data.TenantId, cancellationToken);
 
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
@@ -154,7 +149,6 @@ public abstract class BaseAzureResourceService(
     /// <param name="resourceType">The Azure resource type to query for (e.g., "Microsoft.Sql/servers/databases")</param>
     /// <param name="resourceGroup">The resource group name to filter by (null to query all resource groups)</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
     /// <param name="additionalFilter">Optional additional KQL filter condition</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -163,14 +157,13 @@ public abstract class BaseAzureResourceService(
         string resourceType,
         string? resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? tableName = "resources",
         string? additionalFilter = null,
         string? tenant = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        var result = await ExecuteResourceQueryAsync(resourceType, resourceGroup, subscription, retryPolicy, converter,
+        var result = await ExecuteResourceQueryAsync(resourceType, resourceGroup, subscription, converter,
             tableName, additionalFilter, 1, cancellationToken, tenant).ConfigureAwait(false);
         return result.Results.FirstOrDefault();
     }
@@ -182,13 +175,16 @@ public abstract class BaseAzureResourceService(
     /// <param name="resourceTypeForApiVersion">The resource type token used by the SDK to set a specific API version, e.g. "Microsoft.CognitiveServices/accounts/deployments".</param>
     /// <param name="apiVersion">The API version to set for the specified resource type.</param>
     /// <param name="tenant">Optional tenant to use when creating the client.</param>
-    /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
     /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
-    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(
+        string resourceTypeForApiVersion,
+        string apiVersion,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
     {
         var options = new ArmClientOptions();
         options.SetApiVersion(resourceTypeForApiVersion, apiVersion);
-        return await CreateArmClientAsync(tenant, retryPolicy, options, cancellationToken).ConfigureAwait(false);
+        return await CreateArmClientAsync(tenant, options, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -200,7 +196,10 @@ public abstract class BaseAzureResourceService(
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
-    protected static async Task<GenericResource> GetGenericResourceAsync(ArmClient armClient, ResourceIdentifier resourceIdentifier, CancellationToken cancellationToken = default)
+    protected static async Task<GenericResource> GetGenericResourceAsync(
+        ArmClient armClient,
+        ResourceIdentifier resourceIdentifier,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(armClient);
 

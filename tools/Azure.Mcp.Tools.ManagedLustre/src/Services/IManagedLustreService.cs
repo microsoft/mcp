@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.ManagedLustre.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
@@ -12,13 +11,11 @@ public interface IManagedLustreService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
         string sku, int size,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> CheckAmlFSSubnetAsync(
@@ -28,14 +25,12 @@ public interface IManagedLustreService
         string subnetId,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<ManagedLustreSkuInfo>> SkuGetInfoAsync(
         string subscription,
         string? tenant = null,
         string? location = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<LustreFileSystem> CreateFileSystemAsync(
@@ -65,7 +60,6 @@ public interface IManagedLustreService
         string? sourceVaultId = null,
         string? userAssignedIdentityId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<LustreFileSystem> UpdateFileSystemAsync(
@@ -81,7 +75,6 @@ public interface IManagedLustreService
         long? squashUid = null,
         long? squashGid = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> CreateAutoexportJobAsync(
@@ -92,7 +85,6 @@ public interface IManagedLustreService
         string? autoexportPrefix = null,
         string? adminStatus = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task CancelAutoexportJobAsync(
@@ -101,16 +93,14 @@ public interface IManagedLustreService
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.AutoexportJob> GetAutoexportJobAsync(
+    Task<AutoexportJob> GetAutoexportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<Models.AutoexportJob>> ListAutoexportJobsAsync(
@@ -118,7 +108,6 @@ public interface IManagedLustreService
         string resourceGroup,
         string filesystemName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task DeleteAutoexportJobAsync(
@@ -127,7 +116,6 @@ public interface IManagedLustreService
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> CreateAutoimportJobAsync(
@@ -141,7 +129,6 @@ public interface IManagedLustreService
         bool? enableDeletions = null,
         long? maximumErrors = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task CancelAutoimportJobAsync(
@@ -150,24 +137,21 @@ public interface IManagedLustreService
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.AutoimportJob> GetAutoimportJobAsync(
+    Task<AutoimportJob> GetAutoimportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<Models.AutoimportJob>> ListAutoimportJobsAsync(
+    Task<List<AutoimportJob>> ListAutoimportJobsAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task DeleteAutoimportJobAsync(
@@ -176,7 +160,6 @@ public interface IManagedLustreService
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     // One-time blob import jobs
@@ -189,33 +172,29 @@ public interface IManagedLustreService
         string[]? importPrefixes = null,
         long? maximumErrors = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.ImportJob> CancelImportJobAsync(
+    Task<ImportJob> CancelImportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<Models.ImportJob> GetImportJobAsync(
+    Task<ImportJob> GetImportJobAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<Models.ImportJob>> ListImportJobsAsync(
+    Task<List<ImportJob>> ListImportJobsAsync(
         string subscription,
         string resourceGroup,
         string filesystemName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task DeleteImportJobAsync(
@@ -224,7 +203,38 @@ public interface IManagedLustreService
         string filesystemName,
         string jobName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    // Expansion jobs
+    Task<string> CreateExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        float newSizeTiB,
+        string? jobName = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Models.ExpansionJob> GetExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<Models.ExpansionJob>> ListExpansionJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteExpansionJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 }
-

@@ -8,7 +8,6 @@
     "definitions": {
         "OrgAppAudience": {
             "description": "An OrgAppAudience object.",
-
             "type": "object",
             "required": [
                 "type"
@@ -40,7 +39,6 @@
         },
         "OrgAppAudiences": {
             "description": "A list of OrgAppAudiences.",
-
             "required": [
                 "value"
             ],
@@ -118,28 +116,15 @@
             }
         },
         "OrgAppAudiencePublicDefinition": {
-            "description": "OrgAppAudience public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/org-app-audience-definition) for more details on the structure of the OrgAppAudience definition.",
+            "description": "OrgAppAudience public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/orgappaudience-definition) for more details on the structure of the OrgAppAudience definition.",
             "type": "object",
             "required": [
                 "parts"
             ],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition. Additional `format` types may be added over time.",
+                    "description": "The format of the OrgAppAudience definition.",
                     "type": "string",
-                    "enum": [
-                        "OrgAppAudienceV1"
-                    ],
-                    "x-ms-enum": {
-                        "name": "OrgAppAudienceDefinitionFormat",
-                        "modelAsString": true,
-                        "values": [
-                            {
-                                "value": "OrgAppAudienceV1",
-                                "description": "The V1 JSON format for the OrgAppAudience public definition, specifically designed to support CI/CD scenarios in Fabric. See [OrgAppAudience - OrgAppAudienceV1 specification](/rest/api/fabric/articles/item-management/definitions/org-app-audience-definition/OrgAppAudienceV1) for more details."
-                            }
-                        ]
-                    },
                     "readOnly": false
                 },
                 "parts": {

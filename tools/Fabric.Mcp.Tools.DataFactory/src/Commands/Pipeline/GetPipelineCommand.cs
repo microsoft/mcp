@@ -7,7 +7,6 @@ using global::DataFactory.MCP.Handlers.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 
@@ -20,9 +19,8 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Idempotent = true,
     ReadOnly = true,
     OpenWorld = false)]
-public sealed class GetPipelineCommand(
-    ILogger<GetPipelineCommand> logger,
-    PipelineHandler handler) : AuthenticatedCommand<GetPipelineOptions, GetPipelineCommandResult>
+public sealed class GetPipelineCommand(ILogger<GetPipelineCommand> logger, PipelineHandler handler)
+    : AuthenticatedCommand<GetPipelineOptions, GetPipelineCommandResult>
 {
     private readonly ILogger<GetPipelineCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly PipelineHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
@@ -35,8 +33,7 @@ public sealed class GetPipelineCommand(
             _logger.LogInformation("Successfully retrieved pipeline {PipelineId} from workspace {WorkspaceId}",
                 options.PipelineId, options.WorkspaceId);
 
-            var commandResult = new GetPipelineCommandResult(result.Value!.Pipeline);
-            context.Response.Results = ResponseResult.Create(commandResult, DataFactoryJsonContext.Default.GetPipelineCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result.Value!.Pipeline), DataFactoryJsonContext.Default.GetPipelineCommandResult);
         }
         else
         {

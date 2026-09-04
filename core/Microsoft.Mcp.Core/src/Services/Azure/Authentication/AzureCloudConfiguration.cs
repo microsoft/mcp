@@ -6,7 +6,7 @@ using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 
 namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -27,20 +27,20 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// Initializes a new instance of the <see cref="AzureCloudConfiguration"/> class.
     /// </summary>
     /// <param name="configuration">The configuration to read from.</param>
-    /// <param name="serviceStartOptions">Optional service start options that can provide the cloud configuration.</param>
+    /// <param name="runtimeConfiguration">Optional runtime configurations that can provide the cloud configuration.</param>
     /// <param name="logger">Optional logger for diagnostics.</param>
     public AzureCloudConfiguration(
         IConfiguration configuration,
-        IOptions<ServiceStartOptions>? serviceStartOptions = null,
+        IOptions<ServerRuntimeConfiguration>? runtimeConfiguration = null,
         ILogger<AzureCloudConfiguration>? logger = null)
     {
         // Try to get cloud configuration from various sources in priority order:
-        // 1. ServiceStartOptions (--cloud command line argument)
+        // 1. ServerRuntimeConfiguration (--cloud command line argument)
         // 2. Configuration (appsettings.json or environment variables)
         //    - Keys are case-insensitive
         //    - Usually IConfiguration is created using EnvironmentVariablesConfigurationProvider which 
         //      includes environment variables, but we check both to be safe
-        var cloudValue = serviceStartOptions?.Value?.Cloud
+        var cloudValue = runtimeConfiguration?.Value?.Cloud
             ?? configuration["AZURE_CLOUD"]
             ?? configuration["CLOUD"]
             ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");

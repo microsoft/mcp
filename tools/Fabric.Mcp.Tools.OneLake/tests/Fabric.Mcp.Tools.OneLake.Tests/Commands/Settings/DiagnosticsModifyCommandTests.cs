@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Settings;
 
@@ -16,7 +17,7 @@ public class DiagnosticsModifyCommandTests : CommandUnitTestsBase<DiagnosticsMod
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("modify_diagnostics", Command.Name);
+        Assert.Equal("modify-diagnostics", Command.Name);
         Assert.Equal("Modify OneLake Diagnostics", Command.Title);
         Assert.Contains("Enable or disable workspace-level OneLake diagnostic logging", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
@@ -27,7 +28,7 @@ public class DiagnosticsModifyCommandTests : CommandUnitTestsBase<DiagnosticsMod
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("modify_diagnostics", CommandDefinition.Name);
+        Assert.Equal("modify-diagnostics", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }
@@ -74,10 +75,7 @@ public class DiagnosticsModifyCommandTests : CommandUnitTestsBase<DiagnosticsMod
         var response = await ExecuteCommandAsync(args);
 
         Assert.NotNull(response);
-        if (shouldSucceed)
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-        else
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]

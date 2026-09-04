@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventGrid.Models;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
@@ -11,7 +11,6 @@ public interface IEventGridService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<EventGridSubscriptionInfo>> GetSubscriptionsAsync(
@@ -20,7 +19,6 @@ public interface IEventGridService
         string? topicName = null,
         string? location = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<EventPublishResult> PublishEventAsync(
@@ -30,6 +28,5 @@ public interface IEventGridService
         string eventData,
         string? eventSchema = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

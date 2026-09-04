@@ -7,13 +7,12 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [CommandMetadata(
     Id = "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3",
-    Name = "list_files",
+    Name = "list-files",
     Title = "List OneLake Path Structure",
     Description = """
         List files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2.
@@ -74,7 +73,7 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
-                    new() { RawResponse = rawResponse },
+                    new(null, rawResponse),
                     MinimalJsonContext.Default.PathListResult);
                 return context.Response;
             }
@@ -101,7 +100,7 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
             }
 
             context.Response.Results = ResponseResult.Create(
-                new(fileSystemItems),
+                new(fileSystemItems, null),
                 MinimalJsonContext.Default.PathListResult);
         }
         catch (Exception ex)
@@ -114,18 +113,5 @@ public sealed class PathListCommand(IOneLakeService service, ILogger<PathListCom
         return context.Response;
     }
 
-    public record PathListResult
-    {
-        public List<FileSystemItem>? Items { get; init; }
-        public string? RawResponse { get; init; }
-
-        public PathListResult(List<FileSystemItem> items)
-        {
-            Items = items;
-        }
-
-        public PathListResult()
-        {
-        }
-    }
+    public sealed record PathListResult(List<FileSystemItem>? Items, string? RawResponse);
 }

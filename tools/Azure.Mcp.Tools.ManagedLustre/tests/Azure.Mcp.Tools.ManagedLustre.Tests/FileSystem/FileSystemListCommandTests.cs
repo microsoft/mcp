@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem;
 
-public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCommand, IManagedLustreService>
+public class FileSystemListCommandTests : SubscriptionCommandUnitTestsBase<FileSystemListCommand, IManagedLustreService>
 {
     private readonly string _knownSubscriptionId = "sub123";
     private readonly string _knownResourceIdRg1 = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Lustre/amlfs/fs1";
@@ -82,7 +82,6 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -136,7 +135,6 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
                 Arg.Is(_knownSubscriptionId),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expected);
         }
@@ -168,7 +166,6 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
             Arg.Is(_knownSubscriptionId),
             Arg.Is<string?>(x => x == null),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -189,7 +186,6 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
@@ -208,7 +204,6 @@ public class FileSystemListCommandTests : CommandUnitTestsBase<FileSystemListCom
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 

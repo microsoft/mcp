@@ -98,12 +98,14 @@ jobs:
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
       SubscriptionConfiguration: $(SubscriptionConfiguration)
       AdditionalParameters: "@{ UseHttpTransport = true }"
+      SkipEnvironmentSetup: true # environment setup was performed in the first deployment
 
   - task: AzurePowershell@5
     displayName: "Run tests (http) - az pwsh"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
+      MCP_TEST_TRANSPORT: 'http'
     inputs:
       azureSubscription: ${{ iif(parameters.GovTest, 'azure-mcp-gov-test', 'azure-sdk-tests-public') }}
       azurePowerShellVersion: 'LatestVersion'

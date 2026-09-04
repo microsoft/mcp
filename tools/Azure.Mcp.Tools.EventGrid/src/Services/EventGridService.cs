@@ -4,30 +4,30 @@
 using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.EventGrid.Commands;
+using Azure.Mcp.Tools.EventGrid.Models;
+using Azure.Messaging.EventGrid;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
-public class EventGridService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger, IHttpClientFactory httpClientFactory)
-    : BaseAzureService(tenantService), IEventGridService
+public class EventGridService(IAzureService azureService, ILogger<EventGridService> logger)
+    : BaseAzureService(azureService), IEventGridService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<EventGridService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
 
     public async Task<List<EventGridTopicInfo>> GetTopicsAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var topics = new List<EventGridTopicInfo>();
 
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -59,11 +59,10 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string? topicName = null,
         string? location = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var subscriptions = new List<EventGridSubscriptionInfo>();
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // If specific topic is requested, get subscriptions for that topic only
         if (!string.IsNullOrEmpty(topicName))
@@ -86,82 +85,64 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string eventData,
         string? eventSchema = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var operationId = Guid.NewGuid().ToString();
         _logger.LogInformation("Starting event publication. OperationId: {OperationId}, Topic: {TopicName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
             operationId, topicName, resourceGroup, subscription);
 
-        try
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
+
+        // Find the topic to get its endpoint and access key
+        var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
+        if (topic == null)
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-
-            // Find the topic to get its endpoint and access key
-            var topic = await FindTopic(subscriptionResource, resourceGroup, topicName, cancellationToken);
-            if (topic == null)
-            {
-                var errorMessage = $"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'. Make sure the topic exists and you have access to it.";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
-            }
-
-            if (topic.Data.Endpoint == null)
-            {
-                var errorMessage = $"Event Grid topic '{topicName}' does not have a valid endpoint.";
-                _logger.LogError(errorMessage);
-                throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
-            }
-
-            // Get credential using standardized method from base class for Azure AD authentication
-            var credential = await GetCredential(tenant, cancellationToken);
-
-            // Parse and validate event data directly to EventGridEventSchema
-            var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
-
-            // Create publisher client with HTTP client factory for test proxy support
-            var httpClient = _httpClientFactory.CreateClient(nameof(EventGridPublisherClient));
-            var clientOptions = new EventGridPublisherClientOptions
-            {
-                Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
-            };
-            var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
-
-            // Serialize each event individually to JSON using source-generated context
-            var eventsData = eventGridEventSchemas.Select(eventSchema =>
-            {
-                var jsonString = JsonSerializer.Serialize(eventSchema, EventGridJsonContext.Default.EventGridEventSchema);
-                return BinaryData.FromString(jsonString);
-            }).ToArray();
-
-            var eventCount = eventsData.Length;
-            _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
-                eventCount, topicName, operationId);
-
-            await publisherClient.SendEventsAsync(eventsData, cancellationToken);
-
-            _logger.LogInformation("Successfully published {EventCount} events to topic '{TopicName}'",
-                eventCount, topicName);
-
-            return new(
-                Status: "Success",
-                Message: $"Successfully published {eventCount} event(s) to topic '{topicName}'.",
-                PublishedEventCount: eventCount,
-                OperationId: operationId,
-                PublishedAt: DateTime.UtcNow);
+            var errorMessage = $"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'. Make sure the topic exists and you have access to it.";
+            _logger.LogError(errorMessage);
+            throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
         }
-        catch (Exception ex)
+
+        if (topic.Data.Endpoint == null)
         {
-            _logger.LogError(ex, "Failed to publish events to topic '{TopicName}' in resource group '{ResourceGroup}'",
-                topicName, resourceGroup);
-
-            return new(
-                Status: "Failed",
-                Message: $"Failed to publish events: {ex.Message}",
-                PublishedEventCount: 0,
-                OperationId: operationId,
-                PublishedAt: DateTime.UtcNow);
+            var errorMessage = $"Event Grid topic '{topicName}' does not have a valid endpoint.";
+            _logger.LogError(errorMessage);
+            throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
         }
+
+        // Get credential using standardized method from base class for Azure AD authentication
+        var credential = await GetCredential(tenant, cancellationToken);
+
+        // Parse and validate event data directly to EventGridEventSchema
+        var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
+
+        // Create publisher client with HTTP client factory for test proxy support
+        var httpClient = AzureService.GetClient(nameof(EventGridPublisherClient));
+        var clientOptions = new EventGridPublisherClientOptions
+        {
+            Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+        };
+        var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
+
+        // Serialize each event individually to JSON using source-generated context
+        var eventsData = eventGridEventSchemas
+            .Select(eventSchema => BinaryData.FromObjectAsJson(eventSchema, EventGridJsonContext.Default.EventGridEventSchema))
+            .ToArray();
+
+        var eventCount = eventsData.Length;
+        _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
+            eventCount, topicName, operationId);
+
+        await publisherClient.SendEventsAsync(eventsData, cancellationToken);
+
+        _logger.LogInformation("Successfully published {EventCount} events to topic '{TopicName}'",
+            eventCount, topicName);
+
+        return new(
+            Status: "Success",
+            Message: $"Successfully published {eventCount} event(s) to topic '{topicName}'.",
+            PublishedEventCount: eventCount,
+            OperationId: operationId,
+            PublishedAt: DateTime.UtcNow);
     }
 
     private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
@@ -218,45 +199,39 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                 }
             }
 
-            return new()
-            {
-                Id = cloudEvent.Id ?? Guid.NewGuid().ToString(),
-                Subject = cloudEvent.Source ?? cloudEvent.Subject ?? "/default/subject",
-                EventType = cloudEvent.Type ?? "CustomEvent",
-                DataVersion = cloudEvent.SpecVersion ?? "1.0",
-                Data = cloudEvent.Data.HasValue ? JsonNode.Parse(cloudEvent.Data.Value.GetRawText()) : null,
-                EventTime = cloudEvent.Time ?? DateTimeOffset.UtcNow
-            };
+            return new(
+                Id: cloudEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject: cloudEvent.Source ?? cloudEvent.Subject ?? "/default/subject",
+                EventType: cloudEvent.Type ?? "CustomEvent",
+                DataVersion: cloudEvent.SpecVersion ?? "1.0",
+                Data: cloudEvent.Data.HasValue ? JsonNode.Parse(cloudEvent.Data.Value.GetRawText()) : null,
+                EventTime: cloudEvent.Time ?? DateTimeOffset.UtcNow);
         }
         else if (eventSchema.Equals("EventGrid", StringComparison.OrdinalIgnoreCase))
         {
             var eventGridEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.EventGridEventInput)
                 ?? throw new ArgumentException("Failed to deserialize EventGrid event");
 
-            return new()
-            {
-                Id = eventGridEvent.Id ?? Guid.NewGuid().ToString(),
-                Subject = eventGridEvent.Subject ?? "/default/subject",
-                EventType = eventGridEvent.EventType ?? "CustomEvent",
-                DataVersion = eventGridEvent.DataVersion ?? "1.0",
-                Data = eventGridEvent.Data.HasValue ? JsonNode.Parse(eventGridEvent.Data.Value.GetRawText()) : null,
-                EventTime = eventGridEvent.EventTime ?? DateTimeOffset.UtcNow
-            };
+            return new(
+                Id: eventGridEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject: eventGridEvent.Subject ?? "/default/subject",
+                EventType: eventGridEvent.EventType ?? "CustomEvent",
+                DataVersion: eventGridEvent.DataVersion ?? "1.0",
+                Data: eventGridEvent.Data.HasValue ? JsonNode.Parse(eventGridEvent.Data.Value.GetRawText()) : null,
+                EventTime: eventGridEvent.EventTime ?? DateTimeOffset.UtcNow);
         }
         else // Custom schema - try both CloudEvents and EventGrid field names
         {
             var flexibleEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CustomEvent)
                 ?? throw new ArgumentException("Failed to deserialize custom event");
 
-            return new()
-            {
-                Id = flexibleEvent.Id ?? Guid.NewGuid().ToString(),
-                Subject = flexibleEvent.Subject ?? flexibleEvent.Source ?? "/default/subject",
-                EventType = flexibleEvent.EventType ?? flexibleEvent.Type ?? "CustomEvent",
-                DataVersion = flexibleEvent.DataVersion ?? flexibleEvent.SpecVersion ?? "1.0",
-                Data = flexibleEvent.Data.HasValue ? JsonNode.Parse(flexibleEvent.Data.Value.GetRawText()) : null,
-                EventTime = flexibleEvent.EventTime ?? flexibleEvent.Time ?? DateTimeOffset.UtcNow
-            };
+            return new(
+                Id: flexibleEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject: flexibleEvent.Subject ?? flexibleEvent.Source ?? "/default/subject",
+                EventType: flexibleEvent.EventType ?? flexibleEvent.Type ?? "CustomEvent",
+                DataVersion: flexibleEvent.DataVersion ?? flexibleEvent.SpecVersion ?? "1.0",
+                Data: flexibleEvent.Data.HasValue ? JsonNode.Parse(flexibleEvent.Data.Value.GetRawText()) : null,
+                EventTime: flexibleEvent.EventTime ?? flexibleEvent.Time ?? DateTimeOffset.UtcNow);
         }
     }
 
@@ -370,26 +345,35 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
     {
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            // Search in specific resource group
+            // Direct lookup in the specific resource group instead of enumerating every topic
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync(cancellationToken: cancellationToken))
+            var topics = resourceGroupResource.Value.GetEventGridTopics();
+            var directMatch = await GetIfExists(() => topics.GetIfExistsAsync(topicName, cancellationToken));
+
+            if (directMatch != null)
+            {
+                return directMatch;
+            }
+
+            // Fall back to enumeration so casing differences still resolve the topic
+            await foreach (var topic in topics.GetAllAsync(cancellationToken: cancellationToken))
             {
                 if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return topic;
                 }
             }
+
+            return null;
         }
-        else
+
+        // Search in all resource groups
+        await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
         {
-            // Search in all resource groups
-            await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
+            if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
             {
-                if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
-                {
-                    return topic;
-                }
+                return topic;
             }
         }
 
@@ -404,42 +388,59 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
     {
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            // Search in specific resource group
+            // Direct lookup in the specific resource group instead of enumerating every system topic
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-            await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync(cancellationToken: cancellationToken))
+            var systemTopics = resourceGroupResource.Value.GetSystemTopics();
+            var directMatch = await GetIfExists(() => systemTopics.GetIfExistsAsync(topicName, cancellationToken));
+
+            if (directMatch != null)
+            {
+                return directMatch;
+            }
+
+            // Fall back to enumeration so casing differences still resolve the system topic
+            await foreach (var systemTopic in systemTopics.GetAllAsync(cancellationToken: cancellationToken))
             {
                 if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
                 {
                     return systemTopic;
                 }
             }
+
+            return null;
         }
-        else
+
+        // Search in all resource groups
+        await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
         {
-            // Search in all resource groups
-            await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
+            if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
             {
-                if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
-                {
-                    return systemTopic;
-                }
+                return systemTopic;
             }
         }
 
         return null;
     }
 
-    private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData)
+    /// <summary>
+    /// Invokes a <c>GetIfExistsAsync</c> lookup and normalizes "not found" results to <see langword="null"/>.
+    /// The returned <see cref="NullableResponse{T}"/> throws from its <c>Value</c> getter when the resource
+    /// does not exist, so <c>HasValue</c> is checked first.
+    /// </summary>
+    private static async Task<T?> GetIfExists<T>(Func<Task<NullableResponse<T>>> getIfExistsAsync) where T : class
     {
-        return new(
-            Name: topicData.Name,
-            Location: topicData.Location.ToString(),
-            Endpoint: topicData.Endpoint?.ToString(),
-            ProvisioningState: topicData.ProvisioningState?.ToString(),
-            PublicNetworkAccess: topicData.PublicNetworkAccess?.ToString(),
-            InputSchema: topicData.InputSchema?.ToString());
+        var response = await getIfExistsAsync();
+        return response.HasValue ? response.Value : null;
     }
+
+    private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData) => new(
+        Name: topicData.Name,
+        Location: topicData.Location.ToString(),
+        Endpoint: topicData.Endpoint?.ToString(),
+        ProvisioningState: topicData.ProvisioningState?.ToString(),
+        PublicNetworkAccess: topicData.PublicNetworkAccess?.ToString(),
+        InputSchema: topicData.InputSchema?.ToString());
 
     private static EventGridSubscriptionInfo CreateSubscriptionInfo(EventGridSubscriptionData subscriptionData)
     {
@@ -498,8 +499,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             MaxDeliveryAttempts: subscriptionData.RetryPolicy?.MaxDeliveryAttempts,
             EventTimeToLiveInMinutes: subscriptionData.RetryPolicy?.EventTimeToLiveInMinutes,
             CreatedDateTime: subscriptionData.SystemData?.CreatedOn?.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            UpdatedDateTime: subscriptionData.SystemData?.LastModifiedOn?.ToString("yyyy-MM-ddTHH:mm:ssZ")
-        );
+            UpdatedDateTime: subscriptionData.SystemData?.LastModifiedOn?.ToString("yyyy-MM-ddTHH:mm:ssZ"));
     }
 
     private static async Task AddSubscriptionsFromTopic(

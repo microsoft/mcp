@@ -1,12 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Options.Informational;
 
-public class FileShareGetProvisioningRecommendationOptions : SubscriptionOptions
+public sealed class FileShareGetProvisioningRecommendationOptions : ISubscriptionOption
 {
-    public string? Location { get; set; }
-    public int? ProvisionedStorageGiB { get; set; }
+    [Option(Description = FileSharesOptionDescriptions.Location)]
+    public required string Location { get; set; }
+
+    [Option(Name = "provisioned-storage-in-gib", Description = FileSharesOptionDescriptions.ProvisionedStorageGiB)]
+    public required int ProvisionedStorageInGiB { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
 }

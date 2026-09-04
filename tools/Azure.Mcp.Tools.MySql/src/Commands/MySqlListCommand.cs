@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.MySql.Commands;
 
@@ -23,61 +22,33 @@ namespace Azure.Mcp.Tools.MySql.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService) : SubscriptionCommand<MySqlDatabaseOptions>
+public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlService mysqlService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<MySqlListOptions, MySqlListCommand.MySqlListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<MySqlListCommand> _logger = logger;
     private readonly IMySqlService _mysqlService = mysqlService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(MySqlListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(MySqlOptionDefinitions.ServerOptional);
-        command.Options.Add(MySqlOptionDefinitions.DatabaseOptional);
-        command.Options.Add(MySqlOptionDefinitions.User.AsOptional());
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+
+        // --user is required when performing data-plane operations (listing databases or tables)
+        if (!string.IsNullOrEmpty(options.Server) && string.IsNullOrEmpty(options.User))
         {
-            var server = result.GetValueOrDefault<string?>(MySqlOptionDefinitions.ServerOptional.Name);
-            var database = result.GetValueOrDefault<string?>(MySqlOptionDefinitions.DatabaseOptional.Name);
-            var user = result.GetValueOrDefault<string?>(MySqlOptionDefinitions.User.Name);
+            validationResult.Errors.Add("The --user parameter is required when --server is specified.");
+        }
 
-            // --user is required when performing data-plane operations (listing databases or tables)
-            if (!string.IsNullOrEmpty(server) && string.IsNullOrEmpty(user))
-            {
-                result.AddError("The --user parameter is required when --server is specified.");
-            }
-
-            // --server is required when --database is specified
-            if (!string.IsNullOrEmpty(database) && string.IsNullOrEmpty(server))
-            {
-                result.AddError("The --server parameter is required when --database is specified.");
-            }
-        });
+        // --server is required when --database is specified
+        if (!string.IsNullOrEmpty(options.Database) && string.IsNullOrEmpty(options.Server))
+        {
+            validationResult.Errors.Add("The --server parameter is required when --database is specified.");
+        }
     }
 
-    protected override MySqlDatabaseOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MySqlListOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.User = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.User.Name);
-        options.Server = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.ServerOptional.Name);
-        options.Database = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.DatabaseOptional.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        MySqlDatabaseOptions? options = null;
-
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            options = BindOptions(parseResult);
-
             // Route based on provided parameters
             if (!string.IsNullOrEmpty(options.Database))
             {
@@ -141,5 +112,5 @@ public sealed class MySqlListCommand(ILogger<MySqlListCommand> logger, IMySqlSer
         return context.Response;
     }
 
-    internal record MySqlListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? TablesTruncated = null);
+    public sealed record MySqlListCommandResult(List<string>? Servers, List<string>? Databases, List<string>? Tables, bool? TablesTruncated = null);
 }

@@ -13,9 +13,6 @@ namespace Azure.Mcp.Tools.LoadTesting.Tests;
 public class LoadTestingCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    private const string TestResourceName = "TestResourceName";
-    private const string TestRunId = "TestRunId";
-
     public override List<UriRegexSanitizer> UriRegexSanitizers => [
         .. base.UriRegexSanitizers,
          new UriRegexSanitizer(new UriRegexSanitizerBody

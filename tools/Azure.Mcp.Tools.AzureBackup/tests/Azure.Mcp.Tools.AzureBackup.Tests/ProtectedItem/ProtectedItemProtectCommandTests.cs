@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -30,7 +29,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vm1"), Arg.Is("DefaultPolicy"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("Succeeded", "vm1-backup", "job123", "Protection enabled"));
 
         // Act
@@ -53,7 +52,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vm1"), Arg.Is("DefaultPolicy"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -78,7 +77,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         {
             Service.ProtectItemAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"), Arg.Is("pol1"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new ProtectResult("Succeeded", "item1", "job1", null));
         }
 
@@ -102,7 +101,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // Arrange
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vm1"), Arg.Is("DefaultPolicy"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -143,7 +142,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // (read back from the backup instance) and leave JobId null.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../disks/d1"), Arg.Is("policy-disk"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Succeeded",
                 ProtectedItemName: "rg-mydisk-abcd1234",
@@ -174,7 +173,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // carry Status="Failed" + ErrorMessage rather than a misleading "Accepted".
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../sa1"), Arg.Is("policy-blob"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Failed",
                 ProtectedItemName: "rg-blob-xyz",
@@ -205,7 +204,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // terminal status (Completed, CompletedWithWarnings, Failed) along with the job id.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vms/myvm"), Arg.Is("policy-vm"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Completed",
                 ProtectedItemName: "vm;iaasvmcontainerv2;rg;myvm",
@@ -233,7 +232,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // and ErrorMessage from the job rather than the previous "Accepted".
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../sa/fileServices/default/shares/share"), Arg.Is("policy-afs"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "Failed",
                 ProtectedItemName: "afsfileshare;sa;share",
@@ -263,7 +262,7 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         // should return InProgress with the job id so the caller can keep monitoring.
         Service.ProtectItemAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vms/slowvm"), Arg.Is("policy-vm"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ProtectResult(
                 Status: "InProgress",
                 ProtectedItemName: "vm;iaasvmcontainerv2;rg;slowvm",
@@ -282,5 +281,302 @@ public class ProtectedItemProtectCommandTests : SubscriptionCommandUnitTestsBase
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ProtectedItemProtectCommandResult);
         Assert.Equal("InProgress", result.Result.Status);
         Assert.Equal("33333333-3333-3333-3333-333333333333", result.Result.JobId);
+    }
+
+    [Theory]
+    [InlineData("garbage")]
+    [InlineData("'); DROP TABLE--")]
+    [InlineData(" ")]
+    [InlineData("\t")]
+    public async Task ExecuteAsync_RejectsUnknownDatasourceType_AsValidationError(string datasourceType)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType);
+
+        // Assert: validation error (400), service never called
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Unknown datasource type", response.Message);
+
+        await Service.DidNotReceive().ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("vm")]
+    [InlineData("VM")]
+    [InlineData("sql")]
+    [InlineData("AzureFileShare")]
+    [InlineData("AzureDisk")]
+    [InlineData("aks")]
+    [InlineData("blob")]
+    [InlineData("Microsoft.Compute/disks")]
+    [InlineData("Microsoft.Storage/storageAccounts")]
+    public async Task ExecuteAsync_AcceptsValidDatasourceType(string datasourceType)
+    {
+        // Arrange
+        Service.ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult("Succeeded", "item1", "job1", null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType);
+
+        // Assert: accepted, service was called
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("AzureDisk", "rsv")]
+    [InlineData("aks", "rsv")]
+    [InlineData("Microsoft.Compute/disks", "rsv")]
+    public async Task ExecuteAsync_RejectsDppDatasourceType_WhenVaultTypeIsRsv(string datasourceType, string vaultType)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../disk1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType,
+            "--vault-type", vaultType);
+
+        // Assert: validation error (400), service never called
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not valid for RSV", response.Message);
+
+        await Service.DidNotReceive().ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("vm", "dpp")]
+    [InlineData("SQL", "dpp")]
+    [InlineData("AzureFileShare", "dpp")]
+    public async Task ExecuteAsync_RejectsRsvDatasourceType_WhenVaultTypeIsDpp(string datasourceType, string vaultType)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--datasource-type", datasourceType,
+            "--vault-type", vaultType);
+
+        // Assert: validation error (400), service never called
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("not valid for DPP", response.Message);
+
+        await Service.DidNotReceive().ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    // ---------------------------------------------------------------------
+    // Selective Disk Backup option tests
+    // See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
+    // ---------------------------------------------------------------------
+
+    [Fact]
+    public async Task ExecuteAsync_WithDiskInclusion_PassesSpecToService()
+    {
+        // Arrange
+        DiskExclusionSpec? capturedSpec = null;
+        Service.ProtectItemAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("/subscriptions/.../vm1"), Arg.Is("DefaultPolicy"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult("Succeeded", "vm1-backup", "job123", null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--disk-list-setting", "include",
+            "--disks-list", "0,1,3");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(capturedSpec);
+        Assert.Equal("include", capturedSpec!.Setting);
+        Assert.Equal("0,1,3", capturedSpec.DiskLunsCsv);
+        Assert.False(capturedSpec.ExcludeAllDataDisks);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithDiskExclusion_PassesSpecToService()
+    {
+        // Arrange
+        DiskExclusionSpec? capturedSpec = null;
+        Service.ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult("Succeeded", "vm1-backup", "job123", null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--disk-list-setting", "exclude",
+            "--disks-list", "2");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(capturedSpec);
+        Assert.Equal("exclude", capturedSpec!.Setting);
+        Assert.Equal("2", capturedSpec.DiskLunsCsv);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ExcludeAllDataDisks_PassesSpecToService()
+    {
+        // Arrange
+        DiskExclusionSpec? capturedSpec = null;
+        Service.ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult("Succeeded", "vm1-backup", "job123", null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--exclude-all-data-disks");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(capturedSpec);
+        Assert.True(capturedSpec!.ExcludeAllDataDisks);
+        Assert.Null(capturedSpec.Setting);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ResetExclusionSettings_PassesSpecToService()
+    {
+        // Arrange
+        DiskExclusionSpec? capturedSpec = null;
+        Service.ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult("Succeeded", "vm1-backup", "job123", null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+            "--disk-list-setting", "resetexclusionsettings");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(capturedSpec);
+        Assert.Equal("resetexclusionsettings", capturedSpec!.Setting);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoDiskOptions_PassesNullSpecToService()
+    {
+        // Arrange
+        DiskExclusionSpec? capturedSpec = new("include", "0", false); // sentinel to detect null
+        Service.ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult("Succeeded", "vm1-backup", "job123", null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Null(capturedSpec);
+    }
+
+    [Theory]
+    [InlineData("garbage", "0,1", false, "Invalid --disk-list-setting")]
+    [InlineData("include", null, false, "either --disks-list or --exclude-all-data-disks")]
+    [InlineData("include", "0,-1", false, "Invalid disk LUN")]
+    [InlineData("include", "0,abc", false, "Invalid disk LUN")]
+    [InlineData("include", "0,1", true, "mutually exclusive")]
+    [InlineData("resetexclusionsettings", "0", false, "cannot be combined with --disk-list-setting 'resetexclusionsettings'")]
+    [InlineData(null, "0,1", false, "requires --disk-list-setting")]
+    public async Task ExecuteAsync_InvalidDiskOptions_ReturnsValidationError(
+        string? setting, string? disksList, bool excludeAll, string expectedFragment)
+    {
+        // Arrange
+        var args = new List<string>
+        {
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "/subscriptions/.../vm1",
+            "--policy", "DefaultPolicy",
+        };
+        if (setting is not null)
+        {
+            args.Add("--disk-list-setting");
+            args.Add(setting);
+        }
+        if (disksList is not null)
+        {
+            args.Add("--disks-list");
+            args.Add(disksList);
+        }
+        if (excludeAll)
+        {
+            args.Add("--exclude-all-data-disks");
+        }
+
+        // Act
+        var response = await ExecuteCommandAsync([.. args]);
+
+        // Assert: validation error (400), service never called
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(expectedFragment, response.Message);
+
+        await Service.DidNotReceive().ProtectItemAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

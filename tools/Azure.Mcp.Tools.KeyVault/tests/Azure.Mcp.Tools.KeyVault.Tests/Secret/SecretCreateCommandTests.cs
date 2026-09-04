@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Secret;
 
-public class SecretCreateCommandTests : CommandUnitTestsBase<SecretCreateCommand, IKeyVaultService>
+public class SecretCreateCommandTests : SubscriptionCommandUnitTestsBase<SecretCreateCommand, IKeyVaultService>
 {
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
@@ -32,7 +31,6 @@ public class SecretCreateCommandTests : CommandUnitTestsBase<SecretCreateCommand
             Arg.Is(_knownSecretValue),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultSecret);
 
@@ -44,7 +42,7 @@ public class SecretCreateCommandTests : CommandUnitTestsBase<SecretCreateCommand
             "--subscription", _knownSubscriptionId);
 
         // Assert
-        var retrievedSecret = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.SecretCreateCommandResult);
+        var retrievedSecret = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.SecretDetails);
 
         Assert.Equal(_knownSecretName, retrievedSecret.Name);
         Assert.Equal(_knownSecretValue, retrievedSecret.Value);
@@ -77,7 +75,6 @@ public class SecretCreateCommandTests : CommandUnitTestsBase<SecretCreateCommand
             Arg.Is(_knownSecretValue),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

@@ -4,7 +4,9 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -16,10 +18,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// <param name="logger">Logger for tool loading operations.</param>
 public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, ILogger<CompositeToolLoader> logger) : BaseToolLoader(logger)
 {
-    private readonly IEnumerable<IToolLoader> _toolLoaders = InitializeToolLoaders(toolLoaders);
+    internal readonly IEnumerable<IToolLoader> _toolLoaders = InitializeToolLoaders(toolLoaders);
     private readonly Dictionary<string, IToolLoader> _toolLoaderMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
+    // Server-side performance cache only. This should not be treated as protocol freshness metadata.
     private List<Tool>? _cachedTools;
 
     /// <summary>
@@ -81,7 +84,6 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// <returns>A result containing the output of the tool invocation, or an error result if the tool is not found or initialization fails.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -97,6 +99,9 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
                 IsError = true,
             };
         }
+
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         // Ensure tool loader map is populated before attempting tool lookup
         try
@@ -119,7 +124,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             };
         }
 
-        if (!_toolLoaderMap.TryGetValue(request.Params.Name, out var toolCaller))
+        if (!_toolLoaderMap.TryGetValue(request.Params.Name, out var toolLoader))
         {
             var content = new TextContentBlock
             {
@@ -135,7 +140,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             };
         }
 
-        return await toolCaller.CallToolHandler(request, cancellationToken);
+        return await toolLoader.CallToolHandler(request, cancellationToken);
     }
 
     /// <summary>
@@ -165,10 +170,11 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             var allTools = new List<Tool>();
 
             // Create a request for listing tools to populate the tool loader map
-            var listToolsRequest = new RequestContext<ListToolsRequestParams>(server, new() { Method = RequestMethods.ToolsList })
-            {
-                Params = new ListToolsRequestParams()
-            };
+            var listToolsParams = new ListToolsRequestParams();
+            var listToolsRequest = new RequestContext<ListToolsRequestParams>(
+                server,
+                new() { Method = RequestMethods.ToolsList },
+                listToolsParams);
 
             foreach (var loader in _toolLoaders)
             {

@@ -55,6 +55,18 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         {
             validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
         }
+
+        if (!string.IsNullOrEmpty(options.Expand))
+        {
+            try
+            {
+                _ = VaultExpandParser.Parse(options.Expand);
+            }
+            catch (ArgumentException ex)
+            {
+                validationResult.Errors.Add(ex.Message);
+            }
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultGetOptions options, CancellationToken cancellationToken)
@@ -65,6 +77,12 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
 
         try
         {
+            var expand = VaultExpandParser.Parse(options.Expand);
+            if (expand != VaultExpand.None)
+            {
+                context.Activity?.AddTag(AzureBackupTelemetryTags.VaultExpand, expand.ToString());
+            }
+
             if (!string.IsNullOrEmpty(options.Vault))
             {
                 var vault = await _azureBackupService.GetVaultAsync(
@@ -73,8 +91,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    expand);
 
                 context.Response.Results = ResponseResult.Create(
                     new([vault]),
@@ -87,8 +105,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.ResourceGroup,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    expand);
 
                 context.Response.Results = ResponseResult.Create(
                     new(vaults),
@@ -110,6 +128,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         KeyNotFoundException => "Vault not found. Verify the vault name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault not found. Verify the vault name and resource group.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            "Authorization failed accessing vault information. Ensure you have 'Reader' or 'Backup Reader' role at subscription scope.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

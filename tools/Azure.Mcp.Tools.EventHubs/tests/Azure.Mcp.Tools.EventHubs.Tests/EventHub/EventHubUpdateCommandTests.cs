@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.EventHub;
 
-public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCommand, IEventHubsService>
+public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<EventHubUpdateCommand, IEventHubsService>
 {
     [Theory]
     [InlineData("", false)]
@@ -47,7 +46,6 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
                 Arg.Any<long?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(eventHub);
         }
@@ -81,7 +79,6 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
@@ -110,7 +107,6 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
@@ -151,7 +147,6 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             Arg.Is(336L),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(eventHub);
 
@@ -194,7 +189,6 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             Arg.Any<long?>(),
             Arg.Is("Disabled"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(eventHub);
 
@@ -213,6 +207,6 @@ public class EventHubUpdateCommandTests : CommandUnitTestsBase<EventHubUpdateCom
             "test-hub", "test-namespace", "test-rg", Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<long?>(),
             "Disabled",
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

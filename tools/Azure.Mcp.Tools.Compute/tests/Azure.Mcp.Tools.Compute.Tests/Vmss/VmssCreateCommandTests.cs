@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests.Vmss;
 
-public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IComputeService>
+public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreateCommand, IComputeService>
 {
     private readonly string _knownSubscription = "sub123";
     private readonly string _knownResourceGroup = "test-rg";
@@ -79,7 +78,6 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(createResult);
         }
@@ -117,25 +115,24 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             Tags: new Dictionary<string, string> { { "env", "test" } });
 
         Service.CreateVmssAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            _knownVmssName,
+            _knownResourceGroup,
+            _knownSubscription,
+            _knownLocation,
+            _knownAdminUsername,
+            Arg.Any<string?>(),
+            Arg.Is("Ubuntu2404"),
+            Arg.Any<string?>(),
+            _knownSshKey,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Is(3),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Is(40),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -148,7 +145,8 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             "--admin-username", _knownAdminUsername,
             "--image", "Ubuntu2404",
             "--ssh-public-key", _knownSshKey,
-            "--instance-count", "3");
+            "--instance-count", "3",
+            "--os-disk-size-gb", "40");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.VmssCreateCommandResult);
@@ -200,7 +198,6 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -254,7 +251,6 @@ public class VmssCreateCommandTests : CommandUnitTestsBase<VmssCreateCommand, IC
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 

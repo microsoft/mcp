@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Tests.FileSystem.ImportJob;
 
-public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand, IManagedLustreService>
+public class ImportJobGetCommandTests : SubscriptionCommandUnitTestsBase<ImportJobGetCommand, IManagedLustreService>
 {
     private const string Sub = "sub123";
     private const string Rg = "rg1";
@@ -41,7 +41,7 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
 
             Service.GetImportJobAsync(
                 Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name), Arg.Is(JobName),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(importJob);
         }
 
@@ -53,6 +53,7 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
         if (shouldSucceed)
         {
             var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobGetResult);
+            Assert.NotNull(result.Job);
             Assert.Equal(JobName, result.Job.Name);
         }
         else
@@ -79,7 +80,7 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
 
         Service.GetImportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(importJob);
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name} --job-name {JobName}";
@@ -91,7 +92,7 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.DidNotReceive().ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -106,7 +107,7 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
 
         Service.ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(importJobs);
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name}";
@@ -124,7 +125,7 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
         // Arrange
         Service.ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         var args = $"--subscription {Sub} --resource-group {Rg} --filesystem-name {Name}";
@@ -148,14 +149,15 @@ public class ImportJobGetCommandTests : CommandUnitTestsBase<ImportJobGetCommand
 
         Service.ListImportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(importJobs);
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", Sub, "--resource-group", Rg, "--filesystem-name", Name);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobListResult);
+        var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.ImportJobGetResult);
+        Assert.NotNull(result.Jobs);
         Assert.Single(result.Jobs);
         Assert.Equal(JobName, result.Jobs[0].Name);
     }

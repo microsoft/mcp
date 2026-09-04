@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.MySql.Options.Table;
 
-public class TableSchemaGetOptions : MySqlDatabaseOptions
+public sealed class TableSchemaGetOptions : MySqlDatabaseOptions
 {
-    [JsonPropertyName(MySqlOptionDefinitions.TableName)]
-    public string? Table { get; set; }
+    [Option(Description = "The MySQL table to be accessed.")]
+    public required string Table { get; set; }
 }

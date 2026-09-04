@@ -1,0 +1,27 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+            "type": "Plan",
+            "displayName": "Plan 1",
+            "description": "A plan description.",
+            "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920"
+          },
+          {
+            "id": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+            "type": "Plan",
+            "displayName": "Plan 2",
+            "description": "A plan description.",
+            "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920"
+          }
+        ]
+      }
+    }
+  }
+}

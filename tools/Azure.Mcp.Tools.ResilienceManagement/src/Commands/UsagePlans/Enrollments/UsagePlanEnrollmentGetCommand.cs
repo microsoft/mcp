@@ -46,7 +46,6 @@ public sealed class UsagePlanEnrollmentGetCommand(ILogger<UsagePlanEnrollmentGet
                     options.UsagePlan,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanEnrollmentGetCommandResult(Enrollments: enrollments.ToList());
             }
@@ -58,7 +57,6 @@ public sealed class UsagePlanEnrollmentGetCommand(ILogger<UsagePlanEnrollmentGet
                     options.Name,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanEnrollmentGetCommandResult(Enrollment: enrollment);
             }

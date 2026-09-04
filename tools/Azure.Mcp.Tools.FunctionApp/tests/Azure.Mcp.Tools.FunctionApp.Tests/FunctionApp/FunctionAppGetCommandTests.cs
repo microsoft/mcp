@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FunctionApp.Commands;
 using Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Services;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.Tests.FunctionApp;
 
-public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAppGetCommand, IFunctionAppService>
+public sealed class FunctionAppGetCommandTests : SubscriptionCommandUnitTestsBase<FunctionAppGetCommand, IFunctionAppService>
 {
     [Theory]
     [InlineData("--subscription sub123", true)]
@@ -35,7 +34,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(testFunctionApps);
         }
@@ -70,7 +68,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFunctionApps);
 
@@ -84,7 +81,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
@@ -108,7 +104,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -130,7 +125,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -164,7 +158,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([new("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null)]);
         }
@@ -183,7 +176,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([expected]);
 
@@ -203,7 +195,6 @@ public sealed class FunctionAppGetCommandTests : CommandUnitTestsBase<FunctionAp
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns((List<FunctionAppInfo>?)null);
 
