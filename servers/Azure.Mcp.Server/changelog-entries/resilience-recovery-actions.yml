@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: Added recoveryplan failover, finalize, and reprotect commands, plus recovery job retry and resume commands for Azure Resilience Management.
+  - section: Other Changes
+    description: Standardized the Azure Resilience Management recovery plan option name as recoveryplan.

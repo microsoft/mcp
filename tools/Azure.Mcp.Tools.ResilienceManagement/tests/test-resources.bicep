@@ -12,13 +12,19 @@ var lifecycleEnrollmentName = take('el${uniqueSuffix}', 24)
 var lifecycleServiceGroupName = take('sgl${uniqueSuffix}', 24)
 var planLifecycleEnrollmentName = take('ep${uniqueSuffix}', 24)
 var planLifecycleServiceGroupName = take('sgp${uniqueSuffix}', 24)
+var workflowEnrollmentName = take('ew${uniqueSuffix}', 24)
+var workflowServiceGroupName = take('sgw${uniqueSuffix}', 24)
 var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
+var workflowRecoveryPlanName = take('rw${uniqueSuffix}', 24)
 var drillName = take('dr${uniqueSuffix}', 24)
 var deleteDrillName = take('dd${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 var managedDiskName = take('md${uniqueSuffix}', 80)
+var automationAccountName = take('aa${uniqueSuffix}', 50)
+var failoverRunbookName = 'Failover-${take(uniqueSuffix, 20)}'
+var reprotectRunbookName = 'Reprotect-${take(uniqueSuffix, 19)}'
 
 // The test identity is automatically granted access to this resource group by the
 // test harness (New-TestResources.ps1), so no explicit role assignment is created here.
@@ -30,7 +36,7 @@ var managedDiskName = take('md${uniqueSuffix}', 80)
 //  - Microsoft.Management/serviceGroups (the service group itself)
 //  - the resource group -> service group membership
 //  - the usage plan enrollment
-//  - goal template, goal assignment and recovery plan (extension resources on the service group)
+//  - goal template, goal assignment and recoveryplan (extension resources on the service group)
 
 // Storage account (resource-group scoped) so the service group has a member resource that
 // can surface as a goal/recovery resource target during live tests.
@@ -66,6 +72,18 @@ resource managedDisk 'Microsoft.Compute/disks@2024-03-02' = {
   }
 }
 
+resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
+  name: automationAccountName
+  location: resourceGroup().location
+  properties: {
+    disableLocalAuth: true
+    publicNetworkAccess: true
+    sku: {
+      name: 'Basic'
+    }
+  }
+}
+
 // Usage plan (resource-group scoped). This resource type is only available in the 'global' location.
 resource usagePlan 'Microsoft.AzureResilienceManagement/usagePlans@2026-04-01-preview' = {
   name: usagePlanName
@@ -82,11 +100,18 @@ output lifecycleEnrollmentName string = lifecycleEnrollmentName
 output lifecycleServiceGroupName string = lifecycleServiceGroupName
 output planLifecycleEnrollmentName string = planLifecycleEnrollmentName
 output planLifecycleServiceGroupName string = planLifecycleServiceGroupName
+output workflowEnrollmentName string = workflowEnrollmentName
+output workflowServiceGroupName string = workflowServiceGroupName
 output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
+output workflowRecoveryPlanName string = workflowRecoveryPlanName
 output drillName string = drillName
 output deleteDrillName string = deleteDrillName
 output storageAccountName string = storageAccountName
 output storageAccountId string = storageAccount.id
+output automationAccountName string = automationAccountName
+output automationAccountId string = automationAccount.id
+output failoverRunbookName string = failoverRunbookName
+output reprotectRunbookName string = reprotectRunbookName
 output location string = resourceGroup().location

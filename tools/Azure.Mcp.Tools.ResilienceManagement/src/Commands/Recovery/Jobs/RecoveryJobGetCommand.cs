@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
     Name = "get",
     Title = "Get or List Resilience Recovery Jobs",
     Description = """
-        Gets the recovery jobs of a resilience recovery plan. Provide a recovery job name to get the full
-        details of that job. Omit the name to list all recovery jobs of the recovery plan, returning only their
+        Gets the recovery jobs of a resilience recoveryplan. Provide a recovery job name to get the full
+        details of that job. Omit the name to list all recovery jobs of the recoveryplan, returning only their
         id and name.
         """,
     Destructive = false,
@@ -75,11 +75,11 @@ public sealed class RecoveryJobGetCommand(ILogger<RecoveryJobGetCommand> logger,
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery job not found. Verify the recovery job name, recovery plan, service group, and that you have access.",
+        KeyNotFoundException => "Recovery job not found. Verify the recovery job name, recoveryplan, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery job. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery job not found. Verify the recovery job, recovery plan, and service group exist and you have access.",
+            "Recovery job not found. Verify the recovery job, recoveryplan, and service group exist and you have access.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

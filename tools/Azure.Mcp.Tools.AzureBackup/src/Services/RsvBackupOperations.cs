@@ -122,7 +122,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? containerName,
-        string? datasourceType, string? tenant,
+        string? datasourceType, DiskExclusionSpec? diskExclusion, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -143,6 +143,16 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             subscription, resourceGroup, vaultName, policyName);
 
         var profile = RsvDatasourceRegistry.ResolveOrDefault(datasourceType);
+
+        // Selective disk backup is only meaningful for IaaS VM protected items.
+        var hasDiskExclusion = diskExclusion is not null && diskExclusion.HasAnyValue;
+        if (hasDiskExclusion && profile.ProtectedItemType != RsvProtectedItemType.IaasVm)
+        {
+            throw new ArgumentException(
+                "Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks) is only supported for RSV IaaS VM protected items. " +
+                $"The specified datasource resolved to '{profile.FriendlyName}'. " +
+                "See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for details.");
+        }
 
         if (profile.IsWorkloadType)
         {
@@ -238,13 +248,17 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vmProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, container, vmProtectedItemName);
 
+        var vmProtectedItem = new IaasComputeVmProtectedItem
+        {
+            PolicyId = policyArmId,
+            SourceResourceId = new ResourceIdentifier(datasourceId)
+        };
+
+        ApplyDiskExclusionToProtectedItem(vmProtectedItem, diskExclusion);
+
         var vmProtectedItemData = new BackupProtectedItemData(vaultLocation)
         {
-            Properties = new IaasComputeVmProtectedItem
-            {
-                PolicyId = policyArmId,
-                SourceResourceId = new ResourceIdentifier(datasourceId)
-            }
+            Properties = vmProtectedItem
         };
 
         var vmProtectedItemResource = armClient.GetBackupProtectedItemResource(vmProtectedItemId);
@@ -576,12 +590,36 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         // since RSV vault patch only supports identity and tag updates.
         if (!string.IsNullOrEmpty(softDelete))
         {
-            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, cancellationToken);
+            if (!Enum.TryParse<AzureBackupSoftDeleteState>(softDelete, ignoreCase: true, out var softDeleteEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid soft delete state '{softDelete}'. Valid values: Off, On, AlwaysOn.",
+                    nameof(softDelete));
+            }
+            if (!int.TryParse(softDeleteRetentionDays, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
+            {
+                throw new ArgumentException(
+                    "Soft delete retention days is required (14-180) when updating soft delete state via 'vault update'.",
+                    nameof(softDeleteRetentionDays));
+            }
+            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteEnum, retentionDays, tenant, cancellationToken);
         }
 
         if (!string.IsNullOrEmpty(immutabilityState))
         {
-            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, cancellationToken);
+            if (!Enum.TryParse<AzureBackupImmutabilityState>(immutabilityState, ignoreCase: true, out var immutabilityEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid immutability state '{immutabilityState}'. Valid values: Disabled, Unlocked, Enabled, Locked.",
+                    nameof(immutabilityState));
+            }
+            var normalizedImmutability = immutabilityEnum == AzureBackupImmutabilityState.Enabled
+                ? AzureBackupImmutabilityState.Unlocked
+                : immutabilityEnum;
+            // 'vault update' does not currently plumb immutability-type / duration; default to
+            // AsPerPolicy which is safe for both Disabled and Unlocked. Users needing TimeBased
+            // should use 'governance immutability' instead.
+            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedImmutability, AzureBackupImmutabilityType.AsPerPolicy, immutabilityDurationDays: null, tenant, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
@@ -673,11 +711,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     }
 
     public async Task<OperationResult> UpdatePolicyAsync(
+        Policy.PolicyUpdateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName,
-        string? scheduleTime, string? dailyRetentionDays,
         string? tenant, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var policyName = request.Policy;
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
@@ -695,36 +735,261 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(policyName));
 
         DateTimeOffset? newScheduleTime = null;
-        if (!string.IsNullOrWhiteSpace(scheduleTime))
+        if (!string.IsNullOrWhiteSpace(request.ScheduleTime))
         {
-            if (!DateTimeOffset.TryParse(scheduleTime, out var st))
+            if (!DateTimeOffset.TryParse(request.ScheduleTime, out var st))
             {
-                throw new ArgumentException($"Invalid schedule time '{scheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
+                throw new ArgumentException($"Invalid schedule time '{request.ScheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
             }
             newScheduleTime = st;
         }
 
         int? newRetentionDays = null;
-        if (!string.IsNullOrWhiteSpace(dailyRetentionDays))
+        if (!string.IsNullOrWhiteSpace(request.DailyRetentionDays))
         {
-            if (!int.TryParse(dailyRetentionDays, out var dd) || dd <= 0)
+            if (!int.TryParse(request.DailyRetentionDays, out var dd) || dd <= 0)
             {
-                throw new ArgumentException($"Invalid daily retention days '{dailyRetentionDays}'. Provide a positive integer.");
+                throw new ArgumentException($"Invalid daily retention days '{request.DailyRetentionDays}'. Provide a positive integer.");
             }
             newRetentionDays = dd;
         }
 
-        if (newScheduleTime is null && newRetentionDays is null)
+        if (!request.HasAnyInput())
         {
             return new OperationResult("Succeeded", null, $"No changes specified for policy '{policyName}'. Policy remains unchanged.");
         }
 
-        UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
+        // Extended IaasVM merger (new): applies TimeZone / schedule reshape / weekly-monthly-yearly retention.
+        if (policyProperties is IaasVmProtectionPolicy vmPolicy && request.HasIaasVmExtendedFlags())
+        {
+            MergeIaasVmExtended(vmPolicy, request);
+        }
+
+        // Legacy back-compat: single daily schedule time and/or daily retention days across policy kinds.
+        if (newScheduleTime is not null || newRetentionDays is not null)
+        {
+            UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
+        }
 
         var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
+    /// Semantics: TimeZone is overlaid when supplied. Schedule (SimpleSchedulePolicy) is replaced when
+    /// any of frequency / times / days-of-week is supplied. Retention tiers (Weekly / Monthly / Yearly)
+    /// are individually replaced whenever the corresponding count is greater than zero — other tiers
+    /// on the existing policy are preserved untouched. Daily retention continues to be driven by the
+    /// legacy <see cref="Policy.PolicyUpdateRequest.DailyRetentionDays"/> path.
+    /// </summary>
+    internal static void MergeIaasVmExtended(IaasVmProtectionPolicy vmPolicy, Policy.PolicyUpdateRequest req)
+    {
+        if (!string.IsNullOrWhiteSpace(req.TimeZone))
+        {
+            vmPolicy.TimeZone = req.TimeZone;
+        }
+
+        // Prefer the caller-supplied schedule times; otherwise use the existing policy's schedule times
+        // so retention tiers align with the current run times. Fall back to the parser default only when
+        // neither is available.
+        var existingSchedule = vmPolicy.SchedulePolicy as SimpleSchedulePolicy;
+        IList<DateTimeOffset> scheduleTimes;
+        if (!string.IsNullOrWhiteSpace(req.ScheduleTimes))
+        {
+            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(req.ScheduleTimes);
+        }
+        else if (existingSchedule is not null && existingSchedule.ScheduleRunTimes.Count > 0)
+        {
+            scheduleTimes = new List<DateTimeOffset>(existingSchedule.ScheduleRunTimes);
+        }
+        else
+        {
+            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(null);
+        }
+
+        bool scheduleReplaced = !string.IsNullOrWhiteSpace(req.ScheduleFrequency)
+            || !string.IsNullOrWhiteSpace(req.ScheduleTimes)
+            || !string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek);
+
+        if (scheduleReplaced)
+        {
+            // Determine frequency: explicit --schedule-frequency wins; otherwise infer Weekly when
+            // days-of-week are supplied, and fall back to the existing schedule's frequency.
+            ScheduleRunType freq;
+            if (!string.IsNullOrWhiteSpace(req.ScheduleFrequency))
+            {
+                freq = string.Equals(req.ScheduleFrequency!.Trim(), "Weekly", StringComparison.OrdinalIgnoreCase)
+                    ? ScheduleRunType.Weekly
+                    : ScheduleRunType.Daily;
+            }
+            else if (!string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek))
+            {
+                freq = ScheduleRunType.Weekly;
+            }
+            else
+            {
+                freq = existingSchedule?.ScheduleRunFrequency ?? ScheduleRunType.Daily;
+            }
+
+            var isWeekly = freq == ScheduleRunType.Weekly;
+            var schedule = new SimpleSchedulePolicy
+            {
+                ScheduleRunFrequency = freq,
+            };
+            if (isWeekly)
+            {
+                var days = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.ScheduleDaysOfWeek);
+                if (days.Count == 0 && existingSchedule is not null && existingSchedule.ScheduleRunDays.Count > 0)
+                {
+                    foreach (var d in existingSchedule.ScheduleRunDays)
+                    {
+                        days.Add(d);
+                    }
+                }
+                if (days.Count == 0)
+                {
+                    days.Add(BackupDayOfWeek.Sunday);
+                }
+                foreach (var d in days)
+                {
+                    schedule.ScheduleRunDays.Add(d);
+                }
+            }
+            foreach (var t in scheduleTimes)
+            {
+                schedule.ScheduleRunTimes.Add(t);
+            }
+            vmPolicy.SchedulePolicy = schedule;
+        }
+
+        var retention = vmPolicy.RetentionPolicy as LongTermRetentionPolicy;
+        if (retention is null)
+        {
+            retention = new LongTermRetentionPolicy();
+            vmPolicy.RetentionPolicy = retention;
+        }
+
+        if (req.WeeklyRetentionWeeks > 0)
+        {
+            var weekly = new WeeklyRetentionSchedule
+            {
+                RetentionDuration = new RetentionDuration { Count = req.WeeklyRetentionWeeks, DurationType = RetentionDurationType.Weeks },
+            };
+            var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek);
+            if (dow.Count == 0)
+            {
+                dow.Add(BackupDayOfWeek.Sunday);
+            }
+            foreach (var d in dow)
+            {
+                weekly.DaysOfTheWeek.Add(d);
+            }
+            foreach (var t in scheduleTimes)
+            {
+                weekly.RetentionTimes.Add(t);
+            }
+            retention.WeeklySchedule = weekly;
+        }
+
+        if (req.MonthlyRetentionMonths > 0)
+        {
+            var monthly = new MonthlyRetentionSchedule
+            {
+                RetentionDuration = new RetentionDuration { Count = req.MonthlyRetentionMonths, DurationType = RetentionDurationType.Months },
+            };
+            if (!string.IsNullOrWhiteSpace(req.MonthlyRetentionDaysOfMonth))
+            {
+                monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.MonthlyRetentionDaysOfMonth))
+                {
+                    monthly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
+                }
+            }
+            else
+            {
+                monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
+                monthly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
+                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.MonthlyRetentionDaysOfWeek);
+                if (dow.Count == 0)
+                {
+                    dow.Add(BackupDayOfWeek.Sunday);
+                }
+                foreach (var d in dow)
+                {
+                    monthly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
+                }
+                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.MonthlyRetentionWeekOfMonth);
+                if (weeks.Count == 0)
+                {
+                    weeks.Add(BackupWeekOfMonth.First);
+                }
+                foreach (var w in weeks)
+                {
+                    monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                }
+            }
+            foreach (var t in scheduleTimes)
+            {
+                monthly.RetentionTimes.Add(t);
+            }
+            retention.MonthlySchedule = monthly;
+        }
+
+        if (req.YearlyRetentionYears > 0)
+        {
+            var yearly = new YearlyRetentionSchedule
+            {
+                RetentionDuration = new RetentionDuration { Count = req.YearlyRetentionYears, DurationType = RetentionDurationType.Years },
+            };
+            var months = Policy.RsvPolicyBuilder.ParseMonthsOfYear(req.YearlyRetentionMonths);
+            if (months.Count == 0)
+            {
+                months.Add(BackupMonthOfYear.January);
+            }
+            foreach (var m in months)
+            {
+                yearly.MonthsOfYear.Add(m);
+            }
+            if (!string.IsNullOrWhiteSpace(req.YearlyRetentionDaysOfMonth))
+            {
+                yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.YearlyRetentionDaysOfMonth))
+                {
+                    yearly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
+                }
+            }
+            else
+            {
+                yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
+                yearly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
+                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.YearlyRetentionDaysOfWeek);
+                if (dow.Count == 0)
+                {
+                    dow.Add(BackupDayOfWeek.Sunday);
+                }
+                foreach (var d in dow)
+                {
+                    yearly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
+                }
+                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.YearlyRetentionWeekOfMonth);
+                if (weeks.Count == 0)
+                {
+                    weeks.Add(BackupWeekOfMonth.First);
+                }
+                foreach (var w in weeks)
+                {
+                    yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                }
+            }
+            foreach (var t in scheduleTimes)
+            {
+                yearly.RetentionTimes.Add(t);
+            }
+            retention.YearlySchedule = yearly;
+        }
     }
 
     private static void UpdatePolicyScheduleAndRetention(BackupGenericProtectionPolicy policyProperties, DateTimeOffset? newScheduleTime, int? newRetentionDays)
@@ -844,84 +1109,146 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, CancellationToken cancellationToken)
-    {
-        ValidateRequiredParameters(
-            (nameof(vaultName), vaultName),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(immutabilityState), immutabilityState));
-
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
-        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
-        var vault = await vaultResource.GetAsync(cancellationToken);
-
-        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
-        {
-            Properties = new RecoveryServicesVaultProperties
-            {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    ImmutabilityState = new ImmutabilityState(immutabilityState)
-                }
-            }
-        };
-        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
-
-        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'");
-    }
-
-    public async Task<OperationResult> ConfigureSoftDeleteAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? softDeleteRetentionDays,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(softDeleteState), softDeleteState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        var rsvSoftDeleteState = softDeleteState.ToUpperInvariant() switch
+        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
         {
-            "ON" => RecoveryServicesSoftDeleteState.Enabled,
-            "OFF" => RecoveryServicesSoftDeleteState.Disabled,
-            "ALWAYSON" => RecoveryServicesSoftDeleteState.AlwaysON,
-            _ => new RecoveryServicesSoftDeleteState(softDeleteState)
+            Properties = new RecoveryServicesVaultProperties
+            {
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
+            }
+        };
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for an immutability update.
+    /// Extracted for regression testing: api-version 2026-05-01+ requires
+    /// <c>ImmutabilitySettings.Configuration.Type</c> whenever the state is not <c>Disabled</c>.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        var immutabilitySettings = new ImmutabilitySettings
+        {
+            State = immutabilityState.ToString() switch
+            {
+                nameof(AzureBackupImmutabilityState.Disabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Disabled,
+                nameof(AzureBackupImmutabilityState.Unlocked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                nameof(AzureBackupImmutabilityState.Locked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Locked,
+                // 'Enabled' should have been normalized to 'Unlocked' upstream; guard here just in case.
+                nameof(AzureBackupImmutabilityState.Enabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+            },
         };
 
-        var softDeleteSettings = new RecoveryServicesSoftDeleteSettings()
+        // api-version 2026-05-01+ requires ImmutabilityConfiguration whenever state != Disabled.
+        // For Disabled, omit Configuration so we don't send a nonsensical Type/Duration pair.
+        if (immutabilityState != AzureBackupImmutabilityState.Disabled)
         {
-            SoftDeleteState = rsvSoftDeleteState,
-        };
-
-        if (int.TryParse(softDeleteRetentionDays, out var retentionDays))
-        {
-            softDeleteSettings.SoftDeleteRetentionPeriodInDays = retentionDays;
+            immutabilitySettings.Configuration = new ImmutabilityConfiguration
+            {
+                Type = immutabilityType switch
+                {
+                    AzureBackupImmutabilityType.AsPerPolicy => ImmutabilityType.AsPerPolicy,
+                    AzureBackupImmutabilityType.TimeBased => ImmutabilityType.TimeBased,
+                    _ => throw new ArgumentOutOfRangeException(nameof(immutabilityType), immutabilityType, "Unsupported immutability type."),
+                },
+                DurationInDays = immutabilityType == AzureBackupImmutabilityType.TimeBased ? immutabilityDurationDays : null,
+            };
         }
+
+        return new RecoveryServicesSecuritySettings
+        {
+            ImmutabilitySettings = immutabilitySettings,
+        };
+    }
+
+    public async Task<OperationResult> ConfigureSoftDeleteAsync(
+        string vaultName, string resourceGroup, string subscription,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
 
         var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
         {
             Properties = new RecoveryServicesVaultProperties
             {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    SoftDeleteSettings = softDeleteSettings
-                }
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
             }
         };
 
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'");
+        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing: api-version 2026-02-01+ requires both
+    /// <c>SoftDeleteRetentionPeriodInDays</c> and <c>EnhancedSecurityState</c> to be set
+    /// whenever the state changes; RP rejects state-only patches.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var rsvSoftDeleteState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesSoftDeleteState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesSoftDeleteState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesSoftDeleteState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        // Mirror EnhancedSecurityState from SoftDeleteState. api-version 2026-02-01+ rejects
+        // updates missing this field. AlwaysON is IRREVERSIBLE — mirror it exactly.
+        var enhancedSecurityState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesEnhancedSecurityState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesEnhancedSecurityState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesEnhancedSecurityState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new RecoveryServicesSecuritySettings
+        {
+            SoftDeleteSettings = new RecoveryServicesSoftDeleteSettings
+            {
+                SoftDeleteState = rsvSoftDeleteState,
+                SoftDeleteRetentionPeriodInDays = softDeleteRetentionDays,
+                EnhancedSecurityState = enhancedSecurityState,
+            },
+        };
     }
 
     public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(

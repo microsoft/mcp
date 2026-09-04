@@ -30,4 +30,14 @@ public sealed class ProtectedItemProtectOptions : BaseProtectedItemOptions
 
     [Option(Description = "Include cluster-scoped resources in the AKS backup policy. DPP AKS only.")]
     public bool AksIncludeClusterScopeResources { get; set; }
+
+    // Selective Disk Backup (RSV IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
+    [Option(Description = AzureBackupOptionDefinitions.DiskListSetting)]
+    public string? DiskListSetting { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.DisksList)]
+    public string? DisksList { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.ExcludeAllDataDisks)]
+    public bool ExcludeAllDataDisks { get; set; }
 }
