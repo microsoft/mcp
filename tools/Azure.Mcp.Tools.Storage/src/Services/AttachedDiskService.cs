@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
-public sealed class AttachedDiskService(ISubscriptionService subscriptionService) : IAttachedDiskService
+public sealed class AttachedDiskService(IAzureService azureService) : IAttachedDiskService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly IAzureService _azureService = azureService;
 
     public async Task<(string VmResourceId, string[]? DiskResourceIds)> ResolveFriendlySelectorAsync(
         string subscription,
@@ -19,10 +19,9 @@ public sealed class AttachedDiskService(ISubscriptionService subscriptionService
         string[]? diskNames,
         CancellationToken cancellationToken)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(
+        var subscriptionResource = await _azureService.GetSubscription(
             subscription,
             tenant: null,
-            retryPolicy: null,
             cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var vmResource = await resourceGroupResource.Value
@@ -44,10 +43,9 @@ public sealed class AttachedDiskService(ISubscriptionService subscriptionService
             ?? throw new InvalidOperationException("The virtual machine resource ID does not contain a subscription ID.");
         var resourceGroupName = resourceId.ResourceGroupName
             ?? throw new InvalidOperationException("The virtual machine resource ID does not contain a resource group name.");
-        var subscriptionResource = await _subscriptionService.GetSubscription(
+        var subscriptionResource = await _azureService.GetSubscription(
             subscriptionId,
             tenant: null,
-            retryPolicy: null,
             cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroupName, cancellationToken);
         var vmResource = await resourceGroupResource.Value
