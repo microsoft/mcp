@@ -4549,6 +4549,39 @@
       ]
     },
     {
+      "name": "refresh_azure_backup_containers",
+      "description": "Trigger Recovery Services vault container discovery refresh so newly eligible resources can be discovered for backup workflows.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool triggers a discovery refresh operation without deleting or mutating existing protected resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces equivalent refresh behavior without cumulative side effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool initiates a service operation and is not a pure read-only query."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_container_refresh"
+      ]
+    },
+    {
       "name": "get_azure_terraform_documentation",
       "description": "Retrieve Terraform provider documentation for Azure resources. Get AzureRM and AzAPI provider docs including arguments, attributes, and examples. List, get versions, and read documentation for Azure Verified Modules (AVM).",
       "toolMetadata": {

@@ -204,6 +204,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
+| azurebackup_container_refresh | Refresh backup containers on vault <vault_name> in resource group <resource_group> to discover new Azure File share storage accounts | investigation-required |
+| azurebackup_container_refresh | Trigger container discovery on Recovery Services vault <vault_name> under resource group <resource_group> so the vault picks up newly authorized storage accounts | investigation-required |
+| azurebackup_container_refresh | Kick off backup container refresh on vault <vault_name> in resource group <resource_group> before registering my storage account for Azure Files backup | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |

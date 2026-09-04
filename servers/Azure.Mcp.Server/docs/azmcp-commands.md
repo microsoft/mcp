@@ -1138,6 +1138,18 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        [--container <container>]
 ```
 
+#### Container
+
+```bash
+# Triggers the RSV RefreshContainers (discovery) operation on a Recovery Services vault so it picks up new/changed containers (default filter: Azure File share storage accounts). Fire-and-forget: returns HTTP 202 Accepted with no body. RSV only; DPP vaults are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup container refresh --subscription <subscription> \
+                                    --resource-group <resource-group> \
+                                    --vault <vault> \
+                                    [--vault-type <vault-type>] \
+                                    [--filter <filter>]
+```
+
 #### Backup
 
 ```bash
