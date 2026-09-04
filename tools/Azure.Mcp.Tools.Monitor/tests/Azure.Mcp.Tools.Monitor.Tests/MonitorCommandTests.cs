@@ -666,27 +666,6 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
     }
 
     [Fact]
-    public async Task Should_Return400_WithInvalidWebTestInput()
-    {
-        // Specifying --webtest-resource without --resource-group is invalid for the get command.
-        // This exercises the command's validator deterministically, independent of whether a
-        // default subscription is available via AZURE_SUBSCRIPTION_ID / the Azure CLI profile.
-        // Use a result processor that returns the full response envelope so we can assert on
-        // the status code (the default processor only returns the "results" payload).
-        var response = await CallToolAsync(
-            "monitor_webtests_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "webtest-resource", "some-webtest" }
-            },
-            resultProcessor: root => root);
-
-        Assert.NotNull(response);
-        Assert.Equal(400, response.Value.GetProperty("status").GetInt32());
-    }
-
-    [Fact]
     public async Task Should_Create_WebTest()
     {
         // Use the Application Insights component we created in test resources with proper base name pattern

@@ -406,8 +406,7 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "account", uniqueAccountName },
                 { "resource-group", resourceGroupName },
                 { "location", expectedLocation },
-                { "sku", "Standard_LRS" },
-                { "kind", "StorageV2" }
+                { "sku", "Standard_LRS" }
             });
 
         // Assert
