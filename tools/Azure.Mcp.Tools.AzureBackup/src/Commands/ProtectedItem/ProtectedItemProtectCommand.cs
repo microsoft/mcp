@@ -43,6 +43,12 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     {
         base.ValidateOptions(options, validationResult);
 
+        DiskExclusionValidator.ValidateDiskExclusionOptions(
+            options.DiskListSetting,
+            options.DisksList,
+            options.ExcludeAllDataDisks,
+            validationResult);
+
         if (options.DatasourceType is null)
         {
             return;
@@ -96,6 +102,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
         try
         {
+            var diskExclusion = DiskExclusionValidator.BuildDiskExclusionSpec(
+                options.DiskListSetting,
+                options.DisksList,
+                options.ExcludeAllDataDisks);
+
             var result = await _azureBackupService.ProtectItemAsync(
                 options.Vault,
                 options.ResourceGroup,
@@ -110,6 +121,7 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 options.AksLabelSelectors,
                 options.AksIncludeClusterScopeResources ? "true" : null,
                 options.AksSnapshotResourceGroup,
+                diskExclusion,
                 options.Tenant,
                 cancellationToken);
 

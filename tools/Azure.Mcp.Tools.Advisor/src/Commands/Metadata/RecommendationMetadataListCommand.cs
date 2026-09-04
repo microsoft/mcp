@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Globalization;
 using System.Net;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Metadata;
 using Azure.Mcp.Tools.Advisor.Services;
+using Azure.Mcp.Tools.Advisor.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -46,7 +46,6 @@ public sealed class RecommendationMetadataListCommand(
         "Performance",
         "OperationalExcellence",
     ];
-    private static readonly string[] AllowedRetirementDateOperators = ["eq", "lt", "le", "gt", "ge"];
     private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
         "en", "cs", "de", "es", "fr", "hu", "id", "it", "ja", "ko",
@@ -85,25 +84,11 @@ public sealed class RecommendationMetadataListCommand(
                 $"Invalid --category value '{options.Category}'. Allowed values: {string.Join(", ", AllowedCategories)}.");
         }
 
-        var hasServiceRetirementFilter =
-            !string.IsNullOrWhiteSpace(options.TrackingId) ||
-            !string.IsNullOrWhiteSpace(options.RetirementDate);
-        var normalizedSubCategory = options.SubCategory?.Trim();
-        if (hasServiceRetirementFilter &&
-            !string.IsNullOrWhiteSpace(normalizedSubCategory) &&
-            !normalizedSubCategory.Equals(
-                RecommendationMetadataFilters.ServiceRetirementSubCategory,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add(
-                "Service-retirement filters are only valid with --sub-category " +
-                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory}.");
-        }
-
-        if (!TryParseRetirementDateFilter(options.RetirementDate, out _, out _, out var retirementDateError))
-        {
-            validationResult.Errors.Add(retirementDateError!);
-        }
+        ServiceRetirementFilterValidator.Validate(
+            validationResult,
+            options.SubCategory,
+            NormalizeTrackingIds(options.TrackingId),
+            options.RetirementDate);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
@@ -115,7 +100,7 @@ public sealed class RecommendationMetadataListCommand(
         {
             _ = TryNormalizeLanguage(options.Language, out var language);
             var impact = NormalizeImpact(options.Impact);
-            _ = TryParseRetirementDateFilter(
+            _ = ServiceRetirementFilterValidator.TryParseRetirementDate(
                 options.RetirementDate,
                 out var retirementDateOperator,
                 out var retirementDate,
@@ -126,7 +111,7 @@ public sealed class RecommendationMetadataListCommand(
                 Impact: impact,
                 Category: NormalizeAllowedValue(options.Category, AllowedCategories),
                 SubCategory: NormalizeOptionalFilter(options.SubCategory),
-                TrackingId: NormalizeOptionalFilter(options.TrackingId),
+                TrackingIds: NormalizeTrackingIds(options.TrackingId),
                 RetirementDateOperator: retirementDateOperator,
                 RetirementDate: retirementDate);
 
@@ -203,44 +188,8 @@ public sealed class RecommendationMetadataListCommand(
     private static string? NormalizeOptionalFilter(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static bool TryParseRetirementDateFilter(
-        string? expression,
-        out string? comparisonOperator,
-        out DateOnly? retirementDate,
-        out string? error)
-    {
-        comparisonOperator = null;
-        retirementDate = null;
-        error = null;
-
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            return true;
-        }
-
-        var parts = expression.Split(':', 2, StringSplitOptions.TrimEntries);
-        if (parts.Length != 2 ||
-            !AllowedRetirementDateOperators.Contains(parts[0], StringComparer.OrdinalIgnoreCase))
-        {
-            error = "Invalid --retirement-date value. Use '<operator>:<yyyy-MM-dd>' with operator eq, lt, le, gt, or ge; for example, --retirement-date ge:2026-03-01.";
-            return false;
-        }
-
-        if (!DateOnly.TryParseExact(
-            parts[1],
-            "yyyy-MM-dd",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out var parsedDate))
-        {
-            error = "Invalid --retirement-date date. Use ISO date format yyyy-MM-dd, for example ge:2026-03-31.";
-            return false;
-        }
-
-        comparisonOperator = parts[0].ToLowerInvariant();
-        retirementDate = parsedDate;
-        return true;
-    }
+    private static string[]? NormalizeTrackingIds(string? trackingId) =>
+        NormalizeOptionalFilter(trackingId) is { } normalized ? [normalized] : null;
 
     public sealed record RecommendationMetadataListResult(
         List<Models.RecommendationMetadata> Metadata,
