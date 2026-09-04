@@ -1766,6 +1766,44 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("backupManagementType eq 'AzureStorage'", result.AssertProperty("filter").GetString());
     }
 
+    /// <summary>
+    /// Validates that list-available returns the expected response shape for RSV container discovery.
+    /// The test triggers refresh first so list-available has current discovery data.
+    /// </summary>
+    [Fact]
+    public async Task ContainerListAvailable_RsvVault_ListsAvailableContainers_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        await CallToolAsync(
+            "azurebackup_container_refresh",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var result = await CallToolAsync(
+            "azurebackup_container_list-available",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var containers = result.AssertProperty("containers");
+        Assert.Equal(JsonValueKind.Array, containers.ValueKind);
+
+        foreach (var container in containers.EnumerateArray())
+        {
+            container.AssertProperty("name");
+            container.AssertProperty("friendlyName");
+            container.AssertProperty("containerType");
+        }
+    }
+
     #endregion
 
     #region Governance Tests (RSV)
