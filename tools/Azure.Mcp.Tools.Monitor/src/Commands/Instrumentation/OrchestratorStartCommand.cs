@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
     Secret = false,
     LocalRequired = true)]
 public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> logger, OrchestratorTool orchestratorTool)
-    : BaseCommand<OrchestratorStartOptions, string>
+    : BaseCommand<OrchestratorStartOptions, OrchestratorStartCommand.OrchestratorStartCommandResult>
 {
     private readonly ILogger<OrchestratorStartCommand> _logger = logger;
     private readonly OrchestratorTool _orchestratorTool = orchestratorTool;
@@ -34,7 +34,9 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
             var result = _orchestratorTool.Start(options.WorkspacePath);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                MonitorJsonContext.Default.OrchestratorStartCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -45,4 +47,6 @@ public sealed class OrchestratorStartCommand(ILogger<OrchestratorStartCommand> l
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record OrchestratorStartCommandResult(string Result);
 }

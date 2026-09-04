@@ -33,7 +33,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
     Secret = false,
     LocalRequired = true)]
 public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger, OrchestratorTool orchestratorTool)
-    : BaseCommand<OrchestratorNextOptions, string>
+    : BaseCommand<OrchestratorNextOptions, OrchestratorNextCommand.OrchestratorNextCommandResult>
 {
     private readonly ILogger<OrchestratorNextCommand> _logger = logger;
     private readonly OrchestratorTool _orchestratorTool = orchestratorTool;
@@ -45,7 +45,9 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
             var result = _orchestratorTool.Next(options.SessionId, options.CompletionNote);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                MonitorJsonContext.Default.OrchestratorNextCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -56,4 +58,6 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record OrchestratorNextCommandResult(string Result);
 }

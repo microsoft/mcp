@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
     Secret = false,
     LocalRequired = false)]
 public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logger, IServiceGuideService serviceGuideService)
-    : BaseCommand<ServiceGuideGetOptions, List<string>>
+    : BaseCommand<ServiceGuideGetOptions, ServiceGuideGetCommand.ServiceGuideGetCommandResult>
 {
     private readonly ILogger<ServiceGuideGetCommand> _logger = logger;
     private readonly IServiceGuideService _serviceGuideService = serviceGuideService;
@@ -45,7 +45,9 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             if (string.IsNullOrWhiteSpace(options.Service))
             {
                 var listResponse = GetServiceListResponse(supportedServicesBulletList);
-                context.Response.Results = ResponseResult.Create([listResponse], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Results = ResponseResult.Create(
+                    new([listResponse]),
+                    WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
             }
             else
             {
@@ -57,7 +59,9 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
                     ? GetGuidanceNotAvailable(serviceName, supportedServicesBulletList)
                     : GetGuidanceAvailable(serviceName, serviceGuideUrl);
 
-                context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Results = ResponseResult.Create(
+                    new([guidance]),
+                    WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -121,4 +125,6 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
         return supportedServicesBulletList;
     }
+
+    public sealed record ServiceGuideGetCommandResult(List<string> Guidance);
 }

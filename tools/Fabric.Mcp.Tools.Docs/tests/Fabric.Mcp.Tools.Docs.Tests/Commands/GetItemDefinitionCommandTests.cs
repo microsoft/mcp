@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Fabric.Mcp.Tools.Docs.Commands;
 using Fabric.Mcp.Tools.Docs.Commands.BestPractices;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Mcp.Tests.Client;
@@ -41,8 +42,10 @@ public class GetItemDefinitionCommandTests : CommandUnitTestsBase<GetItemDefinit
         var result = await ExecuteCommandAsync("--item-type", "notebook");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Results);
+        var response = ValidateAndDeserializeResponse(
+            result,
+            FabricJsonContext.Default.GetItemDefinitionCommandResult);
+        Assert.Equal(expectedDefinition, response.Definition);
         Service.Received(1).GetItemDefinition("notebook");
     }
 

@@ -25,7 +25,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = true,
     Secret = false)]
 public sealed class ShortcutListCommand(ILogger<ShortcutListCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutListOptions, ShortcutListResponse>()
+    : AuthenticatedCommand<ShortcutListOptions, ShortcutListCommand.ShortcutListCommandResult>()
 {
     private readonly ILogger<ShortcutListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -44,7 +44,12 @@ public sealed class ShortcutListCommand(ILogger<ShortcutListCommand> logger, IOn
                     .ToList();
             }
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.ShortcutListResponse);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutListCommandResult(
+                    result.Value ?? [],
+                    result.ContinuationToken,
+                    result.ContinuationUri),
+                OneLakeJsonContext.Default.ShortcutListCommandResult);
         }
         catch (Exception ex)
         {
@@ -70,5 +75,9 @@ public sealed class ShortcutListCommand(ILogger<ShortcutListCommand> logger, IOn
 
         return shortcut.Path.StartsWith("Tables/", StringComparison.OrdinalIgnoreCase);
     }
-}
 
+    public sealed record ShortcutListCommandResult(
+        List<OneLakeShortcut> Shortcuts,
+        string? ContinuationToken,
+        string? ContinuationUri);
+}

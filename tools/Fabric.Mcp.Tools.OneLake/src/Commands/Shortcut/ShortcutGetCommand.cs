@@ -25,7 +25,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = true,
     Secret = false)]
 public sealed class ShortcutGetCommand(ILogger<ShortcutGetCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutGetOptions, OneLakeShortcut>()
+    : AuthenticatedCommand<ShortcutGetOptions, ShortcutGetCommand.ShortcutGetCommandResult>()
 {
     private readonly ILogger<ShortcutGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -35,7 +35,9 @@ public sealed class ShortcutGetCommand(ILogger<ShortcutGetCommand> logger, IOneL
         try
         {
             var result = await _oneLakeService.GetShortcutAsync(options.WorkspaceId, options.ItemId, options.ShortcutPath, options.ShortcutName, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutGetCommandResult(result),
+                OneLakeJsonContext.Default.ShortcutGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -46,4 +48,6 @@ public sealed class ShortcutGetCommand(ILogger<ShortcutGetCommand> logger, IOneL
 
         return context.Response;
     }
+
+    public sealed record ShortcutGetCommandResult(OneLakeShortcut Shortcut);
 }
