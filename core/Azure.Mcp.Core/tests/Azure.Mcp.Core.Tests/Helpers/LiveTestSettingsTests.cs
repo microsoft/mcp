@@ -33,6 +33,15 @@ public class LiveTestSettingsTests
     }
 
     [Fact]
+    public void DeserializeTestMode_WithNumericString_ThrowsActionableException()
+    {
+        var exception = Assert.Throws<JsonException>(
+            () => JsonSerializer.Deserialize<LiveTestSettings>("""{ "TestMode": "1" }"""));
+
+        Assert.Contains("Invalid TestMode '1'. TestMode must be one of: Live, Record, Playback.", exception.Message);
+    }
+
+    [Fact]
     public void DeserializeTestMode_WithNonStringValue_ThrowsActionableException()
     {
         var exception = Assert.Throws<JsonException>(
