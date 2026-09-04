@@ -1133,6 +1133,15 @@ azmcp azurebackup container refresh --subscription <subscription> \
                                     --vault <vault> \
                                     [--vault-type <vault-type>] \
                                     [--filter <filter>]
+
+# Lists storage accounts that the RSV can register as Azure File share backup containers.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup container list-available --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --vault <vault> \
+                                           [--vault-type <vault-type>] \
+                                           [--filter <filter>] \
+                                           [--storage-account <storage-account>]
 ```
 
 #### Backup

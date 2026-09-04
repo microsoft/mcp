@@ -29,6 +29,7 @@ public interface IAzureBackupService
 
     // Container operations (RSV only)
     Task RefreshContainersAsync(string vaultName, string resourceGroup, string subscription, string? filter = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(string vaultName, string resourceGroup, string subscription, string? filter = null, string? storageAccount = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Job operations
     Task<BackupJobInfo> GetJobAsync(string vaultName, string resourceGroup, string subscription, string jobId, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);

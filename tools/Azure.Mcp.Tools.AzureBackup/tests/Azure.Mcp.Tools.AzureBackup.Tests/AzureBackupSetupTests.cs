@@ -123,6 +123,7 @@ public class AzureBackupSetupTests
         var container = root.SubGroup.First(g => g.Name == "container");
 
         Assert.Contains(container.Commands, c => c.Key == "refresh");
+        Assert.Contains(container.Commands, c => c.Key == "list-available");
     }
 
     [Fact]

@@ -11,6 +11,8 @@ public static class AzureBackupOptionDefinitions
     internal const string ProtectedItem = "The name of the protected item or backup instance.";
     internal const string Container = "The RSV protection container name. Only applicable for Recovery Services vaults.";
     internal const string ContainerRefreshFilter = "OData filter passed to the RefreshContainers API to scope discovery to a single backup management type. Defaults to \"backupManagementType eq 'AzureStorage'\" when omitted, which discovers Azure File share storage accounts. Other supported values include \"backupManagementType eq 'AzureIaasVM'\" and \"backupManagementType eq 'AzureWorkload'\".";
+    internal const string ContainerListAvailableFilter = "OData filter passed to the protectableContainers API. Defaults to \"backupManagementType eq 'AzureStorage'\" to list Azure File share storage accounts available for registration.";
+    internal const string ContainerStorageAccount = "Optional storage account name or fully qualified ARM resource ID used to filter available containers.";
     internal const string Policy = "The name of the backup policy.";
     internal const string Location = "The Azure region (e.g., 'eastus', 'westus2').";
     internal const string DatasourceId = "The datasource identifier. For VM/FileShare/DPP workloads, use the ARM resource ID (e.g., '/subscriptions/.../virtualMachines/myvm'). For RSV in-guest workloads (SQL/SAPHANA), use the protectable item name from 'protectableitem list' (e.g., 'SAPHanaDatabase;instance;dbname').";
