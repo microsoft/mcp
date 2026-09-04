@@ -559,7 +559,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_create | Create file share <file_share_name> in resource group <resource_group_name> with 100 GB storage | none |
 | fileshares_fileshare_create | Create a file share named <file_share_name> in location <location> with resource group <resource_group_name> | none |
 | fileshares_fileshare_create | Set up a new file share <file_share_name> in resource group <resource_group_name> | none |
-| fileshares_fileshare_create | Create an NFS file share <file_share_name> in resource group <resource_group_name> with encryption in transit enabled | none |
+| fileshares_fileshare_create | Create an NFS file share <file_share_name> in location <location> in resource group <resource_group_name> with NFS encryption in transit enabled | none |
 | fileshares_fileshare_delete | Delete the file share <file_share_name> from resource group <resource_group_name> | none |
 | fileshares_fileshare_delete | Remove file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | List all file shares in my subscription | none |
