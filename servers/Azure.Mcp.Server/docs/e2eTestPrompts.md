@@ -350,6 +350,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication | none |
 | compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | none |
 | compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> | none |
+| compute_vm_create | Create Linux VM <vm-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name> | none |
 | compute_vm_get | List all virtual machines in my subscription | none |
 | compute_vm_get | Show me all VMs in my subscription | none |
 | compute_vm_get | What virtual machines do I have? | none |
@@ -372,6 +373,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_delete | Remove virtual machine <vm-name> from resource group <resource-group-name> | none |
 | compute_vm_delete | Destroy VM <vm-name> in resource group <resource-group-name> | none |
 | compute_vm_delete | Force delete VM <vm-name> in resource group <resource-group-name> using force-deletion | none |
+| compute_vm_delete | Delete VM <vm-name> that does not exist in resource group <resource-group-name> | none |
 | compute_vm_power-state | Power on and start VM <vm-name> in resource group <resource-group-name> | none |
 | compute_vm_power-state | Stop the running virtual machine <vm-name> and power it off in resource group <resource-group-name> | none |
 | compute_vm_power-state | Deallocate VM <vm-name> in resource group <resource-group-name> to release compute resources while keeping the VM | none |
@@ -384,6 +386,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_create | Create a VMSS with 3 instances in <resource-group-name> | clarification-required |
 | compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances | clarification-required |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> | none |
+| compute_vmss_create | Create scale set <vmss-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name> | none |
 | compute_vmss_get | List all virtual machine scale sets in my subscription | none |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> | none |
 | compute_vmss_get | What scale sets are in resource group <resource-group-name>? | none |
@@ -399,6 +402,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_delete | Remove VMSS <vmss-name> from resource group <resource-group-name> | none |
 | compute_vmss_delete | Destroy virtual machine scale set <vmss-name> in resource group <resource-group-name> | none |
 | compute_vmss_delete | Force delete VMSS <vmss-name> in resource group <resource-group-name> using force-deletion | none |
+| compute_vmss_delete | Delete scale set <vmss-name> that does not exist in resource group <resource-group-name> | none |
 | compute_disk_get | List all managed disks in my subscription | none |
 | compute_disk_get | Show me all disks in resource group <resource-group> | none |
 | compute_disk_get | Get details of disk <disk-name> in resource group <resource-group> | none |
