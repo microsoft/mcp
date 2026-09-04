@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL
+// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -229,7 +229,7 @@ public class ResilienceManagementCommandTests(
                 { "resource-group", resourceGroupName },
                 { "drill-type", "Zonal" },
                 { "rbac-setup-mode", "AutomatedBuiltinRoles" },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         var drill = result.AssertProperty("drill");
@@ -631,7 +631,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "plan-type", "Zonal" },
                 { "plan-description", "Recovery plan created by Azure MCP tests." },
                 { "identity-type", "SystemAssigned" }
@@ -664,7 +664,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
@@ -689,7 +689,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan },
+                    { "recoveryplan", recoveryPlan },
                     { "plan-type", "Zonal" },
                     { "plan-description", "Recovery plan lifecycle test." },
                     { "identity-type", "SystemAssigned" },
@@ -723,7 +723,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan },
+                    { "recoveryplan", recoveryPlan },
                     { "plan-type", "Zonal" },
                     { "plan-description", "Updated recovery plan lifecycle test." },
                     { "identity-type", "SystemAssigned" }
@@ -742,7 +742,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan }
+                    { "recoveryplan", recoveryPlan }
                 });
             recoveryPlanExists = false;
             Assert.True(deleteResult.AssertProperty("deleted").GetBoolean());
@@ -754,7 +754,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan }
+                    { "recoveryplan", recoveryPlan }
                 });
             Assert.False(repeatedDeleteResult.AssertProperty("deleted").GetBoolean());
         }
@@ -768,7 +768,129 @@ public class ResilienceManagementCommandTests(
                     {
                         { "tenant", Settings.TenantId },
                         { "service-group", serviceGroup },
-                        { "recovery-plan", recoveryPlan }
+                        { "recoveryplan", recoveryPlan }
+                    });
+            }
+        }
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_finalize_recoveryplan()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("finalizeServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveVariable("finalizeRecoveryPlanName", $"mcp-finalize-{Guid.NewGuid().ToString("N")[..8]}");
+        bool recoveryPlanExists = false;
+
+        try
+        {
+            await CallToolAsync(
+                "resilience_recoveryplan_create",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recoveryplan", recoveryPlan },
+                    { "plan-type", "Zonal" },
+                    { "plan-description", "Recoveryplan finalize test." },
+                    { "identity-type", "SystemAssigned" },
+                    { "default-group-description", "Finalize default group" }
+                });
+            recoveryPlanExists = true;
+
+            var listedResources = await CallToolAsync(
+                "resilience_recoveryplan_resource_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recoveryplan", recoveryPlan }
+                });
+            var resourcesToExclude = new JsonArray();
+            foreach (var resourceSummary in listedResources.AssertProperty("recoveryResources").EnumerateArray())
+            {
+                var resourceId = resourceSummary.AssertProperty("id").GetString();
+                var resourceName = resourceId?.Split('/').Last();
+                Assert.False(string.IsNullOrEmpty(resourceName));
+
+                var resourceResult = await CallToolAsync(
+                    "resilience_recoveryplan_resource_get",
+                    new()
+                    {
+                        { "tenant", Settings.TenantId },
+                        { "service-group", serviceGroup },
+                        { "recoveryplan", recoveryPlan },
+                        { "name", resourceName }
+                    });
+                var recoveryResourceUniqueId = resourceResult
+                    .AssertProperty("recoveryResource")
+                    .AssertProperty("properties")
+                    .AssertProperty("recoveryResourceUniqueId")
+                    .GetString();
+                resourcesToExclude.Add(new JsonObject
+                {
+                    ["properties"] = new JsonObject
+                    {
+                        ["recoveryResourceUniqueId"] = recoveryResourceUniqueId,
+                        ["inclusionState"] = "Excluded"
+                    }
+                });
+            }
+
+            if (resourcesToExclude.Count > 0)
+            {
+                var updateResult = await CallToolAsync(
+                    "resilience_recoveryplan_resource_update",
+                    new()
+                    {
+                        { "tenant", Settings.TenantId },
+                        { "service-group", serviceGroup },
+                        { "recoveryplan", recoveryPlan },
+                        { "resources-to-update", resourcesToExclude.ToJsonString() }
+                    });
+                Assert.Empty(updateResult
+                    .AssertProperty("result")
+                    .AssertProperty("failedResources")
+                    .EnumerateArray());
+            }
+
+            var finalizeResult = await CallToolAsync(
+                "resilience_recoveryplan_finalize",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "recoveryplan", recoveryPlan }
+                });
+
+            Assert.True(Guid.TryParse(finalizeResult.AssertProperty("operationId").GetString(), out _));
+
+            var getResult = await CallToolAsync(
+                "resilience_recoveryplan_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "name", recoveryPlan }
+                });
+            var planState = getResult
+                .AssertProperty("recoveryPlan")
+                .AssertProperty("properties")
+                .AssertProperty("planState")
+                .GetString();
+            Assert.Contains(planState, new[] { "Ready", "Warning" });
+        }
+        finally
+        {
+            if (recoveryPlanExists)
+            {
+                await CallToolAsync(
+                    "resilience_recoveryplan_delete",
+                    new()
+                    {
+                        { "tenant", Settings.TenantId },
+                        { "service-group", serviceGroup },
+                        { "recoveryplan", recoveryPlan }
                     });
             }
         }
@@ -786,7 +908,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryResources").ValueKind);
@@ -804,7 +926,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
         var resourceSummary = listedResources.AssertProperty("recoveryResources").EnumerateArray().First();
         var resourceId = resourceSummary.AssertProperty("id").GetString();
@@ -817,7 +939,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "name", resourceName }
             });
         var recoveryResource = resourceResult.AssertProperty("recoveryResource");
@@ -840,7 +962,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "resources-to-update", $"[{updatedResource.ToJsonString()}]" }
             });
 
@@ -854,7 +976,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "name", resourceName }
             });
         var inclusionState = updatedResourceResult
@@ -930,7 +1052,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
         string? resourceId = null;
         string? sourceLocation = null;
@@ -943,7 +1065,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "tenant", Settings.TenantId },
                     { "service-group", serviceGroup },
-                    { "recovery-plan", recoveryPlan },
+                    { "recoveryplan", recoveryPlan },
                     { "name", candidateResourceId.Split('/').Last() }
                 });
             JsonElement physicalZones = resourceResult
@@ -960,7 +1082,7 @@ public class ResilienceManagementCommandTests(
             }
         }
 
-        Assert.False(string.IsNullOrEmpty(resourceId), "The Zonal recovery plan must contain a resource with a physical zone.");
+        Assert.False(string.IsNullOrEmpty(resourceId), "The Zonal recoveryplan must contain a resource with a physical zone.");
         Assert.False(string.IsNullOrEmpty(sourceLocation), "A physical source zone is required for Zonal failover validation.");
 
         var result = await CallToolAsync(
@@ -969,7 +1091,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "source-locations", new[] { sourceLocation } },
                 { "selected-resource-ids", new[] { resourceId } }
             });
@@ -992,7 +1114,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
@@ -1013,13 +1135,172 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "operation-name", "Failover" }
             });
 
         Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
         Assert.Equal("Failover", result.AssertProperty("operationName").GetString());
         Assert.True(result.AssertProperty("isValid").GetBoolean());
+    }
+
+    [Theory]
+    [InlineData("resilience_recoveryplan_failover")]
+    [InlineData("resilience_recoveryplan_finalize")]
+    [InlineData("resilience_recoveryplan_reprotect")]
+    public async Task Should_reject_recovery_plan_action_when_plan_does_not_exist(string toolName)
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        const string missingRecoveryPlan = "missing-action-plan";
+        var parameters = new Dictionary<string, object?>
+        {
+            { "tenant", Settings.TenantId },
+            { "service-group", serviceGroup },
+            { "recoveryplan", missingRecoveryPlan }
+        };
+        if (toolName == "resilience_recoveryplan_failover")
+        {
+            parameters["source-locations"] = new[] { "eastus" };
+        }
+
+        JsonElement? result = await CallToolAsync(
+            toolName,
+            parameters,
+            resultProcessor: response => response);
+
+        Assert.NotNull(result);
+        Assert.Equal(404, result.Value.AssertProperty("status").GetInt32());
+        Assert.Contains("not found", result.Value.AssertProperty("message").GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("resilience_recoveryjob_retry")]
+    [InlineData("resilience_recoveryjob_resume")]
+    public async Task Should_reject_recovery_job_action_when_job_does_not_exist(string toolName)
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var parameters = new Dictionary<string, object?>
+        {
+            { "tenant", Settings.TenantId },
+            { "service-group", serviceGroup },
+            { "recoveryplan", recoveryPlan },
+            { "recoveryjob", "22222222-2222-2222-2222-222222222222" }
+        };
+        if (toolName == "resilience_recoveryjob_resume")
+        {
+            parameters["description"] = "Approve recovery action";
+        }
+
+        JsonElement? result = await CallToolAsync(
+            toolName,
+            parameters,
+            resultProcessor: response => response);
+
+        Assert.NotNull(result);
+        Assert.Equal(404, result.Value.AssertProperty("status").GetInt32());
+        Assert.Contains("not found", result.Value.AssertProperty("message").GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_retry_failed_recovery_job_and_validate_terminal_result()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var recoveryJob = RegisterOrRetrieveDeploymentOutputVariable("recoveryJobName", "RECOVERYJOBNAME");
+
+        JsonElement failedJob = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+        JsonElement failedJobProperties = failedJob.AssertProperty("properties");
+        Assert.Equal("Failed", failedJobProperties.AssertProperty("status").GetString());
+        string? initialLastModifiedAt = failedJob.AssertProperty("systemData").AssertProperty("lastModifiedAt").GetString();
+
+        var retryResult = await CallToolAsync(
+            "resilience_recoveryjob_retry",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "recoveryjob", recoveryJob }
+            });
+
+        Assert.True(Guid.TryParse(retryResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", retryResult.AssertProperty("status").GetString());
+        JsonElement terminalJob = await WaitForRecoveryJobRetryTerminalStateAsync(serviceGroup, recoveryPlan, recoveryJob, initialLastModifiedAt);
+        JsonElement terminalJobProperties = terminalJob.AssertProperty("properties");
+        Assert.NotEqual(initialLastModifiedAt, terminalJob.AssertProperty("systemData").AssertProperty("lastModifiedAt").GetString());
+        Assert.Contains(terminalJobProperties.AssertProperty("status").GetString(), TerminalRecoveryJobStatuses);
+    }
+
+    [Fact]
+    public async Task Should_failover_resume_and_reprotect_with_terminal_results()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("workflowServiceGroupName", "WORKFLOWSERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("workflowRecoveryPlanName", "WORKFLOWRECOVERYPLANNAME");
+        var recoveryResourceId = RegisterOrRetrieveDeploymentOutputVariable("workflowRecoveryResourceId", "WORKFLOWRECOVERYRESOURCEID");
+        HashSet<string> existingJobs = await GetRecoveryJobNamesAsync(serviceGroup, recoveryPlan);
+
+        var failoverResult = await CallToolAsync(
+            "resilience_recoveryplan_failover",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "selected-resource-ids", new[] { recoveryResourceId } },
+                { "user-consent", "Allowed" }
+            });
+
+        Assert.True(Guid.TryParse(failoverResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", failoverResult.AssertProperty("status").GetString());
+        string failoverJob = await RegisterOrRetrieveNewRecoveryJobAsync(
+            "workflowFailoverJobName",
+            serviceGroup,
+            recoveryPlan,
+            existingJobs);
+        JsonElement pausedJob = await WaitForRecoveryJobStatusAsync(serviceGroup, recoveryPlan, failoverJob, "Paused");
+        Assert.Equal("Paused", pausedJob.AssertProperty("properties").AssertProperty("status").GetString());
+
+        var resumeResult = await CallToolAsync(
+            "resilience_recoveryjob_resume",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "recoveryjob", failoverJob },
+                { "description", "Approve recorded failover workflow." }
+            });
+
+        Assert.True(Guid.TryParse(resumeResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", resumeResult.AssertProperty("status").GetString());
+        JsonElement completedFailover = await WaitForRecoveryJobTerminalStateAsync(serviceGroup, recoveryPlan, failoverJob);
+        Assert.Contains(
+            completedFailover.AssertProperty("properties").AssertProperty("status").GetString(),
+            SuccessfulRecoveryJobStatuses);
+        existingJobs.Add(failoverJob);
+
+        var reprotectResult = await CallToolAsync(
+            "resilience_recoveryplan_reprotect",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "selected-resource-ids", new[] { recoveryResourceId } }
+            });
+
+        Assert.True(Guid.TryParse(reprotectResult.AssertProperty("operationId").GetString(), out _));
+        Assert.Equal("Accepted", reprotectResult.AssertProperty("status").GetString());
+        string reprotectJob = await RegisterOrRetrieveNewRecoveryJobAsync(
+            "workflowReprotectJobName",
+            serviceGroup,
+            recoveryPlan,
+            existingJobs);
+        JsonElement completedReprotect = await WaitForRecoveryJobTerminalStateAsync(serviceGroup, recoveryPlan, reprotectJob);
+        Assert.Contains(
+            completedReprotect.AssertProperty("properties").AssertProperty("status").GetString(),
+            SuccessfulRecoveryJobStatuses);
     }
 
     [Fact]
@@ -1034,7 +1315,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         var recoveryJobs = listResult.AssertProperty("recoveryJobs");
@@ -1049,12 +1330,166 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
+                { "recoveryplan", recoveryPlan },
                 { "name", recoveryJob }
             });
 
         var job = result.AssertProperty("recoveryJob");
         Assert.False(string.IsNullOrEmpty(job.AssertProperty("name").GetString()));
+    }
+
+    private static readonly string[] TerminalRecoveryJobStatuses =
+    [
+        "NotApplicable",
+        "Completed",
+        "CompletedWithWarnings",
+        "Failed",
+        "Skipped",
+        "Cancelled"
+    ];
+
+    private static readonly string[] SuccessfulRecoveryJobStatuses =
+    [
+        "Completed",
+        "CompletedWithWarnings"
+    ];
+
+    private async Task<JsonElement> GetRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob)
+    {
+        var result = await CallToolAsync(
+            "resilience_recoveryjob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "name", recoveryJob }
+            });
+
+        return result.AssertProperty("recoveryJob");
+    }
+
+    private async Task<HashSet<string>> GetRecoveryJobNamesAsync(string serviceGroup, string recoveryPlan)
+    {
+        var result = await CallToolAsync(
+            "resilience_recoveryjob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan }
+            });
+
+        return result.AssertProperty("recoveryJobs")
+            .EnumerateArray()
+            .Select(job => job.AssertProperty("name").GetString()!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<string> WaitForNewRecoveryJobAsync(string serviceGroup, string recoveryPlan, HashSet<string> existingJobs)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            HashSet<string> currentJobs = await GetRecoveryJobNamesAsync(serviceGroup, recoveryPlan);
+            string? newJob = currentJobs.FirstOrDefault(job => !existingJobs.Contains(job));
+            if (newJob is not null)
+            {
+                return newJob;
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"No new recovery job appeared after {maxAttempts} attempts.");
+        return string.Empty;
+    }
+
+    private async Task<string> RegisterOrRetrieveNewRecoveryJobAsync(
+        string variableName,
+        string serviceGroup,
+        string recoveryPlan,
+        HashSet<string> existingJobs)
+    {
+        if (TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+        {
+            return RegisterOrRetrieveVariable(variableName, string.Empty);
+        }
+
+        string recoveryJob = await WaitForNewRecoveryJobAsync(serviceGroup, recoveryPlan, existingJobs);
+        return RegisterOrRetrieveVariable(variableName, recoveryJob);
+    }
+
+    private async Task<JsonElement> WaitForRecoveryJobTerminalStateAsync(string serviceGroup, string recoveryPlan, string recoveryJob)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement job = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+            string? status = job.AssertProperty("properties").AssertProperty("status").GetString();
+            if (TerminalRecoveryJobStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                return job;
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"Recovery job '{recoveryJob}' did not reach a terminal state after {maxAttempts} attempts.");
+        return default;
+    }
+
+    private async Task<JsonElement> WaitForRecoveryJobRetryTerminalStateAsync(
+        string serviceGroup,
+        string recoveryPlan,
+        string recoveryJob,
+        string? initialLastModifiedAt)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement job = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+            JsonElement properties = job.AssertProperty("properties");
+            string? lastModifiedAt = job.AssertProperty("systemData").AssertProperty("lastModifiedAt").GetString();
+            string? status = properties.AssertProperty("status").GetString();
+            if (!string.Equals(lastModifiedAt, initialLastModifiedAt, StringComparison.Ordinal) &&
+                TerminalRecoveryJobStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                return job;
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"Recovery job '{recoveryJob}' did not start a retry and reach a terminal state after {maxAttempts} attempts.");
+        return default;
+    }
+
+    private async Task<JsonElement> WaitForRecoveryJobStatusAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string expectedStatus)
+    {
+        const int maxAttempts = 40;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            JsonElement job = await GetRecoveryJobAsync(serviceGroup, recoveryPlan, recoveryJob);
+            string? status = job.AssertProperty("properties").AssertProperty("status").GetString();
+            if (string.Equals(status, expectedStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                return job;
+            }
+            if (TerminalRecoveryJobStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                Assert.Fail($"Recovery job '{recoveryJob}' reached terminal state '{status}' before expected state '{expectedStatus}'.");
+            }
+
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.Fail($"Recovery job '{recoveryJob}' did not reach state '{expectedStatus}' after {maxAttempts} attempts.");
+        return default;
     }
 
     [Fact]
@@ -1069,7 +1504,7 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan }
+                { "recoveryplan", recoveryPlan }
             });
 
         var recoveryJobs = listResult.AssertProperty("recoveryJobs");
@@ -1084,8 +1519,8 @@ public class ResilienceManagementCommandTests(
             {
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
-                { "recovery-plan", recoveryPlan },
-                { "recovery-job", recoveryJob }
+                { "recoveryplan", recoveryPlan },
+                { "recoveryjob", recoveryJob }
             });
 
         Assert.Equal(JsonValueKind.Array, result.AssertProperty("recoveryJobResources").ValueKind);

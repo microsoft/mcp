@@ -3990,15 +3990,15 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --enrollment <enrollment> \
                                              --service-group <service-group>
 
-# Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
+# Get a resilience recoveryplan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan get --service-group <service-group> \
                                    [--name <name>]
 
-# Create or update a Zonal resilience recovery plan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
+# Create or update a Zonal resilience recoveryplan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan create --service-group <service-group> \
-                                      --recovery-plan <recovery-plan> \
+                                      --recoveryplan <recoveryplan> \
                                       --plan-type Zonal \
                                       [--plan-description <plan-description>] \
                                       --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
@@ -4023,66 +4023,104 @@ azmcp resilience recoveryplan create --service-group <service-group> \
 # CustomRunbook example: [{"type":"CustomRunbook","name":"Start-dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
 # Omit an action option or property to preserve existing actions. Specify [] to clear that action list.
 
-# Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
+# Delete a resilience recoveryplan. Returns deleted=false when the plan does not exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan delete --service-group <service-group> \
-                                      --recovery-plan <recovery-plan>
+                                      --recoveryplan <recoveryplan>
 
-# Validate which recovery-plan resources are qualified for failover from the specified source locations.
+# Start failover for qualified recoveryplan resources. Provide source locations, selected full recovery-resource IDs, or both.
+# Returns after the request is accepted with an operation ID and a recovery job ID when available.
+# Use recoveryjob get to find and monitor the job. Validate qualification and readiness first when unknown.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan failover --service-group <service-group> \
+                                        --recoveryplan <recoveryplan> \
+                                        [--source-locations <source-location> [<source-location> ...]] \
+                                        [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                        [--user-consent <Unspecified|Allowed>]
+
+# Complete or finalize the current recoveryplan operation by validating resource permissions and updating plan state.
+# Returns an operation ID for tracking. This does not commit a completed failover.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan finalize --service-group <service-group> \
+                                        --recoveryplan <recoveryplan>
+
+# Start reprotection after failover for all qualified resources, or limit it to selected full recovery-resource IDs.
+# Returns after the request is accepted with an operation ID and a recovery job ID when available.
+# Use recoveryjob get to find and monitor the job.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan reprotect --service-group <service-group> \
+                                         --recoveryplan <recoveryplan> \
+                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+
+# Validate which recoveryplan resources are qualified for failover from the specified source locations.
 # Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan validateforfailover --service-group <service-group> \
-                                                   --recovery-plan <recovery-plan> \
+                                                   --recoveryplan <recoveryplan> \
                                                    --source-locations <source-location> [<source-location> ...] \
                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
                                                    [--user-consent <Unspecified|Allowed>]
 
-# Validate which recovery-plan resources are qualified for reprotect after failover.
+# Validate which recoveryplan resources are qualified for reprotect after failover.
 # Optionally limit validation to selected full recovery-resource IDs; omit them to validate all qualified resources in the plan.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan validateforreprotect --service-group <service-group> \
-                                                    --recovery-plan <recovery-plan> \
+                                                    --recoveryplan <recoveryplan> \
                                                     [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
 
-# Validate whether a recovery plan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
+# Validate whether a recoveryplan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
 # Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
 # The operation must be explicitly selected; do not infer it from prior context, plan state, or resource metadata.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan validateforoperation --service-group <service-group> \
-                                                    --recovery-plan <recovery-plan> \
+                                                    --recoveryplan <recoveryplan> \
                                                     --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup>
 
-# Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
+# Configure recoveryplan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan resource update --service-group <service-group> \
-                                                --recovery-plan <recovery-plan> \
+                                                --recoveryplan <recoveryplan> \
                                                 [--resources-to-update '<json-array>'] \
                                                 [--resources-to-remove '<json-array>']
 
-# Discover and assess whether a recovery plan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
+# Discover and assess whether a recoveryplan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan checkreadiness --service-group <service-group> \
-                                              --recovery-plan <recovery-plan>
+                                              --recoveryplan <recoveryplan>
 
-# Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
+# Get a resource (member) of a recoveryplan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan resource get --service-group <service-group> \
-                                            --recovery-plan <recovery-plan> \
+                                            --recoveryplan <recoveryplan> \
                                             [--name <name>]
 
-# Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
+# Get a recovery job, or list all recovery jobs of a recoveryplan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryjob get --service-group <service-group> \
-                                 --recovery-plan <recovery-plan> \
+                                 --recoveryplan <recoveryplan> \
                                  [--name <name>]
 
-# Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
+# Retry an existing recoveryjob in the Failed state. Returns after acceptance; use recoveryjob get to monitor the job.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryjob retry --service-group <service-group> \
+                                   --recoveryplan <recoveryplan> \
+                                   --recoveryjob <recoveryjob>
+
+# Resume an existing recoveryjob in the Paused state, optionally providing input for the paused action.
+# Returns after acceptance; use recoveryjob get to monitor the job.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryjob resume --service-group <service-group> \
+                                    --recoveryplan <recoveryplan> \
+                                    --recoveryjob <recoveryjob> \
+                                    [--description <description>]
+
+# Get a resource (target) of a recoveryjob, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryjob resource get --service-group <service-group> \
-                                          --recovery-plan <recovery-plan> \
-                                          --recovery-job <recovery-job> \
+                                          --recoveryplan <recoveryplan> \
+                                          --recoveryjob <recoveryjob> \
                                           [--name <name>]
 
 # Create or update a resilience drill in a service group
@@ -4094,7 +4132,7 @@ azmcp resilience drill create --service-group <service-group> \
                               --drill-type <drill-type> \
                               --rbac-setup-mode <rbac-setup-mode> \
                               [--resource-group <resource-group>] \
-                              [--recovery-plan <recovery-plan>]
+                              [--recoveryplan <recoveryplan>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4120,7 +4158,7 @@ azmcp resilience drill update --service-group <service-group> \
                               --drill <drill> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
-                              [--recovery-plan <recovery-plan>]
+                              [--recoveryplan <recoveryplan>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
