@@ -52,6 +52,28 @@ public sealed class AdmeServiceHelperTests
         Assert.DoesNotContain("sensitive backend details", exception.Message);
     }
 
+    [Fact]
+    public async Task SendAsync_ThrowsRequestFailedExceptionForNullResponseBody()
+    {
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("null", System.Text.Encoding.UTF8, "application/json"),
+        });
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+            CreateCredentialProvider(),
+            new FakeHttpClientFactory(handler),
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
+            "/api/test",
+            AdmeJsonContext.Default.SchemaListResponse,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)HttpStatusCode.OK, exception.Status);
+        Assert.Contains("empty response body", exception.Message);
+    }
+
     private static IAzureTokenCredentialProvider CreateCredentialProvider()
     {
         var credential = Substitute.For<TokenCredential>();

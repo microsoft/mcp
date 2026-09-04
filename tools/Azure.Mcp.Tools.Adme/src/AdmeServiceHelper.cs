@@ -118,10 +118,9 @@ internal static class AdmeServiceHelper
         }
 
         return await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
-            ?? throw new HttpRequestException(
-                "ADME schema request returned an empty response body.",
-                inner: null,
-                statusCode: response.StatusCode);
+            ?? throw new RequestFailedException(
+                (int)response.StatusCode,
+                "ADME schema request returned an empty response body.");
     }
 
     private static string GetRequestFailureMessage(HttpStatusCode statusCode, string? reasonPhrase) => statusCode switch
