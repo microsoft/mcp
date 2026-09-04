@@ -127,7 +127,7 @@ public class RedisService(IAzureService _azureService, ILogger<RedisService> _lo
             Parameters = BinaryData.FromString(parametersJson)
         };
 
-        await resourceGroupResource.Value.GetArmDeployments()
+        var deploymentOperation = await resourceGroupResource.Value.GetArmDeployments()
             .CreateOrUpdateAsync(
             WaitUntil.Started,
             $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
@@ -135,15 +135,34 @@ public class RedisService(IAzureService _azureService, ILogger<RedisService> _lo
             cancellationToken
         );
 
+        // Starting the deployment (WaitUntil.Started) only confirms ARM accepted the request; it does not
+        // guarantee the resource is actually created. Wait for the deployment to reach a terminal state and
+        // verify it succeeded before reporting success, otherwise surface the deployment failure as an error.
+        await WaitForLroCompletionAsync(deploymentOperation, cancellationToken);
+
+        var deploymentProvisioningState = deploymentOperation.Value.Data.Properties?.ProvisioningState;
+        if (deploymentProvisioningState != ResourcesProvisioningState.Succeeded)
+        {
+            var deploymentError = deploymentOperation.Value.Data.Properties?.Error?.Message;
+            throw new Exception(
+                $"Failed to create Redis resource '{name}' in resource group '{resourceGroup}'. " +
+                $"Deployment provisioning state: '{deploymentProvisioningState}'." +
+                (string.IsNullOrWhiteSpace(deploymentError) ? string.Empty : $" Error: {deploymentError}"));
+        }
+
+        var redisEnterpriseCluster = await resourceGroupResource.Value.GetRedisEnterpriseClusters()
+            .GetAsync(name, cancellationToken);
+
         return new()
         {
-            Name = name,
+            Name = redisEnterpriseCluster.Value.Data.Name,
             Type = "AzureManagedRedis",
             ResourceGroupName = resourceGroup,
             SubscriptionId = subscription,
-            Location = location,
-            Sku = sku,
-            Status = "Creating"
+            Location = redisEnterpriseCluster.Value.Data.Location,
+            Sku = redisEnterpriseCluster.Value.Data.Sku.Name.ToString(),
+            Status = redisEnterpriseCluster.Value.Data.ResourceState?.ToString(),
+            ProvisioningState = redisEnterpriseCluster.Value.Data.ProvisioningState?.ToString()
         };
     }
 

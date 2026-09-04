@@ -13,14 +13,15 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Redis.Commands;
 
 /// <summary>
-/// Creates a new Azure Managed Redis resource. Provisioning is asynchronous and the
-/// command returns immediately while the resource is still being created.
+/// Creates a new Azure Managed Redis resource. Provisioning can take several minutes; the command waits
+/// for the deployment to reach a terminal state and returns the actual resulting status, or an error if
+/// the deployment failed.
 /// </summary>
 [CommandMetadata(
     Id = "750133dd-d57f-4ed4-9488-c1d406ad4a83",
     Name = "create",
     Title = "Create Redis Resource",
-    Description = "Create/provision a new Azure Managed Redis resource in your Azure subscription. Provisioning is asynchronous and typically takes several minutes; the command returns immediately with status \"Creating\" while the resource is still being created.",
+    Description = "Create/provision a new Azure Managed Redis resource in your Azure subscription. Provisioning is asynchronous and typically takes several minutes; the command waits for the deployment to complete and returns the resource's actual status, or an error if the deployment failed.",
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

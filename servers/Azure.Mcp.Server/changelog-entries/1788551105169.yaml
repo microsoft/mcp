@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Redis resource create returning a fake success response with status \"Creating\" when the underlying ARM deployment failed and no resource was actually created. The command now waits for the deployment to complete and returns the real resource status, or an error if creation failed."
