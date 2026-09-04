@@ -14,8 +14,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "6f991f5e-0218-46b5-8d6d-8b59defb1143",
     Name = "checkreadiness",
-    Title = "Check Resilience Recovery Plan Readiness",
-    Description = "Checks whether a resilience recovery plan and its protected resources are ready for recovery operations in an Azure service group.",
+    Title = "Check Resilience Recoveryplan Readiness",
+    Description = "Checks whether a resilience recoveryplan and its protected resources are ready for recovery operations in an Azure service group.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
@@ -53,7 +53,7 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error checking recovery plan readiness. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
+                "Error checking recoveryplan readiness. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
                 options.ServiceGroup, options.RecoveryPlan);
             HandleException(context, ex);
         }
@@ -64,17 +64,17 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         TimeoutException =>
-            "The recovery plan readiness check timed out before it completed. Retry the operation.",
+            "The recoveryplan readiness check timed out before it completed. Retry the operation.",
         InvalidOperationException =>
-            "The recovery plan readiness check completed without returning a valid recovery job response. Retry the operation. If the problem persists, contact support.",
+            "The recoveryplan readiness check completed without returning a valid recovery job response. Retry the operation. If the problem persists, contact support.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "The recovery plan readiness check cannot start in its current state. Complete or cancel active recovery operations and try again.",
+            "The recoveryplan readiness check cannot start in its current state. Complete or cancel active recovery operations and try again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed checking recovery plan readiness. Verify you have permission to run recovery plan actions in the service group.",
+            "Authorization failed checking recoveryplan readiness. Verify you have permission to run recoveryplan actions in the service group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery plan not found. Verify the recovery plan and service group exist and you have access.",
+            "Recoveryplan not found. Verify the recoveryplan and service group exist and you have access.",
         RequestFailedException =>
-            "The recovery plan readiness request failed. Verify the recovery plan, service group, and request parameters, then try again.",
+            "The recoveryplan readiness request failed. Verify the recoveryplan, service group, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)
     };
 

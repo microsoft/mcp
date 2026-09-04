@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans.Resources
     Name = "get",
     Title = "Get or List Resilience Recovery Resources",
     Description = """
-        Gets the resources (members) of a resilience recovery plan. Provide a recovery resource name to get the
-        full details of that resource. Omit the name to list all resources of the recovery plan, returning only
+        Gets the resources (members) of a resilience recoveryplan. Provide a recovery resource name to get the
+        full details of that resource. Omit the name to list all resources of the recoveryplan, returning only
         their id and name.
         """,
     OperationPlane = ToolOperationPlane.Control,
@@ -76,11 +76,11 @@ public sealed class RecoveryResourceGetCommand(ILogger<RecoveryResourceGetComman
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery resource not found. Verify the recovery resource name, recovery plan, service group, and that you have access.",
+        KeyNotFoundException => "Recovery resource not found. Verify the recovery resource name, recoveryplan, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery resource. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery resource not found. Verify the recovery resource, recovery plan, and service group exist and you have access.",
+            "Recovery resource not found. Verify the recovery resource, recoveryplan, and service group exist and you have access.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

@@ -56,7 +56,7 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
 
         if (options.RecoveryPlan is { } recoveryPlan && recoveryPlan.Contains('/'))
         {
-            validationResult.Errors.Add("The recovery plan name must be a single path segment.");
+            validationResult.Errors.Add("The recoveryplan name must be a single path segment.");
         }
     }
 
@@ -98,7 +98,7 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed creating or updating the drill. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "The service group, subscription, resource group, or recovery plan was not found.",
+            "The service group, subscription, resource group, or recoveryplan was not found.",
         RequestFailedException =>
             "The drill request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)

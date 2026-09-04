@@ -18,9 +18,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "2fbfa9e6-0a5e-45e4-923d-0ef3706ef733",
     Name = "create",
-    Title = "Create or Update Resilience Recovery Plan",
+    Title = "Create or Update Resilience Recoveryplan",
     Description = """
-        Creates a new Zonal resilience recovery plan in an Azure service group or updates an existing plan's identity,
+        Creates a new Zonal resilience recoveryplan in an Azure service group or updates an existing plan's identity,
         recovery group structure, and recovery group pre/post actions. Use this command to split a plan into additional
         recovery groups or add manual and Azure Automation runbook actions; use recoveryplan resource update instead for
         recovery resource membership and protection settings.
@@ -61,7 +61,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
 
         if (options.PlanDescription is not null && options.PlanDescription.Length is < 5 or > 50)
         {
-            validationResult.Errors.Add("The recovery plan description must be 5 to 50 characters.");
+            validationResult.Errors.Add("The recoveryplan description must be 5 to 50 characters.");
         }
 
         if (options.DefaultGroupDescription is not null &&
@@ -130,7 +130,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating or updating recovery plan. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, PlanType: {PlanType}.",
+                "Error creating or updating recoveryplan. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}, PlanType: {PlanType}.",
                 options.ServiceGroup, options.RecoveryPlan, options.PlanType);
             HandleException(context, ex);
         }
@@ -385,20 +385,22 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
+        TimeoutException => HttpStatusCode.GatewayTimeout,
         _ => base.GetStatusCode(ex)
     };
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argumentException => argumentException.Message,
+        TimeoutException => "The recoveryplan create or update request timed out. Check the recoveryplan state before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "The recovery plan could not be created or updated because it conflicts with the current resource state.",
+            "The recoveryplan could not be created or updated because it conflicts with the current resource state.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed creating or updating the recovery plan. Verify you have the required permissions.",
+            "Authorization failed creating or updating the recoveryplan. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Service group not found. Verify the service group exists and you have access.",
         RequestFailedException =>
-            "The recovery plan request failed. Verify the request parameters and try again.",
+            "The recoveryplan request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)
     };
 

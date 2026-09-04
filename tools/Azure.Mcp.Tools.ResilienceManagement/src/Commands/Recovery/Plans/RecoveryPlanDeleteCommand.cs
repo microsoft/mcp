@@ -14,8 +14,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "e694c9e4-f134-48b2-b6ed-5f6a617d7d8d",
     Name = "delete",
-    Title = "Delete Resilience Recovery Plan",
-    Description = "Deletes a resilience recovery plan from an Azure service group. Use this tool to delete a recovery plan and report whether the entire plan existed.",
+    Title = "Delete Resilience Recoveryplan",
+    Description = "Deletes a resilience recoveryplan from an Azure service group. Use this tool to delete a recoveryplan and report whether the entire plan existed.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -53,7 +53,7 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error deleting recovery plan. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
+                "Error deleting recoveryplan. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
                 options.ServiceGroup, options.RecoveryPlan);
             HandleException(context, ex);
         }
@@ -63,14 +63,19 @@ public sealed class RecoveryPlanDeleteCommand(ILogger<RecoveryPlanDeleteCommand>
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException => "The recoveryplan delete request timed out. Check whether the recoveryplan still exists before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "The recovery plan cannot be deleted in its current state. Complete or cancel active recovery operations and try again.",
+            "The recoveryplan cannot be deleted in its current state. Complete or cancel active recovery operations and try again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed deleting the recovery plan. Verify you have permission to delete recovery plans in the service group.",
+            "Authorization failed deleting the recoveryplan. Verify you have permission to delete recovery plans in the service group.",
         RequestFailedException =>
-            "The recovery plan delete request failed. Verify the recovery plan, service group, and request parameters, then try again.",
+            "The recoveryplan delete request failed. Verify the recoveryplan, service group, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)
     };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex is TimeoutException
+        ? HttpStatusCode.GatewayTimeout
+        : base.GetStatusCode(ex);
 
     public sealed record RecoveryPlanDeleteCommandResult(
         [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] bool Deleted,

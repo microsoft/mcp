@@ -19,9 +19,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "ace3cbba-d572-47dc-a452-ab2cb349e17b",
     Name = "update",
-    Title = "Update Resilience Recovery Plan Resources",
+    Title = "Update Resilience Recoveryplan Resources",
     Description = """
-        Updates recovery resources in a resilience recovery plan in an Azure service group: includes and configures a resource
+        Updates recovery resources in a resilience recoveryplan in an Azure service group: includes and configures a resource
         with protection settings; keeps a resource in the plan but excludes it from recovery operations; or removes a resource
         from membership while retaining the plan and all other resources. Supports CustomRunbook with failover and reprotect
         runbooks. Supports AzureSiteRecovery only for virtual machines with disk reprotection, staging storage, and a test
@@ -77,7 +77,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error updating recovery plan resources. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
+                "Error updating recoveryplan resources. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
                 options.ServiceGroup, options.RecoveryPlan);
             HandleException(context, ex);
         }
@@ -157,7 +157,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
                 (idElement.ValueKind != JsonValueKind.String ||
                  !string.Equals(idElement.GetString(), id, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new ArgumentException("A supplied recovery resource id must match properties.recoveryResourceUniqueId and belong to the selected recovery plan.");
+                throw new ArgumentException("A supplied recovery resource id must match properties.recoveryResourceUniqueId and belong to the selected recoveryplan.");
             }
 
             if (!updatedIds.Add(id))
@@ -206,27 +206,29 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
             id.Length == expectedPrefix.Length ||
             id.AsSpan(expectedPrefix.Length).Contains('/'))
         {
-            throw new ArgumentException($"Recovery resource IDs must belong to service group '{serviceGroup}' and recovery plan '{recoveryPlan}'.");
+            throw new ArgumentException($"Recovery resource IDs must belong to service group '{serviceGroup}' and recoveryplan '{recoveryPlan}'.");
         }
     }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
+        TimeoutException => HttpStatusCode.GatewayTimeout,
         _ => base.GetStatusCode(ex)
     };
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argumentException => argumentException.Message,
+        TimeoutException => "The recoveryplan resource update timed out. Check the recovery resources before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "Recovery plan resources cannot be updated while another recovery operation is in progress.",
+            "Recoveryplan resources cannot be updated while another recovery operation is in progress.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed updating recovery plan resources. Verify you have the required permissions.",
+            "Authorization failed updating recoveryplan resources. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery plan not found. Verify the recovery plan and service group exist and you have access.",
+            "Recoveryplan not found. Verify the recoveryplan and service group exist and you have access.",
         RequestFailedException =>
-            "The recovery plan resource update failed. Verify the resource IDs and protection settings, then try again.",
+            "The recoveryplan resource update failed. Verify the resource IDs and protection settings, then try again.",
         _ => base.GetErrorMessage(ex)
     };
 

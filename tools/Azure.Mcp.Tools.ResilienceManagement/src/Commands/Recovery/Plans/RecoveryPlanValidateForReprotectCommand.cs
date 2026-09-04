@@ -14,8 +14,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "a58a9d25-b69a-4a8e-9ad0-04fb693352de",
     Name = "validateforreprotect",
-    Title = "Validate Resilience Recovery Plan for Reprotect",
-    Description = "Validates whether a resilience recovery plan and its resources are qualified for reprotect after failover. Optionally validates customer-selected recovery-resource IDs; when no IDs are provided, validates all qualified resources in the plan. Use this validation-only tool to identify per-resource reprotect eligibility and blocking reasons. It does not execute reprotect or update recovery resources.",
+    Title = "Validate Resilience Recoveryplan for Reprotect",
+    Description = "Validates whether a resilience recoveryplan and its resources are qualified for reprotect after failover. Optionally validates customer-selected recovery-resource IDs; when no IDs are provided, validates all qualified resources in the plan. Use this validation-only tool to identify per-resource reprotect eligibility and blocking reasons. It does not execute reprotect or update recovery resources.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
@@ -61,7 +61,7 @@ public sealed class RecoveryPlanValidateForReprotectCommand(
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error validating recovery plan for reprotect. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
+                "Error validating recoveryplan for reprotect. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
                 options.ServiceGroup, options.RecoveryPlan);
             HandleException(context, ex);
         }
@@ -72,13 +72,13 @@ public sealed class RecoveryPlanValidateForReprotectCommand(
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         TimeoutException =>
-            "The recovery plan reprotect validation timed out before it completed. Retry the operation.",
+            "The recoveryplan reprotect validation timed out before it completed. Retry the operation.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed validating the recovery plan for reprotect. Verify you have access to the recovery plan and service group.",
+            "Authorization failed validating the recoveryplan for reprotect. Verify you have access to the recoveryplan and service group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery plan not found. Verify the recovery plan and service group exist and you have access.",
+            "Recoveryplan not found. Verify the recoveryplan and service group exist and you have access.",
         RequestFailedException =>
-            "The reprotect validation request failed. Verify the recovery plan, selected resources, and request parameters, then try again.",
+            "The reprotect validation request failed. Verify the recoveryplan, selected resources, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)
     };
 

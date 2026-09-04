@@ -47,7 +47,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, delete, or validate Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, and recovery plans for Azure service groups.",
+      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -55,7 +55,7 @@
         },
         "idempotent": {
           "value": true,
-          "description": "This tool includes operations that may produce additional effects when run multiple times with the same arguments."
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
         },
         "openWorld": {
           "value": false,
@@ -87,12 +87,177 @@
       ]
     },
     {
-      "name": "validate_azure_resilience_recovery_plan_for_failover",
-      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for failover from specified source locations.",
+      "name": "finalize_azure_resilience_recoveryplan",
+      "description": "Complete or finalize the current Azure Resilience Management recoveryplan operation by validating resource permissions and updating recoveryplan state. This does not commit a completed failover.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not delete or modify recovery plan resources."
+          "description": "This tool validates resource permissions and updates recoveryplan state without deleting resources or committing failover."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated requests can start multiple recoveryplan finalize operations."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to the specified Azure Resilience Management recoveryplan."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool changes recoveryplan state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_finalize"
+      ]
+    },
+    {
+      "name": "start_azure_resilience_recoveryplan_failover",
+      "description": "Start failover for qualified resources in an Azure Resilience Management recoveryplan using customer-selected source locations or recovery resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool starts recovery workloads in target locations."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated requests can start multiple failover operations."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to the specified Azure Resilience Management recoveryplan."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool changes recovery state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_failover"
+      ]
+    },
+    {
+      "name": "start_azure_resilience_recoveryplan_reprotect",
+      "description": "Start reprotection after failover for all qualified or explicitly selected resources in an Azure Resilience Management recoveryplan.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool changes recovery protection state."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated requests can start multiple reprotect operations."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to the specified Azure Resilience Management recoveryplan."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool changes recovery protection state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryplan_reprotect"
+      ]
+    },
+    {
+      "name": "retry_azure_resilience_recovery_job",
+      "description": "Retry a failed Azure Resilience Management recovery job, reusing the existing job to re-execute its recovery workflow.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool re-executes the failed recovery workflow."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated requests can start multiple retry orchestrations."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to the specified Azure Resilience Management recovery job."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool changes recovery job state and may modify protected resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryjob_retry"
+      ]
+    },
+    {
+      "name": "resume_azure_resilience_recovery_job",
+      "description": "Resume a paused Azure Resilience Management recovery job and optionally provide user input for the paused recovery action.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool allows the paused recovery workflow to continue modifying recovery state."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Repeated requests can send multiple resume signals."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to the specified Azure Resilience Management recovery job."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool changes recovery job state and continues its workflow."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_recoveryjob_resume"
+      ]
+    },
+    {
+      "name": "validate_azure_resilience_recoveryplan_for_failover",
+      "description": "Validate which resources in an Azure Resilience Management recoveryplan are qualified for failover from specified source locations.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete or modify recoveryplan resources."
         },
         "idempotent": {
           "value": false,
@@ -121,11 +286,11 @@
     },
     {
       "name": "validate_azure_resilience_recoveryplan_for_reprotect",
-      "description": "Validate which resources in an Azure Resilience Management recovery plan are qualified for reprotect after failover.",
+      "description": "Validate which resources in an Azure Resilience Management recoveryplan are qualified for reprotect after failover.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not delete or modify recovery plan resources."
+          "description": "This tool does not delete or modify recoveryplan resources."
         },
         "idempotent": {
           "value": false,
@@ -154,11 +319,11 @@
     },
     {
       "name": "validate_azure_resilience_recoveryplan_for_operation",
-      "description": "Validate a customer-selected or unspecified recovery operation for an Azure Resilience Management recovery plan before execution. Use for requests to validate an operation, an intended recovery operation, or operation-specific pre-validation, including when earlier context mentions failover but the current operation is unspecified. Ask the customer to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup; do not assume the operation. Checks plan state, readiness, and permissions. Not for general readiness or per-resource failover or reprotect qualification. Does not execute recovery operations.",
+      "description": "Validate a customer-selected or unspecified recovery operation for an Azure Resilience Management recoveryplan before execution. Use for requests to validate an operation, an intended recovery operation, or operation-specific pre-validation, including when earlier context mentions failover but the current operation is unspecified. Ask the customer to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup; do not assume the operation. Checks plan state, readiness, and permissions. Not for general readiness or per-resource failover or reprotect qualification. Does not execute recovery operations.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not execute the recovery operation or modify recovery plan resources."
+          "description": "This tool does not execute the recovery operation or modify recoveryplan resources."
         },
         "idempotent": {
           "value": false,
@@ -187,15 +352,15 @@
     },
     {
       "name": "check_azure_resilience_management_readiness",
-      "description": "Check whether Azure Resilience Management recovery plans or drills are ready for recovery or drill run operations in an Azure service group.",
+      "description": "Check whether an Azure Resilience Management recoveryplan or drill and its protected resources are ready for recovery operations or drill execution in an Azure service group.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool does not delete or modify recovery plans, drills, or their protected resources."
+          "description": "This tool does not delete or modify the recoveryplan or its protected resources."
         },
         "idempotent": {
           "value": false,
-          "description": "Each invocation creates a new readiness check operation with a unique operation identifier."
+          "description": "Each invocation creates a new readiness job with a unique operation identifier."
         },
         "openWorld": {
           "value": false,
@@ -203,7 +368,7 @@
         },
         "readOnly": {
           "value": false,
-          "description": "This tool creates a readiness check operation while leaving the recovery plan, drill, and protected resources unchanged."
+          "description": "This tool creates a readiness job while leaving the recoveryplan and its protected resources unchanged."
         },
         "secret": {
           "value": false,
@@ -216,39 +381,7 @@
       },
       "mappedToolList": [
         "resilience_recoveryplan_checkreadiness",
-        "resilience_drill_check-resync-readiness"
-      ]
-    },
-    {
-      "name": "validate_azure_resilience_management_drill_for_execution",
-      "description": "Validate an Azure resilience drill for execution from specified physical source locations and return the validation operation ID.",
-      "toolMetadata": {
-        "destructive": {
-          "value": false,
-          "description": "This tool validates drill readiness without deleting or modifying drill definitions or resources."
-        },
-        "idempotent": {
-          "value": false,
-          "description": "This tool starts a new validation operation each time it runs."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": false,
-          "description": "This tool starts a validation operation and therefore is not read-only."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
+        "resilience_drill_check-resync-readiness",
         "resilience_drill_validate-for-execution"
       ]
     },
@@ -680,9 +813,9 @@
         "monitor_activitylog_list",
         "monitor_healthmodels_list",
         "monitor_healthmodels_get",
-        "monitor_metrics_batchquery",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
+        "monitor_metrics_batchquery",
         "monitor_resource_log_query",
         "monitor_table_list",
         "monitor_table_type_list",
@@ -4505,7 +4638,7 @@
     },
     {
       "name": "update_azure_backup_settings",
-      "description": "Update Azure Backup settings including vault configuration, governance policies for soft delete, immutability, and cross-region restore.",
+      "description": "Update Azure Backup settings including vault and protected item configuration, governance policies for soft delete, immutability, and cross-region restore.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -4535,11 +4668,11 @@
       "mappedToolList": [
         "azurebackup_vault_update",
         "azurebackup_policy_update",
+        "azurebackup_protecteditem_update-protection",
         "azurebackup_governance_immutability",
         "azurebackup_governance_soft-delete",
         "azurebackup_disasterrecovery_enable-crr",
         "azurebackup_protecteditem_undelete",
-        "azurebackup_protecteditem_update-protection",
         "azurebackup_security_configure-encryption",
         "azurebackup_security_enable-mua",
         "azurebackup_security_disable-mua",

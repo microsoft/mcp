@@ -12,19 +12,19 @@ public sealed class RecoveryPlanCreateOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the recovery plan to create or fully update.")]
+    [Option(Name = "recoveryplan", Description = "The name of the recoveryplan to create or fully update.")]
     public required string RecoveryPlan { get; set; }
 
-    [Option(Description = "The recovery plan type. Supported value: Zonal. The type cannot be changed after creation.")]
+    [Option(Description = "The recoveryplan type. Supported value: Zonal. The type cannot be changed after creation.")]
     public required RecoveryPlanKind PlanType { get; set; }
 
     [Option(Description =
-        "The recovery plan description, from 5 to 50 characters. " +
+        "The recoveryplan description, from 5 to 50 characters. " +
         "Required when creating a plan; on update, the existing description is preserved when omitted.")]
     public string? PlanDescription { get; set; }
 
     [Option(Description =
-        "The customer-selected managed identity type for the recovery plan. " +
+        "The customer-selected managed identity type for the recoveryplan. " +
         "Supported values: SystemAssigned, UserAssigned, and SystemAndUserAssigned. " +
         "Do not assume a default; ask the customer when they have not specified an identity type. " +
         "Specify this on every create or update; updates can switch identity types, but cannot replace an existing " +

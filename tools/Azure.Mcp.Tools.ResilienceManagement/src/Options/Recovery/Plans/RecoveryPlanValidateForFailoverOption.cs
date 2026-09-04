@@ -11,7 +11,7 @@ public sealed class RecoveryPlanValidateForFailoverOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the recovery plan to validate for failover.")]
+    [Option(Name = "recoveryplan", Description = "The name of the recoveryplan to validate for failover.")]
     public required string RecoveryPlan { get; set; }
 
     [Option(Description = "Customer-provided Azure locations from which resources would fail over, such as eastus or westus2-az3. Provide source locations, selected resource IDs, or both. Do not infer omitted locations; ask the customer.")]
