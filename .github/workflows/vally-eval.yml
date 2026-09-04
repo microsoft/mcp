@@ -22,6 +22,11 @@ on:
         required: false
         default: 'HEAD'
         type: string
+      runAllTests:
+        description: 'Run all evaluation tests'
+        required: false
+        default: false
+        type: boolean
       logLevel:
         description: 'Is verbose'
         required: false
@@ -96,20 +101,29 @@ jobs:
 
       - name: Create build_info.json
         shell: pwsh
+        env:
+          RUN_ALL_TESTS: ${{ inputs.runAllTests }}
         run: |
-          if ($env:BUILD_REASON -eq 'PullRequest') {
-            Write-Host "Run type: PR run."
+          if ($env:RUN_ALL_TESTS -eq 'true') {
+            Write-Host "Running all evals."
+
+            ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
           }
           else {
-            Write-Host "Run type: manual run"
+            Write-Host "Running evals based on changed files."
+              
+            if ($env:BUILD_REASON -eq 'PullRequest') {
+              Write-Host "Run type: Pull request merged into main."
+            }
+            else {
+              Write-Host "Run type: manual run."
+            }
+
+            ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server `
+              -CommonCodeBuildsAll $false `
+              -SourceCommittish $env:DIFF_HEAD_COMMIT `
+              -TargetCommittish $env:DIFF_BASE_COMMIT
           }
-
-          ./eng/scripts/New-BuildInfo.ps1 `
-            -ServerName Azure.Mcp.Server `
-            -CommonCodeBuildsAll $false `
-            -SourceCommittish $env:DIFF_HEAD_COMMIT `
-            -TargetCommittish $env:DIFF_BASE_COMMIT
-
       - name: Build server code
         shell: pwsh
         run: |
