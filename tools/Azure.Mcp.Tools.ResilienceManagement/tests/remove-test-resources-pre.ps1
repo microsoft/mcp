@@ -37,7 +37,7 @@ function Invoke-ManagementRestMethod {
 
     return [pscustomobject]@{
         StatusCode = [int]$response.StatusCode
-        Content = $response.Content
+        Content    = $response.Content
     }
 }
 
@@ -108,23 +108,25 @@ function Remove-RecoveryPlans {
 $serviceGroupName = Get-OutputValue -Name 'serviceGroupName'
 $lifecycleServiceGroupName = Get-OutputValue -Name 'lifecycleServiceGroupName'
 $planLifecycleServiceGroupName = Get-OutputValue -Name 'planLifecycleServiceGroupName'
+$workflowServiceGroupName = Get-OutputValue -Name 'workflowServiceGroupName'
 $usagePlanName = Get-OutputValue -Name 'usagePlanName'
 $enrollmentName = Get-OutputValue -Name 'enrollmentName'
 $lifecycleEnrollmentName = Get-OutputValue -Name 'lifecycleEnrollmentName'
 $planLifecycleEnrollmentName = Get-OutputValue -Name 'planLifecycleEnrollmentName'
+$workflowEnrollmentName = Get-OutputValue -Name 'workflowEnrollmentName'
 $goalAssignmentName = Get-OutputValue -Name 'goalAssignmentName'
 $goalTemplateName = Get-OutputValue -Name 'goalTemplateName'
 $drillName = Get-OutputValue -Name 'drillName'
 
 $requiredOutputs = @{
-    serviceGroupName = $serviceGroupName
+    serviceGroupName          = $serviceGroupName
     lifecycleServiceGroupName = $lifecycleServiceGroupName
-    usagePlanName = $usagePlanName
-    enrollmentName = $enrollmentName
-    lifecycleEnrollmentName = $lifecycleEnrollmentName
-    goalAssignmentName = $goalAssignmentName
-    goalTemplateName = $goalTemplateName
-    drillName = $drillName
+    usagePlanName             = $usagePlanName
+    enrollmentName            = $enrollmentName
+    lifecycleEnrollmentName   = $lifecycleEnrollmentName
+    goalAssignmentName        = $goalAssignmentName
+    goalTemplateName          = $goalTemplateName
+    drillName                 = $drillName
 }
 
 foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
@@ -136,6 +138,7 @@ foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
 $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
 $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
 $planLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$planLifecycleServiceGroupName"
+$workflowServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$workflowServiceGroupName"
 $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
 $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
 
@@ -145,6 +148,9 @@ Remove-RecoveryPlans -ServiceGroupId $lifecycleServiceGroupId
 if (![string]::IsNullOrWhiteSpace($planLifecycleServiceGroupName)) {
     Remove-RecoveryPlans -ServiceGroupId $planLifecycleServiceGroupId
 }
+if (![string]::IsNullOrWhiteSpace($workflowServiceGroupName)) {
+    Remove-RecoveryPlans -ServiceGroupId $workflowServiceGroupId
+}
 Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$resilienceBase/goalTemplates/$goalTemplateName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$enrollmentName" -ApiVersion $resilienceApiVersion
@@ -152,11 +158,15 @@ Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleEnrollmentName" 
 if (![string]::IsNullOrWhiteSpace($planLifecycleEnrollmentName)) {
     Remove-Resource -ResourceId "$usagePlanId/enrollments/$planLifecycleEnrollmentName" -ApiVersion $resilienceApiVersion
 }
+if (![string]::IsNullOrWhiteSpace($workflowEnrollmentName)) {
+    Remove-Resource -ResourceId "$usagePlanId/enrollments/$workflowEnrollmentName" -ApiVersion $resilienceApiVersion
+}
 Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-rg-member" -ApiVersion $membershipApiVersion
 Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-lifecycle-rg-member" -ApiVersion $membershipApiVersion
 Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-plan-lifecycle-rg-member" -ApiVersion $membershipApiVersion
+Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-workflow-rg-member" -ApiVersion $membershipApiVersion
 
-foreach ($serviceGroupIdToDelete in @($planLifecycleServiceGroupName ? $planLifecycleServiceGroupId : $null, $lifecycleServiceGroupId, $serviceGroupId)) {
+foreach ($serviceGroupIdToDelete in @($workflowServiceGroupName ? $workflowServiceGroupId : $null, $planLifecycleServiceGroupName ? $planLifecycleServiceGroupId : $null, $lifecycleServiceGroupId, $serviceGroupId)) {
     if ($serviceGroupIdToDelete -notmatch '/$') {
         Remove-Resource -ResourceId $serviceGroupIdToDelete -ApiVersion $serviceGroupApiVersion
     }

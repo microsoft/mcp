@@ -30,7 +30,7 @@ public class RecoveryJobResourceGetCommandTests : CommandUnitTestsBase<RecoveryJ
         Service.ListRecoveryJobResourcesAsync(ServiceGroup, RecoveryPlan, RecoveryJob, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan, "--recoveryjob", RecoveryJob);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryJobResourceGetCommandResult);
         Assert.NotNull(result.RecoveryJobResources);
@@ -43,7 +43,7 @@ public class RecoveryJobResourceGetCommandTests : CommandUnitTestsBase<RecoveryJ
         Service.GetRecoveryJobResourceAsync(ServiceGroup, RecoveryPlan, RecoveryJob, "target1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Element("target1"));
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob, "--name", "target1");
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan, "--recoveryjob", RecoveryJob, "--name", "target1");
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryJobResourceGetCommandResult);
         Assert.Null(result.RecoveryJobResources);
@@ -57,7 +57,7 @@ public class RecoveryJobResourceGetCommandTests : CommandUnitTestsBase<RecoveryJ
         Service.ListRecoveryJobResourcesAsync(ServiceGroup, RecoveryPlan, RecoveryJob, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--recovery-job", RecoveryJob);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan, "--recoveryjob", RecoveryJob);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);

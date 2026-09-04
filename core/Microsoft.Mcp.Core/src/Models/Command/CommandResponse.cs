@@ -18,6 +18,14 @@ public class CommandResponse
     [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets a sanitized message to include in failure telemetry.
+    /// This value must not contain secrets, PII, or other sensitive information.
+    /// Ideally, use a static string so telemetry values are easier to group and analyze.
+    /// </summary>
+    [JsonIgnore]
+    public string? TelemetryFailureMessage { get; set; }
+
     [JsonPropertyName("results")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ResponseResult? Results { get; set; }
