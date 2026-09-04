@@ -2077,6 +2077,73 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
+    #region Container Tests (RSV)
+
+    /// <summary>
+    /// The test infrastructure registers the storage account with the RSV vault
+    /// via test-resources-post.ps1 so we expect a 'registered: true' response.
+    /// The container name is derived automatically from the bare storage account name.
+    /// </summary>
+    [Fact]
+    public async Task ContainerGet_RsvVault_ByStorageAccountName_ReturnsRegistered_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var storageAccountName = $"{Settings.ResourceBaseName.Replace("-", "")}sa";
+        if (storageAccountName.Length > 24)
+        {
+            storageAccountName = storageAccountName[..24];
+        }
+
+        var result = await CallToolAsync(
+            "azurebackup_container_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "storage-account", storageAccountName }
+            });
+
+        Assert.True(result.AssertProperty("registered").GetBoolean(), "Storage account should be registered by test-resources-post.ps1");
+
+        var container = result.AssertProperty("container");
+        Assert.Equal(JsonValueKind.Object, container.ValueKind);
+        container.AssertProperty("name");
+        Assert.Equal("AzureStorage", container.AssertProperty("backupManagementType").GetString());
+    }
+
+    /// <summary>
+    /// A storage account that is not registered with the vault must produce HTTP 200
+    /// with 'registered: false' and 'container: null' - this is the idempotency signal for
+    /// register/refresh callers. Because the response is source-generated with
+    /// JsonIgnoreCondition.WhenWritingDefault, false booleans and null references are omitted
+    /// from the JSON payload; an empty results object is the expected shape.
+    /// </summary>
+    [Fact]
+    public async Task ContainerGet_RsvVault_UnknownStorageAccount_ReturnsNotRegistered_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "storage-account", "notregisteredaccount" }
+            });
+
+        Assert.True(result.HasValue);
+        // 'registered' defaults to false and 'container' defaults to null; both are omitted from the
+        // payload when unset. The presence of either non-default value would indicate an unexpected
+        // registered container.
+        Assert.False(result!.Value.TryGetProperty("registered", out var registeredEl) && registeredEl.GetBoolean());
+        Assert.False(result.Value.TryGetProperty("container", out var containerEl) && containerEl.ValueKind == JsonValueKind.Object);
+    }
+
+    #endregion
+
     #region Backup Status Tests
 
     /// <summary>

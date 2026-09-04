@@ -204,6 +204,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
+| azurebackup_container_get | Look up storage account <storage_account_name> in RSV vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_container_get | Is container <container_name> registered in vault <vault_name> under resource group <resource_group>? | investigation-required |
+| azurebackup_container_get | Get the RSV protection container details for storage account <storage_account_name> in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |
