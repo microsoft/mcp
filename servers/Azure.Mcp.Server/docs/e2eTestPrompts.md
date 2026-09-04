@@ -204,6 +204,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_container_list-available | List storage accounts available for registration as Azure File share backup containers in vault <vault_name> and resource group <resource_group> | investigation-required |
+| azurebackup_container_list-available | Show available Azure File share backup containers for Recovery Services vault <vault_name> | investigation-required |
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |

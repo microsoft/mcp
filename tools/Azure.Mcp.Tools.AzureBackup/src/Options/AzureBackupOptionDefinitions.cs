@@ -6,6 +6,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Options;
 public static class AzureBackupOptionDefinitions
 {
     internal const string Vault = "The name of the backup vault (Recovery Services vault or Backup vault).";
+    internal const string ContainerListAvailableFilter = "OData filter passed to the protectableContainers API. Defaults to \"backupManagementType eq 'AzureStorage'\" to list Azure File share storage accounts available for registration.";
+    internal const string ContainerStorageAccount = "Optional storage account name or fully qualified ARM resource ID used to filter available Azure File share containers. Cannot be used with a non-AzureStorage --filter.";
     internal const string VaultType = "The type of backup vault: 'rsv' (Recovery Services vault) or 'dpp' (Backup vault / Data Protection). Auto-detected if omitted for existing vaults.";
     internal const string VaultExpand = "Comma-separated list of extra vault posture fields to include in 'vault get' output. Supported values: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit encryption state field), 'mua' (MUA / Resource Guard link), 'all'. Omit to preserve the default (unexpanded) response shape and avoid extra Resource Guard API calls.";
     internal const string ProtectedItem = "The name of the protected item or backup instance.";

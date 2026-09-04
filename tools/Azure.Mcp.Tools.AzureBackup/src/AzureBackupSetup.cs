@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
+using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
@@ -45,6 +46,7 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectedItemUndeleteCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
+        services.AddSingleton<ContainerListAvailableCommand>();
 
         services.AddSingleton<BackupStatusCommand>();
 
@@ -112,6 +114,10 @@ public sealed class AzureBackupSetup : IAreaSetup
         var protectableItem = new CommandGroup("protectableitem", "Protectable item operations - List discovered databases available for protection.");
         azureBackup.AddSubGroup(protectableItem);
         protectableItem.AddCommand<ProtectableItemListCommand>(serviceProvider);
+
+        var container = new CommandGroup("container", "Container operations - List storage accounts available for Azure File share backup registration in Recovery Services vaults (RSV). Backup vaults (DPP) do not use protection containers.");
+        azureBackup.AddSubGroup(container);
+        container.AddCommand<ContainerListAvailableCommand>(serviceProvider);
 
         var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);
