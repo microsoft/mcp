@@ -3081,7 +3081,7 @@ azmcp keyvault secret get --subscription <subscription> \
 # Gets Azure Kubernetes Service (AKS) cluster details
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp aks cluster get --subscription <subscription> \
-                      --resource-group <resource-group> \
+                      [--resource-group <resource-group>] \
                       [--cluster <cluster>]
 
 # Gets Azure Kubernetes Service (AKS) nodepool details
