@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
@@ -12,22 +11,45 @@ namespace Azure.Mcp.Tools.Authorization.Services;
 public class AuthorizationService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAuthorizationService
 {
+    private const string RoleAssignmentsTable = "authorizationresources";
+    private const string RoleAssignmentResourceType = "Microsoft.Authorization/roleAssignments";
+
     public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
-        string subscription,
+        string? subscription,
         string scope,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(scope), scope));
 
-        var scopeId = new ResourceIdentifier(scope!);
+        // Match the scope itself, plus anything nested beneath it. The trailing separator keeps a scope
+        // ending in "rg1" from also matching "rg10".
+        var escapedScope = EscapeKqlString(scope.TrimEnd('/'));
+        var scopeFilter = $"(properties.scope =~ '{escapedScope}' or properties.scope startswith '{escapedScope}/')";
+
+        if (ManagementGroupScope.TryParse(scope, out var managementGroup))
+        {
+            // Role assignments on a management group are not part of any subscription, so a
+            // subscription-scoped Resource Graph query can never return them.
+            return await ExecuteManagementGroupResourceQueryAsync(
+                RoleAssignmentResourceType,
+                managementGroup,
+                ConvertToRoleAssignmentModel,
+                RoleAssignmentsTable,
+                additionalFilter: scopeFilter,
+                tenant: tenantId,
+                cancellationToken: cancellationToken);
+        }
+
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
         return await ExecuteResourceQueryAsync(
-            "Microsoft.Authorization/roleAssignments",
+            RoleAssignmentResourceType,
             null, // all resource groups
-            subscription,
+            subscription!,
             ConvertToRoleAssignmentModel,
-            "authorizationresources",
-            additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
+            RoleAssignmentsTable,
+            additionalFilter: scopeFilter,
             tenant: tenantId,
             cancellationToken: cancellationToken);
     }

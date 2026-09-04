@@ -83,6 +83,84 @@ public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<R
     }
 
     [Fact]
+    public async Task ExecuteAsync_QueriesManagementGroupScope_WithoutSubscription()
+    {
+        // Arrange
+        var scope = "/providers/Microsoft.Management/managementGroups/mg-contoso";
+        var assignmentId = "00000000-0000-0000-0000-000000000003";
+        var expected = new ResourceQueryResults<RoleAssignment>(
+        [
+            new() {
+                Id = $"{scope}/providers/Microsoft.Authorization/roleAssignments/{assignmentId}",
+                Name = "Reader",
+                PrincipalId = new Guid(assignmentId),
+                PrincipalType = "ServicePrincipal",
+                Scope = scope
+            }
+        ], false);
+
+        Service.ListRoleAssignmentsAsync(null, scope, Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        // Act: a management group scope is outside every subscription, so --subscription is not supplied.
+        var response = await ExecuteCommandAsync("--scope", scope);
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
+
+        Assert.Equal(expected.Results, result.Assignments);
+        await Service.Received(1).ListRoleAssignmentsAsync(null, scope, Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_EchoesQueriedScope()
+    {
+        // Arrange
+        var subscriptionId = "00000000-0000-0000-0000-000000000001";
+        var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
+        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, TestContext.Current.CancellationToken)
+            .Returns(new ResourceQueryResults<RoleAssignment>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);
+
+        // Assert: an empty result must still say which scope produced it.
+        var result = ValidateAndDeserializeResponse(response, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
+
+        Assert.Equal(scope, result.Scope);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RequiresSubscription_ForNonManagementGroupScope()
+    {
+        // Arrange
+        var scope = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg1";
+
+        // Act
+        var response = await ExecuteCommandAsync("--scope", scope);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--subscription", response.Message);
+    }
+
+    [Theory]
+    [InlineData("/providers/Microsoft.Management/managementGroups/mg-contoso", true, "mg-contoso")]
+    [InlineData("/PROVIDERS/MICROSOFT.MANAGEMENT/MANAGEMENTGROUPS/mg-contoso", true, "mg-contoso")]
+    [InlineData("/providers/Microsoft.Management/managementGroups/mg-contoso/", true, "mg-contoso")]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000001", false, "")]
+    [InlineData("/providers/Microsoft.Management/managementGroups/", false, "")]
+    // A resource nested under a management group is a resource scope, not a management group scope.
+    [InlineData("/providers/Microsoft.Management/managementGroups/mg-contoso/providers/Microsoft.Authorization/roleAssignments/abc", false, "")]
+    public void TryParse_RecognizesManagementGroupScopes(string scope, bool expectedResult, string expectedManagementGroup)
+    {
+        var actualResult = ManagementGroupScope.TryParse(scope, out var actualManagementGroup);
+
+        Assert.Equal(expectedResult, actualResult);
+        Assert.Equal(expectedManagementGroup, actualManagementGroup);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
