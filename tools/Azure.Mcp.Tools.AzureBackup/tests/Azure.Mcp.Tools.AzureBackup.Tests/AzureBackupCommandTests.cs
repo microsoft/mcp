@@ -159,7 +159,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "vault-type", "rsv" },
-                { "location", "eastus" }
+                { "location", Settings.IsAzureUSGovernment ? "usgovvirginia" : "eastus" }
             });
 
         var vault = result.AssertProperty("vault");
@@ -179,7 +179,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "vault-type", "dpp" },
-                { "location", "eastus" }
+                { "location", Settings.IsAzureUSGovernment ? "usgovvirginia" : "eastus" }
             });
 
         var vault = result.AssertProperty("vault");
@@ -695,7 +695,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "SQL" }
+                { "workload-type", "SQL" },
+                { "daily-retention-days", "30" }
             });
 
         // Update both schedule time and retention on the Full sub-policy
@@ -897,6 +898,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task PolicyCreate_DppVault_CreatesElasticSanPolicy_Successfully()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "ElasticSAN backup (DPP) is not available in the Azure US Government test region (DppUserErrorFeatureNotAvailable).");
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
         var policyName = RegisterOrRetrieveVariable("createdEsanPolicyName", $"test-esan-{Random.Shared.NextInt64()}");
 
@@ -951,6 +953,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task PolicyCreate_DppVault_CreatesCosmosDbPolicy_Successfully()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "CosmosDB backup (DPP) is not available in the Azure US Government test region (DppUserErrorFeatureNotAvailable).");
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
         var policyName = RegisterOrRetrieveVariable("createdCosmosDbPolicyName", $"test-cosmos-{Random.Shared.NextInt64()}");
 
@@ -1276,7 +1279,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AzureDisk" }
+                { "workload-type", "AzureDisk" },
+                { "daily-retention-days", "7" }
             });
 
         var result = await CallToolAsync(
@@ -1429,6 +1433,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task ProtectedItemProtect_DppVault_CosmosDbProtection_Succeeds_E2E()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "CosmosDB backup (DPP) is not available in the Azure US Government test region (DppUserErrorFeatureNotAvailable).");
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
         // Note: the GUID suffix is non-deterministic across record/playback runs but the
         // existing recording was captured with the original name; tests-proxy URL matching
@@ -1743,6 +1748,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task GovernanceSoftDelete_RsvVault_ConfiguresSuccessfully()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "RSV soft-delete is not supported in the Azure US Government test region (the vault PATCH API rejects EnhancedSecurityState / SoftDeleteRetentionPeriodInDays).");
+
         // RSV soft-delete now uses Vault PATCH API with RecoveryServicesSoftDeleteSettings
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
@@ -1764,6 +1771,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task GovernanceSoftDelete_RsvVault_WithRetentionDays_ConfiguresSuccessfully()
     {
+        Assert.SkipWhen(Settings.IsAzureUSGovernment, "RSV soft-delete is not supported in the Azure US Government test region (the vault PATCH API rejects EnhancedSecurityState / SoftDeleteRetentionPeriodInDays).");
+
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
         var result = await CallToolAsync(
@@ -2439,6 +2448,12 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
+        // CMK encryption requires a real Key Vault + key. Skip when the environment did not provision
+        // one (e.g. the Azure US Government test deployment), since the placeholder Key Vault URI is
+        // rejected by ARM with 'keyUri parameter is invalid'.
+        var keyVaultUri = Settings.DeploymentOutputs?.GetValueOrDefault("KEY_VAULT_URI");
+        Assert.SkipWhen(string.IsNullOrEmpty(keyVaultUri), "KEY_VAULT_URI deployment output is missing; no CMK Key Vault is provisioned for this environment.");
+
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureEncryption_RSV_SystemAssigned");
 
         var result = await CallToolAsync(
@@ -2449,7 +2464,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "vault-type", "rsv" },
-                { "key-vault-uri", Settings.DeploymentOutputs?.GetValueOrDefault("KEY_VAULT_URI") ?? "https://kv-backup-test.vault.azure.net/" },
+                { "key-vault-uri", keyVaultUri },
                 { "key-name", Settings.DeploymentOutputs?.GetValueOrDefault("KEY_NAME") ?? "backup-cmk" },
                 { "identity-type", "SystemAssigned" }
             });
@@ -2458,7 +2473,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         if (result.HasValue)
         {
-            var text = result.Value.GetProperty("text").GetString() ?? "";
+            var text = result.Value.TryGetProperty("text", out var textElement) ? textElement.GetString() ?? "" : "";
             Output.WriteLine($"Result: {text}");
             Assert.Contains("Succeeded", text);
         }

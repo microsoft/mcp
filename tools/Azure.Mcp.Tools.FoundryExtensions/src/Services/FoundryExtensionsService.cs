@@ -12,6 +12,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
@@ -553,6 +554,16 @@ public class FoundryExtensionsService(IAzureService azureService)
         var clientOptions = new AzureOpenAIClientOptions
         {
             Transport = new HttpClientPipelineTransport(httpClient)
+        };
+
+        // The Azure OpenAI data-plane token audience differs per cloud. Without setting this, the
+        // client requests a public-cloud-scoped token (https://cognitiveservices.azure.com) which is
+        // rejected with 401 Unauthorized by sovereign-cloud endpoints (US Gov, China).
+        clientOptions.Audience = AzureService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => AzureOpenAIAudience.AzureGovernment,
+            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new AzureOpenAIAudience("https://cognitiveservices.azure.cn"),
+            _ => AzureOpenAIAudience.AzurePublicCloud,
         };
 
         switch (authMethod)

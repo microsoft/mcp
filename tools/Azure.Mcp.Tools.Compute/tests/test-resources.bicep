@@ -17,10 +17,13 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_B2s'
+param vmSize string = environment().name == 'AzureUSGovernment' ? 'Standard_D2as_v6' : 'Standard_B2s'
+
+// Standard_D2as_v6 only supports NVMe; Standard_B2s supports SCSI
+var diskControllerType = environment().name == 'AzureUSGovernment' ? 'NVMe' : 'SCSI'
 
 // Compute ignores the default location from eng/common
-var location string = 'eastus2'
+var location string = resourceGroup().location
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -83,7 +86,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
           storageAccountType: 'Standard_LRS'
         }
       }
-      diskControllerType: 'SCSI'
+      diskControllerType: diskControllerType
     }
     osProfile: {
       computerName: '${baseName}-vm'
@@ -138,7 +141,7 @@ resource vmss 'Microsoft.Compute/virtualMachineScaleSets@2024-03-01' = {
             storageAccountType: 'Standard_LRS'
           }
         }
-        diskControllerType: 'SCSI'
+        diskControllerType: diskControllerType
       }
       osProfile: {
         computerNamePrefix: '${baseName}-'

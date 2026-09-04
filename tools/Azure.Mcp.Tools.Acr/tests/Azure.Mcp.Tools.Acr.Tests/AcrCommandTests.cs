@@ -121,4 +121,67 @@ public class AcrCommandTests(ITestOutputHelper output, TestProxyFixture fixture,
         var repos = repoArray.EnumerateArray().Select(e => e.GetString()).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
         Assert.Contains("testrepo", repos);
     }
+
+    [Fact]
+    public async Task Should_handle_empty_subscription_gracefully()
+    {
+        var result = await CallToolAsync(
+            "acr_registry_list",
+            new()
+            {
+                { "subscription", "" }
+            });
+
+        if (TestMode == TestMode.Playback)
+        {
+            // Without a default subscription configured, an empty subscription triggers
+            // validation failure (400) -> null results.
+            Assert.Null(result);
+        }
+        else
+        {
+            // In live runs the server is configured with a default subscription
+            // (AZURE_SUBSCRIPTION_ID), so an empty subscription falls back to it and
+            // returns a registries list.
+            var registries = result.AssertProperty("registries");
+            Assert.Equal(JsonValueKind.Array, registries.ValueKind);
+        }
+    }
+
+    [Fact]
+    public async Task Should_handle_invalid_subscription_gracefully()
+    {
+        // Invalid identifier should reach execution and return structured error details (HasValue)
+        var result = await CallToolAsync(
+            "acr_registry_list",
+            new()
+            {
+                { "subscription", "invalid-subscription" }
+            });
+
+        Assert.NotNull(result);
+        var message = result.AssertProperty("message");
+        Assert.Contains("invalid-subscription", message.GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_validate_required_subscription_parameter()
+    {
+        var result = await CallToolAsync("acr_registry_list", []);
+
+        if (TestMode == TestMode.Playback)
+        {
+            // Without a default subscription configured, a missing subscription option
+            // behaves like other areas (validation -> null).
+            Assert.Null(result);
+        }
+        else
+        {
+            // In live runs the server is configured with a default subscription
+            // (AZURE_SUBSCRIPTION_ID), so a missing subscription falls back to it and
+            // returns a registries list.
+            var registries = result.AssertProperty("registries");
+            Assert.Equal(JsonValueKind.Array, registries.ValueKind);
+        }
+    }
 }

@@ -21,6 +21,8 @@ var staticResourceGroupName = 'mcp-static-${staticSuffix}'
 // Is this deployment to the TME tenant
 var isTmeTenant = tenantId == '70a036f6-8e4d-4615-bad6-149c02e7720d'
 
+var isGovCloud = environment().name == 'AzureUSGovernment'
+
 // Azure OpenAI resource
 resource openai 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (!isTmeTenant) {
   name:  toLower(baseName)
@@ -34,17 +36,21 @@ resource openai 'Microsoft.CognitiveServices/accounts@2023-05-01' = if (!isTmeTe
     publicNetworkAccess: 'Enabled'
     disableLocalAuth: true
   }
-  // Deployment of the text-embedding-3-small model
+  // Deployment of the embedding model
+  // text-embedding-3-small is not available with Standard SKU in Azure Government; use text-embedding-ada-002 there
   resource openaiDeployment 'deployments' = {
     name: 'embedding-model'
     sku: {
-        name: 'Standard'
-        capacity: 50 // This is the Tokens Per Minute (TPM) capacity for the model
+        name: isGovCloud ? 'Standard' : 'GlobalStandard'
+        // This is the Tokens Per Minute (TPM) capacity for the model.
+        // Azure Government has a small shared quota for Text-Embedding-Ada-002,
+        // so request a minimal capacity there to avoid quota exhaustion failures.
+        capacity: isGovCloud ? 10 : 50
     }
     properties: {
         model: {
         format: 'OpenAI'
-        name: 'text-embedding-3-small'
+        name: isGovCloud ? 'text-embedding-ada-002' : 'text-embedding-3-small'
         }
     }
   }
@@ -210,3 +216,4 @@ output staticBaseName string = staticBaseName
 output staticResourceGroupName string = staticResourceGroupName
 output storageAccountName string = storageAccount.name
 output containerName string = storageAccount::blobServices::searchDocsContainer.name
+output embeddingModelName string = isTmeTenant ? 'text-embedding-3-small' : (isGovCloud ? 'text-embedding-ada-002' : 'text-embedding-3-small')

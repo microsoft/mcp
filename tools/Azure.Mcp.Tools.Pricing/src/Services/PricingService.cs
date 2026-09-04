@@ -3,14 +3,13 @@
 
 using Azure.Mcp.Tools.Pricing.Models;
 using AzureRetailPrices;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Pricing.Services;
 
 /// <summary>
 /// Service implementation for Azure Retail Pricing operations.
 /// </summary>
-public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPricingService
+public class PricingService : IPricingService
 {
     private const int MaxResults = 5000;
 
@@ -121,13 +120,15 @@ public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPric
         return value.Replace("'", "''");
     }
 
-    private Uri GetPricingEndpoint() => cloudConfiguration.CloudType switch
+    private static Uri GetPricingEndpoint()
     {
-        AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new("https://prices.azure.com"),
-        AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new("https://prices.azure.cn"),
-        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new("https://prices.azure.us"),
-        _ => new("https://prices.azure.com")
-    };
+        // The Azure Retail Prices API is a single global endpoint that serves pricing for all
+        // Azure clouds (Public, Government, China). Sovereign-cloud-specific hosts such as
+        // prices.azure.us / prices.azure.cn do not exist; pricing for those clouds is returned
+        // by https://prices.azure.com via the armRegionName filter (e.g., usgovvirginia, chinanorth).
+        // See: https://learn.microsoft.com/rest/api/cost-management/retail-prices/azure-retail-prices
+        return new Uri("https://prices.azure.com");
+    }
 
     private static PriceItem MapToPriceItem(RetailPriceItem item)
     {
