@@ -35,9 +35,12 @@ public enum ToolOperationPlane
     Control,
 
     /// <summary>
-    /// The tool performs two distinct user-facing actions that fall on different planes, such as
-    /// creating a resource and then performing a workload operation against it in one call. This is
-    /// rare; a control-plane lookup that merely sets up a data-plane action is
+    /// The tool can act on either plane, so a caller cannot infer a single plane from the tool
+    /// alone. This covers two shapes: a tool that performs two distinct user-facing actions on
+    /// different planes in one call, such as creating a resource and then performing a workload
+    /// operation against it; and a tool that dispatches to one plane or the other depending on the
+    /// arguments it is given, such as a list tool that returns accounts from ARM but databases from
+    /// the service itself. A control-plane lookup that merely sets up a data-plane action is
     /// <see cref="Data"/>, not <see cref="Both"/>.
     /// </summary>
     Both,

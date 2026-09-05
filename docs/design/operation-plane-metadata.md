@@ -52,11 +52,13 @@ A tool's plane is the plane of the API it acts against to produce the result the
 |---|---|
 | `Data` | The tool performs its action(s) against a service data-plane API. |
 | `Control` | The tool performs its action(s) against Azure Resource Manager or another management-plane API. |
-| `Both` | The tool performs two distinct user-facing actions, one on each plane. |
+| `Both` | The tool can act on either plane, so a single plane cannot be inferred from the tool alone. |
 | `NotApplicable` | The tool performs no service-plane operation, such as `tools list`, `server start`, or a local-only utility. |
 | `Unspecified` | The tool has not been classified. This is an unset marker, not a valid answer. |
 
 `NotApplicable` is a deliberate classification meaning "reviewed, and no service plane applies". `Unspecified` means "not yet reviewed" and fails validation.
+
+Classify by the API the work ultimately reaches, not by how the tool reaches it. A tool that shells out to an external CLI is not `NotApplicable` if that CLI calls Azure on the user's behalf; `extension azqr` runs the Azure Quick Review CLI, which scans the subscription through ARM, so it is `Control`. `extension cli generate` and `extension cli install` call no service at all and are genuinely `NotApplicable`.
 
 #### Setup does not count
 
@@ -76,9 +78,15 @@ Applying the rule:
 
 #### When `Both` applies
 
-`Both` is reserved for a tool that performs two distinct actions the user asked for, on different planes. Creating a topic and publishing a seed event to it in a single call would qualify: the user wants the topic *and* the event, and neither call is setup for the other.
+`Both` means a caller cannot infer a single plane from the tool alone. Two shapes qualify.
 
-`Both` is expected to be rare. A tool that merely reaches ARM on its way to a data-plane call is `Data`, not `Both`.
+The first is a tool that performs two distinct actions the user asked for, on different planes, in one call. Creating a topic and publishing a seed event to it would qualify: the user wants the topic *and* the event, and neither call is setup for the other.
+
+The second is a tool that dispatches to one plane or the other depending on the arguments it is given. `cosmos list` is the example in this repository: with no `--account` it lists accounts through ARM, but with `--account` it lists databases through the Cosmos DB data plane. Only one branch runs per invocation, so no single call is on both planes, but the tool as a declared capability reaches both. `mysql list` and `postgres list` have the same shape.
+
+Both shapes are treated identically because consumers of this metadata reason about a tool before it is invoked. A policy that permits only data-plane tools must reject `cosmos list`, because it cannot know which branch a given call will take.
+
+A tool that merely reaches ARM on its way to a data-plane call is `Data`, not `Both`.
 
 ### Default
 
