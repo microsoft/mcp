@@ -186,6 +186,40 @@ public class RecommendationUpdateCommandTests
     }
 
     [Theory]
+    [InlineData("sub1", " ")]
+    [InlineData(" ", "sg1")]
+    public async Task ExecuteAsync_BothScopeOptionsExplicitlyProvided_RejectsBlankValues(
+        string subscription,
+        string serviceGroup)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--service-group", serviceGroup,
+            "--recommendation-id", "rec-1",
+            "--recommendation-status", "Completed");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Specify either --subscription or --service-group, not both", response.Message);
+        SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
+        await Service.DidNotReceive().UpdateRecommendationAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(),
+            Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().UpdateServiceGroupRecommendationAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(),
+            Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
     [InlineData(RecommendationDismissReason.ExcessiveCostInvestmentRequired)]
     [InlineData(RecommendationDismissReason.ImplementationStepsAreUnclear)]
     [InlineData(RecommendationDismissReason.IncompatibleWithTheCurrentConfiguration)]
