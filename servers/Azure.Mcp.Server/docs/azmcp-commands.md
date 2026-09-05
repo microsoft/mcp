@@ -14,6 +14,10 @@ The following options are available for most commands:
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
+> **Note:** The following commands do not support `--auth-method`:
+> - `kusto cluster get`, `kusto cluster list`, `kusto database list`, `kusto query`, `kusto sample`, `kusto table list`, `kusto table schema` — do not support `--auth-method`
+> - `storage account get`, `storage blob get`, `storage blob upload`, `storage blob container create`, `storage blob container get`, `storage table list` — do not support `--auth-method`
+
 ### Discovery with `--learn`
 
 The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:
