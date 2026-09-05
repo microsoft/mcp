@@ -69,9 +69,21 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription <subscription> | none |
 | advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription <subscription> | none |
 | advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in subscription <subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in service group <service-group> | none |
+| advisor_recommendation_update | Change Advisor recommendation <recommendation-id> state to Completed for service group <service-group> | none |
+| advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> done for service group <service-group> | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in subscription <subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in service group <service-group> | none |
+| advisor_recommendation_update | Ignore Advisor recommendation <recommendation-id> because the risk is acceptable for service group <service-group> | none |
+| advisor_recommendation_update | Set Advisor recommendation <recommendation-id> status to Dismissed in subscription <subscription> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in subscription <subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in service group <service-group> | none |
+| advisor_recommendation_update | Snooze Advisor recommendation <recommendation-id> until January 15, 2027 in subscription <subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in subscription <subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in service group <service-group> | none |
+| advisor_recommendation_update | Reopen completed Advisor recommendation <recommendation-id> in subscription <subscription> | none |
+| advisor_recommendation_update | Reset Advisor recommendation <recommendation-id> to New in service group <service-group> | none |
+| advisor_recommendation_update | Update the customer state of Advisor recommendation <recommendation-id> in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> | none |

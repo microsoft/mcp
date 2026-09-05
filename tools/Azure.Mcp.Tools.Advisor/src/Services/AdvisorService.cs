@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
-    private const string RecommendationUpdateApiVersion = "2026-03-01-preview";
+    private const string RecommendationUpdateApiVersion = "2026-08-01-preview";
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
@@ -119,12 +119,9 @@ public class AdvisorService(IAzureService azureService)
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(recommendationId), recommendationId));
-        RecommendationStateUpdateValidator.Validate(
+        recommendationDismissReason = ValidateAndResolveRecommendationUpdate(
             recommendationStatus,
             postponedUntilDateTime,
-            recommendationDismissReason);
-        recommendationDismissReason = RecommendationStateUpdateValidator.ResolveDismissReason(
-            recommendationStatus,
             recommendationDismissReason);
 
         var subscriptionResource = await AzureService.GetSubscription(
@@ -133,13 +130,62 @@ public class AdvisorService(IAzureService azureService)
             cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId
             ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
-        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
-        var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
-
         var relativePath =
             $"/subscriptions/{Uri.EscapeDataString(subscriptionId)}/providers/Microsoft.Advisor/recommendations/" +
-            $"{Uri.EscapeDataString(recommendationId.Trim())}?api-version={RecommendationUpdateApiVersion}";
-        var requestUri = new Uri(managementEndpoint, relativePath);
+            Uri.EscapeDataString(recommendationId.Trim());
+
+        return await UpdateRecommendationCoreAsync(
+            relativePath,
+            recommendationStatus,
+            postponedUntilDateTime,
+            recommendationDismissReason,
+            tenant,
+            cancellationToken);
+    }
+
+    public async Task<Recommendation> UpdateServiceGroupRecommendationAsync(
+        string serviceGroup,
+        string recommendationId,
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime = null,
+        RecommendationDismissReason? recommendationDismissReason = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(serviceGroup), serviceGroup),
+            (nameof(recommendationId), recommendationId));
+        recommendationDismissReason = ValidateAndResolveRecommendationUpdate(
+            recommendationStatus,
+            postponedUntilDateTime,
+            recommendationDismissReason);
+
+        var relativePath =
+            $"/providers/Microsoft.Management/serviceGroups/{Uri.EscapeDataString(serviceGroup.Trim())}" +
+            $"/providers/Microsoft.Advisor/recommendations/{Uri.EscapeDataString(recommendationId.Trim())}";
+
+        return await UpdateRecommendationCoreAsync(
+            relativePath,
+            recommendationStatus,
+            postponedUntilDateTime,
+            recommendationDismissReason,
+            tenant,
+            cancellationToken);
+    }
+
+    private async Task<Recommendation> UpdateRecommendationCoreAsync(
+        string relativePath,
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime,
+        RecommendationDismissReason? recommendationDismissReason,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
+        var requestUri = new Uri(
+            managementEndpoint,
+            $"{relativePath}?api-version={RecommendationUpdateApiVersion}");
         var properties = new Models.RecommendationStatePatchProperties(
             recommendationStatus,
             recommendationStatus == RecommendationStatus.Postponed ? postponedUntilDateTime : null,
@@ -161,6 +207,20 @@ public class AdvisorService(IAzureService azureService)
         using var document = JsonDocument.Parse(response.Content.ToStream());
 
         return ConvertUpdateResponseToAdvisorRecommendationModel(document.RootElement);
+    }
+
+    private static RecommendationDismissReason? ValidateAndResolveRecommendationUpdate(
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime,
+        RecommendationDismissReason? recommendationDismissReason)
+    {
+        RecommendationStateUpdateValidator.Validate(
+            recommendationStatus,
+            postponedUntilDateTime,
+            recommendationDismissReason);
+        return RecommendationStateUpdateValidator.ResolveDismissReason(
+            recommendationStatus,
+            recommendationDismissReason);
     }
 
     private static async Task<Response> SendRecommendationUpdateAsync(
