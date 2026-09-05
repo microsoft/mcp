@@ -4,6 +4,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using NSubstitute;
 using Xunit;
@@ -151,6 +152,23 @@ public class CommandGroupDiscoveryStrategyTests
         // Assert
         Assert.NotEmpty(result);
         Assert.All(result, provider => Assert.True(((CommandGroupServerProvider)provider).ReadOnly));
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated)]
+    [InlineData(StructuredOutputMode.Compact)]
+    public async Task DiscoverServersAsync_WithStructuredOutputMode_ForwardsMode(
+        StructuredOutputMode mode)
+    {
+        var configuration = new ServerRuntimeConfiguration { StructuredOutputMode = mode };
+        var strategy = CreateStrategy(configuration: configuration);
+
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(result);
+        Assert.All(
+            result,
+            provider => Assert.Equal(mode, ((CommandGroupServerProvider)provider).StructuredOutputMode));
     }
 
     [Fact]

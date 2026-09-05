@@ -936,6 +936,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_workspace_list | Show me my Log Analytics workspaces | none |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription | none |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> | none |
+| monitor_workspace_log_search | Find records matching <search_query> in the Basic table <table_name> in Log Analytics workspace <workspace_name> in resource group <resource_group> over <timespan> | none |
+| monitor_workspace_log_search | Search the Auxiliary table <table_name> in workspace <workspace_name> in resource group <resource_group> for <search_query> during <timespan>, limited to <limit> results | none |
+| monitor_workspace_log_search | Search for <search_query> in the Basic or Auxiliary table <table_name> in Log Analytics workspace <workspace_name> over the last day | none |
 
 ## Azure Native ISV
 

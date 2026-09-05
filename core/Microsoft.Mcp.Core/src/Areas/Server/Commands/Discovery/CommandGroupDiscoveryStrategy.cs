@@ -40,6 +40,7 @@ public sealed class CommandGroupDiscoveryStrategy(
             {
                 ReadOnly = _configuration.Value.ReadOnly,
                 Transport = _configuration.Value.Transport,
+                StructuredOutputMode = _configuration.Value.StructuredOutputMode,
                 EntryPoint = EntryPoint,
             })
             .Cast<IMcpServerProvider>();

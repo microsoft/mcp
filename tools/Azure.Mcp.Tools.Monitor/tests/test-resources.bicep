@@ -16,6 +16,44 @@ param testApplicationOid string
 
 param healthModelsLocation string = 'swedencentral'
 
+var logSearchBasicTableName = 'McpBasic_CL'
+var logSearchAuxiliaryTableName = 'McpAuxiliary_CL'
+var logSearchAnalyticsTableName = 'McpAnalytics_CL'
+var logSearchDcrName = '${baseName}-log-search-dcr'
+var logSearchDestinationName = 'log-search-workspace'
+var logSearchColumns = [
+  {
+    name: 'TimeGenerated'
+    type: 'dateTime'
+  }
+  {
+    name: 'FixtureId'
+    type: 'string'
+  }
+  {
+    name: 'Message'
+    type: 'string'
+  }
+  {
+    name: 'Count'
+    type: 'long'
+  }
+  {
+    name: 'Enabled'
+    type: 'boolean'
+  }
+  {
+    name: 'OptionalValue'
+    type: 'string'
+  }
+]
+var logSearchStreamColumns = [
+  for column in logSearchColumns: {
+    name: column.name
+    type: column.type == 'dateTime' ? 'datetime' : column.type
+  }
+]
+
 resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: baseName
   location: location
@@ -30,6 +68,124 @@ resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
     }
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+resource logSearchBasicTable 'Microsoft.OperationalInsights/workspaces/tables@2025-07-01' = {
+  name: logSearchBasicTableName
+  parent: workspace
+  properties: {
+    plan: 'Basic'
+    schema: {
+      name: logSearchBasicTableName
+      columns: logSearchColumns
+    }
+  }
+}
+
+resource logSearchAuxiliaryTable 'Microsoft.OperationalInsights/workspaces/tables@2025-07-01' = {
+  name: logSearchAuxiliaryTableName
+  parent: workspace
+  properties: {
+    plan: 'Auxiliary'
+    schema: {
+      name: logSearchAuxiliaryTableName
+      columns: logSearchColumns
+    }
+  }
+}
+
+resource logSearchAnalyticsTable 'Microsoft.OperationalInsights/workspaces/tables@2025-07-01' = {
+  name: logSearchAnalyticsTableName
+  parent: workspace
+  properties: {
+    plan: 'Analytics'
+    schema: {
+      name: logSearchAnalyticsTableName
+      columns: logSearchColumns
+    }
+  }
+}
+
+resource logSearchDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' = {
+  name: logSearchDcrName
+  location: location
+  kind: 'Direct'
+  properties: {
+    streamDeclarations: {
+      'Custom-${logSearchBasicTableName}': {
+        columns: logSearchStreamColumns
+      }
+      'Custom-${logSearchAuxiliaryTableName}': {
+        columns: logSearchStreamColumns
+      }
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          name: logSearchDestinationName
+          workspaceResourceId: workspace.id
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'Custom-${logSearchBasicTableName}'
+        ]
+        destinations: [
+          logSearchDestinationName
+        ]
+        transformKql: 'source'
+        outputStream: 'Custom-${logSearchBasicTableName}'
+      }
+      {
+        streams: [
+          'Custom-${logSearchAuxiliaryTableName}'
+        ]
+        destinations: [
+          logSearchDestinationName
+        ]
+        transformKql: 'source'
+        outputStream: 'Custom-${logSearchAuxiliaryTableName}'
+      }
+    ]
+  }
+  dependsOn: [
+    logSearchBasicTable
+    logSearchAuxiliaryTable
+  ]
+}
+
+// Generic test infrastructure provides one service principal. The multi-identity OBO denial matrix
+// remains a dedicated external validation.
+resource logAnalyticsReaderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '73c42c96-874c-492b-b04d-ab87d138a893'
+}
+
+resource logSearchReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(workspace.id, testApplicationOid, logAnalyticsReaderRoleDefinition.id)
+  scope: workspace
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: logAnalyticsReaderRoleDefinition.id
+    description: 'Log Analytics Reader for Monitor live tests'
+  }
+}
+
+resource monitoringMetricsPublisherRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '3913510d-42f4-4e42-8a64-420c390055eb'
+}
+
+resource logSearchIngestionRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(logSearchDataCollectionRule.id, testApplicationOid, monitoringMetricsPublisherRoleDefinition.id)
+  scope: logSearchDataCollectionRule
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: monitoringMetricsPublisherRoleDefinition.id
+    description: 'Monitoring Metrics Publisher for Monitor live-test fixtures'
   }
 }
 
@@ -234,3 +390,11 @@ module healthModelsModule 'test-resources.healthmodels.module.bicep' = {
 
 output healthModelParentName string = healthModelsModule.outputs.healthModelAName
 output healthModelChildName string = healthModelsModule.outputs.healthModelBName
+output logSearchWorkspaceName string = workspace.name
+output logSearchWorkspaceCustomerId string = workspace.properties.customerId
+output logSearchBasicTableName string = logSearchBasicTable.name
+output logSearchAuxiliaryTableName string = logSearchAuxiliaryTable.name
+output logSearchAnalyticsTableName string = logSearchAnalyticsTable.name
+output logSearchAuxiliaryLastPlanModifiedDate string = logSearchAuxiliaryTable.properties.lastPlanModifiedDate
+output logSearchDcrImmutableId string = logSearchDataCollectionRule.properties.immutableId
+output logSearchIngestionEndpoint string = logSearchDataCollectionRule.properties.endpoints.logsIngestion
