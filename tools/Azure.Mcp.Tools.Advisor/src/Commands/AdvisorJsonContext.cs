@@ -2,11 +2,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
+using Azure.Mcp.Tools.Advisor.Commands.Remediation;
 using Azure.Mcp.Tools.Advisor.Services.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Commands;
 
 [JsonSerializable(typeof(MetadataGetCommand.MetadataGetResult))]
+[JsonSerializable(typeof(RemediationGetCommand.RemediationGetResult))]
+[JsonSerializable(typeof(Models.RemediationPackage))]
 [JsonSerializable(typeof(RecommendationMetadataListCommand.RecommendationMetadataListResult))]
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
 [JsonSerializable(typeof(RecommendationUpdateCommand.RecommendationUpdateResult))]

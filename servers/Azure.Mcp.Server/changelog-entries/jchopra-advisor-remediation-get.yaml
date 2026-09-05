@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the `advisor remediation get` tool to retrieve the remediation package for a specific Azure Advisor recommendation type id. Depending on the recommendation, the package returns one of three output types: remediation guidance (manual, human-readable steps), a hybrid of manual steps plus executable artifacts, or executable artifacts (Azure CLI, PowerShell, Bicep, and ARM) — along with ordered steps, parameters, and verification."

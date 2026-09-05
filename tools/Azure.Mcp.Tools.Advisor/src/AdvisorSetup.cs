@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
+using Azure.Mcp.Tools.Advisor.Commands.Remediation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -18,12 +19,14 @@ public class AdvisorSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAdvisorService, AdvisorService>();
+        services.AddSingleton<IRemediationService, RemediationService>();
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationUpdateCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
         services.AddSingleton<RecommendationApplyCommand>();
         services.AddSingleton<RecommendationMetadataListCommand>();
         services.AddSingleton<MetadataGetCommand>();
+        services.AddSingleton<RemediationGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -42,6 +45,11 @@ public class AdvisorSetup : IAreaSetup
             "Discover and retrieve the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. List localized guidance, impact, categories, subcategories, supported resource types, actions, and service-retirement details, or get a specific catalog entry by recommendation type ID. Use the list command in greenfield environments with no generated recommendations, filter by resource type during brownfield onboarding, or find service retirements by tracking ID and retirement date. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. List results are ordered High, Medium, then Low impact.");
         advisor.AddSubGroup(metadata);
 
+        var remediation = new CommandGroup(
+            "remediation",
+            "Retrieve the Azure Advisor remediation package for a recommendation type id. Depending on the recommendation, the package returns one of three output types: remediation guidance (manual, human-readable steps), a hybrid of manual steps plus executable artifacts, or executable artifacts such as Azure CLI, PowerShell, Bicep, and ARM. Also includes remediation metadata, safety flags, methods with parameters, ordered steps, and verification. Use when an agent needs step-by-step guidance and/or an executable script to fix a specific Advisor recommendation.");
+        advisor.AddSubGroup(remediation);
+
         // Register Advisor commands
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
@@ -49,6 +57,7 @@ public class AdvisorSetup : IAreaSetup
         recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
         metadata.AddCommand<MetadataGetCommand>(serviceProvider);
+        remediation.AddCommand<RemediationGetCommand>(serviceProvider);
 
         return advisor;
     }
