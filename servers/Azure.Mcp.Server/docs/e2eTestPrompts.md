@@ -1344,6 +1344,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storagesync_cloudendpoint_delete | Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name> | clarification-required |
 | storagesync_cloudendpoint_get | Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name> | none |
 | storagesync_cloudendpoint_get | List all cloud endpoints in sync group <syncgroup-name> | none |
+| storagesync_cloudendpoint_update | Update cloud endpoint <endpoint-name> in sync group <syncgroup-name> to enumerate Azure file share changes every 7 days | none |
 | storagesync_serverendpoint_create | Create a new server endpoint on server <server-name> pointing to local path <local-path> in sync group <syncgroup-name> | none |
 | storagesync_serverendpoint_delete | Delete the server endpoint <endpoint-name> from sync group <syncgroup-name> | none |
 | storagesync_serverendpoint_get | Get the details of server endpoint <endpoint-name> in sync group <syncgroup-name> | none |

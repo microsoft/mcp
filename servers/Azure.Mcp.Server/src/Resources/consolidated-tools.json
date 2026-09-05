@@ -4091,6 +4091,39 @@
       ]
     },
     {
+      "name": "update_azure_storage_sync_cloud_endpoints",
+      "description": "Update Azure File Sync Cloud Endpoint change enumeration settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_cloudendpoint_update"
+      ]
+    },
+    {
       "name": "update_azure_storage_sync_server_endpoints",
       "description": "Update Azure File Sync Server Endpoint configurations and settings.",
       "toolMetadata": {

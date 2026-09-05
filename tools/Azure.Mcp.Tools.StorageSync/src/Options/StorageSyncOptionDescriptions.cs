@@ -32,6 +32,7 @@ public static class StorageSyncOptionDescriptions
     public static class CloudEndpoint
     {
         internal const string CloudEndpointNameDescription = "The name of the cloud endpoint";
+        internal const string ChangeEnumerationIntervalDaysDescription = "The interval in days between Azure file share change enumeration runs. Valid values are 1 through 20";
     }
 
     /// <summary>

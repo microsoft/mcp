@@ -4963,7 +4963,17 @@ azmcp storagesync cloudendpoint create --subscription <subscription> \
                                        --sync-group-name <syncgroup-name> \
                                        --cloud-endpoint-name <endpoint-name> \
                                        --storage-account-resource-id <storage-account-resource-id> \
-                                       --azure-file-share-name <share-name>
+                                       --azure-file-share-name <share-name> \
+                                       [--change-enumeration-interval-days <1-20>]
+
+# Update a Cloud Endpoint's Azure file share change enumeration interval
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint update --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --name <service-name> \
+                                       --sync-group-name <syncgroup-name> \
+                                       --cloud-endpoint-name <endpoint-name> \
+                                       --change-enumeration-interval-days <1-20>
 
 # Delete a Cloud Endpoint (idempotent – succeeds even if the endpoint does not exist)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

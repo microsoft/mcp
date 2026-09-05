@@ -152,6 +152,20 @@ public interface IStorageSyncService
         string cloudEndpointName,
         string storageAccountResourceId,
         string azureFileShareName,
+        int? changeEnumerationIntervalDays = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates a cloud endpoint.
+    /// </summary>
+    Task<CloudEndpointDataSchema> UpdateCloudEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string storageSyncServiceName,
+        string syncGroupName,
+        string cloudEndpointName,
+        int changeEnumerationIntervalDays,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 

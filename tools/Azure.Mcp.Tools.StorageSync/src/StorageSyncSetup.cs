@@ -55,6 +55,7 @@ public class StorageSyncSetup : IAreaSetup
         // Register CloudEndpoint commands
         services.AddSingleton<CloudEndpointGetCommand>();
         services.AddSingleton<CloudEndpointCreateCommand>();
+        services.AddSingleton<CloudEndpointUpdateCommand>();
         services.AddSingleton<CloudEndpointDeleteCommand>();
         services.AddSingleton<CloudEndpointTriggerChangeDetectionCommand>();
 
@@ -112,6 +113,7 @@ public class StorageSyncSetup : IAreaSetup
 
         cloudEndpointGroup.AddCommand<CloudEndpointGetCommand>(serviceProvider);
         cloudEndpointGroup.AddCommand<CloudEndpointCreateCommand>(serviceProvider);
+        cloudEndpointGroup.AddCommand<CloudEndpointUpdateCommand>(serviceProvider);
         cloudEndpointGroup.AddCommand<CloudEndpointDeleteCommand>(serviceProvider);
         cloudEndpointGroup.AddCommand<CloudEndpointTriggerChangeDetectionCommand>(serviceProvider);
 
