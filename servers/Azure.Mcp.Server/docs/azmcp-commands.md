@@ -362,6 +362,7 @@ azmcp adme schema list --endpoint <endpoint> \
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
+# Only current-engine recommendations with a 64-character name hash and an empty serviceGroupId are returned
 # Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
@@ -391,18 +392,27 @@ azmcp advisor recommendation update --subscription <subscription> \
                                     [--postponed-until-date-time <date-time-with-offset>] \
                                     [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
 
-# Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
-# --group-by is optional and defaults to 'category' when omitted
-# Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded
+# Summarize Advisor recommendation counts, totals, rankings, and distributions.
+# Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
+# --group-by defaults to category. All groupings except status include only active New recommendations.
+# Only current-engine recommendations with a 64-character name hash and an empty serviceGroupId are included.
+# Recommendation-type groups return stable type ID keys with English metadata labels. Resource-type groups use
+# properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
+# retirement data prefer metadata values with recommendation-instance fallback.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation summary --subscription <subscription> \
                                      [--group-by <group-by>] \
-                                     [--top <top>] \
-                                     [--category <category>] \
-                                     [--impact <impact>] \
+                                     [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
+                                     [--impact <High|Medium|Low>] \
+                                     [--recommendation-type-id <recommendation-type-id>] \
                                      [--resource-type <resource-type>] \
                                      [--resource <resource>] \
-                                     [--search <search>]
+                                     [--search <search>] \
+                                     [--sub-category <sub-category>] \
+                                     [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>] \
+                                     [--top <1-100>] \
+                                     [--resource-group <resource-group>] \
+                                     [--tenant <tenant>]
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

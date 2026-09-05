@@ -1231,11 +1231,11 @@
     },
     {
       "name": "list_azure_advisor_recommendations",
-      "description": "Get or summarize Azure Advisor recommendations for cost optimization, security, reliability, operational excellence, and performance improvements across Azure resources. Individual recommendation results use the standard ARM resource shape and include the stable recommendation ID in the name field. Supports filtering by category, impact, resource type, resource, and free-text search, and aggregating recommendations into grouped summaries.",
+      "description": "List individual current-engine Azure Advisor recommendation records or summarize that recommendation population with server-side counts, totals, rankings, and distributions. Current-engine recommendations have a 64-character stable name hash and no serviceGroupId. Summary groupings include stable recommendation type IDs with labels, category, impact, impacted resource type, lifecycle status, metadata subcategory, and service-retirement date. Supports filters for category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem text, subcategory, and retirement-date comparisons. Use individual results for recommendation details. Use summaries for every aggregate question, including topical counts, breakdowns, rankings, and retirement counts or date groupings for the next N days or months; never count capped list results client-side.",
       "toolMetadata": {
         "destructive": {
           "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+          "description": "This tool only reads Azure Advisor recommendation and metadata data."
         },
         "idempotent": {
           "value": true,
