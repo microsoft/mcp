@@ -988,6 +988,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | role_assignment_list | List all available role assignments in my subscription | none |
 | role_assignment_list | Show me the available role assignments in my subscription | none |
+| role_assignment_list | List the role assignments on management group <management_group_name> | none |
+| role_assignment_list | List the role assignments on resource group <resource_group_name> | none |
 
 ## Azure Redis
 
