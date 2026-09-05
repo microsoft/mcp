@@ -590,7 +590,7 @@
     },
     {
       "name": "get_azure_databases_details",
-      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List databases, retrieve server configurations and parameters, explore table schemas, query and manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -619,12 +619,10 @@
       },
       "mappedToolList": [
         "mysql_list",
-        "mysql_database_query",
         "mysql_server_config_get",
         "mysql_server_param_get",
         "mysql_table_schema_get",
         "postgres_list",
-        "postgres_database_query",
         "postgres_server_config_get",
         "postgres_server_param_get",
         "postgres_table_schema_get",
@@ -637,6 +635,40 @@
         "cosmos_database_container_item_get",
         "cosmos_database_container_item_text-search",
         "cosmos_database_container_item_vector-search"
+      ]
+    },
+    {
+      "name": "execute_azure_database_query",
+      "description": "Execute an arbitrary SQL statement against an Azure Database for MySQL or Azure Database for PostgreSQL flexible server database. Supports reads such as SELECT as well as statements that modify data or schema, including INSERT, UPDATE, DELETE, and DDL. The statement runs with the permissions of the signed-in user, so what it is allowed to do is determined by that user's database privileges.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "mysql_database_query",
+        "postgres_database_query"
       ]
     },
     {

@@ -15,10 +15,10 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Database;
     Name = "query",
     Title = "Query PostgreSQL Database",
     Description = "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.",
-    Destructive = false,
-    Idempotent = true,
+    Destructive = true,
+    Idempotent = false,
     OpenWorld = false,
-    ReadOnly = true,
+    ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
 public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger)
@@ -31,8 +31,8 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
     {
         try
         {
-            // Validate the query early to avoid sending unsafe SQL to the server.
-            SqlQueryValidator.EnsureReadOnlySelect(options.Query);
+            // Validate the query early to reject malformed or stacked statements.
+            SqlQueryValidator.ValidateQuery(options.Query);
             List<string> queryResult = await _postgresService.ExecuteQueryAsync(
                 options.AuthType,
                 options.User,

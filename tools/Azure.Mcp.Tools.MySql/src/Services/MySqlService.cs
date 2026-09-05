@@ -20,62 +20,9 @@ public sealed class MySqlService(IAzureService azureService)
     // Maximum allowed query length in characters to prevent oversized inputs
     private const int MaxQueryLengthChars = 10_000;
 
-    // Static arrays for security validation - initialized once per class
-    private static readonly string[] DangerousKeywords =
-    [
-        // Data manipulation that could be harmful
-        "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
-        // Set operations that can be used for data exfiltration
-        "UNION", "INTERSECT", "EXCEPT",
-        // Administrative operations
-        "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
-        // Information disclosure
-        "SHOW MASTER", "SHOW SLAVE", "SHOW BINARY", "SHOW BINLOG",
-        // System operations
-        "LOAD DATA", "OUTFILE", "DUMPFILE", "LOAD_FILE", "INTO OUTFILE",
-        // User/privilege management
-        "CREATE USER", "DROP USER", "ALTER USER", "RENAME USER",
-        // Database structure changes
-        "CREATE DATABASE", "DROP DATABASE", "CREATE SCHEMA", "DROP SCHEMA",
-        // Stored procedures and functions
-        "CREATE PROCEDURE", "DROP PROCEDURE", "CREATE FUNCTION", "DROP FUNCTION",
-        // Triggers and events
-        "CREATE TRIGGER", "DROP TRIGGER", "CREATE EVENT", "DROP EVENT",
-        // Views that could modify data
-        "CREATE VIEW", "DROP VIEW",
-        // Index operations
-        "CREATE INDEX", "DROP INDEX",
-        // Table operations
-        "CREATE TABLE", "DROP TABLE", "RENAME TABLE",
-        // Lock operations
-        "LOCK TABLES", "UNLOCK TABLES",
-        // Transaction control in unsafe contexts
-        "START TRANSACTION", "BEGIN", "COMMIT", "ROLLBACK",
-        // System variables
-        "SET GLOBAL", "SET SESSION", "SET SQL_MODE"
-    ];
-
-    private static readonly string[] ObfuscationFunctions =
-    [
-        "CHAR", "CHR", "ASCII", "ORD", "HEX", "UNHEX", "CONV",
-        "CONVERT", "CAST", "BINARY", "CONCAT_WS", "MAKE_SET",
-        "ELT", "FIELD", "FIND_IN_SET", "EXPORT_SET", "LOAD_FILE",
-        "FROM_BASE64", "TO_BASE64", "COMPRESS", "UNCOMPRESS",
-        "AES_ENCRYPT", "AES_DECRYPT", "DES_ENCRYPT", "DES_DECRYPT",
-        "ENCODE", "DECODE", "PASSWORD", "OLD_PASSWORD"
-    ];
-
-    // Pre-compiled regex patterns for word-boundary keyword matching
+    // Pre-compiled regex used to detect multiple / stacked statements
     private static readonly Regex s_multipleStatementsPattern =
         RegexHelper.CreateRegex(@";\s*\w", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex DangerousKeywordsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", DangerousKeywords.Select(Regex.Escape)) + @")\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex ObfuscationFunctionsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
@@ -153,6 +100,11 @@ public sealed class MySqlService(IAzureService azureService)
         return builder.ConnectionString;
     }
 
+    /// <summary>
+    /// Performs lightweight structural validation of a query. This does not restrict which SQL verbs may be
+    /// executed; the caller's database permissions are the authority on what is allowed. Validation is limited
+    /// to rejecting empty or oversized input, SQL comments, and multiple / stacked statements.
+    /// </summary>
     internal static void ValidateQuerySafety(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -190,35 +142,7 @@ public sealed class MySqlService(IAzureService azureService)
 
         if (s_multipleStatementsPattern.IsMatch(cleanedQuery))
         {
-            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
-        }
-
-        // List of dangerous SQL keywords that should be blocked (word-boundary matching)
-        var keywordMatch = DangerousKeywordsPattern.Match(cleanedQuery);
-        if (keywordMatch.Success)
-        {
-            throw new InvalidOperationException($"Query contains dangerous keyword '{keywordMatch.Value.ToUpperInvariant()}' which is not allowed for security reasons.");
-        }
-
-        // Check for character conversion functions that may be used for obfuscation
-        var funcMatch = ObfuscationFunctionsPattern.Match(cleanedQuery);
-        if (funcMatch.Success)
-        {
-            throw new InvalidOperationException($"Character conversion and obfuscation functions like '{funcMatch.Groups[1].Value.ToUpperInvariant()}' are not allowed for security reasons.");
-        }
-
-        // Additional validation: Only allow SELECT statements
-        var trimmedQuery = cleanedQuery.Trim();
-        var allowedStartPatterns = new[]
-        {
-            "SELECT"
-        };
-
-        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern, StringComparison.OrdinalIgnoreCase));
-
-        if (!isAllowed)
-        {
-            throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
+            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single statement.");
         }
     }
 
