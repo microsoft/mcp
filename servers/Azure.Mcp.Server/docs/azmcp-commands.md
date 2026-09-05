@@ -5176,6 +5176,9 @@ azmcp azureterraform conftest plan --plan-folder <plan-folder> \
 
 ### Azure Virtual Desktop Operations
 
+> [!NOTE]
+> The `virtualdesktop hostpool list`, `virtualdesktop hostpool host list`, and `virtualdesktop hostpool host user-list` commands do not support the `--auth-method` global option. Authentication always uses the default credential flow.
+
 ```bash
 # List Azure Virtual Desktop host pools in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
