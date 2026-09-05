@@ -10,7 +10,7 @@ The following options are available for most commands:
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
-| `--tenant-id` | No | - | Azure tenant ID for authentication |
+| `--tenant` | No | - | The Microsoft Entra ID tenant GUID identifier or display name. |
 | `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
