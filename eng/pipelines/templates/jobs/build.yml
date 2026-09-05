@@ -51,6 +51,7 @@ jobs:
     displayName: 'Download build info artifact'
 
   - checkout: self
+    fetchTags: false
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
