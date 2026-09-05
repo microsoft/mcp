@@ -352,12 +352,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> | none |
+| compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> | clarification-required |
 | compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> | clarification-required |
-| compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> | none |
-| compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication | none |
-| compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | none |
-| compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> | none |
+| compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> | clarification-required |
+| compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication | clarification-required |
+| compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | clarification-required |
+| compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> | clarification-required |
 | compute_vm_create | Create Linux VM <vm-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name> | none |
 | compute_vm_get | List all virtual machines in my subscription | none |
 | compute_vm_get | Show me all VMs in my subscription | none |
@@ -589,7 +589,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventgrid_subscription_list | Show all Event Grid subscriptions in my subscription | none |
 | eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> | none |
 | eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> | none |
-| eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> | none |
+| eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> | context-required |
 
 ## Azure Event Hubs
 
@@ -939,7 +939,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
 | monitor_metrics_batchquery | Compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period> | none |
 | monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |
-| monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
+| monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace <namespace> | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
 | monitor_metrics_query | Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
@@ -980,7 +980,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | quota_region_availability_list | Show me the available regions for these resource types <resource_types> | none |
-| quota_usage_check | Check usage information for <resource_type> in region <region> | none |
+| quota_usage_check | Check usage information for <resource_type> in region <region> | context-required |
 
 ## Azure RBAC
 
@@ -1159,7 +1159,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | servicebus_queue_details | Show me the details of service bus <service_bus_name> queue <queue_name> | none |
 | servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> | none |
-| servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> | none |
+| servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> | clarification-required |
 
 ## Azure Service Fabric
 
@@ -1213,18 +1213,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| sql_server_create | Create a new Azure SQL server named <server_name> in resource group <resource_group_name> | none |
-| sql_server_create | Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user> | none |
-| sql_server_create | Set up a new SQL server called <server_name> in my resource group <resource_group_name> | none |
+| sql_server_create | Create a new Azure SQL server named <server_name> in resource group <resource_group_name> | clarification-required |
+| sql_server_create | Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user> | clarification-required |
+| sql_server_create | Set up a new SQL server called <server_name> in my resource group <resource_group_name> | clarification-required |
 | sql_server_delete | Delete the Azure SQL server <server_name> from resource group <resource_group_name> | none |
 | sql_server_delete | Remove the SQL server <server_name> from my subscription | none |
 | sql_server_delete | Delete SQL server <server_name> permanently | none |
 | sql_server_entra-admin_list | List Microsoft Entra ID administrators for SQL server <server_name> | none |
 | sql_server_entra-admin_list | Show me the Entra ID administrators configured for SQL server <server_name> | none |
 | sql_server_entra-admin_list | What Microsoft Entra ID administrators are set up for my SQL server <server_name>? | none |
-| sql_server_firewall-rule_create | Create a firewall rule for my Azure SQL server <server_name> | none |
+| sql_server_firewall-rule_create | Create a firewall rule for my Azure SQL server <server_name> | clarification-required |
 | sql_server_firewall-rule_create | Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name> | none |
-| sql_server_firewall-rule_create | Create a new firewall rule named <rule_name> for SQL server <server_name> | none |
+| sql_server_firewall-rule_create | Create a new firewall rule named <rule_name> for SQL server <server_name> | clarification-required |
 | sql_server_firewall-rule_delete | Delete a firewall rule from my Azure SQL server <server_name> | none |
 | sql_server_firewall-rule_delete | Remove the firewall rule <rule_name> from SQL server <server_name> | none |
 | sql_server_firewall-rule_delete | Delete firewall rule <rule_name> for SQL server <server_name> | none |
@@ -1243,18 +1243,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | sreagent_agents_list | List all Azure SRE Agent resources in my subscription | none |
 | sreagent_agents_get | Show me the details of SRE Agent <agent_name> in resource group <resource_group> | none |
-| sreagent_agents_create | Use SRE Agent sub-agent management to create sub-agent <name> on SRE Agent <agent_name> | none |
+| sreagent_agents_create | Use SRE Agent sub-agent management to create sub-agent <name> on SRE Agent <agent_name> | clarification-required |
 | sreagent_agents_delete | Use SRE Agent sub-agent management to delete sub-agent <name> from SRE Agent <agent_name> | investigation-required |
 | sreagent_agents_tools_list | List the custom tools attached to SRE Agent <agent_name> | none |
 | sreagent_agents_tools_get | Get the definition of custom tool <tool_name> from SRE Agent <agent_name> | none |
-| sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> | none |
+| sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> | clarification-required |
 | sreagent_skills_list | List all skills available on SRE Agent <agent_name> | none |
-| sreagent_skills_create | Add a new skill called <skill_name> to SRE Agent <agent_name> | none |
+| sreagent_skills_create | Add a new skill called <skill_name> to SRE Agent <agent_name> | clarification-required |
 | sreagent_skills_delete | Delete the skill <skill_name> from SRE Agent <agent_name> | none |
 | sreagent_connectors_list | List the connectors configured on SRE Agent <agent_name> | none |
 | sreagent_connectors_get | Show me the details of connector <connector_name> on SRE Agent <agent_name> | none |
-| sreagent_connectors_create_kusto | Create a Kusto connector on SRE Agent <agent_name> | none |
-| sreagent_connectors_create_mcp | Create an MCP connector on SRE Agent <agent_name> | none |
+| sreagent_connectors_create_kusto | Create a Kusto connector on SRE Agent <agent_name> | clarification-required |
+| sreagent_connectors_create_mcp | Create an MCP connector on SRE Agent <agent_name> | clarification-required |
 | sreagent_connectors_delete | Remove the connector <connector_name> from SRE Agent <agent_name> | none |
 | sreagent_connectors_test | Test the connector <connector_name> on SRE Agent <agent_name> and list its tools | none |
 | sreagent_hooks_list | List the hooks configured for SRE Agent <agent_name> | none |
@@ -1265,8 +1265,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_hooks_thread_deactivate | Deactivate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> | none |
 | sreagent_threads_list | List the active threads on SRE Agent <agent_name> | none |
 | sreagent_threads_get | Show me thread <thread_id> on SRE Agent <agent_name> | none |
-| sreagent_threads_create | Start a new thread on SRE Agent <agent_name> | none |
-| sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> | none |
+| sreagent_threads_create | Start a new thread on SRE Agent <agent_name> | clarification-required |
+| sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> | context-required |
 | sreagent_threads_investigate | Use SRE Agent <agent_name> to investigate this issue: <issue> | none |
 | sreagent_threads_investigate_yolo | Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting | none |
 | sreagent_threads_delete | Delete thread <thread_id> from SRE Agent <agent_name> | none |
@@ -1277,11 +1277,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_scheduledtasks_resume | Resume the scheduled task <task_id> on SRE Agent <agent_name> | none |
 | sreagent_scheduledtasks_delete | Delete the scheduled task <task_id> from SRE Agent <agent_name> | none |
 | sreagent_incidents_active_list | List the active incidents on SRE Agent <agent_name> | none |
-| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> | none |
+| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> | clarification-required |
 | sreagent_incidents_plans_list | List the incident response plans configured on SRE Agent <agent_name> | none |
-| sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> | none |
-| sreagent_incidents_setup_pagerduty | Configure the PagerDuty incident-management integration for SRE Agent <agent_name> | none |
-| sreagent_incidents_setup_servicenow | Configure the ServiceNow incident-management integration for SRE Agent <agent_name> | none |
+| sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> | clarification-required |
+| sreagent_incidents_setup_pagerduty | Configure the PagerDuty incident-management integration for SRE Agent <agent_name> | clarification-required |
+| sreagent_incidents_setup_servicenow | Configure the ServiceNow incident-management integration for SRE Agent <agent_name> | clarification-required |
 | sreagent_workflows_generate | Generate a YAML workflow for a tool named <tool_name> | clarification-required |
 | sreagent_workflows_validate | Validate the following SRE Agent workflow YAML | context-required |
 | sreagent_workflows_apply | Apply the workflow YAML to SRE Agent <agent_name> | none |
@@ -1294,7 +1294,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_architecture_plan | Use SRE Agent architecture planning for these requirements: <requirements> | investigation-required |
 | sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> | none |
 | sreagent_commonprompts_get | Show me the common prompt <prompt_name> on SRE Agent <agent_name> | none |
-| sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> | none |
+| sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> | clarification-required |
 | sreagent_commonprompts_delete | Permanently remove and erase common prompt <prompt_name> from SRE Agent <agent_name> | none |
 
 ## Azure Storage
@@ -1445,16 +1445,16 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| foundryextensions_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project | none |
-| foundryextensions_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project | none |
-| foundryextensions_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource | none |
-| foundryextensions_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> | none |
-| foundryextensions_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource | none |
-| foundryextensions_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource | none |
-| foundryextensions_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource | none |
-| foundryextensions_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource | none |
-| foundryextensions_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource | none |
-| foundryextensions_openai_models-list | Use Microsoft Foundry Extensions to list the OpenAI model deployments in my Microsoft Foundry resource | investigation-required |
+| foundryextensions_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project | context-required |
+| foundryextensions_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project | context-required |
+| foundryextensions_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource | context-required |
+| foundryextensions_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> | context-required |
+| foundryextensions_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_models-list | Use Microsoft Foundry Extensions to list the OpenAI model deployments in my Microsoft Foundry resource | context-required |
 | foundryextensions_resource_get | Use Microsoft Foundry Extensions to list all Microsoft Foundry resources in my subscription | none |
 | foundryextensions_resource_get | Use Microsoft Foundry Extensions to list Microsoft Foundry resources in resource group <resource_group_name> | none |
 | foundryextensions_resource_get | Use Microsoft Foundry Extensions to get details for resource <resource_name> in resource group <resource_group_name> | none |
