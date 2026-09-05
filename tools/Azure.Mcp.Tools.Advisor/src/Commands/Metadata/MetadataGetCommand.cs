@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
     Description = "Get Azure Advisor metadata for a specific recommendation type id. " +
         "Explains what an Advisor recommendation type means, including its display name, category, sub-category, " +
         "impact, supported resource type, description, potential benefits, and remediation actions.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -30,6 +30,7 @@ namespace Azure.Mcp.Tools.Insights.Commands;
 
         This command can only be used if the client supports MCP sampling.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

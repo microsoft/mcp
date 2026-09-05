@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
         to list usage plans (id and name only): for the given resource group, or for the whole subscription when
         no resource group is provided.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

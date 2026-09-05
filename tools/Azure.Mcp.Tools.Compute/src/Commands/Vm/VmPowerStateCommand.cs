@@ -29,6 +29,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         Do not use this to query, check, or get a VM's current state; use the VM get command with --instance-view instead.
         """,
     Title = "Change Virtual Machine Power State",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

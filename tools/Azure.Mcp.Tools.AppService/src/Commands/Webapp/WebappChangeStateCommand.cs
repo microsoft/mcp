@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
         Returns a message indicating the result of the operation.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

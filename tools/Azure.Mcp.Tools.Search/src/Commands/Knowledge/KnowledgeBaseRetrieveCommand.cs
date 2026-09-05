@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         - service
         - knowledge-base
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

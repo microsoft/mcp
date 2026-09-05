@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Name = "investigate",
     Title = "Investigate With Agent",
     Description = "Investigate an issue or incident using an SRE Agent. Sends your investigation message and automatically follows up on agent questions until the investigation is complete.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,

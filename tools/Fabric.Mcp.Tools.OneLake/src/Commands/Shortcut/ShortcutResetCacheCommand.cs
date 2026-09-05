@@ -19,6 +19,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         re-resolve from the destination. Use sparingly — primarily for debugging
         stale-cache issues. Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

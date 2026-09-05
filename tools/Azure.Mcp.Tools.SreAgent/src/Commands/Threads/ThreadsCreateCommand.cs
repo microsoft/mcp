@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Name = "create",
     Title = "Create Thread",
     Description = "Create a new thread on an SRE Agent and start a conversation by sending the opening message. Returns the initial agent response.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,

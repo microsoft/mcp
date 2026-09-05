@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -31,6 +32,12 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         Assert.Equal("list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+    }
+
+    [Fact]
+    public void Command_OperationPlane_IsControl()
+    {
+        Assert.Equal(ToolOperationPlane.Control, Command.Metadata.OperationPlane);
     }
 
     [Fact]

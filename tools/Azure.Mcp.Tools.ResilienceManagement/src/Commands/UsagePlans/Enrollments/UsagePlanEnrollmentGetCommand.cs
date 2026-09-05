@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
         enrollment (id, name, the associated service group id, provisioning state, and error details). Omit the
         name to list all enrollments of the usage plan, returning only their id and name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

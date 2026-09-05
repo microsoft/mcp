@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     Name = "update",
     Title = "Update Backup Policy",
     Description = "Modifies an existing RSV backup policy. Updates the backup schedule time and daily retention days for VM, SQL, SAP HANA, and file share workload policies. The named policy must already exist in the vault.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

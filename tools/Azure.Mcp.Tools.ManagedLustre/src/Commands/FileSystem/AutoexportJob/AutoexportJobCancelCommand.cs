@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

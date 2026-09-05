@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Name = "list-pipelines",
     Title = "List Pipelines",
     Description = "Lists all pipelines in a specified Microsoft Fabric workspace. Requires the workspace ID.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,

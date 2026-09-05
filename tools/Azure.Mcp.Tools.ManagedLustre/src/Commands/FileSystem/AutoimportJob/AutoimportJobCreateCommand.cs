@@ -29,6 +29,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
         - enable-deletions: Enable deletions during auto import (default: false)
         - maximum-errors: Max errors before failure (-1: infinite, 0: immediate exit, default: none)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

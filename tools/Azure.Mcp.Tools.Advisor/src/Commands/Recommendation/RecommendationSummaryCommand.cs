@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Optional --top caps how many buckets are displayed (defaults to all); the 'Unknown' bucket is always preserved at the tail so users can see uncategorized items. " +
         "'TotalRecommendations' always reflects the full filtered population regardless of --top. " +
         "Presentation guidance: when rendering Groups as a table, include every returned bucket — in particular the 'Unknown' bucket must appear as a regular row at the bottom of the table, NOT relegated to a footnote, since it represents real recommendations that lack an extractable group key.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

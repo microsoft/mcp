@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
         Guard's ARM ID, location, and the list of vault critical operations it protects and
         excludes.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

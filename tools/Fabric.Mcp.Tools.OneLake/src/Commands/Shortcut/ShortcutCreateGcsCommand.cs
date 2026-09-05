@@ -19,6 +19,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         connection ID for authentication and a target URL. Requires
         OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

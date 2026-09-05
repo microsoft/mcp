@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Name = "create",
     Title = "Create File Share",
     Description = "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

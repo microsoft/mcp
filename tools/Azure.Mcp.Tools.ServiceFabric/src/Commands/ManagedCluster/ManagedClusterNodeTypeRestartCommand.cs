@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
     Name = "restart",
     Title = "Restart Service Fabric Managed Cluster Nodes",
     Description = "Restart nodes of a specific node type in a Service Fabric managed cluster. Requires the cluster name, node type, and list of node names to restart. Optionally specify the update type (Default or ByUpgradeDomain).",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

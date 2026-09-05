@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Workspace;
     Name = "list-workspaces",
     Title = "List OneLake Workspaces",
     Description = "Lists all Fabric workspaces accessible via OneLake data plane API. Use this when the user needs to view available workspaces or select a workspace for data operations. Returns workspace names and IDs.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

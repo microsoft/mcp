@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands.Conftest;
         ('all', 'Azure-Proactive-Resiliency-Library-v2', or 'avmsec'), severity filter (for avmsec), and custom policy paths.
         If conftest is not installed locally, returns installation instructions instead.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

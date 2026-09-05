@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         (azurerm or azapi), custom resource name, output folder, parallelism, and whether to include role assignments.
         If aztfexport is not installed locally, returns installation instructions instead.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

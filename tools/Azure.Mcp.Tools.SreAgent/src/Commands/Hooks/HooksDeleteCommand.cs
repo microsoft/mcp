@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
     Name = "delete",
     Title = "Delete SRE Agent Hook",
     Description = "Delete a hook from an Azure SRE Agent resource. Required: --subscription, --agent, --name.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

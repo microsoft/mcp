@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Name = "list-recent",
     Title = "List Recent Cosmos DB Documents",
     Description = "Retrieve the most recently modified documents from a Cosmos DB container, ordered by the system timestamp (_ts) in descending order. Use the --count option to control how many documents are returned (1-20, default is 10).",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

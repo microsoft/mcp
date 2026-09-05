@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
         Gets/retrieves a list of all firewall rules configured for a SQL server, including their IP address ranges
         and rule names. Returns an array of firewall rule objects with their properties.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

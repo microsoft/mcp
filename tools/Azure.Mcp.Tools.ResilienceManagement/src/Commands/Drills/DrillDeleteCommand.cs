@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
         and cannot be undone. Use this only when the drill is no longer needed; do not use it to stop a running
         drill execution.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

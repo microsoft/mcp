@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
         key filter and label filter. Each key-value includes its key, value, label, content type, ETag, last modified time,
         and lock status.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

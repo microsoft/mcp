@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     Name = "best-practices",
     Title = "Best Practices",
     Description = "Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Query;
         When neither --query nor --filters is provided, a bare 'SELECT * FROM devices' runs. Prefer projecting only the specific property fields you need; avoid raw 'SELECT *' unless you want full device twins.
         Use --max-count to cap the total number of items returned across all pages; omit it to return every matching item. If the query matches more items than the cap, the tool returns an error stating the max-count limit was hit (the partial items are still included) - raise --max-count, narrow the query, or omit --max-count to get a complete result.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

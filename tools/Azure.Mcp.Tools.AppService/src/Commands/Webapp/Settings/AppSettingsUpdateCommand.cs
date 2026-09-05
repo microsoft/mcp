@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
         For add and set update types, both the application setting name and value are required. For delete update type, only the application setting name is required.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

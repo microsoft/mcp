@@ -21,6 +21,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     Name = "read",
     Title = "Read OneLake File",
     Description = "Read the contents of a file from OneLake storage.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

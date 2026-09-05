@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Skills;
     Name = "list",
     Title = "List SRE Agent Skills",
     Description = "Lists custom skills on a targeted SRE Agent resource. Required: --subscription and --agent.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

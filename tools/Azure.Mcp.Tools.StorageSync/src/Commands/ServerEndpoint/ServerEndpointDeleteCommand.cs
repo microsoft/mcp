@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
     Name = "delete",
     Title = "Delete Server Endpoint",
     Description = "Delete a server endpoint from a sync group.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

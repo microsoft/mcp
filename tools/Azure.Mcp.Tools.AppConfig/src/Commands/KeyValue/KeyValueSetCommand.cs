@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
         label otherwise the default label will be used. You can also specify a content type to indicate how the value
         should be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

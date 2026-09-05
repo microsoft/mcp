@@ -28,6 +28,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
         The --resource-group parameter is optional for listing operations but required when getting a specific namespace.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

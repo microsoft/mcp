@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
         This command also provides guidance for code generation on Microsoft Foundry for application development.
         When the request involves code generation of AI components or AI applications in any capacity, use this command instead of calling the general code generation best practices command.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

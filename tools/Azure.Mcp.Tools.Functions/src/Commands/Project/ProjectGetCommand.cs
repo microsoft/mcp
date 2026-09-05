@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Functions.Commands.Project;
     Name = "get",
     Title = "Get Project Template",
     Description = "Get project scaffolding information for a new Azure Functions app. Call this tool when the user wants to create, initialize, or set up a new Azure Functions project. Returns the complete project structure, required files configurations and setup instructions for the specific language that agents use to create files. Use after functions language list and before functions template get.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

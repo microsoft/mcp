@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     Name = "generate",
     Title = "Generate CLI Command",
     Description = "Generate Azure CLI (az) commands used to accomplish a goal described by the user. This tool incorporates CLI knowledge beyond what you know. Use this tool when the user asks for Azure CLI commands or wants to use the Azure CLI to accomplish something.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

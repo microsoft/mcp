@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
         Gets a list of all Microsoft Entra ID administrators for a SQL server, including their display names,
         object IDs, and tenant information. Returns an array of Entra ID administrator objects with their properties.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

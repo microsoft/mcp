@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
         (by setting start and end IP to the same value) or a range of IP addresses. Returns
         the created firewall rule with its properties.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

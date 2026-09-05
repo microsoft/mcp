@@ -374,6 +374,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(metadata);
+        Assert.Equal(ToolOperationPlane.NotApplicable, metadata.OperationPlane);
         Assert.False(metadata.Destructive, "Tool list command should not be destructive");
         Assert.True(metadata.ReadOnly, "Tool list command should be read-only");
     }
@@ -399,10 +400,11 @@ public class ToolsListCommandTests
             Assert.NotNull(command.Metadata);
 
             // Verify that metadata has the expected properties
-            // Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
+            // OperationPlane, Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
             var metadata = command.Metadata;
 
             // Check that at least the main properties are accessible
+            Assert.True(Enum.IsDefined(metadata.OperationPlane), "OperationPlane should be defined");
             Assert.True(metadata.Destructive || !metadata.Destructive, "Destructive should be defined");
             Assert.True(metadata.ReadOnly || !metadata.ReadOnly, "ReadOnly should be defined");
             Assert.True(metadata.Idempotent || !metadata.Idempotent, "Idempotent should be defined");

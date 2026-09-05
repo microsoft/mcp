@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Communication.Commands.Email;
     Name = "send",
     Title = "Send Email",
     Description = "Send emails to one or multiple recipients to the given email-address. The emails can be plain text or HTML formatted. You can include a subject, custom sender name, CC and BCC recipients, and reply-to addresses.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,

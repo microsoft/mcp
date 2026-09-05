@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
         exercise. Provide a drill name to return that single drill's own definition — its schedule,
         configuration, and metadata. Omit the name to enumerate every resilience drill by id and name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
