@@ -954,6 +954,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "Summarize my Advisor recommendations by category"
+* "Which resource types have the most high-impact Advisor recommendations?"
 * "Mark an Advisor recommendation as completed"
 * "Dismiss an Advisor recommendation because the risk is acceptable"
 * "Postpone an Advisor recommendation until December 31, 2026"
