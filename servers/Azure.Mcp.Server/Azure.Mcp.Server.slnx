@@ -33,6 +33,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Acr/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Acr/tests/Azure.Mcp.Tools.Acr.Tests/Azure.Mcp.Tools.Acr.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Adme/src/Azure.Mcp.Tools.Adme.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.Adme/tests/Azure.Mcp.Tools.Adme.Tests/Azure.Mcp.Tools.Adme.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Advisor/src/Azure.Mcp.Tools.Advisor.csproj" />

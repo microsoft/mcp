@@ -1102,6 +1102,12 @@ Example prompts that generate Azure CLI commands:
 * "Search documents in container 'items' from database 'mydb' where 'description' contains 'wireless headphones'"
 * "Find documents similar to 'noise cancelling earbuds' in container 'items' of database 'mydb' using vector property 'embedding'"
 
+### Azure Data Manager for Energy
+
+* "Check authentication and connectivity for my ADME endpoint and data partition"
+* "Get an ADME schema by kind"
+* "List shared Well schemas from my ADME data partition"
+
 ### 🧮 Azure Data Explorer
 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
@@ -1310,7 +1316,7 @@ Example prompts that generate Azure CLI commands:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **44+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 📊 **Azure Advisor** - Advisor recommendations, recommendation state management, and recommendation metadata
@@ -1327,6 +1333,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
