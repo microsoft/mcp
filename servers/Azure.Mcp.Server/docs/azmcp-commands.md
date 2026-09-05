@@ -1062,7 +1062,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--log-retention-days <int>] \
                                 [--is-compression <true|false>] \
                                 [--is-sql-compression <true|false>] \
-                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags / AKS ---
+                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags ---
                                 [--smart-tier <true|false>] \
                                 [--enable-snapshot-backup <true|false>] \
                                 [--snapshot-instant-rp-retention-days <int>] \
@@ -1071,12 +1071,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--vault-tier-copy-after-days <int>] \
                                 [--backup-mode <Continuous|Vaulted>] \
                                 [--pitr-retention-days <int>] \
-                                [--policy-tags <key=value[,key=value...]>] \
-                                [--aks-snapshot-resource-group <resource-group>] \
-                                [--aks-included-namespaces <ns[,ns...]>] \
-                                [--aks-excluded-namespaces <ns[,ns...]>] \
-                                [--aks-label-selectors <selector[,selector...]>] \
-                                [--aks-include-cluster-scope-resources <true|false>]
+                                [--policy-tags <key=value[,key=value...]>]
 
 # Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1136,7 +1131,12 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>] \
                                         [--disk-list-setting <include|exclude|resetexclusionsettings>] \
                                         [--disks-list <lun[,lun...]>] \
-                                        [--exclude-all-data-disks]
+                                        [--exclude-all-data-disks] \
+                                        [--aks-snapshot-resource-group <resource-group>] \
+                                        [--aks-included-namespaces <ns[,ns...]>] \
+                                        [--aks-excluded-namespaces <ns[,ns...]>] \
+                                        [--aks-label-selectors <selector[,selector...]>] \
+                                        [--aks-include-cluster-scope-resources <true|false>]
 
 # Updates the backup configuration of an already-protected RSV IaaS VM. Supports changing the attached backup policy and/or the selective disk backup configuration. Only supported for RSV IaaS VM protected items. At least one of --policy, --disk-list-setting, --disks-list, or --exclude-all-data-disks must be provided.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
