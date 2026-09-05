@@ -11,7 +11,6 @@ The following options are available for most commands:
 |-----------|----------|---------|-------------|
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
 | `--tenant-id` | No | - | Azure tenant ID for authentication |
-| `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
@@ -624,7 +623,7 @@ azmcp appconfig kv set --subscription <subscription> \
 ### Azure App Lens Operations
 
 > [!NOTE]
-> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
+> The `applens resource diagnose` command does not support any `--retry-*` options.
 
 ```bash
 # Diagnose resource using Azure App Lens
@@ -2294,9 +2293,6 @@ azmcp containerapps list --subscription <subscription> \
 
 ### Azure Container Registry (ACR) Operations
 
-> [!NOTE]
-> The `acr registry list` and `acr registry repository list` commands do not support `--auth-method`.
-
 ```bash
 # List Azure Container Registries in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2333,7 +2329,8 @@ azmcp acr registry repository list --subscription <subscription> \
 azmcp cosmos list --subscription <subscription> \
                   [--account <account>] \
                   [--database <database>] \
-                  [--resource-group <resource-group>]
+                  [--resource-group <resource-group>] \
+                  [--auth-method <auth-method>]
 
 # Query items in a Cosmos DB container
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2341,7 +2338,8 @@ azmcp cosmos database container item query --subscription <subscription> \
                                            --account <account> \
                                            --database <database> \
                                            --container <container> \
-                                           [--query "SELECT * FROM c"]
+                                           [--query "SELECT * FROM c"] \
+                                           [--auth-method <auth-method>]
 
 # Infer an approximate schema for a Cosmos DB container by sampling documents. Reports top-level properties only; nested
 # objects/arrays appear as `object` / `array`. To discover nested paths (e.g., a vector property's dot-path), fetch a
@@ -2351,7 +2349,8 @@ azmcp cosmos database container schema infer --subscription <subscription> \
                                            --account <account> \
                                            --database <database> \
                                            --container <container> \
-                                           [--sample-size 10]
+                                           [--sample-size 10] \
+                                           [--auth-method <auth-method>]
 
 # Get the most recently modified documents from a Cosmos DB container.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2359,7 +2358,8 @@ azmcp cosmos database container item list-recent --subscription <subscription> \
                                                  --account <account> \
                                                  --database <database> \
                                                  --container <container> \
-                                                 [--count 10]
+                                                 [--count 10] \
+                                                 [--auth-method <auth-method>]
 
 # Get a single Cosmos DB document by id (provide --partition-key to scope to one partition; otherwise cross-partition).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2368,7 +2368,8 @@ azmcp cosmos database container item get --subscription <subscription> \
                                          --database <database> \
                                          --container <container> \
                                          --id <id> \
-                                         [--partition-key <partition-key>]
+                                         [--partition-key <partition-key>] \
+                                         [--auth-method <auth-method>]
 
 # Search Cosmos DB documents where a given --search-property matches a --search-phrase via Cosmos `FullTextContains`.
 # Matching is word-tokenized (not substring) and uses the container's full-text analyzer, so the configured language
@@ -2382,7 +2383,8 @@ azmcp cosmos database container item text-search --subscription <subscription> \
                                                  --search-property <property> \
                                                  --search-phrase <phrase> \
                                                  [--properties-to-select <p1,p2,...>] \
-                                                 [--count 10]
+                                                 [--count 10] \
+                                                 [--auth-method <auth-method>]
 
 # Vector similarity search against a Cosmos DB container. Provide --search-text plus --openai-endpoint and
 # --embedding-deployment; the tool generates the query vector via Azure OpenAI and runs the search against the
@@ -2404,7 +2406,8 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    --embedding-deployment <deployment> \
                                                    [--properties-to-select <p1,p2,...>] \
                                                    [--count 10] \
-                                                   [--embedding-dimensions <n>]
+                                                   [--embedding-dimensions <n>] \
+                                                   [--auth-method <auth-method>]
 ```
 
 ### Azure Optimization Operations
@@ -2895,7 +2898,8 @@ azmcp foundryextensions openai chat-completions-create \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
     --deployment <deployment-name> \
-    --message-array <json-message-array>
+    --message-array <json-message-array> \
+    [--auth-method <auth-method>]
 
 # Create text completions using Azure OpenAI in Microsoft Foundry
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2904,7 +2908,8 @@ azmcp foundryextensions openai create-completion \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
     --deployment <deployment-name> \
-    --prompt-text <prompt>
+    --prompt-text <prompt> \
+    [--auth-method <auth-method>]
 
 # Create embeddings using Azure OpenAI in Microsoft Foundry
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2913,14 +2918,16 @@ azmcp foundryextensions openai embeddings-create \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
     --deployment <deployment-name> \
-    --input-text <text>
+    --input-text <text> \
+    [--auth-method <auth-method>]
 
 # List available Azure OpenAI model deployments in a Microsoft Foundry resource
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions openai models-list \
     --subscription <subscription> \
     --resource-group <resource-group> \
-    --resource-name <resource-name>
+    --resource-name <resource-name> \
+    [--auth-method <auth-method>]
 
 # List or get Microsoft Foundry resource details (endpoint, SKU, location). --resource-group is required when --resource-name is specified.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3109,9 +3116,6 @@ azmcp keyvault secret get --subscription <subscription> \
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
-
-> [!NOTE]
-> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
@@ -5290,7 +5294,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 ### Cloud Architect
 
 > [!NOTE]
-> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, or any `--retry-*` options.
 
 ```bash
 # Design Azure cloud architectures through guided questions
