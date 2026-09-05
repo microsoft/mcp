@@ -1312,6 +1312,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_blob_get | List all blobs in the blob container <container> in the storage account <account> with prefix <prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> | none |
 | storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> | none |
+| storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine <vm-resource-id> | none |
+| storage_disk_diagnose | Analyze managed disk <disk-resource-id> for IOPS or throughput throttling during the last 24 hours | none |
+| storage_disk_diagnose | Diagnose disks <disk-name-1> and <disk-name-2> attached to VM <vm-name> in resource group <resource-group> | none |
+| storage_disk_diagnose | Diagnose managed disk <disk-resource-id> and include host-side 1-second and 5-second latency signals | none |
+| storage_disk_diagnose | Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine <vm-resource-id> | none |
 | storage_table_list | List all tables in the storage account <account> | none |
 | storage_table_list | Show me the tables in the storage account <account> | none |
 
