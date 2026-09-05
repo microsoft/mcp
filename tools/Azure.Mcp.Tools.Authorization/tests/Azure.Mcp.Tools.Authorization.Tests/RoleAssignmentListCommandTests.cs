@@ -146,7 +146,7 @@ public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<R
 
     [Theory]
     [InlineData("/providers/Microsoft.Management/managementGroups/mg-contoso", true, "mg-contoso")]
-    [InlineData("/PROVIDERS/MICROSOFT.MANAGEMENT/MANAGEMENTGROUPS/mg-contoso", true, "mg-contoso")]
+    [InlineData("/PROVIDERS/Microsoft.Management/ManagementGroups/mg-contoso", true, "mg-contoso")]
     [InlineData("/providers/Microsoft.Management/managementGroups/mg-contoso/", true, "mg-contoso")]
     [InlineData("/subscriptions/00000000-0000-0000-0000-000000000001", false, "")]
     [InlineData("/providers/Microsoft.Management/managementGroups/", false, "")]
