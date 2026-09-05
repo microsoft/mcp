@@ -939,7 +939,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
 | monitor_metrics_batchquery | Compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period> | none |
 | monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |
-| monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
+| monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace <namespace> | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
 | monitor_metrics_query | Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
