@@ -1738,6 +1738,74 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
+    #region Container Tests (RSV)
+
+    /// <summary>
+    /// Validates that container refresh triggers RSV discovery successfully.
+    /// Uses the default AzureStorage filter (Azure File share discovery); the response is a
+    /// fire-and-forget acceptance record, not a container list.
+    /// </summary>
+    [Fact]
+    public async Task ContainerRefresh_RsvVault_TriggersDiscovery_Successfully()
+    {
+        // Container refresh is RSV-only
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_refresh",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        Assert.Equal("Accepted", result.AssertProperty("status").GetString());
+        Assert.Equal(vaultName, result.AssertProperty("vault").GetString());
+        Assert.Equal("Azure", result.AssertProperty("fabric").GetString());
+        Assert.Equal("backupManagementType eq 'AzureStorage'", result.AssertProperty("filter").GetString());
+    }
+
+    /// <summary>
+    /// Validates that list-available returns the expected response shape for RSV container discovery.
+    /// The test triggers refresh first so list-available has current discovery data.
+    /// </summary>
+    [Fact]
+    public async Task ContainerListAvailable_RsvVault_ListsAvailableContainers_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        await CallToolAsync(
+            "azurebackup_container_refresh",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var result = await CallToolAsync(
+            "azurebackup_container_list-available",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var containers = result.AssertProperty("containers");
+        Assert.Equal(JsonValueKind.Array, containers.ValueKind);
+
+        foreach (var container in containers.EnumerateArray())
+        {
+            container.AssertProperty("name");
+            container.AssertProperty("friendlyName");
+            container.AssertProperty("containerType");
+        }
+    }
+
+    #endregion
+
     #region Governance Tests (RSV)
 
     [Fact]

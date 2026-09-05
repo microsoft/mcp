@@ -437,6 +437,54 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, cancellationToken);
     }
 
+    public async Task RefreshContainersAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? filter, string? vaultType, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(vaultType))
+        {
+            throw new ArgumentException("Container refresh is only supported for Recovery Services (RSV) vaults. Backup vaults (DPP) do not use protection containers.");
+        }
+
+        // Auto-detect vault type when not explicitly specified so DPP vaults do not get routed to RSV.
+        if (!VaultTypeResolver.IsVaultTypeSpecified(vaultType))
+        {
+            var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+            if (VaultTypeResolver.IsDpp(resolved))
+            {
+                throw new ArgumentException(
+                    $"Vault '{vaultName}' is a Data Protection (DPP) vault. Container refresh is only supported for Recovery Services (RSV) vaults.");
+            }
+        }
+
+        await rsvOps.RefreshContainersAsync(vaultName, resourceGroup, subscription, filter, tenant, cancellationToken);
+    }
+
+    public async Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? filter, string? storageAccount, string? vaultType, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(vaultType))
+        {
+            throw new ArgumentException("Listing available containers is only supported for Recovery Services (RSV) vaults. Backup vaults (DPP) do not use protection containers.");
+        }
+
+        if (!VaultTypeResolver.IsVaultTypeSpecified(vaultType))
+        {
+            var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+            if (VaultTypeResolver.IsDpp(resolved))
+            {
+                throw new ArgumentException($"Vault '{vaultName}' is a Data Protection (DPP) vault. Available container discovery is only supported for Recovery Services (RSV) vaults.");
+            }
+        }
+
+        return await rsvOps.ListAvailableContainersAsync(vaultName, resourceGroup, subscription, filter, storageAccount, tenant, cancellationToken);
+    }
+
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(
         string datasourceId, string subscription, string location,
         string? tenant, CancellationToken cancellationToken)

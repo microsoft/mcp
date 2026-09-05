@@ -215,6 +215,23 @@ public interface IRsvBackupOperations
         string? tenant,
         CancellationToken cancellationToken);
 
+    Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? storageAccount,
+        string? tenant,
+        CancellationToken cancellationToken);
+
     Task<OperationResult> ConfigureEncryptionAsync(
         string vaultName,
         string resourceGroup,
