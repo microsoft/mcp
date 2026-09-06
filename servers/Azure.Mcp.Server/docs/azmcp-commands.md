@@ -2933,6 +2933,33 @@ azmcp foundryextensions resource get \
 ### Azure Function App Operations
 
 ```bash
+# Create a function app hosted in Azure Container Apps
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functionapp containerapp create --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --function-app <function-app-name> \
+                                      --location <location> \
+                                      [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
+                                      [--runtime-version <version>] \
+                                      [--storage-account <storage-account-name>] \
+                                      [--storage-auth-mode <managed-identity|connection-string>] \
+                                      [--container-apps-environment <environment-name>]
+
+# Create a function app on an App Service plan (Consumption, Flex Consumption, Premium, or App Service)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp functionapp create --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --function-app <function-app-name> \
+                         --location <location> \
+                         [--app-service-plan <existing-plan-name>] \
+                         [--plan-type <consumption|flex|premium|appservice>] \
+                         [--plan-sku <sku>] \
+                         [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
+                         [--runtime-version <version>] \
+                         [--os <windows|linux>] \
+                         [--storage-account <storage-account-name>] \
+                         [--storage-auth-mode <managed-identity|connection-string>]
+
 # Get detailed properties of function apps
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp functionapp get --subscription <subscription> \

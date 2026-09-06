@@ -664,6 +664,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
+| functionapp_containerapp_create | Create a container-hosted Azure Function App named <function_app_name> in <resource_group_name> | none |
+| functionapp_containerapp_create | Deploy a Functions workload on Azure Container Apps in <resource_group_name> | none |
+| functionapp_containerapp_create | Create a function app with Container Apps hosting in <location> | none |
+| functionapp_create | Create a new Azure Function App named <function_app_name> in <resource_group_name> | none |
+| functionapp_create | Create a function app with the Python runtime in <resource_group_name> | none |
+| functionapp_create | Deploy a new function app to the <location> region | none |
+| functionapp_create | Set up a function app on a premium hosting plan | none |
 | functionapp_get | Describe the function app <function_app_name> in resource group <resource_group_name> | none |
 | functionapp_get | Get configuration for function app <function_app_name> | none |
 | functionapp_get | Get function app status for <function_app_name> | none |
