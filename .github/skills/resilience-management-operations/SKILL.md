@@ -31,6 +31,7 @@ For operational Azure requests, use the Azure Resilience Management MCP tools ex
 10. Use `recoveryplan` as the recovery plan parameter for every tool.
 11. For Recovery Orchestration (RO) recovery plan updates only, do not use or imply HTTP `PATCH`; the current SDK does not support RO recovery plan PATCH. Get the existing plan and preserve unchanged values in the create-or-update request.
 12. For operational Azure requests, if no registered Resilience Management MCP tool supports the requested operation, state that the operation is unavailable through the current toolset. Do not work around the gap with `az`, REST, or another execution surface.
+13. Distinguish parent usage-plan deletion from enrollment deletion by the requested outcome. “Delete/remove the usage plan” means delete the entire plan even when the request mentions its service group; never reinterpret it as deleting only an enrollment. “Unenroll/remove the service group association but keep the plan” means delete the enrollment only.
 
 ## Route the Request
 
@@ -68,8 +69,10 @@ For operational Azure requests, use the Azure Resilience Management MCP tools ex
 
 1. Get the named resource and verify it is the intended target.
 2. Check for active drill runs, recovery operations, or other state that blocks deletion.
-3. Call delete only for an explicit, unambiguous request.
-4. Report whether the resource existed and whether deletion was accepted or completed.
+3. When deleting a usage plan, list all child enrollments. An explicit request to delete the entire plan also authorizes deleting those child enrollments as required dependencies; report that prerequisite cleanup. Do not stop after deleting only one enrollment.
+4. Call delete only for an explicit, unambiguous request.
+5. Re-read the exact parent after prerequisite cleanup and deletion when a get tool is available.
+6. Report whether the resource existed and whether deletion was accepted or completed.
 
 ### Long-running or destructive requests
 

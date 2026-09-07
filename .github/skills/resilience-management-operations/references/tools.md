@@ -10,10 +10,10 @@ This reference lists all 38 tools registered under the `resilience` namespace. P
 |---|---|---|
 | `mcp_azure_mcp_ser_resilience_usageplan_get` | List usage plans or get one | `subscription?`, `resource-group?`, `name?`, `tenant?`. A specific `name` requires `resource-group`. Omit both to list across the subscription. |
 | `mcp_azure_mcp_ser_resilience_usageplan_create` | Create or update a usage plan | **`resource-group`**, **`usage-plan`**, **`plan-type`** (`Basic` or `Standard`), `subscription?`, `tenant?` |
-| `mcp_azure_mcp_ser_resilience_usageplan_delete` | Delete a usage plan; returns whether it existed | **`resource-group`**, **`usage-plan`**, `subscription?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_usageplan_delete` | Delete the entire usage plan after all child enrollments are removed; returns whether the plan existed | **`resource-group`**, **`usage-plan`**, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_usageplan_enrollment_get` | List enrollments or get one | **`resource-group`**, **`usage-plan`**, `name?`, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_usageplan_enrollment_create` | Create/update enrollment associating a service group | **`resource-group`**, **`usage-plan`**, **`enrollment`**, **`service-group`**, `subscription?`, `tenant?` |
-| `mcp_azure_mcp_ser_resilience_usageplan_enrollment_delete` | Delete an enrollment; returns whether it existed | **`resource-group`**, **`usage-plan`**, **`enrollment`**, `subscription?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_usageplan_enrollment_delete` | Delete only an enrollment/service-group association while retaining the usage plan; returns whether the enrollment existed | **`resource-group`**, **`usage-plan`**, **`enrollment`**, `subscription?`, `tenant?` |
 
 Usage-plan and enrollment names are 3–24 characters containing letters, numbers, or hyphens.
 

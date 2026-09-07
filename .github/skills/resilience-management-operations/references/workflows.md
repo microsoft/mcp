@@ -21,8 +21,12 @@ Use these recipes after resolving the exact service group and target names. The 
 
 1. Get the usage plan with `mcp_azure_mcp_ser_resilience_usageplan_get` and confirm the exact resource group and name.
 2. List enrollments with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_get`. A plan with dependent enrollments cannot be deleted until those dependencies are removed.
-3. Call `mcp_azure_mcp_ser_resilience_usageplan_delete` only for an explicit, unambiguous request; deletion is permanent.
-4. Report `deleted: true` when the plan was removed and `deleted: false` when it was already absent.
+3. If enrollments exist, delete every returned enrollment by its exact name with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_delete`. The explicit request to delete the parent plan authorizes this required child cleanup. Report which associations were removed.
+4. Call `mcp_azure_mcp_ser_resilience_usageplan_delete`. If the service still reports dependent enrollments, list again, remove only the newly resolved exact enrollment names, and retry the idempotent plan deletion once.
+5. Get the usage plan again. Treat `ResourceNotFound` as confirmation that the requested parent plan is gone; do not report success based only on enrollment deletion.
+6. Report `deleted: true` when the plan was removed and `deleted: false` when it was already absent.
+
+The mention of a service group supplies context for resolving a usage plan; it does not change the target from the parent plan to an enrollment. Use the enrollment-only workflow only when the user asks to unenroll a service group, remove an association, or explicitly retain the usage plan.
 
 ## Inspect Goals and Participation
 
