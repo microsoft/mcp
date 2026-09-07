@@ -29,7 +29,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
         "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
         "Only current-engine recommendations whose stable name is a 64-character hash and whose serviceGroupId is empty are returned. " +
-        "Legacy 32-character recommendation IDs are excluded to prevent duplicate old-engine and new-engine recommendations; service-group recommendations are excluded to reserve that future recommendation flavor. " +
+        "Legacy non-64-character recommendation IDs are excluded to prevent duplicate old-engine and new-engine recommendations; service-group recommendations are excluded to reserve that future recommendation flavor. " +
         "Each result uses the standard ARM resource shape; its name is the stable recommendation ID accepted by tools that operate on a recommendation. " +
         "--top caps the number of returned items (default 50, max 100).",
     Destructive = false,

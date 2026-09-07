@@ -329,7 +329,7 @@ azmcp server info
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
 # Only current-engine recommendations with a 64-character name hash and an empty serviceGroupId are returned.
-# Legacy 32-character IDs are excluded to prevent old/new duplicates; service-group recommendations are reserved
+# Legacy non-64-character IDs are excluded to prevent old/new duplicates; service-group recommendations are reserved
 # for a future recommendation flavor.
 # Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
