@@ -6,6 +6,7 @@ using Azure.Containers.ContainerRegistry;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Acr.Models;
+using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -60,18 +61,15 @@ public sealed class AcrService(IAzureService azureService)
 
     private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrEmpty(reg.LoginServer))
-        {
-            var acrEndpointString = $"https://{reg.LoginServer}";
-            EndpointValidator.ValidateAzureServiceEndpoint(acrEndpointString, "acr", AzureService.CloudConfiguration.ArmEnvironment);
-        }
+        var acrEndpoint = CreateValidatedAcrEndpoint(
+            reg.LoginServer!,
+            AzureService.CloudConfiguration.ArmEnvironment);
 
         // Build data-plane client for this login server
         var credential = await GetCredential(tenant, cancellationToken);
         var options = AddDefaultPolicies(new ContainerRegistryClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         options.Audience = GetAcrAudience();
-        var acrEndpoint = new Uri($"https://{reg.LoginServer}");
         var client = new ContainerRegistryClient(acrEndpoint, credential, options);
 
         var repoNames = new List<string>();
@@ -84,6 +82,18 @@ public sealed class AcrService(IAzureService azureService)
         }
 
         return repoNames;
+    }
+
+    internal static Uri CreateValidatedAcrEndpoint(string loginServer, ArmEnvironment armEnvironment)
+    {
+        // GitHub Copilot: ListRegistryRepositories intentionally skips incomplete Resource Graph rows
+        // without a login server. Reaching this boundary means the caller requires repository access,
+        // so fail fast if that invariant is violated and validate the exact URI passed to the ACR SDK.
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginServer);
+
+        var endpoint = new Uri($"https://{loginServer}");
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, "acr", armEnvironment);
+        return endpoint;
     }
 
     public async Task<Dictionary<string, List<string>>> ListRegistryRepositories(
