@@ -898,17 +898,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azuremigrate_platformlandingzone_getguidance | Get Azure Migrate Platform Landing Zone guidance for configuring DDoS protection in an existing landing zone | none |
 | azuremigrate_platformlandingzone_getguidance | List all available policies by archetype in my Landing Zone | none |
 | azuremigrate_platformlandingzone_getguidance | Use Azure Migrate Platform Landing Zone guidance to find policy assignments related to storage encryption in the landing-zone policy catalog | none |
-| azuremigrate_platformlandingzone_request | Check if a platform landing zone already exists for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
-| azuremigrate_platformlandingzone_request | Update the landing zone parameters for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
+| azuremigrate_platformlandingzone_request | List the platform landing zones for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
+| azuremigrate_platformlandingzone_request | Show me the configuration of the platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
 | azuremigrate_platformlandingzone_request | Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name> | none |
 | azuremigrate_platformlandingzone_request | Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
-| azuremigrate_platformlandingzone_request | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
-| azuremigrate_platformlandingzone_request | Generate a platform landing zone | none |
-| azuremigrate_platformlandingzone_request | Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name> | none |
-| azuremigrate_platformlandingzone_request | Start landing zone generation for migrate project <migrate-project-name> | none |
+| azuremigrate_platformlandingzone_request | Create a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
+| azuremigrate_platformlandingzone_request | Create a platform landing zone | none |
+| azuremigrate_platformlandingzone_request | Create a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name> | none |
+| azuremigrate_platformlandingzone_request | Turn off DDoS protection on the platform landing zone for migrate project <migrate-project-name> | none |
+| azuremigrate_platformlandingzone_request | Create a landing zone for migrate project <migrate-project-name> without Bastion, DDoS or Private DNS | none |
+| azuremigrate_platformlandingzone_request | Create a landing zone for migrate project <migrate-project-name> with no ExpressRoute or VPN gateway | none |
+| azuremigrate_platformlandingzone_request | Wait for the landing zone generation to finish for migrate project <migrate-project-name> | none |
 | azuremigrate_platformlandingzone_request | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
-| azuremigrate_platformlandingzone_request | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
-| azuremigrate_platformlandingzone_request | Verify if all parameters are set for migrate project <migrate-project-name> | none |
+| azuremigrate_platformlandingzone_request | Download the landing zone output and the design document for migrate project <migrate-project-name> | none |
 
 ## Azure Monitor
 

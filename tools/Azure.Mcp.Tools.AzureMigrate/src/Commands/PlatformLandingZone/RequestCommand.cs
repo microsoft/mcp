@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.AzureMigrate.Constants;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
@@ -14,55 +16,61 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 
 /// <summary>
-/// Command to generate and download platform landing zone configurations, update parameters, check existing platform landing zones, and view status.
+/// Command to create, inspect and download Platform Landing Zones for an Azure Migrate project.
 /// </summary>
 [CommandMetadata(
     Id = "a7f3b8c1-9e2d-4f6a-8b3c-5d1e7f9a2c4b",
     Name = "request",
     Title = "Platform Landing Zone Management",
     Description = """
-        Generate and download platform landing zone configurations for Azure Migrate projects.
-        Updates parameters, check existing landing zones, and view parameters status.
+        Create, inspect and download Platform Landing Zones for an Azure Migrate project.
+
+        A Platform Landing Zone is an ARM resource under a migrate project. Creating or updating it starts
+        an asynchronous generation run that produces infrastructure-as-code output. The ARM call itself
+        returns immediately; the generation run is tracked separately by 'status'.
 
         **Actions:**
-        - createmigrateproject: Create a new Azure Migrate project if one doesn't exist (requires location parameter)
-        - check: Check if a platform landing zone already exists
-        - update: Update all parameters for generation (collect ALL params in one call)
-        - generate: Generate the platform landing zone
-        - download: Download generated files to local workspace
-        - status: View cached parameters
+        - createmigrateproject: Create a new Azure Migrate project (requires --location)
+        - list: List the landing zones under the migrate project
+        - get: Read one landing zone, its generation status, and its full effective configuration
+        - create: Create a landing zone, or update an existing one, and start a generation run
+        - wait: Poll until the generation run reaches a terminal status (Succeeded or Failed)
+        - download: Download the generated output.zip once generation has succeeded
 
-        **Context (required for most actions):**
-        - subscription, resourceGroup, migrateProjectName
+        **Context (required for all actions except createmigrateproject):**
+        - --subscription, --resource-group, --migrate-project-name
+        - --landing-zone-name is optional and defaults to 'default'
 
-        **Create Azure Migrate Parameters (for 'createmigrateproject' action):**
-        - subscription, resourceGroup, migrateProjectName, location
+        **Configuration parameters (for 'create'):**
+        | Parameter | Values | Notes |
+        |-----------|--------|-------|
+        | --regions | comma-separated, e.g. eastus,westus2 | first is primary; two or more makes it multi-region |
+        | --network-architecture | hubspoke, vwan | |
+        | --firewall-type | azurefirewall, nva, none | |
+        | --bastion | enabled, disabled | |
+        | --ddos | enabled, disabled | disabling removes the largest cost line item |
+        | --private-dns | enabled, disabled | |
+        | --express-route | enabled, disabled | enabling also requires --network-architecture |
+        | --vpn-gateway | enabled, disabled | enabling also requires --network-architecture |
+        | --scale-tier | full, managementonly | managementonly omits connectivity entirely |
+        | --version-control-system | local, github, azuredevops | |
+        | --identity-subscription-id, --management-subscription-id, --connectivity-subscription-id, --security-subscription-id | GUID | supply together; any one supplied replaces the whole subscription block |
+        | --parent-management-group-id | management group resource ID | create-only |
+        | --organization-name, --service-name | any string | |
 
-        **Generation Parameters (for 'update' action - collect ALL at once from user):**
-        | Parameter | Options | Default |
-        |-----------|---------|----------|
-        | regionType | single, multi | single |
-        | firewallType | azurefirewall, nva | azurefirewall |
-        | networkArchitecture | hubspoke, vwan | hubspoke |
-        | versionControlSystem | local, github, azuredevops | local |
-        | regions | comma-separated (e.g., eastus,westus) | eastus |
-        | environmentName | any string | prod |
-        | organizationName | any string | contoso |
-        | identitySubscriptionId | GUID | (uses main subscription) |
-        | managementSubscriptionId | GUID | (uses main subscription) |
-        | connectivitySubscriptionId | GUID | (uses main subscription) |
+        **Do not invent values.** Every parameter is optional: the service applies its own defaults for
+        anything omitted and echoes the full effective configuration back, which 'get' and 'create'
+        display. Ask the user only about what they care about, send just that, and show them the echo.
+
+        **Updating an existing landing zone is incremental.** The supplied parameters are layered over the
+        current configuration, so `--ddos disabled` on its own is enough to turn DDoS protection off
+        without restating anything else.
 
         **Workflow:**
-        1. Ask the user if they want to create a new Azure Migrate project or use an existing one. If creating, collect location parameter and create the project.
-        2. action='createmigrateproject' - Create a new Azure Migrate project only if the user doesn't have one already. Requires location parameter.
-        3. action='check' - See if one already exists
-        4. action='update' with ALL parameters - Ask user to confirm defaults or provide values
-        5. action='generate' - Create the landing zone
-        6. action='download' - Get the files
-        7. Extract zip to workspace root
-
-        **IMPORTANT:** When using 'update', collect ALL parameters from the user in ONE call.
-        Show them the defaults and ask which ones they want to change.
+        1. action='list' or 'get' - see what already exists
+        2. action='create' - create or update; only pass what the user asked for
+        3. action='wait' - poll until generation finishes (this takes several minutes)
+        4. action='download' - retrieve output.zip, then extract it into the workspace root and delete the zip
         """,
     Destructive = true,
     Idempotent = true,
@@ -91,17 +99,21 @@ public sealed class RequestCommand(
             var landingZoneContext = new PlatformLandingZoneContext(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.MigrateProjectName);
+                options.MigrateProjectName,
+                string.IsNullOrWhiteSpace(options.LandingZoneName)
+                    ? PlatformLandingZoneConstants.DefaultLandingZoneName
+                    : options.LandingZoneName);
 
             var result = options.Action.ToLowerInvariant() switch
             {
                 "createmigrateproject" => await HandleCreateMigrateProjectActionAsync(_azureMigrateProjectHelper, options, cancellationToken),
-                "update" => await HandleUpdateActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
-                "check" => await HandleCheckActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
-                "generate" => await HandleGenerateActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
-                "download" => await HandleDownloadActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
-                "status" => _platformLandingZoneService.GetParameterStatus(landingZoneContext),
-                _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
+                "list" => await HandleListActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "get" => await HandleGetActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                "create" => await HandleCreateActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
+                "wait" => await HandleWaitActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
+                "download" => await HandleDownloadActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
+                _ => throw new ArgumentException(
+                    $"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, list, get, create, wait, download.")
             };
 
             context.Response.Results = ResponseResult.Create(new(result), AzureMigrateJsonContext.Default.RequestCommandResult);
@@ -115,95 +127,100 @@ public sealed class RequestCommand(
         return context.Response;
     }
 
-    private static async Task<string> HandleUpdateActionAsync(
+    private static async Task<string> HandleListActionAsync(
+        IPlatformLandingZoneService service,
+        PlatformLandingZoneContext context,
+        CancellationToken cancellationToken)
+    {
+        var landingZones = await service.ListAsync(context, cancellationToken);
+        if (landingZones.Count == 0)
+        {
+            return $"No Platform Landing Zones exist under migrate project '{context.MigrateProjectName}' in resource group " +
+                   $"'{context.ResourceGroupName}'. Use the 'create' action to create one.";
+        }
+
+        var builder = new StringBuilder();
+        builder.AppendLine($"Platform Landing Zones under migrate project '{context.MigrateProjectName}':");
+        foreach (var landingZone in landingZones)
+        {
+            builder.AppendLine(
+                $"  - {landingZone.Name} (generation status: {landingZone.Status ?? "unknown"}, provisioning state: {landingZone.ProvisioningState ?? "unknown"})");
+        }
+
+        builder.Append("Use the 'get' action with --landing-zone-name to see the full configuration of any of these.");
+        return builder.ToString();
+    }
+
+    private static async Task<string> HandleGetActionAsync(
+        IPlatformLandingZoneService service,
+        PlatformLandingZoneContext context,
+        CancellationToken cancellationToken)
+    {
+        var landingZone = await service.GetAsync(context, cancellationToken);
+        if (landingZone is null)
+        {
+            return $"No Platform Landing Zone named '{context.LandingZoneName}' exists under migrate project " +
+                   $"'{context.MigrateProjectName}'. Use the 'create' action to create one.";
+        }
+
+        return Describe(landingZone, context);
+    }
+
+    private static async Task<string> HandleCreateActionAsync(
         IPlatformLandingZoneService service,
         PlatformLandingZoneContext context,
         RequestOptions options,
         CancellationToken cancellationToken)
     {
-        var updated = await service.UpdateParametersAsync(
-            context,
-            options.RegionType,
-            options.FirewallType,
-            options.NetworkArchitecture,
-            options.IdentitySubscriptionId,
-            options.ManagementSubscriptionId,
-            options.ConnectivitySubscriptionId,
-            options.Regions,
-            options.EnvironmentName,
-            options.VersionControlSystem,
-            options.OrganizationName,
-            cancellationToken);
+        var landingZone = await service.CreateOrUpdateAsync(context, options, cancellationToken);
 
-        var message = $"Parameters updated successfully. Complete: {updated.IsComplete}";
-        if (!updated.IsComplete)
-        {
-            var missing = service.GetMissingParameters(context);
-            message += $"\nMissing required parameters: {string.Join(", ", missing)}";
-        }
-
-        return message;
+        var builder = new StringBuilder();
+        builder.AppendLine(
+            $"Platform Landing Zone '{context.LandingZoneName}' was submitted under migrate project '{context.MigrateProjectName}'. " +
+            "Generation runs in the background and typically takes several minutes.");
+        builder.AppendLine(Describe(landingZone, context));
+        builder.Append("Use the 'wait' action to poll until generation finishes, then the 'download' action to retrieve the output.");
+        return builder.ToString();
     }
 
-    private static async Task<string> HandleCheckActionAsync(
+    private static async Task<string> HandleWaitActionAsync(
         IPlatformLandingZoneService service,
         PlatformLandingZoneContext context,
+        RequestOptions options,
         CancellationToken cancellationToken)
     {
-        var exists = await service.CheckExistingAsync(context, cancellationToken);
+        var timeout = options.TimeoutMinutes is > 0
+            ? TimeSpan.FromMinutes(options.TimeoutMinutes.Value)
+            : PlatformLandingZoneConstants.DefaultWaitTimeout;
 
-        if (exists)
+        var landingZone = await service.WaitForTerminalAsync(context, timeout, cancellationToken);
+        var summary = Describe(landingZone, context);
+
+        if (string.Equals(landingZone.Status, PlatformLandingZoneConstants.StatusFailed, StringComparison.OrdinalIgnoreCase))
         {
-            return $"Platform Landing zone exists for Migrate project '{context.MigrateProjectName}' in resource group '{context.ResourceGroupName}'. You can download it using the 'download' action and then extract the files to the root of your local workspace. Delete the zip after extraction.";
+            return $"Platform Landing Zone '{context.LandingZoneName}' failed to generate.\n{summary}";
         }
 
-        return $"No Platform Landing zone found for Migrate project '{context.MigrateProjectName}' in resource group '{context.ResourceGroupName}'. " +
-               "You can generate a new Platform Landing zone using the 'generate' action.";
-    }
-
-    private static async Task<string> HandleGenerateActionAsync(
-        IPlatformLandingZoneService service,
-        PlatformLandingZoneContext context,
-        CancellationToken cancellationToken)
-    {
-        var missingParams = service.GetMissingParameters(context);
-        if (missingParams.Count > 0)
-        {
-            var paramsNeeded = string.Join("\n  - ", missingParams);
-            return $"Cannot generate platform landing zone. Please provide the following required parameters using the 'update' action first:\n  - {paramsNeeded}\n\n" +
-                   $"Example: Use action='update' with these parameters:\n" +
-                   $"  --region-type <single|multi>\n" +
-                   $"  --firewall-type <azurefirewall|nva|none>\n" +
-                   $"  --network-architecture <hubspoke|vwan>\n" +
-                   $"  --identity-subscription-id <guid>\n" +
-                   $"  --management-subscription-id <guid>\n" +
-                   $"  --connectivity-subscription-id <guid>\n" +
-                   $"  --regions <comma-separated regions>\n" +
-                   $"  --environment-name <environment name>\n" +
-                   $"  --version-control-system <local|github|azuredevops>";
-        }
-
-        var downloadUrl = await service.GenerateAsync(context, cancellationToken);
-
-        if (string.IsNullOrEmpty(downloadUrl))
-        {
-            return "Platform Landing zone generation is in progress but the download URL is not yet available. " +
-                   "The generation process may take several minutes to complete. " +
-                   "Please wait a few minutes and then use the 'download' action again to check if the download URL is ready.";
-        }
-
-        return $"Platform Landing zone generated successfully. Download URL: {downloadUrl}\nUse 'download' action to retrieve the files.";
+        return $"Platform Landing Zone '{context.LandingZoneName}' finished generating.\n{summary}\n" +
+               "Use the 'download' action to retrieve the generated output.";
     }
 
     private static async Task<string> HandleDownloadActionAsync(
         IPlatformLandingZoneService service,
         PlatformLandingZoneContext context,
+        RequestOptions options,
         CancellationToken cancellationToken)
     {
-        var outputPath = Environment.CurrentDirectory;
-        var filePath = await service.DownloadAsync(context, outputPath, cancellationToken);
+        var files = await service.DownloadAsync(
+            context,
+            Environment.CurrentDirectory,
+            options.IncludeDesignDocument,
+            cancellationToken);
 
-        return $"Platform Landing zone downloaded successfully to: {filePath}. Extract the files to the root of the local workspace. To make changes to the platform landing zone, you can use the 'GetGuidance' command for guidance on modifying the configuration files. Delete the zip after extraction.";
+        return $"Platform Landing Zone '{context.LandingZoneName}' downloaded to:\n  - {string.Join("\n  - ", files)}\n" +
+               "Extract the archive into the root of the local workspace and delete the zip afterwards. " +
+               "To change the landing zone, prefer re-running the 'create' action with the parameters you want to change; " +
+               "use the 'getguidance' command for changes that are not exposed as parameters.";
     }
 
     private static async Task<string> HandleCreateMigrateProjectActionAsync(
@@ -231,11 +248,32 @@ public sealed class RequestCommand(
 
         return $"Azure Migrate project '{result.Name}' created successfully in resource group '{options.ResourceGroup}' at location '{result.Location}'.\n" +
                $"Resource ID: {result.Id}\n" +
-               "You can now use the 'check', 'update', 'generate', and 'download' actions to generate a platform landing zone.";
+               "You can now use the 'list', 'get', 'create', 'wait' and 'download' actions to manage a Platform Landing Zone.";
+    }
+
+    private static string Describe(PlatformLandingZoneView landingZone, PlatformLandingZoneContext context)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Name: {landingZone.Name ?? context.LandingZoneName}");
+        builder.AppendLine($"Provisioning state: {landingZone.ProvisioningState ?? "unknown"}");
+        builder.AppendLine($"Generation status: {landingZone.Status ?? "unknown"}");
+
+        if (!string.IsNullOrWhiteSpace(landingZone.ArtifactId))
+        {
+            builder.AppendLine($"Artifact: {landingZone.ArtifactId}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(landingZone.EffectiveProperties))
+        {
+            builder.AppendLine("Effective configuration (includes every value defaulted by the service):");
+            builder.AppendLine(landingZone.EffectiveProperties);
+        }
+
+        return builder.ToString().TrimEnd();
     }
 
     /// <summary>
-    /// Result for the platform landing zone generate command.
+    /// Result for the platform landing zone request command.
     /// </summary>
     /// <param name="Message">The result message.</param>
     public sealed record RequestCommandResult(string Message);

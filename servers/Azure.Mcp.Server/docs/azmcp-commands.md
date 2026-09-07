@@ -3796,7 +3796,7 @@ azmcp azuremigrate platformlandingzone getguidance --scenario policy-assignment 
 #### Platform Landing Zone Management
 
 ```bash
-# Generate, download, and manage Azure Platform Landing Zones
+# Create, inspect and download Azure Platform Landing Zones
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                --resource-group <resource-group> \
@@ -3807,60 +3807,82 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
 
 **Actions:**
 
-1. **Check Existing** (`--action check`)
+1. **List Landing Zones** (`--action list`)
    ```bash
-   # Check if a platform landing zone already exists
+   # List the platform landing zones under the migrate project
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
-                                                  --action check
+                                                  --action list
    ```
 
-2. **Update Parameters** (`--action update`)
+2. **Get Landing Zone** (`--action get`)
    ```bash
-   # Cache all parameters for generation of the platform landing zone
-   # Defaults are applied automatically if not specified
+   # Read one landing zone, its generation status, and its full effective configuration
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
-                                                  --action update \
-                                                  [--region-type <single|multi>] \
-                                                  [--firewall-type <azurefirewall|nva>] \
-                                                  [--network-architecture <hubspoke|vwan>] \
-                                                  [--version-control-system <local|github|azuredevops>] \
+                                                  --action get \
+                                                  [--landing-zone-name <landing-zone-name>]
+   ```
+
+3. **Create or Update Landing Zone** (`--action create`)
+   ```bash
+   # Create a landing zone, or update an existing one, and start a generation run.
+   # Every configuration parameter is optional: the service defaults anything omitted and echoes the
+   # full effective configuration back. On an existing landing zone the supplied parameters are layered
+   # over the current configuration, so a single toggle can be changed on its own.
+   azmcp azuremigrate platformlandingzone request --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --migrate-project-name <migrate-project-name> \
+                                                  --action create \
+                                                  [--landing-zone-name <landing-zone-name>] \
                                                   [--regions <comma-separated-regions>] \
-                                                  [--environment-name <environment-name>] \
+                                                  [--network-architecture <hubspoke|vwan>] \
+                                                  [--firewall-type <azurefirewall|nva|none>] \
+                                                  [--bastion <enabled|disabled>] \
+                                                  [--ddos <enabled|disabled>] \
+                                                  [--private-dns <enabled|disabled>] \
+                                                  [--express-route <enabled|disabled>] \
+                                                  [--vpn-gateway <enabled|disabled>] \
+                                                  [--scale-tier <full|managementonly>] \
+                                                  [--version-control-system <local|github|azuredevops>] \
                                                   [--organization-name <organization-name>] \
+                                                  [--service-name <service-name>] \
+                                                  [--parent-management-group-id <management-group-resource-id>] \
                                                   [--identity-subscription-id <subscription-id>] \
                                                   [--management-subscription-id <subscription-id>] \
-                                                  [--connectivity-subscription-id <subscription-id>]
-   ```
+                                                  [--connectivity-subscription-id <subscription-id>] \
+                                                  [--security-subscription-id <subscription-id>]
 
-3. **Generate Landing Zone** (`--action generate`)
-   ```bash
-   # Generate the platform landing zone
+   # Turn DDoS protection off on an existing landing zone without restating anything else
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
-                                                  --action generate
+                                                  --action create \
+                                                  --ddos disabled
    ```
 
-4. **Download Landing Zone** (`--action download`)
+4. **Wait for Generation** (`--action wait`)
    ```bash
-   # Download generated landing zone files to local workspace
+   # Poll until the generation run reaches a terminal status (Succeeded or Failed)
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
-                                                  --action download
+                                                  --action wait \
+                                                  [--landing-zone-name <landing-zone-name>] \
+                                                  [--timeout-minutes <minutes>]
    ```
 
-5. **View Status** (`--action status`)
+5. **Download Landing Zone** (`--action download`)
    ```bash
-   # View cached parameters
+   # Download the generated output to the local workspace
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
-                                                  --action status
+                                                  --action download \
+                                                  [--landing-zone-name <landing-zone-name>] \
+                                                  [--include-design-document]
    ```
 
 6. **Create Azure Migrate Project** (`--action createmigrateproject`)

@@ -6,7 +6,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added `--bastion`, `--ddos`, `--private-dns`, `--express-route`, and `--vpn-gateway` toggles to `azmcp azuremigrate platformlandingzone request --action create`, so a Platform Landing Zone can be created without Azure Bastion, DDoS network protection, Private DNS zones, an ExpressRoute gateway, or a VPN gateway.
+- Added `--landing-zone-name` to `azmcp azuremigrate platformlandingzone request`, so a migrate project can hold more than one Platform Landing Zone.
+- Added the `list`, `get`, `wait`, `--scale-tier`, `--service-name`, `--security-subscription-id`, `--parent-management-group-id`, `--timeout-minutes`, and `--include-design-document` capabilities to `azmcp azuremigrate platformlandingzone request`. `get` returns the full effective configuration, including every value the service defaulted.
+
 ### Breaking Changes
+
+- Replaced the `check`, `update`, `generate`, and `status` actions on `azmcp azuremigrate platformlandingzone request` with `list`, `get`, `create`, and `wait`, which operate directly on the Platform Landing Zone ARM resource. Configuration is no longer cached in the server between calls: `create` sends the supplied parameters in one call and layers them over the existing configuration, so an individual setting can be changed without restating the rest.
+- Removed `--region-type` from `azmcp azuremigrate platformlandingzone request`. Whether a landing zone is single- or multi-region is derived from the number of values in `--regions`.
+- Renamed `--environment-name` to `--organization-name` on `azmcp azuremigrate platformlandingzone request`, matching the Platform Landing Zone API. The separate `--service-name` parameter now carries the service name.
 
 ### Bugs Fixed
 
