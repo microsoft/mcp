@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added commands to delete Azure Resilience Management usage plans and usage plan enrollments.

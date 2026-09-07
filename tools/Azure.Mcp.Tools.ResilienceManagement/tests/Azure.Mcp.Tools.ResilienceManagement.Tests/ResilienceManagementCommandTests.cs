@@ -49,6 +49,12 @@ public class ResilienceManagementCommandTests(
             Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
             GroupForReplace = "value",
             Value = "sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Azure-AsyncOperation")
+        {
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
+            Value = "sanitized"
         })
     ];
 
@@ -1548,6 +1554,49 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_delete_usage_plan()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("deleteResourceGroupName", Settings.ResourceGroupName);
+        const string usagePlanName = "mcp-delete-plan";
+
+        await CallToolAsync(
+            "resilience_usageplan_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "plan-type", "Basic" }
+            });
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName }
+            });
+
+        Assert.True(result.AssertProperty("deleted").GetBoolean());
+        Assert.Equal(usagePlanName, result.AssertProperty("usagePlan").GetString());
+
+        var repeatedResult = await CallToolAsync(
+            "resilience_usageplan_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName }
+            });
+
+        Assert.False(repeatedResult.AssertProperty("deleted").GetBoolean());
+    }
+
+    [Fact]
     public async Task Should_create_usage_plan_enrollment()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
@@ -1569,5 +1618,59 @@ public class ResilienceManagementCommandTests(
 
         var enrollment = result.AssertProperty("enrollment");
         Assert.False(string.IsNullOrEmpty(enrollment.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_delete_usage_plan_enrollment()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("deleteEnrollmentResourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentServiceGroupName", "SERVICEGROUPNAME");
+        var usagePlanName = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentUsagePlanName", "USAGEPLANNAME");
+        var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentName", "ENROLLMENTNAME");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "resilience_usageplan_enrollment_delete",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName },
+                    { "enrollment", enrollmentName }
+                });
+
+            Assert.True(result.AssertProperty("deleted").GetBoolean());
+            Assert.Equal(usagePlanName, result.AssertProperty("usagePlan").GetString());
+            Assert.Equal(enrollmentName, result.AssertProperty("enrollment").GetString());
+
+            var repeatedResult = await CallToolAsync(
+                "resilience_usageplan_enrollment_delete",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName },
+                    { "enrollment", enrollmentName }
+                });
+
+            Assert.False(repeatedResult.AssertProperty("deleted").GetBoolean());
+        }
+        finally
+        {
+            await CallToolAsync(
+                "resilience_usageplan_enrollment_create",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName },
+                    { "enrollment", enrollmentName },
+                    { "service-group", serviceGroup }
+                });
+        }
     }
 }

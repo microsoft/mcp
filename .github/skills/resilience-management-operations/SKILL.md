@@ -1,6 +1,6 @@
 ---
-name: resilience-recovery-operations
-description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, recovery plans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; run or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs; implement, add, test, or record a Resilience Management tool.'
+name: resilience-management-operations
+description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, drill resources and runs, recovery plans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; configure, validate, run, resync, or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs; implement, add, test, or record a Resilience Management tool.'
 argument-hint: 'Describe the resilience operation and provide known service group, plan, drill, job, subscription, or resource identifiers'
 user-invocable: true
 disable-model-invocation: false
@@ -100,6 +100,8 @@ For operational Azure requests, use the Azure Resilience Management MCP tools ex
 For the generic authoring lifecycle, follow [add-azure-mcp-tools](../add-azure-mcp-tools/SKILL.md). Then apply the [Resilience Management development requirements](./references/development.md), including its stricter ToolDescriptionEvaluator gate.
 
 Every new or behaviorally changed Resilience Management tool must have at least two distinct E2E evaluation prompts. For every prompt, the expected tool must rank `#1` with a score of at least `0.6`. This is an intentional Resilience-specific override of the repository-wide top-three and `0.4` baseline.
+
+Tests for every new or behaviorally changed Resilience Management tool must always cover both positive and negative scenarios.
 
 ## Result Format
 

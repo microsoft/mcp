@@ -2115,6 +2115,34 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return MapUsagePlan(operation.Value.Data);
     }
 
+    public async Task<bool> DeleteUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var resourceGroupId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}");
+        UsagePlanCollection usagePlans = armClient.GetResourceGroupResource(resourceGroupId).GetUsagePlans();
+        NullableResponse<UsagePlanResource> existingPlan = await usagePlans.GetIfExistsAsync(usagePlan, cancellationToken);
+        if (!existingPlan.HasValue || existingPlan.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            ArmOperation operation = await existingPlan.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return false;
+        }
+    }
+
     public async Task<UsagePlanEnrollmentInfo> CreateUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string serviceGroup, string subscription, string? tenant = null, CancellationToken cancellationToken = default)
     {
         var subscriptionId = AzureService.IsSubscriptionId(subscription)
@@ -2136,5 +2164,33 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return MapUsagePlanEnrollment(operation.Value.Data);
+    }
+
+    public async Task<bool> DeleteUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string subscription, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
+            ? subscription
+            : (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
+
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var usagePlanId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.AzureResilienceManagement/usagePlans/{usagePlan}");
+        UsagePlanEnrollmentCollection enrollments = armClient.GetUsagePlanResource(usagePlanId).GetUsagePlanEnrollments();
+        NullableResponse<UsagePlanEnrollmentResource> existingEnrollment = await enrollments.GetIfExistsAsync(enrollment, cancellationToken);
+        if (!existingEnrollment.HasValue || existingEnrollment.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            ArmOperation operation = await existingEnrollment.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return false;
+        }
     }
 }
