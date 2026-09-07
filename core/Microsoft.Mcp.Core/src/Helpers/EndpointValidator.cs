@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Frozen;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
@@ -13,7 +12,7 @@ namespace Microsoft.Mcp.Core.Helpers;
 /// <summary>
 /// Validates Azure service endpoints.
 /// </summary>
-public static class EndpointValidator
+public static partial class EndpointValidator
 {
     private static readonly string[] s_reservedHosts =
     [
@@ -27,34 +26,6 @@ public static class EndpointValidator
         "sslip.io",              // Wildcard DNS - resolves to embedded IP
         "xip.io",                // Wildcard DNS - resolves to embedded IP
     ];
-
-    private record AllowedSuffixManager(string Public, string China, string UsGov, string Germany)
-    {
-        public string GetSuffix(ArmEnvironment environment) =>
-            ArmEnvironment.AzurePublicCloud.Equals(environment) ? Public :
-            ArmEnvironment.AzureChina.Equals(environment) ? China :
-            ArmEnvironment.AzureGovernment.Equals(environment) ? UsGov :
-            ArmEnvironment.AzureGermany.Equals(environment) ? Germany :
-            Public;
-    }
-
-    private static readonly FrozenDictionary<string, AllowedSuffixManager[]> s_allowedDomainSuffixes = new Dictionary<string, AllowedSuffixManager[]>
-    {
-        ["acr"] = [new AllowedSuffixManager(Public: ".azurecr.io", China: ".azurecr.cn", UsGov: ".azurecr.us", Germany: ".azurecr.de")],
-        ["adme"] = [
-            new AllowedSuffixManager(Public: ".energy.azure.com", China: ".energy.azure.com", UsGov: ".energy.azure.com", Germany: ".energy.azure.com"),
-            new AllowedSuffixManager(Public: ".oep.ppe.azure-int.net", China: ".oep.ppe.azure-int.net", UsGov: ".oep.ppe.azure-int.net", Germany: ".oep.ppe.azure-int.net")
-        ],
-        ["appconfig"] = [new AllowedSuffixManager(Public: ".azconfig.io", China: ".azconfig.azure.cn", UsGov: ".azconfig.azure.us", Germany: ".azconfig.azure.de")],
-        ["azure-openai"] = [
-            new AllowedSuffixManager(Public: ".openai.azure.com", China: ".openai.azure.cn", UsGov: ".openai.azure.us", Germany: ".openai.azure.de"),
-            new AllowedSuffixManager(Public: ".cognitiveservices.azure.com", China: ".cognitiveservices.azure.cn", UsGov: ".cognitiveservices.azure.us", Germany: ".cognitiveservices.azure.de")
-        ],
-        ["communication"] = [new AllowedSuffixManager(Public: ".communication.azure.com", China: ".communication.azure.cn", UsGov: ".communication.azure.us", Germany: ".communication.azure.de")],
-        ["foundry"] = [new AllowedSuffixManager(Public: ".services.ai.azure.com", China: ".services.ai.azure.cn", UsGov: ".services.ai.azure.us", Germany: ".services.ai.azure.de")],
-        ["servicebus"] = [new AllowedSuffixManager(Public: ".servicebus.windows.net", China: ".servicebus.chinacloudapi.cn", UsGov: ".servicebus.usgovcloudapi.net", Germany: ".servicebus.cloudapi.de")],
-        ["storage-blob"] = [new AllowedSuffixManager(Public: ".blob.core.windows.net", China: ".blob.core.chinacloudapi.cn", UsGov: ".blob.core.usgovcloudapi.net", Germany: ".blob.core.cloudapi.de")]
-    }.ToFrozenDictionary();
 
     /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
@@ -81,16 +52,16 @@ public static class EndpointValidator
                 $"Endpoint must use HTTPS protocol. Got: {uri.Scheme}");
         }
 
-        if (!s_allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixes))
+        if (!s_allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixManager))
         {
             throw new ArgumentException($"Unknown service type: {serviceType}", nameof(serviceType));
         }
 
-        // Validate domain: must exactly match suffix or be a proper subdomain
-        var isValid = allowedSuffixes.Any(s =>
-        {
-            var suffix = s.GetSuffix(armEnvironment);
+        var allowedSuffixes = allowedSuffixManager.GetSuffixes(armEnvironment);
 
+        // Validate domain: must exactly match suffix or be a proper subdomain
+        var isValid = allowedSuffixes.Any(suffix =>
+        {
             // Exact match (e.g., "azconfig.io")
             if (uri.Host.Equals(suffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -117,7 +88,7 @@ public static class EndpointValidator
                 : armEnvironment.Equals(ArmEnvironment.AzureGermany) ? "Azure Germany Cloud"
                 : "configured Azure cloud";
 
-            var expectedDomains = string.Join(", ", allowedSuffixes.Select(s => s.GetSuffix(armEnvironment)));
+            var expectedDomains = string.Join(", ", allowedSuffixes);
             throw new SecurityException(
                 $"Endpoint host '{uri.Host}' is not a valid {serviceType} domain for {cloudName}. " +
                 $"Expected domains: {expectedDomains}");
