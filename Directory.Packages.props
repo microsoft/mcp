@@ -100,6 +100,7 @@
     <PackageVersion Include="Microsoft.Identity.Client.Broker" Version="4.87.0" />
     <PackageVersion Include="Microsoft.Identity.Web" Version="4.6.0" />
     <PackageVersion Include="Microsoft.Identity.Web.Azure" Version="4.6.0" />
+    <PackageVersion Include="Microsoft.Security.AntiSSRF" Version="1.0.0" />
     <PackageVersion Include="ModelContextProtocol" Version="2.2.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
     <PackageVersion Include="MySqlConnector" Version="2.6.1" />

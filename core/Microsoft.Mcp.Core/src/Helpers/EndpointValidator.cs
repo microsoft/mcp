@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Security;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
+using Microsoft.Security.AntiSSRF;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
@@ -40,16 +41,16 @@ public static partial class EndpointValidator
             throw new ArgumentException("Endpoint cannot be null or empty", nameof(endpoint));
         }
 
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri))
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uriUnderTest))
         {
             throw new SecurityException($"Invalid endpoint format: {endpoint}");
         }
 
         // Ensure HTTPS
-        if (!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+        if (!uriUnderTest.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
         {
             throw new SecurityException(
-                $"Endpoint must use HTTPS protocol. Got: {uri.Scheme}");
+                $"Endpoint must use HTTPS protocol. Got: {uriUnderTest.Scheme}");
         }
 
         if (!s_allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixManager))
@@ -57,28 +58,63 @@ public static partial class EndpointValidator
             throw new ArgumentException($"Unknown service type: {serviceType}", nameof(serviceType));
         }
 
-        var allowedSuffixes = allowedSuffixManager.GetSuffixes(armEnvironment);
+        string[] allowedSuffixes = allowedSuffixManager.GetSuffixes(armEnvironment);
 
-        // Validate domain: must exactly match suffix or be a proper subdomain
-        var isValid = allowedSuffixes.Any(suffix =>
+        bool isValid;
+
+        if (allowedSuffixManager.UseLegacyCheck)
         {
-            // Exact match (e.g., "azconfig.io")
-            if (uri.Host.Equals(suffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
-                return true;
+            // Pre-migration to Microsoft.Security.AntiSSRF path.
+            //
+            // IMPORTANT NOTE: This code path treats suffixes differently depending on
+            // the presence or lack of a leading `.` character..
+            // - ".contoso.com" with a leading '.' allows both "contoso.com" and "sub.contoso.com"
+            // - "contoso.com" without a leading '.' ONLY "contoso.com"
+            //
+            // This is unlike the other branch of this `if`.
+            //
+            // Minor extra note: This path uses `Uri.Host` while the non-legacy path uses
+            // URIValidator which uses `Uri.IdnHost`, a Unicode to ASCII translation.
+            // There are various minor differences that mean this code path will falsely
+            // deny/block some acceptable URIs, but they are likely few and far between
+            // at the time of this comment being written for the service endpoints
+            // presently defined with allow-lists
 
-            // Proper subdomain match (e.g., "myconfig.azconfig.io" matches ".azconfig.io")
-            // Ensure the suffix starts with a dot, then check if host ends with it
-            if (suffix.StartsWith('.') && uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            // Validate domain: must exactly match suffix or be a proper subdomain
+            isValid = allowedSuffixes.Any(suffix =>
             {
-                // Ensure there's a subdomain portion and it doesn't contain path separators
-                // This prevents path components from being interpreted as subdomains (e.g., "azconfig.io/evil")
-                // Note: Multi-level subdomains like "sub.myconfig.azconfig.io" are valid and allowed
-                var domainBeforeSuffix = uri.Host.Substring(0, uri.Host.Length - suffix.Length);
-                return !string.IsNullOrEmpty(domainBeforeSuffix) && !domainBeforeSuffix.Contains('/');
-            }
+                // Exact match (e.g., "azconfig.io")
+                if (uriUnderTest.Host.Equals(suffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
+                    return true;
 
-            return false;
-        });
+                // Proper subdomain match (e.g., "myconfig.azconfig.io" matches ".azconfig.io")
+                // Ensure the suffix starts with a dot, then check if host ends with it
+                if (suffix.StartsWith('.') && uriUnderTest.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Ensure there's a subdomain portion and it doesn't contain path separators
+                    // This prevents path components from being interpreted as subdomains (e.g., "azconfig.io/evil")
+                    // Note: Multi-level subdomains like "sub.myconfig.azconfig.io" are valid and allowed
+                    var domainBeforeSuffix = uriUnderTest.Host.Substring(0, uriUnderTest.Host.Length - suffix.Length);
+                    return !string.IsNullOrEmpty(domainBeforeSuffix) && !domainBeforeSuffix.Contains('/');
+                }
+
+                return false;
+            });
+        }
+        else
+        {
+            // IMPORTANT NOTE: As of Microsoft.Security.AntiSSRF 1.0.0, URIValidator.InDomain
+            // will a suffix with or without a leading `.` effectively the same.
+            // - ".contoso.com" with a leading '.' allows both "contoso.com" and "sub.contoso.com"
+            // - "contoso.com" without a leading '.' allows both "contoso.com" and "sub.contoso.com"
+            //
+            // This is unlike the other branch of this `if`.
+            //
+            // TO MAINTAINERS: It will need to be a feature ask on the Microsoft.Security.AntiSSRF
+            // to allow expressions of "exact match, only" in the URIValidator API. This may be
+            // a breaking change. Until such functionality is added, the other code path remains.
+            isValid = URIValidator.InDomain(uriUnderTest.Host, allowedSuffixes);
+        }
 
         if (!isValid)
         {
@@ -90,7 +126,7 @@ public static partial class EndpointValidator
 
             var expectedDomains = string.Join(", ", allowedSuffixes);
             throw new SecurityException(
-                $"Endpoint host '{uri.Host}' is not a valid {serviceType} domain for {cloudName}. " +
+                $"Endpoint host '{uriUnderTest.Host}' is not a valid {serviceType} domain for {cloudName}. " +
                 $"Expected domains: {expectedDomains}");
         }
     }
