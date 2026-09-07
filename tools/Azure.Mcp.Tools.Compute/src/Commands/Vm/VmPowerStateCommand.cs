@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
 using Microsoft.Extensions.Logging;
@@ -39,10 +40,6 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<VmPowerStateOptions, VmPowerStateCommand.VmPowerStateCommandResult>(subscriptionResolver)
 {
-    private static readonly HashSet<string> s_validActions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "start", "stop", "deallocate", "restart"
-    };
     private readonly ILogger<VmPowerStateCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
 
@@ -50,12 +47,7 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!string.IsNullOrEmpty(options.PowerAction) && !s_validActions.Contains(options.PowerAction))
-        {
-            validationResult.Errors.Add($"Invalid --power-action value '{options.PowerAction}'. Accepted values: start, stop, deallocate, restart.");
-        }
-
-        if (options.SkipShutdown && !string.Equals(options.PowerAction, "stop", StringComparison.OrdinalIgnoreCase))
+        if (options.SkipShutdown && options.PowerAction != VmPowerAction.Stop)
         {
             validationResult.Errors.Add("--skip-shutdown is only compatible with --power-action stop.");
         }

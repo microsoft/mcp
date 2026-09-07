@@ -1151,7 +1151,7 @@ public class ComputeService(
         string vmName,
         string resourceGroup,
         string subscription,
-        string powerAction,
+        VmPowerAction powerAction,
         bool noWait = false,
         bool skipShutdown = false,
         string? tenant = null,
@@ -1168,13 +1168,13 @@ public class ComputeService(
         var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
         var vmResource = vmResponse.Value;
 
-        ArmOperation operation = powerAction.ToLowerInvariant() switch
+        ArmOperation operation = powerAction switch
         {
-            "start" => await vmResource.PowerOnAsync(WaitUntil.Started, cancellationToken),
-            "stop" => await vmResource.PowerOffAsync(WaitUntil.Started, skipShutdown, cancellationToken),
-            "deallocate" => await vmResource.DeallocateAsync(WaitUntil.Started, cancellationToken: cancellationToken),
-            "restart" => await vmResource.RestartAsync(WaitUntil.Started, cancellationToken),
-            _ => throw new ArgumentException($"Invalid power action '{powerAction}'. Accepted values: start, stop, deallocate, restart.", nameof(powerAction))
+            VmPowerAction.Start => await vmResource.PowerOnAsync(WaitUntil.Started, cancellationToken),
+            VmPowerAction.Stop => await vmResource.PowerOffAsync(WaitUntil.Started, skipShutdown, cancellationToken),
+            VmPowerAction.Deallocate => await vmResource.DeallocateAsync(WaitUntil.Started, cancellationToken: cancellationToken),
+            VmPowerAction.Restart => await vmResource.RestartAsync(WaitUntil.Started, cancellationToken),
+            _ => throw new ArgumentOutOfRangeException(nameof(powerAction), powerAction, null)
         };
 
         if (!noWait)
@@ -1198,13 +1198,14 @@ public class ComputeService(
             }
         }
 
+        var powerActionValue = powerAction.ToValue();
         var message = completed
-            ? $"Virtual machine '{vmName}' {powerAction} operation completed successfully."
+            ? $"Virtual machine '{vmName}' {powerActionValue} operation completed successfully."
             : statusUri is not null
-                ? $"Virtual machine '{vmName}' {powerAction} operation initiated. Poll 'statusUri' to track completion."
-                : $"Virtual machine '{vmName}' {powerAction} operation initiated. Use instance view to check status.";
+                ? $"Virtual machine '{vmName}' {powerActionValue} operation initiated. Poll 'statusUri' to track completion."
+                : $"Virtual machine '{vmName}' {powerActionValue} operation initiated. Use instance view to check status.";
 
-        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, powerAction, message, completed, statusUri);
+        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, powerActionValue, message, completed, statusUri);
     }
 
     public async Task<bool> DeleteVmssAsync(
@@ -1529,7 +1530,7 @@ public class ComputeService(
         string? location = null,
         int? sizeGb = null,
         string? sku = null,
-        string? osType = null,
+        DiskOperatingSystemType? osType = null,
         string? zone = null,
         string? hyperVGeneration = null,
         int? maxShares = null,
@@ -1575,20 +1576,14 @@ public class ComputeService(
             diskData.Sku = new() { Name = new(sku) };
         }
 
-        if (!string.IsNullOrEmpty(osType))
+        if (osType is not null)
         {
-            if (osType.Equals("Windows", StringComparison.OrdinalIgnoreCase))
+            diskData.OSType = osType switch
             {
-                diskData.OSType = SupportedOperatingSystemType.Windows;
-            }
-            else if (osType.Equals("Linux", StringComparison.OrdinalIgnoreCase))
-            {
-                diskData.OSType = SupportedOperatingSystemType.Linux;
-            }
-            else
-            {
-                throw new ArgumentException($"Invalid OS type: {osType}. Accepted values: Linux, Windows.");
-            }
+                DiskOperatingSystemType.Linux => SupportedOperatingSystemType.Linux,
+                DiskOperatingSystemType.Windows => SupportedOperatingSystemType.Windows,
+                _ => throw new ArgumentOutOfRangeException(nameof(osType), osType, null)
+            };
         }
 
         if (!string.IsNullOrEmpty(zone))
