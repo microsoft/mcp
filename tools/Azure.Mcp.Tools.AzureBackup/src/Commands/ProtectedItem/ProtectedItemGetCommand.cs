@@ -23,10 +23,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     Description = """
         Retrieves the complete protected-item representation returned by Azure Backup. When
         --protected-item is specified, returns detailed information about a single backup
-        instance including datasource and policy details, VM protection and health state,
-        deferred deletion and archive state, recovery-point metadata, and disk inclusion or
-        exclusion properties. Specify --container for RSV workload items. When --protected-item
-        is omitted, lists all protected items (backup instances) in the vault.
+        instance including datasource and policy details, workload-specific protection and
+        health state, lifecycle and recovery metadata, and any workload-specific extended
+        properties returned by Azure Backup. Specify --container for RSV workload items.
+        When --protected-item is omitted, lists all protected items (backup instances)
+        in the vault.
         """,
     Destructive = false,
     Idempotent = true,

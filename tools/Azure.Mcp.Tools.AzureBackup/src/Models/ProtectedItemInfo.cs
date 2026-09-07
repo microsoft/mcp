@@ -13,4 +13,5 @@ public sealed record ProtectedItemInfo(
     string? PolicyName,
     DateTimeOffset? LastBackupTime,
     string? ContainerName,
-    ProtectedItemDetails? Details = null);
+    ProtectedItemDetails? Details = null,
+    ProtectedItemDppDetails? DppDetails = null);

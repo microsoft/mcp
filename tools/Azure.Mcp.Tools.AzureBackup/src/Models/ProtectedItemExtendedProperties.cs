@@ -4,7 +4,7 @@
 namespace Azure.Mcp.Tools.AzureBackup.Models;
 
 /// <summary>
-/// Extended properties returned by the Recovery Services protected-item API.
+/// Extended properties currently returned by RSV VM protected-item APIs.
 /// </summary>
 public sealed record ProtectedItemExtendedProperties(
     ProtectedItemDiskExclusionProperties? DiskExclusionProperties,

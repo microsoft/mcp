@@ -1058,7 +1058,7 @@ azmcp azurebackup policy get --subscription <subscription> \
 #### Protected Item
 
 ```bash
-# Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, VM topology, disk inclusion/exclusion properties, recovery-point metadata, and last backup time. When --protected-item is omitted, lists all protected items in the vault. The explicit response contract mirrors the current Azure Backup SDK surface and must be revisited when the SDK version changes.
+# Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, lifecycle and recovery metadata, and workload-specific extended properties returned by Azure Backup. When --protected-item is omitted, lists all protected items in the vault. The explicit response contract mirrors the current Azure Backup SDK surface and must be revisited when the SDK version changes.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem get --subscription <subscription> \
                                     --resource-group <resource-group> \

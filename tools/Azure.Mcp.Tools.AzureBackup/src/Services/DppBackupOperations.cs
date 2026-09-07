@@ -1240,16 +1240,73 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     private static ProtectedItemInfo MapToProtectedItemInfo(DataProtectionBackupInstanceData data)
     {
+        var properties = data.Properties;
+        var dataSourceInfo = properties?.DataSourceInfo;
+        var dataSourceSetInfo = properties?.DataSourceSetInfo;
+        var policyInfo = properties?.PolicyInfo;
+        var protectionStatus = properties?.ProtectionStatus;
+        var resourceProtectionError = properties?.ResourceProtectionErrorDetails;
+        var identityDetails = properties?.IdentityDetails;
+
         return new ProtectedItemInfo(
             data.Id?.ToString(),
             data.Name,
             VaultType,
-            data.Properties?.ProtectionStatus?.Status?.ToString(),
-            data.Properties?.DataSourceInfo?.DataSourceType,
-            data.Properties?.DataSourceInfo?.ResourceId?.ToString(),
-            data.Properties?.PolicyInfo?.PolicyId?.Name,
+            protectionStatus?.Status?.ToString(),
+            dataSourceInfo?.DataSourceType,
+            dataSourceInfo?.ResourceId?.ToString(),
+            policyInfo?.PolicyId?.Name,
             null,
-            null);
+            null,
+            null,
+            new ProtectedItemDppDetails(
+                properties?.FriendlyName,
+                properties?.CurrentProtectionState?.ToString(),
+                properties?.ProvisioningState?.ToString(),
+                properties?.ValidationType?.ToString(),
+                properties?.ObjectType,
+                properties?.ResourceGuardOperationRequests?.ToList(),
+                dataSourceInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        dataSourceInfo.ResourceId?.ToString(),
+                        dataSourceInfo.ResourceName,
+                        dataSourceInfo.DataSourceType,
+                        dataSourceInfo.ResourceType,
+                        dataSourceInfo.ResourceLocation,
+                        dataSourceInfo.ObjectType),
+                dataSourceSetInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        dataSourceSetInfo.ResourceId?.ToString(),
+                        dataSourceSetInfo.ResourceName,
+                        dataSourceSetInfo.DataSourceType,
+                        dataSourceSetInfo.ResourceType,
+                        dataSourceSetInfo.ResourceLocation,
+                        dataSourceSetInfo.ObjectType),
+                policyInfo is null
+                    ? null
+                    : new ProtectedItemDppPolicyInfo(
+                        policyInfo.PolicyId?.ToString(),
+                        policyInfo.PolicyVersion),
+                protectionStatus is null
+                    ? null
+                    : new ProtectedItemDppProtectionStatus(protectionStatus.Status?.ToString()),
+                resourceProtectionError is null
+                    ? null
+                    : new ProtectedItemDppError(
+                        resourceProtectionError.Code,
+                        resourceProtectionError.Message,
+                        resourceProtectionError.RecommendedAction?.ToList(),
+                        resourceProtectionError.Target,
+                        resourceProtectionError.IsRetryable,
+                        resourceProtectionError.IsUserError),
+                identityDetails is null
+                    ? null
+                    : new ProtectedItemDppIdentityDetails(
+                        null,
+                        identityDetails.UseSystemAssignedIdentity,
+                        identityDetails.UserAssignedIdentityId)));
     }
 
     private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)
