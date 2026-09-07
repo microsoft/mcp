@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added support for commands to provide sanitized telemetry messages for failed tool calls."

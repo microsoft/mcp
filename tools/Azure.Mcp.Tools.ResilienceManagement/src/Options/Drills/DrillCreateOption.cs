@@ -30,7 +30,7 @@ public sealed class DrillCreateOptions
     [Option(Description = "The RBAC setup mode. Supported values: AutomatedCustomRole, AutomatedBuiltinRoles, Manual.")]
     public required DrillRbacSetupMode RbacSetupMode { get; set; }
 
-    [Option(Description = "The optional recovery plan name in the same service group to associate with the drill.")]
+    [Option(Name = "recoveryplan", Description = "The optional recoveryplan name in the same service group to associate with the drill.")]
     public string? RecoveryPlan { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

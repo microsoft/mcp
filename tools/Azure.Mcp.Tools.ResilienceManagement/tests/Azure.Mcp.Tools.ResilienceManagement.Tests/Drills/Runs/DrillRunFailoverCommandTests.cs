@@ -18,7 +18,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
     private const string SourceLocation = "eastus-az1";
-    private const string SelectedResourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1";
+    private const string SelectedResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -122,6 +122,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--selected-resource-ids", SelectedResourceId,
             "--auto-failover", "true");
 
+        Assert.True(response.Status == HttpStatusCode.OK, response.Message);
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.DrillRunFailoverCommandResult);
         Assert.True(result.Accepted);
         Assert.Equal(DrillRun, result.DrillRun);

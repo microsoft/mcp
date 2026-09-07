@@ -321,6 +321,40 @@ The `azmcp server start` command supports the following options:
 azmcp server info
 ```
 
+### Azure Data Manager for Energy Operations
+
+```bash
+# Check authentication and connectivity for an ADME endpoint and data partition
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme health check --endpoint <endpoint> \
+                         --data-partition <data-partition> \
+                         [--tenant <tenant>]
+
+# Get a schema by its fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme schema get --endpoint <endpoint> \
+                       --data-partition <data-partition> \
+                       --kind <authority:source:entity-type:version> \
+                       [--tenant <tenant>]
+
+# List schemas with optional identity, lifecycle, scope, version, and paging filters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme schema list --endpoint <endpoint> \
+                        --data-partition <data-partition> \
+                        [--tenant <tenant>] \
+                        [--authority <authority>] \
+                        [--source <source>] \
+                        [--entity-type <entity-type>] \
+                        [--status <PUBLISHED|DEVELOPMENT|OBSOLETE>] \
+                        [--scope <SHARED|INTERNAL>] \
+                        [--schema-version-major <major>] \
+                        [--schema-version-minor <minor>] \
+                        [--schema-version-patch <patch>] \
+                        [--latest-version] \
+                        [--offset <offset>] \
+                        [--limit <limit>]
+```
+
 ### Azure Advisor Operations
 
 ```bash
@@ -558,6 +592,8 @@ azmcp appconfig kv delete --subscription <subscription> \
                           [--label <label>]
 
 # Get key-value settings in an App Configuration store
+# Use --key to retrieve a single key-value, or --key-filter for wildcard matches (e.g., 'App*'). --key and --key-filter are mutually exclusive.
+# Use --label to scope to a specific label, or --label-filter for wildcard label matches. --label and --label-filter are mutually exclusive.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv get --subscription <subscription> \
                        --account <account> \
@@ -1490,7 +1526,7 @@ azmcp compute vm create --subscription <subscription> \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
-Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided.
+Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -1604,7 +1640,7 @@ azmcp compute vm create --subscription "my-sub" \
 | `--admin-username` | Yes | Admin username |
 | `--image` | Yes | Image alias (e.g., `Ubuntu2404`), Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). No default. |
 | `--admin-password` | Conditional | Admin password (required for Windows, optional for Linux) |
-| `--ssh-public-key` | Conditional | SSH public key (for Linux VMs) |
+| `--ssh-public-key` | Conditional | SSH public key content for Linux VMs. Accepted formats: `ssh-rsa`, `ssh-ed25519`, `ssh-dss`, `ecdsa-sha2-nistp256`, `ecdsa-sha2-nistp384`, `ecdsa-sha2-nistp521`, `sk-ssh-ed25519@openssh.com`, `sk-ecdsa-sha2-nistp256@openssh.com`. In stdio mode, a file path (e.g., `~/.ssh/id_rsa.pub`) may be provided instead. In HTTP/remote mode, only key content is accepted — file paths are rejected for security. |
 | `--vm-size` | No | VM size (default: Standard_D2s_v5) |
 | `--os-type` | No | OS type: 'linux' or 'windows' (auto-detected from image) |
 | `--virtual-network` | No | Virtual network name |
@@ -1692,6 +1728,7 @@ azmcp compute vm delete --subscription "my-subscription" \
 **Command Behavior:**
 - Deletes the VM. Associated resources (disks, NICs, public IPs) are NOT automatically deleted.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VM even if it is in a running or failed state.
+- **Not-found handling**: If the specified VM does not exist, the command returns `Success: false` with a descriptive message ("...was not found in resource group '...'. Nothing was deleted.") rather than throwing an error. This makes the operation idempotent.
 
 **Parameters:**
 | Parameter | Required | Description |
@@ -1853,7 +1890,7 @@ azmcp compute vmss create --subscription <subscription> \
                           [--os-disk-size-gb <os-disk-size-gb>] \
                           [--os-disk-type <os-disk-type>]
 
-Defaults to two Standard_D2s_v5 instances when size or instance count are not provided. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`).
+Defaults to two Standard_D2s_v5 instances when size or instance count are not provided. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -1890,7 +1927,7 @@ azmcp compute vmss create --subscription "my-subscription" \
 | `--admin-username` | Yes | Admin username |
 | `--image` | Yes | Image alias (e.g., `Ubuntu2404`), Marketplace URN (`publisher:offer:sku:version`), or shared gallery image ID (`/sharedGalleries/...`). No default. |
 | `--admin-password` | Conditional | Admin password (required for Windows) |
-| `--ssh-public-key` | Conditional | SSH public key (for Linux VMSS) |
+| `--ssh-public-key` | Conditional | SSH public key content for Linux VMSS. Accepted formats: `ssh-rsa`, `ssh-ed25519`, `ssh-dss`, `ecdsa-sha2-nistp256`, `ecdsa-sha2-nistp384`, `ecdsa-sha2-nistp521`, `sk-ssh-ed25519@openssh.com`, `sk-ecdsa-sha2-nistp256@openssh.com`. In stdio mode, a file path (e.g., `~/.ssh/id_rsa.pub`) may be provided instead. In HTTP/remote mode, only key content is accepted — file paths are rejected for security. |
 | `--vm-size` | No | VM size (default: Standard_D2s_v5) |
 | `--os-type` | No | OS type: 'linux' or 'windows' |
 | `--virtual-network` | No | Virtual network name |
@@ -1980,6 +2017,7 @@ azmcp compute vmss delete --subscription "my-subscription" \
 **Command Behavior:**
 - Deletes the VMSS and all its VM instances. This operation is irreversible.
 - **With `--force-deletion`**: Passes `forceDeletion=true` to the Azure API, which force-deletes the VMSS even if it is in a running or failed state.
+- **Not-found handling**: If the specified VMSS does not exist, the command returns `Success: false` with a descriptive message ("...was not found in resource group '...'. Nothing was deleted.") rather than throwing an error. This makes the operation idempotent.
 
 **Parameters:**
 | Parameter | Required | Description |
@@ -2369,6 +2407,38 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    [--embedding-dimensions <n>]
 ```
 
+### Azure Optimization Operations
+
+#### Optimization Recommendations
+
+```bash
+# List top Azure Advisor cost-saving recommendations for a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation list --subscription <subscription> \
+                                       [--top <top>] \
+                                       [--tenant <tenant>]
+
+# Get alternative compute resize/SKU options for a VM or VM scale set
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation alternatives --subscription <subscription> \
+                                               --resource-id <resource-id> \
+                                               [--new-skus <new-skus>] \
+                                               [--new-vm-series <new-vm-series>] \
+                                               [--new-processor-types <new-processor-types>] \
+                                               [--exclude-skus <exclude-skus>] \
+                                               [--exclude-vm-series <exclude-vm-series>] \
+                                               [--exclude-processor-types <exclude-processor-types>] \
+                                               [--tenant <tenant>]
+
+# Explain a recommendation with current-versus-target utilization projections
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp optimization recommendation explain --subscription <subscription> \
+                                          --resource-id <resource-id> \
+                                          [--target-sku <target-sku>] \
+                                          [--view <Detail|Trend|Both>] \
+                                          [--tenant <tenant>]
+```
+
 ### Azure Data Explorer Operations
 
 ```bash
@@ -2420,13 +2490,14 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```bash
 # Hierarchical list command for MySQL resources
-# Without parameters: lists all MySQL servers in the resource group
-# With --server: lists all databases on that server
-# With --server and --database: lists all tables in that database
+# Without parameters: lists all MySQL servers in the subscription
+# With --resource-group: lists servers in that resource group
+# With --server: lists all databases on that server (--user required)
+# With --server and --database: lists all tables in that database (--user required)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql list --subscription <subscription> \
-                 --resource-group <resource-group> \
-                 --user <user> \
+                 [--resource-group <resource-group>] \
+                 [--user <user>] \
                  [--server <server>] \
                  [--database <database>]
 
@@ -2452,14 +2523,12 @@ azmcp mysql table schema get --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server config get --subscription <subscription> \
                               --resource-group <resource-group> \
-                              --user <user> \
                               --server <server>
 
 # Retrieve a specific parameter of a MySQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param get --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --user <user> \
                              --server <server> \
                              --param <parameter>
 
@@ -2467,7 +2536,6 @@ azmcp mysql server param get --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param set --subscription <subscription> \
                              --resource-group <resource-group> \
-                             --user <user> \
                              --server <server> \
                              --param <parameter> \
                              --value <value>
@@ -3049,7 +3117,7 @@ azmcp keyvault secret get --subscription <subscription> \
 # Gets Azure Kubernetes Service (AKS) cluster details
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp aks cluster get --subscription <subscription> \
-                      --resource-group <resource-group> \
+                      [--resource-group <resource-group>] \
                       [--cluster <cluster>]
 
 # Gets Azure Kubernetes Service (AKS) nodepool details
@@ -3851,7 +3919,8 @@ azmcp quota usage check --subscription <subscription> \
 # List Azure Policy Assignments
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp policy assignment list --subscription <subscription> \
-                             --scope <scope>
+                             [--scope <scope>] \
+                             [--tenant <tenant>]
 ```
 
 ### Azure Pricing Operations
@@ -3958,15 +4027,15 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --enrollment <enrollment> \
                                              --service-group <service-group>
 
-# Get a resilience recovery plan, or list all recovery plans in a service group (omit --name)
+# Get a resilience recoveryplan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan get --service-group <service-group> \
                                    [--name <name>]
 
-# Create or update a Zonal resilience recovery plan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
+# Create or update a Zonal resilience recoveryplan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan create --service-group <service-group> \
-                                      --recovery-plan <recovery-plan> \
+                                      --recoveryplan <recoveryplan> \
                                       --plan-type Zonal \
                                       [--plan-description <plan-description>] \
                                       --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
@@ -3991,66 +4060,104 @@ azmcp resilience recoveryplan create --service-group <service-group> \
 # CustomRunbook example: [{"type":"CustomRunbook","name":"Start-dependencies","description":"Start application dependencies","timeoutInMinutes":30,"actionResourceId":"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}","parameters":{"environment":"production"}}]
 # Omit an action option or property to preserve existing actions. Specify [] to clear that action list.
 
-# Delete a resilience recovery plan. Returns deleted=false when the plan does not exist.
+# Delete a resilience recoveryplan. Returns deleted=false when the plan does not exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan delete --service-group <service-group> \
-                                      --recovery-plan <recovery-plan>
+                                      --recoveryplan <recoveryplan>
 
-# Validate which recovery-plan resources are qualified for failover from the specified source locations.
+# Start failover for qualified recoveryplan resources. Provide source locations, selected full recovery-resource IDs, or both.
+# Returns after the request is accepted with an operation ID and a recovery job ID when available.
+# Use recoveryjob get to find and monitor the job. Validate qualification and readiness first when unknown.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan failover --service-group <service-group> \
+                                        --recoveryplan <recoveryplan> \
+                                        [--source-locations <source-location> [<source-location> ...]] \
+                                        [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                        [--user-consent <Unspecified|Allowed>]
+
+# Complete or finalize the current recoveryplan operation by validating resource permissions and updating plan state.
+# Returns an operation ID for tracking. This does not commit a completed failover.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan finalize --service-group <service-group> \
+                                        --recoveryplan <recoveryplan>
+
+# Start reprotection after failover for all qualified resources, or limit it to selected full recovery-resource IDs.
+# Returns after the request is accepted with an operation ID and a recovery job ID when available.
+# Use recoveryjob get to find and monitor the job.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryplan reprotect --service-group <service-group> \
+                                         --recoveryplan <recoveryplan> \
+                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+
+# Validate which recoveryplan resources are qualified for failover from the specified source locations.
 # Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan validateforfailover --service-group <service-group> \
-                                                   --recovery-plan <recovery-plan> \
+                                                   --recoveryplan <recoveryplan> \
                                                    --source-locations <source-location> [<source-location> ...] \
                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
                                                    [--user-consent <Unspecified|Allowed>]
 
-# Validate which recovery-plan resources are qualified for reprotect after failover.
+# Validate which recoveryplan resources are qualified for reprotect after failover.
 # Optionally limit validation to selected full recovery-resource IDs; omit them to validate all qualified resources in the plan.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan validateforreprotect --service-group <service-group> \
-                                                    --recovery-plan <recovery-plan> \
+                                                    --recoveryplan <recoveryplan> \
                                                     [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
 
-# Validate whether a recovery plan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
+# Validate whether a recoveryplan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
 # Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
 # The operation must be explicitly selected; do not infer it from prior context, plan state, or resource metadata.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan validateforoperation --service-group <service-group> \
-                                                    --recovery-plan <recovery-plan> \
+                                                    --recoveryplan <recoveryplan> \
                                                     --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup>
 
-# Configure recovery-plan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
+# Configure recoveryplan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan resource update --service-group <service-group> \
-                                                --recovery-plan <recovery-plan> \
+                                                --recoveryplan <recoveryplan> \
                                                 [--resources-to-update '<json-array>'] \
                                                 [--resources-to-remove '<json-array>']
 
-# Discover and assess whether a recovery plan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
+# Discover and assess whether a recoveryplan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan checkreadiness --service-group <service-group> \
-                                              --recovery-plan <recovery-plan>
+                                              --recoveryplan <recoveryplan>
 
-# Get a resource (member) of a recovery plan, or list all resources of the plan (omit --name)
+# Get a resource (member) of a recoveryplan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryplan resource get --service-group <service-group> \
-                                            --recovery-plan <recovery-plan> \
+                                            --recoveryplan <recoveryplan> \
                                             [--name <name>]
 
-# Get a recovery job, or list all recovery jobs of a recovery plan (omit --name)
+# Get a recovery job, or list all recovery jobs of a recoveryplan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryjob get --service-group <service-group> \
-                                 --recovery-plan <recovery-plan> \
+                                 --recoveryplan <recoveryplan> \
                                  [--name <name>]
 
-# Get a resource (target) of a recovery job, or list all resources of the job (omit --name)
+# Retry an existing recoveryjob in the Failed state. Returns after acceptance; use recoveryjob get to monitor the job.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryjob retry --service-group <service-group> \
+                                   --recoveryplan <recoveryplan> \
+                                   --recoveryjob <recoveryjob>
+
+# Resume an existing recoveryjob in the Paused state, optionally providing input for the paused action.
+# Returns after acceptance; use recoveryjob get to monitor the job.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience recoveryjob resume --service-group <service-group> \
+                                    --recoveryplan <recoveryplan> \
+                                    --recoveryjob <recoveryjob> \
+                                    [--description <description>]
+
+# Get a resource (target) of a recoveryjob, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience recoveryjob resource get --service-group <service-group> \
-                                          --recovery-plan <recovery-plan> \
-                                          --recovery-job <recovery-job> \
+                                          --recoveryplan <recoveryplan> \
+                                          --recoveryjob <recoveryjob> \
                                           [--name <name>]
 
 # Create or update a resilience drill in a service group
@@ -4062,7 +4169,7 @@ azmcp resilience drill create --service-group <service-group> \
                               --drill-type <drill-type> \
                               --rbac-setup-mode <rbac-setup-mode> \
                               [--resource-group <resource-group>] \
-                              [--recovery-plan <recovery-plan>]
+                              [--recoveryplan <recoveryplan>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4088,7 +4195,7 @@ azmcp resilience drill update --service-group <service-group> \
                               --drill <drill> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
-                              [--recovery-plan <recovery-plan>]
+                              [--recoveryplan <recoveryplan>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4199,6 +4306,8 @@ azmcp resourcehealth availability-status get --subscription <subscription> \
 azmcp resourcehealth health-events list --subscription <subscription> \
                                                 [--event-type <event-type>] \
                                                 [--status <status>] \
+                                                [--tracking-id <tracking-id>] \
+                                                [--filter <odata-filter>] \
                                                 [--query-start-time <start-time>] \
                                                 [--query-end-time <end-time>]
 ```
