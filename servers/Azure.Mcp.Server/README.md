@@ -1284,6 +1284,10 @@ Example prompts that generate Azure CLI commands:
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "Start resilience drill 'my-drill' in service group 'my-service-group' in Failover mode"
+* "Run a TestFailover for resilience drill 'my-drill' in service group 'my-service-group'"
+* "End resilience drill 'my-drill' in service group 'my-service-group' and attest it as Success with notes 'Validation completed'"
+* "Stop the running resilience drill 'my-drill' in service group 'my-service-group' and attest it as Failed"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
