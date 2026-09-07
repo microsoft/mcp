@@ -44,13 +44,3 @@ public sealed record ProtectedItemDetails(
     int? RecoveryPointCount,
     bool? IsPolicyInconsistent,
     ProtectedItemExtendedProperties? ExtendedProperties);
-
-public sealed record ProtectedItemHealthDetails(
-    int? Code,
-    string? Title,
-    string? Message,
-    IReadOnlyList<string>? Recommendations);
-
-public sealed record ProtectedItemKpiHealthDetails(
-    string? ResourceHealthStatus,
-    IReadOnlyList<ProtectedItemHealthDetails>? ResourceHealthDetails);

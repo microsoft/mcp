@@ -9,7 +9,3 @@ namespace Azure.Mcp.Tools.AzureBackup.Models;
 public sealed record ProtectedItemExtendedProperties(
     ProtectedItemDiskExclusionProperties? DiskExclusionProperties,
     string? LinuxVmApplicationName);
-
-public sealed record ProtectedItemDiskExclusionProperties(
-    IReadOnlyList<int>? DiskLunList,
-    bool? IsInclusionList);
