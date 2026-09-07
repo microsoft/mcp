@@ -186,7 +186,9 @@ public class RecommendationUpdateCommandTests
     }
 
     [Theory]
+    [InlineData("sub1", "")]
     [InlineData("sub1", " ")]
+    [InlineData("", "sg1")]
     [InlineData(" ", "sg1")]
     public async Task ExecuteAsync_BothScopeOptionsExplicitlyProvided_RejectsBlankValues(
         string subscription,
