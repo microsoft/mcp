@@ -328,9 +328,6 @@ azmcp server info
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
-# Only current-engine recommendations with a 64-character name hash and an empty serviceGroupId are returned.
-# Legacy non-64-character IDs are excluded to prevent old/new duplicates; service-group recommendations are reserved
-# for a future recommendation flavor.
 # Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list --subscription <subscription> \
@@ -363,8 +360,7 @@ azmcp advisor recommendation update --subscription <subscription> \
 # Summarize Advisor recommendation counts, totals, rankings, and distributions.
 # Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
 # --group-by defaults to category. All groupings except status include only active New recommendations.
-# Only current-engine recommendations with a 64-character name hash and an empty serviceGroupId are included.
-# Recommendation-type groups return stable type ID keys with English metadata labels. Resource-type groups use
+# Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
 # properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
 # retirement data prefer metadata values with recommendation-instance fallback.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded

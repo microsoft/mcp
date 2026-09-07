@@ -24,9 +24,8 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Retirement filters are one-sided: le:<end-date> includes every active recommendation retiring on or before the end date, including overdue retirements, and is not a bounded next-N window. " +
         "Use explicit exact, on-or-before, or on-or-after retirement-date questions; recommendation list is capped and must not be counted client-side. " +
         "Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date; category is the default. " +
-        "All groups return canonical key, label, and count values. Recommendation-type keys are stable type ID GUIDs with English metadata labels. " +
+        "All groups return canonical key, label, and count values. Recommendation-type keys are recommendation type ID GUIDs with English metadata labels. " +
         "All groupings except status include only active New recommendations; status includes every backend lifecycle state. " +
-        "Only current-engine recommendations whose stable name is a 64-character hash and whose serviceGroupId is empty are included. " +
         "Filters include category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem-text search, subcategory, and explicit retirement-date comparisons. " +
         "Use --search with this summary tool for topical aggregate questions such as counts or impact breakdowns for recommendations mentioning encryption or right-size; do not call recommendation list and count its capped results. " +
         "Use recommendation list instead when the user wants individual recommendation records. TotalRecommendations always covers the complete filtered population, even when --top limits displayed buckets.",
