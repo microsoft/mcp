@@ -1,0 +1,3 @@
+changes:
+  - section: Bug Fixes
+    description: "`azmcp azurebackup protecteditem get` now returns VM-specific protected-item properties, including disk inclusion/exclusion settings, so callers can inspect the current state before updating protection."

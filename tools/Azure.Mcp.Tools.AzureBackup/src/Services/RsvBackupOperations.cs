@@ -1447,6 +1447,68 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             {
                 protectionStatus = vmItem.ProtectionState?.ToString();
                 lastBackupTime = vmItem.LastBackupOn;
+
+                var extendedInfo = vmItem.ExtendedInfo;
+                var extendedProperties = vmItem.ExtendedProperties;
+                var diskExclusionProperties = extendedProperties?.DiskExclusionProperties;
+                var vmDetails = new ProtectedItemVmDetails(
+                    vmItem.BackupManagementType?.ToString(),
+                    vmItem.WorkloadType?.ToString(),
+                    vmItem.LastRecoverOn,
+                    vmItem.BackupSetName,
+                    vmItem.CreateMode?.ToString(),
+                    vmItem.DeferredDeletedOn,
+                    vmItem.IsScheduledForDeferredDelete,
+                    vmItem.DeferredDeleteTimeRemaining?.ToString(),
+                    vmItem.IsDeferredDeleteScheduleUpcoming,
+                    vmItem.IsRehydrate,
+                    vmItem.ResourceGuardOperationRequests?.ToList(),
+                    vmItem.IsArchiveEnabled,
+                    vmItem.PolicyName,
+                    vmItem.SoftDeleteRetentionPeriodInDays,
+                    vmItem.VaultId?.ToString(),
+                    vmItem.FriendlyName,
+                    vmItem.VirtualMachineId?.ToString(),
+                    vmItem.ProtectionStatus,
+                    vmItem.ProtectionState?.ToString(),
+                    vmItem.HealthStatus?.ToString(),
+                    vmItem.HealthDetails?.Select(MapToProtectedItemHealthDetails).ToList(),
+                    vmItem.KpisHealths?.ToDictionary(
+                        static kpi => kpi.Key,
+                        static kpi => new ProtectedItemKpiHealthDetails(
+                            kpi.Value?.ResourceHealthStatus?.ToString(),
+                            kpi.Value?.ResourceHealthDetails?.Select(MapToProtectedItemHealthDetails).ToList())),
+                    vmItem.LastBackupStatus,
+                    vmItem.ProtectedItemDataId,
+                    vmItem.PolicyType,
+                    vmItem.LastBackupOn,
+                    extendedInfo?.OldestRecoverOn,
+                    extendedInfo?.OldestRecoveryPointInVault,
+                    extendedInfo?.OldestRecoveryPointInArchive,
+                    extendedInfo?.NewestRecoveryPointInArchive,
+                    extendedInfo?.RecoveryPointCount,
+                    extendedInfo?.IsPolicyInconsistent,
+                    extendedProperties is null
+                        ? null
+                        : new ProtectedItemExtendedProperties(
+                            diskExclusionProperties is null
+                                ? null
+                                : new ProtectedItemDiskExclusionProperties(
+                                    diskExclusionProperties.DiskLunList?.ToList(),
+                                    diskExclusionProperties.IsInclusionList),
+                            extendedProperties.LinuxVmApplicationName));
+
+                return new ProtectedItemInfo(
+                    data.Id?.ToString(),
+                    data.Name,
+                    VaultType,
+                    protectionStatus,
+                    datasourceType,
+                    datasourceId,
+                    policyName,
+                    lastBackupTime,
+                    container,
+                    vmDetails);
             }
             else if (genericItem is VmWorkloadProtectedItem workloadItem)
             {
@@ -1467,6 +1529,9 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             lastBackupTime,
             container);
     }
+
+    private static ProtectedItemHealthDetails MapToProtectedItemHealthDetails(ResourceHealthDetails details) =>
+        new(details.Code, details.Title, details.Message, details.Recommendations?.ToList());
 
     private static BackupPolicyInfo MapToPolicyInfo(BackupProtectionPolicyData data)
     {
