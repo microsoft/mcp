@@ -70,6 +70,22 @@ public class RecommendationQueryBuilderTests
             result);
     }
 
+    [Fact]
+    public void BuildInstancePredicates_ListExcludesLegacyAndServiceGroupRecommendations()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            null,
+            includeStatus: true,
+            useRequestedStatus: true,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false);
+
+        Assert.StartsWith(
+            $"{RecommendationQueryBuilder.CurrentRecommendationNameClause} and " +
+            $"{RecommendationQueryBuilder.ServiceGroupExclusionClause} and ",
+            result);
+    }
+
     [Theory]
     [InlineData(RecommendationStatus.New, "New")]
     [InlineData(RecommendationStatus.Postponed, "Postponed")]

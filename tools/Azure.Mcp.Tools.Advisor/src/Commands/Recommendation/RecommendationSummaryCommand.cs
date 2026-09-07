@@ -21,15 +21,14 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "This is the aggregate-only tool for questions such as how many, count, breakdown, distribution, top, most common, or which has the most. " +
         "Use it for an executive summary or main themes, counts by category or business impact, top recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
         "Count overdue service-retirement Advisor recommendations that are still active, or group active service-retirement recommendations by retirement date. " +
-        "This includes services retiring on an exact date, on or before a date, on or after a specified date, in the next N days or months, or soon. " +
-        "For requests to summarize, count, or group retirements in the next N days or months by retirement date, always use this summary tool; recommendation list is capped and must not be counted client-side. " +
+        "Retirement filters are one-sided: le:<end-date> includes every active recommendation retiring on or before the end date, including overdue retirements, and is not a bounded next-N window. " +
+        "Use explicit exact, on-or-before, or on-or-after retirement-date questions; recommendation list is capped and must not be counted client-side. " +
         "Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date; category is the default. " +
         "All groups return canonical key, label, and count values. Recommendation-type keys are stable type ID GUIDs with English metadata labels. " +
         "All groupings except status include only active New recommendations; status includes every backend lifecycle state. " +
         "Only current-engine recommendations whose stable name is a 64-character hash and whose serviceGroupId is empty are included. " +
         "Filters include category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem-text search, subcategory, and explicit retirement-date comparisons. " +
         "Use --search with this summary tool for topical aggregate questions such as counts or impact breakdowns for recommendations mentioning encryption or right-size; do not call recommendation list and count its capped results. " +
-        "For natural-language windows such as 'retiring soon' or 'in the next two months', compute an end date and pass le:<yyyy-MM-dd>; unqualified 'soon' means 90 calendar days and does not add a lower bound. " +
         "Use recommendation list instead when the user wants individual recommendation records. TotalRecommendations always covers the complete filtered population, even when --top limits displayed buckets.",
     Destructive = false,
     Idempotent = true,

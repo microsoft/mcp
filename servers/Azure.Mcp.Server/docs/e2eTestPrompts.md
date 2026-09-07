@@ -71,19 +71,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
 | advisor_recommendation_summary | Show the distribution of my Advisor recommendations by business impact | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types | none |
-| advisor_recommendation_summary | Which Advisor recommendation type occurs most often? | none |
+| advisor_recommendation_summary | Which Advisor recommendation type occurs most often for resources in my subscription? | none |
 | advisor_recommendation_summary | Rank impacted Azure resource types by the count of High-impact Advisor recommendations | none |
 | advisor_recommendation_summary | Rank the Azure resource types with the most critical Advisor recommendations | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by lifecycle status | none |
 | advisor_recommendation_summary | How many Advisor recommendations are new, completed, dismissed, or postponed? | none |
 | advisor_recommendation_summary | Group active Advisor recommendations by metadata subcategory | none |
 | advisor_recommendation_summary | Count my zone resiliency Advisor recommendations by impacted resource type | none |
-| advisor_recommendation_summary | Summarize active service-retirement recommendations by retirement date | none |
+| advisor_recommendation_summary | How many active service-retirement Advisor recommendations do I have for each retirement date? | none |
 | advisor_recommendation_summary | How many overdue service-retirement Advisor recommendations are still active? | none |
 | advisor_recommendation_summary | Count active recommendations for services retiring on December 31, 2026 | none |
 | advisor_recommendation_summary | Count active service-retirement Advisor recommendations with retirement dates on or before December 31, 2026 | none |
 | advisor_recommendation_summary | Count active service-retirement Advisor recommendations with retirement dates on or after March 31, 2026 | none |
-| advisor_recommendation_summary | Summarize active recommendations for services retiring in the next two months by retirement date | none |
 | advisor_recommendation_summary | Show the impact breakdown for Advisor recommendations affecting resource my-web-app | none |
 | advisor_recommendation_summary | Break down counts by impact for Advisor recommendations whose problem text mentions "encryption" | none |
 
