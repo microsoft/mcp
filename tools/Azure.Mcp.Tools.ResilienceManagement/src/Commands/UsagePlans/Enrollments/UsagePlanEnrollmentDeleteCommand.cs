@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
 using Azure.Mcp.Tools.ResilienceManagement.Options.UsagePlans.Enrollments;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Microsoft.Extensions.Logging;
@@ -37,8 +38,8 @@ public sealed class UsagePlanEnrollmentDeleteCommand(
     {
         base.ValidateOptions(options, validationResult);
 
-        ValidateUsagePlanResourceName(options.UsagePlan, "usage plan", validationResult);
-        ValidateUsagePlanResourceName(options.Enrollment, "enrollment", validationResult);
+        UsagePlanResourceNameValidator.Validate(options.UsagePlan, "usage plan", validationResult);
+        UsagePlanResourceNameValidator.Validate(options.Enrollment, "enrollment", validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
@@ -74,17 +75,6 @@ public sealed class UsagePlanEnrollmentDeleteCommand(
 
         return context.Response;
     }
-
-    private static void ValidateUsagePlanResourceName(string name, string resourceType, ValidationResult validationResult)
-    {
-        if (name.Length is < 3 or > 24 || !name.All(IsAsciiLetterNumberOrHyphen))
-        {
-            validationResult.Errors.Add($"The {resourceType} name must be 3 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
-    }
-
-    private static bool IsAsciiLetterNumberOrHyphen(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-';
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
