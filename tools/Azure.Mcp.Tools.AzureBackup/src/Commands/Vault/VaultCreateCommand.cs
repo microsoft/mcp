@@ -40,20 +40,11 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
     {
         base.ValidateOptions(options, validationResult);
 
-        if (string.IsNullOrEmpty(options.VaultType) ||
-            (!options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
-            !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase)))
+        if (options.VaultType is null)
         {
             validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
         }
 
-        if (!string.IsNullOrEmpty(options.StorageType) &&
-            !options.StorageType.Equals("GeoRedundant", StringComparison.OrdinalIgnoreCase) &&
-            !options.StorageType.Equals("LocallyRedundant", StringComparison.OrdinalIgnoreCase) &&
-            !options.StorageType.Equals("ZoneRedundant", StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add("--storage-type must be 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.");
-        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultCreateOptions options, CancellationToken cancellationToken)
@@ -67,7 +58,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.VaultType!,
+                options.VaultType ?? throw new InvalidOperationException("Vault type is required."),
                 options.Location!,
                 options.Sku,
                 options.StorageType,

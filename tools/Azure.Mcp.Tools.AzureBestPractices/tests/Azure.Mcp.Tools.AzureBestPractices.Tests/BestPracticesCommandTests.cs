@@ -93,7 +93,8 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid resource", response.Message);
+        Assert.Contains("Invalid --resource", response.Message);
+        Assert.Contains("Must be one of", response.Message);
     }
 
     [Fact]
@@ -126,7 +127,8 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid action", response.Message);
+        Assert.Contains("Invalid --action", response.Message);
+        Assert.Contains("Must be one of", response.Message);
     }
 
     [Fact]

@@ -31,9 +31,9 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
         var expected = new OperationResult("Succeeded", null, "Policy created successfully");
 
         Service.CreatePolicyAsync(
-            Arg.Is<PolicyCreateRequest>(r => r.Policy == "myPolicy" && r.WorkloadType == "AzureIaasVM"),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "myPolicy" && r.WorkloadType == AzureBackupPolicyWorkloadType.AzureIaasVm),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
         // Act
@@ -56,9 +56,9 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
     {
         // Arrange
         Service.CreatePolicyAsync(
-            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "AzureIaasVM"),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == AzureBackupPolicyWorkloadType.AzureIaasVm),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
         // Act
@@ -83,9 +83,9 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
         if (shouldSucceed)
         {
             Service.CreatePolicyAsync(
-                Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM"),
+                Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == AzureBackupPolicyWorkloadType.Vm),
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-                Arg.Any<string?>(),
+                Arg.Any<AzureBackupVaultType?>(),
                 Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
@@ -202,7 +202,7 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
         Service.CreatePolicyAsync(
             Arg.Any<PolicyCreateRequest>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
         // Act
@@ -226,9 +226,9 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
     {
         // Arrange
         Service.CreatePolicyAsync(
-            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM"),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == AzureBackupPolicyWorkloadType.Vm),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
         // Act

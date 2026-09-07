@@ -33,7 +33,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
-        string? sku, string? storageType, string? tenant,
+        string? sku, AzureBackupStorageType? storageType, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -52,12 +52,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             new()
             {
                 DataStoreType = StorageSettingStoreType.VaultStore,
-                StorageSettingType = storageType?.ToLowerInvariant() switch
+                StorageSettingType = storageType switch
                 {
-                    "locallyredundant" => StorageSettingType.LocallyRedundant,
-                    "zoneredundant" => StorageSettingType.ZoneRedundant,
-                    "georedundant" or null => StorageSettingType.GeoRedundant,
-                    _ => throw new ArgumentException($"Invalid storage type: '{storageType}'.")
+                    AzureBackupStorageType.LocallyRedundant => StorageSettingType.LocallyRedundant,
+                    AzureBackupStorageType.ZoneRedundant => StorageSettingType.ZoneRedundant,
+                    AzureBackupStorageType.GeoRedundant or null => StorageSettingType.GeoRedundant,
+                    _ => throw new ArgumentOutOfRangeException(nameof(storageType), storageType, null)
                 }
             }
         };
@@ -147,7 +147,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
-        string datasourceId, string policyName, string? datasourceType,
+        string datasourceId, string policyName, AzureBackupDatasourceType? datasourceType,
         string? aksIncludedNamespaces, string? aksExcludedNamespaces,
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
@@ -180,9 +180,9 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         }
 
         string resolvedDatasourceType;
-        if (!string.IsNullOrEmpty(datasourceType))
+        if (datasourceType is { } specifiedDatasourceType)
         {
-            resolvedDatasourceType = datasourceType;
+            resolvedDatasourceType = specifiedDatasourceType.ToValue();
         }
         else
         {
@@ -810,7 +810,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
-        string? immutabilityState, string? identityType, string? tags,
+        string? immutabilityState, AzureBackupManagedIdentityType? identityType, string? tags,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -832,10 +832,10 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         var patchData = new DataProtectionBackupVaultPatch();
 
-        if (!string.IsNullOrEmpty(identityType))
+        if (identityType is { } managedIdentityType)
         {
             patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                ParseIdentityType(identityType));
+            ToSdkIdentityType(managedIdentityType));
         }
 
         var securitySettings = new BackupVaultSecuritySettings();
@@ -897,7 +897,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         ArgumentNullException.ThrowIfNull(request);
 
         var policyName = request.Policy;
-        var workloadType = request.WorkloadType;
+        var workloadType = request.WorkloadType.ToValue();
 
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -979,16 +979,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
 
-    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
-        identityType.ToUpperInvariant() switch
+    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ToSdkIdentityType(AzureBackupManagedIdentityType identityType) =>
+        identityType switch
         {
-            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
-            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
-            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
-                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
-            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
-            _ => throw new ArgumentException(
-                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
+            AzureBackupManagedIdentityType.SystemAssigned => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
+            AzureBackupManagedIdentityType.UserAssigned => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
+            AzureBackupManagedIdentityType.SystemAssignedUserAssigned => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
+            AzureBackupManagedIdentityType.None => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
+            _ => throw new ArgumentOutOfRangeException(nameof(identityType), identityType, null)
         };
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
@@ -1163,7 +1161,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> ConfigureEncryptionAsync(
         string vaultName, string resourceGroup, string subscription,
-        string keyVaultUri, string keyName, string identityType,
+        string keyVaultUri, string keyName, AzureBackupEncryptionIdentityType identityType,
         string? keyVersion, string? userAssignedIdentityId,
         string? tenant,
         CancellationToken cancellationToken)
@@ -1173,17 +1171,10 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(keyVaultUri), keyVaultUri),
-            (nameof(keyName), keyName),
-            (nameof(identityType), identityType));
+            (nameof(keyName), keyName));
 
-        var isSystemAssigned = "SystemAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
-        var isUserAssigned = "UserAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
-
-        if (!isSystemAssigned && !isUserAssigned)
-        {
-            throw new ArgumentException(
-                $"Invalid identity type '{identityType}' for CMK encryption. Supported values: 'SystemAssigned', 'UserAssigned'.");
-        }
+        var isSystemAssigned = identityType == AzureBackupEncryptionIdentityType.SystemAssigned;
+        var isUserAssigned = identityType == AzureBackupEncryptionIdentityType.UserAssigned;
 
         if (isUserAssigned && string.IsNullOrWhiteSpace(userAssignedIdentityId))
         {

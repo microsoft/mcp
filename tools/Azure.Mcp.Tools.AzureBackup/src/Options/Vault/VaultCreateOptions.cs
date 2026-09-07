@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
@@ -14,5 +15,5 @@ public sealed class VaultCreateOptions : BaseAzureBackupOptions
     public string? Sku { get; set; }
 
     [Option(Description = "Storage redundancy: 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.")]
-    public string? StorageType { get; set; }
+    public AzureBackupStorageType? StorageType { get; set; }
 }

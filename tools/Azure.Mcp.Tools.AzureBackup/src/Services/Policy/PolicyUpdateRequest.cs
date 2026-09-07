@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
+
 namespace Azure.Mcp.Tools.AzureBackup.Services.Policy;
 
 /// <summary>
@@ -39,7 +41,7 @@ public sealed class PolicyUpdateRequest
     public string? TimeZone { get; set; }
 
     /// <summary>Schedule frequency: "Daily" or "Weekly".</summary>
-    public string? ScheduleFrequency { get; set; }
+    public AzureBackupPolicyUpdateScheduleFrequency? ScheduleFrequency { get; set; }
 
     /// <summary>Comma-separated backup times in HH:mm (e.g. "02:00" or "02:00,14:00").</summary>
     public string? ScheduleTimes { get; set; }
@@ -72,7 +74,7 @@ public sealed class PolicyUpdateRequest
     public bool HasIaasVmExtendedFlags()
     {
         return !string.IsNullOrWhiteSpace(TimeZone)
-            || !string.IsNullOrWhiteSpace(ScheduleFrequency)
+            || ScheduleFrequency is not null
             || !string.IsNullOrWhiteSpace(ScheduleTimes)
             || !string.IsNullOrWhiteSpace(ScheduleDaysOfWeek)
             || WeeklyRetentionWeeks > 0

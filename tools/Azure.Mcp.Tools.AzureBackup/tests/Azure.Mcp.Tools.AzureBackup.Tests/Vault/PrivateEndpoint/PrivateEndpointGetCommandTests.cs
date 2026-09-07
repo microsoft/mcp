@@ -38,7 +38,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.GetPrivateEndpointAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("pec-1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(SampleConnection());
 
         var response = await ExecuteCommandAsync(
@@ -57,7 +57,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.ListPrivateEndpointsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([SampleConnection("pec-1"), SampleConnection("pec-2")]);
 
         var response = await ExecuteCommandAsync(
@@ -74,7 +74,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.ListPrivateEndpointsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("Private Endpoints are not supported for Backup vaults (DPP)."));
 
         var response = await ExecuteCommandAsync(
@@ -92,7 +92,7 @@ public class PrivateEndpointGetCommandTests : SubscriptionCommandUnitTestsBase<P
     {
         Service.GetPrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var response = await ExecuteCommandAsync(

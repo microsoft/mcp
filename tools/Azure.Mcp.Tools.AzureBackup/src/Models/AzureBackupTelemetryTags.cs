@@ -43,8 +43,8 @@ public static class AzureBackupTelemetryTags
     /// Normalizes the vault type to canonical lowercase values (rsv/dpp).
     /// Returns "auto" when the input is null or empty (user didn't specify --vault-type).
     /// </summary>
-    public static string NormalizeVaultType(string? vaultType) =>
-        string.IsNullOrWhiteSpace(vaultType) ? "auto" : vaultType.ToLowerInvariant();
+    public static string NormalizeVaultType(AzureBackupVaultType? vaultType) =>
+        vaultType?.ToValue() ?? "auto";
 
     /// <summary>
     /// Normalizes the workload type to canonical lowercase for consistent telemetry.
@@ -56,7 +56,7 @@ public static class AzureBackupTelemetryTags
     /// <summary>
     /// Adds a normalized vault type tag to the activity.
     /// </summary>
-    public static void AddVaultTags(Activity? activity, string? vaultType)
+    public static void AddVaultTags(Activity? activity, AzureBackupVaultType? vaultType)
     {
         activity?.AddTag(VaultType, NormalizeVaultType(vaultType));
     }
@@ -64,7 +64,7 @@ public static class AzureBackupTelemetryTags
     /// <summary>
     /// Adds normalized vault type and workload type tags to the activity.
     /// </summary>
-    public static void AddVaultAndWorkloadTags(Activity? activity, string? vaultType, string? workloadType)
+    public static void AddVaultAndWorkloadTags(Activity? activity, AzureBackupVaultType? vaultType, string? workloadType)
     {
         activity?.AddTag(VaultType, NormalizeVaultType(vaultType));
         activity?.AddTag(WorkloadType, NormalizeWorkloadType(workloadType));

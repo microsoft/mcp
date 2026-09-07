@@ -45,8 +45,8 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
 
         Service.CreatePrivateEndpointAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestPeName), Arg.Is(TestSubnetId),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupPrivateEndpointGroupId>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -68,8 +68,8 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
     {
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupPrivateEndpointGroupId>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("Private Endpoints are not supported for Backup vaults (DPP). Only Recovery Services vaults (RSV) expose Private Endpoint Connections."));
 
         var response = await ExecuteCommandAsync(
@@ -89,8 +89,8 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
     {
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupPrivateEndpointGroupId>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var response = await ExecuteCommandAsync(
@@ -108,8 +108,8 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
     {
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupPrivateEndpointGroupId>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "forbidden"));
 
         var response = await ExecuteCommandAsync(
@@ -128,8 +128,8 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
     {
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupPrivateEndpointGroupId>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
         var response = await ExecuteCommandAsync(
@@ -143,14 +143,8 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesInvalidGroupId_AsInvalidOperation()
+    public async Task ExecuteAsync_RejectsInvalidGroupId()
     {
-        Service.CreatePrivateEndpointAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("--group-id must be one of: AzureBackup, AzureBackup_secondary"));
-
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
@@ -161,5 +155,9 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("--group-id", response.Message);
+        await Service.DidNotReceive().CreatePrivateEndpointAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<AzureBackupPrivateEndpointGroupId>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

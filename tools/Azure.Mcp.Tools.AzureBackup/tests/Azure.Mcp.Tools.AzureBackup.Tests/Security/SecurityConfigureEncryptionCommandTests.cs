@@ -37,8 +37,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
 
         Service.ConfigureEncryptionAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("SystemAssigned"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is(AzureBackupEncryptionIdentityType.SystemAssigned),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -65,8 +65,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
 
         Service.ConfigureEncryptionAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("UserAssigned"),
-            Arg.Any<string?>(), Arg.Is(TestUserAssignedIdentityId), Arg.Any<string?>(),
+            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is(AzureBackupEncryptionIdentityType.UserAssigned),
+            Arg.Any<string?>(), Arg.Is(TestUserAssignedIdentityId), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -93,8 +93,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
 
         Service.ConfigureEncryptionAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("SystemAssigned"),
-            Arg.Is(TestKeyVersion), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is(AzureBackupEncryptionIdentityType.SystemAssigned),
+            Arg.Is(TestKeyVersion), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -118,8 +118,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
         // Arrange
         Service.ConfigureEncryptionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -143,8 +143,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
         // Arrange
         Service.ConfigureEncryptionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
@@ -168,8 +168,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
         // Arrange
         Service.ConfigureEncryptionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
@@ -193,8 +193,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
         // Arrange
         Service.ConfigureEncryptionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "Bad request"));
 
@@ -250,10 +250,13 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
     [InlineData("DPP")]
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
+        var expectedVaultType = vaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase)
+            ? AzureBackupVaultType.Rsv
+            : AzureBackupVaultType.Dpp;
         Service.ConfigureEncryptionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(vaultType),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(expectedVaultType),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
@@ -284,7 +287,7 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
             "--vault-type", vaultType);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--vault-type must be", response.Message);
+        Assert.Contains("Invalid --vault-type", response.Message);
     }
 
     [Fact]
@@ -314,8 +317,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
 
         Service.ConfigureEncryptionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -341,8 +344,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
         // Arrange
         Service.ConfigureEncryptionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
@@ -358,8 +361,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
         // Assert
         await Service.Received(1).ConfigureEncryptionAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is("SystemAssigned"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is(TestKeyVaultUri), Arg.Is(TestKeyName), Arg.Is(AzureBackupEncryptionIdentityType.SystemAssigned),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
@@ -372,8 +375,8 @@ public class SecurityConfigureEncryptionCommandTests : SubscriptionCommandUnitTe
         {
             Service.ConfigureEncryptionAsync(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupEncryptionIdentityType>(),
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(),
                 Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }

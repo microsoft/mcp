@@ -14,7 +14,7 @@ public sealed class GetGuidanceOptions
     /// Gets or sets the scenario key for the modification.
     /// </summary>
     [Option(Description = "The modification scenario key. Valid values: resource-names, management-groups, ddos, bastion, dns, gateways, regions, ip-addresses, policy-enforcement, policy-assignment, ama, amba, defender, zero-trust, slz.")]
-    public required string Scenario { get; set; }
+    public required PlatformLandingZoneScenario Scenario { get; set; }
 
     /// <summary>
     /// Gets or sets the policy name for policy-related scenarios.

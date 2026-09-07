@@ -93,15 +93,15 @@ public sealed class RequestCommand(
                 options.ResourceGroup,
                 options.MigrateProjectName);
 
-            var result = options.Action.ToLowerInvariant() switch
+            var result = options.Action switch
             {
-                "createmigrateproject" => await HandleCreateMigrateProjectActionAsync(_azureMigrateProjectHelper, options, cancellationToken),
-                "update" => await HandleUpdateActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
-                "check" => await HandleCheckActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
-                "generate" => await HandleGenerateActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
-                "download" => await HandleDownloadActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
-                "status" => _platformLandingZoneService.GetParameterStatus(landingZoneContext),
-                _ => throw new ArgumentException($"Invalid action '{options.Action}'. Valid actions are: createmigrateproject, update, check, generate, download, status.")
+                PlatformLandingZoneAction.CreateMigrateProject => await HandleCreateMigrateProjectActionAsync(_azureMigrateProjectHelper, options, cancellationToken),
+                PlatformLandingZoneAction.Update => await HandleUpdateActionAsync(_platformLandingZoneService, landingZoneContext, options, cancellationToken),
+                PlatformLandingZoneAction.Check => await HandleCheckActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                PlatformLandingZoneAction.Generate => await HandleGenerateActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                PlatformLandingZoneAction.Download => await HandleDownloadActionAsync(_platformLandingZoneService, landingZoneContext, cancellationToken),
+                PlatformLandingZoneAction.Status => _platformLandingZoneService.GetParameterStatus(landingZoneContext),
+                _ => throw new ArgumentOutOfRangeException(nameof(options.Action), options.Action, null)
             };
 
             context.Response.Results = ResponseResult.Create(new(result), AzureMigrateJsonContext.Default.RequestCommandResult);

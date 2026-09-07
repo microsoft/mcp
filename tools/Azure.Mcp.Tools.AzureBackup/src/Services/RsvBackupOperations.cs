@@ -20,7 +20,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
-        string? sku, string? storageType, string? tenant,
+        string? sku, AzureBackupStorageType? storageType, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -122,7 +122,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? containerName,
-        string? datasourceType, DiskExclusionSpec? diskExclusion, string? tenant,
+        AzureBackupDatasourceType? datasourceType, DiskExclusionSpec? diskExclusion, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -142,7 +142,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var policyArmId = BackupProtectionPolicyResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, policyName);
 
-        var profile = RsvDatasourceRegistry.ResolveOrDefault(datasourceType);
+        var datasourceTypeValue = datasourceType?.ToValue();
+        var profile = RsvDatasourceRegistry.ResolveOrDefault(datasourceTypeValue);
 
         // Selective disk backup is only meaningful for IaaS VM protected items.
         var hasDiskExclusion = diskExclusion is not null && diskExclusion.HasAnyValue;
@@ -193,8 +194,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         if (profile.ProtectedItemType == RsvProtectedItemType.AzureFileShare)
         {
-            var fsContainer = containerName ?? RsvNamingHelper.DeriveContainerName(datasourceId, datasourceType);
-            var fsProtectedItemName = RsvNamingHelper.DeriveProtectedItemName(datasourceId, datasourceType);
+            var fsContainer = containerName ?? RsvNamingHelper.DeriveContainerName(datasourceId, datasourceTypeValue);
+            var fsProtectedItemName = RsvNamingHelper.DeriveProtectedItemName(datasourceId, datasourceTypeValue);
 
             var containerId = BackupProtectionContainerResource.CreateResourceIdentifier(
                 subscription, resourceGroup, vaultName, FabricName, fsContainer);
@@ -539,7 +540,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
-        string? immutabilityState, string? identityType, string? tags,
+        string? immutabilityState, AzureBackupManagedIdentityType? identityType, string? tags,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -554,10 +555,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location);
 
-        if (!string.IsNullOrEmpty(identityType))
+        if (identityType is { } managedIdentityType)
         {
             patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                ParseIdentityType(identityType));
+            ToSdkIdentityType(managedIdentityType));
         }
 
         if (!string.IsNullOrEmpty(tags))
@@ -657,8 +658,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
-            (nameof(policyName), policyName),
-            (nameof(workloadType), workloadType));
+            (nameof(policyName), policyName));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultResourceId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -810,7 +810,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(null);
         }
 
-        bool scheduleReplaced = !string.IsNullOrWhiteSpace(req.ScheduleFrequency)
+        bool scheduleReplaced = req.ScheduleFrequency is not null
             || !string.IsNullOrWhiteSpace(req.ScheduleTimes)
             || !string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek);
 
@@ -819,9 +819,9 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             // Determine frequency: explicit --schedule-frequency wins; otherwise infer Weekly when
             // days-of-week are supplied, and fall back to the existing schedule's frequency.
             ScheduleRunType freq;
-            if (!string.IsNullOrWhiteSpace(req.ScheduleFrequency))
+            if (req.ScheduleFrequency is { } scheduleFrequency)
             {
-                freq = string.Equals(req.ScheduleFrequency!.Trim(), "Weekly", StringComparison.OrdinalIgnoreCase)
+                freq = scheduleFrequency == AzureBackupPolicyUpdateScheduleFrequency.Weekly
                     ? ScheduleRunType.Weekly
                     : ScheduleRunType.Daily;
             }
@@ -1389,7 +1389,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> ConfigureEncryptionAsync(
         string vaultName, string resourceGroup, string subscription,
-        string keyVaultUri, string keyName, string identityType,
+        string keyVaultUri, string keyName, AzureBackupEncryptionIdentityType identityType,
         string? keyVersion, string? userAssignedIdentityId,
         string? tenant,
         CancellationToken cancellationToken)
@@ -1399,15 +1399,9 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(keyVaultUri), keyVaultUri),
-            (nameof(keyName), keyName),
-            (nameof(identityType), identityType));
-        var isSystemAssigned = "SystemAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
-        var isUserAssigned = "UserAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
-        if (!isSystemAssigned && !isUserAssigned)
-        {
-            throw new ArgumentException(
-                $"Invalid identity type '{identityType}' for CMK encryption. Supported values: 'SystemAssigned', 'UserAssigned'.");
-        }
+            (nameof(keyName), keyName));
+        var isSystemAssigned = identityType == AzureBackupEncryptionIdentityType.SystemAssigned;
+        var isUserAssigned = identityType == AzureBackupEncryptionIdentityType.UserAssigned;
 
         if (isUserAssigned && string.IsNullOrWhiteSpace(userAssignedIdentityId))
         {
@@ -1459,16 +1453,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");
     }
 
-    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
-        identityType.ToUpperInvariant() switch
+    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ToSdkIdentityType(AzureBackupManagedIdentityType identityType) =>
+        identityType switch
         {
-            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
-            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
-            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
-                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
-            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
-            _ => throw new ArgumentException(
-                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
+            AzureBackupManagedIdentityType.SystemAssigned => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
+            AzureBackupManagedIdentityType.UserAssigned => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
+            AzureBackupManagedIdentityType.SystemAssignedUserAssigned => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
+            AzureBackupManagedIdentityType.None => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
+            _ => throw new ArgumentOutOfRangeException(nameof(identityType), identityType, null)
         };
 
     private static BackupVaultInfo MapToVaultInfo(RecoveryServicesVaultData data, string? resourceGroup)
@@ -2016,7 +2008,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? workloadType, string? containerName, string? tenant,
+        AzureBackupProtectableItemWorkloadType? workloadType, string? containerName, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -2030,9 +2022,9 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
         string filter;
-        if (!string.IsNullOrEmpty(workloadType))
+        if (workloadType is { } specifiedWorkloadType)
         {
-            var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
+            var normalizedType = NormalizeWorkloadTypeForFilter(specifiedWorkloadType);
             filter = $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
         }
         else
@@ -2093,29 +2085,18 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     /// commonly pass "SAPHana" (which is what the API returns in workloadType fields).
     /// Validates input against known workload types to prevent OData injection.
     /// </summary>
-    private static string NormalizeWorkloadTypeForFilter(string workloadType)
+    private static string NormalizeWorkloadTypeForFilter(AzureBackupProtectableItemWorkloadType workloadType) => workloadType switch
     {
-        var normalized = workloadType.ToUpperInvariant() switch
-        {
-            "SQL" or "SQLDATABASE" => "SQLDataBase",
-            "SQLINSTANCE" => "SQLInstance",
-            "SAPHANA" or "SAPHANADATABASE" => "SAPHanaDatabase",
-            "SAPHANASYSTEM" => "SAPHanaSystem",
-            "SAPHANADBINSTANCE" or "SAPHANADBI" => "SAPHanaDBInstance",
-            "VM" or "IAASVM" or "VIRTUALMACHINE" => "VM",
-            "FILESHARE" or "AZUREFILESHARE" or "AFS" => "AzureFileShare",
-            "SAPASE" or "SAPASEDATABASE" or "ASE" or "SYBASE" => "SAPAseDatabase",
-            _ => (string?)null
-        };
-
-        if (normalized is null)
-        {
-            throw new ArgumentException(
-                $"Unknown workload type '{workloadType}'. Supported values: SQL (or SQLDatabase), SQLInstance, SAPHana (or SAPHanaDatabase), SAPHanaSystem, SAPHanaDBInstance (or SAPHanaDBI), VM (or IaaSVM, VirtualMachine), FileShare (or AzureFileShare, AFS), SAPAse (or SAPAseDatabase, ASE, Sybase).");
-        }
-
-        return normalized;
-    }
+        AzureBackupProtectableItemWorkloadType.Sql or AzureBackupProtectableItemWorkloadType.SqlDatabase => "SQLDataBase",
+        AzureBackupProtectableItemWorkloadType.SqlInstance => "SQLInstance",
+        AzureBackupProtectableItemWorkloadType.SapHana or AzureBackupProtectableItemWorkloadType.SapHanaDatabase => "SAPHanaDatabase",
+        AzureBackupProtectableItemWorkloadType.SapHanaSystem => "SAPHanaSystem",
+        AzureBackupProtectableItemWorkloadType.SapHanaDbInstance or AzureBackupProtectableItemWorkloadType.SapHanaDbi => "SAPHanaDBInstance",
+        AzureBackupProtectableItemWorkloadType.Vm or AzureBackupProtectableItemWorkloadType.IaasVm or AzureBackupProtectableItemWorkloadType.VirtualMachine => "VM",
+        AzureBackupProtectableItemWorkloadType.FileShare or AzureBackupProtectableItemWorkloadType.AzureFileShare or AzureBackupProtectableItemWorkloadType.Afs => "AzureFileShare",
+        AzureBackupProtectableItemWorkloadType.SapAse or AzureBackupProtectableItemWorkloadType.SapAseDatabase or AzureBackupProtectableItemWorkloadType.Ase or AzureBackupProtectableItemWorkloadType.Sybase => "SAPAseDatabase",
+        _ => throw new ArgumentOutOfRangeException(nameof(workloadType), workloadType, null)
+    };
 
     private static ProtectableItemInfo MapToProtectableItemInfo(WorkloadProtectableItemResource data)
     {

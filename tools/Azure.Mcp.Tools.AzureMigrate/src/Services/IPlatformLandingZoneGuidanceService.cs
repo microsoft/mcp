@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using static Azure.Mcp.Tools.AzureMigrate.Services.PlatformLandingZoneGuidanceService;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
@@ -16,7 +17,7 @@ public interface IPlatformLandingZoneGuidanceService
     /// <param name="scenario">The scenario key (e.g., 'bastion', 'ddos', 'policy-assignment').</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The official documentation for the scenario.</returns>
-    Task<string> GetGuidanceAsync(string scenario, CancellationToken cancellationToken = default);
+    Task<string> GetGuidanceAsync(PlatformLandingZoneScenario scenario, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all policies organized by archetype.

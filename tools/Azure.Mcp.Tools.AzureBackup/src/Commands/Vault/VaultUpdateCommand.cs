@@ -38,7 +38,7 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
             !string.IsNullOrEmpty(options.SoftDelete) ||
             !string.IsNullOrEmpty(options.SoftDeleteRetentionDays) ||
             !string.IsNullOrEmpty(options.ImmutabilityState) ||
-            !string.IsNullOrEmpty(options.IdentityType) ||
+            options.IdentityType is not null ||
             !string.IsNullOrEmpty(options.Tags);
 
         if (!hasUpdate)
@@ -55,14 +55,6 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
             }
         }
 
-        if (!string.IsNullOrEmpty(options.IdentityType) &&
-            !options.IdentityType.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase) &&
-            !options.IdentityType.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase) &&
-            !options.IdentityType.Equals("None", StringComparison.OrdinalIgnoreCase) &&
-            !options.IdentityType.Equals("SystemAssigned,UserAssigned", StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add("--identity-type must be 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.");
-        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultUpdateOptions options, CancellationToken cancellationToken)

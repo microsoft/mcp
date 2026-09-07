@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Azure.ResourceManager.DataProtectionBackup.Models;
@@ -17,7 +18,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureDisk",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureDisk,
         };
 
         var policy = DppPolicyBuilder.Build(req, profile);
@@ -40,7 +41,7 @@ public class DppPolicyBuilderTests
     public void Build_BlobContinuous_OmitsBackupRule()
     {
         var profile = DppDatasourceRegistry.Resolve("AzureBlob");
-        var req = new PolicyCreateRequest { Policy = "p", WorkloadType = "AzureBlob" };
+        var req = new PolicyCreateRequest { Policy = "p", WorkloadType = AzureBackupPolicyWorkloadType.AzureBlob };
 
         var policy = DppPolicyBuilder.Build(req, profile);
 
@@ -55,7 +56,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureDisk",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureDisk,
             DailyRetentionDays = "7",
             WeeklyRetentionWeeks = 8,
             MonthlyRetentionMonths = 12,
@@ -104,7 +105,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureDisk",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureDisk,
             ArchiveTierMode = "CopyOnExpiry",
         };
 
@@ -121,7 +122,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureDisk",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureDisk,
             ScheduleFrequency = "PT4H",
             ScheduleTimes = "14:30",
             TimeZone = "UTC",
@@ -145,7 +146,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureDisk",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureDisk,
             EnableVaultTierCopy = true,
             VaultTierCopyAfterDays = 7,
         };
@@ -178,7 +179,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureBlob",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureBlob,
             BackupMode = "Vaulted",
             DailyRetentionDays = "30",
         };
@@ -198,7 +199,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureBlob",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureBlob,
             PitrRetentionDays = 60,
         };
 
@@ -216,7 +217,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureDataLakeStorage",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureDataLakeStorage,
             BackupMode = "Vaulted",
             DailyRetentionDays = "30",
         };
@@ -236,7 +237,7 @@ public class DppPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AKS",
+            WorkloadType = AzureBackupPolicyWorkloadType.Aks,
         };
 
         var policy = DppPolicyBuilder.Build(req, profile);

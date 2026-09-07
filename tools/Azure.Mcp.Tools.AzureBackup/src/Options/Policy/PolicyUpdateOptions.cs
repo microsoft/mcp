@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Policy;
@@ -29,7 +30,7 @@ public sealed class PolicyUpdateOptions : BaseAzureBackupOptions
     public string? TimeZone { get; set; }
 
     [Option(Description = "Backup schedule frequency: 'Daily' or 'Weekly'. Hourly, PolicySubType, and V2 schedules are not supported by update. RSV Azure VM only.")]
-    public string? ScheduleFrequency { get; set; }
+    public AzureBackupPolicyUpdateScheduleFrequency? ScheduleFrequency { get; set; }
 
     [Option(Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in --time-zone. RSV Azure VM only.")]
     public string? ScheduleTimes { get; set; }

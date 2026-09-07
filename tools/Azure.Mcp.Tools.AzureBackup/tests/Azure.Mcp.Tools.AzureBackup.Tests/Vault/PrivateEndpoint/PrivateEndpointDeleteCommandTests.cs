@@ -28,7 +28,7 @@ public class PrivateEndpointDeleteCommandTests : SubscriptionCommandUnitTestsBas
     {
         Service.DeletePrivateEndpointAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("pec-1"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Deleted"));
 
         var response = await ExecuteCommandAsync(
@@ -46,7 +46,7 @@ public class PrivateEndpointDeleteCommandTests : SubscriptionCommandUnitTestsBas
     {
         Service.DeletePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("Private Endpoints are not supported for Backup vaults (DPP)."));
 
         var response = await ExecuteCommandAsync(
@@ -64,7 +64,7 @@ public class PrivateEndpointDeleteCommandTests : SubscriptionCommandUnitTestsBas
     {
         Service.DeletePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var response = await ExecuteCommandAsync(

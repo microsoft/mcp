@@ -41,31 +41,10 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     {
         base.ValidateOptions(options, validationResult);
 
-        if (string.IsNullOrWhiteSpace(options.Resource) || string.IsNullOrWhiteSpace(options.Action))
+        if (options.Resource is BestPracticesResource.StaticWebApp or BestPracticesResource.CodingAgent &&
+            options.Action != BestPracticesAction.All)
         {
-            validationResult.Errors.Add("Both resource and action parameters are required.");
-        }
-        else
-        {
-            bool validResource = options.Resource == "general" || options.Resource == "azurefunctions" || options.Resource == "static-web-app" || options.Resource == "coding-agent";
-            bool validAction = options.Action == "all" || options.Action == "code-generation" || options.Action == "deployment";
-
-            if (!validResource)
-            {
-                validationResult.Errors.Add("Invalid resource. Must be 'general', 'azurefunctions', 'static-web-app', or 'coding-agent'.");
-            }
-            if (!validAction)
-            {
-                validationResult.Errors.Add("Invalid action. Must be 'all', 'code-generation' or 'deployment'.");
-            }
-            if (options.Resource == "static-web-app" && options.Action != "all")
-            {
-                validationResult.Errors.Add("The 'static-web-app' resource only supports 'all' action.");
-            }
-            if (options.Resource == "coding-agent" && options.Action != "all")
-            {
-                validationResult.Errors.Add("The 'coding-agent' resource only supports 'all' action.");
-            }
+            validationResult.Errors.Add($"The '{GetResourceValue(options.Resource)}' resource only supports 'all' action.");
         }
     }
 
@@ -93,21 +72,30 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         return Task.FromResult(context.Response);
     }
 
-    private static string GetResourceFileName(string resource, string action)
+    private static string GetResourceFileName(BestPracticesResource resource, BestPracticesAction action)
     {
         return (resource, action) switch
         {
-            ("general", "code-generation") => "azure-general-codegen-best-practices.txt",
-            ("general", "deployment") => "azure-general-deployment-best-practices.txt",
-            ("general", "all") => "azure-general-codegen-best-practices.txt,azure-general-deployment-best-practices.txt",
-            ("azurefunctions", "code-generation") => "azure-functions-codegen-best-practices.txt",
-            ("azurefunctions", "deployment") => "azure-functions-deployment-best-practices.txt",
-            ("azurefunctions", "all") => "azure-functions-codegen-best-practices.txt,azure-functions-deployment-best-practices.txt",
-            ("static-web-app", "all") => "azure-swa-best-practices.txt",
-            ("coding-agent", "all") => "azure-coding-agent-best-practices.txt",
+            (BestPracticesResource.General, BestPracticesAction.CodeGeneration) => "azure-general-codegen-best-practices.txt",
+            (BestPracticesResource.General, BestPracticesAction.Deployment) => "azure-general-deployment-best-practices.txt",
+            (BestPracticesResource.General, BestPracticesAction.All) => "azure-general-codegen-best-practices.txt,azure-general-deployment-best-practices.txt",
+            (BestPracticesResource.AzureFunctions, BestPracticesAction.CodeGeneration) => "azure-functions-codegen-best-practices.txt",
+            (BestPracticesResource.AzureFunctions, BestPracticesAction.Deployment) => "azure-functions-deployment-best-practices.txt",
+            (BestPracticesResource.AzureFunctions, BestPracticesAction.All) => "azure-functions-codegen-best-practices.txt,azure-functions-deployment-best-practices.txt",
+            (BestPracticesResource.StaticWebApp, BestPracticesAction.All) => "azure-swa-best-practices.txt",
+            (BestPracticesResource.CodingAgent, BestPracticesAction.All) => "azure-coding-agent-best-practices.txt",
             _ => throw new ArgumentException($"Invalid combination of resource '{resource}' and action '{action}'")
         };
     }
+
+    private static string GetResourceValue(BestPracticesResource resource) => resource switch
+    {
+        BestPracticesResource.General => "general",
+        BestPracticesResource.AzureFunctions => "azurefunctions",
+        BestPracticesResource.StaticWebApp => "static-web-app",
+        BestPracticesResource.CodingAgent => "coding-agent",
+        _ => throw new ArgumentOutOfRangeException(nameof(resource), resource, null)
+    };
 
     private static string GetBestPracticesText(string resourceFileName)
     {

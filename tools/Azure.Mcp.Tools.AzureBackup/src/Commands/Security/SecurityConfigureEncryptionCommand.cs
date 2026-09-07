@@ -34,20 +34,13 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
 {
     private readonly ILogger<SecurityConfigureEncryptionCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
-    private string? _lastVaultType;
+    private AzureBackupVaultType? _lastVaultType;
 
     public override void ValidateOptions(SecurityConfigureEncryptionOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!string.IsNullOrEmpty(options.IdentityType) &&
-            !options.IdentityType.Equals("SystemAssigned", StringComparison.OrdinalIgnoreCase) &&
-            !options.IdentityType.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add("--identity-type must be 'SystemAssigned' or 'UserAssigned' for CMK encryption.");
-        }
-
-        if (string.Equals(options.IdentityType, "UserAssigned", StringComparison.OrdinalIgnoreCase))
+        if (options.IdentityType == AzureBackupEncryptionIdentityType.UserAssigned)
         {
             if (string.IsNullOrEmpty(options.UserAssignedIdentityId))
             {
@@ -121,7 +114,7 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault or Key Vault key not found. Verify the vault name, resource group, Key Vault URI, and key name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
-            string.Equals(_lastVaultType, "rsv", StringComparison.OrdinalIgnoreCase)
+            _lastVaultType == AzureBackupVaultType.Rsv
                 ? $"Bad request configuring CMK encryption. For RSV, CMK can only be enabled on new vaults with no registered items. Ensure the vault has a managed identity enabled and the Key Vault Crypto Service Encryption User role is assigned. Details: {reqEx.Message}"
                 : $"Bad request configuring CMK encryption. Ensure the vault has a managed identity enabled and the Key Vault Crypto Service Encryption User role is assigned. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>

@@ -42,7 +42,7 @@ public class RecoveryPointGetCommandTests : SubscriptionCommandUnitTestsBase<Rec
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
             Arg.Is(protectedItem),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -78,7 +78,7 @@ public class RecoveryPointGetCommandTests : SubscriptionCommandUnitTestsBase<Rec
             Arg.Is(subscription),
             Arg.Is(protectedItem),
             Arg.Is(rpId),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -104,7 +104,7 @@ public class RecoveryPointGetCommandTests : SubscriptionCommandUnitTestsBase<Rec
     {
         // Arrange
         Service.ListRecoveryPointsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -125,7 +125,7 @@ public class RecoveryPointGetCommandTests : SubscriptionCommandUnitTestsBase<Rec
     {
         // Arrange
         Service.ListRecoveryPointsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -145,7 +145,7 @@ public class RecoveryPointGetCommandTests : SubscriptionCommandUnitTestsBase<Rec
     {
         // Arrange
         Service.GetRecoveryPointAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("nonexistent"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Recovery point not found"));
 
         // Act
@@ -170,11 +170,11 @@ public class RecoveryPointGetCommandTests : SubscriptionCommandUnitTestsBase<Rec
         if (shouldSucceed)
         {
             Service.ListRecoveryPointsAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetRecoveryPointAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("rp1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item"), Arg.Is("rp1"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new RecoveryPointInfo("rp1", "rp1", "rsv", DateTimeOffset.UtcNow, "Full"));
         }
 

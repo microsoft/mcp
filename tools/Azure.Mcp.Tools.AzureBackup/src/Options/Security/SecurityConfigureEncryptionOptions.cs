@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Security;
@@ -17,7 +18,7 @@ public sealed class SecurityConfigureEncryptionOptions : BaseAzureBackupOptions
     public string? KeyVersion { get; set; }
 
     [Option(Description = "Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.")]
-    public required string IdentityType { get; set; }
+    public required AzureBackupEncryptionIdentityType IdentityType { get; set; }
 
     [Option(Description = "ARM resource ID of the user-assigned managed identity for Key Vault access. Required when --identity-type is 'UserAssigned'.")]
     public string? UserAssignedIdentityId { get; set; }

@@ -30,7 +30,7 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
         var expected = new OperationResult("Succeeded", null, "MUA disabled");
         Service.DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -43,7 +43,7 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
 
         await Service.Received(1).DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
     {
         Service.DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         var response = await ExecuteCommandAsync(
@@ -68,7 +68,7 @@ public class SecurityDisableMuaCommandTests : SubscriptionCommandUnitTestsBase<S
     {
         Service.DisableMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         var response = await ExecuteCommandAsync(

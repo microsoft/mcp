@@ -354,7 +354,8 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
         // Assert
         Assert.NotNull(response);
         Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
-        Assert.Contains("Invalid action", response.Message);
+        Assert.Contains("Invalid --action", response.Message);
+        Assert.Contains("Must be one of", response.Message);
     }
 
     [Fact]

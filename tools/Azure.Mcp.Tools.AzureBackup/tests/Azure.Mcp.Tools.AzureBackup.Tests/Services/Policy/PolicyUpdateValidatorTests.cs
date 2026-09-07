@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Xunit;
@@ -41,7 +42,7 @@ public class PolicyUpdateValidatorTests
     public void Validate_WeeklyWithoutDaysOfWeek_Fails()
     {
         var options = BaseOptions();
-        options.ScheduleFrequency = "Weekly";
+        options.ScheduleFrequency = AzureBackupPolicyUpdateScheduleFrequency.Weekly;
 
         var result = PolicyUpdateValidator.Validate(options);
 
@@ -53,7 +54,7 @@ public class PolicyUpdateValidatorTests
     public void Validate_WeeklyWithDaysOfWeek_Passes()
     {
         var options = BaseOptions();
-        options.ScheduleFrequency = "Weekly";
+        options.ScheduleFrequency = AzureBackupPolicyUpdateScheduleFrequency.Weekly;
         options.ScheduleDaysOfWeek = "Sunday";
 
         var result = PolicyUpdateValidator.Validate(options);
@@ -61,14 +62,11 @@ public class PolicyUpdateValidatorTests
         Assert.True(result.IsValid);
     }
 
-    [Theory]
-    [InlineData("Hourly")]
-    [InlineData("Monthly")]
-    [InlineData("Bogus")]
-    public void Validate_UnsupportedFrequency_Fails(string freq)
+    [Fact]
+    public void Validate_UndefinedFrequency_Fails()
     {
         var options = BaseOptions();
-        options.ScheduleFrequency = freq;
+        options.ScheduleFrequency = (AzureBackupPolicyUpdateScheduleFrequency)999;
 
         var result = PolicyUpdateValidator.Validate(options);
 

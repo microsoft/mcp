@@ -14,39 +14,23 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 /// </summary>
 internal static class DiskExclusionValidator
 {
-    private static readonly HashSet<string> AllowedSettings = new(StringComparer.OrdinalIgnoreCase)
-    {
-        DiskExclusionSpec.SettingInclude,
-        DiskExclusionSpec.SettingExclude,
-        DiskExclusionSpec.SettingReset,
-    };
-
     /// <summary>
     /// Validates the combination of selective disk options at command-binding time
     /// (transport-agnostic, no Azure calls). Adds messages to <paramref name="validationResult"/>
     /// on failure.
     /// </summary>
     public static void ValidateDiskExclusionOptions(
-        string? diskListSetting,
+        AzureBackupDiskListSetting? diskListSetting,
         string? disksList,
         bool excludeAllDataDisks,
         ValidationResult validationResult)
     {
-        var hasSetting = !string.IsNullOrWhiteSpace(diskListSetting);
+        var hasSetting = diskListSetting is not null;
         var hasList = !string.IsNullOrWhiteSpace(disksList);
 
         if (hasSetting)
         {
-            var normalized = diskListSetting!.Trim();
-            if (!AllowedSettings.Contains(normalized))
-            {
-                validationResult.Errors.Add(
-                    $"Invalid --disk-list-setting value '{diskListSetting}'. " +
-                    $"Allowed values: {string.Join(", ", AllowedSettings)}.");
-                return;
-            }
-
-            var isReset = string.Equals(normalized, DiskExclusionSpec.SettingReset, StringComparison.OrdinalIgnoreCase);
+            var isReset = diskListSetting == AzureBackupDiskListSetting.ResetExclusionSettings;
             if (isReset)
             {
                 if (hasList || excludeAllDataDisks)
@@ -112,7 +96,7 @@ internal static class DiskExclusionValidator
     /// <see langword="null"/> when none of the disk options were provided.
     /// </summary>
     public static DiskExclusionSpec? BuildDiskExclusionSpec(
-        string? diskListSetting,
+        AzureBackupDiskListSetting? diskListSetting,
         string? disksList,
         bool excludeAllDataDisks)
     {

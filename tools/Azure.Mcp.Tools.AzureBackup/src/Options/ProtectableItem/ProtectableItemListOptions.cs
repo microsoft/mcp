@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectableItem;
@@ -8,7 +9,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectableItem;
 public sealed class ProtectableItemListOptions : BaseAzureBackupOptions
 {
     [Option(Description = AzureBackupOptionDefinitions.WorkloadType)]
-    public string? WorkloadType { get; set; }
+    public AzureBackupProtectableItemWorkloadType? WorkloadType { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.Container)]
     public string? Container { get; set; }

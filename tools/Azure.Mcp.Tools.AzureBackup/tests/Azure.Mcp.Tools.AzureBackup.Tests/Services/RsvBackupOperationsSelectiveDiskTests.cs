@@ -53,7 +53,7 @@ public class RsvBackupOperationsSelectiveDiskTests
         // 'resetexclusionsettings' must produce ExtendedProperties with DiskExclusionProperties=null
         // so the ARM PUT explicitly removes any prior selective-disk configuration.
         var vm = new IaasComputeVmProtectedItem();
-        var spec = new DiskExclusionSpec(DiskExclusionSpec.SettingReset, DiskLunsCsv: null, ExcludeAllDataDisks: false);
+        var spec = new DiskExclusionSpec(AzureBackupDiskListSetting.ResetExclusionSettings, DiskLunsCsv: null, ExcludeAllDataDisks: false);
 
         RsvBackupOperations.ApplyDiskExclusionToProtectedItem(vm, spec);
 
@@ -111,7 +111,7 @@ public class RsvBackupOperationsSelectiveDiskTests
         // supplied, "exclude all data disks" wins (matches the CLI documented contract).
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(
-            Setting: DiskExclusionSpec.SettingExclude,
+            Setting: AzureBackupDiskListSetting.Exclude,
             DiskLunsCsv: "0,1,2",
             ExcludeAllDataDisks: true);
 
@@ -127,7 +127,7 @@ public class RsvBackupOperationsSelectiveDiskTests
     {
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(
-            Setting: DiskExclusionSpec.SettingInclude,
+            Setting: AzureBackupDiskListSetting.Include,
             DiskLunsCsv: "0,2,5",
             ExcludeAllDataDisks: false);
 
@@ -143,7 +143,7 @@ public class RsvBackupOperationsSelectiveDiskTests
     {
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(
-            Setting: DiskExclusionSpec.SettingExclude,
+            Setting: AzureBackupDiskListSetting.Exclude,
             DiskLunsCsv: "1, 3",
             ExcludeAllDataDisks: false);
 
@@ -155,13 +155,13 @@ public class RsvBackupOperationsSelectiveDiskTests
     }
 
     [Fact]
-    public void ApplyDiskExclusionToProtectedItem_SettingIsCaseInsensitive()
+    public void ApplyDiskExclusionToProtectedItem_IncludeSettingProducesInclusionList()
     {
         // The command layer already normalizes casing, but the translation helper is used by
         // both 'protect' and 'update-protection' and must also tolerate the raw casing.
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(
-            Setting: "INCLUDE",
+            Setting: AzureBackupDiskListSetting.Include,
             DiskLunsCsv: "0",
             ExcludeAllDataDisks: false);
 
@@ -179,7 +179,7 @@ public class RsvBackupOperationsSelectiveDiskTests
         // 'az backup protection enable-for-vm --disk-list-setting include --disks-list ...'.
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(
-            Setting: DiskExclusionSpec.SettingInclude,
+            Setting: AzureBackupDiskListSetting.Include,
             DiskLunsCsv: null,
             ExcludeAllDataDisks: false);
 
@@ -195,7 +195,7 @@ public class RsvBackupOperationsSelectiveDiskTests
         // OS disk (LUN -1) is never a user-selectable value on the wire.
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(
-            Setting: DiskExclusionSpec.SettingExclude,
+            Setting: AzureBackupDiskListSetting.Exclude,
             DiskLunsCsv: "-1",
             ExcludeAllDataDisks: false);
 
@@ -210,7 +210,7 @@ public class RsvBackupOperationsSelectiveDiskTests
     {
         var vm = new IaasComputeVmProtectedItem();
         var spec = new DiskExclusionSpec(
-            Setting: DiskExclusionSpec.SettingExclude,
+            Setting: AzureBackupDiskListSetting.Exclude,
             DiskLunsCsv: "0,foo,2",
             ExcludeAllDataDisks: false);
 

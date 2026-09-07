@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Policy;
@@ -11,7 +12,7 @@ public sealed class PolicyCreateOptions : BaseAzureBackupOptions
     public required string Policy { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.WorkloadType)]
-    public required string WorkloadType { get; set; }
+    public required AzureBackupPolicyWorkloadType WorkloadType { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.DailyRetentionDays)]
     public string? DailyRetentionDays { get; set; }

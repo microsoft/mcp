@@ -14,7 +14,7 @@ public interface IRsvBackupOperations
         string subscription,
         string location,
         string? sku,
-        string? storageType,
+        AzureBackupStorageType? storageType,
         string? tenant,
         CancellationToken cancellationToken);
 
@@ -40,7 +40,7 @@ public interface IRsvBackupOperations
         string? softDelete,
         string? softDeleteRetentionDays,
         string? immutabilityState,
-        string? identityType,
+        AzureBackupManagedIdentityType? identityType,
         string? tags,
         string? tenant,
         CancellationToken cancellationToken);
@@ -83,7 +83,7 @@ public interface IRsvBackupOperations
         string datasourceId,
         string policyName,
         string? containerName,
-        string? datasourceType,
+        AzureBackupDatasourceType? datasourceType,
         DiskExclusionSpec? diskExclusion,
         string? tenant,
         CancellationToken cancellationToken);
@@ -119,7 +119,7 @@ public interface IRsvBackupOperations
         string vaultName,
         string resourceGroup,
         string subscription,
-        string? workloadType,
+        AzureBackupProtectableItemWorkloadType? workloadType,
         string? containerName,
         string? tenant,
         CancellationToken cancellationToken);
@@ -221,7 +221,7 @@ public interface IRsvBackupOperations
         string subscription,
         string keyVaultUri,
         string keyName,
-        string identityType,
+        AzureBackupEncryptionIdentityType identityType,
         string? keyVersion,
         string? userAssignedIdentityId,
         string? tenant,
@@ -234,7 +234,7 @@ public interface IRsvBackupOperations
         string subscription,
         string privateEndpointName,
         string vnetSubnetId,
-        string groupId,
+        AzureBackupPrivateEndpointGroupId groupId,
         string? location,
         bool autoApprove,
         string? tenant,

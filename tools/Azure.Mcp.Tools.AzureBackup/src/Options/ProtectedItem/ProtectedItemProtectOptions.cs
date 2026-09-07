@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
@@ -14,7 +15,7 @@ public sealed class ProtectedItemProtectOptions : BaseProtectedItemOptions
     public required string DatasourceId { get; set; }
 
     [Option(Description = "The workload type hint: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.")]
-    public string? DatasourceType { get; set; }
+    public AzureBackupDatasourceType? DatasourceType { get; set; }
 
     [Option(Description = "Resource group used to store AKS volume snapshots created by Backup. DPP AKS only.")]
     public string? AksSnapshotResourceGroup { get; set; }
@@ -33,7 +34,7 @@ public sealed class ProtectedItemProtectOptions : BaseProtectedItemOptions
 
     // Selective Disk Backup (RSV IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
     [Option(Description = AzureBackupOptionDefinitions.DiskListSetting)]
-    public string? DiskListSetting { get; set; }
+    public AzureBackupDiskListSetting? DiskListSetting { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.DisksList)]
     public string? DisksList { get; set; }

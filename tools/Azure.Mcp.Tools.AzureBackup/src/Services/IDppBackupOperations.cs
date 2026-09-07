@@ -13,7 +13,7 @@ public interface IDppBackupOperations
         string subscription,
         string location,
         string? sku,
-        string? storageType,
+        AzureBackupStorageType? storageType,
         string? tenant,
         CancellationToken cancellationToken);
 
@@ -39,7 +39,7 @@ public interface IDppBackupOperations
         string? softDelete,
         string? softDeleteRetentionDays,
         string? immutabilityState,
-        string? identityType,
+        AzureBackupManagedIdentityType? identityType,
         string? tags,
         string? tenant,
         CancellationToken cancellationToken);
@@ -73,7 +73,7 @@ public interface IDppBackupOperations
         string subscription,
         string datasourceId,
         string policyName,
-        string? datasourceType,
+        AzureBackupDatasourceType? datasourceType,
         string? aksIncludedNamespaces,
         string? aksExcludedNamespaces,
         string? aksLabelSelectors,
@@ -184,7 +184,7 @@ public interface IDppBackupOperations
         string subscription,
         string keyVaultUri,
         string keyName,
-        string identityType,
+        AzureBackupEncryptionIdentityType identityType,
         string? keyVersion,
         string? userAssignedIdentityId,
         string? tenant,

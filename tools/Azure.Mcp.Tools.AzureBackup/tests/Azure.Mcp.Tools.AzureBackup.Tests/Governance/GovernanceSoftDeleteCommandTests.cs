@@ -20,7 +20,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
         service.ConfigureSoftDeleteAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Is(state), Arg.Is(retention),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Soft delete configured"));
     }
 
@@ -39,7 +39,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
         Service.ConfigureSoftDeleteAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is(AzureBackupSoftDeleteState.AlwaysOn), Arg.Is(90),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Soft delete configured"));
 
         // Act
@@ -63,7 +63,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
         Service.ConfigureSoftDeleteAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
             Arg.Is(AzureBackupSoftDeleteState.On), Arg.Is(14),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -113,7 +113,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
         Service.ConfigureSoftDeleteAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Is(AzureBackupSoftDeleteState.On), Arg.Any<int>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         // Act
@@ -136,7 +136,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
         Service.ConfigureSoftDeleteAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Is(AzureBackupSoftDeleteState.On), Arg.Any<int>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Cannot change"));
 
         // Act
@@ -158,7 +158,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
         Service.ConfigureSoftDeleteAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Is(AzureBackupSoftDeleteState.On), Arg.Any<int>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act

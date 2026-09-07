@@ -4,6 +4,7 @@
 using System.Globalization;
 using System.Linq;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
+using Azure.Mcp.Tools.AzureBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services.Policy;
 
@@ -31,7 +32,7 @@ public static class RsvPolicyBuilder
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var profile = RsvDatasourceRegistry.ResolveOrDefault(request.WorkloadType);
+        var profile = RsvDatasourceRegistry.ResolveOrDefault(request.WorkloadType.ToValue());
 
         return profile.PolicyType switch
         {
