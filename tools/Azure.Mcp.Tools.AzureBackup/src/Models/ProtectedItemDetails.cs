@@ -6,9 +6,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Models;
 // This contract intentionally mirrors the currently supported RSV SDK protected-item
 // properties. Revisit it whenever Azure.ResourceManager.RecoveryServicesBackup is upgraded.
 /// <summary>
-/// VM-specific properties returned by the Recovery Services protected-item API.
+/// Workload-specific details returned by the Recovery Services protected-item API.
+/// Properties are populated when supported by the protected-item workload type.
 /// </summary>
-public sealed record ProtectedItemVmDetails(
+public sealed record ProtectedItemDetails(
     string? BackupManagementType,
     string? WorkloadType,
     DateTimeOffset? LastRecoverOn,
@@ -21,7 +22,7 @@ public sealed record ProtectedItemVmDetails(
     bool? IsRehydrate,
     IReadOnlyList<string>? ResourceGuardOperationRequests,
     bool? IsArchiveEnabled,
-    string? VmPolicyName,
+    string? PolicyName,
     int? SoftDeleteRetentionPeriodInDays,
     string? VaultId,
     string? FriendlyName,

@@ -1435,6 +1435,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string? policyName = null;
         DateTimeOffset? lastBackupTime = null;
         string? container = null;
+        ProtectedItemDetails? protectedItemDetails = null;
 
         if (data.Properties is BackupGenericProtectedItem genericItem)
         {
@@ -1451,7 +1452,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                 var extendedInfo = vmItem.ExtendedInfo;
                 var extendedProperties = vmItem.ExtendedProperties;
                 var diskExclusionProperties = extendedProperties?.DiskExclusionProperties;
-                var vmDetails = new ProtectedItemVmDetails(
+                protectedItemDetails = new ProtectedItemDetails(
                     vmItem.BackupManagementType?.ToString(),
                     vmItem.WorkloadType?.ToString(),
                     vmItem.LastRecoverOn,
@@ -1498,23 +1499,46 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                                     diskExclusionProperties.IsInclusionList),
                             extendedProperties.LinuxVmApplicationName));
 
-                return new ProtectedItemInfo(
-                    data.Id?.ToString(),
-                    data.Name,
-                    VaultType,
-                    protectionStatus,
-                    datasourceType,
-                    datasourceId,
-                    policyName,
-                    lastBackupTime,
-                    container,
-                    vmDetails);
             }
             else if (genericItem is VmWorkloadProtectedItem workloadItem)
             {
                 protectionStatus = workloadItem.ProtectionState?.ToString();
                 lastBackupTime = workloadItem.LastBackupOn;
                 datasourceType = workloadItem.WorkloadType?.ToString();
+                protectedItemDetails = new ProtectedItemDetails(
+                    genericItem.BackupManagementType?.ToString(),
+                    datasourceType,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    policyName,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    protectionStatus,
+                    null,
+                    null,
+                    workloadItem.LastBackupStatus?.ToString(),
+                    null,
+                    null,
+                    lastBackupTime,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
             }
         }
 
@@ -1527,7 +1551,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             datasourceId,
             policyName,
             lastBackupTime,
-            container);
+            container,
+            protectedItemDetails);
     }
 
     private static ProtectedItemHealthDetails MapToProtectedItemHealthDetails(ResourceHealthDetails details) =>
