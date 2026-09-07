@@ -1278,6 +1278,10 @@ Example prompts that generate Azure CLI commands:
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus'"
+* "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
+* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 

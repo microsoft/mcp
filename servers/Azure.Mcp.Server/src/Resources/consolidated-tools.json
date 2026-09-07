@@ -94,8 +94,8 @@
           "description": "This tool changes drill run execution by disabling further retries for the specified stage."
         },
         "idempotent": {
-          "value": false,
-          "description": "This operation is intended for a stage that has not already been marked complete."
+          "value": true,
+          "description": "Repeated requests leave the specified drill run stage marked complete."
         },
         "openWorld": {
           "value": false,

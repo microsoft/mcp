@@ -1806,7 +1806,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);

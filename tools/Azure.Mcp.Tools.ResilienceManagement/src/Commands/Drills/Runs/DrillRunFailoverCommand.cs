@@ -46,7 +46,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
 
         if (options.SelectedResourceIds?.Any(resourceId => !IsValidResourceIdentifier(resourceId)) == true)
         {
-            validationResult.Errors.Add("Each selected resource ID must be an absolute Azure resource ID.");
+            validationResult.Errors.Add("Each selected resource ID must be a full Azure recovery-resource ID.");
         }
     }
 
@@ -139,10 +139,13 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
 
         try
         {
-            _ = new ResourceIdentifier(resourceId);
-            return true;
+            var parsed = new ResourceIdentifier(resourceId);
+            return string.Equals(parsed.ResourceType.ToString(), "Microsoft.AzureResilienceManagement/recoveryResources", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(parsed.SubscriptionId) &&
+                !string.IsNullOrWhiteSpace(parsed.ResourceGroupName) &&
+                !string.IsNullOrWhiteSpace(parsed.Name);
         }
-        catch (ArgumentException)
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
         {
             return false;
         }

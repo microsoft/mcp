@@ -82,18 +82,32 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
         Assert.Contains("physical Azure zone format", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_RejectsInvalidSelectedResourceId()
+    [Theory]
+    [InlineData("not-an-arm-id")]
+    [InlineData("/subscriptions/x")]
+    [InlineData("/not/a/real/id")]
+    [InlineData("/subscriptions/sub1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1")]
+    [InlineData("/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1")]
+    public async Task ExecuteAsync_RejectsInvalidSelectedResourceId(string selectedResourceId)
     {
         var response = await ExecuteCommandAsync(
             "--service-group", ServiceGroup,
             "--drill", Drill,
             "--drill-run", DrillRun,
             "--source-locations", SourceLocation,
-            "--selected-resource-ids", "not-an-arm-id");
+            "--selected-resource-ids", selectedResourceId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("absolute Azure resource ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("full Azure recovery-resource ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().FailoverDrillRunAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<IEnumerable<string>?>(),
+            Arg.Any<bool>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
