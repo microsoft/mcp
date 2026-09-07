@@ -1291,16 +1291,16 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                         policyInfo.PolicyVersion),
                 protectionStatus is null
                     ? null
-                    : new ProtectedItemDppProtectionStatus(protectionStatus.Status?.ToString()),
+                    : new ProtectedItemDppProtectionStatus(
+                        protectionStatus.Status?.ToString(),
+                        null,
+                        protectionStatus.ProtectionStatusErrorDetails is null
+                            ? null
+                            : [MapToDppError(protectionStatus.ProtectionStatusErrorDetails)]),
                 resourceProtectionError is null
                     ? null
-                    : new ProtectedItemDppError(
-                        resourceProtectionError.Code,
-                        resourceProtectionError.Message,
-                        resourceProtectionError.RecommendedAction?.ToList(),
-                        resourceProtectionError.Target,
-                        resourceProtectionError.IsRetryable,
-                        resourceProtectionError.IsUserError),
+                    : MapToDppError(resourceProtectionError),
+                properties?.DataSourceAuthCredentials?.GetType().Name,
                 identityDetails is null
                     ? null
                     : new ProtectedItemDppIdentityDetails(
@@ -1308,6 +1308,24 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                         identityDetails.UseSystemAssignedIdentity,
                         identityDetails.UserAssignedIdentityId)));
     }
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupUserFacingError error) =>
+        new(
+            error.Code,
+            error.Message,
+            error.RecommendedAction?.ToList(),
+            error.Target,
+            error.IsRetryable,
+            error.IsUserError);
+
+    private static ProtectedItemDppError MapToDppError(Azure.ResponseError error) =>
+        new(
+            error.Code,
+            error.Message,
+            null,
+            null,
+            null,
+            null);
 
     private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)
     {

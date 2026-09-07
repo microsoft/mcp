@@ -18,32 +18,5 @@ public sealed record ProtectedItemDppDetails(
     ProtectedItemDppPolicyInfo? PolicyInfo,
     ProtectedItemDppProtectionStatus? ProtectionStatus,
     ProtectedItemDppError? ResourceProtectionError,
+    string? DataSourceAuthCredentialsType,
     ProtectedItemDppIdentityDetails? IdentityDetails);
-
-public sealed record ProtectedItemDppDataSourceReference(
-    string? ResourceId,
-    string? ResourceName,
-    string? DataSourceType,
-    string? ResourceType,
-    string? ResourceLocation,
-    string? ObjectType);
-
-public sealed record ProtectedItemDppPolicyInfo(
-    string? PolicyId,
-    string? PolicyVersion);
-
-public sealed record ProtectedItemDppProtectionStatus(
-    string? Status);
-
-public sealed record ProtectedItemDppError(
-    string? Code,
-    string? Message,
-    IReadOnlyList<string>? RecommendedAction,
-    string? Target,
-    bool? IsRetryable,
-    bool? IsUserError);
-
-public sealed record ProtectedItemDppIdentityDetails(
-    string? UserAssignedIdentityArmUri,
-    bool? UseSystemAssignedIdentity,
-    string? UserAssignedIdentityId);

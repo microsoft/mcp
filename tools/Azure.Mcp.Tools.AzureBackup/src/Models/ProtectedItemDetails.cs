@@ -25,6 +25,7 @@ public sealed record ProtectedItemDetails(
     bool? IsArchiveEnabled,
     string? PolicyName,
     int? SoftDeleteRetentionPeriodInDays,
+    int? SoftDeleteRetentionPeriod,
     string? VaultId,
     string? FriendlyName,
     string? VirtualMachineId,
