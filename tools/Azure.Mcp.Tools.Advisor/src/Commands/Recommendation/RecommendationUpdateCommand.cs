@@ -63,13 +63,12 @@ public sealed class RecommendationUpdateCommand(
 
         var subscriptionWasProvided = options.Subscription is not null;
         var serviceGroupWasProvided = options.ServiceGroup is not null;
-        var hasSubscription = !string.IsNullOrWhiteSpace(options.Subscription);
-        var hasServiceGroup = !string.IsNullOrWhiteSpace(options.ServiceGroup);
         if (subscriptionWasProvided && serviceGroupWasProvided)
         {
             validationResult.Errors.Add("Specify either --subscription or --service-group, not both.");
         }
-        else if (!hasSubscription && !hasServiceGroup)
+        else if (string.IsNullOrWhiteSpace(options.Subscription) &&
+            string.IsNullOrWhiteSpace(options.ServiceGroup))
         {
             validationResult.Errors.Add("Missing Required options: --subscription or --service-group.");
         }
