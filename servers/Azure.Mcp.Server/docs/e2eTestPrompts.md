@@ -1099,14 +1099,16 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
 | resilience_usageplan_delete | Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name> | none |
 | resilience_usageplan_delete | Permanently remove the usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
-| resilience_usageplan_delete | Remove the usage plan of service group <service_group> | none |
+| resilience_usageplan_delete | Remove the usage plan of service group <service_group> | clarification-required |
 | resilience_usageplan_delete | Remove usage plan <usage_plan_name> entirely, not just one service group enrollment, from resource group <resource_group_name> | none |
+| resilience_usageplan_delete | Delete usage plan <usage_plan_name> from resource group <resource_group_name>. If dependent enrollments block deletion, list their exact names and ask for explicit confirmation before deleting any enrollment; do not remove them automatically | none |
+| resilience_usageplan_delete | Retry deleting usage plan <usage_plan_name> from resource group <resource_group_name> only after every separately confirmed dependent enrollment deletion succeeds; stop and report any enrollment cleanup failure | none |
 | resilience_usageplan_enrollment_create | Create a usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> associated with service group <service_group> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_create | Enroll service group <service_group> in usage plan <usage_plan_name> as <enrollment_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_create | Update enrollment <enrollment_name> under usage plan <usage_plan_name> to use service group <service_group> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_delete | Delete enrollment <enrollment_name> from usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_delete | Remove the service group association named <enrollment_name> from resilience usage plan <usage_plan_name> in resource group <resource_group_name> | none |
-| resilience_usageplan_enrollment_delete | Unenroll service group <service_group> from usage plan <usage_plan_name>, but keep the usage plan itself | none |
+| resilience_usageplan_enrollment_delete | Unenroll service group <service_group> from usage plan <usage_plan_name>, but keep the usage plan itself | clarification-required |
 | resilience_usageplan_enrollment_delete | Remove only enrollment <enrollment_name> from usage plan <usage_plan_name>; do not delete the parent plan | none |
 | resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> | none |

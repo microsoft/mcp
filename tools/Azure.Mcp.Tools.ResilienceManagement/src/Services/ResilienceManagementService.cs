@@ -19,6 +19,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 {
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan UsagePlanOperationTimeout = TimeSpan.FromMinutes(10);
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default)
     {
@@ -991,6 +992,19 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             throw new TimeoutException($"The {operationDescription} did not complete within {timeout.TotalMinutes} minutes.");
         }
+    }
+
+    private static async Task WaitForUsagePlanLroCompletionAsync(Operation operation, string operationDescription, CancellationToken cancellationToken)
+    {
+        await ExecuteWithTimeoutAsync(
+            async token =>
+            {
+                await WaitForLroCompletionAsync(operation, token);
+                return true;
+            },
+            operationDescription,
+            UsagePlanOperationTimeout,
+            cancellationToken);
     }
 
     private static async Task WaitForRecoveryPlanLroCompletionAsync(Operation operation, TimeSpan timeout, CancellationToken cancellationToken)
@@ -2134,7 +2148,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         try
         {
             ArmOperation operation = await existingPlan.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+            await WaitForUsagePlanLroCompletionAsync(operation, "usage plan delete", cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -2185,7 +2199,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         try
         {
             ArmOperation operation = await existingEnrollment.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+            await WaitForUsagePlanLroCompletionAsync(operation, "usage plan enrollment delete", cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)

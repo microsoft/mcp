@@ -69,9 +69,9 @@ For operational Azure requests, use the Azure Resilience Management MCP tools ex
 
 1. Get the named resource and verify it is the intended target.
 2. Check for active drill runs, recovery operations, or other state that blocks deletion.
-3. When deleting a usage plan, list all child enrollments. An explicit request to delete the entire plan also authorizes deleting those child enrollments as required dependencies; report that prerequisite cleanup. Do not stop after deleting only one enrollment.
+3. A request to delete a usage plan does not authorize deleting its child enrollments. If dependent enrollments block deletion, list their exact names and get explicit confirmation before removing any of them.
 4. Call delete only for an explicit, unambiguous request.
-5. Re-read the exact parent after prerequisite cleanup and deletion when a get tool is available.
+5. Re-read the exact parent after deletion or confirmed prerequisite cleanup when a get tool is available.
 6. Report whether the resource existed and whether deletion was accepted or completed.
 
 ### Long-running or destructive requests

@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
     Id = "88aefef8-13ca-4e02-907f-ad6fbf23a28e",
     Name = "delete",
     Title = "Delete Resilience Usage Plan Enrollment",
-    Description = "Deletes only a named enrollment from a resilience usage plan and reports whether the enrollment existed. Use this to unenroll a service group or remove its association while retaining the parent usage plan. Do not use this when the user asks to delete the entire usage plan resource.",
+    Description = "Deletes a named enrollment from a resilience usage plan to remove a service group association while keeping the parent plan. Deletes only the enrollment and reports whether it existed. Use this to unenroll a service group, not to delete the entire usage plan resource.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
     Id = "7d5ccdb2-6595-49cf-89d7-8a55dc1dc823",
     Name = "delete",
     Title = "Delete Resilience Usage Plan",
-    Description = "Deletes a resilience usage plan from an Azure resource group and reports whether it existed. Permanently removes the entire named usage plan resource. Use this when asked to delete or remove the usage plan itself, including the usage plan of or associated with a service group. Do not use this merely to unenroll a service group while retaining the plan.",
+    Description = "Deletes a named resilience usage plan from an Azure resource group or removes the usage plan of a service group. Deletes the entire parent plan and reports whether it existed; do not use this to remove only an enrollment or association. Dependent enrollments block plan deletion and are not deleted automatically; list the exact enrollments and obtain explicit confirmation before deleting each separately.",
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -76,7 +76,7 @@ public sealed class UsagePlanDeleteCommand(
     {
         TimeoutException => "The usage plan delete request timed out. Check whether the usage plan still exists before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "The usage plan cannot be deleted in its current state. Remove dependent enrollments and try again.",
+            "The usage plan cannot be deleted while dependent enrollments exist. List the enrollments and obtain explicit confirmation before deleting them separately, then try again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed deleting the usage plan. Verify you have permission to delete usage plans in the resource group.",
         RequestFailedException =>
