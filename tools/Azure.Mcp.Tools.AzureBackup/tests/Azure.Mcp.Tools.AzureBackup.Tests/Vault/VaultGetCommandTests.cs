@@ -308,7 +308,11 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         var subscription = "sub123";
         var vaultName = "vault-with-identity";
         var resourceGroup = "rg1";
-        var identityResourceId = "/subscriptions/sub123/resourceGroups/rg-identity/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id1";
+        var identityResourceId = "/subscriptions/sub123/resourceGroups/rg-identity/providers/Microsoft.ManagedIdentity/userAssignedIdentities/user-assigned-identity-1";
+        var userAssignedIdentities = new List<BackupVaultUserAssignedIdentity>
+        {
+            new(identityResourceId, "principal-user-assigned-1", "client-user-assigned-1")
+        };
 
         var expectedVault = new BackupVaultInfo(
             "id1",
@@ -329,7 +333,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
                 "principal-1",
                 "tenant-1",
                 "SystemAssigned,UserAssigned",
-                [new BackupVaultUserAssignedIdentity(identityResourceId, "principal-uami-1", "client-uami-1")])));
+                userAssignedIdentities));
 
         Service.GetVaultAsync(
             Arg.Is(vaultName),
@@ -351,10 +355,12 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         Assert.NotNull(vault.IdentityDetails);
         Assert.Equal("principal-1", vault.IdentityDetails!.PrincipalId);
         Assert.Equal("tenant-1", vault.IdentityDetails.TenantId);
-        Assert.Equal("SystemAssigned,UserAssigned", vault.IdentityDetails.IdentityType);
-        var userAssignedIdentity = Assert.Single(vault.IdentityDetails.UserAssignedIdentities);
+        Assert.Equal("SystemAssigned,UserAssigned", vault.IdentityDetails.Type);
+        var returnedUserAssignedIdentities = vault.IdentityDetails.UserAssignedIdentities;
+        Assert.NotNull(returnedUserAssignedIdentities);
+        var userAssignedIdentity = Assert.Single(returnedUserAssignedIdentities);
         Assert.Equal(identityResourceId, userAssignedIdentity.ResourceId);
-        Assert.Equal("principal-uami-1", userAssignedIdentity.PrincipalId);
-        Assert.Equal("client-uami-1", userAssignedIdentity.ClientId);
+        Assert.Equal("principal-user-assigned-1", userAssignedIdentity.PrincipalId);
+        Assert.Equal("client-user-assigned-1", userAssignedIdentity.ClientId);
     }
 }
