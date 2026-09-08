@@ -517,6 +517,7 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_add_notes_to_drill_run()
     {
+        const string note = "Recorded MCP add-notes validation.";
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
         var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
@@ -529,11 +530,12 @@ public class ResilienceManagementCommandTests(
                 { "service-group", serviceGroup },
                 { "drill", drill },
                 { "drill-run", drillRun },
-                { "notes", "Recorded MCP add-notes validation." }
+                { "notes", note }
             });
 
         Assert.True(result.AssertProperty("accepted").GetBoolean());
         Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        await WaitForDrillRunNoteAsync(serviceGroup, drill, drillRun, note);
     }
 
     [Fact]
@@ -659,6 +661,37 @@ public class ResilienceManagementCommandTests(
         }
 
         Assert.True(reachedExpectedVerb, $"Drill run stage '{stageName}' did not offer verb(s) [{string.Join(", ", expectedVerbs)}] within the timeout.");
+    }
+
+    private async Task WaitForDrillRunNoteAsync(string serviceGroup, string drill, string drillRun, string expectedNote)
+    {
+        bool notePersisted = false;
+        for (int attempt = 0; attempt < 60 && !notePersisted; attempt++)
+        {
+            var getResult = await CallToolAsync(
+                "resilience_drill_run_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "name", drillRun }
+                });
+
+            JsonElement notes = getResult
+                .AssertProperty("drillRun")
+                .AssertProperty("properties")
+                .AssertProperty("notes");
+            notePersisted = notes.ValueKind == JsonValueKind.Array &&
+                notes.EnumerateArray().Any(note => note.GetString()?.Contains(expectedNote, StringComparison.Ordinal) == true);
+
+            if (!notePersisted && TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+            {
+                await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+            }
+        }
+
+        Assert.True(notePersisted, $"Drill run note '{expectedNote}' was not persisted within the timeout.");
     }
 
     /// <summary>

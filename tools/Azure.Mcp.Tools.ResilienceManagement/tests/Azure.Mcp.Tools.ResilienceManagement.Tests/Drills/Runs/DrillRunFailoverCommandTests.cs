@@ -18,7 +18,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
     private const string SourceLocation = "eastus-az1";
-    private const string SelectedResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1";
+    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -86,8 +86,9 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     [InlineData("not-an-arm-id")]
     [InlineData("/subscriptions/x")]
     [InlineData("/not/a/real/id")]
-    [InlineData("/subscriptions/sub1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1")]
-    [InlineData("/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/virtualMachines/vm1")]
     public async Task ExecuteAsync_RejectsInvalidSelectedResourceId(string selectedResourceId)
     {
         var response = await ExecuteCommandAsync(
@@ -98,7 +99,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--selected-resource-ids", selectedResourceId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("full Azure recovery-resource ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("full recovery-resource ID under the requested service group", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().FailoverDrillRunAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

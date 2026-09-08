@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
+using Azure.ResourceManager.ResilienceManagement;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -25,6 +26,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> logger, IResilienceManagementService resilienceManagementService)
     : AuthenticatedCommand<DrillRunFailoverOptions, DrillRunFailoverCommand.DrillRunFailoverCommandResult>
 {
+    private static readonly ResourceType ServiceGroupResourceType = new("Microsoft.Management/serviceGroups");
     private readonly ILogger<DrillRunFailoverCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
 
@@ -44,9 +46,9 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
             validationResult.Errors.Add("Each source location must use the physical Azure zone format '<region>-az<zone-number>', such as 'eastus-az1'.");
         }
 
-        if (options.SelectedResourceIds?.Any(resourceId => !IsValidResourceIdentifier(resourceId)) == true)
+        if (options.SelectedResourceIds?.Any(resourceId => !IsRecoveryResourceIdForServiceGroup(resourceId, options.ServiceGroup)) == true)
         {
-            validationResult.Errors.Add("Each selected resource ID must be a full Azure recovery-resource ID.");
+            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under the requested service group.");
         }
     }
 
@@ -130,20 +132,17 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         return true;
     }
 
-    private static bool IsValidResourceIdentifier(string resourceId)
+    private static bool IsRecoveryResourceIdForServiceGroup(string resourceId, string serviceGroup)
     {
-        if (string.IsNullOrWhiteSpace(resourceId) || !resourceId.StartsWith('/'))
-        {
-            return false;
-        }
-
         try
         {
             var parsed = new ResourceIdentifier(resourceId);
-            return string.Equals(parsed.ResourceType.ToString(), "Microsoft.AzureResilienceManagement/recoveryResources", StringComparison.OrdinalIgnoreCase) &&
-                !string.IsNullOrWhiteSpace(parsed.SubscriptionId) &&
-                !string.IsNullOrWhiteSpace(parsed.ResourceGroupName) &&
-                !string.IsNullOrWhiteSpace(parsed.Name);
+            ResourceIdentifier? recoveryPlanId = parsed.Parent;
+            ResourceIdentifier? serviceGroupId = recoveryPlanId?.Parent;
+            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
+                recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
+                serviceGroupId?.ResourceType == ServiceGroupResourceType &&
+                string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase);
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException)
         {
