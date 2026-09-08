@@ -6,6 +6,7 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.Tests.FileShare;
