@@ -36,4 +36,5 @@ public sealed record RecommendationProperties(
     [property: JsonPropertyName("review")] JsonElement? Review = null,
     [property: JsonPropertyName("resourceWorkload")] JsonElement? ResourceWorkload = null,
     [property: JsonPropertyName("sourceSystem")] string? SourceSystem = null,
-    [property: JsonPropertyName("notes")] string? Notes = null);
+    [property: JsonPropertyName("notes")] string? Notes = null,
+    [property: JsonPropertyName("serviceGroupId")] string? ServiceGroupId = null);
