@@ -10,14 +10,18 @@ words:
   - deletedrillname
   - drillname
   - drillresourcename
+  - drillrunsourcelocation
   - enrollmentname
+  - faultinjection
   - goalassignmentname
   - goaltemplatename
   - recoveryjobname
   - recoveryplanname
   - reinclusion
   - reprotect
+  - reprotected
   - reprotection
+  - reprotects
   - resiliencemanagement
   - servicegroupname
   - usageplanname
