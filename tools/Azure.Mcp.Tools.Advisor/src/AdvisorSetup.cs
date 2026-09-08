@@ -44,9 +44,9 @@ public class AdvisorSetup : IAreaSetup
         advisor.AddSubGroup(metadata);
 
         // Register Advisor commands
+        recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
-        recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
         metadata.AddCommand<MetadataGetCommand>(serviceProvider);

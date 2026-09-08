@@ -18,6 +18,8 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
+    private readonly AdvisorResourceGraphQueryExecutor _queryExecutor = new(azureService);
+
     private const string RecommendationUpdateApiVersion = "2026-08-01-preview";
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
@@ -724,25 +726,8 @@ public class AdvisorService(IAzureService azureService)
 
     private async Task<TenantResource> GetTenantResourceAsync(
         string? tenant,
-        CancellationToken cancellationToken)
-    {
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        if (tenants.Count == 0)
-        {
-            throw new InvalidOperationException("No accessible Azure tenants were found.");
-        }
-
-        if (string.IsNullOrWhiteSpace(tenant))
-        {
-            return tenants[0];
-        }
-
-        var resolvedTenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
-            ?? throw new InvalidOperationException($"Could not resolve tenant '{tenant}'.");
-        var tenantId = Guid.Parse(resolvedTenantId);
-        return tenants.FirstOrDefault(candidate => candidate.Data.TenantId == tenantId)
-            ?? throw new InvalidOperationException($"No accessible tenant found for tenant '{tenant}'.");
-    }
+        CancellationToken cancellationToken) =>
+        await _queryExecutor.ResolveTenantResourceAsync(tenant, cancellationToken);
 
     public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
         string recommendationTypeId,
@@ -818,7 +803,8 @@ public class AdvisorService(IAzureService azureService)
                 Review: advisorRecommendation.Properties?.Review,
                 ResourceWorkload: advisorRecommendation.Properties?.ResourceWorkload,
                 SourceSystem: advisorRecommendation.Properties?.SourceSystem,
-                Notes: advisorRecommendation.Properties?.Notes),
+                Notes: advisorRecommendation.Properties?.Notes,
+                ServiceGroupId: advisorRecommendation.Properties?.ServiceGroupId),
             Id: advisorRecommendation.ResourceId,
             Type: advisorRecommendation.ResourceType,
             Name: advisorRecommendation.ResourceName);
