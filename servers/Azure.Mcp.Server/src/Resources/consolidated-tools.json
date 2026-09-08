@@ -644,7 +644,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, manage web tests for application monitoring, and get health status of entities in Azure Monitor health models.",
+      "description": "Query Analytics logs or search Basic and Auxiliary tables in a Log Analytics workspace. Find matching records in a named table over a time range, with a result limit. Get Azure resource and application health, metrics, availability, and service health events. List Log Analytics workspaces, tables, activity logs, Grafana instances, and Datadog monitored resources. Diagnose applications with App Lens, get Application Insights recommendations, manage web tests, and inspect Azure Monitor health models.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -688,6 +688,7 @@
         "monitor_table_type_list",
         "monitor_webtests_get",
         "monitor_workspace_log_query",
+        "monitor_workspace_log_search",
         "resourcehealth_availability-status_get",
         "resourcehealth_health-events_list"
       ]

@@ -134,9 +134,8 @@ public sealed class NamespaceToolLoader(
             var tool = new Tool
             {
                 Name = namespaceName,
-                Description = group.Description + """
+                Description = group.Description + Environment.NewLine + Environment.NewLine + """
                     This tool is a hierarchical MCP command router.
-                    Sub commands are routed to MCP servers that require specific fields inside the "parameters" object.
                     To invoke a command, set "command" and wrap its args in "parameters".
                     Set "learn=true" to discover available sub commands.
                     """,
