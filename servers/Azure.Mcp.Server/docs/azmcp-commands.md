@@ -321,6 +321,40 @@ The `azmcp server start` command supports the following options:
 azmcp server info
 ```
 
+### Azure Data Manager for Energy Operations
+
+```bash
+# Check authentication and connectivity for an ADME endpoint and data partition
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme health check --endpoint <endpoint> \
+                         --data-partition <data-partition> \
+                         [--tenant <tenant>]
+
+# Get a schema by its fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme schema get --endpoint <endpoint> \
+                       --data-partition <data-partition> \
+                       --kind <authority:source:entity-type:version> \
+                       [--tenant <tenant>]
+
+# List schemas with optional identity, lifecycle, scope, version, and paging filters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme schema list --endpoint <endpoint> \
+                        --data-partition <data-partition> \
+                        [--tenant <tenant>] \
+                        [--authority <authority>] \
+                        [--source <source>] \
+                        [--entity-type <entity-type>] \
+                        [--status <PUBLISHED|DEVELOPMENT|OBSOLETE>] \
+                        [--scope <SHARED|INTERNAL>] \
+                        [--schema-version-major <major>] \
+                        [--schema-version-minor <minor>] \
+                        [--schema-version-patch <patch>] \
+                        [--latest-version] \
+                        [--offset <offset>] \
+                        [--limit <limit>]
+```
+
 ### Azure Advisor Operations
 
 ```bash
@@ -357,18 +391,28 @@ azmcp advisor recommendation update --subscription <subscription> \
                                     [--postponed-until-date-time <date-time-with-offset>] \
                                     [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
 
-# Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
-# --group-by is optional and defaults to 'category' when omitted
-# Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded
+# Summarize Advisor recommendation counts, totals, rankings, and distributions.
+# Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
+# --group-by defaults to category. All groupings except status include only active New recommendations.
+# Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
+# properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
+# retirement data prefer metadata values with recommendation-instance fallback.
+# Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
+# next-N window.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation summary --subscription <subscription> \
                                      [--group-by <group-by>] \
-                                     [--top <top>] \
-                                     [--category <category>] \
-                                     [--impact <impact>] \
+                                     [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
+                                     [--impact <High|Medium|Low>] \
+                                     [--recommendation-type-id <recommendation-type-id>] \
                                      [--resource-type <resource-type>] \
                                      [--resource <resource>] \
-                                     [--search <search>]
+                                     [--search <search>] \
+                                     [--sub-category <sub-category>] \
+                                     [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>] \
+                                     [--top <1-100>] \
+                                     [--resource-group <resource-group>] \
+                                     [--tenant <tenant>]
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # Supported --resource values:
@@ -4210,12 +4254,40 @@ azmcp resilience drill run get --service-group <service-group> \
                                --drill <drill> \
                                [--name <name>]
 
+# Add notes to a drill run
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run add-notes --service-group <service-group> \
+                                     --drill <drill> \
+                                     --drill-run <drill-run> \
+                                     --notes <notes>
+
+# Start failover for a drill run. Repeat source locations and selected resource IDs as needed.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run failover --service-group <service-group> \
+                                    --drill <drill> \
+                                    --drill-run <drill-run> \
+                                    --source-locations <source-location> \
+                                    [--selected-resource-ids <selected-resource-id>] \
+                                    [--auto-failover <true|false>]
+
+# Resume a failover drill run paused after fault injection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run resume --service-group <service-group> \
+                                  --drill <drill> \
+                                  --drill-run <drill-run>
+
 # Mark a drill run stage complete, disabling further retries on that stage
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill run mark-complete --service-group <service-group> \
                                          --drill <drill> \
                                          --drill-run <drill-run> \
                                          --stage <stage>
+
+# Reprotect failed-over resources in a drill run
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run reprotect --service-group <service-group> \
+                                     --drill <drill> \
+                                     --drill-run <drill-run>
 
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

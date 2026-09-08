@@ -954,8 +954,10 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
-* "Summarize my Advisor recommendations by category"
-* "Which resource types have the most high-impact Advisor recommendations?"
+* "Summarize the key themes from my Advisor recommendations"
+* "Show the top 10 most common Advisor recommendation types"
+* "Break down my Advisor recommendations by lifecycle status"
+* "Summarize active service-retirement recommendations by retirement date"
 * "Mark an Advisor recommendation as completed"
 * "Dismiss an Advisor recommendation because the risk is acceptable"
 * "Postpone an Advisor recommendation until December 31, 2026"
@@ -1103,6 +1105,12 @@ Example prompts that generate Azure CLI commands:
 * "Get the document with id '123' from container 'items' in database 'mydb' of Cosmos DB account 'myaccount'"
 * "Search documents in container 'items' from database 'mydb' where 'description' contains 'wireless headphones'"
 * "Find documents similar to 'noise cancelling earbuds' in container 'items' of database 'mydb' using vector property 'embedding'"
+
+### Azure Data Manager for Energy
+
+* "Check authentication and connectivity for my ADME endpoint and data partition"
+* "Get an ADME schema by kind"
+* "List shared Well schemas from my ADME data partition"
 
 ### 🧮 Azure Data Explorer
 
@@ -1280,6 +1288,10 @@ Example prompts that generate Azure CLI commands:
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
+* "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
+* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
@@ -1312,10 +1324,10 @@ Example prompts that generate Azure CLI commands:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **44+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
-- 📊 **Azure Advisor** - Advisor recommendations, recommendation state management, and recommendation metadata
+- 📊 **Azure Advisor** - Advisor recommendation records, aggregate summaries, lifecycle state management, and recommendation metadata
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management
@@ -1329,6 +1341,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
