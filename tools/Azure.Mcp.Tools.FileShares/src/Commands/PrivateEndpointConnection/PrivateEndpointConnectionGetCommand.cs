@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     Secret = false,
     LocalRequired = false)]
 public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointConnectionGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<PrivateEndpointConnectionGetOptions, PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<PrivateEndpointConnectionGetOptions, PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PrivateEndpointConnectionGetOptions options, CancellationToken cancellationToken)
     {

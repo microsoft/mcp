@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Secret = false,
     LocalRequired = false)]
 public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<SnapshotGetOptions, SnapshotGetCommand.SnapshotGetCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<SnapshotGetOptions, SnapshotGetCommand.SnapshotGetCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotGetOptions options, CancellationToken cancellationToken)
     {

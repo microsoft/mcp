@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(subscriptionResolver)
 {
     public override void ValidateOptions(FileShareGetOptions options, ValidationResult validationResult)
     {

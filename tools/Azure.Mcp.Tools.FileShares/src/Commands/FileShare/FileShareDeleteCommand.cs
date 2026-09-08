@@ -26,7 +26,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareDeleteOptions, FileShareDeleteCommand.FileShareDeleteCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareDeleteOptions, FileShareDeleteCommand.FileShareDeleteCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareDeleteOptions options, CancellationToken cancellationToken)
     {

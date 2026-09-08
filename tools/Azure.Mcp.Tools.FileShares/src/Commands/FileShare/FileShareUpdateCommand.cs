@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareUpdateOptions, FileShareUpdateCommand.FileShareUpdateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareUpdateOptions, FileShareUpdateCommand.FileShareUpdateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareUpdateOptions options, CancellationToken cancellationToken)
     {

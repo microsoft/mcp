@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareCreateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareCreateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareCreateOptions options, CancellationToken cancellationToken)
     {
