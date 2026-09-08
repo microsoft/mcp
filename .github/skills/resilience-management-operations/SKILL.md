@@ -10,7 +10,7 @@ disable-model-invocation: false
 
 # Azure Resilience Management Operations
 
-For operational Azure requests, use the Azure Resilience Management MCP tools exclusively. Do not use Azure CLI (`az`), `az rest`, direct HTTP/REST calls, PowerShell Azure commands, or SDK code as an operational fallback. This restriction does not apply to development tasks such as implementing, testing, recording, or debugging tools; follow the repository development workflow and use its required tooling. This skill covers all tools registered under the `resilience` namespace.
+For operational Azure Resilience Management requests, use the Azure Resilience Management MCP tools when a registered tool supports the operation. If no registered tool supports the requested resilience operation, ask the user for explicit permission before using Azure CLI (`az`), `az rest`, direct HTTP/REST calls, PowerShell Azure commands, or SDK code as a fallback. This fallback restriction does not apply to non-resilience Azure operations or to development tasks such as implementing, testing, recording, or debugging tools; follow the applicable workflow and required tooling. This skill covers all tools registered under the `resilience` namespace.
 
 - See [tool reference](./references/tools.md) for exact tool names, parameters, and enum values.
 - See [workflow recipes](./references/workflows.md) for end-to-end operation sequences and state gates.
@@ -30,7 +30,7 @@ For operational Azure requests, use the Azure Resilience Management MCP tools ex
 9. If a prerequisite fails, report per-resource blockers and do not start the dependent destructive operation.
 10. Use `recoveryplan` as the recovery plan parameter for every tool.
 11. For Recovery Orchestration (RO) recovery plan updates only, do not use or imply HTTP `PATCH`; the current SDK does not support RO recovery plan PATCH. Get the existing plan and preserve unchanged values in the create-or-update request.
-12. For operational Azure requests, if no registered Resilience Management MCP tool supports the requested operation, state that the operation is unavailable through the current toolset. Do not work around the gap with `az`, REST, or another execution surface.
+12. For operational Azure Resilience Management requests, if no registered Resilience Management MCP tool supports the requested operation, explain that the operation is unavailable through the current toolset and ask the user for explicit permission to use `az`, REST, or another execution surface. Use a fallback only after the user approves it.
 13. Distinguish parent usage-plan deletion from enrollment deletion by the requested outcome. “Delete/remove the usage plan” means delete the entire plan even when the request mentions its service group; never reinterpret it as deleting only an enrollment. “Unenroll/remove the service group association but keep the plan” means delete the enrollment only.
 
 ## Route the Request
