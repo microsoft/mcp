@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 public sealed class RecommendationUpdateOptions : ISubscriptionOption
 {
-    [Option(Description = "The name of the Azure service group that contains the recommendation. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
+    [Option(Description = "The globally unique ID of the Azure service group that contains the recommendation, provided as the name segment in its ARM resource ID. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
     public string? ServiceGroup { get; set; }
 
     [Option(Description = "The stable ID of the Advisor recommendation to update. The REST API and this command also call this value the recommendation ID.")]

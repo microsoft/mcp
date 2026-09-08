@@ -181,6 +181,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
+            new Azure.Mcp.Tools.Adme.AdmeSetup(),
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),
@@ -220,6 +221,7 @@ internal class Program
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
             new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
+            new Azure.Mcp.Tools.Optimization.OptimizationSetup(),
             new Azure.Mcp.Tools.Policy.PolicySetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Pricing.PricingSetup(),

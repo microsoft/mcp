@@ -16,14 +16,6 @@ public interface IAdvisorService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<RecommendationSummary> SummarizeRecommendationsAsync(
-        string subscription,
-        string? resourceGroup,
-        string groupBy,
-        RecommendationFilters? filters = null,
-        string? tenant = null,
-        CancellationToken cancellationToken = default);
-
     Task<Recommendation> UpdateRecommendationAsync(
         string subscription,
         string recommendationId,

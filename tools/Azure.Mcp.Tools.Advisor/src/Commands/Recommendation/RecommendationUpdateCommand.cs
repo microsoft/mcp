@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Description = """
         Mark one Azure Advisor recommendation as completed, dismiss it because the risk is acceptable, postpone it until a future date, or reactivate it by setting New.
         Snooze an Advisor recommendation in a subscription until a future date and time, or postpone an Advisor recommendation in a subscription or Azure service group. Update, change, or set the customer-provided recommendation status or state to New, Postponed, Dismissed, or Completed.
-        Common user requests may say mark done, ignore, reopen, or reset to New. Requires the stable recommendation ID and either --subscription or --service-group, but not both; the configured default subscription is used when neither is supplied.
+        Common user requests may say mark done, ignore, reopen, or reset to New. Requires the stable recommendation ID and either --subscription or the globally unique service-group ID from --service-group, but not both; the configured default subscription is used when neither is supplied.
         Use --tenant when the target subscription or service group is in a non-default tenant. Dismissed accepts an explicit reason and defaults to Other.
         State changes are rejected for Security category and platform-resolved recommendations. Returns the updated ARM recommendation resource.
         Use this state-changing tool instead of list or summary when the user wants to modify or snooze one recommendation.
@@ -74,11 +74,11 @@ public sealed class RecommendationUpdateCommand(
         }
 
         if (serviceGroupWasProvided &&
-            (options.ServiceGroup!.Length is < 1 or > 90 ||
-             !options.ServiceGroup.All(IsValidServiceGroupNameCharacter)))
+            (options.ServiceGroup!.Length is < 1 or > 250 ||
+             !options.ServiceGroup.All(IsValidServiceGroupIdCharacter)))
         {
             validationResult.Errors.Add(
-                "The service group name must be 1 to 90 characters and contain only ASCII letters, numbers, hyphens, underscores, periods, or parentheses.");
+                 "The service group ID must be 1 to 250 characters and contain only letters, numbers, hyphens, underscores, periods, parentheses, or tildes.");
         }
 
         if (string.IsNullOrWhiteSpace(options.RecommendationId))
@@ -179,8 +179,8 @@ public sealed class RecommendationUpdateCommand(
         _ => base.GetErrorMessage(ex)
     };
 
-    private static bool IsValidServiceGroupNameCharacter(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-' or '_' or '.' or '(' or ')';
+    private static bool IsValidServiceGroupIdCharacter(char character) =>
+        char.IsLetterOrDigit(character) || character is '-' or '_' or '.' or '(' or ')' or '~';
 
     public sealed record RecommendationUpdateResult(Models.Recommendation Recommendation);
 }

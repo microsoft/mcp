@@ -18,12 +18,12 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Description = """
         Updates an existing resilience drill in an Azure service group. Use for requests such as "Update
         resilience drill <drill_name> in service group <service_group> to use manual RBAC setup",
-        "Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group
+        "Associate recoveryplan <recoveryplan_name> with resilience drill <drill_name> in service group
         <service_group>", and "Move the supporting resources of resilience drill <drill_name> in service
         group <service_group> to subscription <subscription> and region <region>". Changes the drill's RBAC
-        setup mode, associates or links a recovery plan with the drill, or moves the drill's supporting
+        setup mode, associates or links a recoveryplan with the drill, or moves the drill's supporting
         resources by changing their subscription and region together. This tool modifies the drill; it does
-        not get drill details or get a recovery plan. Only supplied properties are changed.
+        not get drill details or get a recoveryplan. Only supplied properties are changed.
         """,
     Destructive = true,
     Idempotent = true,
@@ -53,7 +53,7 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
 
         if (options.RecoveryPlan is { } recoveryPlan && (string.IsNullOrWhiteSpace(recoveryPlan) || recoveryPlan.Contains('/')))
         {
-            validationResult.Errors.Add("The recovery plan name must be a non-empty single path segment.");
+            validationResult.Errors.Add("The recoveryplan name must be a non-empty single path segment.");
         }
 
         if (options.Subscription is not null && string.IsNullOrWhiteSpace(options.Subscription))
@@ -73,7 +73,7 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
 
         if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null && string.IsNullOrWhiteSpace(options.RecoveryPlan))
         {
-            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, or recovery plan.");
+            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, or recoveryplan.");
         }
     }
 
@@ -113,7 +113,7 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed updating the drill. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "The drill, service group, subscription, or recovery plan was not found.",
+            "The drill, service group, subscription, or recoveryplan was not found.",
         RequestFailedException =>
             "The drill update request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)

@@ -16,6 +16,22 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Recommendation;
 public class RecommendationUpdateCommandTests
     : SubscriptionCommandUnitTestsBase<RecommendationUpdateCommand, IAdvisorService>
 {
+    public static TheoryData<string> ValidServiceGroupIds => new()
+    {
+        "a",
+        "guptaravi-sg-test",
+        "AZaz09-_().~",
+        "service\u00E9~01",
+        new string('a', 250),
+    };
+
+    public static TheoryData<string> InvalidServiceGroupIds => new()
+    {
+        "bad#name",
+        "../group",
+        new string('a', 251),
+    };
+
     private static readonly Models.Recommendation UpdatedRecommendation = new(
         Properties: new Models.RecommendationProperties(
             Category: "HighAvailability",
@@ -252,10 +268,30 @@ public class RecommendationUpdateCommandTests
     }
 
     [Theory]
-    [InlineData("bad#name")]
-    [InlineData("../group")]
-    [InlineData("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901")]
-    public async Task ExecuteAsync_InvalidServiceGroup_ReturnsBadRequest(string serviceGroup)
+    [MemberData(nameof(ValidServiceGroupIds))]
+    public async Task ExecuteAsync_ValidServiceGroupId_ForwardsValue(string serviceGroup)
+    {
+        ConfigureSuccessfulUpdate();
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", serviceGroup,
+            "--recommendation-id", "rec-1",
+            "--recommendation-status", "Completed");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateServiceGroupRecommendationAsync(
+            serviceGroup,
+            "rec-1",
+            RecommendationStatus.Completed,
+            null,
+            null,
+            null,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidServiceGroupIds))]
+    public async Task ExecuteAsync_InvalidServiceGroupId_ReturnsBadRequest(string serviceGroup)
     {
         var response = await ExecuteCommandAsync(
             "--service-group", serviceGroup,
@@ -263,7 +299,7 @@ public class RecommendationUpdateCommandTests
             "--recommendation-status", "Completed");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("service group name", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("service group ID", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().UpdateServiceGroupRecommendationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

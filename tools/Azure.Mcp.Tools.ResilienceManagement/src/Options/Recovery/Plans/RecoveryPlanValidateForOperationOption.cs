@@ -11,7 +11,7 @@ public sealed class RecoveryPlanValidateForOperationOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the recovery plan to validate.")]
+    [Option(Name = "recoveryplan", Description = "The name of the recoveryplan to validate.")]
     public required string RecoveryPlan { get; set; }
 
     [Option(Description = "The customer-selected recovery operation to validate. Supported values: Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup. If omitted, ask the customer to choose one; never infer it from context or resource metadata.")]
