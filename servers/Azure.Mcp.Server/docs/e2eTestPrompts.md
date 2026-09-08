@@ -235,6 +235,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Get the managed identity details, including principal ID, tenant ID, and attached user-assigned identities, for backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Show the identity type and attached user-assigned identity resource IDs for Data Protection backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | investigation-required |
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
