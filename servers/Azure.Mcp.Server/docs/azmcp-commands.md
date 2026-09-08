@@ -378,7 +378,7 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
 
 # Update the customer-provided state of an Advisor recommendation in a subscription or service group.
-# Use --subscription with an Azure subscription ID or name, use --service-group with a globally unique service-group ID,
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
 # or omit both to use the configured default subscription. Do not specify both. --recommendation-id
 # is the stable ID, also called recommendation ID. Set the state to New, Postponed,
 # Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed,
