@@ -1020,7 +1020,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:----------|:----------|
-| resilience_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recoveryplan <recoveryplan_name> | none |
+| resilience_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recovery plan <recovery_plan_name> | none |
 | resilience_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup | none |
 | resilience_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
 | resilience_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
@@ -1030,7 +1030,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |
 | resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
-| resilience_drill_update | Associate recoveryplan <recoveryplan_name> with resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_update | Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region> | none |
 | resilience_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
@@ -1048,8 +1048,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_start | Run resilience drill <drill_name> in service group <service_group> as a TestFailover | none |
 | resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_add-notes | Add the note <notes> to drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_failover | Start failover for drill run <drill_run_name> of drill <drill_name> in service group <service_group>, using source location <source_location> | none |
+| resilience_drill_run_failover | Fail over selected resources <resource_ids> in drill run <drill_run_name> from physical zones <source_locations>, and automatically continue after fault injection | none |
+| resilience_drill_run_resume | Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover | none |
 | resilience_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
 | resilience_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
+| resilience_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |

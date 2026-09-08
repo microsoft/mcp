@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the 'azmcp resilience drill run resume' command to resume a failover drill run paused after fault injection."
