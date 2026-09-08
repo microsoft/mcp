@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the 'azmcp resilience drill run reprotect' command to re-establish protection for failed-over resources in a drill run."

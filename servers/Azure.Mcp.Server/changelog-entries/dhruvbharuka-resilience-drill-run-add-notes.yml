@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the 'azmcp resilience drill run add-notes' command to append notes to a resilience drill run."
