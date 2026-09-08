@@ -70,7 +70,10 @@ jobs:
       - name: Install .NET SDK
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
 
-      - run: npm install -g @microsoft/vally-cli@0.13.0
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot@1.0.83
+
+      - run: npm install -g @microsoft/vally-cli@0.15.0
 
       - name: Resolve git SHAs
         id: diff
@@ -81,6 +84,7 @@ jobs:
           MANUAL_HEAD: ${{ inputs.headCommit }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ALL_TESTS: ${{ inputs.runAllTests }}
         run: |
           if ($env:EVENT_NAME -eq 'pull_request') {
             $baseCommit = $env:PR_BASE_SHA
@@ -95,7 +99,9 @@ jobs:
             Write-Host "Manual run. Base: ${baseCommit}, Head: ${headCommit}"
           }
 
-          "BUILD_REASON=PullRequest" >> $env:GITHUB_ENV
+          $buildReason = if ($env:RUN_ALL_TESTS -eq 'true') { '' } else { 'PullRequest' }
+
+          "BUILD_REASON=$buildReason" >> $env:GITHUB_ENV
           "DIFF_HEAD_COMMIT=$headCommit" >> $env:GITHUB_ENV
           "DIFF_BASE_COMMIT=$baseCommit" >> $env:GITHUB_ENV
 
