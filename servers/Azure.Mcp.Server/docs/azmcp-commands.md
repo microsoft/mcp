@@ -588,9 +588,6 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ### Azure App Lens Operations
 
-> [!NOTE]
-> The `applens resource diagnose` command does not support any `--retry-*` options.
-
 ```bash
 # Diagnose resource using Azure App Lens
 # Only --resource and --question are required; --subscription, --resource-group, and --resource-type are optional and used to narrow down results when multiple resources share the same name; --tenant is optional
@@ -5260,7 +5257,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 ### Cloud Architect
 
 > [!NOTE]
-> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, or any `--retry-*` options.
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription` or `--tenant-id`.
 
 ```bash
 # Design Azure cloud architectures through guided questions
