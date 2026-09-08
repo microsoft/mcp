@@ -37,51 +37,15 @@ public sealed class RecommendationUpdateCommand(
     ILogger<RecommendationUpdateCommand> logger,
     IAdvisorService advisorService,
     ISubscriptionResolver subscriptionResolver)
-    : AuthenticatedCommand<RecommendationUpdateOptions, RecommendationUpdateCommand.RecommendationUpdateResult>
+    : RecommendationScopeCommand<RecommendationUpdateOptions, RecommendationUpdateCommand.RecommendationUpdateResult>(
+        subscriptionResolver)
 {
     private readonly ILogger<RecommendationUpdateCommand> _logger = logger;
     private readonly IAdvisorService _advisorService = advisorService;
-    private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver;
-
-    public override void PostBindOptions(RecommendationUpdateOptions options)
-    {
-        base.PostBindOptions(options);
-
-        var serviceGroupWasProvided = options.ServiceGroup is not null;
-        options.ServiceGroup = options.ServiceGroup?.Trim();
-        options.Subscription = options.Subscription?.Trim('"', '\'');
-
-        // An explicit service group selects tenant-scoped ARM routing and must not inherit a default subscription.
-        if (!serviceGroupWasProvided)
-        {
-            options.Subscription = _subscriptionResolver.ResolveSubscription(options.Subscription);
-            options.Subscription = options.Subscription?.Trim('"', '\'');
-        }
-    }
 
     public override void ValidateOptions(RecommendationUpdateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        var subscriptionWasProvided = options.Subscription is not null;
-        var serviceGroupWasProvided = options.ServiceGroup is not null;
-        if (subscriptionWasProvided && serviceGroupWasProvided)
-        {
-            validationResult.Errors.Add("Specify either --subscription or --service-group, not both.");
-        }
-        else if (string.IsNullOrWhiteSpace(options.Subscription) &&
-            string.IsNullOrWhiteSpace(options.ServiceGroup))
-        {
-            validationResult.Errors.Add("Missing Required options: --subscription or --service-group.");
-        }
-
-        if (serviceGroupWasProvided &&
-            (options.ServiceGroup!.Length is < 1 or > 250 ||
-             !options.ServiceGroup.All(IsValidServiceGroupIdCharacter)))
-        {
-            validationResult.Errors.Add(
-                 "The service group ID must be 1 to 250 characters and contain only letters, numbers, hyphens, underscores, periods, parentheses, or tildes.");
-        }
 
         if (string.IsNullOrWhiteSpace(options.RecommendationId))
         {
@@ -180,9 +144,6 @@ public sealed class RecommendationUpdateCommand(
             $"Advisor recommendation update failed with status code {reqEx.Status}",
         _ => base.GetErrorMessage(ex)
     };
-
-    private static bool IsValidServiceGroupIdCharacter(char character) =>
-        char.IsLetterOrDigit(character) || character is '-' or '_' or '.' or '(' or ')' or '~';
 
     public sealed record RecommendationUpdateResult(Models.Recommendation Recommendation);
 }
