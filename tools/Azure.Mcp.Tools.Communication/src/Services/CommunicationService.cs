@@ -32,7 +32,11 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             (nameof(from), from),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", AzureService.CloudConfiguration.ArmEnvironment);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: "communication",
+            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
+            executingToolNamespaceName: "communication");
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
@@ -110,7 +114,11 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             (nameof(subject), subject),
             (nameof(message), message));
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "communication", AzureService.CloudConfiguration.ArmEnvironment);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: "communication",
+            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
+            executingToolNamespaceName: "communication");
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)

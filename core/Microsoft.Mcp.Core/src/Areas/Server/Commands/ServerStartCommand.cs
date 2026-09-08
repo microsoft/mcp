@@ -131,6 +131,12 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     {
         try
         {
+            // This initialization only runs for `server start`. Direct CLI command execution
+            // bypasses ServerStartCommand and will require separate wiring if this option is
+            // later intended to apply outside MCP server mode.
+            EndpointValidator.SetDangerouslyDisabledSsrfProtectionNamespaces(
+                options.DangerouslyDisableSsrfProtectionsByNamespace);
+
             using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
 
             using var host = CreateHost(options);

@@ -92,7 +92,11 @@ public sealed class AcrService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(loginServer);
 
         var endpoint = new Uri($"https://{loginServer}");
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, "acr", armEnvironment);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "acr",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "acr");
         return endpoint;
     }
 

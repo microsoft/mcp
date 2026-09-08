@@ -18,7 +18,11 @@ internal static class FoundryExtensionsHelpers
         {
             try
             {
-                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
+                EndpointValidator.ValidateAzureServiceEndpoint(
+                    endpoint: endpoint,
+                    serviceType: "foundry",
+                    armEnvironment: cloud,
+                    executingToolNamespaceName: "foundryextensions");
                 return;
             }
             catch (Exception ex)

@@ -775,7 +775,11 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
         {
             try
             {
-                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment);
+                EndpointValidator.ValidateAzureServiceEndpoint(
+                    endpoint: endpoint,
+                    serviceType: serviceType,
+                    armEnvironment: armEnvironment,
+                    executingToolNamespaceName: "cosmos");
                 return;
             }
             catch (Exception ex) when (ex is SecurityException or ArgumentException)
