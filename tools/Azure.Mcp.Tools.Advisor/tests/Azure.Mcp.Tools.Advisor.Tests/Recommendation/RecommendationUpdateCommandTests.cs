@@ -19,7 +19,7 @@ public class RecommendationUpdateCommandTests
     public static TheoryData<string> ValidServiceGroupIds => new()
     {
         "a",
-        "guptaravi-sg-test",
+        "service-group-test",
         "AZaz09-_().~",
         "service\u00E9~01",
         new string('a', 250),
