@@ -18,7 +18,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_get | Show me the catalog details for Advisor recommendation type <recommendation-type-id> | none |
 | advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type <recommendation-type-id> | none |
 | advisor_metadata_get | What is the impact and category of Advisor recommendation type <recommendation-type-id>? | none |
-| advisor_metadata_get | Show the remediation actions for Advisor recommendation type <recommendation-type-id> | none |
 | advisor_metadata_get | When does Advisor recommendation type <recommendation-type-id> retire? | none |
 | advisor_metadata_list | List the Advisor recommendation metadata catalog | none |
 | advisor_metadata_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? | none |
@@ -70,9 +69,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id <recommendation-type-id> | none |
 | advisor_remediation_get | How do I fix Advisor recommendation type id <recommendation-type-id>? | none |
-| advisor_remediation_get | Show me the remediation steps for recommendation type id <recommendation-type-id> | none |
+| advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id <recommendation-type-id> | none |
+| advisor_remediation_get | Show me the remediation actions for recommendation type id <recommendation-type-id> | none |
 | advisor_remediation_get | Give me the CLI and PowerShell scripts to remediate recommendation type id <recommendation-type-id> | none |
 | advisor_remediation_get | Get the ARM and Bicep artifacts to fix Advisor recommendation type id <recommendation-type-id> | none |
+| advisor_remediation_get | Get the terraform to fix Advisor recommendation type id <recommendation-type-id> | none |
+| advisor_remediation_get | How do I resolve Advisor recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | What are the steps to remediate recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | Give me a ready-to-run script to remediate recommendation type id <recommendation-type-id> | none |
+| advisor_remediation_get | Get the executable automation artifacts to remediate recommendation type id <recommendation-type-id> | none |
+| advisor_remediation_get | Get the deployment artifacts to fix Advisor recommendation type id <recommendation-type-id> | none |
+| advisor_remediation_get | Is remediating recommendation type id <recommendation-type-id> destructive or reversible? | none |
+| advisor_remediation_get | How do I verify the fix for Advisor recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id <recommendation-type-id> | none |
 
 ## Azure AI Search
 

@@ -375,16 +375,16 @@ azmcp advisor metadata list [--language <language>] \
 
 # Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor
 # recommendation type means, including its display name, category, sub-category, impact,
-# supported resource type, description, potential benefits, and remediation actions.
+# supported resource type, description, and potential benefits.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
                            [--language <language>]
 
-# Get the Azure Advisor remediation package for a specific recommendation type id. Depending on the
-# recommendation, the package returns one of three output types: remediation guidance (manual, human-
-# readable steps), a hybrid of manual steps plus executable artifacts, or executable artifacts (Azure
-# CLI, PowerShell, Bicep, ARM template). Also includes remediation metadata, safety flags, methods with
-# parameters, ordered steps, and verification.
+# Fix, resolve, or remediate a specific Azure Advisor recommendation type id with its remediation package:
+# step-by-step remediation steps plus ready-to-run artifacts, scripts, and deployment templates in ARM
+# template, Bicep, Azure CLI, PowerShell, and terraform formats to remediate the issue. Also indicates
+# remediation characteristics such as whether it is destructive, reversible, or grounded, along with its
+# confidence, effort, and output type.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
 ```

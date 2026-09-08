@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 public sealed record RemediationStep
 {
     [JsonPropertyName("number")]
-    public int? Number { get; init; }
+    public string? Number { get; init; }
 
     [JsonPropertyName("text")]
     public string? Text { get; init; }
@@ -21,4 +21,10 @@ public sealed record RemediationStep
 
     [JsonPropertyName("command")]
     public string? Command { get; init; }
+
+    [JsonPropertyName("source")]
+    public string? Source { get; init; }
+
+    [JsonPropertyName("sourceUrl")]
+    public string? SourceUrl { get; init; }
 }

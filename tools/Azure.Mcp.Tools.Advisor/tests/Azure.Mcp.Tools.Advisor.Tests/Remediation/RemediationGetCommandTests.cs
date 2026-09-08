@@ -55,7 +55,7 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
                     ],
                     Steps =
                     [
-                        new RemediationStep { Number = 1, Text = "Apply the remediation command.", Kind = "command", Command = "az webapp config set" },
+                        new RemediationStep { Number = "1", Text = "Apply the remediation command.", Kind = "command", Command = "az webapp config set" },
                     ],
                     Verification = "az webapp config show --name <app-name> --resource-group <resource-group>",
                 },
@@ -119,7 +119,7 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
         var method = Assert.Single(result.Remediation.Properties.Methods!);
         Assert.Equal("Azure CLI", method.Heading);
         var step = Assert.Single(method.Steps!);
-        Assert.Equal(1, step.Number);
+        Assert.Equal("1", step.Number);
     }
 
     [Fact]
@@ -171,12 +171,15 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
         Service.GetRemediationAsync(
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("Not found", null, HttpStatusCode.NotFound));
+            .ThrowsAsync(new HttpRequestException(
+                "{\"error\":{\"code\":\"RemediationNotFound\",\"message\":\"No remediation found for recommendation type '18745007-438b-4c68-bfa3-b6576d85a831'.\",\"target\":\"recommendationTypeId\"}}",
+                null,
+                HttpStatusCode.NotFound));
 
         var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("No remediation was found", response.Message);
+        Assert.Contains("RemediationNotFound", response.Message);
     }
 
     [Fact]
@@ -185,12 +188,15 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
         Service.GetRemediationAsync(
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("Unauthorized", null, HttpStatusCode.Unauthorized));
+            .ThrowsAsync(new HttpRequestException(
+                "{\"error\":{\"code\":\"AuthenticationFailed\",\"message\":\"Authentication failed.\"}}",
+                null,
+                HttpStatusCode.Unauthorized));
 
         var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
-        Assert.Contains("Service unavailable or network connectivity issues", response.Message);
+        Assert.Contains("AuthenticationFailed", response.Message);
     }
 
     [Fact]

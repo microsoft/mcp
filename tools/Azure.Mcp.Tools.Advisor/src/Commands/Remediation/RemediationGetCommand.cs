@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.Advisor.Options.Remediation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -14,12 +13,13 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Remediation;
     Id = "cdef7740-73b6-4492-8670-53b1cb98ff5a",
     Name = "get",
     Title = "Get Advisor Recommendation Remediation",
-    Description = "Get the Azure Advisor remediation package for a specific recommendation type id. " +
-        "Depending on the recommendation, the package returns one of three output types: remediation guidance " +
-        "(manual, human-readable steps), a hybrid of manual steps plus executable artifacts, or executable " +
-        "artifacts (Azure CLI, PowerShell, Bicep, and ARM template). Also includes remediation metadata, " +
-        "safety flags (destructive, reversible, grounded, confidence), methods with parameters, ordered steps, " +
-        "and verification. Use when an agent needs step-by-step guidance and/or an executable script to fix a recommendation.",
+    Description = "Fix, resolve, or remediate a specific Azure Advisor recommendation type id with its " +
+        "remediation package: step-by-step remediation steps plus ready-to-run artifacts, scripts, and " +
+        "deployment templates in ARM template, Bicep, Azure CLI, PowerShell, and terraform formats to " +
+        "remediate the issue. Also indicates remediation characteristics such as whether it is destructive, " +
+        "reversible, or grounded, along with its confidence, effort, and output type. Use whenever you need " +
+        "to fix, resolve, remediate, or verify a recommendation, or want " +
+        "the ARM, Bicep, CLI, PowerShell, or terraform artifacts and scripts to remediate it.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -69,8 +69,11 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        HttpRequestException httpEx when httpEx.StatusCode == HttpStatusCode.NotFound =>
-            "No remediation was found for the specified recommendation type id. Verify the recommendation type id.",
+        // The service throws HttpRequestException only when ARM returned an error status, carrying
+        // ARM's exact error payload as the message. Surface it as-is instead of the base class's
+        // generic "service unavailable or network connectivity issues" text, which is misleading
+        // for normal HTTP error responses such as 404 RemediationNotFound.
+        HttpRequestException httpEx => httpEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 

@@ -76,8 +76,14 @@ public class RemediationServiceTests
 
         var method = Assert.Single(package.Properties.Methods!);
         Assert.Equal("Azure CLI", method.Heading);
+        Assert.Equal("medium", method.Confidence);
         var step = Assert.Single(method.Steps!);
-        Assert.Equal(1, step.Number);
+        Assert.Equal("1", step.Number);
+        Assert.Equal("source_doc", step.Source);
+        Assert.Equal("https://learn.microsoft.com/azure/app-service/configure-common", step.SourceUrl);
+        var check = Assert.Single(method.Checks!);
+        Assert.Equal("Confirm the setting was applied.", check.Text);
+        Assert.Equal("az webapp config show --name <app-name>", check.Command);
     }
 
     [Theory]
@@ -93,6 +99,21 @@ public class RemediationServiceTests
             () => service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken));
 
         Assert.Equal(status, exception.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetRemediationAsync_ErrorStatus_SurfacesArmErrorBody()
+    {
+        const string armError =
+            "{\"error\":{\"code\":\"RemediationNotFound\",\"message\":\"No remediation found for recommendation type '18745007-438b-4c68-bfa3-b6576d85a831'.\",\"target\":\"recommendationTypeId\"}}";
+        var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.NotFound, armError));
+        var service = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(
+            () => service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken));
+
+        Assert.Equal(HttpStatusCode.NotFound, exception.StatusCode);
+        Assert.Equal(armError, exception.Message);
     }
 
     private static RemediationService CreateService(HttpMessageHandler handler)
@@ -156,9 +177,13 @@ public class RemediationServiceTests
                   { "name": "app-name", "description": "The App Service name.", "example": "my-web-app", "required": true }
                 ],
                 "steps": [
-                  { "number": 1, "text": "Apply the remediation command.", "kind": "command", "command": "az webapp config set" }
+                  { "number": "1", "text": "Apply the remediation command.", "kind": "command", "command": "az webapp config set", "source": "source_doc", "sourceUrl": "https://learn.microsoft.com/azure/app-service/configure-common" }
                 ],
-                "verification": "az webapp config show --name <app-name> --resource-group <resource-group>"
+                "verification": "az webapp config show --name <app-name> --resource-group <resource-group>",
+                "confidence": "medium",
+                "checks": [
+                  { "text": "Confirm the setting was applied.", "command": "az webapp config show --name <app-name>" }
+                ]
               }
             ]
           }

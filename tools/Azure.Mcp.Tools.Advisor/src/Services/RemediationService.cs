@@ -52,8 +52,13 @@ public sealed class RemediationService(IAzureService azureService)
             return result ?? throw new JsonException("Advisor remediation response deserialized to null.");
         }
 
+        // Surface the exact error payload returned by the ARM API (e.g. the
+        // {"error":{"code":"RemediationNotFound",...}} envelope) without substituting our own text.
+        var errorContent = response.Content?.ToString();
         throw new HttpRequestException(
-            $"Advisor remediation request failed with status {response.Status}: {response.ReasonPhrase}",
+            string.IsNullOrWhiteSpace(errorContent)
+                ? $"Advisor remediation request failed with status {response.Status}: {response.ReasonPhrase}"
+                : errorContent,
             null,
             (HttpStatusCode)response.Status);
     }

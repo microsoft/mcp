@@ -30,4 +30,10 @@ public sealed record RemediationMethod
 
     [JsonPropertyName("verification")]
     public string? Verification { get; init; }
+
+    [JsonPropertyName("confidence")]
+    public string? Confidence { get; init; }
+
+    [JsonPropertyName("checks")]
+    public List<RemediationCheck>? Checks { get; init; }
 }

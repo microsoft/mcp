@@ -44,7 +44,7 @@ public class AdvisorSetup : IAreaSetup
 
         var remediation = new CommandGroup(
             "remediation",
-            "Retrieve the Azure Advisor remediation package for a recommendation type id. Depending on the recommendation, the package returns one of three output types: remediation guidance (manual, human-readable steps), a hybrid of manual steps plus executable artifacts, or executable artifacts such as Azure CLI, PowerShell, Bicep, and ARM. Also includes remediation metadata, safety flags, methods with parameters, ordered steps, and verification. Use when an agent needs step-by-step guidance and/or an executable script to fix a specific Advisor recommendation.");
+            "Get the Azure Advisor remediation package that explains how to fix or resolve a recommendation type id. Returns step-by-step remediation guidance (manual, human-readable steps to fix the issue) and/or ready-to-run executable artifacts and scripts to remediate it: Azure CLI, PowerShell, Bicep, ARM template and terraform. Also includes remediation metadata, safety flags, methods with parameters, ordered steps, and verification. Use when an agent needs to know how to fix a recommendation, or wants the ARM, Bicep, CLI, PowerShell or terraform artifacts to remediate it.");
         advisor.AddSubGroup(remediation);
 
         // Register Advisor commands
