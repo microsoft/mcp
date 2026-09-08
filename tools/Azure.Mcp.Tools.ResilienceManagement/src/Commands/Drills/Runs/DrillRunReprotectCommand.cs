@@ -39,14 +39,14 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
     {
         try
         {
-            await _resilienceManagementService.ReprotectDrillRunAsync(
+            string operationId = await _resilienceManagementService.ReprotectDrillRunAsync(
                 options.ServiceGroup,
                 options.Drill,
                 options.DrillRun,
                 options.Tenant,
                 cancellationToken);
 
-            var result = new DrillRunReprotectCommandResult(options.DrillRun, Accepted: true);
+            var result = new DrillRunReprotectCommandResult(operationId, options.DrillRun, Accepted: true);
             context.Response.Results = ResponseResult.Create(
                 result,
                 ResilienceManagementJsonContext.Default.DrillRunReprotectCommandResult);
@@ -83,5 +83,5 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
         }
     }
 
-    public sealed record DrillRunReprotectCommandResult(string DrillRun, bool Accepted);
+    public sealed record DrillRunReprotectCommandResult(string OperationId, string DrillRun, bool Accepted);
 }

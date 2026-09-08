@@ -18,6 +18,7 @@ public sealed class DrillRunAddNotesCommandTests : CommandUnitTestsBase<DrillRun
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
     private const string Notes = "Validation completed successfully.";
+    private const string OperationId = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -78,6 +79,15 @@ public sealed class DrillRunAddNotesCommandTests : CommandUnitTestsBase<DrillRun
     [Fact]
     public async Task ExecuteAsync_AddsNotesAndReturnsAcceptedResult()
     {
+        Service.AddDrillRunNotesAsync(
+            ServiceGroup,
+            Drill,
+            DrillRun,
+            Notes,
+            null,
+            Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+
         var response = await ExecuteCommandAsync(
             "--service-group", ServiceGroup,
             "--drill", Drill,
@@ -87,6 +97,7 @@ public sealed class DrillRunAddNotesCommandTests : CommandUnitTestsBase<DrillRun
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.DrillRunAddNotesCommandResult);
         Assert.True(result.Accepted);
         Assert.Equal(DrillRun, result.DrillRun);
+        Assert.Equal(OperationId, result.OperationId);
         Assert.DoesNotContain(Notes, response.Results?.ToString(), StringComparison.Ordinal);
         await Service.Received(1).AddDrillRunNotesAsync(
             ServiceGroup,

@@ -39,14 +39,14 @@ public sealed class DrillRunResumeCommand(ILogger<DrillRunResumeCommand> logger,
     {
         try
         {
-            await _resilienceManagementService.ResumeDrillRunAsync(
+            string operationId = await _resilienceManagementService.ResumeDrillRunAsync(
                 options.ServiceGroup,
                 options.Drill,
                 options.DrillRun,
                 options.Tenant,
                 cancellationToken);
 
-            var result = new DrillRunResumeCommandResult(options.DrillRun, Accepted: true);
+            var result = new DrillRunResumeCommandResult(operationId, options.DrillRun, Accepted: true);
             context.Response.Results = ResponseResult.Create(
                 result,
                 ResilienceManagementJsonContext.Default.DrillRunResumeCommandResult);
@@ -83,5 +83,5 @@ public sealed class DrillRunResumeCommand(ILogger<DrillRunResumeCommand> logger,
         }
     }
 
-    public sealed record DrillRunResumeCommandResult(string DrillRun, bool Accepted);
+    public sealed record DrillRunResumeCommandResult(string OperationId, string DrillRun, bool Accepted);
 }

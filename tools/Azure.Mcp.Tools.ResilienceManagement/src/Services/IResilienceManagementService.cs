@@ -83,15 +83,15 @@ public interface IResilienceManagementService
 
     Task<string> StartDrillAsync(string serviceGroup, string drill, string mode, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<DrillRunMarkCompleteResult> MarkDrillRunCompleteAsync(string serviceGroup, string drill, string drillRun, string stage, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<string> EndDrillAsync(string serviceGroup, string drill, string attestation, string attestationNotes, string? tenant = null, CancellationToken cancellationToken = default);
 

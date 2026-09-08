@@ -535,6 +535,7 @@ public class ResilienceManagementCommandTests(
 
         Assert.True(result.AssertProperty("accepted").GetBoolean());
         Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
         await WaitForDrillRunNoteAsync(serviceGroup, drill, drillRun, note);
     }
 
@@ -560,6 +561,7 @@ public class ResilienceManagementCommandTests(
 
         Assert.True(result.AssertProperty("accepted").GetBoolean());
         Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
 
         // FaultInjection only offers MarkAsComplete once it finishes; Failover does not unlock its own
         // Start verb until that stage is explicitly marked complete.
@@ -592,6 +594,7 @@ public class ResilienceManagementCommandTests(
 
         Assert.True(result.AssertProperty("accepted").GetBoolean());
         Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
 
         // Same lifecycle rule applies to Failover -> Reprotect: mark Failover complete explicitly.
         await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Failover", "MarkAsComplete");
@@ -623,6 +626,7 @@ public class ResilienceManagementCommandTests(
 
         Assert.True(result.AssertProperty("accepted").GetBoolean());
         Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
     }
 
     /// <summary>

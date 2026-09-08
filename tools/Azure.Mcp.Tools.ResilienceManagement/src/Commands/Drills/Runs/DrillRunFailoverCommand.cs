@@ -48,7 +48,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
 
         if (options.SelectedResourceIds?.Any(resourceId => !IsRecoveryResourceIdForServiceGroup(resourceId, options.ServiceGroup)) == true)
         {
-            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under the requested service group.");
+            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under the requested service group with a GUID resource name.");
         }
     }
 
@@ -56,7 +56,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
     {
         try
         {
-            await _resilienceManagementService.FailoverDrillRunAsync(
+            string operationId = await _resilienceManagementService.FailoverDrillRunAsync(
                 options.ServiceGroup,
                 options.Drill,
                 options.DrillRun,
@@ -66,7 +66,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.Tenant,
                 cancellationToken);
 
-            var result = new DrillRunFailoverCommandResult(options.DrillRun, Accepted: true);
+            var result = new DrillRunFailoverCommandResult(operationId, options.DrillRun, Accepted: true);
             context.Response.Results = ResponseResult.Create(
                 result,
                 ResilienceManagementJsonContext.Default.DrillRunFailoverCommandResult);
@@ -142,7 +142,8 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
             return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
                 recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
                 serviceGroupId?.ResourceType == ServiceGroupResourceType &&
-                string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase);
+                string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
+                Guid.TryParse(parsed.Name, out _);
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException)
         {
@@ -150,5 +151,5 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         }
     }
 
-    public sealed record DrillRunFailoverCommandResult(string DrillRun, bool Accepted);
+    public sealed record DrillRunFailoverCommandResult(string OperationId, string DrillRun, bool Accepted);
 }

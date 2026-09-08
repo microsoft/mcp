@@ -44,7 +44,7 @@ public sealed class DrillRunAddNotesCommand(ILogger<DrillRunAddNotesCommand> log
     {
         try
         {
-            await _resilienceManagementService.AddDrillRunNotesAsync(
+            string operationId = await _resilienceManagementService.AddDrillRunNotesAsync(
                 options.ServiceGroup,
                 options.Drill,
                 options.DrillRun,
@@ -52,7 +52,7 @@ public sealed class DrillRunAddNotesCommand(ILogger<DrillRunAddNotesCommand> log
                 options.Tenant,
                 cancellationToken);
 
-            var result = new DrillRunAddNotesCommandResult(options.DrillRun, Accepted: true);
+            var result = new DrillRunAddNotesCommandResult(operationId, options.DrillRun, Accepted: true);
             context.Response.Results = ResponseResult.Create(
                 result,
                 ResilienceManagementJsonContext.Default.DrillRunAddNotesCommandResult);
@@ -89,5 +89,5 @@ public sealed class DrillRunAddNotesCommand(ILogger<DrillRunAddNotesCommand> log
         }
     }
 
-    public sealed record DrillRunAddNotesCommandResult(string DrillRun, bool Accepted);
+    public sealed record DrillRunAddNotesCommandResult(string OperationId, string DrillRun, bool Accepted);
 }

@@ -17,6 +17,7 @@ public sealed class DrillRunResumeCommandTests : CommandUnitTestsBase<DrillRunRe
     private const string ServiceGroup = "sg1";
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
+    private const string OperationId = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -61,6 +62,14 @@ public sealed class DrillRunResumeCommandTests : CommandUnitTestsBase<DrillRunRe
     [Fact]
     public async Task ExecuteAsync_ResumesDrillRunAndReturnsAcceptedResult()
     {
+        Service.ResumeDrillRunAsync(
+            ServiceGroup,
+            Drill,
+            DrillRun,
+            null,
+            Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+
         var response = await ExecuteCommandAsync(
             "--service-group", ServiceGroup,
             "--drill", Drill,
@@ -69,6 +78,7 @@ public sealed class DrillRunResumeCommandTests : CommandUnitTestsBase<DrillRunRe
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.DrillRunResumeCommandResult);
         Assert.True(result.Accepted);
         Assert.Equal(DrillRun, result.DrillRun);
+        Assert.Equal(OperationId, result.OperationId);
         await Service.Received(1).ResumeDrillRunAsync(
             ServiceGroup,
             Drill,

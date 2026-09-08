@@ -2017,7 +2017,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return document.RootElement.Clone();
     }
 
-    public async Task AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<string> AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
@@ -2027,11 +2027,14 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             Notes = notes
         };
+        string operationId = Guid.NewGuid().ToString();
 
-        await drillRunResource.AddNotesAsync(WaitUntil.Started, Guid.NewGuid().ToString(), content, cancellationToken);
+        await drillRunResource.AddNotesAsync(WaitUntil.Started, operationId, content, cancellationToken);
+
+        return operationId;
     }
 
-    public async Task FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<string> FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
@@ -2050,18 +2053,24 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             failoverProperties);
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        string operationId = Guid.NewGuid().ToString();
 
-        await drillRunResource.FailOverAsync(WaitUntil.Started, Guid.NewGuid().ToString(), content, cancellationToken);
+        await drillRunResource.FailOverAsync(WaitUntil.Started, operationId, content, cancellationToken);
+
+        return operationId;
     }
 
-    public async Task ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<string> ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        string operationId = Guid.NewGuid().ToString();
 
-        await drillRunResource.ResumeAsync(WaitUntil.Started, Guid.NewGuid().ToString(), cancellationToken);
+        await drillRunResource.ResumeAsync(WaitUntil.Started, operationId, cancellationToken);
+
+        return operationId;
     }
 
     public async Task<DrillRunMarkCompleteResult> MarkDrillRunCompleteAsync(string serviceGroup, string drill, string drillRun, string stage, string? tenant = null, CancellationToken cancellationToken = default)
@@ -2078,14 +2087,17 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new DrillRunMarkCompleteResult(operationId, operation.HasCompleted);
     }
 
-    public async Task ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        string operationId = Guid.NewGuid().ToString();
 
-        await drillRunResource.ReprotectAsync(WaitUntil.Started, Guid.NewGuid().ToString(), cancellationToken);
+        await drillRunResource.ReprotectAsync(WaitUntil.Started, operationId, cancellationToken);
+
+        return operationId;
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillRunResourcesAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
