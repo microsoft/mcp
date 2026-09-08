@@ -1203,6 +1203,16 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var securitySettings = properties?.SecuritySettings;
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
 
         string? crossRegionRestoreState = null;
         string? encryptionState = null;
@@ -1235,7 +1245,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             MuaResourceGuardId: muaResourceGuardId,
             CrossRegionRestoreState: crossRegionRestoreState,
             EncryptionState: encryptionState,
-            EncryptionKeyUri: encryptionKeyUri);
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(DataProtectionBackupInstanceData data)

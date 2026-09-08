@@ -301,4 +301,60 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<CancellationToken>(),
             Arg.Is(VaultExpand.None));
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsIdentityDetails_WhenProvidedByService()
+    {
+        var subscription = "sub123";
+        var vaultName = "vault-with-identity";
+        var resourceGroup = "rg1";
+        var identityResourceId = "/subscriptions/sub123/resourceGroups/rg-identity/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id1";
+
+        var expectedVault = new BackupVaultInfo(
+            "id1",
+            vaultName,
+            "rsv",
+            "eastus",
+            resourceGroup,
+            "Succeeded",
+            "Standard",
+            "GeoRedundant",
+            null,
+            null,
+            null,
+            "SystemAssigned,UserAssigned",
+            null,
+            null,
+            IdentityDetails: new BackupVaultIdentityDetails(
+                "principal-1",
+                "tenant-1",
+                "SystemAssigned,UserAssigned",
+                [new BackupVaultUserAssignedIdentity(identityResourceId, "principal-uami-1", "client-uami-1")])));
+
+        Service.GetVaultAsync(
+            Arg.Is(vaultName),
+            Arg.Is(resourceGroup),
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedVault);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--vault", vaultName,
+            "--resource-group", resourceGroup);
+
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.VaultGetCommandResult);
+        var vault = Assert.Single(result.Vaults);
+
+        Assert.NotNull(vault.IdentityDetails);
+        Assert.Equal("principal-1", vault.IdentityDetails!.PrincipalId);
+        Assert.Equal("tenant-1", vault.IdentityDetails.TenantId);
+        Assert.Equal("SystemAssigned,UserAssigned", vault.IdentityDetails.IdentityType);
+        var userAssignedIdentity = Assert.Single(vault.IdentityDetails.UserAssignedIdentities);
+        Assert.Equal(identityResourceId, userAssignedIdentity.ResourceId);
+        Assert.Equal("principal-uami-1", userAssignedIdentity.PrincipalId);
+        Assert.Equal("client-uami-1", userAssignedIdentity.ClientId);
+    }
 }

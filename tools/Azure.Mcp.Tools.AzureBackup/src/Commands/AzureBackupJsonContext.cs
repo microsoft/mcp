@@ -48,6 +48,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(PrivateEndpointApproveRejectCommand.PrivateEndpointApproveRejectCommandResult))]
 [JsonSerializable(typeof(PrivateEndpointConnectionInfo))]
 [JsonSerializable(typeof(BackupVaultInfo))]
+[JsonSerializable(typeof(BackupVaultIdentityDetails))]
+[JsonSerializable(typeof(BackupVaultUserAssignedIdentity))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]
 [JsonSerializable(typeof(BackupJobInfo))]
