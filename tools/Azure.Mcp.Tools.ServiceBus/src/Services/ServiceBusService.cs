@@ -25,9 +25,10 @@ public sealed class ServiceBusService(IAzureService azureService)
         }
 
         EndpointValidator.ValidateAzureServiceEndpoint(
-            $"https://{namespaceName}/",
-            "servicebus",
-            AzureService.CloudConfiguration.ArmEnvironment);
+            endpoint: $"https://{namespaceName}/",
+            serviceType: "servicebus",
+            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
+            executingToolNamespaceName: "servicebus");
     }
 
     private async Task<ServiceBusAdministrationClient> CreateAdministrationClient(

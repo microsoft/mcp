@@ -13,8 +13,20 @@ namespace Microsoft.Mcp.Core.Helpers;
 /// <summary>
 /// Validates Azure service endpoints.
 /// </summary>
+// @vukelich notes: as this static class is growing, more anti-patterns are
+// being introduced, such as an abundance of unit test-only `internal static`
+// methods. This is a recognized stop-gap to a post-3.0 goal for cleanup, a
+// full design of which will be easier to propose when we see the final breadth
+// of SSRF protections added.
 public static partial class EndpointValidator
 {
+    /// <summary>
+    /// The special configured namespace value that disables SSRF protections for every tool namespace.
+    /// </summary>
+    internal const string AllNamespaces = "ALL";
+
+    private static IReadOnlyList<string>? s_dangerouslyDisabledSsrfProtectionNamespaces;
+
     private static readonly string[] s_reservedHosts =
     [
         "localhost",
@@ -29,13 +41,93 @@ public static partial class EndpointValidator
     ];
 
     /// <summary>
+    /// Gets the configured namespaces for unit-test verification.
+    /// </summary>
+    /// <remarks>
+    /// This property is internal solely so unit tests can verify the write-once configuration and defensive copy.
+    /// Production code outside this class must not use it.
+    /// </remarks>
+    internal static IReadOnlyList<string> DangerouslyDisabledSsrfProtectionNamespaces =>
+        Volatile.Read(ref s_dangerouslyDisabledSsrfProtectionNamespaces) ?? [];
+
+    /// <summary>
+    /// Stores exactly once the tool namespaces for which SSRF protections will be disabled.
+    /// </summary>
+    /// <param name="namespaces">
+    /// The tool namespaces to configure, or <see langword="null"/> to initialize with no disabled namespaces.
+    /// The special value <see cref="AllNamespaces"/> represents every tool namespace.
+    /// </param>
+    /// <exception cref="SecurityException">
+    /// Thrown when an attempt is made to configure the setting more than once.
+    /// </exception>
+    public static void SetDangerouslyDisabledSsrfProtectionNamespaces(IEnumerable<string>? namespaces)
+    {
+        IReadOnlyList<string> configuredNamespaces = Array.AsReadOnly(namespaces?.ToArray() ?? []);
+
+        if (Interlocked.CompareExchange(
+            ref s_dangerouslyDisabledSsrfProtectionNamespaces,
+            configuredNamespaces,
+            null) is not null)
+        {
+            throw new SecurityException(
+                "SSRF protection settings can only be configured once during application startup.");
+        }
+    }
+
+    private static bool AreSsrfProtectionsDangerouslyDisabled(string? executingToolNamespaceName)
+        => AreSsrfProtectionsDangerouslyDisabled(
+            DangerouslyDisabledSsrfProtectionNamespaces,
+            executingToolNamespaceName);
+
+    /// <summary>
+    /// Determines whether a supplied namespace matches a supplied SSRF protection configuration.
+    /// </summary>
+    /// <remarks>
+    /// This method is internal solely so unit tests can verify matching independently of the process-wide,
+    /// write-once configuration. Production code outside this class must not use it.
+    /// </remarks>
+    /// <param name="disabledNamespaces">The namespace configuration to evaluate.</param>
+    /// <param name="executingToolNamespaceName">The executing tool namespace to match.</param>
+    /// <returns>
+    /// <see langword="true"/> when the executing namespace or <see cref="AllNamespaces"/> is configured;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    internal static bool AreSsrfProtectionsDangerouslyDisabled(
+        IReadOnlyList<string> disabledNamespaces,
+        string? executingToolNamespaceName)
+    {
+        if (string.IsNullOrWhiteSpace(executingToolNamespaceName))
+        {
+            return false;
+        }
+
+        return disabledNamespaces.Any(configuredNamespace =>
+            string.Equals(configuredNamespace, AllNamespaces, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(configuredNamespace, executingToolNamespaceName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
     /// </summary>
     /// <param name="endpoint">The endpoint URL to validate.</param>
     /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
     /// <param name="armEnvironment">The Azure cloud environment (Public, China, Government, etc.).</param>
-    public static void ValidateAzureServiceEndpoint(string endpoint, string serviceType, ArmEnvironment armEnvironment)
+    /// <param name="executingToolNamespaceName">
+    /// The tool namespace executing the validation, which may differ from <paramref name="serviceType"/>.
+    /// A <see langword="null"/>, empty, or whitespace value cannot match a configured namespace and leaves
+    /// SSRF protections enabled, including when <see cref="AllNamespaces"/> is configured.
+    /// </param>
+    public static void ValidateAzureServiceEndpoint(
+        string endpoint,
+        string serviceType,
+        ArmEnvironment armEnvironment,
+        string? executingToolNamespaceName)
     {
+        if (AreSsrfProtectionsDangerouslyDisabled(executingToolNamespaceName))
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(endpoint))
         {
             throw new ArgumentException("Endpoint cannot be null or empty", nameof(endpoint));
@@ -165,11 +257,36 @@ public static partial class EndpointValidator
     }
 
     /// <summary>
+    /// Test-only overload that validates a public target URL without an executing tool namespace.
+    /// </summary>
+    /// <remarks>
+    /// This overload is internal solely so unit tests can exercise validation without configuring an executing
+    /// tool namespace. Production callers must use the public namespace-aware overload.
+    /// </remarks>
+    internal static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
+        => ValidatePublicTargetUrl(url, logger, null);
+
+    /// <summary>
     /// Validates that a target URL (for load testing, etc.) isn't pointing to internal resources.
     /// Performs DNS resolution to detect hostnames that resolve to private/reserved IPs.
     /// </summary>
-    public static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
+    /// <param name="url">The public target URL to validate.</param>
+    /// <param name="logger">An optional logger for DNS resolution diagnostics.</param>
+    /// <param name="executingToolNamespaceName">
+    /// The tool namespace executing the validation.
+    /// A <see langword="null"/>, empty, or whitespace value cannot match a configured namespace and leaves
+    /// SSRF protections enabled, including when <see cref="AllNamespaces"/> is configured.
+    /// </param>
+    public static void ValidatePublicTargetUrl(
+        string url,
+        ILogger? logger,
+        string? executingToolNamespaceName)
     {
+        if (AreSsrfProtectionsDangerouslyDisabled(executingToolNamespaceName))
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(url))
         {
             throw new ArgumentException("URL cannot be null or empty", nameof(url));

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests;
@@ -127,6 +128,31 @@ public class ServerStartCommandTests
         // Assert
         var hasToolOption = command.Options.Any(o => o.Name == "--tool");
         Assert.True(hasToolOption, "Tool option should be registered");
+    }
+
+    [Fact]
+    public void DangerouslyDisableSsrfProtectionsByNamespaceOption_ParsesMultipleNamespaces()
+    {
+        // Arrange & Act
+        var options = BindOptions(
+            "--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE", "acr",
+            "--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE", EndpointValidator.AllNamespaces);
+
+        // Assert
+        Assert.NotNull(options.DangerouslyDisableSsrfProtectionsByNamespace);
+        Assert.Equal(["acr", EndpointValidator.AllNamespaces], options.DangerouslyDisableSsrfProtectionsByNamespace);
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesDangerouslyDisableSsrfProtectionsByNamespace()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasOption = command.Options.Any(
+            o => o.Name == "--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE");
+        Assert.True(hasOption, "DangerouslyDisableSsrfProtectionsByNamespace option should be registered");
     }
 
     [Theory]
@@ -294,6 +320,7 @@ public class ServerStartCommandTests
         Assert.False(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.DangerouslyDisableElicitation);
+        Assert.Null(options.DangerouslyDisableSsrfProtectionsByNamespace);
         Assert.Null(options.DangerouslyWriteSupportLogsToDir);
         Assert.False(options.DisableCaching);
     }
