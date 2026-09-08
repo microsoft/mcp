@@ -394,7 +394,10 @@ azmcp advisor recommendation update [--subscription <subscription>] \
                                     [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>] \
                                     [--tenant <tenant>]
 
-# Summarize Advisor recommendation counts, totals, rankings, and distributions.
+# Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group.
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
+# or omit both to use the configured default subscription. Do not specify both.
+# --resource-group can only be used with subscription scope.
 # Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
 # --group-by defaults to category. All groupings except status include only active New recommendations.
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
@@ -403,7 +406,8 @@ azmcp advisor recommendation update [--subscription <subscription>] \
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation summary --subscription <subscription> \
+azmcp advisor recommendation summary [--subscription <subscription>] \
+                                     [--service-group <service-group>] \
                                      [--group-by <group-by>] \
                                      [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
                                      [--impact <High|Medium|Low>] \

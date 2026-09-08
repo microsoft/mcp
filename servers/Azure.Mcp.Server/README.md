@@ -955,7 +955,9 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 * "List my Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
+* "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
+* "Break down Advisor recommendations in service group 'my-service-group' by impact"
 * "Break down my Advisor recommendations by lifecycle status"
 * "Summarize active service-retirement recommendations by retirement date"
 * "Mark an Advisor recommendation as completed"
