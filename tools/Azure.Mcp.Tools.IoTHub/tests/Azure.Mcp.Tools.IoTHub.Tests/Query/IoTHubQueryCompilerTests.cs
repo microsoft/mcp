@@ -55,7 +55,7 @@ public class IoTHubQueryCompilerTests
     {
         var request = new QueryCompileRequest
         {
-            LogicalOperator = "OR",
+            LogicalOperator = QueryLogicalOperator.Or,
             Filters =
             [
                 Predicate(PredicateScope.Tags, "floor", PredicateOperator.Equals, "3"),
@@ -74,42 +74,42 @@ public class IoTHubQueryCompilerTests
         Assert.Equal("SELECT * FROM devices WHERE tags.owner = 'O''Brien'", IoTHubQueryCompiler.Compile(request));
     }
 
-    [Fact]
-    public void Compile_UsesRequestedSource()
+    [Theory]
+    [InlineData(QuerySource.DeviceModules, "devices.modules")]
+    [InlineData(QuerySource.DeviceJobs, "devices.jobs")]
+    public void Compile_UsesRequestedSource(QuerySource source, string sourceValue)
     {
         var request = new QueryCompileRequest
         {
-            From = "devices.modules",
+            From = source,
             Filters = [Predicate(PredicateScope.Reported, "status", PredicateOperator.Equals, "\"running\"")]
         };
 
-        Assert.Equal("SELECT * FROM devices.modules WHERE properties.reported.status = 'running'", IoTHubQueryCompiler.Compile(request));
+        Assert.Equal($"SELECT * FROM {sourceValue} WHERE properties.reported.status = 'running'", IoTHubQueryCompiler.Compile(request));
     }
 
     [Fact]
-    public void Compile_RejectsUnsupportedSource()
+    public void Compile_RejectsInvalidSource()
     {
         var request = new QueryCompileRequest
         {
-            From = "servers",
+            From = (QuerySource)(-1),
             Filters = [Predicate(PredicateScope.Device, "status", PredicateOperator.Equals, "\"enabled\"")]
         };
 
-        var ex = Assert.Throws<ArgumentException>(() => IoTHubQueryCompiler.Compile(request));
-        Assert.Contains("Unsupported query source", ex.Message);
+        Assert.Throws<ArgumentOutOfRangeException>(() => IoTHubQueryCompiler.Compile(request));
     }
 
     [Fact]
-    public void Compile_RejectsUnsupportedLogicalOperator()
+    public void Compile_RejectsInvalidLogicalOperator()
     {
         var request = new QueryCompileRequest
         {
-            LogicalOperator = "XOR",
+            LogicalOperator = (QueryLogicalOperator)(-1),
             Filters = [Predicate(PredicateScope.Device, "status", PredicateOperator.Equals, "\"enabled\"")]
         };
 
-        var ex = Assert.Throws<ArgumentException>(() => IoTHubQueryCompiler.Compile(request));
-        Assert.Contains("Unsupported logical operator", ex.Message);
+        Assert.Throws<ArgumentOutOfRangeException>(() => IoTHubQueryCompiler.Compile(request));
     }
 
     [Fact]

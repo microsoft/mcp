@@ -11,7 +11,7 @@ public static class IoTHubQueryDiscovery
     // Samples the twin registry for <paramref name="source"/> and returns the discovered queryable fields.
     public static async Task<QueryDiscoveredFields> DiscoverFieldsAsync(
         IIoTHubDeviceService service,
-        string source,
+        QuerySource source,
         string hubName,
         string resourceGroup,
         string subscription,
@@ -21,7 +21,7 @@ public static class IoTHubQueryDiscovery
         ArgumentNullException.ThrowIfNull(service);
 
         var samplePage = await service.RunQuery(
-            $"SELECT * FROM {source}",
+            $"SELECT * FROM {source.ToValue()}",
             hubName,
             resourceGroup,
             subscription,

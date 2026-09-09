@@ -261,7 +261,7 @@ public sealed class IoTHubQueryRunCommand(
             return null;
         }
 
-        var source = string.IsNullOrWhiteSpace(options.From) ? "devices" : options.From!;
+        var source = options.From ?? QuerySource.Devices;
 
         QueryDiscoveredFields discoveredFields;
         try
@@ -286,7 +286,7 @@ public sealed class IoTHubQueryRunCommand(
         {
             Filters = filters,
             From = source,
-            LogicalOperator = string.IsNullOrWhiteSpace(options.LogicalOperator) ? "AND" : options.LogicalOperator!,
+            LogicalOperator = options.LogicalOperator ?? QueryLogicalOperator.And,
             DiscoveredFields = discoveredFields
         };
 

@@ -16,7 +16,7 @@ public class QueryCompileRequest
 
     /// <summary>The source collection to query. Defaults to <c>devices</c>.</summary>
     [JsonPropertyName("from")]
-    public string From { get; set; } = "devices";
+    public QuerySource From { get; set; } = QuerySource.Devices;
 
     /// <summary>An optional page-size hint returned as <c>maxCount</c> for <c>query run</c>.</summary>
     [JsonPropertyName("top")]
@@ -24,7 +24,7 @@ public class QueryCompileRequest
 
     /// <summary>The logical operator (<c>AND</c> or <c>OR</c>) used to join predicates. Defaults to <c>AND</c>.</summary>
     [JsonPropertyName("logicalOperator")]
-    public string LogicalOperator { get; set; } = "AND";
+    public QueryLogicalOperator LogicalOperator { get; set; } = QueryLogicalOperator.And;
 
     /// <summary>Optional discovered field paths used to validate predicates before compiling a query.</summary>
     [JsonPropertyName("discoveredFields")]

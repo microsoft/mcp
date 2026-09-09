@@ -234,7 +234,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
                 EventTime: flexibleEvent.EventTime ?? flexibleEvent.Time ?? DateTimeOffset.UtcNow);
         }
 
-            throw new ArgumentOutOfRangeException(nameof(eventSchema), eventSchema, null);
+        throw new ArgumentOutOfRangeException(nameof(eventSchema), eventSchema, null);
     }
 
     private async Task GetSubscriptionsForSpecificTopic(
