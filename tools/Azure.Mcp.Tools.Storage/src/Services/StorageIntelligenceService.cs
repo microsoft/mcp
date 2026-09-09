@@ -16,6 +16,8 @@ public sealed class StorageIntelligenceService(
     IAzureTokenCredentialProvider tokenCredentialProvider,
     IHttpClientFactory httpClientFactory) : IStorageIntelligenceService
 {
+    private const string DefaultEndpoint = "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze";
+    private const string DefaultScope = "a5965d26-227b-4df0-a516-d86aba489cb6/.default";
     private const string EndpointEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT";
     private const string ScopeEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE";
     private const string TenantEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID";
@@ -33,8 +35,8 @@ public sealed class StorageIntelligenceService(
         string? endTime = null,
         CancellationToken cancellationToken = default)
     {
-        var endpoint = GetRequiredEnvironmentVariable(EndpointEnvironmentVariable);
-        var scope = GetRequiredEnvironmentVariable(ScopeEnvironmentVariable);
+        var endpoint = GetEnvironmentVariableOrDefault(EndpointEnvironmentVariable, DefaultEndpoint);
+        var scope = GetEnvironmentVariableOrDefault(ScopeEnvironmentVariable, DefaultScope);
         var tenant = Environment.GetEnvironmentVariable(TenantEnvironmentVariable);
         ValidateEndpoint(endpoint);
         if (!IsValidApplicationScope(scope))
@@ -105,10 +107,10 @@ public sealed class StorageIntelligenceService(
         return responseDocument.RootElement.Clone();
     }
 
-    private static string GetRequiredEnvironmentVariable(string name) =>
+    private static string GetEnvironmentVariableOrDefault(string name, string defaultValue) =>
         Environment.GetEnvironmentVariable(name) is { Length: > 0 } value
             ? value
-            : throw new InvalidOperationException($"The server operator must configure {name} before using disk diagnostics.");
+            : defaultValue;
 
     private static void ValidateEndpoint(string endpoint)
     {
