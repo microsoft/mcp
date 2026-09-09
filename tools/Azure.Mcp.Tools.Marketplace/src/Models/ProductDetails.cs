@@ -393,6 +393,9 @@ public enum PublishingStage
     Public
 }
 
+/// <summary>
+/// Values from: https://learn.microsoft.com/rest/api/marketplacecatalog/resourcemanager/product-list/list-by-subscription?view=rest-marketplacecatalog-resourcemanager-2025-05-01&tabs=HTTP#productsummary
+/// </summary>
 public enum PricingType
 {
     Free = 0,
@@ -400,7 +403,10 @@ public enum PricingType
     Byol = 2,
     Payg = 3,
     Ri = 4,
-    ContactPublisher = 5
+    ContactPublisher = 5,
+    Freemium = 6,
+    RequestPrivateOffer = 7,
+    PrivateOffer = 8,
 }
 
 public enum RatingBucket
