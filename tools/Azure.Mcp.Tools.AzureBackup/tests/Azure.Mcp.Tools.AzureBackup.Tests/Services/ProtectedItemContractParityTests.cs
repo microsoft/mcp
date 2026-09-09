@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.ResourceManager.DataProtectionBackup.Models;
-using Azure.ResourceManager.DataProtectionBackup;
-using Azure.ResourceManager.RecoveryServicesBackup;
-using Azure.ResourceManager.RecoveryServicesBackup.Models;
-using Azure.ResourceManager;
-using Azure.ResourceManager.Models;
+using System.Reflection;
+
 using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using System.Reflection;
+using Azure.ResourceManager;
+using Azure.ResourceManager.DataProtectionBackup;
+using Azure.ResourceManager.DataProtectionBackup.Models;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.RecoveryServicesBackup;
+using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Services;
