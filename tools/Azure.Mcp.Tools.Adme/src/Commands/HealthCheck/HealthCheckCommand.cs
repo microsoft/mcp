@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
     Name = "check",
     Title = "Check ADME Health",
     Description = """
-        Check Microsoft Entra authentication and platform connectivity for an endpoint and data partition.
+        Check ADME endpoint's health, platform connectivity and authentication for an endpoint and data partition.
         Use this first when other tools fail, to tell a sign-in or token problem apart from a wrong endpoint,
         wrong data partition, or blocked network path.
 

@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
     Name = "fetch",
     Title = "Fetch ADME Records",
     Description = """
-        Retrieve multiple OSDU records by id in a single call.
+        Fetch the content of multiple ADME OSDU records in one batch using two or more record IDs.
 
         Required: --ids, --endpoint, and --data-partition. Each id is a fully-qualified
         '{partition}:{group-type}--{EntityType}:{unique-id}', typically taken verbatim from

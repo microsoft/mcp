@@ -17,8 +17,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
     Name = "list",
     Title = "List ADME Records",
     Description = """
-        List the ids of OSDU records of one kind in a data partition. Returns ids only - use
-        'azmcp adme storage record get' or 'azmcp adme storage record fetch' to read the records.
+        List multiple ADME records of a specified OSDU kind, returning only a paged set of record IDs.
 
         Required: --kind, --endpoint, and --data-partition.
 

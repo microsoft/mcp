@@ -17,8 +17,9 @@ namespace Azure.Mcp.Tools.Adme.Tests.Services;
 
 public sealed class StorageServiceTests
 {
+    private const string EscapedColon = "%3A";
     private const string RecordId = "opendes:master-data--Well:W-99";
-    private const string EscapedRecordId = "opendes%3Amaster-data--Well%3AW-99";
+    private const string EscapedRecordId = $"opendes{EscapedColon}master-data--Well{EscapedColon}W-99";
 
     [Fact]
     public async Task GetRecordAsync_SendsEscapedIdAuthenticationPartitionAndTenant()

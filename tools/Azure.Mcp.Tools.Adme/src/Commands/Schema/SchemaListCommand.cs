@@ -17,9 +17,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     Name = "list",
     Title = "List ADME Schemas",
     Description = """
-        List OSDU schemas (which kinds/versions exist) in a data partition, optionally filtered. Returns
-        lightweight descriptors (id, entityType, version, status, scope) - NOT the full field definitions;
-        use 'azmcp adme schema get' for those.
+        List multiple ADME OSDU schemas, optionally filtering by individual kind components (authority, source,
+        entity type, and version), lifecycle status, or scope. Returns metadata, not full field definitions.
 
         Required: --endpoint and --data-partition. Optional: --tenant for cross-tenant authentication.
 
