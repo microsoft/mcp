@@ -189,7 +189,7 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(
             new ServerRuntimeConfiguration { StructuredOutputMode = mode },
             new MockMcpClientBuilder(),
-            "registryserver");
+            "registry-server");
         var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
         {
             ["learn"] = true,
@@ -201,7 +201,7 @@ public class SingleProxyToolLoaderTests
         Assert.False(result.IsError ?? false);
         Assert.True(result.StructuredContent.HasValue);
         Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
-        Assert.Equal("registryserver", result.StructuredContent.Value.GetProperty("tools")[0].GetProperty("tool").GetString());
+        Assert.Equal("registry-server", result.StructuredContent.Value.GetProperty("tools")[0].GetProperty("tool").GetString());
         var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
         var toolsJson = result.StructuredContent.Value.GetProperty("tools").GetRawText();
         Assert.Equal(
@@ -436,17 +436,17 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(
             new ServerRuntimeConfiguration { StructuredOutputMode = mode },
             clientBuilder,
-            "registryserver");
+            "registry-server");
 
         var result = await toolLoader.CallToolHandler(
-            CreateCallToolRequestWithToolAndCommand("registryserver", "account_list"),
+            CreateCallToolRequestWithToolAndCommand("registry-server", "account_list"),
             TestContext.Current.CancellationToken);
 
         Assert.False(result.IsError ?? false);
         Assert.True(result.StructuredContent.HasValue);
         var structuredContent = result.StructuredContent.Value;
         Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
-        Assert.Equal("registryserver", structuredContent.GetProperty("tool").GetString());
+        Assert.Equal("registry-server", structuredContent.GetProperty("tool").GetString());
         Assert.Equal("account_list", structuredContent.GetProperty("command").GetString());
         var proxiedResult = structuredContent.GetProperty("result");
         Assert.Equal(
@@ -469,10 +469,10 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(
             new ServerRuntimeConfiguration { StructuredOutputMode = StructuredOutputMode.Compact },
             clientBuilder,
-            "registryserver");
+            "registry-server");
 
         var result = await toolLoader.CallToolHandler(
-            CreateCallToolRequestWithToolAndCommand("registryserver", "account_list"),
+            CreateCallToolRequestWithToolAndCommand("registry-server", "account_list"),
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsError);
@@ -717,9 +717,9 @@ public class SingleProxyToolLoaderTests
                 return new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }] };
             });
 
-        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registryserver");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "account_create");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_create");
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -746,9 +746,9 @@ public class SingleProxyToolLoaderTests
         var clientBuilder = new MockMcpClientBuilder()
             .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Listed accounts" }] });
 
-        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registryserver");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "account_list");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_list");
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -792,9 +792,9 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(
             new ServerRuntimeConfiguration { Transport = TransportTypes.Http },
             clientBuilder,
-            "registryserver");
+            "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "local_command");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "local_command");
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -824,9 +824,9 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(
             new ServerRuntimeConfiguration { Transport = TransportTypes.Http },
             clientBuilder,
-            "registryserver");
+            "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "remote_command");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "remote_command");
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -860,9 +860,9 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(
             new ServerRuntimeConfiguration { ReadOnly = true },
             clientBuilder,
-            "registryserver");
+            "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "unknown_command");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "unknown_command");
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -889,9 +889,9 @@ public class SingleProxyToolLoaderTests
         var clientBuilder = new MockMcpClientBuilder()
             .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Created account" }] });
 
-        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "registryserver");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "account_create");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_create");
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -916,9 +916,9 @@ public class SingleProxyToolLoaderTests
         using var activity = new Activity("test-activity");
         activity.Start();
 
-        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registryserver");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "account_list");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_list");
         request.Params.Arguments?.Add("learn", JsonDocument.Parse("true").RootElement);
 
         // Act
@@ -953,9 +953,9 @@ public class SingleProxyToolLoaderTests
         using var activity = new Activity("test-activity");
         activity.Start();
 
-        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registryserver");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "account_list");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_list");
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -981,9 +981,9 @@ public class SingleProxyToolLoaderTests
         using var activity = new Activity("test-activity");
         activity.Start();
 
-        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registryserver");
+        var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registryserver", "account_list");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_list");
         request.Params.Arguments?.Add("parameters", JsonDocument.Parse("""{"subscription": "test-sub"}""").RootElement);
 
         // Act
