@@ -13,7 +13,8 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Remediation;
     Id = "cdef7740-73b6-4492-8670-53b1cb98ff5a",
     Name = "get",
     Title = "Get Advisor Recommendation Remediation",
-    Description = "Fix, resolve, or remediate a specific Azure Advisor recommendation type id with its " +
+    Description = "Fix, resolve, or remediate a specific Azure Advisor recommendation type id. " +
+        "Use this whenever you ask how to fix or how to resolve an Advisor recommendation. Returns its " +
         "remediation package: step-by-step remediation steps plus ready-to-run artifacts, scripts, and " +
         "deployment templates in ARM template, Bicep, Azure CLI, PowerShell, and terraform formats to " +
         "remediate the issue. Also indicates remediation characteristics such as whether it is destructive, " +

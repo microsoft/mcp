@@ -16,7 +16,7 @@ public sealed class RemediationService(IAzureService azureService)
 {
     // Advisor Remediation ARM API: GET /providers/Microsoft.Advisor/remediations/{recommendationTypeId}.
     // Provider-level GET requiring an ARM bearer token + api-version (no RBAC role assignment).
-    private const string ApiVersion = "2026-08-12-preview";
+    private const string ApiVersion = "2026-09-01-preview";
 
     public async Task<RemediationPackage> GetRemediationAsync(
         string recommendationTypeId,
@@ -24,7 +24,10 @@ public sealed class RemediationService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(recommendationTypeId), recommendationTypeId));
 
-        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
+        // TEMP (canary validation only — DO NOT MERGE): force the eastus2euap canary ARM host
+        // instead of the global endpoint so the remediations RC API can be validated pre-global-rollout.
+        // Revert to `AzureService.CloudConfiguration.ArmEnvironment.Endpoint` before opening/updating the PR.
+        var managementEndpoint = "https://eastus2euap.management.azure.com";
         var url = BuildRemediationUrl(managementEndpoint, recommendationTypeId);
 
         using var httpClient = AzureService.GetClient();
