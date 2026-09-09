@@ -20,7 +20,7 @@ public abstract class BaseFileSharesCommand<[DynamicallyAccessedMembers(TrimAnno
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when IsResourceProviderUnavailable(reqEx) =>
-            "Azure File Shares (the Microsoft.FileShares resource provider) is not available in this cloud.",
+            "Azure File Shares (the Microsoft.FileShares resource provider) is not available in this cloud",
         _ => base.GetErrorMessage(ex)
     };
 
