@@ -73,7 +73,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 1. **VS Code**: Install either [stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-3. **Node.js**: Install [Node.js](https://nodejs.org/en/download) 22 or later (ensure `node` and `npm` are in your PATH)
+3. **Node.js**: Install latest [Node.js](https://nodejs.org/en/download) version (ensure `node` and `npm` are in your PATH)
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
 
 ### Central NuGet Feed
@@ -173,6 +173,8 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
 
 4. **Follow implementation guidelines** in [.github/skills/add-azure-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 
+  Tools marked `LocalRequired = true` need special recorded-test handling. In every applicable test in a class extending `RecordedCommandTestsBase`, call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true` so the test verifies that remote HTTP mode excludes the local-only tool.
+
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
    - Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)
@@ -252,7 +254,11 @@ Real product code under unit testing must be passed `Xunit.TestContext.Current.C
 
 ### End-to-end Tests
 
-End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to the server's `/server/<servername>/docs/e2eTestPrompts.md` file.
+
+### Running evals with vally
+
+vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See [`/docs/testing-with-vally.md`](https://github.com/microsoft/mcp/blob/main/docs/testing-with-vally.md).
 
 ### Testing Local Build with VS Code
 
@@ -652,7 +658,7 @@ To ensure consistent spelling across the codebase, run the spelling check before
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-This will check all files for spelling errors using the project's dictionary. Add any new technical terms or proper nouns to `.vscode/cspell.json` if needed.
+This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to `.vscode/cspell.json`.
 
 #### Requirements
 
@@ -786,7 +792,7 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
-- Use `title` as the dislay name for the namespace tool (optional)
+- Use `title` as the display name for the namespace tool (optional)
 - Use `description` as the description of the namespace tool for the MCP server
 - Use `toolPrefix` to assign unique prefix to tools of the MCP server
 - If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
@@ -850,9 +856,23 @@ External servers integrate seamlessly with the Azure MCP Server's tool aggregati
 3. Reference the original issue
 4. Wait for review and address any feedback
 
+#### Assisted Pull Request Review
+
+The repository includes the `.github/skills/mcp-code-reviewer/SKILL.md` skill for consistent, repository-aware reviews in supported IDE, CLI, and GitHub Copilot Code Review sessions.
+
+1. Open the repository in the pull request branch or worktree.
+2. Ask the reviewing agent to `Review pull request <number> using the mcp-code-reviewer skill. Return draft inline comments only and do not post them.`
+3. Inspect each draft finding against the diff and post only the comments you agree with.
+
+In GitHub Copilot Code Review, requesting a review authorizes the agent to post qualified inline comments directly. The skill keeps these reviews read-only and comment-only: it does not modify the branch, approve or request changes, resolve threads, or invoke another agent to implement changes.
+
+The skill does not replace maintainer judgment, required validation, or the security inspection required before authorizing live tests for an untrusted contribution.
+
 ### Builds and Releases (Internal)
 
-The internal pipeline [azure-mcp](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7571) is used for all official releases and CI builds. On every merge to main, a build will run and will produce a dynamically named prerelease package on the public dev feed, e.g. [@azure/mcp@0.0.10-beta.4799791](https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-js/Npm/@azure%2Fmcp/overview/0.0.10-beta.4799791).
+**For instructions on managing Azure MCP releases, follow the [release checklist](https://eng.ms/docs/products/azure-developer-experience/mcp/release-checklist).**
+
+The internal pipeline [azure-mcp](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7866) is used for all official releases and CI builds. On every merge to main, a build will run and will produce a dynamically named prerelease package on the public dev feed, e.g. [@azure/mcp@0.0.10-beta.4799791](https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-js/Npm/@azure%2Fmcp/overview/0.0.10-beta.4799791).
 
 Only manual runs of the pipeline sign and publish packages. Building `main` or `hotfix/*` will publish to `npmjs.com`, all other refs will publish to the [public dev feed](https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-js).
 

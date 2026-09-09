@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
@@ -31,12 +30,6 @@ public sealed class CommandValidationExceptionTests
             => Task.FromResult(context.Response);
 
         public void InvokeHandleException(CommandContext context, Exception ex) => HandleException(context, ex);
-    }
-
-    private static CommandContext CreateContext()
-    {
-        var serviceProvider = new ServiceCollection().BuildServiceProvider();
-        return new CommandContext(serviceProvider);
     }
 
     // ---------- Exception default tests ----------
@@ -76,7 +69,7 @@ public sealed class CommandValidationExceptionTests
     public void HandleException_MapsDefaultStatusCode_ToBadRequest()
     {
         var command = new ValidationTestCommand();
-        var context = CreateContext();
+        var context = new CommandContext();
 
         command.InvokeHandleException(context, new CommandValidationException("Validation failed."));
 
@@ -89,7 +82,7 @@ public sealed class CommandValidationExceptionTests
     public void HandleException_HonorsExplicitStatusCode()
     {
         var command = new ValidationTestCommand();
-        var context = CreateContext();
+        var context = new CommandContext();
 
         command.InvokeHandleException(
             context,
@@ -104,7 +97,7 @@ public sealed class CommandValidationExceptionTests
     public void HandleException_FormatsMissingOptionsMessage()
     {
         var command = new ValidationTestCommand();
-        var context = CreateContext();
+        var context = new CommandContext();
 
         command.InvokeHandleException(
             context,

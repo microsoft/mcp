@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
         Returns execution details including status, start/end times, progress, metrics, and artifacts.
         Does not return test configuration or resource details.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -60,7 +61,6 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.TestrunId,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 // Set results if any were returned
                 context.Response.Results = result != null
@@ -76,7 +76,6 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
                     options.TestId,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
             }

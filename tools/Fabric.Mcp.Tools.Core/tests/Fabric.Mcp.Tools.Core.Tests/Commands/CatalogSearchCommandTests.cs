@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Core.Tests.Commands;
 

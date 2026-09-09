@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Models;
@@ -22,6 +23,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
         key filter and label filter. Each key-value includes its key, value, label, content type, ETag, last modified time,
         and lock status.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -33,6 +35,8 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
 {
     private readonly ILogger<KeyValueGetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
+
+    public override JsonTypeInfo<KeyValueGetCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueGetCommandResult;
 
     public override void ValidateOptions(KeyValueGetOptions options, ValidationResult validationResult)
     {
@@ -59,10 +63,9 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppC
                 options.KeyFilter,
                 options.LabelFilter,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(settings ?? []), AppConfigJsonContext.Default.KeyValueGetCommandResult);
+            SetResult(context, new(settings ?? []));
         }
         catch (Exception ex)
         {

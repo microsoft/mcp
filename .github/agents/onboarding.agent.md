@@ -49,7 +49,7 @@ Before contributing, ensure you have:
 |------|-------|
 | [VS Code](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) | Recommended editor. Insiders required for some agent-mode features. |
 | [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) + [Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) | Used for command scaffolding via skills. |
-| [Node.js 20+](https://nodejs.org/en/download) | Ensure `node` and `npm` are on PATH. |
+| [Latest Node.js LTS](https://nodejs.org/en/download) | Ensure `node` and `npm` are on PATH. |
 | [PowerShell 7.0+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) | Required for build/test scripts in `eng/scripts`. |
 | .NET SDK | Version pinned in `global.json`. |
 
@@ -238,6 +238,8 @@ eng/common/TestResources/New-TestResources.ps1 `
 
 Azure resource commands **require recorded live tests**. See `docs/recorded-tests.md` for the record/playback workflow.
 
+For tools marked `LocalRequired = true`, every applicable test in a class extending `RecordedCommandTestsBase` must call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true`. This verifies that remote HTTP mode excludes the local-only tool.
+
 ### Testing Your Local Build
 
 Point your `mcp.json` at the freshly built binary:
@@ -299,7 +301,7 @@ You can duplicate an existing configuration to debug your own new command.
 6. **Submitting multiple tools in one PR** — slows down review significantly
 7. **Using `CommandUnitTestsBase` for subscription commands** — use `SubscriptionCommandUnitTestsBase` instead
 8. **Skipping `eng/scripts/Update-Solutions.ps1 -All`** after adding a new project — solution files won't include it
-9. **Hardcoding cloud URLs** — use `TenantService.CloudConfiguration.CloudType` switch for sovereign cloud support
+9. **Hardcoding cloud URLs** — use `AzureService.CloudConfiguration.CloudType` switch for sovereign cloud support
 
 ## Standard Commands Reference
 

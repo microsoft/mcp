@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Name = "get",
     Title = "Get File Share",
     Description = "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -51,7 +52,6 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.ResourceGroup!,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([fileShare]), FileSharesJsonContext.Default.FileShareGetCommandResult);
@@ -68,7 +68,6 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareGetCommandResult);

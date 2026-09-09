@@ -4,7 +4,6 @@
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -18,7 +17,6 @@ public interface IMonitorService
         int? hours = 24,
         int? limit = 20,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonNode>> QueryWorkspace(
@@ -27,7 +25,6 @@ public interface IMonitorService
         string query,
         int timeSpanDays = 1,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<string>> ListTables(
@@ -35,14 +32,12 @@ public interface IMonitorService
         string resourceGroup,
         string workspace, string? tableType = "CustomLog",
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<WorkspaceInfo>> ListWorkspaces(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonNode>> QueryWorkspaceLogs(
@@ -52,7 +47,6 @@ public interface IMonitorService
         string table,
         int? hours = 24, int? limit = 20,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<string>> ListTableTypes(
@@ -60,7 +54,6 @@ public interface IMonitorService
         string resourceGroup,
         string workspace,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     Task<List<ActivityLogEventData>> ListActivityLogs(
@@ -72,6 +65,5 @@ public interface IMonitorService
         ActivityLogEventLevel? eventLevel = null,
         int top = 10,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

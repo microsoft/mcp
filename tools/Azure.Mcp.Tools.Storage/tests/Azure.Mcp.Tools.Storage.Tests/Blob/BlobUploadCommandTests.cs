@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -43,7 +42,6 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
             Arg.Is(localFilePath),
             Arg.Is(subscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -75,7 +73,6 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -115,7 +112,6 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }

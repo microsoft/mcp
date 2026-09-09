@@ -27,9 +27,6 @@ public sealed class ContainerSchemaInferOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
     [Option(Description = OptionDescriptions.AuthMethod)]
     public AuthMethod? AuthMethod { get; set; }
 }

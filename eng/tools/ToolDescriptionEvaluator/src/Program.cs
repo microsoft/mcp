@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.VectorData;
 using ToolSelection.Models;
 using ToolSelection.Services;
 using ToolSelection.VectorDb;
@@ -24,6 +26,8 @@ class Program
 
     static async Task Main(string[] args)
     {
+        Console.OutputEncoding = Encoding.UTF8;
+
         var stopwatchTotal = Stopwatch.StartNew();
 
         // Check if we're in CI mode (skip if credentials are missing)
@@ -256,7 +260,9 @@ class Program
             }
 
             // Create vector database
-            var db = new VectorDB(new CosineSimilarity());
+            using var store = new VectorDB(new CosineSimilarity());
+            var db = store.DefaultCollection;
+            await db.EnsureCollectionExistsAsync();
             var stopwatch = Stopwatch.StartNew();
 
             await PopulateDatabaseAsync(db, tools, embeddingService);
@@ -380,7 +386,7 @@ class Program
                 }
             }
 
-            await PerformAnalysis(toolNameAndPrompts!, embeddingService, db, executionTime, writer, maxResultsPerTest, isCiMode);
+            await PerformAnalysis(toolNameAndPrompts!, embeddingService, db, toolCount, executionTime, writer, maxResultsPerTest, isCiMode);
 
             stopwatchTotal.Stop();
 
@@ -545,19 +551,33 @@ class Program
         var fileName = isDll ? "dotnet" : cliArtifact.FullName;
         var arguments = isDll ? $"{cliArtifact.FullName} tools list" : "tools list";
 
-        var process = new Process
+        var startInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            }
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+            CreateNoWindow = true
         };
 
+        if (OperatingSystem.IsWindows())
+        {
+            startInfo.FileName = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
+            startInfo.Environment["MCP_SERVER_FILE"] = fileName;
+            startInfo.Arguments = isDll
+                ? "/d /s /c \"chcp 65001 >nul & call \"\"%MCP_SERVER_FILE%\"\" \"\"%MCP_SERVER_DLL%\"\" tools list\""
+                : "/d /s /c \"chcp 65001 >nul & call \"\"%MCP_SERVER_FILE%\"\" tools list\"";
+
+            if (isDll)
+            {
+                startInfo.Environment["MCP_SERVER_DLL"] = cliArtifact.FullName;
+            }
+        }
+
+        using var process = new Process { StartInfo = startInfo };
         process.Start();
 
         var output = await process.StandardOutput.ReadToEndAsync();
@@ -784,7 +804,7 @@ class Program
                .Replace(UnicodeChars.RightDoubleQuote, "\"");
     }
 
-    private static async Task PopulateDatabaseAsync(VectorDB db, List<Tool> tools, EmbeddingService embeddingService)
+    private static async Task PopulateDatabaseAsync(VectorStoreCollection<string, Entry> db, List<Tool> tools, EmbeddingService embeddingService)
     {
         const int threshold = 2;
 
@@ -821,11 +841,23 @@ class Program
 
             var vector = await embeddingService.CreateEmbeddingsAsync(input);
 
-            db.Upsert(new Entry(toolName, tool, vector));
+            await db.UpsertAsync(new Entry(toolName, tool, vector));
         }
     }
 
-    private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorDB db, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5, bool isCiMode = false)
+    private static async Task<List<VectorSearchResult<Entry>>> SearchToolsAsync(VectorStoreCollection<string, Entry> db, ReadOnlyMemory<float> vector, int topK)
+    {
+        var results = new List<VectorSearchResult<Entry>>(topK);
+
+        await foreach (var result in db.SearchAsync(vector, topK))
+        {
+            results.Add(result);
+        }
+
+        return results;
+    }
+
+    private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorStoreCollection<string, Entry> db, int toolCount, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5, bool isCiMode = false)
     {
         var stopwatch = Stopwatch.StartNew();
         int promptCount = 0;
@@ -833,7 +865,7 @@ class Program
 
         if (isTextOutput)
         {
-            await writer.WriteLineAsync($"Loaded {db.Count} tools in {databaseSetupTime.TotalSeconds:F7}s");
+            await writer.WriteLineAsync($"Loaded {toolCount} tools in {databaseSetupTime.TotalSeconds:F7}s");
             await writer.WriteLineAsync();
         }
         else
@@ -841,7 +873,7 @@ class Program
             await writer.WriteLineAsync("# Tool Selection Analysis Results");
             await writer.WriteLineAsync();
             await writer.WriteLineAsync($"**Analysis Date:** {DateTime.Now:yyyy-MM-dd HH:mm:ss}  ");
-            await writer.WriteLineAsync($"**Tool count:** {db.Count}  ");
+            await writer.WriteLineAsync($"**Tool count:** {toolCount}  ");
             await writer.WriteLineAsync();
             await writer.WriteLineAsync("## Table of Contents");
             await writer.WriteLineAsync();
@@ -893,7 +925,7 @@ class Program
                 // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
                 // If user requests more than 10, expand TopK accordingly so we have enough rows.
                 var topK = Math.Max(10, maxResultsPerTest);
-                var queryResults = db.Query(vector, new QueryOptions(TopK: topK));
+                var queryResults = await SearchToolsAsync(db, vector, topK);
 
                 for (int i = 0; i < Math.Min(maxResultsPerTest, queryResults.Count); i++)
                 {
@@ -901,13 +933,13 @@ class Program
 
                     if (isTextOutput)
                     {
-                        var note = qr.Entry.Id == toolName ? "*** EXPECTED ***" : "";
-                        await writer.WriteLineAsync($"   {qr.Score:F6}   {qr.Entry.Id,-50}     {note}");
+                        var note = qr.Record.Id == toolName ? "*** EXPECTED ***" : "";
+                        await writer.WriteLineAsync($"   {qr.Score:F6}   {qr.Record.Id,-50}     {note}");
                     }
                     else
                     {
-                        var status = qr.Entry.Id == toolName ? "✅ **EXPECTED**" : "❌";
-                        await writer.WriteLineAsync($"| {i + 1} | {qr.Score:F6} | `{qr.Entry.Id}` | {status} |");
+                        var status = qr.Record.Id == toolName ? "✅ **EXPECTED**" : "❌";
+                        await writer.WriteLineAsync($"| {i + 1} | {qr.Score:F6} | `{qr.Record.Id}` | {status} |");
                     }
                 }
 
@@ -1039,7 +1071,7 @@ class Program
         Console.WriteLine($"   ⭐ Top + acceptable confidence (≥0.4): {metricsForConsole.TopChoiceAcceptableConfidencePercentage:F1}%");
     }
 
-    private static async Task<SuccessRateMetrics> CalculateSuccessRateAsync(VectorDB db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, int maxResultsPerTest = 5)
+    private static async Task<SuccessRateMetrics> CalculateSuccessRateAsync(VectorStoreCollection<string, Entry> db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, int maxResultsPerTest = 5)
     {
         var metrics = new SuccessRateMetrics();
 
@@ -1052,15 +1084,15 @@ class Program
                 // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
                 // If user requests more than 10, expand TopK accordingly so we have enough rows.
                 var topK = Math.Max(10, maxResultsPerTest);
-                var queryResults = db.Query(vector, new QueryOptions(TopK: topK));
+                var queryResults = await SearchToolsAsync(db, vector, topK);
 
                 if (queryResults.Count > 0)
                 {
                     var topResult = queryResults[0];
-                    var expectedToolResult = queryResults.FirstOrDefault(r => r.Entry.Id == toolName);
+                    var expectedToolResult = queryResults.FirstOrDefault(r => r.Record.Id == toolName);
 
                     // Check if expected tool is top choice
-                    if (topResult.Entry.Id == toolName)
+                    if (topResult.Record.Id == toolName)
                     {
                         metrics.TopChoiceCount++;
 
@@ -1195,7 +1227,7 @@ class Program
         Console.WriteLine("    --prompt \"what storage accounts do I have\"");
     }
 
-    private static async Task TestSingleToolAsync(string? toolDescription, List<string> testPrompts, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest = 5)
+    private static async Task TestSingleToolAsync(string? toolDescription, List<string> testPrompts, EmbeddingService embeddingService, VectorStoreCollection<string, Entry> db, int maxResultsPerTest = 5)
     {
         Console.WriteLine("🔧 Testing Single Tool Description");
         Console.WriteLine($"📋 Tool Description: {toolDescription}");
@@ -1234,18 +1266,18 @@ class Program
                 // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
                 // If user requests more than 10, expand TopK accordingly so we have enough rows.
                 var topK = Math.Max(10, maxResultsPerTest);
-                var queryResults = db.Query(vector, new QueryOptions(TopK: topK));
+                var queryResults = await SearchToolsAsync(db, vector, topK);
 
                 // Find test tool rankings
-                var testToolResults = new List<(int rank, float score, string toolName)>();
+                var testToolResults = new List<(int rank, double score, string toolName)>();
 
                 for (int i = 0; i < queryResults.Count; i++)
                 {
                     var result = queryResults[i];
 
-                    if (result.Entry.Id.StartsWith(TestToolIdPrefix))
+                    if (result.Record.Id.StartsWith(TestToolIdPrefix))
                     {
-                        testToolResults.Add((i + 1, result.Score, $"{TestToolIdPrefix}1"));
+                        testToolResults.Add((i + 1, result.Score ?? 0.0, $"{TestToolIdPrefix}1"));
                     }
                 }
 
@@ -1280,10 +1312,10 @@ class Program
                 for (int i = 0; i < Math.Min(5, queryResults.Count); i++)
                 {
                     var result = queryResults[i];
-                    var isTestTool = result.Entry.Id.StartsWith(TestToolIdPrefix);
+                    var isTestTool = result.Record.Id.StartsWith(TestToolIdPrefix);
                     var indicator = isTestTool ? "👉 TEST TOOL" : "";
 
-                    Console.WriteLine($"   {i + 1:D2}. {result.Score:F4} - {result.Entry.Id} {indicator}");
+                    Console.WriteLine($"   {i + 1:D2}. {result.Score:F4} - {result.Record.Id} {indicator}");
                 }
 
                 // Suggestions for improvement
@@ -1332,9 +1364,9 @@ class Program
                 // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
                 // If user requests more than 10, expand TopK accordingly so we have enough rows.
                 var topK = Math.Max(10, maxResultsPerTest);
-                var queryResults = db.Query(vector, new QueryOptions(TopK: topK));
+                var queryResults = await SearchToolsAsync(db, vector, topK);
                 var testToolId = $"{TestToolIdPrefix}1";
-                var rank = queryResults.FindIndex(r => r.Entry.Id == testToolId) + 1;
+                var rank = queryResults.FindIndex(r => r.Record.Id == testToolId) + 1;
 
                 if (rank == 1)
                     excellentCount++;

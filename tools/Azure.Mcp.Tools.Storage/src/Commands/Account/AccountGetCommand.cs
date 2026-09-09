@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Account;
     Name = "get",
     Title = "Get Storage Account Details",
     Description = "Retrieves detailed information about Azure Storage accounts, including account name, location, SKU, kind, hierarchical namespace status, HTTPS-only settings, and blob public access configuration. If a specific account name is not provided, the command will return details for all accounts in a subscription.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -38,7 +39,6 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new AccountGetCommandResult(accounts?.Results ?? [], accounts?.AreResultsTruncated ?? false), StorageJsonContext.Default.AccountGetCommandResult);

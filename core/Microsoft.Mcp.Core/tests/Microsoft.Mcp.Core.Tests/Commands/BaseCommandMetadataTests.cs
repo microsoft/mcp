@@ -20,6 +20,7 @@ public sealed class BaseCommandMetadataTests
         Name = "test-attribute",
         Title = "Test Attribute Command",
         Description = "A command used only in tests.",
+        OperationPlane = ToolOperationPlane.Control,
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
@@ -31,6 +32,8 @@ public sealed class BaseCommandMetadataTests
         public override Task<CommandResponse> ExecuteAsync(
             CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
             => Task.FromResult(context.Response);
+
+        public void SetStringResult(CommandContext context, string result) => SetResult(context, result);
     }
 
     private sealed class NoMetadataCommand : BaseCommand<EmptyOptions, string>
@@ -80,6 +83,13 @@ public sealed class BaseCommandMetadataTests
     // ---------- ToToolMetadata mapping tests ----------
 
     [Fact]
+    public void ToToolMetadata_MapsOperationPlane()
+    {
+        var command = new AttributeBasedCommand();
+        Assert.Equal(ToolOperationPlane.Control, command.Metadata.OperationPlane);
+    }
+
+    [Fact]
     public void ToToolMetadata_MapsDestructive()
     {
         var command = new AttributeBasedCommand();
@@ -125,7 +135,8 @@ public sealed class BaseCommandMetadataTests
     public void ToToolMetadata_DefaultValues_AreCorrect()
     {
         // A fresh attribute with only required properties should use spec defaults:
-        // Destructive=true, Idempotent=false, OpenWorld=true, ReadOnly=false, Secret=false, LocalRequired=false
+        // OperationPlane=Unspecified, Destructive=true, Idempotent=false, OpenWorld=true,
+        // ReadOnly=false, Secret=false, LocalRequired=false
         var attr = new CommandMetadataAttribute
         {
             Id = "00000000-0000-0000-0000-000000000000",
@@ -135,12 +146,32 @@ public sealed class BaseCommandMetadataTests
         };
         var metadata = attr.ToToolMetadata();
 
+        Assert.Equal(ToolOperationPlane.Unspecified, metadata.OperationPlane);
         Assert.True(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.True(metadata.OpenWorld);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);
         Assert.False(metadata.LocalRequired);
+    }
+
+    [Fact]
+    public void SetResult_WithNullContext_ThrowsArgumentNullException()
+    {
+        var command = new AttributeBasedCommand();
+
+        Assert.Throws<ArgumentNullException>(() => command.SetStringResult(null!, "result"));
+    }
+
+    [Fact]
+    public void SetResult_WithoutResultTypeInfo_ThrowsInvalidOperationException()
+    {
+        var command = new AttributeBasedCommand();
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => command.SetStringResult(new CommandContext(), "result"));
+
+        Assert.Contains(nameof(command.ResultTypeInfo), exception.Message, StringComparison.Ordinal);
     }
 
     // ---------- Missing metadata throws InvalidOperationException ----------

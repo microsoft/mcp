@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     Name = "create",
     Title = "Create Backup Policy",
     Description = "Creates a backup policy for a specified workload type with schedule and retention rules.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -101,7 +102,6 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
                 options.Subscription!,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

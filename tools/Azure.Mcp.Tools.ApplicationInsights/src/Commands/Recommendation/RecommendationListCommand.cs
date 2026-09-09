@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
         List Application Insights Code Optimization Recommendations in a subscription. Optionally filter by resource group when --resource-group is provided.
         Returns the code optimization recommendations based on the profiler data.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,7 +41,6 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = insights?.Count() > 0 ?

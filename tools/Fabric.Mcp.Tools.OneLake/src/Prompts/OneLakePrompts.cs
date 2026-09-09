@@ -20,7 +20,7 @@ public sealed class OneLakePrompts
     {
         var header =
 $@"You will list items in OneLake:
-- ALWAYS call tool 'onelake_list_items' with: workspace, lakehouse, path.
+- ALWAYS call tool 'onelake_list-items' with: workspace, lakehouse, path.
 - Use paging: set maxResults (<=100) and iterate cursors if provided.
 - Do NOT assume paths exist; handle 404s gracefully.";
 
@@ -79,7 +79,7 @@ sql:
         return [new ChatMessage(ChatRole.User, content)];
     }
 
-    [McpServerPrompt(Name = "onelake_confirm_delete")]
+    [McpServerPrompt(Name = "onelake_confirm-delete")]
     [Description("Ask the user to confirm destructive OneLake delete operations before invoking tools.")]
     public static ChatMessage[] ConfirmDelete(
         [Description("Fabric workspace ID or name")] string workspace,

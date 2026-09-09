@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -34,7 +33,6 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
             Arg.Is("server1"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockServer);
 
@@ -49,8 +47,8 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
-        await Service.Received(1).GetServerAsync("server1", "rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await Service.DidNotReceive().ListServersAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetServerAsync("server1", "rg", "sub", Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ListServersAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -62,7 +60,6 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         Service.ListServersAsync(
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockServers);
 
@@ -74,8 +71,8 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
-        await Service.Received(1).ListServersAsync("rg", "sub", Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await Service.DidNotReceive().GetServerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListServersAsync("rg", "sub", Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().GetServerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -85,7 +82,6 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         Service.ListServersAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -107,7 +103,6 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -130,7 +125,6 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         Service.ListServersAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
@@ -153,10 +147,10 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         if (shouldSucceed)
         {
             Service
-                .ListServersAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                .ListServersAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
             Service
-                .GetServerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                .GetServerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(CreateMockServer("server1"));
         }
 

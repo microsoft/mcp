@@ -12,13 +12,14 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000014",
-    Name = "create_shortcut_gcs",
+    Name = "create-shortcut-gcs",
     Title = "Create OneLake Shortcut (Google Cloud Storage Target)",
     Description = """
         Create a shortcut pointing to a Google Cloud Storage location. Requires a
         connection ID for authentication and a target URL. Requires
         OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

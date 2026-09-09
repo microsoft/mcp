@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Keys;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -46,7 +45,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
             Arg.Is(_knownKeyName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultKey);
 
@@ -76,7 +74,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
             Arg.Is(_knownKeyName),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -103,7 +100,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
             Arg.Is(false),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedKeys);
 
@@ -132,7 +128,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
             Arg.Is(true),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedKeys);
 
@@ -162,7 +157,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
             Arg.Any<bool>(),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -190,7 +184,6 @@ public class KeyGetCommandTests : SubscriptionCommandUnitTestsBase<KeyGetCommand
             Arg.Is(false),
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedKeys);
 

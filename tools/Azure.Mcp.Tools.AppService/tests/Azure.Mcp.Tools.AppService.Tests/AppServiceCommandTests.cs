@@ -265,7 +265,7 @@ public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFi
                 { "detector-id", "AvailabilityAndPerformanceWindows"},
                 { "start-time", startTime },
                 { "end-time", endTime },
-                { "time-grain", "PT10M" }
+                { "interval", "PT10M" }
             });
 
         var detectorsResult = DeserializeResult(result, AppServiceJsonContext.Default.DetectorDiagnoseResult);

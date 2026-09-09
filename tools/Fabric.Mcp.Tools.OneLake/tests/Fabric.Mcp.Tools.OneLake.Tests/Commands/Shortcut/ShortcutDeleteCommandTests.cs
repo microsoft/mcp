@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
 
@@ -12,7 +13,7 @@ public class ShortcutDeleteCommandTests : CommandUnitTestsBase<ShortcutDeleteCom
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("delete_shortcut", Command.Name);
+        Assert.Equal("delete-shortcut", Command.Name);
         Assert.Equal("Delete OneLake Shortcut", Command.Title);
         Assert.Contains("Delete a single shortcut from an item", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
@@ -23,7 +24,7 @@ public class ShortcutDeleteCommandTests : CommandUnitTestsBase<ShortcutDeleteCom
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("delete_shortcut", CommandDefinition.Name);
+        Assert.Equal("delete-shortcut", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

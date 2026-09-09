@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
         Uploads a local file to an Azure Storage blob, only if the blob does not exist, returning the last modified time,
         ETag, and content hash of the uploaded blob.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -43,7 +44,6 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
                 options.LocalFilePath,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);

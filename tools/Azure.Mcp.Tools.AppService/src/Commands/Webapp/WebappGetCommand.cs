@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
         in a subscription or resource group in a subscription. You can specify the app name, resource group name, and
         subscription to get details for a specific web app.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -56,7 +57,6 @@ public sealed class WebappGetCommand(ILogger<WebappGetCommand> logger, IAppServi
                 options.ResourceGroup,
                 options.App,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(webapps), AppServiceJsonContext.Default.WebappGetResult);

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     Name = "create",
     Title = "Create Key Vault Secret",
     Description = "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -39,7 +40,6 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKe
                 options.Value!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(SecretDetails.FromSecret(secret), KeyVaultJsonContext.Default.SecretDetails);

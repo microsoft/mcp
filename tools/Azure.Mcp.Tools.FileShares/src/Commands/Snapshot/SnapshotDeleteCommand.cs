@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Name = "delete",
     Title = "Delete File Share Snapshot",
     Description = "Delete a file share snapshot permanently. This operation cannot be undone.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -45,7 +46,6 @@ public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger,
                 options.FileShareName,
                 options.SnapshotName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

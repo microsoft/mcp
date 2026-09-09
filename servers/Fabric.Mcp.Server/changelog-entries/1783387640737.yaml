@@ -1,4 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Updated @microsoft/vscode-azext-utils from ~2 to ~4 (4.1.1) and @vscode/vsce from 3.7.1 to 3.9.2 in the VS Code extension."
-    subsection: "Dependency Updates"

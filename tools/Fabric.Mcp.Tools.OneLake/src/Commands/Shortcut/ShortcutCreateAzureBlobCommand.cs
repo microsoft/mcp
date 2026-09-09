@@ -12,13 +12,14 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000013",
-    Name = "create_shortcut_azure_blob",
+    Name = "create-shortcut-azure-blob",
     Title = "Create OneLake Shortcut (Azure Blob Storage Target)",
     Description = """
         Create a shortcut pointing to an Azure Blob Storage location. Requires a
         connection ID for authentication and a target URL. Requires
         OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

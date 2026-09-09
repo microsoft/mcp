@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
         query accepts KQL syntax.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -50,7 +51,6 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
                 options.Hours,
                 options.Limit,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(results, MonitorJsonContext.Default.ListJsonNode);

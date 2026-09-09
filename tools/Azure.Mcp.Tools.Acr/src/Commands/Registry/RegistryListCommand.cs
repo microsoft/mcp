@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Acr.Commands.Registry;
         includes: name, location, loginServer, skuName, skuTier. If no registries are found the tool returns null results
         (consistent with other list commands).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,7 +41,6 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAc
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(registries?.Results ?? [], registries?.AreResultsTruncated ?? false), AcrJsonContext.Default.RegistryListCommandResult);

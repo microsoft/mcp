@@ -1,3 +1,5 @@
+[![Help shape Azure MCP Server's Managed Remote Hosting — take our 1-minute survey](https://raw.githubusercontent.com/microsoft/mcp/refs/tags/Azure.Mcp.Server-[Version]/servers/Azure.Mcp.Server/images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
+
 _[Release Title]_ 
 
 [Release Description]

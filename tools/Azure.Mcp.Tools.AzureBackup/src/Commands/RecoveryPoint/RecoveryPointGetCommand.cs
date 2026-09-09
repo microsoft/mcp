@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
         specified, returns detailed information about a single recovery point including time
         and type. When omitted, lists all available recovery points for the protected item.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -56,7 +57,6 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.VaultType,
                     options.Container,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -73,7 +73,6 @@ public sealed class RecoveryPointGetCommand(ILogger<RecoveryPointGetCommand> log
                     options.VaultType,
                     options.Container,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

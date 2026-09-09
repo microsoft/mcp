@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: Name of the import job to delete
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -44,7 +45,6 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
                 options.FilesystemName,
                 options.JobName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(options.JobName), ManagedLustreJsonContext.Default.ImportJobDeleteResult);

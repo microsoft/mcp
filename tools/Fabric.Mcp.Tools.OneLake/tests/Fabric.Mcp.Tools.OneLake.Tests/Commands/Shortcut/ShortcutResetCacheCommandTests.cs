@@ -5,9 +5,11 @@ using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
 
@@ -16,7 +18,7 @@ public class ShortcutResetCacheCommandTests : CommandUnitTestsBase<ShortcutReset
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("reset_shortcut_cache", Command.Name);
+        Assert.Equal("reset-shortcut-cache", Command.Name);
         Assert.Equal("Reset OneLake Shortcut Cache", Command.Title);
         Assert.Contains("Drop cached shortcut reads", Command.Description);
         Assert.False(Command.Metadata.ReadOnly);
@@ -27,7 +29,7 @@ public class ShortcutResetCacheCommandTests : CommandUnitTestsBase<ShortcutReset
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("reset_shortcut_cache", CommandDefinition.Name);
+        Assert.Equal("reset-shortcut-cache", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

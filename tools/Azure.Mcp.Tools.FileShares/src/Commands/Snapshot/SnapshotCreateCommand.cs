@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Name = "create",
     Title = "Create File Share Snapshot",
     Description = "Create a snapshot of an Azure managed file share. Snapshots are read-only point-in-time copies used for backup and recovery.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -55,7 +56,6 @@ public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger,
                 options.SnapshotName,
                 metadata,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotCreateCommandResult);

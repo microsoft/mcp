@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
         Returns message content, properties, and metadata.  Messages remain in the queue after peeking.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -43,7 +44,6 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger, IServiceB
                 options.Queue,
                 options.MaxMessages ?? 1,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.QueuePeekCommandResult);

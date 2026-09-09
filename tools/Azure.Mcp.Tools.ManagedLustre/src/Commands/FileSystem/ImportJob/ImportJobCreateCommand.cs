@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
         - import-prefixes: Blob prefixes to import (default: imports all data from root '/')
         - maximum-errors: Maximum errors allowed before job failure (-1: infinite, 0: fail on first error, default: use service default)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -61,7 +62,6 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
                 options.ImportPrefixes,
                 options.MaximumErrors,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.ImportJobCreateResult);

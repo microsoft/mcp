@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Name = "update",
     Title = "Update File Share",
     Description = "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -68,7 +69,6 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 allowedSubnets,
                 tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareUpdateCommandResult);

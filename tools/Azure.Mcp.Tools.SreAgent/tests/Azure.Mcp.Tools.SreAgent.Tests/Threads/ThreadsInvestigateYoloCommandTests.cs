@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Threads;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -49,7 +48,6 @@ public class ThreadsInvestigateYoloCommandTests : SubscriptionCommandUnitTestsBa
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -101,7 +99,6 @@ public class ThreadsInvestigateYoloCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -148,7 +145,6 @@ public class ThreadsInvestigateYoloCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 
@@ -173,7 +169,6 @@ public class ThreadsInvestigateYoloCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "test-agent", Endpoint = "https://test.azuresre.ai" });
 

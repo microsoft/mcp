@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -34,7 +33,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedContainers);
 
@@ -62,7 +60,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -89,7 +86,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -132,7 +128,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedContainers);
         }
@@ -169,7 +164,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expected]);
 
@@ -203,7 +197,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -233,7 +226,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Container not found"));
 
@@ -262,7 +254,6 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 

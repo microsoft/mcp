@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
     Name = "ask",
     Title = "Calculate AMLFS Subnet Size required number of IP Addresses",
     Description = "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -54,7 +55,6 @@ public sealed class SubnetSizeAskCommand(IManagedLustreService service, ILogger<
                 options.Sku,
                 options.Size,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
         }

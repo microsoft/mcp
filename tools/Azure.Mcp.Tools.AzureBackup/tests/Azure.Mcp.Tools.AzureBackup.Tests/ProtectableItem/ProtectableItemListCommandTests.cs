@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -36,7 +35,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
 
         Service.ListProtectableItemsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedItems);
 
         // Act
@@ -57,7 +56,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         // Arrange
         Service.ListProtectableItemsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -78,7 +77,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         // Arrange
         Service.ListProtectableItemsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -101,7 +100,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         {
             Service.ListProtectableItemsAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -163,7 +162,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         // Arrange
         Service.ListProtectableItemsAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is<string?>(workloadType), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -202,6 +201,6 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         await Service.DidNotReceive().ListProtectableItemsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 }

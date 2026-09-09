@@ -3,14 +3,15 @@
 
 using System.Text.RegularExpressions;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public partial class ComputeUsageChecker(TokenCredential credential, string subscriptionId, ILogger<ComputeUsageChecker> logger, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
+public partial class ComputeUsageChecker(TokenCredential credential, string subscriptionId, ILogger<ComputeUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
 {
     private const string VirtualMachinesMagicString = "virtualmachines";
     private const string CoresMagicString = "cores";

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Policy.Commands;
 using Azure.Mcp.Tools.Policy.Commands.Assignment;
 using Azure.Mcp.Tools.Policy.Models;
 using Azure.Mcp.Tools.Policy.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -54,7 +53,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -97,7 +95,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(assignments);
 
@@ -119,7 +116,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
@@ -139,7 +135,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -153,7 +148,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
             "test-sub",
             scope,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -165,7 +159,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -177,7 +170,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
             "test-sub",
             null,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -189,7 +181,6 @@ public class PolicyAssignmentListCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 

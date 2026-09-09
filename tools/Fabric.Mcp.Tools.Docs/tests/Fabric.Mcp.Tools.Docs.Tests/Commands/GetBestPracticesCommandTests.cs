@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Commands;
 

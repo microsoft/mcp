@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -46,7 +45,6 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
@@ -62,7 +60,6 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
             subscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -85,7 +82,6 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
             Arg.Is(expectedSubscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
@@ -101,14 +97,12 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
             expectedSubscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         await Service.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             ignoredSubscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 }

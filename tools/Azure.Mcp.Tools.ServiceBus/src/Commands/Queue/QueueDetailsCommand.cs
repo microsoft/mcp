@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
         Get details about a Service Bus queue. Returns queue properties and runtime information. Properties returned include
         lock duration, max message size, queue size, creation date, status, current message counts, etc.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,7 +41,6 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, ISe
                 options.Namespace,
                 options.Queue,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);

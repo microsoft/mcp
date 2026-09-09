@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
         the full details of that assignment (id, name, goal assignment type, goal template id, and provisioning
         state). Omit the name to list all goal assignments in the service group, returning only their id and name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -42,7 +43,6 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
                 var goalAssignments = await _resilienceManagementService.ListGoalAssignmentsAsync(
                     options.ServiceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalAssignmentGetCommandResult(GoalAssignments: goalAssignments.ToList());
             }
@@ -52,7 +52,6 @@ public sealed class GoalAssignmentGetCommand(ILogger<GoalAssignmentGetCommand> l
                     options.ServiceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalAssignmentGetCommandResult(GoalAssignment: goalAssignment);
             }

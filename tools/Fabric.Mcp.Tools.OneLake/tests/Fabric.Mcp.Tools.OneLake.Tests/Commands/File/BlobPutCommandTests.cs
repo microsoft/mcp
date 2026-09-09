@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
@@ -16,7 +17,7 @@ public class BlobPutCommandTests : CommandUnitTestsBase<BlobPutCommand, IOneLake
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("upload_file", Command.Name);
+        Assert.Equal("upload-file", Command.Name);
         Assert.Contains("Uploads a file to OneLake storage", Command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.False(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Destructive);
@@ -25,7 +26,7 @@ public class BlobPutCommandTests : CommandUnitTestsBase<BlobPutCommand, IOneLake
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("upload_file", CommandDefinition.Name);
+        Assert.Equal("upload-file", CommandDefinition.Name);
         Assert.NotEmpty(CommandDefinition.Options);
     }
 

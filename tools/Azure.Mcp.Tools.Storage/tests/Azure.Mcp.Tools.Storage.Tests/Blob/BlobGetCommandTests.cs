@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -36,7 +35,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedBlobs);
 
@@ -69,7 +67,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -101,7 +98,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -154,7 +150,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedBlobs);
         }
@@ -193,7 +188,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expected]);
 
@@ -230,7 +224,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -263,7 +256,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Blob not found"));
 
@@ -295,7 +287,6 @@ public class BlobGetCommandTests : SubscriptionCommandUnitTestsBase<BlobGetComma
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 

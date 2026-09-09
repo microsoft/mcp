@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.OneLake.Commands.Security;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Security;
 
@@ -12,7 +13,7 @@ public class DataAccessRoleGetCommandTests : CommandUnitTestsBase<DataAccessRole
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("get_data_access_role", Command.Name);
+        Assert.Equal("get-data-access-role", Command.Name);
         Assert.Equal("Get OneLake Data Access Role", Command.Title);
         Assert.Contains("Get the full definition of a single data access role", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
@@ -23,7 +24,7 @@ public class DataAccessRoleGetCommandTests : CommandUnitTestsBase<DataAccessRole
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("get_data_access_role", CommandDefinition.Name);
+        Assert.Equal("get-data-access-role", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }

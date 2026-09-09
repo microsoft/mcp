@@ -52,7 +52,6 @@ public interface IPostgresService
         string user,
         string server,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> GetServerParameterAsync(
@@ -62,7 +61,6 @@ public interface IPostgresService
         string server,
         string param,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> SetServerParameterAsync(
@@ -73,6 +71,5 @@ public interface IPostgresService
         string param,
         string value,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

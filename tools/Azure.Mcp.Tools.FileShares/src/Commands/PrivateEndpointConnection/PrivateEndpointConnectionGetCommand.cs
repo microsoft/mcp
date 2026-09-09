@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     Name = "get",
     Title = "Get Private Endpoint Connection",
     Description = "Get details of a specific private endpoint connection or list all private endpoint connections for a file share. If --connection-name is provided, returns a specific connection; otherwise, lists all connections.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -44,7 +45,6 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                     options.FileShareName,
                     options.ConnectionName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 var singleResult = new PrivateEndpointConnectionGetCommandResult([connection]);
@@ -64,7 +64,6 @@ public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointC
                     options.ResourceGroup,
                     options.FileShareName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 var result = new PrivateEndpointConnectionGetCommandResult(connections ?? []);

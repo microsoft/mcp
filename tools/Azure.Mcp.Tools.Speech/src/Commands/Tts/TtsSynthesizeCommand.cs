@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Speech.Commands.Tts;
         Optional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.
         The command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -100,7 +101,6 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
                 options.Voice,
                 options.Format,
                 options.EndpointId,
-                options.RetryPolicy,
                 cancellationToken);
 
             _logger.LogInformation(

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
@@ -131,7 +131,7 @@ public class SpeechSetupTests
         services.AddLogging();
         services.AddHttpClient();
         // Add required dependencies
-        services.AddSingleton(Substitute.For<ITenantService>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();
     }

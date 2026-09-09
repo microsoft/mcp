@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         - service
         - knowledge-base
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,
@@ -85,7 +86,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
 
         try
         {
-            var result = await _searchService.RetrieveFromKnowledgeBase(options.Service, options.KnowledgeBase, options.Query, parsedMessages, options.RetryPolicy, cancellationToken);
+            var result = await _searchService.RetrieveFromKnowledgeBase(options.Service, options.KnowledgeBase, options.Query, parsedMessages, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)

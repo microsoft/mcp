@@ -12,13 +12,14 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000017",
-    Name = "create_shortcut_onedrive_sharepoint",
+    Name = "create-shortcut-onedrive-sharepoint",
     Title = "Create OneLake Shortcut (OneDrive/SharePoint Target)",
     Description = """
         Create a shortcut pointing to a OneDrive or SharePoint Online location.
         Requires a connection ID and target URL. Optionally updates the Fabric
         item sensitivity label from the source. Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

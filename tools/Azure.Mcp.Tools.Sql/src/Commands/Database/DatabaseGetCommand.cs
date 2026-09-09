@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
         (show one Azure SQL database) or 'az sql db list' (list all Azure SQL databases in a server).
         Returns database information including configuration details and current status.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -46,7 +47,6 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.Database,
                     options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -59,7 +59,6 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.Server,
                     options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

@@ -42,6 +42,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
         - Cosmos DB: ARM (account level)
         - Elastic SAN: ARM (volume group level)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -67,7 +68,6 @@ public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnpro
                 options.ResourceGroup,
                 options.TagFilter,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

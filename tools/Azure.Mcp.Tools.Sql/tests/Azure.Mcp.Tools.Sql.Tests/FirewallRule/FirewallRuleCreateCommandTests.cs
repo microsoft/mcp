@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -50,7 +49,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedFirewallRule);
         }
@@ -88,7 +86,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             "TestRule",
             "192.168.1.1",
             "192.168.1.255",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFirewallRule);
 
@@ -118,7 +115,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -149,7 +145,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -179,7 +174,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -209,7 +203,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -239,7 +232,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(argumentException);
 
@@ -282,7 +274,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFirewallRule);
 
@@ -303,55 +294,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             ruleName,
             startIp,
             endIp,
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithRetryPolicyOptions()
-    {
-        // Arrange
-        var expectedFirewallRule = new SqlServerFirewallRule(
-            "TestRule",
-            "/subscriptions/testsub/resourceGroups/testrg/providers/Microsoft.Sql/servers/testserver/firewallRules/TestRule",
-            "Microsoft.Sql/servers/firewallRules",
-            "192.168.1.1",
-            "192.168.1.255");
-
-        Service.CreateFirewallRuleAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(expectedFirewallRule);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "testsub",
-            "--resource-group", "testrg",
-            "--server", "testserver",
-            "--firewall-rule-name", "TestRule",
-            "--start-ip-address", "192.168.1.1",
-            "--end-ip-address", "192.168.1.255",
-            "--retry-max-retries", "3");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
-
-        // Verify the service was called with retry policy
-        await Service.Received(1).CreateFirewallRuleAsync(
-            "testserver",
-            "testrg",
-            "testsub",
-            "TestRule",
-            "192.168.1.1",
-            "192.168.1.255",
-            Arg.Is<RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
             Arg.Any<CancellationToken>());
     }
 
@@ -376,7 +318,6 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFirewallRule);
 
@@ -419,7 +360,7 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
         Assert.Contains("IP address format", response.Message);
 
         // Verify service was never called due to validation failure
-        await Service.DidNotReceive().CreateFirewallRuleAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().CreateFirewallRuleAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -442,7 +383,7 @@ public class FirewallRuleCreateCommandTests : SubscriptionCommandUnitTestsBase<F
         Assert.Contains("security", response.Message);
 
         // Verify service was never called due to validation failure
-        await Service.DidNotReceive().CreateFirewallRuleAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().CreateFirewallRuleAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
 
     }
 

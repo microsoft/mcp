@@ -1,6 +1,7 @@
 param(
     [string] $TenantId,
     [string] $TestApplicationId,
+    [string] $TestApplicationOid,
     [string] $ResourceGroupName,
     [string] $BaseName,
     [hashtable] $DeploymentOutputs,
@@ -37,9 +38,24 @@ $subscriptionId = $testSettings.SubscriptionId
 $serviceGroupName = $DeploymentOutputs['SERVICEGROUPNAME']
 $usagePlanName = $DeploymentOutputs['USAGEPLANNAME']
 $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
+$lifecycleEnrollmentName = $DeploymentOutputs['LIFECYCLEENROLLMENTNAME']
+$lifecycleServiceGroupName = $DeploymentOutputs['LIFECYCLESERVICEGROUPNAME']
+$planLifecycleEnrollmentName = $DeploymentOutputs['PLANLIFECYCLEENROLLMENTNAME']
+$planLifecycleServiceGroupName = $DeploymentOutputs['PLANLIFECYCLESERVICEGROUPNAME']
+$workflowEnrollmentName = $DeploymentOutputs['WORKFLOWENROLLMENTNAME']
+$workflowServiceGroupName = $DeploymentOutputs['WORKFLOWSERVICEGROUPNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
+$workflowRecoveryPlanName = $DeploymentOutputs['WORKFLOWRECOVERYPLANNAME']
+$drillName = $DeploymentOutputs['DRILLNAME']
+$deleteDrillName = $DeploymentOutputs['DELETEDRILLNAME']
+$storageAccountId = $DeploymentOutputs['STORAGEACCOUNTID']
+$automationAccountName = $DeploymentOutputs['AUTOMATIONACCOUNTNAME']
+$automationAccountId = $DeploymentOutputs['AUTOMATIONACCOUNTID']
+$failoverRunbookName = $DeploymentOutputs['FAILOVERRUNBOOKNAME']
+$reprotectRunbookName = $DeploymentOutputs['REPROTECTRUNBOOKNAME']
+$location = $DeploymentOutputs['LOCATION']
 
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
@@ -47,6 +63,13 @@ $resilienceApiVersion = '2026-04-01-preview'
 
 $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
 $serviceGroupResilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
+$lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
+$lifecycleServiceGroupResilienceBase = "$lifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement"
+$planLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$planLifecycleServiceGroupName"
+$workflowServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$workflowServiceGroupName"
+$workflowServiceGroupResilienceBase = "$workflowServiceGroupId/providers/Microsoft.AzureResilienceManagement"
+$failoverRunbookId = "$automationAccountId/runbooks/$failoverRunbookName"
+$reprotectRunbookId = "$automationAccountId/runbooks/$reprotectRunbookName"
 
 function Invoke-ResilienceRestPut {
     param(
@@ -65,11 +88,35 @@ function Invoke-ResilienceRestPut {
 
 function Invoke-ResilienceRestPost {
     param(
-        [string] $Path
+        [string] $Path,
+        [hashtable] $Body,
+        [string] $OperationId
     )
 
     Write-Host "POST $Path"
-    $response = Invoke-AzRestMethod -Method POST -Path $Path
+    if ($Body) {
+        $payload = $Body | ConvertTo-Json -Depth 20 -Compress
+        if ($OperationId) {
+            $payloadPath = [System.IO.Path]::GetTempFileName()
+            try {
+                [System.IO.File]::WriteAllText($payloadPath, $payload)
+                $responseContent = az rest --method POST --url "https://management.azure.com$Path" --headers "operation-id=$OperationId" "Content-Type=application/json" --body "@$payloadPath" --output json 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    throw "POST $Path failed: $responseContent"
+                }
+                return $responseContent
+            }
+            finally {
+                Remove-Item $payloadPath -Force
+            }
+        }
+
+        $response = Invoke-AzRestMethod -Method POST -Path $Path -Payload $payload
+    }
+    else {
+        $response = Invoke-AzRestMethod -Method POST -Path $Path
+    }
+
     if ($response.StatusCode -ge 400) {
         throw "POST $Path failed with status $($response.StatusCode): $($response.Content)"
     }
@@ -79,18 +126,18 @@ function Invoke-ResilienceRestPost {
 function Wait-ResilienceProvisioning {
     param(
         [string] $Path,
-        [int] $TimeoutSeconds = 900
+        [int] $TimeoutSeconds = 900,
+        [switch] $WaitForAuthorization
     )
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
         $response = Invoke-AzRestMethod -Method GET -Path $Path
 
-        # Creation of these resources is asynchronous and eventually consistent, so a
-        # 404 immediately after the PUT is expected. Treat it as "not ready yet" and keep
-        # polling until the resource appears or we hit the timeout.
-        if ($response.StatusCode -eq 404) {
-            Write-Host "  not found yet (still provisioning)"
+        # Resource creation is eventually consistent. Service groups also create an
+        # automatic administrator assignment that can take time to become effective.
+        if ($response.StatusCode -eq 404 -or ($WaitForAuthorization -and $response.StatusCode -eq 403)) {
+            Write-Host "  not accessible yet (still provisioning)"
             Start-Sleep -Seconds 15
             continue
         }
@@ -105,7 +152,14 @@ function Wait-ResilienceProvisioning {
             return
         }
         if ($state -in @('Failed', 'Canceled')) {
-            throw "Provisioning of $Path ended in state '$state'."
+            $errorDetails = ($response.Content | ConvertFrom-Json).properties.errorDetails
+            $errorMessage = if ($errorDetails) {
+                " ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
+            }
+            else {
+                ''
+            }
+            throw "Provisioning of $Path ended in state '$state'.$errorMessage"
         }
 
         Start-Sleep -Seconds 15
@@ -113,6 +167,95 @@ function Wait-ResilienceProvisioning {
 
     throw "Timed out waiting for $Path to finish provisioning."
 }
+
+function Add-RecoveryContributorRole {
+    param(
+        [string] $Scope,
+        [int] $TimeoutSeconds = 900
+    )
+
+    $roleName = 'Azure Resilience Management Recovery Contributor'
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction Stop
+            if ($assignment) {
+                return
+            }
+
+            Write-Host "Assigning $roleName to test identity at $Scope"
+            New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction Stop | Out-Null
+            return
+        }
+        catch {
+            if ($_.Exception.Response.StatusCode -notin @(403, 404)) {
+                throw
+            }
+
+            Write-Host "  role assignment authorization is still propagating"
+            Start-Sleep -Seconds 15
+        }
+    }
+
+    throw "Timed out assigning $roleName to test identity at $Scope."
+}
+
+function Add-DrillsAdministratorRole {
+    param(
+        [string] $Scope,
+        [int] $TimeoutSeconds = 900
+    )
+
+    $roleDefinitionId = 'c914561b-1575-4601-af9c-a1356bf59818'
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionId $roleDefinitionId -ErrorAction Stop
+            if ($assignment) {
+                return
+            }
+
+            Write-Host "Assigning Azure Resilience Management Drills Administrator to test identity at $Scope"
+            New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionId $roleDefinitionId -ErrorAction Stop | Out-Null
+            return
+        }
+        catch {
+            if ($_.Exception.Response.StatusCode -notin @(403, 404)) {
+                throw
+            }
+
+            Write-Host "  role assignment authorization is still propagating"
+            Start-Sleep -Seconds 15
+        }
+    }
+
+    throw "Timed out assigning the Drills Administrator role to test identity at $Scope."
+}
+
+function Publish-TestRunbook {
+    param(
+        [string] $Name
+    )
+
+    $runbookPath = Join-Path ([System.IO.Path]::GetTempPath()) "$Name.ps1"
+    try {
+        [System.IO.File]::WriteAllText($runbookPath, "Write-Output 'Completed'`r`n")
+        Import-AzAutomationRunbook `
+            -ResourceGroupName $ResourceGroupName `
+            -AutomationAccountName $automationAccountName `
+            -Name $Name `
+            -Type PowerShell `
+            -Path $runbookPath `
+            -Published `
+            -Force | Out-Null
+    }
+    finally {
+        Remove-Item $runbookPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Publish-TestRunbook -Name $failoverRunbookName
+Publish-TestRunbook -Name $reprotectRunbookName
 
 # 1) Create the tenant-scoped service group.
 $serviceGroupPath = "$serviceGroupId`?api-version=$serviceGroupApiVersion"
@@ -124,7 +267,49 @@ Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
         }
     }
 } | Out-Null
-Wait-ResilienceProvisioning -Path $serviceGroupPath
+Wait-ResilienceProvisioning -Path $serviceGroupPath -WaitForAuthorization
+
+# Create a second enrolled service group without a recoveryplan. Lifecycle tests use it
+# to exercise create and delete without disturbing the shared plan used by other tests.
+$lifecycleServiceGroupPath = "$lifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $lifecycleServiceGroupPath -Body @{
+    properties = @{
+        displayName = $lifecycleServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $lifecycleServiceGroupPath -WaitForAuthorization
+
+# Recoveryplan lifecycle tests use a separate service group because only one plan of each
+# type can exist in a service group and the drill delete fixture reserves the lifecycle group.
+$planLifecycleServiceGroupPath = "$planLifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $planLifecycleServiceGroupPath -Body @{
+    properties = @{
+        displayName = $planLifecycleServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $planLifecycleServiceGroupPath -WaitForAuthorization
+
+$workflowServiceGroupPath = "$workflowServiceGroupId`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $workflowServiceGroupPath -Body @{
+    properties = @{
+        displayName = $workflowServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $workflowServiceGroupPath -WaitForAuthorization
+
+Add-RecoveryContributorRole -Scope $serviceGroupId
+Add-RecoveryContributorRole -Scope $lifecycleServiceGroupId
+Add-RecoveryContributorRole -Scope $planLifecycleServiceGroupId
+Add-DrillsAdministratorRole -Scope "/subscriptions/$subscriptionId"
 
 # 2) Add the resource group as a member of the service group so its resources
 #    (e.g. the storage account) surface as goal/recovery resource targets.
@@ -132,6 +317,27 @@ $membershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupN
 Invoke-ResilienceRestPut -Path $membershipPath -Body @{
     properties = @{
         targetId = $serviceGroupId
+    }
+} | Out-Null
+
+$lifecycleMembershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-lifecycle-rg-member`?api-version=$membershipApiVersion"
+Invoke-ResilienceRestPut -Path $lifecycleMembershipPath -Body @{
+    properties = @{
+        targetId = $lifecycleServiceGroupId
+    }
+} | Out-Null
+
+$planLifecycleMembershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-plan-lifecycle-rg-member`?api-version=$membershipApiVersion"
+Invoke-ResilienceRestPut -Path $planLifecycleMembershipPath -Body @{
+    properties = @{
+        targetId = $planLifecycleServiceGroupId
+    }
+} | Out-Null
+
+$workflowMembershipPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-workflow-rg-member`?api-version=$membershipApiVersion"
+Invoke-ResilienceRestPut -Path $workflowMembershipPath -Body @{
+    properties = @{
+        targetId = $workflowServiceGroupId
     }
 } | Out-Null
 
@@ -144,6 +350,30 @@ Invoke-ResilienceRestPut -Path $enrollmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $enrollmentPath
 
+$lifecycleEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$lifecycleEnrollmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $lifecycleEnrollmentPath -Body @{
+    properties = @{
+        serviceGroupId = $lifecycleServiceGroupId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $lifecycleEnrollmentPath
+
+$planLifecycleEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$planLifecycleEnrollmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $planLifecycleEnrollmentPath -Body @{
+    properties = @{
+        serviceGroupId = $planLifecycleServiceGroupId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $planLifecycleEnrollmentPath
+
+$workflowEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$workflowEnrollmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $workflowEnrollmentPath -Body @{
+    properties = @{
+        serviceGroupId = $workflowServiceGroupId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $workflowEnrollmentPath
+
 # 4) Create a goal template on the service group.
 $goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
@@ -155,47 +385,84 @@ Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
         regionalRecoveryTimeObjective  = 'PT30M'
     }
 } | Out-Null
-Wait-ResilienceProvisioning -Path $goalTemplatePath
+Wait-ResilienceProvisioning -Path $goalTemplatePath -WaitForAuthorization
 
 # 5) Assign the goal template to the service group.
 $goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
-    properties = @{
-        goalAssignmentType = 'Resiliency'
-        goalTemplateId     = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
-    }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $goalAssignmentPath
-
-# 6) Create a recovery plan on the service group.
-$recoveryPlanPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $recoveryPlanPath -Body @{
-    identity   = @{
-        type = 'SystemAssigned'
-    }
-    properties = @{
-        planDescription       = 'Recovery plan for live testing.'
-        planType              = 'Zonal'
-        recoveryGroupsSetting = @{
-            defaultGroup     = @{
-                properties = @{
-                    description   = 'Default recovery group'
-                    groupUniqueId = (New-Guid).Guid
-                    orderId       = 0
-                    preActions    = @()
-                    postActions   = @()
-                }
-            }
-            additionalGroups = @()
+$goalTemplateId = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
+$existingGoalAssignment = Invoke-AzRestMethod -Method GET -Path $goalAssignmentPath
+if ($existingGoalAssignment.StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
+        properties = @{
+            goalAssignmentType = 'Resiliency'
+            goalTemplateId     = $goalTemplateId
         }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $goalAssignmentPath -WaitForAuthorization
+}
+elseif ($existingGoalAssignment.StatusCode -eq 200) {
+    $goalAssignment = $existingGoalAssignment.Content | ConvertFrom-Json
+    if ($goalAssignment.properties.goalAssignmentType -ne 'Resiliency' -or
+        $goalAssignment.properties.goalTemplateId -ne $goalTemplateId -or
+        $goalAssignment.properties.provisioningState -ne 'Succeeded') {
+        throw "Existing goal assignment '$goalAssignmentName' does not match the requested test configuration."
     }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $recoveryPlanPath
+    Write-Host "Goal assignment '$goalAssignmentName' already exists with the requested configuration."
+}
+else {
+    throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
+}
 
-# 7) Run a readiness check on the recovery plan so it has a recorded validation status.
+# 6) Create or validate the recoveryplan on the service group. Do not PUT an
+# existing plan because recovery group IDs are referenced by its recovery resources.
+$recoveryPlanPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
+$existingRecoveryPlan = Invoke-AzRestMethod -Method GET -Path $recoveryPlanPath
+if ($existingRecoveryPlan.StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $recoveryPlanPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            planDescription       = 'Recoveryplan for live testing.'
+            planType              = 'Zonal'
+            recoveryGroupsSetting = @{
+                defaultGroup     = @{
+                    properties = @{
+                        description   = 'Default recovery group'
+                        groupUniqueId = (New-Guid).Guid
+                        orderId       = 0
+                        preActions    = @()
+                        postActions   = @()
+                    }
+                }
+                additionalGroups = @()
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $recoveryPlanPath -WaitForAuthorization
+}
+elseif ($existingRecoveryPlan.StatusCode -eq 200) {
+    $recoveryPlan = $existingRecoveryPlan.Content | ConvertFrom-Json
+    if ($recoveryPlan.properties.provisioningState -ne 'Succeeded') {
+        $errorDetails = $recoveryPlan.properties.errorDetails
+        throw "Existing recoveryplan '$recoveryPlanName' is in provisioning state '$($recoveryPlan.properties.provisioningState)'. ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
+    }
+    if ($recoveryPlan.properties.planType -ne 'Zonal') {
+        throw "Existing recoveryplan '$recoveryPlanName' does not match the requested Zonal test configuration."
+    }
+    if ([string]::IsNullOrWhiteSpace($recoveryPlan.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId)) {
+        throw "Existing recoveryplan '$recoveryPlanName' does not have a valid default recovery group."
+    }
+    Write-Host "Recoveryplan '$recoveryPlanName' already exists with the requested configuration."
+}
+else {
+    throw "GET $recoveryPlanPath failed with status $($existingRecoveryPlan.StatusCode): $($existingRecoveryPlan.Content)"
+}
+
+# 7) Run a readiness check on the recoveryplan so it has a recorded validation status.
 $checkReadinessPath = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName/checkReadiness`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPost -Path $checkReadinessPath | Out-Null
-Wait-ResilienceProvisioning -Path $recoveryPlanPath
+Invoke-ResilienceRestPost -Path $checkReadinessPath -OperationId (New-Guid).Guid | Out-Null
+Wait-ResilienceProvisioning -Path $recoveryPlanPath -WaitForAuthorization
 
 # Capture the recovery job created by the readiness check (and its first resource, if any) so the
 # recovery job/resource live tests can read them from deployment outputs. The job appears
@@ -229,4 +496,357 @@ else {
     Write-Warning "No recovery job appeared after the readiness check; RECOVERYJOBNAME was not set."
 }
 
-Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recovery plan: $recoveryPlanName)."
+# Prepare an isolated CustomRunbook plan for successful failover, resume, and reprotect recordings.
+$workflowRecoveryPlanPath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName`?api-version=$resilienceApiVersion"
+if ((Invoke-AzRestMethod -Method GET -Path $workflowRecoveryPlanPath).StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $workflowRecoveryPlanPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            planDescription       = 'Recovery action workflow live test.'
+            planType              = 'Zonal'
+            recoveryGroupsSetting = @{
+                defaultGroup     = @{
+                    properties = @{
+                        description   = 'Workflow recovery group'
+                        groupUniqueId = (New-Guid).Guid
+                        orderId       = 0
+                        preActions    = @()
+                        postActions   = @(
+                            @{
+                                type             = 'ManualAction'
+                                name             = 'Confirmfailover'
+                                description      = 'Approve the recorded failover workflow.'
+                                timeoutInMinutes = 30
+                            }
+                        )
+                    }
+                }
+                additionalGroups = @()
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $workflowRecoveryPlanPath -WaitForAuthorization
+}
+
+$workflowRecoveryPlan = (Invoke-AzRestMethod -Method GET -Path $workflowRecoveryPlanPath).Content | ConvertFrom-Json
+$workflowPlanPrincipalId = $workflowRecoveryPlan.identity.principalId
+$automationJobOperatorRoleId = '4fe576fe-1146-4730-92eb-48519fa6bf9f'
+$automationRole = Get-AzRoleAssignment -ObjectId $workflowPlanPrincipalId -Scope $automationAccountId -RoleDefinitionId $automationJobOperatorRoleId -ErrorAction SilentlyContinue
+if (!$automationRole) {
+    New-AzRoleAssignment -ObjectId $workflowPlanPrincipalId -Scope $automationAccountId -RoleDefinitionId $automationJobOperatorRoleId | Out-Null
+}
+
+$workflowResourcesPath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName/recoveryResources`?api-version=$resilienceApiVersion"
+$workflowResource = $null
+$deadline = (Get-Date).AddSeconds(600)
+while (-not $workflowResource -and (Get-Date) -lt $deadline) {
+    $workflowResources = ((Invoke-AzRestMethod -Method GET -Path $workflowResourcesPath).Content | ConvertFrom-Json).value
+    $workflowResource = $workflowResources | Where-Object { $_.properties.resourceId -eq $automationAccountId } | Select-Object -First 1
+    if (-not $workflowResource) {
+        Write-Host "  waiting for the Automation account recovery resource to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+if (-not $workflowResource) {
+    throw "No recovery resource was created for Automation account $automationAccountId."
+}
+
+$workflowGroupId = $workflowRecoveryPlan.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId
+$workflowResourceUpdates = @(
+    @{
+        id         = $workflowResource.id
+        properties = @{
+            recoveryResourceUniqueId          = $workflowResource.name
+            inclusionState                    = 'Included'
+            recoveryGroupId                   = $workflowGroupId
+            selectedProtectionSolutionType    = 'CustomRunbook'
+            selectedProtectionSolutionSetting = @{
+                protectionSolutionType = 'CustomRunbook'
+                failoverAction         = @{ resourceId = $failoverRunbookId }
+                reprotectAction        = @{ resourceId = $reprotectRunbookId }
+            }
+        }
+    }
+)
+foreach ($resource in $workflowResources | Where-Object { $_.id -ne $workflowResource.id }) {
+    $workflowResourceUpdates += @{
+        id         = $resource.id
+        properties = @{
+            recoveryResourceUniqueId = $resource.name
+            inclusionState           = 'Excluded'
+        }
+    }
+}
+
+$workflowUpdatePath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName/updateResources`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPost -Path $workflowUpdatePath -OperationId (New-Guid).Guid -Body @{
+    resourcesToUpdate = $workflowResourceUpdates
+    resourcesToRemove = @()
+} | Out-Null
+Wait-ResilienceProvisioning -Path $workflowRecoveryPlanPath -WaitForAuthorization
+
+$workflowFinalizePath = "$workflowServiceGroupResilienceBase/recoveryPlans/$workflowRecoveryPlanName/finalize`?api-version=$resilienceApiVersion"
+$workflowFinalizeResponse = $null
+$workflowFinalizeOperationId = (New-Guid).Guid
+for ($attempt = 0; $attempt -lt 40; $attempt++) {
+    $workflowFinalizeResponse = az rest --method POST --url "https://management.azure.com$workflowFinalizePath" --headers "operation-id=$workflowFinalizeOperationId" --output json 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        break
+    }
+    if ($workflowFinalizeResponse -notmatch '\b409\b|Conflict') {
+        throw "POST $workflowFinalizePath failed: $workflowFinalizeResponse"
+    }
+
+    Write-Host "  recoveryplan update is still active; waiting to finalize..."
+    Start-Sleep -Seconds 15
+}
+if ($LASTEXITCODE -ne 0) {
+    throw "Recoveryplan $workflowRecoveryPlanName could not be finalized after waiting for the resource update."
+}
+Wait-ResilienceProvisioning -Path $workflowRecoveryPlanPath -WaitForAuthorization
+
+$DeploymentOutputs['WORKFLOWRECOVERYRESOURCEID'] = $workflowResource.id
+New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
+
+# 8) Create a drill. The service creates its drillResources from the service-group membership.
+$drillPath = "$serviceGroupResilienceBase/drills/$drillName`?api-version=$resilienceApiVersion"
+$recoveryPlanId = "$serviceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+$existingDrill = Invoke-AzRestMethod -Method GET -Path $drillPath
+if ($existingDrill.StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $drillPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            drillType               = 'Zonal'
+            rbacSetupMode           = 'AutomatedBuiltinRoles'
+            recoveryPlanProperties  = @{
+                recoveryPlanId = $recoveryPlanId
+                identity       = @{ type = 'SystemAssigned' }
+            }
+            drillAssetProperties    = @{
+                subscription  = $subscriptionId
+                region        = $location
+                resourceGroup = $ResourceGroupName
+            }
+            chaosResourceProperties = @{
+                identity                       = @{ type = 'SystemAssigned' }
+                chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+            }
+            monitoringProperties    = @{
+                identity = @{ type = 'SystemAssigned' }
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $drillPath -WaitForAuthorization
+}
+elseif ($existingDrill.StatusCode -eq 200) {
+    $drill = $existingDrill.Content | ConvertFrom-Json
+    if ($drill.properties.drillType -ne 'Zonal' -or
+        $drill.properties.rbacSetupMode -ne 'AutomatedBuiltinRoles' -or
+        $drill.properties.drillAssetProperties.subscription -ne $subscriptionId -or
+        $drill.properties.drillAssetProperties.region -ne $location -or
+        $drill.properties.drillAssetProperties.resourceGroup -ne $ResourceGroupName -or
+        $drill.properties.recoveryPlanProperties.recoveryPlanId -ne $recoveryPlanId -or
+        $drill.properties.monitoringProperties.identity.type -ne 'SystemAssigned' -or
+        $drill.properties.provisioningState -ne 'Succeeded') {
+        throw "Existing drill '$drillName' does not match the requested test configuration."
+    }
+    Write-Host "Drill '$drillName' already exists with the requested configuration."
+}
+else {
+    throw "GET $drillPath failed with status $($existingDrill.StatusCode): $($existingDrill.Content)"
+}
+
+# 8b) Create an isolated recoveryplan and drill used exclusively by the delete live test.
+$deleteRecoveryPlanPath = "$lifecycleServiceGroupResilienceBase/recoveryPlans/$recoveryPlanName`?api-version=$resilienceApiVersion"
+if ((Invoke-AzRestMethod -Method GET -Path $deleteRecoveryPlanPath).StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $deleteRecoveryPlanPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            planDescription       = 'Recoveryplan for the drill delete live test.'
+            planType              = 'Zonal'
+            recoveryGroupsSetting = @{
+                defaultGroup     = @{
+                    properties = @{
+                        description   = 'Default recovery group'
+                        groupUniqueId = (New-Guid).Guid
+                        orderId       = 0
+                        preActions    = @()
+                        postActions   = @()
+                    }
+                }
+                additionalGroups = @()
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $deleteRecoveryPlanPath -WaitForAuthorization
+}
+
+$deleteDrillPath = "$lifecycleServiceGroupResilienceBase/drills/$deleteDrillName`?api-version=$resilienceApiVersion"
+$deleteRecoveryPlanId = "$lifecycleServiceGroupResilienceBase/recoveryPlans/$recoveryPlanName"
+if ((Invoke-AzRestMethod -Method GET -Path $deleteDrillPath).StatusCode -eq 404) {
+    Invoke-ResilienceRestPut -Path $deleteDrillPath -Body @{
+        identity   = @{
+            type = 'SystemAssigned'
+        }
+        properties = @{
+            drillType               = 'Zonal'
+            rbacSetupMode           = 'AutomatedBuiltinRoles'
+            recoveryPlanProperties  = @{
+                recoveryPlanId = $deleteRecoveryPlanId
+                identity       = @{ type = 'SystemAssigned' }
+            }
+            drillAssetProperties    = @{
+                subscription  = $subscriptionId
+                region        = $location
+                resourceGroup = $ResourceGroupName
+            }
+            chaosResourceProperties = @{
+                identity                       = @{ type = 'SystemAssigned' }
+                chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
+            }
+            monitoringProperties    = @{
+                identity = @{ type = 'SystemAssigned' }
+            }
+        }
+    } | Out-Null
+    Wait-ResilienceProvisioning -Path $deleteDrillPath -WaitForAuthorization
+}
+
+# Wait for the drill resource created from the storage-account service-group member.
+$drillResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillResources`?api-version=$resilienceApiVersion"
+$drillResource = $null
+$deadline = (Get-Date).AddSeconds(600)
+while (-not $drillResource -and (Get-Date) -lt $deadline) {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillResourcesPath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillResourcesPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $drillResources = ($response.Content | ConvertFrom-Json).value
+    $drillResource = $drillResources | Where-Object {
+        $_.properties.resourceId -eq $storageAccountId
+    } | Select-Object -First 1
+
+    if (-not $drillResource) {
+        Write-Host "  waiting for the storage account drill resource to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if (-not $drillResource) {
+    throw "No drill resource was created for storage account $storageAccountId."
+}
+
+$DeploymentOutputs['DRILLRESOURCENAME'] = $drillResource.name
+
+# 9) Include the storage account in the drill, preserving the faults discovered by the service.
+$includeResource = @{
+    id = $drillResource.id
+}
+if ($drillResource.properties.faultProperties) {
+    $includeResource['faultProperties'] = $drillResource.properties.faultProperties
+}
+
+$addResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/addOrUpdateResources`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPost -Path $addResourcesPath -OperationId (New-Guid).Guid -Body @{
+    faultDurationInMin      = 1
+    forceInclusionAndUpdate = 'Enable'
+    resourceLists           = @{
+        includeResources = @($includeResource)
+        excludeResources = @()
+        updateResources  = @()
+    }
+} | Out-Null
+
+$drillResourcePath = "$($drillResource.id)`?api-version=$resilienceApiVersion"
+$deadline = (Get-Date).AddSeconds(900)
+do {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillResourcePath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillResourcePath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $includedResource = $response.Content | ConvertFrom-Json
+    if ($includedResource.properties.inclusionState -eq 'Included') {
+        break
+    }
+
+    Write-Host "  drill resource inclusionState = $($includedResource.properties.inclusionState)"
+    Start-Sleep -Seconds 15
+} while ((Get-Date) -lt $deadline)
+
+if ($includedResource.properties.inclusionState -ne 'Included') {
+    throw "Drill resource $($drillResource.name) was not included before the timeout."
+}
+
+# 10) Start the drill and discover the server-generated drill run.
+$drillRunsPath = "$serviceGroupResilienceBase/drills/$drillName/drillRuns`?api-version=$resilienceApiVersion"
+$existingRunIds = @()
+$existingRunsResponse = Invoke-AzRestMethod -Method GET -Path $drillRunsPath
+if ($existingRunsResponse.StatusCode -lt 400) {
+    $existingRunIds = @((($existingRunsResponse.Content | ConvertFrom-Json).value).id)
+}
+
+$startPath = "$serviceGroupResilienceBase/drills/$drillName/start`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPost -Path $startPath -OperationId (New-Guid).Guid -Body @{
+    mode = 'Failover'
+} | Out-Null
+
+$drillRun = $null
+$deadline = (Get-Date).AddSeconds(900)
+while (-not $drillRun -and (Get-Date) -lt $deadline) {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillRunsPath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillRunsPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $runs = ($response.Content | ConvertFrom-Json).value
+    $drillRun = $runs | Where-Object { $_.id -notin $existingRunIds } | Select-Object -First 1
+    if (-not $drillRun) {
+        Write-Host "  waiting for the drill run to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if (-not $drillRun) {
+    throw "No drill run appeared after starting drill $drillName."
+}
+
+$DeploymentOutputs['DRILLRUNNAME'] = $drillRun.name
+$DeploymentOutputs['MARKCOMPLETESERVICEGROUP'] = $serviceGroupName
+$DeploymentOutputs['MARKCOMPLETEDRILL'] = $drillName
+$DeploymentOutputs['MARKCOMPLETEDRILLRUN'] = $drillRun.name
+
+# Capture a run target for the drill run resource live tests.
+$drillRunResourcesPath = "$serviceGroupResilienceBase/drills/$drillName/drillRuns/$($drillRun.name)/drillRunTargets`?api-version=$resilienceApiVersion"
+$drillRunResource = $null
+$deadline = (Get-Date).AddSeconds(900)
+while (-not $drillRunResource -and (Get-Date) -lt $deadline) {
+    $response = Invoke-AzRestMethod -Method GET -Path $drillRunResourcesPath
+    if ($response.StatusCode -ge 400) {
+        throw "GET $drillRunResourcesPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $drillRunResources = ($response.Content | ConvertFrom-Json).value
+    $drillRunResource = $drillRunResources | Select-Object -First 1
+    if (-not $drillRunResource) {
+        Write-Host "  waiting for the drill run target to appear..."
+        Start-Sleep -Seconds 15
+    }
+}
+
+if (-not $drillRunResource) {
+    throw "No drill run target appeared for drill run $($drillRun.name)."
+}
+
+$DeploymentOutputs['DRILLRUNRESOURCENAME'] = $drillRunResource.name
+
+New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
+
+Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recoveryplan: $recoveryPlanName, drill: $drillName, drill run: $($drillRun.name))."

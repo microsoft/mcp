@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Name = "get",
     Title = "Get Thread",
     Description = "Get messages for an SRE Agent thread.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

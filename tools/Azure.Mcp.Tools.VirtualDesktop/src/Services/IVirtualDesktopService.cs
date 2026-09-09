@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.VirtualDesktop.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Services;
 
@@ -11,28 +10,24 @@ public interface IVirtualDesktopService
     Task<IReadOnlyList<HostPool>> ListHostpoolsAsync(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<HostPool>> ListHostpoolsByResourceGroupAsync(
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<SessionHost>> ListSessionHostsAsync(
         string subscription,
         string hostPoolName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<SessionHost>> ListSessionHostsByResourceIdAsync(
         string subscription,
         string hostPoolResourceId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<SessionHost>> ListSessionHostsByResourceGroupAsync(
@@ -40,7 +35,6 @@ public interface IVirtualDesktopService
         string resourceGroup,
         string hostPoolName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<UserSession>> ListUserSessionsAsync(
@@ -48,7 +42,6 @@ public interface IVirtualDesktopService
         string hostPoolName,
         string sessionHostName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<UserSession>> ListUserSessionsByResourceIdAsync(
@@ -56,7 +49,6 @@ public interface IVirtualDesktopService
         string hostPoolResourceId,
         string sessionHostName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<UserSession>> ListUserSessionsByResourceGroupAsync(
@@ -65,6 +57,5 @@ public interface IVirtualDesktopService
         string hostPoolName,
         string sessionHostName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

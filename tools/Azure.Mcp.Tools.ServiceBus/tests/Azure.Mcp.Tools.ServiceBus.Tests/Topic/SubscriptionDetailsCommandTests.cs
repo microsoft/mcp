@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -43,7 +42,6 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedDetails);
 
@@ -72,7 +70,6 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(serviceBusException);
 
@@ -99,7 +96,6 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
             Arg.Is(TopicName),
             Arg.Is(SubscriptionName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -138,7 +134,6 @@ public class SubscriptionDetailsCommandTests : CommandUnitTestsBase<Subscription
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedDetails);
         }

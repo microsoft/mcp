@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Data.AppConfiguration;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Mcp.Core.Options;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests.Services;
@@ -12,29 +11,18 @@ namespace Azure.Mcp.Tools.AppConfig.Tests.Services;
 public class AppConfigServiceTests
 {
     [Fact]
-    public void CreateConfigurationClientOptions_AppliesRetrySettings()
+    public void CreateConfigurationClientOptions_ConfiguresAudienceAndTransport()
     {
-        var retryPolicy = new RetryPolicyOptions
-        {
-            DelaySeconds = 2,
-            MaxDelaySeconds = 10,
-            MaxRetries = 4,
-            Mode = RetryMode.Fixed,
-            NetworkTimeoutSeconds = 15
-        };
         using var httpClient = new HttpClient();
+        var endpoint = new Uri("https://example.azconfig.io");
         var options = AppConfigService.CreateConfigurationClientOptions(
             AppConfigurationAudience.AzurePublicCloud,
-            retryPolicy,
             httpClient,
-            new Uri("https://example.azconfig.io"));
+            endpoint);
 
         Assert.Equal(AppConfigurationAudience.AzurePublicCloud, options.Audience);
-        Assert.Equal(TimeSpan.FromSeconds(2), options.Retry.Delay);
-        Assert.Equal(TimeSpan.FromSeconds(10), options.Retry.MaxDelay);
-        Assert.Equal(4, options.Retry.MaxRetries);
-        Assert.Equal(RetryMode.Fixed, options.Retry.Mode);
-        Assert.Equal(TimeSpan.FromSeconds(15), options.Retry.NetworkTimeout);
+        Assert.IsType<HttpClientTransport>(options.Transport);
+        Assert.Equal(endpoint, httpClient.BaseAddress);
     }
 
     [Theory]

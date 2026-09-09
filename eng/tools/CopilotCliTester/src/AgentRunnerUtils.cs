@@ -3,7 +3,6 @@
 
 using System.Text.Json;
 using CopilotCliTester.Models;
-using GitHub.Copilot.SDK;
 
 namespace CopilotCliTester;
 
@@ -13,12 +12,12 @@ namespace CopilotCliTester;
 internal static class AgentRunnerUtils
 {
     // Internal/meta tools we do NOT want to count as "the expected MCP tool"
-    private static readonly HashSet<string> IgnoredTools = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> s_ignoredTools = new(StringComparer.OrdinalIgnoreCase)
     {
         "report_intent"
     };
 
-    private static readonly string[] prefixes = new[] { "azure-", "azure_" };
+    private static readonly string[] s_prefixes = ["azure-", "azure_"];
 
     /// <summary>
     /// Returns tool.execution_start events
@@ -30,7 +29,7 @@ internal static class AgentRunnerUtils
             .Where(e =>
             {
                 var name = e.Data.TryGetValue("toolName", out var tn) ? tn?.ToString() : null;
-                return !string.IsNullOrWhiteSpace(name) && !IgnoredTools.Contains(name!);
+                return !string.IsNullOrWhiteSpace(name) && !s_ignoredTools.Contains(name!);
             }).ToList();
     }
 
@@ -47,7 +46,7 @@ internal static class AgentRunnerUtils
                 return true;
 
             // Strip known single-segment namespace-proxy prefix instead of open-ended suffix match to avoid false positives (e.g., "subscription_list" matching "eventgrid_subscription_list")
-            foreach (var prefix in prefixes)
+            foreach (var prefix in s_prefixes)
             {
                 if (resolved.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(resolved[prefix.Length..], expectedTool, StringComparison.OrdinalIgnoreCase))

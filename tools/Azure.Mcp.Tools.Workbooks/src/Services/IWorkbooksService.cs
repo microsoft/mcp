@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Workbooks.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Services;
 
@@ -19,7 +18,6 @@ public interface IWorkbooksService
         int maxResults = 50,
         bool includeTotalCount = true,
         OutputFormat outputFormat = OutputFormat.Standard,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -29,7 +27,6 @@ public interface IWorkbooksService
     /// </summary>
     Task<WorkbookBatchResult> GetWorkbooksAsync(
         IReadOnlyList<string> workbookIds,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -42,7 +39,6 @@ public interface IWorkbooksService
         string displayName,
         string serializedData,
         string sourceId,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -53,7 +49,6 @@ public interface IWorkbooksService
         string workbookId,
         string? displayName = null,
         string? serializedContent = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -62,7 +57,6 @@ public interface IWorkbooksService
     /// </summary>
     Task<WorkbookDeleteBatchResult> DeleteWorkbooksAsync(
         IReadOnlyList<string> workbookIds,
-        RetryPolicyOptions? retryPolicy = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 }

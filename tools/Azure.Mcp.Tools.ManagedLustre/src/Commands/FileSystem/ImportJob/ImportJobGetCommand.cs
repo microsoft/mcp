@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
         Optional options:
         - job-name: Name of specific import job to get (omit to list all jobs)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -49,7 +50,6 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
                     options.FilesystemName,
                     options.JobName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.ImportJobGetResult);
@@ -62,7 +62,6 @@ public sealed class ImportJobGetCommand(IManagedLustreService service, ILogger<I
                     options.ResourceGroup,
                     options.FilesystemName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, results), ManagedLustreJsonContext.Default.ImportJobGetResult);

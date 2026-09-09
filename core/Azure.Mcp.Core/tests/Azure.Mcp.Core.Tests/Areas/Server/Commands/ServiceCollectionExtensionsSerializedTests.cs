@@ -61,11 +61,11 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_HttpTransport()
     {
         // Assert
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             Transport = TransportTypes.Http,
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Options.Create(serverStartOptions));
 
         // Act
         services.InitializeConfigurationAndOptions(s_serverAssembly);
@@ -117,11 +117,11 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_WithSupportLoggingFolder_DisablesTelemetry()
     {
         // Arrange
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             DangerouslyWriteSupportLogsToDir = "/tmp/logs"
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Options.Create(serverStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);
@@ -141,11 +141,11 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_WithSupportLoggingFolderAndEnvVarTrue_StillDisablesTelemetry()
     {
         // Arrange
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             DangerouslyWriteSupportLogsToDir = "/tmp/logs"
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Options.Create(serverStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", "true");
@@ -167,11 +167,11 @@ public class ServiceCollectionExtensionsSerializedTests
     public void InitializeConfigurationAndOptions_WithEmptyOrWhitespaceSupportLoggingFolder_EnablesTelemetry(string? folderPath)
     {
         // Arrange
-        var serviceStartOptions = new ServerStartOptions
+        var serverStartOptions = new ServerStartOptions
         {
             DangerouslyWriteSupportLogsToDir = folderPath
         };
-        var services = SetupBaseServices().AddSingleton(Options.Create(serviceStartOptions));
+        var services = SetupBaseServices().AddSingleton(Options.Create(serverStartOptions));
 
         // Act
         Environment.SetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY", null);

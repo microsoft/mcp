@@ -1,0 +1,14 @@
+name: test-writer-eval
+description: Evaluate the test-writer skill
+type: capability
+
+stimuli:
+  - name: insert-name-here
+    prompt: insert-prompt-here
+    environment: development
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: insert-namespace-here
+              command: insert-tool-command-here

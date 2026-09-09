@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     Name = "update",
     Title = "Update Backup Vault",
     Description = "Updates vault-level settings including storage redundancy, soft delete, immutability, and managed identity.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -84,7 +85,6 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
                 options.IdentityType,
                 options.Tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

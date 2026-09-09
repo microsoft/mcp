@@ -29,6 +29,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using ModelContextProtocol.Protocol;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -46,6 +47,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Name = "start",
     Title = "Start MCP Server",
     Description = "Starts Azure MCP Server.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     ReadOnly = true)]
 public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
@@ -121,7 +123,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     }
 
     /// <summary>
-    /// Executes the service start command, creating and starting the MCP server.
+    /// Executes the server start command, creating and starting the MCP server.
     /// </summary>
     /// <param name="context">The command execution context.</param>
     /// <param name="options">The parsed command options.</param>
@@ -277,7 +279,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             }
             return;
 #else
-            commandResult.AddError($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy is only supported in the Docker image distribution of Azure MCP Server. " +
+            validationResult.Errors.Add($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy is only supported in the Docker image distribution of Azure MCP Server. " +
                 "Please use the Docker image or switch to a different outgoing authentication strategy.");
 #endif
         }
@@ -685,9 +687,9 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     // server/discover, ping, notifications, etc.) require Mcp-Method only.
     private static readonly HashSet<string> McpNamedMethods = new(StringComparer.Ordinal)
     {
-        "tools/call",
-        "resources/read",
-        "prompts/get",
+        RequestMethods.ToolsCall,
+        RequestMethods.ResourcesRead,
+        RequestMethods.PromptsGet,
     };
 
     private static async Task ValidateMcpRoutingHeadersMiddleware(HttpContext context, Func<Task> next)

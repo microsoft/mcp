@@ -28,6 +28,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
             - These indexes can be used with AI agents for knowledge retrieval and RAG applications.
             - The list may change as new indexes are created or existing ones are updated.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -53,7 +54,6 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
             var indexes = await _foundryExtensionsService.ListKnowledgeIndexes(
                 options.Endpoint,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), FoundryExtensionsJsonContext.Default.KnowledgeIndexListCommandResult);

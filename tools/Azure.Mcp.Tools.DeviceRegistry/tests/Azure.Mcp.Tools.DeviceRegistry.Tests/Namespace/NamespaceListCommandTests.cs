@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.DeviceRegistry.Commands;
 using Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
 using Azure.Mcp.Tools.DeviceRegistry.Models;
 using Azure.Mcp.Tools.DeviceRegistry.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,7 +31,6 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
         Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedNamespaces);
 
@@ -59,7 +57,6 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
         Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Is(resourceGroup),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedNamespaces);
 
@@ -79,7 +76,6 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
         Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<DeviceRegistryNamespaceInfo>([], false));
 
@@ -99,7 +95,6 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
         Service.ListNamespacesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -133,7 +128,7 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
             ], false);
 
             Service.ListNamespacesAsync(
-                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(expectedNamespaces);
         }
 
@@ -157,7 +152,7 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
         var subscription = "sub123";
 
         Service.ListNamespacesAsync(
-            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--subscription", subscription);
@@ -172,7 +167,7 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
         var subscription = "sub123";
 
         Service.ListNamespacesAsync(
-            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
         var response = await ExecuteCommandAsync("--subscription", subscription);
@@ -186,7 +181,7 @@ public class NamespaceListCommandTests : SubscriptionCommandUnitTestsBase<Namesp
         var subscription = "sub123";
 
         Service.ListNamespacesAsync(
-            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var response = await ExecuteCommandAsync("--subscription", subscription);

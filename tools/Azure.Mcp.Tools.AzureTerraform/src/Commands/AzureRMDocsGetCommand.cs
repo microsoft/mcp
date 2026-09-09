@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         (e.g., azurerm_resource_group). Optionally filter by --doc-type (resource or data-source),
         --argument, or --attribute.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

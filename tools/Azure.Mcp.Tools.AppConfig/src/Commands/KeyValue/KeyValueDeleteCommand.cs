@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
@@ -20,6 +21,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
         If a label is specified, only the labeled version is deleted. If no label is specified, the key-value with the matching
         key and the default label will be deleted.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -32,6 +34,8 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
     private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
+    public override JsonTypeInfo<KeyValueDeleteCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueDeleteCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueDeleteOptions options, CancellationToken cancellationToken)
     {
         try
@@ -41,7 +45,6 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
                 options.Key,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 options.Label,
                 cancellationToken);
 
@@ -49,7 +52,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
             var message = existed
                 ? $"Key '{options.Key}'{labelSuffix} deleted successfully."
                 : $"Key '{options.Key}'{labelSuffix} did not exist in store '{options.Account}'.";
-            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label, existed, message), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+            SetResult(context, new(options.Key, options.Label, existed, message));
         }
         catch (Exception ex)
         {

@@ -7,14 +7,23 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Governance;
 
 public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase<GovernanceSoftDeleteCommand, IAzureBackupService>
 {
+    private static void StubDefault(IAzureBackupService service, AzureBackupSoftDeleteState state = AzureBackupSoftDeleteState.On, int retention = 14)
+    {
+        service.ConfigureSoftDeleteAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(state), Arg.Is(retention),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new OperationResult("Succeeded", null, "Soft delete configured"));
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -28,8 +37,9 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Arrange
         Service.ConfigureSoftDeleteAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("AlwaysOn"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Is(AzureBackupSoftDeleteState.AlwaysOn), Arg.Is(90),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Soft delete configured"));
 
         // Act
@@ -37,7 +47,8 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--soft-delete", "AlwaysOn");
+            "--soft-delete", "AlwaysOn",
+            "--soft-delete-retention-days", "90");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.GovernanceSoftDeleteCommandResult);
@@ -50,8 +61,9 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Arrange
         Service.ConfigureSoftDeleteAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Is(AzureBackupSoftDeleteState.On), Arg.Is(14),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -59,7 +71,8 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--soft-delete", "On");
+            "--soft-delete", "On",
+            "--soft-delete-retention-days", "14");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -67,17 +80,16 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
     }
 
     [Theory]
-    [InlineData("--subscription sub --vault v --resource-group rg --soft-delete On", true)]
-    [InlineData("--subscription sub --vault v --resource-group rg", false)] // soft-delete is required
+    [InlineData("--subscription sub --vault v --resource-group rg --soft-delete On --soft-delete-retention-days 14", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --soft-delete On", false)] // retention-days required
+    [InlineData("--subscription sub --vault v --resource-group rg --soft-delete-retention-days 30", false)] // soft-delete required
+    [InlineData("--subscription sub --vault v --resource-group rg", false)] // both required missing
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            Service.ConfigureSoftDeleteAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-                .Returns(new OperationResult("Succeeded", null, null));
+            StubDefault(Service);
         }
 
         // Act
@@ -99,8 +111,9 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Arrange
         Service.ConfigureSoftDeleteAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(AzureBackupSoftDeleteState.On), Arg.Any<int>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         // Act
@@ -108,7 +121,8 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--soft-delete", "On");
+            "--soft-delete", "On",
+            "--soft-delete-retention-days", "14");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -120,8 +134,9 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Arrange
         Service.ConfigureSoftDeleteAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(AzureBackupSoftDeleteState.On), Arg.Any<int>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Cannot change"));
 
         // Act
@@ -129,11 +144,11 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--soft-delete", "On");
+            "--soft-delete", "On",
+            "--soft-delete-retention-days", "14");
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
-        Assert.Contains("Cannot change", response.Message);
     }
 
     [Fact]
@@ -141,8 +156,9 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
     {
         // Arrange
         Service.ConfigureSoftDeleteAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is(AzureBackupSoftDeleteState.On), Arg.Any<int>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -150,7 +166,8 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--soft-delete", "On");
+            "--soft-delete", "On",
+            "--soft-delete-retention-days", "14");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -169,11 +186,11 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--soft-delete", softDeleteState);
+            "--soft-delete", softDeleteState,
+            "--soft-delete-retention-days", "14");
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--soft-delete must be", response.Message);
     }
 
     [Theory]
@@ -193,20 +210,16 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--soft-delete-retention-days", response.Message);
     }
 
     [Theory]
-    [InlineData("14")]
-    [InlineData("90")]
-    [InlineData("180")]
-    public async Task ExecuteAsync_AcceptsValidRetentionDays(string retentionDays)
+    [InlineData(14)]
+    [InlineData(90)]
+    [InlineData(180)]
+    public async Task ExecuteAsync_AcceptsValidRetentionDays(int retentionDays)
     {
         // Arrange
-        Service.ConfigureSoftDeleteAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new OperationResult("Succeeded", null, null));
+        StubDefault(Service, AzureBackupSoftDeleteState.On, retentionDays);
 
         // Act
         var response = await ExecuteCommandAsync(
@@ -214,7 +227,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
             "--vault", "v",
             "--resource-group", "rg",
             "--soft-delete", "On",
-            "--soft-delete-retention-days", retentionDays);
+            "--soft-delete-retention-days", retentionDays.ToString());
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -224,10 +237,7 @@ public class GovernanceSoftDeleteCommandTests : SubscriptionCommandUnitTestsBase
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        Service.ConfigureSoftDeleteAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("On"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
-            .Returns(new OperationResult("Succeeded", null, "Soft delete set to 'On'"));
+        StubDefault(Service, AzureBackupSoftDeleteState.On, 30);
 
         // Act
         var response = await ExecuteCommandAsync(

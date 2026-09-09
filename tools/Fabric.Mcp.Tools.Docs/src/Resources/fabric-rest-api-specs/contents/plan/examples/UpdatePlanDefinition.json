@@ -1,0 +1,27 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920",
+    "planId": "3546052c-ae64-4526-b1a8-52af7761426f",
+    "updatePlanDefinitionRequest": {
+      "definition": {
+        "parts": [
+          {
+            "path": "connectedPlanning/infobridge.json",
+            "payload": "eyJjb25uZWN0aW9uSWQiOiAiMTIzNDU2Nzg...",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "200": {},
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/73f66a97-e6b8-4ef5-bf5f-8f076de3cb9b",
+        "x-ms-operation-id": "73f66a97-e6b8-4ef5-bf5f-8f076de3cb9b",
+        "Retry-After": 30
+      }
+    }
+  }
+}

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
     Name = "update",
     Title = "Update Registered Server",
     Description = "Update properties of a registered server.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -43,7 +44,6 @@ public sealed class RegisteredServerUpdateCommand(ILogger<RegisteredServerUpdate
                 options.ServerId,
                 null, // TODO (alzimmer): Doesn't appear this command actually updates anything.
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(server), StorageSyncJsonContext.Default.RegisteredServerUpdateCommandResult);

@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager.Search;
 using Azure.ResourceManager.Search.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class SearchUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SearchUsageChecker> logger, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
+public class SearchUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SearchUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {

@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
         Optionally specify --container for RSV workload items (SQL/HANA).
         The operation is asynchronous; use 'azurebackup job get' to monitor progress.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -51,7 +52,6 @@ public sealed class ProtectedItemUndeleteCommand(ILogger<ProtectedItemUndeleteCo
                 options.VaultType,
                 options.Container,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

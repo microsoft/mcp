@@ -12,12 +12,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000015",
-    Name = "create_shortcut_s3_compatible",
+    Name = "create-shortcut-s3-compatible",
     Title = "Create OneLake Shortcut (S3 Compatible Target)",
     Description = """
         Create a shortcut pointing to an S3-compatible storage location. Requires
         a connection ID, target URL, and bucket name. Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

@@ -7,7 +7,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -35,7 +34,6 @@ public class ItemQueryCommandTests : SubscriptionCommandUnitTestsBase<ItemQueryC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             null,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedItems);
 
@@ -71,7 +69,6 @@ public class ItemQueryCommandTests : SubscriptionCommandUnitTestsBase<ItemQueryC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedItems);
 
@@ -99,7 +96,6 @@ public class ItemQueryCommandTests : SubscriptionCommandUnitTestsBase<ItemQueryC
             Arg.Is("sub123"),
             Arg.Is(AuthMethod.Credential),
             Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -130,7 +126,6 @@ public class ItemQueryCommandTests : SubscriptionCommandUnitTestsBase<ItemQueryC
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

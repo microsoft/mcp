@@ -4,7 +4,7 @@
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,15 +17,15 @@ namespace Azure.Mcp.Tools.Extension.Tests;
 
 public sealed class AzqrCommandTests : SubscriptionCommandUnitTestsBase<AzqrCommand, IExternalProcessService>
 {
-    private readonly ISubscriptionService _subscriptionService;
+    private readonly IAzureService _azureService;
     private readonly IDateTimeProvider _dateTimeProvider;
 
     public AzqrCommandTests()
     {
-        _subscriptionService = Substitute.For<ISubscriptionService>();
+        _azureService = Substitute.For<IAzureService>();
         _dateTimeProvider = Substitute.For<IDateTimeProvider>();
 
-        Services.AddSingleton(_subscriptionService);
+        Services.AddSingleton(_azureService);
         Services.AddSingleton(_dateTimeProvider);
     }
 

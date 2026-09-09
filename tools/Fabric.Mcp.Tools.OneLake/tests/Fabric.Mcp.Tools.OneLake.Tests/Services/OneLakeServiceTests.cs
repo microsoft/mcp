@@ -5,6 +5,7 @@
 
 using Fabric.Mcp.Tools.OneLake.Models;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Services;
 

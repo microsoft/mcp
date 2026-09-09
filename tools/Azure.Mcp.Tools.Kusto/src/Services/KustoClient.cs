@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
@@ -10,7 +11,7 @@ public sealed class KustoClient(
     string clusterUri,
     TokenCredential tokenCredential,
     string userAgent,
-    IHttpClientFactory httpClientFactory)
+    IAzureService azureService)
 {
     // Valid Kusto cluster domain suffixes from official Kusto endpoints configuration
     private static readonly string[] s_validKustoDomainSuffixes =
@@ -75,7 +76,7 @@ public sealed class KustoClient(
     private readonly string _clusterUri = ValidateAndNormalizeClusterUri(clusterUri);
     private readonly TokenCredential _tokenCredential = tokenCredential;
     private readonly string _userAgent = userAgent;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IAzureService _azureService = azureService;
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromSeconds(240);
     private static readonly string s_application = "AzureMCP";
     private static readonly string s_clientRequestIdPrefix = "AzMcp";
@@ -225,7 +226,7 @@ public sealed class KustoClient(
     {
         var uri = _clusterUri + endpoint;
         var httpRequest = await GenerateRequestAsync(uri, database, text, cancellationToken).ConfigureAwait(false);
-        var client = _httpClientFactory.CreateClient();
+        var client = _azureService.GetClient();
         client.Timeout = s_httpClientTimeout;
         return await SendRequestAsync(client, httpRequest, cancellationToken).ConfigureAwait(false);
     }
@@ -240,12 +241,12 @@ public sealed class KustoClient(
         var clientRequestId = s_clientRequestIdPrefix + Guid.NewGuid().ToString();
         var tokenRequestContext = new TokenRequestContext(scopes, clientRequestId);
         var accessToken = await _tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
-        httpRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("bearer", accessToken.Token);
+        httpRequest.Headers.Authorization = new("bearer", accessToken.Token);
         httpRequest.Headers.Add("User-Agent", _userAgent);
         httpRequest.Headers.Add("x-ms-client-request-id", clientRequestId);
         httpRequest.Headers.Add("x-ms-app", s_application);
         httpRequest.Headers.Add("x-ms-client-version", "Kusto.Client.Light");
-        httpRequest.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequest.Headers.Accept.Add(new("application/json"));
 
         var body = new JsonObject
         {
@@ -259,7 +260,7 @@ public sealed class KustoClient(
         body.Add("properties", properties);
         var bodyStr = body.ToJsonString();
         httpRequest.Content = new StringContent(bodyStr);
-        httpRequest.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
+        httpRequest.Content.Headers.ContentType = new("application/json", "utf-8");
         return httpRequest;
     }
 

@@ -1,5 +1,3 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
-#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -7,8 +5,6 @@ using System.Text.Json;
 using Microsoft.Mcp.Core.Areas.Server;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
-using NSubstitute;
-using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 
@@ -127,8 +123,8 @@ public sealed class MockMcpClientBuilder
         // transport instead, dispatching tools/list and tools/call to the registered handlers.
         return LoopbackMcpClient.Create(request => request.Method switch
         {
-            "tools/list" => HandleListToolsRequest(request).GetAwaiter().GetResult(),
-            "tools/call" => HandleCallToolRequest(request).GetAwaiter().GetResult(),
+            RequestMethods.ToolsList => HandleListToolsRequest(request).GetAwaiter().GetResult(),
+            RequestMethods.ToolsCall => HandleCallToolRequest(request).GetAwaiter().GetResult(),
             _ => null
         });
     }

@@ -3,8 +3,7 @@
 
 using System.Net;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.ResourceManager;
@@ -12,7 +11,6 @@ using Azure.ResourceManager.Resources;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
@@ -23,35 +21,31 @@ namespace Azure.Mcp.Tools.Cosmos.Tests;
 
 public class CosmosServiceTests : IAsyncDisposable
 {
-    private readonly ISubscriptionService _subscriptionService;
-    private readonly ITenantService _tenantService;
+    private readonly IAzureService _azureService;
     private readonly ICacheService _cacheService;
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<CosmosService> _logger;
     private readonly CosmosService _service;
 
     public CosmosServiceTests()
     {
-        _subscriptionService = Substitute.For<ISubscriptionService>();
-        _tenantService = Substitute.For<ITenantService>();
+        _azureService = Substitute.For<IAzureService>();
         _cacheService = Substitute.For<ICacheService>();
-        _httpClientFactory = Substitute.For<IHttpClientFactory>();
         _logger = Substitute.For<ILogger<CosmosService>>();
 
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);
         cloudConfig.AuthorityHost.Returns(new Uri("https://login.microsoftonline.com"));
         cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
-        _tenantService.CloudConfiguration.Returns(cloudConfig);
+        _azureService.CloudConfiguration.Returns(cloudConfig);
 
         var credential = Substitute.For<TokenCredential>();
-        _tenantService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(credential));
 
         _cacheService.GetGroupKeysAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ValueTask<IEnumerable<string>>(Enumerable.Empty<string>()));
 
-        _service = new CosmosService(_subscriptionService, _tenantService, _cacheService, _httpClientFactory, _logger);
+        _service = new CosmosService(_azureService, _cacheService, _logger);
     }
 
     public async ValueTask DisposeAsync()
@@ -81,9 +75,9 @@ public class CosmosServiceTests : IAsyncDisposable
     [Fact]
     public async Task ListDatabases_CredentialAuthFails_DoesNotFallBackToKeyAuth()
     {
-        // Arrange: HTTP handler returns 401 so credential-based CosmosClient validation fails
+        // Arrange: HTTP handler returns 401 so the credential-based database operation fails
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
@@ -96,16 +90,16 @@ public class CosmosServiceTests : IAsyncDisposable
 
         // Verify no fallback to key auth: GetSubscription is only called for key-based auth
         // (to look up the account and retrieve master keys)
-        await _subscriptionService.DidNotReceive()
-            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive()
+            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ListDatabases_CredentialAuthFailsWith403_DoesNotFallBackToKeyAuth()
     {
-        // Arrange: HTTP handler returns 403 so credential-based CosmosClient validation fails
+        // Arrange: HTTP handler returns 403 so the credential-based database operation fails
         var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
@@ -117,8 +111,8 @@ public class CosmosServiceTests : IAsyncDisposable
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Credential, cancellationToken: TestContext.Current.CancellationToken));
 
         // Verify no fallback to key auth
-        await _subscriptionService.DidNotReceive()
-            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _azureService.DidNotReceive()
+            .GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -126,14 +120,14 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
         _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(List<string>));
 
-        // Act: client creation fails, but cache lookup has already happened
+        // Act: the database operation fails, but the client cache lookup has already happened
         await Assert.ThrowsAnyAsync<Exception>(() =>
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Credential, cancellationToken: TestContext.Current.CancellationToken));
 
@@ -155,13 +149,13 @@ public class CosmosServiceTests : IAsyncDisposable
     [Fact]
     public async Task GetCosmosClientAsync_KeyAuthRequest_QueriesCacheWithKeyAuthKey()
     {
-        // Arrange: _subscriptionService returns null/throws by default, causing key-based creation to fail
+        // Arrange: _azureService returns null/throws by default, causing key-based creation to fail
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
         _cacheService.GetAsync<List<string>>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(List<string>));
 
-        // Act: client creation fails after the cache miss, but cache lookup has already happened
+        // Act: key authentication setup fails after the cache miss, but cache lookup has already happened
         await Assert.ThrowsAnyAsync<Exception>(() =>
             _service.ListDatabases("myaccount", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
 
@@ -185,7 +179,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange: simulate a server that always returns 401 so client creation always fails
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
@@ -221,7 +215,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange: the resource group lookup returns a 404, which should surface as a not-found.
         var subscriptionResource = Substitute.For<SubscriptionResource>();
-        _subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
         subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
@@ -243,7 +237,7 @@ public class CosmosServiceTests : IAsyncDisposable
             .Returns(default(List<string>));
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
-        _subscriptionService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscription("sub123", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
         subscriptionResource.GetResourceGroupAsync("missing-rg", Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Resource group not found"));
@@ -259,7 +253,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
@@ -294,7 +288,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
@@ -329,7 +323,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
@@ -372,7 +366,7 @@ public class CosmosServiceTests : IAsyncDisposable
     {
         // Arrange
         var handler = new MockHttpHandler(HttpStatusCode.Unauthorized);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
+        _azureService.GetClient().Returns(new HttpClient(handler));
 
         _cacheService.GetAsync<CosmosClient>(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>())
             .Returns(default(CosmosClient));
@@ -413,10 +407,10 @@ public class CosmosServiceTests : IAsyncDisposable
     [Fact]
     public async Task QueryItems_NonSuccessResponse_Throws()
     {
-        // Arrange: route the CosmosClient's transport through the mocked IHttpClientFactory so it always returns 403.
+        // Arrange: route the CosmosClient's transport through the mocked AzureService so it always returns 403.
         var handler = new MockHttpHandler(HttpStatusCode.Forbidden);
-        _httpClientFactory.CreateClient(Arg.Any<string>()).Returns(new HttpClient(handler));
-        var clientOptions = new CosmosClientOptions { HttpClientFactory = () => _httpClientFactory.CreateClient() };
+        _azureService.GetClient().Returns(new HttpClient(handler));
+        var clientOptions = new CosmosClientOptions { HttpClientFactory = () => _azureService.GetClient() };
 
         var credential = Substitute.For<TokenCredential>();
         var token = new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1));

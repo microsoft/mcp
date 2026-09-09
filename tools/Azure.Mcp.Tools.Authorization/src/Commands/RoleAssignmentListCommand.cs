@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
         List role assignments. This command retrieves and displays all Azure RBAC role assignments
         in the specified scope. Results include role definition IDs and principal IDs, returned as a JSON array.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,7 +41,6 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
                 options.Subscription!,
                 options.Scope,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(assignments?.Results ?? [], assignments?.AreResultsTruncated ?? false), AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);

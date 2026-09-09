@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
         and analysis types for each detector. Useful for troubleshooting app service issues, checking available
         health checks, and finding the right detector for performance, availability, or configuration analysis.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -45,7 +46,6 @@ public sealed class DetectorListCommand(ILogger<DetectorListCommand> logger, IAp
                 options.ResourceGroup,
                 options.App,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(detectors), AppServiceJsonContext.Default.DetectorListResult);

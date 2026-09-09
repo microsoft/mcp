@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -26,7 +25,7 @@ public class RecoveryPlanGetCommandTests : CommandUnitTestsBase<RecoveryPlanGetC
     public async Task ExecuteAsync_ListsRecoveryPlans_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "plan1"), new("id2", "plan2") };
-        Service.ListRecoveryPlansAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryPlansAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);
@@ -39,7 +38,7 @@ public class RecoveryPlanGetCommandTests : CommandUnitTestsBase<RecoveryPlanGetC
     [Fact]
     public async Task ExecuteAsync_GetsRecoveryPlan_WhenNameProvided()
     {
-        Service.GetRecoveryPlanAsync(ServiceGroup, "plan1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetRecoveryPlanAsync(ServiceGroup, "plan1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--name", "plan1");
@@ -53,7 +52,7 @@ public class RecoveryPlanGetCommandTests : CommandUnitTestsBase<RecoveryPlanGetC
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListRecoveryPlansAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryPlansAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);

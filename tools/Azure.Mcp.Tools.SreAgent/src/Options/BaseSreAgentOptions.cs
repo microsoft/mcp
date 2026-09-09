@@ -19,7 +19,4 @@ public class BaseSreAgentOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

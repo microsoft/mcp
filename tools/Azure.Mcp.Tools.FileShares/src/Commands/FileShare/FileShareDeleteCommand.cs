@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Name = "delete",
     Title = "Delete File Share",
     Description = "Delete a file share",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -43,7 +44,6 @@ public sealed class FileShareDeleteCommand(ILogger<FileShareDeleteCommand> logge
                 options.ResourceGroup,
                 options.Name,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

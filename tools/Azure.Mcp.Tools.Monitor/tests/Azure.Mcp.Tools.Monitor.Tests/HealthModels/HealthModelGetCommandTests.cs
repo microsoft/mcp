@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -22,7 +21,7 @@ public class HealthModelGetCommandTests : SubscriptionCommandUnitTestsBase<Healt
     [Fact]
     public async Task ExecuteAsync_ReturnsHealthModel_WhenItExists()
     {
-        Service.GetHealthModel(TestSubscription, TestResourceGroup, TestHealthModel, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetHealthModel(TestSubscription, TestResourceGroup, TestHealthModel, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new HealthModelDetail
             {
                 Id = null,

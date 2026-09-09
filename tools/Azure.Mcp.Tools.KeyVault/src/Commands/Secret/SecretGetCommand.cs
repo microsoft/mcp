@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     Name = "get",
     Title = "Get Key Vault Secret",
     Description = """List all secrets in your Key Vault or get a specific secret by name. Shows all secret names in the vault (without values), or retrieves the secret value and full details including enabled status and expiration dates.""",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,7 +41,6 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                     options.Vault,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
@@ -53,7 +53,6 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                     options.Secret,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, SecretDetails.FromSecret(secret)), KeyVaultJsonContext.Default.SecretGetCommandResult);

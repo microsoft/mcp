@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
         When --webtest-resource is provided, returns detailed information about a single web test.
         When --webtest-resource is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -57,7 +58,6 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
                     options.ResourceGroup!,
                     options.WebtestResource!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (webTest != null)
@@ -74,8 +74,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger, IMoni
             {
                 // Otherwise, list web tests
                 var webTests = options.ResourceGroup == null
-                    ? await _monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
-                    : await _monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
+                    ? await _monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, cancellationToken)
+                    : await _monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, webTests ?? []), MonitorJsonContext.Default.WebTestsGetCommandResult);
             }

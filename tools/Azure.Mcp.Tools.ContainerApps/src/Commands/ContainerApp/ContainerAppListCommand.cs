@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ContainerApps.Commands.ContainerApp;
         includes: name, location, resourceGroup, managedEnvironmentId, provisioningState. If no container apps are
         found the tool returns an empty list of results (consistent with other list commands).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,7 +41,6 @@ public sealed class ContainerAppListCommand(ILogger<ContainerAppListCommand> log
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(containerApps?.Results ?? [], containerApps?.AreResultsTruncated ?? false), ContainerAppsJsonContext.Default.ContainerAppListCommandResult);

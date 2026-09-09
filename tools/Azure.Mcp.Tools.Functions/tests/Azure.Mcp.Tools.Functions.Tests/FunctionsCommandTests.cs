@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.Functions.Tests;
 public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    private static readonly string[] s_expectedLanguages = ["python", "typescript", "javascript", "csharp", "java", "powershell"];
+    private static readonly string[] s_expectedLanguages = ["python", "typescript", "javascript", "csharp", "java", "powershell", "go"];
 
     /// <summary>
     /// Disable default sanitizer additions since Functions tests don't have
@@ -71,8 +71,8 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         Assert.NotEmpty(languageList.FunctionsRuntimeVersion);
         Assert.NotEmpty(languageList.ExtensionBundleVersion);
 
-        // Verify all 6 expected languages are present
-        Assert.Equal(6, languageList.Languages.Count);
+        // Verify all 7 expected languages are present
+        Assert.Equal(7, languageList.Languages.Count);
         var languageNames = languageList.Languages.Select(l => l.Language).ToList();
         foreach (var expected in s_expectedLanguages)
         {
@@ -95,7 +95,8 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             ["javascript"] = ("Node.js - JavaScript", "node", "v4 (Schema-based)"),
             ["java"] = ("Java", "java", "Annotations-based"),
             ["csharp"] = ("dotnet-isolated - C#", "dotnet", "Isolated worker process"),
-            ["powershell"] = ("PowerShell", "powershell", "Script-based")
+            ["powershell"] = ("PowerShell", "powershell", "Script-based"),
+            ["go"] = ("Go", "native", "Native Go worker SDK")
         };
 
         foreach (var (languageKey, expected) in expectations)
@@ -126,16 +127,19 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
             var language = GetLanguage(languageList, languageKey);
 
             Assert.NotNull(language.RuntimeVersions);
-            Assert.NotEmpty(language.RuntimeVersions.Supported);
             Assert.NotEmpty(language.RuntimeVersions.Default);
 
-            // Default should be one of the supported versions
-            Assert.Contains(language.RuntimeVersions.Default, language.RuntimeVersions.Supported);
+            var availableVersions = language.RuntimeVersions.Supported
+                .Concat(language.RuntimeVersions.Preview ?? [])
+                .ToList();
+            Assert.NotEmpty(availableVersions);
+            Assert.Contains(language.RuntimeVersions.Default, availableVersions);
 
             // Same versions should be in Info.RuntimeVersions
             Assert.NotNull(language.Info.RuntimeVersions);
             Assert.Equal(language.RuntimeVersions.Default, language.Info.RuntimeVersions.Default);
             Assert.Equal(language.RuntimeVersions.Supported, language.Info.RuntimeVersions.Supported);
+            Assert.Equal(language.RuntimeVersions.Preview, language.Info.RuntimeVersions.Preview);
         }
     }
 
@@ -207,8 +211,8 @@ public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fi
     {
         var languageList = await GetLanguageListAsync();
 
-        // Python, C#, and PowerShell don't have template parameters
-        var languagesWithoutParams = new[] { "python", "csharp", "powershell" };
+        // Python, C#, PowerShell, and Go don't have template parameters
+        var languagesWithoutParams = new[] { "python", "csharp", "powershell", "go" };
         foreach (var languageKey in languagesWithoutParams)
         {
             var language = GetLanguage(languageList, languageKey);

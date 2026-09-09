@@ -7,7 +7,6 @@ namespace Microsoft.Mcp.Core.Areas.Server.Options;
 
 /// <summary>
 /// Configuration options for publishing plugin telemetry.
-/// Inherits from ServiceStartOptions to enable full MCP server service registration.
 /// </summary>
 public sealed class PluginTelemetryOptions
 {

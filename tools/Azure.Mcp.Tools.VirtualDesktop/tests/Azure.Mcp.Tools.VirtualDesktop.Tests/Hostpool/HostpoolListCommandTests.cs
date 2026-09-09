@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,9 +39,9 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
                 new() { Name = "hostpool1" },
                 new() { Name = "hostpool2" }
             }.AsReadOnly();
-            Service.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(hostpools);
-            Service.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(hostpools);
         }
 
@@ -66,9 +65,9 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
     public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpools()
     {
         // Arrange
-        Service.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns([]);
-        Service.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -83,7 +82,7 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -104,7 +103,7 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
             new() { Name = "hostpool1" },
             new() { Name = "hostpool2" }
         }.AsReadOnly();
-        Service.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListHostpoolsAsync("test-sub", null, Arg.Any<CancellationToken>())
             .Returns(expectedHostpools);
 
         // Act
@@ -114,11 +113,11 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await Service.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsResourceGroupService_WhenResourceGroupProvided()
+    public async Task ExecuteAsync_CallsAzureService_WhenResourceGroupProvided()
     {
         // Arrange
         var expectedHostpools = new List<HostPool>
@@ -126,7 +125,7 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
             new() { Name = "hostpool1" },
             new() { Name = "hostpool2" }
         }.AsReadOnly();
-        Service.ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<CancellationToken>())
             .Returns(expectedHostpools);
 
         // Act
@@ -136,12 +135,12 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await Service.Received(1).ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await Service.DidNotReceive().ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsSubscriptionService_WhenNoResourceGroup()
+    public async Task ExecuteAsync_CallsAzureService_WhenNoResourceGroup()
     {
         // Arrange
         var expectedHostpools = new List<HostPool>
@@ -149,7 +148,7 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
             new() { Name = "hostpool1" },
             new() { Name = "hostpool2" }
         }.AsReadOnly();
-        Service.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListHostpoolsAsync("test-sub", null, Arg.Any<CancellationToken>())
             .Returns(expectedHostpools);
 
         // Act
@@ -159,15 +158,15 @@ public class HostpoolListCommandTests : SubscriptionCommandUnitTestsBase<Hostpoo
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await Service.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
-        await Service.DidNotReceive().ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListHostpoolsAsync("test-sub", null, Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpoolsInResourceGroup()
     {
         // Arrange
-        Service.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act

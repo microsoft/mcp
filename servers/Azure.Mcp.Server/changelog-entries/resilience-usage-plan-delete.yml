@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: Added commands to delete Azure Resilience Management usage plans and usage plan enrollments.
+  - section: Breaking Changes
+    description: Renamed the user-invocable `/resilience-recovery-operations` skill to `/resilience-management-operations`; update saved prompts and workflows to use the new invocation name.

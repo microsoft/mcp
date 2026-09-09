@@ -27,7 +27,6 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 [JsonSerializable(typeof(ItemsResponse))]
 [JsonSerializable(typeof(LakehousesResponse))]
 [JsonSerializable(typeof(OneLakeEndpoint))]
-[JsonSerializable(typeof(OneLakeEnvironmentEndpoints))]
 [JsonSerializable(typeof(OneLakeWorkspaceListCommand.OneLakeWorkspaceListCommandResult))]
 [JsonSerializable(typeof(OneLakeItemListCommand.OneLakeItemListCommandResult))]
 [JsonSerializable(typeof(OneLakeItemListDfsCommand.OneLakeItemListDfsCommandResult))]

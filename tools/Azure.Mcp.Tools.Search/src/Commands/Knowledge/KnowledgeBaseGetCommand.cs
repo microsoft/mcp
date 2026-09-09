@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         Required arguments:
         - service
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -37,7 +38,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
     {
         try
         {
-            var bases = await _searchService.ListKnowledgeBases(options.Service, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
+            var bases = await _searchService.ListKnowledgeBases(options.Service, options.KnowledgeBase, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
         }
         catch (Exception ex)
