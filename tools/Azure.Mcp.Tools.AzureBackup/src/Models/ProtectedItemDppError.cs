@@ -9,4 +9,7 @@ public sealed record ProtectedItemDppError(
     IReadOnlyList<string>? RecommendedAction,
     string? Target,
     bool? IsRetryable,
-    bool? IsUserError);
+    bool? IsUserError,
+    IReadOnlyList<ProtectedItemDppError>? Details,
+    ProtectedItemDppError? InnerError,
+    IReadOnlyDictionary<string, string>? Properties);

@@ -1271,53 +1271,58 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             null,
             null,
             new ProtectedItemDppDetails(
-                properties?.FriendlyName,
-                properties?.CurrentProtectionState?.ToString(),
-                properties?.ProvisioningState?.ToString(),
-                properties?.ValidationType?.ToString(),
-                properties?.ObjectType,
-                properties?.ResourceGuardOperationRequests?.ToList(),
-                dataSourceInfo is null
+                FriendlyName: properties?.FriendlyName,
+                CurrentProtectionState: properties?.CurrentProtectionState?.ToString(),
+                ProvisioningState: properties?.ProvisioningState?.ToString(),
+                ValidationType: properties?.ValidationType?.ToString(),
+                ObjectType: properties?.ObjectType,
+                ResourceGuardOperationRequests: properties?.ResourceGuardOperationRequests?.ToList(),
+                DataSourceInfo: dataSourceInfo is null
                     ? null
                     : new ProtectedItemDppDataSourceReference(
-                        dataSourceInfo.ResourceId?.ToString(),
-                        dataSourceInfo.ResourceName,
-                        dataSourceInfo.DataSourceType,
-                        dataSourceInfo.ResourceType,
-                        dataSourceInfo.ResourceLocation,
-                        dataSourceInfo.ObjectType),
-                dataSourceSetInfo is null
+                        ResourceId: dataSourceInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceInfo.ResourceName,
+                        DataSourceType: dataSourceInfo.DataSourceType,
+                        ResourceType: dataSourceInfo.ResourceType,
+                        ResourceLocation: dataSourceInfo.ResourceLocation,
+                        ObjectType: dataSourceInfo.ObjectType,
+                        ResourceUriString: dataSourceInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceInfo.ResourceProperties)),
+                DataSourceSetInfo: dataSourceSetInfo is null
                     ? null
                     : new ProtectedItemDppDataSourceReference(
-                        dataSourceSetInfo.ResourceId?.ToString(),
-                        dataSourceSetInfo.ResourceName,
-                        dataSourceSetInfo.DataSourceType,
-                        dataSourceSetInfo.ResourceType,
-                        dataSourceSetInfo.ResourceLocation,
-                        dataSourceSetInfo.ObjectType),
-                policyInfo is null
+                        ResourceId: dataSourceSetInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceSetInfo.ResourceName,
+                        DataSourceType: dataSourceSetInfo.DataSourceType,
+                        ResourceType: dataSourceSetInfo.ResourceType,
+                        ResourceLocation: dataSourceSetInfo.ResourceLocation,
+                        ObjectType: dataSourceSetInfo.ObjectType,
+                        ResourceUriString: dataSourceSetInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceSetInfo.ResourceProperties)),
+                PolicyInfo: policyInfo is null
                     ? null
                     : new ProtectedItemDppPolicyInfo(
-                        policyInfo.PolicyId?.ToString(),
-                        policyInfo.PolicyVersion),
-                protectionStatus is null
+                        PolicyId: policyInfo.PolicyId?.ToString(),
+                        PolicyVersion: policyInfo.PolicyVersion,
+                        PolicyParameters: ConvertToString(policyInfo.PolicyParameters)),
+                ProtectionStatus: protectionStatus is null
                     ? null
                     : new ProtectedItemDppProtectionStatus(
-                        protectionStatus.Status?.ToString(),
-                        null,
+                        Status: protectionStatus.Status?.ToString(),
+                        ErrorDetails: null,
                         protectionStatus.ProtectionStatusErrorDetails is null
                             ? null
                             : [MapToDppError(protectionStatus.ProtectionStatusErrorDetails)]),
-                resourceProtectionError is null
+                ResourceProtectionError: resourceProtectionError is null
                     ? null
                     : MapToDppError(resourceProtectionError),
-                properties?.DataSourceAuthCredentials?.GetType().Name,
-                identityDetails is null
+                DataSourceAuthCredentialsType: properties?.DataSourceAuthCredentials?.GetType().Name,
+                IdentityDetails: identityDetails is null
                     ? null
                     : new ProtectedItemDppIdentityDetails(
-                        null,
-                        identityDetails.UseSystemAssignedIdentity,
-                        identityDetails.UserAssignedIdentityId)));
+                        UserAssignedIdentityArmUri: null,
+                        UseSystemAssignedIdentity: identityDetails.UseSystemAssignedIdentity,
+                        UserAssignedIdentityId: identityDetails.UserAssignedIdentityId)));
     }
 
     private static ProtectedItemDppError MapToDppError(DataProtectionBackupUserFacingError error) =>
@@ -1327,7 +1332,22 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             error.RecommendedAction?.ToList(),
             error.Target,
             error.IsRetryable,
-            error.IsUserError);
+            error.IsUserError,
+            error.Details?.Select(MapToDppError).ToList(),
+            error.InnerError is null ? null : MapToDppError(error.InnerError),
+            error.Properties?.ToDictionary(p => p.Key, p => p.Value));
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupInnerError error) =>
+        new(
+            error.Code,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            error.EmbeddedInnerError is null ? null : MapToDppError(error.EmbeddedInnerError),
+            error.AdditionalInfo?.ToDictionary(p => p.Key, p => p.Value));
 
     private static ProtectedItemDppError MapToDppError(Azure.ResponseError error) =>
         new(
@@ -1336,7 +1356,20 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             null,
             null,
             null,
+            null,
+            null,
+            null,
             null);
+
+    private static string? ConvertToString(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        return value.ToString();
+    }
 
     private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)
     {

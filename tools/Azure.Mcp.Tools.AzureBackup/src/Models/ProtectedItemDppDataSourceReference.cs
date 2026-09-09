@@ -9,4 +9,6 @@ public sealed record ProtectedItemDppDataSourceReference(
     string? DataSourceType,
     string? ResourceType,
     string? ResourceLocation,
-    string? ObjectType);
+    string? ObjectType,
+    string? ResourceUriString,
+    string? ResourceProperties);
