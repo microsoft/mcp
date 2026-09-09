@@ -70,7 +70,6 @@ public sealed class DiskUpdateCommand(ILogger<DiskUpdateCommand> logger, IComput
                     options.Subscription!,
                     null,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 var matchingDisks = disks
@@ -120,7 +119,6 @@ public sealed class DiskUpdateCommand(ILogger<DiskUpdateCommand> logger, IComput
                 options.DiskAccess,
                 options.Tier,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(disk), ComputeJsonContext.Default.DiskUpdateCommandResult);

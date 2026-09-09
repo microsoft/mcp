@@ -41,7 +41,6 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
                     options.Cluster,
                     options.Node,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([node]), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
@@ -53,7 +52,6 @@ public sealed class ManagedClusterNodeGetCommand(ILogger<ManagedClusterNodeGetCo
                     options.ResourceGroup,
                     options.Cluster,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(nodes ?? []), ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);

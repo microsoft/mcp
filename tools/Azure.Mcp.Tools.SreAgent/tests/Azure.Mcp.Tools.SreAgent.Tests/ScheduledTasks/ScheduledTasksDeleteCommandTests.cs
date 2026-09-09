@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -30,12 +29,12 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
     {
         var command = Command.GetCommand();
         Assert.Contains(command.Options, o => o.Name == $"--{SreAgentOptionDefinitions.TaskIdName}");
-        Assert.Contains(command.Options, o => o.Name == $"--{SreAgentOptionDefinitions.ConfirmName}");
+        Assert.DoesNotContain(command.Options, o => o.Name == "--confirm");
     }
 
     [Theory]
-    [InlineData("--subscription sub --agent agent1 --task-id task1 --confirm true", true)]
-    [InlineData("--subscription sub --agent agent1 --task-id task1", false)]
+    [InlineData("--subscription sub --agent agent1 --task-id task1", true)]
+    [InlineData("--subscription sub --agent agent1 --task-id task1 --confirm true", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -46,7 +45,6 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -78,7 +76,6 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -89,7 +86,7 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--task-id", "task1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--task-id", "task1");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -103,7 +100,6 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -114,7 +110,7 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--task-id", "task1", "--confirm", "true");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--task-id", "task1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -128,7 +124,6 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
             null,
             "agent1",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -139,7 +134,7 @@ public class ScheduledTasksDeleteCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--task-id", "task1", "--confirm", "true", "--tenant", "tenant1");
+        var response = await ExecuteCommandAsync("--subscription", "sub", "--agent", "agent1", "--task-id", "task1", "--tenant", "tenant1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).DeleteScheduledTaskAsync(Arg.Any<string>(), "task1", "tenant1", Arg.Any<CancellationToken>());

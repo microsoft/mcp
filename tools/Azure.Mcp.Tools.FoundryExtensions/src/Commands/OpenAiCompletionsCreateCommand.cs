@@ -47,7 +47,6 @@ public sealed class OpenAiCompletionsCreateCommand(IFoundryExtensionsService fou
                 options.Temperature,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

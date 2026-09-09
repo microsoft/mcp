@@ -53,7 +53,6 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
                 options.FunctionApp,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);

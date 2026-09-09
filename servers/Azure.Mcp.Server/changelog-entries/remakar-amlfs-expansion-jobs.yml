@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added AMLFS expansion job commands (create, get, delete) to resize Azure Managed Lustre filesystem storage capacity"

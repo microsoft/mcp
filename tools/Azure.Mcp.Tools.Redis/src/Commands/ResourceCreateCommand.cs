@@ -47,7 +47,6 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
                 options.PublicNetworkAccess ?? false,
                 options.Modules,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

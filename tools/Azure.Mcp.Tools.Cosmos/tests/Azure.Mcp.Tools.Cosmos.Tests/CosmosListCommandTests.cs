@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -44,7 +43,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
@@ -70,7 +68,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedDatabases);
 
@@ -97,7 +94,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedContainers);
 
@@ -123,7 +119,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -148,7 +143,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -174,7 +168,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -224,7 +217,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -246,7 +238,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -271,7 +262,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -296,7 +286,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Cosmos DB account 'missingaccount' not found in subscription 'sub123'."));
 
@@ -321,7 +310,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             Arg.Is("rg1"),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedDatabases);
 
@@ -341,7 +329,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
             "rg1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -354,7 +341,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Is("sub123"),
             Arg.Is("rg1"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
@@ -371,7 +357,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             "sub123",
             "rg1",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -383,7 +368,6 @@ public class CosmosListCommandTests : SubscriptionCommandUnitTestsBase<CosmosLis
             Arg.Is("sub123"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 

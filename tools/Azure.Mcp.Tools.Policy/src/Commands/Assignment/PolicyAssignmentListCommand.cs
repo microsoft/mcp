@@ -43,7 +43,6 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
                 options.Subscription!,
                 options.Scope,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

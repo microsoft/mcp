@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,7 +32,6 @@ public class KeyValueLockSetCommandTests : SubscriptionCommandUnitTestsBase<KeyV
             true,
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             null,
             Arg.Any<CancellationToken>());
 
@@ -61,7 +59,6 @@ public class KeyValueLockSetCommandTests : SubscriptionCommandUnitTestsBase<KeyV
             true,
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             "prod",
             Arg.Any<CancellationToken>());
 
@@ -88,7 +85,6 @@ public class KeyValueLockSetCommandTests : SubscriptionCommandUnitTestsBase<KeyV
             false,
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             null,
             Arg.Any<CancellationToken>());
 
@@ -115,7 +111,6 @@ public class KeyValueLockSetCommandTests : SubscriptionCommandUnitTestsBase<KeyV
             false,
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             "prod",
             Arg.Any<CancellationToken>());
 
@@ -136,7 +131,6 @@ public class KeyValueLockSetCommandTests : SubscriptionCommandUnitTestsBase<KeyV
             Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to lock key-value"));

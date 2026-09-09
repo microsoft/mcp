@@ -9,7 +9,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
@@ -29,7 +28,6 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
         string? language = null,
         string[]? phrases = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
@@ -49,11 +47,8 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
             throw new InvalidOperationException($"Audio file is too large ({fileInfo.Length / (1024.0 * 1024):F1} MB). Fast Transcription supports files up to 300 MB.");
         }
 
-        // Apply retry policy configuration
-        var maxRetries = retryPolicy?.MaxRetries ?? 3;
-        var delaySeconds = retryPolicy?.DelaySeconds ?? 1.0;
-        var maxDelaySeconds = retryPolicy?.MaxDelaySeconds ?? 30.0;
-        var isExponentialBackoff = retryPolicy?.Mode == RetryMode.Exponential;
+        const int maxRetries = 3;
+        const double delaySeconds = 1.0;
 
         Exception? lastException = null;
 
@@ -165,12 +160,8 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
                 // Calculate delay for next attempt
                 if (attempt < maxRetries)
                 {
-                    var delay = isExponentialBackoff
-                        ? Math.Min(delaySeconds * Math.Pow(2, attempt), maxDelaySeconds)
-                        : delaySeconds;
-
-                    _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delay, attempt + 2);
-                    await Task.Delay(TimeSpan.FromSeconds(delay), cancellationToken);
+                    _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delaySeconds, attempt + 2);
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
                 }
             }
             catch (Exception ex)

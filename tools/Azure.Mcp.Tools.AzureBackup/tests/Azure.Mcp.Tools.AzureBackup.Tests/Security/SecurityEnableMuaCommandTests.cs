@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Security;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,7 +32,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
         var expected = new OperationResult("Succeeded", null, "MUA enabled");
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -62,10 +61,10 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
 
         await Service.DidNotReceive().DisableMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
         await Service.DidNotReceive().ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -86,7 +85,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
     {
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(
@@ -104,7 +103,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
     {
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         var response = await ExecuteCommandAsync(
@@ -122,7 +121,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
     {
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         var response = await ExecuteCommandAsync(
@@ -140,7 +139,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
     {
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "Region mismatch"));
 
         var response = await ExecuteCommandAsync(
@@ -158,7 +157,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
     {
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Already configured"));
 
         var response = await ExecuteCommandAsync(
@@ -198,7 +197,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
     {
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Is(vaultType), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is(vaultType), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new OperationResult("Succeeded", null, null)));
 
         var response = await ExecuteCommandAsync(
@@ -220,7 +219,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
         {
             Service.ConfigureMultiUserAuthorizationAsync(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -255,7 +254,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
         var expected = new OperationResult("Succeeded", null, "MUA enabled with guard");
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -274,7 +273,7 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
     {
         Service.ConfigureMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         await ExecuteCommandAsync(
@@ -285,10 +284,10 @@ public class SecurityEnableMuaCommandTests : SubscriptionCommandUnitTestsBase<Se
 
         await Service.Received(1).ConfigureMultiUserAuthorizationAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestResourceGuardId),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
 
         await Service.DidNotReceive().DisableMultiUserAuthorizationAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

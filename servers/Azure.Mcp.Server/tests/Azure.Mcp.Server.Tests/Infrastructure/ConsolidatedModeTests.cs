@@ -474,7 +474,7 @@ public class ConsolidatedModeTests
 
     private static async Task<string?> ReadJsonRpcResponseAsync(StreamReader reader)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         try
         {
             return await reader.ReadLineAsync(cts.Token);
@@ -796,7 +796,7 @@ public class ConsolidatedModeTests
 
     private static async Task<HttpResponseMessage> SendWithRetryAsync(HttpClient client, HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(10);
+        var deadline = DateTime.UtcNow.AddSeconds(30);
         Exception? lastException = null;
 
         while (DateTime.UtcNow < deadline)

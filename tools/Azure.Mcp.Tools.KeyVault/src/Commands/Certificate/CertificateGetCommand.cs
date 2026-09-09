@@ -40,7 +40,6 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                     options.Vault,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(certificates ?? [], null), KeyVaultJsonContext.Default.CertificateGetCommandResult);
@@ -53,7 +52,6 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                     options.Certificate,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, CertificateDetails.FromCertificate(certificate)), KeyVaultJsonContext.Default.CertificateGetCommandResult);

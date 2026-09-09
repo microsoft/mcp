@@ -36,7 +36,6 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISear
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(services ?? []), SearchJsonContext.Default.ServiceListCommandResult);

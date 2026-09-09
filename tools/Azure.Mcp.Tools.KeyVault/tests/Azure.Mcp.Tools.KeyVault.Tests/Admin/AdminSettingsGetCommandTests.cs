@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Administration;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -27,7 +26,6 @@ public class AdminSettingsGetCommandTests : SubscriptionCommandUnitTestsBase<Adm
             Arg.Is(KnownVaultName),
             Arg.Is(KnownSubscriptionId),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns((GetSettingsResult)null!);
 
@@ -46,7 +44,6 @@ public class AdminSettingsGetCommandTests : SubscriptionCommandUnitTestsBase<Adm
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -70,7 +67,6 @@ public class AdminSettingsGetCommandTests : SubscriptionCommandUnitTestsBase<Adm
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns((GetSettingsResult)null!);
         }

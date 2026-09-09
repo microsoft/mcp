@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
@@ -21,7 +20,6 @@ public class IoTHubService(IAzureService azureService, ILogger<IoTHubService> lo
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -31,8 +29,13 @@ public class IoTHubService(IAzureService azureService, ILogger<IoTHubService> lo
 
         try
         {
-            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(
+                subscription,
+                tenant,
+                cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(
+                tenant,
+                cancellationToken: cancellationToken);
             var iotHubResourceId = new ResourceIdentifier(
                 $"/subscriptions/{subscriptionResource.Data.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Devices/IotHubs/{hubName}");
             var hub = await armClient.GetGenericResource(iotHubResourceId).GetAsync(cancellationToken);

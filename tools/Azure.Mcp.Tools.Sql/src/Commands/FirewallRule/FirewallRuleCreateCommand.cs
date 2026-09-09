@@ -95,7 +95,6 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
                 options.FirewallRuleName,
                 options.StartIpAddress,
                 options.EndIpAddress,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);

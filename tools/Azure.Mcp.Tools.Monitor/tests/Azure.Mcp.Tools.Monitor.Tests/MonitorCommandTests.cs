@@ -19,6 +19,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
     private string? _bingWebTestName;
     private string? _healthModelParentName;
     private string? _healthModelChildName;
+    private string? _storageAccountName;
 
     private static readonly string[] s_validHealthStates =
     [
@@ -85,6 +86,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
         _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
         _healthModelChildName = $"{Settings.ResourceBaseName}-hm-b";
+        _storageAccountName = $"{Settings.ResourceBaseName}mon";
     }
 
     // [Fact]
@@ -490,6 +492,79 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
     //         // Don't fail the test if storage activity generation fails
     //     }
     // }
+
+    #region Metrics Integration Tests
+
+    [Fact]
+    public async Task Should_Batch_Query_Metrics()
+    {
+        // The command defaults start/end time to "now" when not supplied, which would produce a different
+        // query string URI on every run and break playback matching. Registering the computed values as
+        // variables pins the values used at record time so they're replayed exactly during playback.
+        var startTime = RegisterOrRetrieveVariable("startTime", DateTime.UtcNow.AddHours(-24).ToString("o"));
+        var endTime = RegisterOrRetrieveVariable("endTime", DateTime.UtcNow.ToString("o"));
+
+        var result = await CallToolAsync(
+            "monitor_metrics_batchquery",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "resource-type", "Microsoft.Storage/storageAccounts" },
+                { "resources", _storageAccountName },
+                { "metric-namespace", "Microsoft.Storage/storageAccounts" },
+                { "metric-names", "UsedCapacity" },
+                { "start-time", startTime },
+                { "end-time", endTime }
+            });
+
+        var resultsArray = result.AssertProperty("results");
+        Assert.Equal(JsonValueKind.Array, resultsArray.ValueKind);
+        var resources = resultsArray.EnumerateArray().ToList();
+        Assert.NotEmpty(resources);
+
+        var firstResource = resources[0];
+
+        var resourceId = firstResource.AssertProperty("resourceId");
+        Assert.Equal(JsonValueKind.String, resourceId.ValueKind);
+        Assert.Contains(_storageAccountName!, resourceId.GetString(), StringComparison.OrdinalIgnoreCase);
+
+        var metrics = firstResource.AssertProperty("metrics");
+        Assert.Equal(JsonValueKind.Array, metrics.ValueKind);
+        var metricsList = metrics.EnumerateArray().ToList();
+        Assert.NotEmpty(metricsList);
+
+        var firstMetric = metricsList[0];
+
+        var name = firstMetric.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, name.ValueKind);
+        Assert.Equal("UsedCapacity", name.GetString());
+
+        var unit = firstMetric.AssertProperty("unit");
+        Assert.Equal(JsonValueKind.String, unit.ValueKind);
+        Assert.False(string.IsNullOrEmpty(unit.GetString()));
+
+        var timeSeries = firstMetric.AssertProperty("timeSeries");
+        Assert.Equal(JsonValueKind.Array, timeSeries.ValueKind);
+        var timeSeriesList = timeSeries.EnumerateArray().ToList();
+        Assert.NotEmpty(timeSeriesList);
+
+        var firstTimeSeries = timeSeriesList[0];
+
+        var start = firstTimeSeries.AssertProperty("start");
+        Assert.Equal(JsonValueKind.String, start.ValueKind);
+        Assert.True(DateTime.TryParse(start.GetString(), out _));
+
+        var end = firstTimeSeries.AssertProperty("end");
+        Assert.Equal(JsonValueKind.String, end.ValueKind);
+        Assert.True(DateTime.TryParse(end.GetString(), out _));
+
+        var interval = firstTimeSeries.AssertProperty("interval");
+        Assert.Equal(JsonValueKind.String, interval.ValueKind);
+        Assert.StartsWith("PT", interval.GetString());
+    }
+
+    #endregion
 
     #region WebTests Integration Tests
 

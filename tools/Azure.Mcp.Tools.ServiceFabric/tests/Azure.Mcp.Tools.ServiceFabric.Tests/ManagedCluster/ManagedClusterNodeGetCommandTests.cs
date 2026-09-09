@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
 
@@ -50,7 +48,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new Models.ManagedClusterNode());
         }
@@ -112,7 +109,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedNodes);
 
@@ -128,7 +124,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
@@ -172,7 +167,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedNode);
 
@@ -187,7 +181,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
         await Service.Received(1).GetManagedClusterNode(
             "sub1", "rg1", "cluster1", "primary_0",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         await Service.DidNotReceive().ListManagedClusterNodes(
@@ -195,7 +188,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, ServiceFabricJsonContext.Default.ManagedClusterNodeGetCommandResult);
@@ -214,7 +206,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -239,7 +230,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -265,7 +255,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Not found", null, HttpStatusCode.NotFound));
 
@@ -290,7 +279,6 @@ public class ManagedClusterNodeGetCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -47,7 +46,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestPeName), Arg.Is(TestSubnetId),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -70,7 +69,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("Private Endpoints are not supported for Backup vaults (DPP). Only Recovery Services vaults (RSV) expose Private Endpoint Connections."));
 
         var response = await ExecuteCommandAsync(
@@ -91,7 +90,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var response = await ExecuteCommandAsync(
@@ -110,7 +109,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "forbidden"));
 
         var response = await ExecuteCommandAsync(
@@ -130,7 +129,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
         var response = await ExecuteCommandAsync(
@@ -149,7 +148,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("--group-id must be one of: AzureBackup, AzureBackup_secondary"));
 
         var response = await ExecuteCommandAsync(

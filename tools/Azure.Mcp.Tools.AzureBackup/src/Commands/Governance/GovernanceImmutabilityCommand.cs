@@ -17,8 +17,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     Name = "immutability",
     Title = "Configure Vault Immutability",
     Description = """
-        Configures the immutability state for a backup vault. States include 'Disabled', 'Enabled',
-        or 'Locked'. Warning: 'Locked' state is irreversible.
+        Configures the immutability state for a backup vault. --immutability-state 'Locked'
+        is irreversible, 'Enabled' is an alias for 'Unlocked'. --immutability-type 'TimeBased'
+        also requires --immutability-duration-days (30-36135) unless --immutability-state
+        is 'Disabled'.
         """,
     Destructive = true,
     Idempotent = true,
@@ -36,12 +38,23 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!string.IsNullOrEmpty(options.ImmutabilityState) &&
-            !options.ImmutabilityState.Equals("Disabled", StringComparison.OrdinalIgnoreCase) &&
-            !options.ImmutabilityState.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
-            !options.ImmutabilityState.Equals("Locked", StringComparison.OrdinalIgnoreCase))
+        // Enum values are validated by the model binder. Extra semantic rules:
+        //  * TimeBased requires a duration in [30, 36135] days, but only when the state
+        //    is not Disabled (the service accepts and ignores duration when state=Disabled).
+        //  * AsPerPolicy ignores duration.
+        //  * Locked is IRREVERSIBLE - surfaced in the command description; we do not
+        //    silently reject it here because the caller may legitimately want to lock.
+        if (options.ImmutabilityType == AzureBackupImmutabilityType.TimeBased
+            && options.ImmutabilityState != AzureBackupImmutabilityState.Disabled)
         {
-            validationResult.Errors.Add("--immutability-state must be 'Disabled', 'Enabled', or 'Locked'. Warning: 'Locked' is irreversible.");
+            if (options.ImmutabilityDurationDays is null)
+            {
+                validationResult.Errors.Add("--immutability-duration-days is required when --immutability-type is 'TimeBased' and --immutability-state is not 'Disabled'.");
+            }
+            else if (options.ImmutabilityDurationDays < 30 || options.ImmutabilityDurationDays > 36135)
+            {
+                validationResult.Errors.Add("--immutability-duration-days must be between 30 and 36135 for TimeBased immutability.");
+            }
         }
     }
 
@@ -56,10 +69,11 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.ImmutabilityState!,
+                options.ImmutabilityState,
+                options.ImmutabilityType,
+                options.ImmutabilityDurationDays,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

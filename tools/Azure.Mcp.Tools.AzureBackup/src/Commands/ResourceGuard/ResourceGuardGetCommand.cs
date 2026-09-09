@@ -61,7 +61,6 @@ public sealed class ResourceGuardGetCommand(ILogger<ResourceGuardGetCommand> log
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 guards = [guard];
             }
@@ -71,7 +70,6 @@ public sealed class ResourceGuardGetCommand(ILogger<ResourceGuardGetCommand> log
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

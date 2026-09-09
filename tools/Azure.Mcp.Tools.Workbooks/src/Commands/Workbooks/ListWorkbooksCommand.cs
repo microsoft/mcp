@@ -64,7 +64,6 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
                 options.MaxResults == null || options.MaxResults.Value < 1 ? 50 : Math.Min(options.MaxResults.Value, 1000),
                 options.IncludeTotalCount ?? true,
                 ParseOutputFormat(options.OutputFormat),
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 

@@ -49,7 +49,6 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
                 options.Subscription!,
                 options.Prefix,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken
             );
 

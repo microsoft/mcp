@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Options;
@@ -46,19 +47,12 @@ public class BaseAzureServiceTests
 
         _azureService.GetTenantId(tenantName2, Arg.Any<CancellationToken>()).Returns(tenantId2);
 
-        var retryPolicyArgs = new RetryPolicyOptions
-        {
-            DelaySeconds = 5,
-            MaxDelaySeconds = 15,
-            MaxRetries = 3
-        };
-
-        var client = await _testAzureService.GetArmClientAsync(TenantName, retryPolicyArgs);
-        var client2 = await _testAzureService.GetArmClientAsync(TenantName, retryPolicyArgs);
+        var client = await _testAzureService.GetArmClientAsync(TenantName);
+        var client2 = await _testAzureService.GetArmClientAsync(TenantName);
 
         Assert.NotEqual(client, client2);
 
-        var otherClient = await _testAzureService.GetArmClientAsync(tenantName2, retryPolicyArgs);
+        var otherClient = await _testAzureService.GetArmClientAsync(tenantName2);
 
         Assert.NotEqual(client, otherClient);
 
@@ -287,8 +281,8 @@ public class BaseAzureServiceTests
 
     private sealed class TestAzureService(IAzureService azureService) : BaseAzureService(azureService)
     {
-        public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
-            CreateArmClientAsync(tenant, retryPolicy);
+        public Task<ArmClient> GetArmClientAsync(string? tenant = null) =>
+            CreateArmClientAsync(tenant);
 
         public Task<AccessToken> GetArmAccessTokenPublicAsync(CancellationToken cancellationToken) =>
             GetArmAccessTokenAsync(null, cancellationToken);
@@ -301,6 +295,6 @@ public class BaseAzureServiceTests
         public string GetUserAgent() => UserAgent;
 
         public static T ConfigureRetryPolicyPublic<T>(T clientOptions, RetryPolicyOptions? retryPolicy) where T : ClientOptions =>
-            ConfigureRetryPolicy(clientOptions, retryPolicy);
+            AzureHelper.ConfigureRetryPolicy(clientOptions, retryPolicy);
     }
 }

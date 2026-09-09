@@ -42,7 +42,6 @@ public sealed class CloudEndpointDeleteCommand(ILogger<CloudEndpointDeleteComman
                 options.SyncGroupName,
                 options.CloudEndpointName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Cloud endpoint deleted successfully";

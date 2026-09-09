@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -56,7 +55,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
                 Arg.Any<long?>(),
                 Arg.Any<long?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(CreateLustre());
         }
@@ -96,7 +94,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -119,7 +116,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, ManagedLustreJsonContext.Default.FileSystemUpdateResult);
@@ -141,7 +137,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             1000,
             1000,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -166,7 +161,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             1000,
             1000,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -184,7 +178,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<long?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
@@ -222,7 +215,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
                 Arg.Any<long?>(),
                 Arg.Any<long?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(CreateLustre());
         }
@@ -255,7 +247,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             2000,
             3000,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -280,7 +271,6 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             2000,
             3000,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 

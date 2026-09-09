@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -25,7 +24,6 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
         bool enableDeliveryReport = false,
         string? tag = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         // Validate required parameters using base class method
@@ -48,7 +46,7 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             // Create SMS client using Azure credential from base class and endpoint
             var credential = await GetCredential(tenantId, cancellationToken);
 
-            var smsClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new SmsClientOptions()), retryPolicy);
+            var smsClientOptions = AddDefaultPolicies(new SmsClientOptions());
             smsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
             var smsClient = new SmsClient(new Uri(endpoint), credential, smsClientOptions);
@@ -103,7 +101,6 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
         string[]? bcc = null,
         string[]? replyTo = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         // Validate required parameters using base class method
@@ -132,7 +129,7 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             // Create email client with credential from base class
             var credential = await GetCredential(tenantId, cancellationToken);
 
-            var emailClientOptions = ConfigureRetryPolicy(AddDefaultPolicies(new EmailClientOptions()), retryPolicy);
+            var emailClientOptions = AddDefaultPolicies(new EmailClientOptions());
             emailClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
             var emailClient = new EmailClient(new(endpoint), credential, emailClientOptions);

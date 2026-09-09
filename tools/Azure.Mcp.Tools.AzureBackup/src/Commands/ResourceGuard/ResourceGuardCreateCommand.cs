@@ -55,7 +55,6 @@ public sealed class ResourceGuardCreateCommand(ILogger<ResourceGuardCreateComman
                 excluded,
                 tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

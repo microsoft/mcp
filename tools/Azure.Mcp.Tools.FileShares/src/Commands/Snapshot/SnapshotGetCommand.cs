@@ -42,7 +42,6 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.FileShareName,
                     options.SnapshotName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([snapshot]), FileSharesJsonContext.Default.SnapshotGetCommandResult);
@@ -60,7 +59,6 @@ public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFile
                     options.ResourceGroup,
                     options.FileShareName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(snapshots ?? []), FileSharesJsonContext.Default.SnapshotGetCommandResult);

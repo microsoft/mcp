@@ -39,7 +39,6 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKe
                 options.Value!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(SecretDetails.FromSecret(secret), KeyVaultJsonContext.Default.SecretDetails);

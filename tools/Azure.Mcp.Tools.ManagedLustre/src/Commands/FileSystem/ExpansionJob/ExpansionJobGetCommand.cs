@@ -43,7 +43,6 @@ public sealed class ExpansionJobGetCommand(IManagedLustreService service, ILogge
                     options.FilesystemName,
                     options.ExpansionJobName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.ExpansionJobGetResult);
@@ -55,7 +54,6 @@ public sealed class ExpansionJobGetCommand(IManagedLustreService service, ILogge
                     options.ResourceGroup,
                     options.FilesystemName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, results ?? []), ManagedLustreJsonContext.Default.ExpansionJobGetResult);

@@ -45,7 +45,6 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deleted, options.ConsumerGroup, options.Eventhub, options.Namespace, options.ResourceGroup), EventHubsJsonContext.Default.ConsumerGroupDeleteCommandResult);

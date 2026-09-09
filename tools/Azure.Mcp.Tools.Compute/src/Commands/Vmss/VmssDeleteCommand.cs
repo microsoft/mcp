@@ -48,7 +48,6 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComput
                 options.Subscription!,
                 options.ForceDeletion ? true : null,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             var message = deleted

@@ -6,7 +6,6 @@ using System.Text.Json;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -46,7 +45,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -80,7 +78,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(expectedQueryType),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -97,7 +94,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(expectedQueryType),
             Arg.Is<string?>(s => s == null),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -116,7 +112,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(IndexQueryType.Semantic),
             Arg.Is<string?>(semanticConfiguration),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -137,7 +132,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(IndexQueryType.Semantic),
             Arg.Is<string?>(semanticConfiguration),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -155,7 +149,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -171,7 +164,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(t => t == null),
             Arg.Is<string?>(s => s == null),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -203,7 +195,6 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

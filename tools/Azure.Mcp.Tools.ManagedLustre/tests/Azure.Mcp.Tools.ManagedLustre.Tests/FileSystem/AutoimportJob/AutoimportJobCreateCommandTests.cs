@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("autoimport-20250107120000");
 
@@ -65,7 +63,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -88,7 +85,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("blob_autoimport");
 
@@ -112,7 +108,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -133,7 +128,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("blob_autoimport");
 
@@ -157,7 +151,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -194,7 +187,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
@@ -224,7 +216,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("boom"));
 
@@ -254,7 +245,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("autoimport-20250107120000");
 
@@ -277,7 +267,6 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

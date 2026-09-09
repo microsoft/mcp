@@ -281,8 +281,7 @@ namespace Azure.Mcp.Tools.SreAgent.Tests
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "agent", Settings.ResourceBaseName },
-                    { "name", promptName },
-                    { "confirm", true }
+                    { "name", promptName }
                 });
             Assert.NotNull(deleteResult);
         }
@@ -325,8 +324,7 @@ namespace Azure.Mcp.Tools.SreAgent.Tests
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "agent", Settings.ResourceBaseName },
-                    { "name", memoryName },
-                    { "confirm", true }
+                    { "name", memoryName }
                 });
             Assert.NotNull(deleteResult);
         }
@@ -385,8 +383,7 @@ namespace Azure.Mcp.Tools.SreAgent.Tests
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "agent", Settings.ResourceBaseName },
-                    { "name", connectorName },
-                    { "confirm", true }
+                    { "name", connectorName }
                 });
             Assert.NotNull(deleteResult);
         }
@@ -418,8 +415,7 @@ namespace Azure.Mcp.Tools.SreAgent.Tests
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "agent", Settings.ResourceBaseName },
-                    { "name", skillName },
-                    { "confirm", true }
+                    { "name", skillName }
                 });
             Assert.NotNull(deleteResult);
         }

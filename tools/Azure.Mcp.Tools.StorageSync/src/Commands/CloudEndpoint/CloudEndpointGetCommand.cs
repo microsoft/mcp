@@ -47,7 +47,6 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     options.SyncGroupName,
                     options.CloudEndpointName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (endpoint == null)
@@ -71,7 +70,6 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     options.Name,
                     options.SyncGroupName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(endpoints ?? []), StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);

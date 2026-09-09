@@ -51,7 +51,6 @@ public sealed class ExpansionJobCreateCommand(IManagedLustreService service, ILo
                 options.NewSize,
                 options.ExpansionJobName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(jobName), ManagedLustreJsonContext.Default.ExpansionJobCreateResult);

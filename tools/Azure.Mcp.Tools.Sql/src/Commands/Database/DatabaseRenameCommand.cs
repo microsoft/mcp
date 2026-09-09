@@ -44,7 +44,6 @@ public sealed class DatabaseRenameCommand(ISqlService sqlService, ILogger<Databa
                 options.NewDatabaseName,
                 options.ResourceGroup,
                 options.Subscription!,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseRenameResult);

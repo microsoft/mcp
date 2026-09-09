@@ -65,7 +65,6 @@ public sealed class SecurityEnableMuaCommand(ILogger<SecurityEnableMuaCommand> l
                 options.ResourceGuardId!,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -35,7 +35,6 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
                 options.WorkbookId,
                 options.DisplayName,
                 options.SerializedContent,
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken) ?? throw new InvalidOperationException("Failed to update workbook");
 

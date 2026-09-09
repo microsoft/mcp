@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -69,7 +68,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(workbook);
@@ -91,7 +89,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             "Test Workbook",
             """{"items":[{"type":"text","content":"Test content"}]}""",
             "azure monitor",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -121,7 +118,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(workbook);
@@ -141,7 +137,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             "Test Workbook",
             """{"items":[{"type":"text","content":"Test content"}]}""",
             "custom-source",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -156,7 +151,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns((WorkbookInfo?)null);
@@ -182,7 +176,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
@@ -223,7 +216,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(workbook);
@@ -242,7 +234,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             "My Test Workbook",
             """{"version": "Notebook/1.0","items": [{"type": "1","content": "Hello World"}]}""",
             "azure monitor",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -258,7 +249,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(workbook);
@@ -277,7 +267,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             "Test Workbook",
             """{"items":[]}""",
             "azure monitor",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Is<string?>(t => t == null),
             Arg.Any<CancellationToken>());
     }
@@ -371,7 +360,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(workbook);
@@ -389,49 +377,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithRetryOptions_PassesCorrectParameters()
-    {
-        // Arrange
-        var workbook = new WorkbookInfo("test-id", null, null, null, null, null, null, null, null, null, null, null);
-        Service.CreateWorkbookAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(workbook);
-
-        // Act
-        await ExecuteCommandAsync(
-            "--subscription", "test-sub",
-            "--resource-group", "test-rg",
-            "--display-name", "Test Workbook",
-            "--serialized-content", """{"items":[]}""",
-            "--retry-max-retries", "5",
-            "--retry-delay", "2.5",
-            "--retry-max-delay", "30",
-            "--retry-mode", "Exponential");
-
-        // Assert
-        await Service.Received(1).CreateWorkbookAsync(
-            "test-sub",
-            "test-rg",
-            "Test Workbook",
-            """{"items":[]}""",
-            "azure monitor",
-            Arg.Is<RetryPolicyOptions?>(opts =>
-                opts != null &&
-                opts.MaxRetries == 5 &&
-                opts.DelaySeconds == 2.5 &&
-                opts.MaxDelaySeconds == 30),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_HandlesExceptionCorrectly_WhenExceptionOccurs()
     {
         // Arrange
@@ -441,7 +386,6 @@ public class CreateWorkbooksCommandTests : SubscriptionCommandUnitTestsBase<Crea
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid workbook data"));

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Insights.Services.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Insights.Services;
 
@@ -20,7 +19,6 @@ public interface IInsightsService
     Task<SubscriptionAggregation> AggregateSubscriptionAsync(
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken,
         IProgress<string>? progress = null,
         bool noCache = false);
@@ -33,7 +31,6 @@ public interface IInsightsService
     /// <param name="noCache">Fetch new ARG data if true, else use cached data.</param>
     Task<SubscriptionAggregation> AggregateTenantAsync(
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken,
         IProgress<string>? progress = null,
         bool noCache = false);

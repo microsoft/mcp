@@ -46,7 +46,6 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
                     options.Name,
                     options.ServerId,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (server == null)
@@ -69,7 +68,6 @@ public sealed class RegisteredServerGetCommand(ILogger<RegisteredServerGetComman
                     options.ResourceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(servers ?? []), StorageSyncJsonContext.Default.RegisteredServerGetCommandResult);

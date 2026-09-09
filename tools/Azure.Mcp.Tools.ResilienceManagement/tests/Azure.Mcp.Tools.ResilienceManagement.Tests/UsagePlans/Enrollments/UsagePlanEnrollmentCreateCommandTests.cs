@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -48,7 +47,6 @@ public sealed class UsagePlanEnrollmentCreateCommandTests : SubscriptionCommandU
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new UsagePlanEnrollmentInfo("id1", "e1"));
         }
@@ -95,7 +93,6 @@ public sealed class UsagePlanEnrollmentCreateCommandTests : SubscriptionCommandU
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -110,7 +107,6 @@ public sealed class UsagePlanEnrollmentCreateCommandTests : SubscriptionCommandU
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new UsagePlanEnrollmentInfo("id1", "en1"));
 
@@ -137,7 +133,6 @@ public sealed class UsagePlanEnrollmentCreateCommandTests : SubscriptionCommandU
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
@@ -159,7 +154,6 @@ public sealed class UsagePlanEnrollmentCreateCommandTests : SubscriptionCommandU
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

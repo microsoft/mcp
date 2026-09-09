@@ -19,6 +19,7 @@
   <Folder Name="/core/Microsoft.Mcp.Core/tests/">
     <Project Path="core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.Tests/Microsoft.Mcp.Core.Tests.csproj" />
     <Project Path="core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Microsoft.Mcp.Tests.csproj" />
+    <Project Path="core/Microsoft.Mcp.Core/tests/TrimmedOptionContainerApp/TrimmedOptionContainerApp.csproj" />
   </Folder>
   <Folder Name="/core/Microsoft.ModelContextProtocol.HttpServer.Distributed/" />
   <Folder Name="/core/Microsoft.ModelContextProtocol.HttpServer.Distributed/src/">
@@ -101,6 +102,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Acr/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Acr/tests/Azure.Mcp.Tools.Acr.Tests/Azure.Mcp.Tools.Acr.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/src/">
+    <Project Path="tools/Azure.Mcp.Tools.Adme/src/Azure.Mcp.Tools.Adme.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Adme/tests/Azure.Mcp.Tools.Adme.Tests/Azure.Mcp.Tools.Adme.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/src/">
@@ -381,6 +389,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/tests/">
     <Project Path="tools/Azure.Mcp.Tools.NetAppFiles/tests/Azure.Mcp.Tools.NetAppFiles.UnitTests/Azure.Mcp.Tools.NetAppFiles.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Optimization/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Optimization/src/">
+    <Project Path="tools/Azure.Mcp.Tools.Optimization/src/Azure.Mcp.Tools.Optimization.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Optimization/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Optimization/tests/Azure.Mcp.Tools.Optimization.Tests/Azure.Mcp.Tools.Optimization.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Policy/src/">

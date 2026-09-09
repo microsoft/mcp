@@ -58,7 +58,6 @@ public sealed class PrivateEndpointCreateCommand(
                 options.AutoApprove ?? false,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

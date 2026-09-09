@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -39,7 +38,7 @@ public class ResourceGuardCreateCommandTests : SubscriptionCommandUnitTestsBase<
         Service.CreateResourceGuardAsync(
             Arg.Is("guard1"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("eastus2"),
             Arg.Any<IReadOnlyList<string>?>(), Arg.Any<IReadOnlyDictionary<string, string>?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(NewGuard());
 
         var response = await ExecuteCommandAsync(
@@ -60,7 +59,7 @@ public class ResourceGuardCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Do<IReadOnlyList<string>?>(v => captured = v),
             Arg.Any<IReadOnlyDictionary<string, string>?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(NewGuard());
 
         var response = await ExecuteCommandAsync(
@@ -84,7 +83,7 @@ public class ResourceGuardCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Do<IReadOnlyDictionary<string, string>?>(v => capturedTags = v),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(NewGuard());
 
         var response = await ExecuteCommandAsync(
@@ -139,7 +138,7 @@ public class ResourceGuardCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyDictionary<string, string>?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("The following operations cannot be excluded from a Resource Guard because they are mandatory: disableSoftDelete."));
 
         var response = await ExecuteCommandAsync(
@@ -160,7 +159,7 @@ public class ResourceGuardCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<IReadOnlyDictionary<string, string>?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Already exists"));
 
         var response = await ExecuteCommandAsync(

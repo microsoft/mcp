@@ -42,7 +42,6 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
             {
                 var status = await _resourceHealthService.GetAvailabilityStatusAsync(
                     options.ResourceId,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 statuses = [status];
@@ -54,7 +53,6 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken) ?? [];
             }
 

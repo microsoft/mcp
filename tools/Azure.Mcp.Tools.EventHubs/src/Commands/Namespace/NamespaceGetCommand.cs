@@ -62,7 +62,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = namespaceDetails != null
@@ -75,7 +74,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger, IEv
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, namespaces ?? []), EventHubsJsonContext.Default.NamespaceGetCommandResult);

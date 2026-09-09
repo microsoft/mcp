@@ -48,7 +48,7 @@ public sealed class PrivateEndpointGetCommand(
             {
                 var list = await _azureBackupService.ListPrivateEndpointsAsync(
                     options.Vault, options.ResourceGroup, options.Subscription!,
-                    options.VaultType, options.Tenant, options.RetryPolicy, cancellationToken);
+                    options.VaultType, options.Tenant, cancellationToken);
                 context.Response.Results = ResponseResult.Create(
                     new(Connections: list),
                     AzureBackupJsonContext.Default.PrivateEndpointGetCommandResult);
@@ -58,7 +58,7 @@ public sealed class PrivateEndpointGetCommand(
                 var single = await _azureBackupService.GetPrivateEndpointAsync(
                     options.Vault, options.ResourceGroup, options.Subscription!,
                     options.PrivateEndpointName!,
-                    options.VaultType, options.Tenant, options.RetryPolicy, cancellationToken);
+                    options.VaultType, options.Tenant, cancellationToken);
                 context.Response.Results = ResponseResult.Create(
                     new(Connections: [single]),
                     AzureBackupJsonContext.Default.PrivateEndpointGetCommandResult);

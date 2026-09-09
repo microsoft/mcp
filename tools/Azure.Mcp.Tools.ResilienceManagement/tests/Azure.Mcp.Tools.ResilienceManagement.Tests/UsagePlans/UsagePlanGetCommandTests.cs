@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -23,7 +22,7 @@ public class UsagePlanGetCommandTests : SubscriptionCommandUnitTestsBase<UsagePl
     public async Task ExecuteAsync_ListsUsagePlansBySubscription_WhenNoResourceGroupOrName()
     {
         var expected = new List<ResourceSummary> { new("id1", "plan1"), new("id2", "plan2") };
-        Service.ListUsagePlansBySubscriptionAsync(SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListUsagePlansBySubscriptionAsync(SubscriptionId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--subscription", SubscriptionId);
@@ -38,7 +37,7 @@ public class UsagePlanGetCommandTests : SubscriptionCommandUnitTestsBase<UsagePl
     public async Task ExecuteAsync_ListsUsagePlansByResourceGroup_WhenResourceGroupOnly()
     {
         var expected = new List<ResourceSummary> { new("id1", "plan1") };
-        Service.ListUsagePlansAsync(ResourceGroup, SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListUsagePlansAsync(ResourceGroup, SubscriptionId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--resource-group", ResourceGroup);
@@ -52,7 +51,7 @@ public class UsagePlanGetCommandTests : SubscriptionCommandUnitTestsBase<UsagePl
     public async Task ExecuteAsync_GetsUsagePlan_WhenNameAndResourceGroupProvided()
     {
         var expected = new UsagePlanInfo("id1", "plan1", "Microsoft.AzureResilience/usagePlans", "westus");
-        Service.GetUsagePlanAsync(ResourceGroup, "plan1", SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetUsagePlanAsync(ResourceGroup, "plan1", SubscriptionId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--subscription", SubscriptionId, "--resource-group", ResourceGroup, "--name", "plan1");
@@ -75,7 +74,7 @@ public class UsagePlanGetCommandTests : SubscriptionCommandUnitTestsBase<UsagePl
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListUsagePlansBySubscriptionAsync(SubscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListUsagePlansBySubscriptionAsync(SubscriptionId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--subscription", SubscriptionId);

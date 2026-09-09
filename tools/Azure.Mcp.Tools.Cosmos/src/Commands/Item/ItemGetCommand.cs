@@ -42,7 +42,6 @@ public sealed class ItemGetCommand(ILogger<ItemGetCommand> logger, ICosmosServic
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -44,7 +44,6 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
                     options.ServiceGroup,
                     options.GoalAssignment,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalResourceGetCommandResult(GoalResources: goalResources.ToList());
             }
@@ -55,7 +54,6 @@ public sealed class GoalResourceGetCommand(ILogger<GoalResourceGetCommand> logge
                     options.GoalAssignment,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new GoalResourceGetCommandResult(GoalResource: goalResource);
             }

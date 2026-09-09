@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -35,7 +34,6 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("sub"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Cross-region restore enabled"));
 
@@ -61,7 +59,6 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("sub"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -86,7 +83,6 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("sub"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
@@ -111,7 +107,6 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("sub"),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "CRR not supported"));
 
@@ -132,7 +127,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
         // Arrange
         Service.ConfigureCrossRegionRestoreAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Already enabled"));
 
         // Act
@@ -171,7 +166,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
     {
         Service.ConfigureCrossRegionRestoreAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(vaultType),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         var response = await ExecuteCommandAsync(
@@ -191,7 +186,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
         {
             Service.ConfigureCrossRegionRestoreAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -228,7 +223,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
         // Arrange
         Service.ConfigureCrossRegionRestoreAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Cross-region restore enabled"));
 
         // Act

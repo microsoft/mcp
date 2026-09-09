@@ -46,7 +46,6 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.Database,
                     options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -59,7 +58,6 @@ public sealed class DatabaseGetCommand(ISqlService sqlService, ILogger<DatabaseG
                     options.Server,
                     options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
@@ -88,6 +89,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             properties.AssertProperty("command");
             properties.AssertProperty("parameters");
             properties.AssertProperty("learn");
+            Assert.False(tool.OutputSchema.HasValue);
         }
     }
 
@@ -106,13 +108,49 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.Same(result1.Tools, result2.Tools);
     }
 
+    [Theory]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Compact)]
+    public async Task ListToolsHandler_StructuredOutputModeEmitsAggregateSchemaWithoutChangingInputSchema(
+        string executionMode,
+        StructuredOutputMode mode)
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = executionMode,
+            StructuredOutputMode = mode
+        });
+        var loader = new NamespaceToolLoader(
+            _commandFactory,
+            options,
+            _logger,
+            applyFilter: executionMode != ModeTypes.ConsolidatedProxy);
+
+        var result = await loader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(result.Tools);
+        Assert.All(result.Tools, tool =>
+        {
+            Assert.True(tool.OutputSchema.HasValue);
+            Assert.Equal(4, tool.InputSchema.GetProperty("properties").EnumerateObject().Count());
+            Assert.Equal("object", tool.OutputSchema.Value.GetProperty("type").GetString());
+            Assert.Equal(3, tool.OutputSchema.Value.GetProperty("oneOf").GetArrayLength());
+        });
+    }
+
     [Fact]
     public async Task ListToolsHandler_FiltersNamespacesWhenConfigured()
     {
         // Arrange
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
-            Namespace = ["storage", "keyvault"]
+            Namespace = ["storage", "keyvault"],
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
         });
 
         var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
@@ -124,7 +162,10 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // Assert
         Assert.NotNull(result.Tools);
         Assert.All(result.Tools, tool =>
-            Assert.True(tool.Name == "storage" || tool.Name == "keyvault"));
+        {
+            Assert.True(tool.Name == "storage" || tool.Name == "keyvault");
+            Assert.True(tool.OutputSchema.HasValue);
+        });
     }
 
     [Fact]
@@ -217,6 +258,52 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
         Assert.Contains("available command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated, false)]
+    [InlineData(StructuredOutputMode.Compact, true)]
+    public async Task CallToolHandler_LearnReturnsAggregateToolList(
+        StructuredOutputMode mode,
+        bool expectsCompactContent)
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = mode
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var namespaceName = GetFirstAvailableNamespace();
+        var request = McpTestUtilities.CreateToolCallRequest(namespaceName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources"
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.NotEmpty(result.StructuredContent.Value.GetProperty("tools").EnumerateArray());
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        if (expectsCompactContent)
+        {
+            Assert.Equal(StructuredOutputHelper.CompactContentMessage, text);
+        }
+        else
+        {
+            var toolsJson = result.StructuredContent.Value.GetProperty("tools").GetRawText();
+            Assert.Equal(
+                $"""
+                Here are the available commands and their input schema for '{namespaceName}' tool.
+                If you do not find a suitable "command", run again with the "learn=true" to get a list of available commands and their parameters.
+                Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
+
+                {toolsJson}
+                """,
+                text);
+        }
     }
 
     [Fact]
@@ -321,6 +408,122 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.NotNull(textContent);
         Assert.Contains("command", textContent.Text, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("learn", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactHelpReturnsAggregateMessage()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+
+        var result = await loader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(
+                GetFirstAvailableNamespace(),
+                new Dictionary<string, object?>()),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(
+            StructuredOutputHelper.CompactContentMessage,
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("message", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.Contains(
+            "command",
+            result.StructuredContent.Value.GetProperty("message").GetString(),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Duplicated, false)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, true)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Duplicated, false)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Compact, true)]
+    public async Task CallToolHandler_ChildResultUsesAggregateEnvelope(
+        string executionMode,
+        StructuredOutputMode mode,
+        bool expectsCompactContent)
+    {
+        var response = CreateSuccessfulCommandResponse();
+        var loader = CreateLoaderWithCommand(executionMode, mode, response);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "read data",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.True(result.StructuredContent.HasValue);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Equal(
+            expectsCompactContent
+                ? StructuredOutputHelper.CompactContentMessage
+                : JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse),
+            text);
+        var structuredContent = result.StructuredContent.Value;
+        Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+        Assert.Equal("read-cmd", structuredContent.GetProperty("command").GetString());
+        Assert.Equal("alpha", structuredContent.GetProperty("result").GetProperty("name").GetString());
+        Assert.Equal(3, structuredContent.GetProperty("result").GetProperty("count").GetInt32());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactChildErrorOmitsStructuredContent()
+    {
+        var response = CreateSuccessfulCommandResponse();
+        response.Status = System.Net.HttpStatusCode.BadRequest;
+        response.Message = "Invalid request.";
+        var loader = CreateLoaderWithCommand(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, response);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "read data",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.False(result.StructuredContent.HasValue);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains("Invalid request.", text, StringComparison.Ordinal);
+        Assert.NotEqual(StructuredOutputHelper.CompactContentMessage, text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactMessageOnlyChildPreservesMessage()
+    {
+        var response = new CommandResponse
+        {
+            Status = System.Net.HttpStatusCode.OK,
+            Message = "Use zone-redundant storage for production workloads."
+        };
+        var loader = CreateLoaderWithCommand(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, response);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "get guidance",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(
+            StructuredOutputHelper.CompactContentMessage,
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        var structuredContent = Assert.IsType<JsonElement>(result.StructuredContent);
+        Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+        Assert.Equal(
+            response.Message,
+            structuredContent.GetProperty("result").GetProperty("message").GetString());
     }
 
     [Fact]
@@ -873,6 +1076,51 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     // Helper methods
+
+    private NamespaceToolLoader CreateLoaderWithCommand(
+        string executionMode,
+        StructuredOutputMode mode,
+        CommandResponse response)
+    {
+        var command = Substitute.For<IBaseCommand>();
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "Reads data."));
+        command.ExecuteAsync(default!, default!, default!)
+            .ReturnsForAnyArgs(response);
+
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        storageGroup.AddCommand("read-cmd", command);
+        var rootGroup = new CommandGroup("root", "Root command group");
+        rootGroup.SubGroup.Add(storageGroup);
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = command });
+
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = executionMode,
+            StructuredOutputMode = mode
+        });
+        return new NamespaceToolLoader(
+            commandFactory,
+            options,
+            _logger,
+            applyFilter: executionMode != ModeTypes.ConsolidatedProxy);
+    }
+
+    private static CommandResponse CreateSuccessfulCommandResponse()
+    {
+        using var document = JsonDocument.Parse("""{"name":"alpha","count":3}""");
+        return new CommandResponse
+        {
+            Status = System.Net.HttpStatusCode.OK,
+            Results = ResponseResult.Create(
+                document.RootElement.Clone(),
+                ServerJsonContext.Default.JsonElement)
+        };
+    }
 
     private string GetFirstAvailableNamespace()
     {

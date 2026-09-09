@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -37,7 +36,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
 
         Service.FindUnprotectedResourcesAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         // Act
@@ -56,7 +55,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
         // Arrange
         Service.FindUnprotectedResourcesAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -74,7 +73,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
         // Arrange
         Service.FindUnprotectedResourcesAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -93,7 +92,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
         {
             Service.FindUnprotectedResourcesAsync(
                 Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -136,7 +135,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
         // Arrange
         Service.FindUnprotectedResourcesAsync(
             Arg.Is("sub123"), Arg.Any<string?>(), Arg.Is("myRG"), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -146,7 +145,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).FindUnprotectedResourcesAsync(
             "sub123", Arg.Any<string?>(), "myRG",
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -161,7 +160,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
 
         Service.FindUnprotectedResourcesAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         // Act
@@ -192,7 +191,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
 
         Service.FindUnprotectedResourcesAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         // Act
@@ -234,7 +233,7 @@ public class GovernanceFindUnprotectedCommandTests : SubscriptionCommandUnitTest
 
         Service.FindUnprotectedResourcesAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         // Act

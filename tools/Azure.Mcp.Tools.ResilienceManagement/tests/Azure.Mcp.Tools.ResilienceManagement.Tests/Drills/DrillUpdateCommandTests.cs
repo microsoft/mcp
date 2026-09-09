@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -64,7 +63,6 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             DrillRbacSetupMode.Manual,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -83,7 +81,6 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<DrillRbacSetupMode?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, "Sensitive provider details"));
 
@@ -104,7 +101,6 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<DrillRbacSetupMode?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DrillInfo("id1", "drill1"));
     }

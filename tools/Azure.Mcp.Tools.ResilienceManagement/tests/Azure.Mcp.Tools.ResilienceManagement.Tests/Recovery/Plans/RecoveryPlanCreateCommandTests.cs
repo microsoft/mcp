@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -17,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Recovery.Plans;
 public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<RecoveryPlanCreateCommand, IResilienceManagementService>
 {
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
-    private const string ValidArgs = "--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description --identity-type UserAssigned --user-assigned-identity " + UserAssignedIdentityResourceId + " --default-group-description default";
+    private const string ValidArgs = "--service-group sg1 --recoveryplan plan1 --plan-type Zonal --plan-description description --identity-type UserAssigned --user-assigned-identity " + UserAssignedIdentityResourceId + " --default-group-description default";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -30,12 +29,12 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
     [Theory]
     [InlineData(ValidArgs, true)]
-    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description --identity-type SystemAssigned", true)]
-    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --identity-type SystemAssigned", true)]
-    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-type Zonal --plan-description description", false)]
-    [InlineData("--recovery-plan plan1 --plan-type Zonal --plan-description description --default-group-description default", false)]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --plan-type Zonal --plan-description description --identity-type SystemAssigned", true)]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --plan-type Zonal --identity-type SystemAssigned", true)]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --plan-type Zonal --plan-description description", false)]
+    [InlineData("--recoveryplan plan1 --plan-type Zonal --plan-description description --default-group-description default", false)]
     [InlineData("--service-group sg1 --plan-type Zonal --plan-description description --default-group-description default", false)]
-    [InlineData("--service-group sg1 --recovery-plan plan1 --plan-description description --default-group-description default", false)]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --plan-description description --default-group-description default", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesRequiredInput(string args, bool shouldSucceed)
     {
@@ -50,7 +49,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(Element("plan1"));
         }
@@ -69,7 +67,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description");
 
@@ -84,7 +82,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: TestContext.Current.CancellationToken);
     }
 
@@ -97,7 +94,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", recoveryPlan,
+            "--recoveryplan", recoveryPlan,
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -114,7 +111,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: TestContext.Current.CancellationToken);
     }
 
@@ -123,7 +119,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "../sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -140,7 +136,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: TestContext.Current.CancellationToken);
     }
 
@@ -158,13 +153,12 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element(recoveryPlan));
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", recoveryPlan,
+            "--recoveryplan", recoveryPlan,
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned");
@@ -179,7 +173,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", planDescription,
             "--identity-type", "SystemAssigned",
@@ -203,13 +197,12 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", planDescription,
             "--identity-type", "SystemAssigned");
@@ -225,7 +218,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -249,13 +242,12 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             defaultGroupDescription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -269,7 +261,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Regional",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -287,7 +279,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
 
@@ -342,7 +333,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "UserAssigned",
@@ -374,7 +365,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups =>
                 groups != null &&
                 groups.Count == 1 &&
@@ -388,7 +378,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -401,7 +391,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             RecoveryPlanKind.Zonal,
             "description",
             RecoveryPlanIdentityKind.SystemAssigned,
-            null,
             null,
             null,
             null,
@@ -422,7 +411,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -445,25 +434,25 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups =>
                 groups != null &&
                 groups[0].PreActions != null &&
                 groups[0].PreActions![0].Type == RecoveryPlanGroupActionKind.CustomRunbook),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions =>
                 actions != null &&
-                actions[0].Type == RecoveryPlanGroupActionKind.ManualAction),
+                actions[0].Type == RecoveryPlanGroupActionKind.ManualAction &&
+                actions[0].TimeoutInMinutes == 30),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions.Count == 0),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
-            "--default-group-pre-actions", "[{\"type\":\"ManualAction\",\"name\":\"Confirm-failover\",\"description\":\"Wait for approval\",\"timeoutInMinutes\":60}]",
+            "--default-group-pre-actions", "[{\"type\":\"ManualAction\",\"name\":\"Confirm-failover\",\"description\":\"Wait for approval\",\"timeoutInMinutes\":30}]",
             "--default-group-post-actions", "[]",
             "--additional-groups", $"[{{\"orderId\":1,\"description\":\"Second recovery group\",\"preActions\":[{{\"type\":\"CustomRunbook\",\"name\":\"Prepare-database\",\"timeoutInMinutes\":30,\"actionResourceId\":\"{runbookId}\",\"parameters\":{{\"mode\":\"safe\"}}}}]}}]");
 
@@ -483,7 +472,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -506,7 +495,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Description == string.Empty),
             null,
             Arg.Any<CancellationToken>())
@@ -514,7 +502,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -537,7 +525,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             null,
-            null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Parameters == null),
             null,
             Arg.Any<CancellationToken>())
@@ -545,7 +532,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -561,7 +548,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -588,7 +575,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "UserAssigned",
@@ -605,7 +592,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: TestContext.Current.CancellationToken);
     }
 
@@ -627,7 +613,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned");
@@ -664,7 +650,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAndUserAssigned",
@@ -691,7 +677,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", identityType.ToString());
@@ -705,7 +691,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--plan-type", "Zonal",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
@@ -743,7 +729,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -751,6 +736,28 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith("Test error", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MapsTimeoutExceptionToGatewayTimeout()
+    {
+        Service.CreateRecoveryPlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecoveryPlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<RecoveryPlanIdentityKind>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TimeoutException("Internal timeout details"));
+
+        var response = await ExecuteCommandAsync(ValidArgs);
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
+        Assert.Contains("timed out", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Internal timeout details", response.Message);
     }
 
     private static RecoveryPlanInfo Element(string name) => new(
@@ -775,7 +782,6 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, message));
     }

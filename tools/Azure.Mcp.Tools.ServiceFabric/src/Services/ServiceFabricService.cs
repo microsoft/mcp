@@ -6,7 +6,6 @@ using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ServiceFabric.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Services;
 
@@ -23,7 +22,6 @@ public sealed class ServiceFabricService(IAzureService azureService)
         string resourceGroup,
         string clusterName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -31,7 +29,7 @@ public sealed class ServiceFabricService(IAzureService azureService)
             (nameof(resourceGroup), resourceGroup),
             (nameof(clusterName), clusterName));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
@@ -69,7 +67,6 @@ public sealed class ServiceFabricService(IAzureService azureService)
         string clusterName,
         string nodeName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -78,7 +75,7 @@ public sealed class ServiceFabricService(IAzureService azureService)
             (nameof(clusterName), clusterName),
             (nameof(nodeName), nodeName));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
@@ -104,7 +101,6 @@ public sealed class ServiceFabricService(IAzureService azureService)
         string[] nodes,
         UpdateType updateType = UpdateType.Default,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -119,7 +115,7 @@ public sealed class ServiceFabricService(IAzureService azureService)
             throw new ArgumentException("At least one node name must be specified.", nameof(nodes));
         }
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
         var token = await GetArmAccessTokenAsync(tenant, cancellationToken);

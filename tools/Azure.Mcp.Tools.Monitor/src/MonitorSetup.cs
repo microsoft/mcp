@@ -82,6 +82,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<HealthModelGetCommand>();
 
         services.AddSingleton<MetricsQueryCommand>();
+        services.AddSingleton<MetricsBatchQueryCommand>();
         services.AddSingleton<MetricsDefinitionsCommand>();
 
         services.AddSingleton<ActivityLogListCommand>();
@@ -151,6 +152,7 @@ public class MonitorSetup : IAreaSetup
         monitor.AddSubGroup(metrics);
 
         metrics.AddCommand<MetricsQueryCommand>(serviceProvider);
+        metrics.AddCommand<MetricsBatchQueryCommand>(serviceProvider);
         metrics.AddCommand<MetricsDefinitionsCommand>(serviceProvider);
 
         var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");

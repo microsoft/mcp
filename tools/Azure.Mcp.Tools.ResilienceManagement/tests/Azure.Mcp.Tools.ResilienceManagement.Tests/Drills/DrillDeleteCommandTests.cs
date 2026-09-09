@@ -6,7 +6,6 @@ using Azure;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -53,14 +52,13 @@ public class DrillDeleteCommandTests : CommandUnitTestsBase<DrillDeleteCommand, 
             ServiceGroup,
             Drill,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesForbiddenException()
     {
-        Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Sensitive backend details"));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill);
@@ -74,7 +72,7 @@ public class DrillDeleteCommandTests : CommandUnitTestsBase<DrillDeleteCommand, 
     public async Task ExecuteAsync_TreatsNotFoundAsSuccess()
     {
         const string providerDetails = "Sensitive provider not-found details";
-        Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, providerDetails));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill);
@@ -89,7 +87,7 @@ public class DrillDeleteCommandTests : CommandUnitTestsBase<DrillDeleteCommand, 
     public async Task ExecuteAsync_HandlesConflictException()
     {
         const string providerDetails = "Sensitive provider conflict details";
-        Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.DeleteDrillAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, providerDetails));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill);

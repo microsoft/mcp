@@ -120,7 +120,6 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
                 options.Phrases,
                 options.Format,
                 options.Profanity,
-                options.RetryPolicy,
                 cancellationToken);
 
             _logger.LogInformation(

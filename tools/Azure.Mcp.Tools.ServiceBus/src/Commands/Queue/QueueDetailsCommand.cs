@@ -40,7 +40,6 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger, ISe
                 options.Namespace,
                 options.Queue,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);

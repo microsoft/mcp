@@ -242,10 +242,61 @@ public static class McpTestUtilities
             output,
             disableAuthentication);
 
-        // Invert: disableAuthentication=false means authenticationEnabled=true
-        await WaitForServerReadinessAsync(serverUrl, timeoutSeconds, pollIntervalMs, authenticationEnabled: !disableAuthentication);
+        CancellationToken testCancellationToken = TestContext.Current.CancellationToken;
+        using var readinessCancellation = CancellationTokenSource.CreateLinkedTokenSource(testCancellationToken);
+        try
+        {
+            var readinessTask = WaitForServerReadinessAsync(
+                serverUrl,
+                timeoutSeconds,
+                pollIntervalMs,
+                authenticationEnabled: !disableAuthentication,
+                readinessCancellation.Token);
+            var processExitTask = process.WaitForExitAsync(testCancellationToken);
 
-        return process;
+            if (await Task.WhenAny(readinessTask, processExitTask) == processExitTask)
+            {
+                testCancellationToken.ThrowIfCancellationRequested();
+                await readinessCancellation.CancelAsync();
+                try
+                {
+                    await readinessTask;
+                }
+                catch (OperationCanceledException)
+                {
+                }
+
+                throw new ClientTransportClosedException(new ClientCompletionDetails
+                {
+                    Exception = new InvalidOperationException($"HTTP server process exited with code {process.ExitCode} before becoming ready.")
+                });
+            }
+
+            await readinessTask;
+
+            return process;
+        }
+        catch
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                    await process.WaitForExitAsync(CancellationToken.None);
+                }
+            }
+            catch
+            {
+                // Preserve the startup or test cancellation exception.
+            }
+            finally
+            {
+                process.Dispose();
+            }
+
+            throw;
+        }
     }
 
     /// <summary>
@@ -259,7 +310,8 @@ public static class McpTestUtilities
         string serverUrl,
         int timeoutSeconds = 30,
         int pollIntervalMs = 500,
-        bool authenticationEnabled = false)
+        bool authenticationEnabled = false,
+        CancellationToken cancellationToken = default)
     {
         using var httpClient = new HttpClient();
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
@@ -284,7 +336,7 @@ public static class McpTestUtilities
                 };
                 requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
-                using var resp = await httpClient.SendAsync(requestMessage);
+                using var resp = await httpClient.SendAsync(requestMessage, cancellationToken);
 
                 // If authentication is enabled, 401 Unauthorized means server is ready
                 // If authentication is disabled, we need a success status code
@@ -298,7 +350,7 @@ public static class McpTestUtilities
             {
                 // Server not yet available, continue polling
             }
-            await Task.Delay(pollIntervalMs);
+            await Task.Delay(pollIntervalMs, cancellationToken);
         }
 
         throw new TimeoutException($"Server at {serverUrl} did not become ready within {timeoutSeconds} seconds");

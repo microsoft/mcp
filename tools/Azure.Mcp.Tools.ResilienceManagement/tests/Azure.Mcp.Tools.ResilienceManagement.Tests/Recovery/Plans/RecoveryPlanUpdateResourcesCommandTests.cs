@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -47,7 +46,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1");
+            "--recoveryplan", "plan1");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("at least one", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -73,7 +72,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "invalid_plan",
+            "--recoveryplan", "invalid_plan",
             "--resources-to-update", ResourcesToUpdateWithoutId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -86,7 +85,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "../sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", ResourcesToUpdateWithoutId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -96,7 +95,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UpdateRecoveryResourcesContent>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -114,13 +112,12 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
                 content.ResourcesToUpdate[0].Properties.SelectedProtectionSolutionType == ResourceProtectionSolutionType.AzureNative &&
                 content.ResourcesToUpdate[0].Properties.SelectedProtectionSolutionSetting != null),
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", ResourcesToUpdate);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryPlanUpdateResourcesCommandResult);
@@ -129,7 +126,6 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             "sg1",
             "plan1",
             Arg.Any<UpdateRecoveryResourcesContent>(),
-            null,
             null,
             Arg.Any<CancellationToken>());
     }
@@ -145,16 +141,45 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
                 content.ResourcesToRemove.Count == 1 &&
                 content.ResourcesToRemove[0].ToString() == RecoveryResourceId),
             null,
+            Arg.Any<CancellationToken>())
+            .Returns(UpdateResult());
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--resources-to-remove", $"[\"{RecoveryResourceId}\"]");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsUpdateAndDistinctRemovalTogether()
+    {
+        Service.UpdateRecoveryPlanResourcesAsync(
+            "sg1",
+            "plan1",
+            Arg.Is<UpdateRecoveryResourcesContent>(content =>
+                content.ResourcesToUpdate.Count == 1 &&
+                content.ResourcesToUpdate[0].Properties.RecoveryResourceUniqueId == "12345678-9012-3456-7890-123456789012" &&
+                content.ResourcesToRemove.Count == 1 &&
+                content.ResourcesToRemove[0].ToString() == OtherRecoveryResourceId),
             null,
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
-            "--resources-to-remove", $"[\"{RecoveryResourceId}\"]");
+            "--recoveryplan", "plan1",
+            "--resources-to-update", ResourcesToUpdate,
+            "--resources-to-remove", $"[\"{OtherRecoveryResourceId}\"]");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateRecoveryPlanResourcesAsync(
+            "sg1",
+            "plan1",
+            Arg.Any<UpdateRecoveryResourcesContent>(),
+            null,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -164,7 +189,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", updates);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -180,13 +205,12 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Is<UpdateRecoveryResourcesContent>(content => content.ResourcesToUpdate[0].Properties.InclusionState == null),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", updates);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -202,13 +226,12 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
                 content.ResourcesToUpdate.Count == 1 &&
                 content.ResourcesToUpdate[0].Properties.RecoveryResourceUniqueId == "12345678-9012-3456-7890-123456789012"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(UpdateResult());
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", ResourcesToUpdateWithoutId);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -221,7 +244,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", updates);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -235,12 +258,12 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", updates);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("properties.recoveryResourceUniqueId", response.Message);
-        Assert.Contains("selected recovery plan", response.Message);
+        Assert.Contains("selected recoveryplan", response.Message);
     }
 
     [Fact]
@@ -250,11 +273,11 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", updates);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("selected recovery plan", response.Message);
+        Assert.Contains("selected recoveryplan", response.Message);
     }
 
     [Fact]
@@ -262,7 +285,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", ResourcesToUpdate,
             "--resources-to-remove", $"[\"{RecoveryResourceId}\",\"{OtherRecoveryResourceId}\"]");
 
@@ -278,18 +301,38 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UpdateRecoveryResourcesContent>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.BadRequest, "provider details"));
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--resources-to-update", ResourcesToUpdate);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Verify the resource IDs and protection settings", response.Message);
         Assert.DoesNotContain("provider details", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MapsTimeoutExceptionToGatewayTimeout()
+    {
+        Service.UpdateRecoveryPlanResourcesAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UpdateRecoveryResourcesContent>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TimeoutException("Internal timeout details"));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--resources-to-update", ResourcesToUpdate);
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
+        Assert.Contains("timed out", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Internal timeout details", response.Message);
     }
 
     private static RecoveryPlanUpdateResourcesResult UpdateResult() => new([]);

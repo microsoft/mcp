@@ -50,7 +50,6 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
                 options.Subscription!,
                 options.Prefix,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken
             );
 

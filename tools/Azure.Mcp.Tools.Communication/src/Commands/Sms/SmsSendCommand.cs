@@ -43,7 +43,6 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicatio
                 options.EnableDeliveryReport,
                 options.Tag,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Set results

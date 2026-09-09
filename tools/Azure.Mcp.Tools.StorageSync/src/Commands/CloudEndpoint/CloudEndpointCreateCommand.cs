@@ -45,7 +45,6 @@ public sealed class CloudEndpointCreateCommand(ILogger<CloudEndpointCreateComman
                 options.StorageAccountResourceId,
                 options.AzureFileShareName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.CloudEndpointCreateCommandResult);

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -42,7 +41,7 @@ public class DrillRunResourceGetCommandTests : CommandUnitTestsBase<DrillRunReso
     public async Task ExecuteAsync_ListsDrillRunResources_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "target1"), new("id2", "target2") };
-        Service.ListDrillRunResourcesAsync(ServiceGroup, Drill, DrillRun, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDrillRunResourcesAsync(ServiceGroup, Drill, DrillRun, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -58,7 +57,7 @@ public class DrillRunResourceGetCommandTests : CommandUnitTestsBase<DrillRunReso
     [Fact]
     public async Task ExecuteAsync_GetsDrillRunResource_WhenNameProvided()
     {
-        Service.GetDrillRunResourceAsync(ServiceGroup, Drill, DrillRun, "target1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetDrillRunResourceAsync(ServiceGroup, Drill, DrillRun, "target1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Element("target1"));
 
         var response = await ExecuteCommandAsync(
@@ -76,7 +75,7 @@ public class DrillRunResourceGetCommandTests : CommandUnitTestsBase<DrillRunReso
     public async Task ExecuteAsync_HandlesException()
     {
         const string expectedError = "Test error";
-        Service.ListDrillRunResourcesAsync(ServiceGroup, Drill, DrillRun, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListDrillRunResourcesAsync(ServiceGroup, Drill, DrillRun, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync(

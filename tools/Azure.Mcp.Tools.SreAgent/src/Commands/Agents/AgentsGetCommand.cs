@@ -38,7 +38,6 @@ public sealed class AgentsGetCommand(ILogger<AgentsGetCommand> logger, ISreAgent
                 options.ResourceGroup,
                 options.Agent,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             if (agent is null)

@@ -69,7 +69,6 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                     options.ResourceGroup,
                     options.WebtestResource,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             catch
@@ -126,7 +125,6 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                     sslLifetimeCheckInDays: options.SslLifetimeCheck,
                     timeoutInSeconds: options.Timeout,
                     tenant: options.Tenant,
-                    retryPolicy: options.RetryPolicy,
                     cancellationToken: cancellationToken);
             }
             else
@@ -159,7 +157,6 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
                     sslLifetimeCheckInDays: options.SslLifetimeCheck,
                     timeoutInSeconds: options.Timeout,
                     tenant: options.Tenant,
-                    retryPolicy: options.RetryPolicy,
                     cancellationToken: cancellationToken);
             }
 

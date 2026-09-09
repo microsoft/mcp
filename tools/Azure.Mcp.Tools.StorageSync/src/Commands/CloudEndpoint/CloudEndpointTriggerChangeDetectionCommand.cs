@@ -45,7 +45,6 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
                 options.ChangeDetectionMode,
                 options.Paths,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Change detection triggered successfully";

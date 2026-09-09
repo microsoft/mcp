@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
@@ -34,11 +33,10 @@ public sealed class ServiceBusService(IAzureService azureService)
     private async Task<ServiceBusAdministrationClient> CreateAdministrationClient(
         string namespaceName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var credential = await GetCredential(tenantId, cancellationToken);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
+        var options = AddDefaultPolicies(new ServiceBusAdministrationClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new ServiceBusAdministrationClient(namespaceName, credential, options);
     }
@@ -47,11 +45,10 @@ public sealed class ServiceBusService(IAzureService azureService)
         string namespaceName,
         string queueName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateNamespace(namespaceName);
-        var client = await CreateAdministrationClient(namespaceName, tenantId, retryPolicy, cancellationToken);
+        var client = await CreateAdministrationClient(namespaceName, tenantId, cancellationToken);
         var runtimeProperties = (await client.GetQueueRuntimePropertiesAsync(queueName, cancellationToken)).Value;
         var properties = (await client.GetQueueAsync(queueName, cancellationToken)).Value;
 
@@ -85,11 +82,10 @@ public sealed class ServiceBusService(IAzureService azureService)
         string topicName,
         string subscriptionName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateNamespace(namespaceName);
-        var client = await CreateAdministrationClient(namespaceName, tenantId, retryPolicy, cancellationToken);
+        var client = await CreateAdministrationClient(namespaceName, tenantId, cancellationToken);
         var runtimeProperties = (await client.GetSubscriptionRuntimePropertiesAsync(topicName, subscriptionName, cancellationToken)).Value;
         var properties = (await client.GetSubscriptionAsync(topicName, subscriptionName, cancellationToken)).Value;
 
@@ -116,11 +112,10 @@ public sealed class ServiceBusService(IAzureService azureService)
         string namespaceName,
         string topicName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateNamespace(namespaceName);
-        var client = await CreateAdministrationClient(namespaceName, tenantId, retryPolicy, cancellationToken);
+        var client = await CreateAdministrationClient(namespaceName, tenantId, cancellationToken);
         var runtimeProperties = (await client.GetTopicRuntimePropertiesAsync(topicName, cancellationToken)).Value;
         var properties = (await client.GetTopicAsync(topicName, cancellationToken)).Value;
 
@@ -144,7 +139,6 @@ public sealed class ServiceBusService(IAzureService azureService)
         string queueName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateNamespace(namespaceName);
@@ -165,7 +159,6 @@ public sealed class ServiceBusService(IAzureService azureService)
         string subscriptionName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateNamespace(namespaceName);

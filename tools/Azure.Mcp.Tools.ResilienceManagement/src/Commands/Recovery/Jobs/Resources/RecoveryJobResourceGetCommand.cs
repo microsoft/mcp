@@ -45,7 +45,6 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
                     options.RecoveryPlan,
                     options.RecoveryJob,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new RecoveryJobResourceGetCommandResult(RecoveryJobResources: recoveryJobResources.ToList());
             }
@@ -57,7 +56,6 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
                     options.RecoveryJob,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new RecoveryJobResourceGetCommandResult(RecoveryJobResource: recoveryJobResource);
             }
@@ -79,11 +77,11 @@ public sealed class RecoveryJobResourceGetCommand(ILogger<RecoveryJobResourceGet
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        KeyNotFoundException => "Recovery job resource not found. Verify the recovery job resource name, recovery job, recovery plan, service group, and that you have access.",
+        KeyNotFoundException => "Recovery job resource not found. Verify the recovery job resource name, recovery job, recoveryplan, service group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed getting the recovery job resource. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery job resource not found. Verify the recovery job resource, recovery job, recovery plan, and service group exist and you have access.",
+            "Recovery job resource not found. Verify the recovery job resource, recovery job, recoveryplan, and service group exist and you have access.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

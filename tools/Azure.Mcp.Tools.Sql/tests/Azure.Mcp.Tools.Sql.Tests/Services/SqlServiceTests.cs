@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Sql.Services;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -50,7 +49,6 @@ public class SqlServiceTests
         _azureService.GetSubscription(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(SubscriptionResolvedMessage));
 
@@ -61,7 +59,7 @@ public class SqlServiceTests
     public async Task GetServerAsync_ResolvesSubscriptionThroughAzureService()
     {
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _service.GetServerAsync("server1", "rg", SubscriptionName, null, TestContext.Current.CancellationToken));
+            _service.GetServerAsync("server1", "rg", SubscriptionName, TestContext.Current.CancellationToken));
 
         Assert.Equal(SubscriptionResolvedMessage, ex.Message);
         await AssertSubscriptionResolvedAsync();
@@ -71,7 +69,7 @@ public class SqlServiceTests
     public async Task ListServersAsync_ResolvesSubscriptionThroughAzureService()
     {
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _service.ListServersAsync("rg", SubscriptionName, null, TestContext.Current.CancellationToken));
+            _service.ListServersAsync("rg", SubscriptionName, TestContext.Current.CancellationToken));
 
         Assert.Equal(SubscriptionResolvedMessage, ex.Message);
         await AssertSubscriptionResolvedAsync();
@@ -90,7 +88,6 @@ public class SqlServiceTests
                 "P@ssw0rd!",
                 null,
                 null,
-                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Equal(SubscriptionResolvedMessage, ex.Message);
@@ -107,7 +104,6 @@ public class SqlServiceTests
                 "newdb",
                 "rg",
                 SubscriptionName,
-                null,
                 TestContext.Current.CancellationToken));
 
         Assert.Equal(SubscriptionResolvedMessage, ex.Message);
@@ -118,37 +114,36 @@ public class SqlServiceTests
         _azureService.Received(1).GetSubscription(
             SubscriptionName,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
     [Fact]
     public async Task ListDatabasesAsync_WithSubscriptionName_ResolvesNameToId()
     {
         _azureService.IsSubscriptionId(SubscriptionName).Returns(false);
-        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(ResolveSentinel));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.ListDatabasesAsync(ServerName, ResourceGroup, SubscriptionName, null, TestContext.Current.CancellationToken));
+            () => _service.ListDatabasesAsync(ServerName, ResourceGroup, SubscriptionName, TestContext.Current.CancellationToken));
 
         Assert.Equal(ResolveSentinel, exception.Message);
         await _azureService.Received(1).GetSubscriptionIdByName(
-            SubscriptionName, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetElasticPoolsAsync_WithSubscriptionName_ResolvesNameToId()
     {
         _azureService.IsSubscriptionId(SubscriptionName).Returns(false);
-        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(ResolveSentinel));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.GetElasticPoolsAsync(ServerName, ResourceGroup, SubscriptionName, null, TestContext.Current.CancellationToken));
+            () => _service.GetElasticPoolsAsync(ServerName, ResourceGroup, SubscriptionName, TestContext.Current.CancellationToken));
 
         Assert.Equal(ResolveSentinel, exception.Message);
         await _azureService.Received(1).GetSubscriptionIdByName(
-            SubscriptionName, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -159,7 +154,7 @@ public class SqlServiceTests
 
         try
         {
-            await _service.ListDatabasesAsync(ServerName, ResourceGroup, SubscriptionId, null, canceled);
+            await _service.ListDatabasesAsync(ServerName, ResourceGroup, SubscriptionId, canceled);
         }
         catch
         {
@@ -167,7 +162,7 @@ public class SqlServiceTests
         }
 
         await _azureService.DidNotReceive().GetSubscriptionIdByName(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -178,7 +173,7 @@ public class SqlServiceTests
 
         try
         {
-            await _service.GetElasticPoolsAsync(ServerName, ResourceGroup, SubscriptionId, null, canceled);
+            await _service.GetElasticPoolsAsync(ServerName, ResourceGroup, SubscriptionId, canceled);
         }
         catch
         {
@@ -186,22 +181,22 @@ public class SqlServiceTests
         }
 
         await _azureService.DidNotReceive().GetSubscriptionIdByName(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetDatabaseAsync_WithSubscriptionName_ResolvesNameToId()
     {
         _azureService.IsSubscriptionId(SubscriptionName).Returns(false);
-        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _azureService.GetSubscriptionIdByName(SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(ResolveSentinel));
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.GetDatabaseAsync(ServerName, DatabaseName, ResourceGroup, SubscriptionName, null, TestContext.Current.CancellationToken));
+            () => _service.GetDatabaseAsync(ServerName, DatabaseName, ResourceGroup, SubscriptionName, TestContext.Current.CancellationToken));
 
         Assert.Equal(ResolveSentinel, exception.Message);
         await _azureService.Received(1).GetSubscriptionIdByName(
-            SubscriptionName, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            SubscriptionName, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -212,7 +207,7 @@ public class SqlServiceTests
 
         try
         {
-            await _service.GetDatabaseAsync(ServerName, DatabaseName, ResourceGroup, SubscriptionId, null, canceled);
+            await _service.GetDatabaseAsync(ServerName, DatabaseName, ResourceGroup, SubscriptionId, canceled);
         }
         catch
         {
@@ -220,7 +215,7 @@ public class SqlServiceTests
         }
 
         await _azureService.DidNotReceive().GetSubscriptionIdByName(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
 }

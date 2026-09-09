@@ -42,7 +42,6 @@ public sealed class SyncGroupCreateCommand(ILogger<SyncGroupCreateCommand> logge
                 options.Name,
                 options.SyncGroupName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(syncGroup), StorageSyncJsonContext.Default.SyncGroupCreateCommandResult);

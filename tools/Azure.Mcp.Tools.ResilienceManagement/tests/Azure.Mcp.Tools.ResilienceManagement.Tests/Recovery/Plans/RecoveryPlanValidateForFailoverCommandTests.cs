@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -29,8 +28,8 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
     }
 
     [Theory]
-    [InlineData("--service-group sg1 --recovery-plan plan1", "source-locations or --selected-resource-ids")]
-    [InlineData("--service-group sg1 --recovery-plan plan1 --source-locations eastus --user-consent Denied", "Unspecified or Allowed")]
+    [InlineData("--service-group sg1 --recoveryplan plan1", "source-locations or --selected-resource-ids")]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --source-locations eastus --user-consent Denied", "Unspecified or Allowed")]
     public async Task ExecuteAsync_RejectsInvalidInput(string args, string expectedMessage)
     {
         var response = await ExecuteCommandAsync(args);
@@ -46,12 +45,12 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--source-locations", "eastus",
             "--selected-resource-ids", otherPlanResourceId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("under the requested service group and recovery plan", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("under the requested service group and recoveryplan", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -67,13 +66,12 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
             null,
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--selected-resource-ids", RecoveryResourceId);
 
         RecoveryPlanValidateForFailoverResult result = ValidateAndDeserializeResponse(
@@ -107,13 +105,12 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
             "Allowed",
             null,
-            null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--source-locations", "eastus",
             "--selected-resource-ids", RecoveryResourceId,
             "--user-consent", "Allowed");
@@ -141,13 +138,12 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--source-locations", "eastus");
 
         Assert.Equal(status, response.Status);
@@ -166,13 +162,12 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--source-locations", "eastus");
 
         Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);

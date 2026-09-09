@@ -6,7 +6,6 @@ using System.Text.Json;
 using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -65,7 +64,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }
@@ -122,7 +120,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
             Arg.Any<string[]>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -141,7 +138,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
             "Test Subject",
             "Test Message",
             false,
-            null,
             null,
             null,
             null,
@@ -183,7 +179,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
             Arg.Any<string[]>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 

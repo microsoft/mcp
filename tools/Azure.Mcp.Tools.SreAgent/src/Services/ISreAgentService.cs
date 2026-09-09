@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Threads;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Services;
 
@@ -16,7 +15,6 @@ public interface ISreAgentService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -27,7 +25,6 @@ public interface ISreAgentService
         string? resourceGroup = null,
         string agentName = "",
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #region Agents + Skills (sub-agent A)
@@ -93,7 +90,6 @@ public interface ISreAgentService
         string subscription,
         string agentName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<ConnectorTestResult> TestConnectorAsync(

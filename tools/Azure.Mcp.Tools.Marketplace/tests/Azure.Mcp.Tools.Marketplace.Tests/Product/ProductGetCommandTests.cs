@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -46,7 +45,6 @@ public class ProductGetCommandTests : SubscriptionCommandUnitTestsBase<ProductGe
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedProduct);
 
@@ -89,7 +87,6 @@ public class ProductGetCommandTests : SubscriptionCommandUnitTestsBase<ProductGe
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

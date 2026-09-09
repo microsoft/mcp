@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,7 +37,7 @@ public class ResourceGuardGetCommandTests : SubscriptionCommandUnitTestsBase<Res
     {
         Service.GetResourceGuardAsync(
             Arg.Is("guard1"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(NewGuard());
 
         var response = await ExecuteCommandAsync(
@@ -56,7 +55,7 @@ public class ResourceGuardGetCommandTests : SubscriptionCommandUnitTestsBase<Res
     {
         Service.ListResourceGuardsAsync(
             Arg.Is("sub"), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new List<ResourceGuardInfo> { NewGuard("a"), NewGuard("b") });
 
         var response = await ExecuteCommandAsync(
@@ -82,7 +81,7 @@ public class ResourceGuardGetCommandTests : SubscriptionCommandUnitTestsBase<Res
     {
         Service.GetResourceGuardAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         var response = await ExecuteCommandAsync(

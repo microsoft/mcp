@@ -7,7 +7,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -53,7 +52,6 @@ public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<R
             Arg.Is(subscriptionId),
             Arg.Is(scope),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedRoleAssignments);
 
@@ -72,7 +70,7 @@ public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
-        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, TestContext.Current.CancellationToken)
             .Returns(new ResourceQueryResults<RoleAssignment>([], false));
 
         // Act
@@ -92,7 +90,7 @@ public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<R
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
 
-        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListRoleAssignmentsAsync(subscriptionId, scope, null, TestContext.Current.CancellationToken)
             .ThrowsAsync(new Exception(expectedError));
 
         // Act

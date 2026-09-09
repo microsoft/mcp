@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Azure.ResourceManager.ResilienceManagement;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -16,8 +14,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 [CommandMetadata(
     Id = "96622339-b89f-4764-b15f-793bd52d11bf",
     Name = "validateforfailover",
-    Title = "Validate Resilience Recovery Plan for Failover",
-    Description = "Validates a resilience recovery plan for failover using customer-provided source locations, selected recovery-resource IDs, or both. If the customer provides neither selector, ask which source locations or recovery-resource IDs to validate; never infer them from prior context or resource metadata. Use this tool to check failover qualification or readiness, identify blocking reasons per recovery resource, or supply user consent. This validation-only operation does not execute failover or update recovery resources.",
+    Title = "Validate Resilience Recoveryplan for Failover",
+    Description = "Validates a resilience recoveryplan for failover using customer-provided source locations, selected recovery-resource IDs, or both. If the customer provides neither selector, ask which source locations or recovery-resource IDs to validate; never infer them from prior context or resource metadata. Use this tool to check failover qualification or readiness, identify blocking reasons per recovery resource, or supply user consent. This validation-only operation does not execute failover or update recovery resources.",
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -57,14 +55,11 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
             validationResult.Errors.Add("--user-consent must be Unspecified or Allowed when specified.");
         }
 
-        foreach (string resourceId in options.SelectedResourceIds ?? [])
-        {
-            if (string.IsNullOrWhiteSpace(resourceId) || !IsRecoveryResourceIdForPlan(resourceId, options.ServiceGroup, options.RecoveryPlan))
-            {
-                validationResult.Errors.Add("Each --selected-resource-ids value must be a full recovery-resource ID under the requested service group and recovery plan.");
-                break;
-            }
-        }
+        RecoveryPlanValidation.ValidateSelectedResourceIds(
+            options.SelectedResourceIds,
+            options.ServiceGroup,
+            options.RecoveryPlan,
+            validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecoveryPlanValidateForFailoverOptions options, CancellationToken cancellationToken)
@@ -78,7 +73,6 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
                 options.SelectedResourceIds,
                 options.UserConsent,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -88,7 +82,7 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error validating recovery plan for failover. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
+                "Error validating recoveryplan for failover. ServiceGroup: {ServiceGroup}, RecoveryPlan: {RecoveryPlan}.",
                 options.ServiceGroup, options.RecoveryPlan);
             HandleException(context, ex);
         }
@@ -96,31 +90,16 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
         return context.Response;
     }
 
-    private static bool IsRecoveryResourceIdForPlan(string resourceId, string serviceGroup, string recoveryPlan)
-    {
-        try
-        {
-            var parsed = new ResourceIdentifier(resourceId);
-            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
-                string.Equals(parsed.Parent?.Name, recoveryPlan, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(parsed.Parent?.Parent?.Name, serviceGroup, StringComparison.OrdinalIgnoreCase);
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
-        {
-            return false;
-        }
-    }
-
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         TimeoutException =>
-            "The recovery plan failover validation timed out before it completed. Retry the operation.",
+            "The recoveryplan failover validation timed out before it completed. Retry the operation.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed validating the recovery plan for failover. Verify you have access to the recovery plan and service group.",
+            "Authorization failed validating the recoveryplan for failover. Verify you have access to the recoveryplan and service group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Recovery plan not found. Verify the recovery plan and service group exist and you have access.",
+            "Recoveryplan not found. Verify the recoveryplan and service group exist and you have access.",
         RequestFailedException =>
-            "The failover validation request failed. Verify the recovery plan, source locations, selected resources, and request parameters, then try again.",
+            "The failover validation request failed. Verify the recoveryplan, source locations, selected resources, and request parameters, then try again.",
         _ => base.GetErrorMessage(ex)
     };
 

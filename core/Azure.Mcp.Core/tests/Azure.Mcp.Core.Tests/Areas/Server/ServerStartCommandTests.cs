@@ -93,7 +93,8 @@ public class ServerStartCommandTests
             "--dangerously-disable-http-incoming-auth",
             "--dangerously-disable-elicitation",
             "--dangerously-disable-retry-limits",
-            "--disable-caching"
+            "--disable-caching",
+            "--disable-proxy-tools"
         };
         var theoryData = new TheoryData<string, bool, bool>();
         foreach (var option in options)
@@ -126,6 +127,26 @@ public class ServerStartCommandTests
         // Assert
         var hasToolOption = command.Options.Any(o => o.Name == "--tool");
         Assert.True(hasToolOption, "Tool option should be registered");
+    }
+
+    [Theory]
+    [InlineData("DuPlIcAtEd", StructuredOutputMode.Duplicated)]
+    [InlineData("COMPACT", StructuredOutputMode.Compact)]
+    public void StructuredOutputModeOption_ParsesCaseInsensitiveValues(
+        string value,
+        StructuredOutputMode expected)
+    {
+        var options = BindOptions(new[] { "--structured-output-mode", value });
+
+        Assert.Equal(expected, options.StructuredOutputMode);
+    }
+
+    [Fact]
+    public void StructuredOutputModeOption_DefaultsToDisabled()
+    {
+        var options = BindOptions();
+
+        Assert.Null(options.StructuredOutputMode);
     }
 
     [Theory]
@@ -210,20 +231,24 @@ public class ServerStartCommandTests
             "--namespace", "storage",
             "--namespace", "keyvault",
             "--mode", "all",
+            "--structured-output-mode", "compact",
             "--read-only",
             "--debug",
             "--dangerously-disable-elicitation",
-            "--disable-caching");
+            "--disable-caching",
+            "--disable-proxy-tools");
 
         // Assert
         Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
+        Assert.Equal(StructuredOutputMode.Compact, options.StructuredOutputMode);
         Assert.True(options.ReadOnly);
         Assert.True(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.True(options.DangerouslyDisableElicitation);
         Assert.True(options.DisableCaching);
+        Assert.True(options.DisableProxyTools);
     }
 
     [Fact]

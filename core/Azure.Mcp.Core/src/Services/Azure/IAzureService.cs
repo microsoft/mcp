@@ -5,7 +5,6 @@ using Azure.Core;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Models.Resource;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Core.Services.Azure;
@@ -136,12 +135,10 @@ public interface IAzureService
     /// Gets the list of all available Azure subscriptions.
     /// </summary>
     /// <param name="tenant">An optional tenant to scope the search.</param>
-    /// <param name="retryPolicy">Retry options for the search.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A list of subscription data representing the found subscriptions.</returns>
     Task<List<SubscriptionData>> GetSubscriptions(
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -149,13 +146,11 @@ public interface IAzureService
     /// </summary>
     /// <param name="subscription">The subscription ID or name to get data for.</param>
     /// <param name="tenant">An optional tenant to scope the search.</param>
-    /// <param name="retryPolicy">Retry options for the search.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>Subscription data representing the specific subscription.</returns>
     Task<SubscriptionResource> GetSubscription(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -173,7 +168,6 @@ public interface IAzureService
     /// </summary>
     /// <param name="subscriptionName">The subscription name to find the ID for.</param>
     /// <param name="tenant">An optional tenant to scope the search.</param>
-    /// <param name="retryPolicy">Retry options for the search.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The found subscription ID.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when a subscription with the specified name is not found.</exception>
@@ -181,7 +175,6 @@ public interface IAzureService
     Task<string> GetSubscriptionIdByName(
         string subscriptionName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -200,13 +193,11 @@ public interface IAzureService
     /// </summary>
     /// <param name="subscriptionId">The subscription ID to list resource groups.</param>
     /// <param name="tenant">An optional tenant to scope the search.</param>
-    /// <param name="retryPolicy">Retry options for the search.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A list of resource group information for the given subscription.</returns>
     Task<List<ResourceGroupInfo>> GetResourceGroups(
         string subscriptionId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -215,14 +206,12 @@ public interface IAzureService
     /// <param name="subscriptionId">The subscription ID to get the resource group.</param>
     /// <param name="resourceGroupName">The resource group name to get.</param>
     /// <param name="tenant">An optional tenant to scope the search.</param>
-    /// <param name="retryPolicy">Retry options for the search.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The resource group information for the specific resource group in the subscription.</returns>
     Task<ResourceGroupInfo?> GetResourceGroup(
         string subscriptionId,
         string resourceGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #endregion Resource Group
@@ -235,14 +224,12 @@ public interface IAzureService
     /// <param name="subscriptionId">The subscription ID to get the resource.</param>
     /// <param name="resourceGroupName">The resource group containing the resource.</param>
     /// <param name="tenant">An optional tenant to scope the search.</param>
-    /// <param name="retryPolicy">Retry options for the search.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>The resource information.</returns>
     Task<ResourceGroupResource?> GetResourceGroupResource(
         string subscriptionId,
         string resourceGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -251,14 +238,12 @@ public interface IAzureService
     /// <param name="subscriptionId">The subscription ID to get the resources.</param>
     /// <param name="resourceGroupName">The resource group containing the resources.</param>
     /// <param name="tenant">An optional tenant to scope the search.</param>
-    /// <param name="retryPolicy">Retry options for the search.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns></returns>
     IAsyncEnumerable<GenericResourceInfo> GetGenericResources(
         string subscriptionId,
         string resourceGroupName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     #endregion Generic Resource

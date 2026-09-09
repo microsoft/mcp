@@ -68,7 +68,6 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 allowedSubnets,
                 tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareUpdateCommandResult);

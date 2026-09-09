@@ -44,7 +44,6 @@ public sealed class ImportJobDeleteCommand(IManagedLustreService service, ILogge
                 options.FilesystemName,
                 options.JobName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(options.JobName), ManagedLustreJsonContext.Default.ImportJobDeleteResult);

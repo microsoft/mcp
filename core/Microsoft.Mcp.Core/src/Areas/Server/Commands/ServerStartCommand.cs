@@ -278,7 +278,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             }
             return;
 #else
-            commandResult.AddError($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy is only supported in the Docker image distribution of Azure MCP Server. " +
+            validationResult.Errors.Add($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy is only supported in the Docker image distribution of Azure MCP Server. " +
                 "Please use the Docker image or switch to a different outgoing authentication strategy.");
 #endif
         }

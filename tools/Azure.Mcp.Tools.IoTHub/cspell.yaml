@@ -7,3 +7,7 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - brien
+  - detag
+  - iothub
+  - notjson

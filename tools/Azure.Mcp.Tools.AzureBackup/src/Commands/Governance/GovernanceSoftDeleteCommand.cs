@@ -16,8 +16,10 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     Name = "soft-delete",
     Title = "Configure Soft Delete",
     Description = """
-        Configures the soft delete settings for a backup vault. Set the state to 'AlwaysOn', 'On',
-        or 'Off', and optionally specify the retention period in days (14-180).
+        Configures the soft delete settings for a backup vault. --soft-delete accepts 'Off', 'On',
+        or 'AlwaysOn' (AlwaysOn is IRREVERSIBLE). --soft-delete-retention-days is required
+        (14-180). Retention must be sent every time on api-version 2026-02-01+ or the RP
+        rejects the patch.
         """,
     Destructive = true,
     Idempotent = true,
@@ -35,20 +37,12 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!string.IsNullOrEmpty(options.SoftDelete) &&
-            !options.SoftDelete.Equals("AlwaysOn", StringComparison.OrdinalIgnoreCase) &&
-            !options.SoftDelete.Equals("On", StringComparison.OrdinalIgnoreCase) &&
-            !options.SoftDelete.Equals("Off", StringComparison.OrdinalIgnoreCase))
+        // Enum value is validated by the model binder. Retention is required by the
+        // options class; here we only enforce the numeric range. AlwaysOn is IRREVERSIBLE —
+        // surfaced in the command description; the caller may still choose it.
+        if (options.SoftDeleteRetentionDays < 14 || options.SoftDeleteRetentionDays > 180)
         {
-            validationResult.Errors.Add("--soft-delete must be 'AlwaysOn', 'On', or 'Off'.");
-        }
-
-        if (!string.IsNullOrEmpty(options.SoftDeleteRetentionDays) &&
-            (!int.TryParse(options.SoftDeleteRetentionDays, out var retentionDays)
-                || retentionDays < 14
-                || retentionDays > 180))
-        {
-            validationResult.Errors.Add("--soft-delete-retention-days must be an integer between 14 and 180.");
+            validationResult.Errors.Add("--soft-delete-retention-days must be between 14 and 180.");
         }
     }
 
@@ -60,14 +54,13 @@ public sealed class GovernanceSoftDeleteCommand(ILogger<GovernanceSoftDeleteComm
         try
         {
             var result = await _azureBackupService.ConfigureSoftDeleteAsync(
-                options.Vault,
-                options.ResourceGroup,
+                options.Vault!,
+                options.ResourceGroup!,
                 options.Subscription!,
                 options.SoftDelete,
-                options.VaultType,
                 options.SoftDeleteRetentionDays,
+                options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

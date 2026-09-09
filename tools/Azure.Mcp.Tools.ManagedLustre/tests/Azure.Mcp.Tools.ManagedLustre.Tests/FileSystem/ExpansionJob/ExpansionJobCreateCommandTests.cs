@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ExpansionJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,7 +37,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<float>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("expansion-20250107120000");
 
@@ -60,7 +58,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Is(64f),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -105,7 +102,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             default,
             default,
             default,
-            default,
             Arg.Any<CancellationToken>());
     }
 
@@ -141,7 +137,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<float>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
@@ -168,7 +163,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<float>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("boom"));
 
@@ -195,7 +189,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<float>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns("expansion-20250107120000");
 
@@ -215,7 +208,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Is(128f),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -231,7 +223,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Any<float>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(jobName);
 
@@ -252,7 +243,6 @@ public class ExpansionJobCreateCommandTests : SubscriptionCommandUnitTestsBase<E
             Arg.Is(64f),
             Arg.Is(jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }
