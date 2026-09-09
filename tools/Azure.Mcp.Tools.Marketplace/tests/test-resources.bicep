@@ -4,19 +4,18 @@ targetScope = 'resourceGroup'
 @minLength(3)
 @maxLength(24)
 @description('The base resource name.')
+#disable-next-line no-unused-params
 param baseName string
 
 @description('The client OID to grant access to test resources.')
+#disable-next-line no-unused-params
 param testApplicationOid string = deployer().objectId
-
-var location string = resourceGroup().location
-var tenantId string = subscription().tenantId
 
 // Add any additional resources and role assignments needed for live tests here.
 
 
 // Outputs will be available in test-resources-post.ps1
-output location string = location
+output location string = resourceGroup().location
 
 // Their keys will be uppercase
 // $DeploymentOutputs.LOCATION
