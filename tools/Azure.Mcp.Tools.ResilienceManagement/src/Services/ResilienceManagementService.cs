@@ -2204,7 +2204,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{UsagePlanResourceType}/{usagePlan}",
             usagePlan,
             UsagePlanResourceType,
-            "global",
+            usagePlanData.Location.Name,
             Properties: new(planType.ToString(), GetAcceptedUsagePlanProvisioningState(operation.GetRawResponse().Status)));
     }
 

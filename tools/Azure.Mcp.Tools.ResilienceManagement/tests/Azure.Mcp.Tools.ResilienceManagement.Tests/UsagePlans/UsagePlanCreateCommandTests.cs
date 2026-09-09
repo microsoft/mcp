@@ -95,7 +95,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             .Returns(new UsagePlanInfo(
                 "id1",
                 "up1",
-                "Microsoft.ResilienceManagement/usagePlans",
+                "Microsoft.AzureResilienceManagement/usagePlans",
                 "global",
                 Properties: new("Basic", "Creating")));
 
