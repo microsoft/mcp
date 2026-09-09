@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Name = "get-pipeline",
     Title = "Get Pipeline",
     Description = "Gets details of a specific pipeline in a Microsoft Fabric workspace. Requires workspace ID and pipeline ID.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,

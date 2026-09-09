@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
     Description = """
         Creates an expansion job to increase the storage capacity of an Azure Managed Lustre (AMLFS) file system. The expansion job resizes the filesystem to the specified new capacity in TiB. The new size must be a multiple of the SKU step size and greater than the current storage capacity.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

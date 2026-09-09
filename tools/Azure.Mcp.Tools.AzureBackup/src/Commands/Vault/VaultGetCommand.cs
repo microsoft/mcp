@@ -30,6 +30,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
         subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or
         --resource-group to narrow the listing results.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

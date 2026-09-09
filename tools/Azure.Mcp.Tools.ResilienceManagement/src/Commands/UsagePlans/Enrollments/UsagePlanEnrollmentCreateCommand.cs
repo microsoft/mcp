@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.UsagePlans.Enrollments;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -23,6 +24,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
         service group, and returns the enrollment information including id, name, the associated service group
         id, provisioning state, and error details.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -39,8 +41,8 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
     {
         base.ValidateOptions(options, validationResult);
 
-        ValidateUsagePlanResourceName(options.UsagePlan, "usage plan", validationResult);
-        ValidateUsagePlanResourceName(options.Enrollment, "enrollment", validationResult);
+        UsagePlanResourceNameValidator.Validate(options.UsagePlan, "usage plan", validationResult);
+        UsagePlanResourceNameValidator.Validate(options.Enrollment, "enrollment", validationResult);
 
         if (options.ServiceGroup.Length is < 1 or > 90 || !options.ServiceGroup.All(IsValidServiceGroupNameCharacter))
         {
@@ -74,14 +76,6 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
         }
 
         return context.Response;
-    }
-
-    private static void ValidateUsagePlanResourceName(string name, string resourceType, ValidationResult validationResult)
-    {
-        if (name.Length is < 3 or > 24 || !name.All(IsAsciiLetterNumberOrHyphen))
-        {
-            validationResult.Errors.Add($"The {resourceType} name must be 3 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
     }
 
     private static bool IsAsciiLetterNumberOrHyphen(char character) =>

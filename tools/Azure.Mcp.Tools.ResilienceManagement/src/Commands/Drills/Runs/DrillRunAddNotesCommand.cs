@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Name = "add-notes",
     Title = "Add Notes to a Resilience Drill Run",
     Description = "Adds notes to a run of a resilience drill in an Azure service group.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

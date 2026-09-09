@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
     Name = "enable-crr",
     Title = "Enable Cross-Region Restore",
     Description = "Enables Cross-Region Restore on a GRS-enabled vault.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

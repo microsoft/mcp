@@ -19,6 +19,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         data is preserved — only the shortcut reference is removed. Requires
         OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     LocalRequired = false,
