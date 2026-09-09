@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
+    private const string UsagePlanResourceType = "Microsoft.AzureResilienceManagement/usagePlans";
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
 
@@ -2184,10 +2185,21 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         };
 
         ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Started, usagePlan, usagePlanData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        return MapUsagePlan(operation.Value.Data);
+        return new UsagePlanInfo(
+            $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{UsagePlanResourceType}/{usagePlan}",
+            usagePlan,
+            UsagePlanResourceType,
+            "global",
+            Properties: new(planType.ToString(), GetAcceptedUsagePlanProvisioningState(operation.GetRawResponse().Status)));
     }
+
+    internal static string GetAcceptedUsagePlanProvisioningState(int responseStatus) => responseStatus switch
+    {
+        200 => "Updating",
+        201 => "Creating",
+        _ => "Accepted"
+    };
 
     public async Task<UsagePlanEnrollmentInfo> CreateUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string serviceGroup, string subscription, string? tenant = null, CancellationToken cancellationToken = default)
     {

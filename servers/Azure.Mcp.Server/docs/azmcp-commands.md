@@ -4015,7 +4015,7 @@ azmcp resilience usageplan get --subscription <subscription> \
                                [--resource-group <resource-group>] \
                                [--name <name>]
 
-# Create a resilience usage plan in a resource group
+# Create or update a resilience usage plan. Returns immediately with Creating, Updating, or Accepted provisioning state; use usageplan get to check completion
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan create --subscription <subscription> \
                                   --resource-group <resource-group> \

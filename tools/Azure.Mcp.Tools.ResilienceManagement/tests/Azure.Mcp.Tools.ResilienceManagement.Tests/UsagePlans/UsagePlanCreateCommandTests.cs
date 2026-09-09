@@ -92,7 +92,12 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new UsagePlanInfo("id1", "up1", "Microsoft.ResilienceManagement/usagePlans", "eastus"));
+            .Returns(new UsagePlanInfo(
+                "id1",
+                "up1",
+                "Microsoft.ResilienceManagement/usagePlans",
+                "global",
+                Properties: new("Basic", "Creating")));
 
         // Act
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -101,6 +106,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.UsagePlanCreateCommandResult);
         Assert.NotNull(result.UsagePlan);
         Assert.Equal("up1", result.UsagePlan.Name);
+        Assert.Equal("Creating", result.UsagePlan.Properties?.ProvisioningState);
     }
 
     [Fact]

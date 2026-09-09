@@ -18,6 +18,15 @@ public sealed class ResilienceManagementServiceTests
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
     [Theory]
+    [InlineData(200, "Updating")]
+    [InlineData(201, "Creating")]
+    [InlineData(202, "Accepted")]
+    public void GetAcceptedUsagePlanProvisioningState_MapsInitialResponse(int responseStatus, string expected)
+    {
+        Assert.Equal(expected, ResilienceManagementService.GetAcceptedUsagePlanProvisioningState(responseStatus));
+    }
+
+    [Theory]
     [InlineData("Recovery job retry")]
     [InlineData("Recovery job resume")]
     [InlineData("Recovery plan finalize")]

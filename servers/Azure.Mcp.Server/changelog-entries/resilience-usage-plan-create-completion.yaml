@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed resilience usage plan creation hanging by returning the accepted asynchronous provisioning state immediately."

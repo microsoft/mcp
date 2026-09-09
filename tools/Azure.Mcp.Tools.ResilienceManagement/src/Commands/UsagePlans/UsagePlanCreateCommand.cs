@@ -20,8 +20,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
     Title = "Create or Update Resilience Usage Plan",
     Description = """
         Creates or updates a resilience usage plan in the specified resource group with the given plan type,
-        and returns the usage plan information including id, name, resource type, location, tags, plan type,
-        and provisioning state. If the usage plan already exists, its properties are updated.
+        and returns immediately after Azure accepts the request. The response includes the usage plan id, name,
+        resource type, location, plan type, and provisioning state (Creating, Updating, or Accepted). Use the
+        usage plan get command to check whether asynchronous provisioning has completed.
+        If the usage plan already exists, its properties are updated.
         This tool can also be used to set up a new usage plan.
         """,
     Destructive = true,
