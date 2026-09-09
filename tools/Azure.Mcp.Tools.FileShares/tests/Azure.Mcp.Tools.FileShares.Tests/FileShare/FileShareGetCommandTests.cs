@@ -29,7 +29,7 @@ public class FileShareGetCommandTests : SubscriptionCommandUnitTestsBase<FileSha
     {
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var errorMessage = "The resource namespace 'Microsoft.FileShares' is invalid.";
-        var expectedError = $"Azure File Shares (the Microsoft.FileShares resource provider) is not available in this cloud. Details: {errorMessage}. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+        var expectedError = $"Azure File Shares (the Microsoft.FileShares resource provider) is not available in this cloud. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
         Service.ListFileSharesAsync(subscriptionId, null, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, errorMessage, "InvalidResourceNamespace", null));
