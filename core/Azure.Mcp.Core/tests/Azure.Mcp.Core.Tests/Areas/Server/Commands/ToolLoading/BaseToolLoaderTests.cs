@@ -3,9 +3,12 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -561,5 +564,91 @@ public class BaseToolLoaderTests
         Assert.NotNull(result);
         Assert.True(result.IsError);
         Assert.Contains("Elicitation failed", ((TextContentBlock)result.Content[0]).Text);
+    }
+
+    [Theory]
+    [InlineData(false, false, "stdio", false)] // Configuration isn't read-only, tool isn't read-only.
+    [InlineData(true, true, "stdio", false)] // Configuration is read-only, tool is read-only.
+    [InlineData(false, false, "stdio", true)] // Configuration is local mode, tool requires local access.
+    [InlineData(true, true, "http", false)] // Configuration is remote mode, tool doesn't require local access.
+    public void ShouldKeepBaseCommand_BaseCommandIsKeptAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
+    {
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { ReadOnly = toolReadonly, LocalRequired = toolLocalRequired });
+
+        var configuration = new ServerRuntimeConfiguration
+        {
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
+
+        Assert.True(BaseToolLoader.ShouldKeepBaseCommand(baseCommand, configuration));
+    }
+
+    [Theory]
+    [InlineData(true, false, "stdio", false)] // Configuration is read-only, tool isn't read-only.
+    [InlineData(true, true, "http", true)] // Configuration is remote mode, tool requires local access.
+    public void ShouldKeepBaseCommand_BaseCommandIsFilteredAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
+    {
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { ReadOnly = toolReadonly, LocalRequired = toolLocalRequired });
+
+        var configuration = new ServerRuntimeConfiguration
+        {
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
+
+        Assert.False(BaseToolLoader.ShouldKeepBaseCommand(baseCommand, configuration));
+    }
+
+    [Theory]
+    [InlineData(false, false, "stdio", false)] // Configuration isn't read-only, tool isn't read-only.
+    [InlineData(true, true, "stdio", false)] // Configuration is read-only, tool is read-only.
+    [InlineData(false, false, "stdio", true)] // Configuration is local mode, tool requires local access.
+    [InlineData(true, true, "http", false)] // Configuration is remote mode, tool doesn't require local access.
+    public void ShouldKeepTool_BaseCommandIsKeptAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
+    {
+        var tool = new Tool()
+        {
+            Name = "tool",
+            Annotations = new ToolAnnotations()
+            {
+                ReadOnlyHint = toolReadonly
+            },
+            Meta = new JsonObject([new(McpHelper.LocalRequiredHintMetaKey, toolLocalRequired)])
+        };
+
+        var configuration = new ServerRuntimeConfiguration
+        {
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
+
+        Assert.True(BaseToolLoader.ShouldKeepTool(tool, configuration));
+    }
+
+    [Theory]
+    [InlineData(true, false, "stdio", false)] // Configuration is read-only, tool isn't read-only.
+    [InlineData(true, true, "http", true)] // Configuration is remote mode, tool requires local access.
+    public void ShouldKeepTool_BaseCommandIsFilteredAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
+    {
+        var tool = new Tool()
+        {
+            Name = "tool",
+            Annotations = new ToolAnnotations()
+            {
+                ReadOnlyHint = toolReadonly
+            },
+            Meta = new JsonObject([new(McpHelper.LocalRequiredHintMetaKey, toolLocalRequired)])
+        };
+
+        var configuration = new ServerRuntimeConfiguration
+        {
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
+
+        Assert.False(BaseToolLoader.ShouldKeepTool(tool, configuration));
     }
 }

@@ -357,7 +357,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// <summary>
     /// Creates a tool definition from a command (same logic as CommandFactoryToolLoader).
     /// </summary>
-    protected static Tool CreateToolFromCommand(string fullName, IBaseCommand command)
+    public static Tool CreateToolFromCommand(string fullName, IBaseCommand command)
     {
         var underlyingCommand = command.GetCommand();
         var tool = new Tool
@@ -411,7 +411,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// <param name="command">The command to check.</param>
     /// <param name="configuration">The server runtime configuration.</param>
     /// <returns>True if the command should be kept, false if it should be filtered.</returns>
-    protected static bool ShouldKeepBaseCommand(IBaseCommand command, ServerRuntimeConfiguration configuration)
+    public static bool ShouldKeepBaseCommand(IBaseCommand command, ServerRuntimeConfiguration configuration)
     {
         // Keep the command if and only if:
         // - The server isn't running in read-only mode or the command is read-only.
@@ -420,7 +420,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
             (!configuration.IsHttpMode || !command.Metadata.LocalRequired);
     }
 
-    protected static bool ShouldKeepTool(Tool tool, ServerRuntimeConfiguration configuration)
+    public static bool ShouldKeepTool(Tool tool, ServerRuntimeConfiguration configuration)
     {
         // Keep the tool if and only if:
         // - The server isn't running in read-only mode or the tool is read-only.
