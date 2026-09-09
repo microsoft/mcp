@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -993,13 +993,15 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, CancellationToken cancellationToken)
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(immutabilityState), immutabilityState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -1009,10 +1011,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         {
             Properties = new DataProtectionBackupVaultPatchProperties
             {
-                SecuritySettings = new BackupVaultSecuritySettings
-                {
-                    ImmutabilityState = new BackupVaultImmutabilityState(immutabilityState)
-                }
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
             }
         };
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
@@ -1021,45 +1020,90 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
     }
 
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for an immutability update.
+    /// Extracted for regression testing. DPP has no ImmutabilityConfiguration
+    /// (Type / DurationInDays); those parameters are RSV-only and are intentionally
+    /// ignored here. Only the top-level <c>ImmutabilityState</c> is populated because
+    /// the DPP api-version does not expose a nested <c>ImmutabilitySettings.State</c>
+    /// on the security-settings surface.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        _ = immutabilityType;
+        _ = immutabilityDurationDays;
+
+        var dppState = immutabilityState switch
+        {
+            AzureBackupImmutabilityState.Disabled => BackupVaultImmutabilityState.Disabled,
+            AzureBackupImmutabilityState.Unlocked => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Enabled => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Locked => BackupVaultImmutabilityState.Locked,
+            _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            ImmutabilityState = dppState,
+        };
+    }
+
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? softDeleteRetentionDays,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(softDeleteState), softDeleteState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
 
-        var softDeleteSettings = new BackupVaultSoftDeleteSettings
-        {
-            State = new BackupVaultSoftDeleteState(softDeleteState)
-        };
-
-        if (double.TryParse(softDeleteRetentionDays, out var retentionDays))
-        {
-            softDeleteSettings.RetentionDurationInDays = retentionDays;
-        }
-
         var patchData = new DataProtectionBackupVaultPatch
         {
             Properties = new DataProtectionBackupVaultPatchProperties
             {
-                SecuritySettings = new BackupVaultSecuritySettings
-                {
-                    SoftDeleteSettings = softDeleteSettings
-                }
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
             }
         };
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing. Retention is always sent — RP rejects
+    /// state-only patches on newer api-versions.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var dppState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => BackupVaultSoftDeleteState.On,
+            AzureBackupSoftDeleteState.Off => BackupVaultSoftDeleteState.Off,
+            AzureBackupSoftDeleteState.AlwaysOn => BackupVaultSoftDeleteState.AlwaysOn,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            SoftDeleteSettings = new BackupVaultSoftDeleteSettings
+            {
+                State = dppState,
+                RetentionDurationInDays = softDeleteRetentionDays,
+            },
+        };
     }
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
@@ -1203,6 +1247,16 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var securitySettings = properties?.SecuritySettings;
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
 
         string? crossRegionRestoreState = null;
         string? encryptionState = null;
@@ -1235,21 +1289,130 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             MuaResourceGuardId: muaResourceGuardId,
             CrossRegionRestoreState: crossRegionRestoreState,
             EncryptionState: encryptionState,
-            EncryptionKeyUri: encryptionKeyUri);
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(DataProtectionBackupInstanceData data)
     {
+        var properties = data.Properties;
+        var dataSourceInfo = properties?.DataSourceInfo;
+        var dataSourceSetInfo = properties?.DataSourceSetInfo;
+        var policyInfo = properties?.PolicyInfo;
+        var protectionStatus = properties?.ProtectionStatus;
+        var resourceProtectionError = properties?.ResourceProtectionErrorDetails;
+        var identityDetails = properties?.IdentityDetails;
+
         return new ProtectedItemInfo(
             data.Id?.ToString(),
             data.Name,
             VaultType,
-            data.Properties?.ProtectionStatus?.Status?.ToString(),
-            data.Properties?.DataSourceInfo?.DataSourceType,
-            data.Properties?.DataSourceInfo?.ResourceId?.ToString(),
-            data.Properties?.PolicyInfo?.PolicyId?.Name,
+            protectionStatus?.Status?.ToString(),
+            dataSourceInfo?.DataSourceType,
+            dataSourceInfo?.ResourceId?.ToString(),
+            policyInfo?.PolicyId?.Name,
+            null,
+            null,
+            null,
+            new ProtectedItemDppDetails(
+                FriendlyName: properties?.FriendlyName,
+                CurrentProtectionState: properties?.CurrentProtectionState?.ToString(),
+                ProvisioningState: properties?.ProvisioningState?.ToString(),
+                ValidationType: properties?.ValidationType?.ToString(),
+                ObjectType: properties?.ObjectType,
+                ResourceGuardOperationRequests: properties?.ResourceGuardOperationRequests?.ToList(),
+                DataSourceInfo: dataSourceInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        ResourceId: dataSourceInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceInfo.ResourceName,
+                        DataSourceType: dataSourceInfo.DataSourceType,
+                        ResourceType: dataSourceInfo.ResourceType,
+                        ResourceLocation: dataSourceInfo.ResourceLocation,
+                        ObjectType: dataSourceInfo.ObjectType,
+                        ResourceUriString: dataSourceInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceInfo.ResourceProperties)),
+                DataSourceSetInfo: dataSourceSetInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        ResourceId: dataSourceSetInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceSetInfo.ResourceName,
+                        DataSourceType: dataSourceSetInfo.DataSourceType,
+                        ResourceType: dataSourceSetInfo.ResourceType,
+                        ResourceLocation: dataSourceSetInfo.ResourceLocation,
+                        ObjectType: dataSourceSetInfo.ObjectType,
+                        ResourceUriString: dataSourceSetInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceSetInfo.ResourceProperties)),
+                PolicyInfo: policyInfo is null
+                    ? null
+                    : new ProtectedItemDppPolicyInfo(
+                        PolicyId: policyInfo.PolicyId?.ToString(),
+                        PolicyVersion: policyInfo.PolicyVersion,
+                        PolicyParameters: ConvertToString(policyInfo.PolicyParameters)),
+                ProtectionStatus: protectionStatus is null
+                    ? null
+                    : new ProtectedItemDppProtectionStatus(
+                        Status: protectionStatus.Status?.ToString(),
+                        ErrorDetails: null,
+                        protectionStatus.ProtectionStatusErrorDetails is null
+                            ? null
+                            : [MapToDppError(protectionStatus.ProtectionStatusErrorDetails)]),
+                ResourceProtectionError: resourceProtectionError is null
+                    ? null
+                    : MapToDppError(resourceProtectionError),
+                DataSourceAuthCredentialsType: properties?.DataSourceAuthCredentials?.GetType().Name,
+                IdentityDetails: identityDetails is null
+                    ? null
+                    : new ProtectedItemDppIdentityDetails(
+                        UserAssignedIdentityArmUri: null,
+                        UseSystemAssignedIdentity: identityDetails.UseSystemAssignedIdentity,
+                        UserAssignedIdentityId: identityDetails.UserAssignedIdentityId)));
+    }
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupUserFacingError error) =>
+        new(
+            error.Code,
+            error.Message,
+            error.RecommendedAction?.ToList(),
+            error.Target,
+            error.IsRetryable,
+            error.IsUserError,
+            error.Details?.Select(MapToDppError).ToList(),
+            error.InnerError is null ? null : MapToDppError(error.InnerError),
+            error.Properties?.ToDictionary(p => p.Key, p => p.Value));
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupInnerError error) =>
+        new(
+            error.Code,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            error.EmbeddedInnerError is null ? null : MapToDppError(error.EmbeddedInnerError),
+            error.AdditionalInfo?.ToDictionary(p => p.Key, p => p.Value));
+
+    private static ProtectedItemDppError MapToDppError(Azure.ResponseError error) =>
+        new(
+            error.Code,
+            error.Message,
+            null,
+            null,
+            null,
+            null,
+            null,
             null,
             null);
+
+    private static string? ConvertToString(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        return value.ToString();
     }
 
     private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)

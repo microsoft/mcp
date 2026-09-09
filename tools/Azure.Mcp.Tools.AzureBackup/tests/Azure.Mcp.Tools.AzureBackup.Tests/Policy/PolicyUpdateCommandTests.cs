@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
+using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,9 +33,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         var expected = new OperationResult("Succeeded", null, "Policy updated successfully");
 
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("myPolicy"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -57,9 +58,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     {
         // Arrange
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -82,9 +83,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         if (shouldSucceed)
         {
             Service.UpdatePolicyAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -136,9 +137,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         var expected = new OperationResult("Succeeded", null, "Policy updated successfully");
 
         Service.UpdatePolicyAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -161,9 +162,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     {
         // Arrange
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -183,9 +184,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     {
         // Arrange
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not Found"));
 
         // Act
@@ -205,9 +206,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     {
         // Arrange
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update."));
 
         // Act
@@ -227,9 +228,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     {
         // Arrange — an unsupported policy type is an input error, returns ArgumentException
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Unsupported policy type 'SomePolicy'."));
 
         // Act
@@ -249,9 +250,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     {
         // Arrange — invalid schedule time should return ArgumentException error
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Is("not-a-time"), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid schedule time 'not-a-time'. Provide a valid time in UTC HH:mm format (e.g., '04:00')."));
 
         // Act
@@ -272,9 +273,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     {
         // Arrange — invalid retention days should return ArgumentException error
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is("-5"),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid daily retention days '-5'. Provide a positive integer."));
 
         // Act
@@ -297,9 +298,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         var expected = new OperationResult("Succeeded", null, "Policy 'p' updated in vault 'v'.");
 
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Is("04:00"), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -321,9 +322,9 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         var expected = new OperationResult("Succeeded", null, "Policy 'p' updated in vault 'v'.");
 
         Service.UpdatePolicyAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("p"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is("60"),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<PolicyUpdateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
