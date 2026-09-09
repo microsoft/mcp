@@ -26,28 +26,17 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger, ICliIns
 {
     private readonly ILogger<CliInstallCommand> _logger = logger;
     private readonly ICliInstallService _cliInstallService = cliInstallService;
-    private static readonly string[] s_allowedCliTypeValues = ["az", "azd", "func"];
-
-    public override void ValidateOptions(CliInstallOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (!s_allowedCliTypeValues.Contains(options.CliType.ToLowerInvariant()))
-        {
-            validationResult.Errors.Add($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", s_allowedCliTypeValues)}");
-        }
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CliInstallOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var cliType = options.CliType.ToLowerInvariant();
+            var cliType = options.CliType.ToValue();
 
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
 
-            using HttpResponseMessage responseMessage = await _cliInstallService.GetCliInstallInstructions(cliType, cancellationToken);
+            using HttpResponseMessage responseMessage = await _cliInstallService.GetCliInstallInstructions(options.CliType, cancellationToken);
             responseMessage.EnsureSuccessStatusCode();
 
             var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);

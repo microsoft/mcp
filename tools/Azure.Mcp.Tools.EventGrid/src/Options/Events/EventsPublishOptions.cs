@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventGrid.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Options.Events;
@@ -15,7 +16,7 @@ public sealed class EventsPublishOptions : ISubscriptionOption
     public required string Data { get; set; }
 
     [Option(Description = "The event schema type (CloudEvents, EventGrid, or Custom). Defaults to EventGrid.")]
-    public string? Schema { get; set; }
+    public EventSchema? Schema { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }

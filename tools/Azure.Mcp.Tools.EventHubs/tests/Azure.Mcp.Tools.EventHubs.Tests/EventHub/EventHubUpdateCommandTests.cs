@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.EventHub;
+using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.Mcp.Tools.EventHubs.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -18,6 +19,7 @@ public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<Event
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --partition-count 4", true)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --message-retention-in-hours 168", true)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --status Active", true)]
+    [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --status invalid", false)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace", false)]
     [InlineData("--subscription test-subscription --eventhub test-hub", false)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
@@ -44,7 +46,7 @@ public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<Event
                 Arg.Any<string>(),
                 Arg.Any<int?>(),
                 Arg.Any<long?>(),
-                Arg.Any<string?>(),
+                Arg.Any<EventHubStatus?>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(eventHub);
@@ -77,7 +79,7 @@ public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Any<string>(),
             Arg.Any<int?>(),
             Arg.Any<long?>(),
-            Arg.Any<string?>(),
+            Arg.Any<EventHubStatus?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
@@ -105,7 +107,7 @@ public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Any<string>(),
             Arg.Any<int?>(),
             Arg.Any<long?>(),
-            Arg.Any<string?>(),
+            Arg.Any<EventHubStatus?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
@@ -145,7 +147,7 @@ public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Is("test-subscription"),
             Arg.Is(8),
             Arg.Is(336L),
-            Arg.Any<string?>(),
+            Arg.Any<EventHubStatus?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(eventHub);
@@ -187,7 +189,7 @@ public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<Event
             Arg.Is("test-subscription"),
             Arg.Any<int?>(),
             Arg.Any<long?>(),
-            Arg.Is("Disabled"),
+            Arg.Is(EventHubStatus.Disabled),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(eventHub);
@@ -206,7 +208,7 @@ public class EventHubUpdateCommandTests : SubscriptionCommandUnitTestsBase<Event
         await Service.Received(1).CreateOrUpdateEventHubAsync(
             "test-hub", "test-namespace", "test-rg", Arg.Any<string>(),
             Arg.Any<int?>(), Arg.Any<long?>(),
-            "Disabled",
+            EventHubStatus.Disabled,
             Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

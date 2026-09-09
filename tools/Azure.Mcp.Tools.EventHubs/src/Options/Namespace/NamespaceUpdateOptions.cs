@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventHubs.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Options.Namespace;
@@ -18,7 +19,7 @@ public sealed class NamespaceUpdateOptions : ISubscriptionOption
     public string? SkuName { get; set; }
 
     [Option(Description = "The SKU tier for the namespace. Valid values: 'Basic', 'Standard', 'Premium'.")]
-    public string? SkuTier { get; set; }
+    public NamespaceSkuTier? SkuTier { get; set; }
 
     [Option(Description = "The SKU capacity (throughput units) for the namespace. Valid range depends on the SKU.")]
     public int? SkuCapacity { get; set; }

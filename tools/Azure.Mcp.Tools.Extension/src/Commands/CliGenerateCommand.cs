@@ -26,37 +26,27 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
 {
     private readonly ILogger<CliGenerateCommand> _logger = logger;
     private readonly ICliGenerateService _cliGenerateService = cliGenerateService;
-    private static readonly string[] s_allowedCliTypeValues = ["az"];
-
-    public override void ValidateOptions(CliGenerateOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (!s_allowedCliTypeValues.Contains(options.CliType.ToLowerInvariant()))
-        {
-            validationResult.Errors.Add($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", s_allowedCliTypeValues)}");
-        }
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CliGenerateOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var cliType = options.CliType?.ToLowerInvariant();
+            var cliType = options.CliType switch
+            {
+                CliGenerateType.Az => Constants.AzureCliType,
+                _ => throw new ArgumentOutOfRangeException(nameof(options.CliType), options.CliType, null)
+            };
 
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
 
-            if (cliType == Constants.AzureCliType)
-            {
-                using HttpResponseMessage responseMessage = await _cliGenerateService.GenerateAzureCLICommandAsync(
-                    options.Intent,
-                    cancellationToken);
-                responseMessage.EnsureSuccessStatusCode();
+            using HttpResponseMessage responseMessage = await _cliGenerateService.GenerateAzureCLICommandAsync(
+                options.Intent,
+                cancellationToken);
+            responseMessage.EnsureSuccessStatusCode();
 
-                var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-                context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliGenerateResult);
-            }
+            var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
+            context.Response.Results = ResponseResult.Create(new(responseBody, cliType), ExtensionJsonContext.Default.CliGenerateResult);
         }
         catch (Exception ex)
         {

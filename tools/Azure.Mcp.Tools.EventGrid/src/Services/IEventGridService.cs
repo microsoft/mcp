@@ -26,7 +26,7 @@ public interface IEventGridService
         string? resourceGroup,
         string topicName,
         string eventData,
-        string? eventSchema = null,
+        EventSchema? eventSchema = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 }

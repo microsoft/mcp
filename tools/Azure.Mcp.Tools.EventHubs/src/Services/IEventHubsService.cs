@@ -26,7 +26,7 @@ public interface IEventHubsService
         string subscription,
         string? location = null,
         string? skuName = null,
-        string? skuTier = null,
+        NamespaceSkuTier? skuTier = null,
         int? skuCapacity = null,
         bool? isAutoInflateEnabled = null,
         int? maximumThroughputUnits = null,
@@ -65,7 +65,7 @@ public interface IEventHubsService
         string subscription,
         int? partitionCount = null,
         long? messageRetentionInHours = null,
-        string? status = null,
+        EventHubStatus? status = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 

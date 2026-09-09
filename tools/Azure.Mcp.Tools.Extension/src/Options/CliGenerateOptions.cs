@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Extension.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Extension.Options;
@@ -11,5 +12,5 @@ public sealed class CliGenerateOptions
     public required string Intent { get; set; }
 
     [Option(Description = "The type of CLI tool to use. Supported values are 'az' for Azure CLI.")]
-    public required string CliType { get; set; }
+    public required CliGenerateType CliType { get; set; }
 }

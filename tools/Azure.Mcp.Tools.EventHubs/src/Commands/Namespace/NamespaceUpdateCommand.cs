@@ -51,7 +51,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         // Validate that at least one update property is provided (for update scenario)
         if (string.IsNullOrEmpty(options.Location) &&
             string.IsNullOrEmpty(options.SkuName) &&
-            string.IsNullOrEmpty(options.SkuTier) &&
+            !options.SkuTier.HasValue &&
             !options.SkuCapacity.HasValue &&
             !options.IsAutoInflateEnabled.HasValue &&
             !options.MaximumThroughputUnits.HasValue &&

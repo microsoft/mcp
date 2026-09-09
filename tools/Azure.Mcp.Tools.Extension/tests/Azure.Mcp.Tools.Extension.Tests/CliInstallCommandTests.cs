@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Tools.Extension.Commands;
+using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Tests.Client;
@@ -34,7 +35,7 @@ public sealed class CliInstallCommandTests : CommandUnitTestsBase<CliInstallComm
         // Arrange
         if (shouldSucceed)
         {
-            Service.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Service.GetCliInstallInstructions(Arg.Any<CliInstallType>(), Arg.Any<CancellationToken>())
                 .Returns(new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent("Instructions")
@@ -57,7 +58,7 @@ public sealed class CliInstallCommandTests : CommandUnitTestsBase<CliInstallComm
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        Service.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.GetCliInstallInstructions(Arg.Any<CliInstallType>(), Arg.Any<CancellationToken>())
             .Returns(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("Instructions")
@@ -77,7 +78,7 @@ public sealed class CliInstallCommandTests : CommandUnitTestsBase<CliInstallComm
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
+        Service.GetCliInstallInstructions(Arg.Any<CliInstallType>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
 
         // Act
         var response = await ExecuteCommandAsync("--cli-type", "az");
