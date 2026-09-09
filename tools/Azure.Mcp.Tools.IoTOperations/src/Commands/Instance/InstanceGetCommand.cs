@@ -32,9 +32,6 @@ namespace Azure.Mcp.Tools.IoTOperations.Commands.Instance;
 public sealed class InstanceGetCommand(ILogger<InstanceGetCommand> logger, IIoTOperationsService iotOperationsService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<InstanceGetOptions, InstanceGetCommand.InstanceGetCommandResult>(subscriptionResolver)
 {
-    private const int InstanceNameMinLength = 3;
-    private const int InstanceNameMaxLength = 63;
-
     private readonly ILogger<InstanceGetCommand> _logger = logger;
     private readonly IIoTOperationsService _iotOperationsService = iotOperationsService;
 
@@ -50,11 +47,6 @@ public sealed class InstanceGetCommand(ILogger<InstanceGetCommand> logger, IIoTO
         if (string.IsNullOrWhiteSpace(options.Instance))
         {
             validationResult.Errors.Add("--instance is required.");
-        }
-        else if (!IsValidInstanceName(options.Instance))
-        {
-            validationResult.Errors.Add(
-                "--instance must be 3-63 characters, lowercase letters, digits, or hyphens, and must start and end with a letter or digit (IoT Operations instance naming rule).");
         }
     }
 
@@ -109,34 +101,6 @@ public sealed class InstanceGetCommand(ILogger<InstanceGetCommand> logger, IIoTO
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
-
-    private static bool IsValidInstanceName(string value)
-    {
-        if (value.Length is < InstanceNameMinLength or > InstanceNameMaxLength)
-        {
-            return false;
-        }
-
-        for (var i = 0; i < value.Length; i++)
-        {
-            var ch = value[i];
-            var isLowerAlphaNumeric = (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
-            var isHyphen = ch == '-';
-
-            if (!isLowerAlphaNumeric && !isHyphen)
-            {
-                return false;
-            }
-
-            // Must start and end with a lowercase letter or digit.
-            if ((i == 0 || i == value.Length - 1) && !isLowerAlphaNumeric)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     public sealed record InstanceGetCommandResult(IoTOperationsInstanceInfo Instance);
 }
