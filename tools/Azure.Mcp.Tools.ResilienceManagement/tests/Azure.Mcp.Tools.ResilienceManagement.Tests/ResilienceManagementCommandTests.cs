@@ -73,13 +73,12 @@ public class ResilienceManagementCommandTests(
             GroupForReplace = "1",
             Value = "Sanitized"
         }),
-        // The Drills backend requires a fresh operationId query parameter per invocation, so recorded requests
-        // never match on replay unless the value is normalized for matching purposes.
+        // The Drills backend requires a fresh operationId query parameter per invocation. Remove it from the
+        // sanitized URI so recordings made before the parameter was added still match current requests.
         new UriRegexSanitizer(new UriRegexSanitizerBody
         {
-            Regex = "operationId=(?<opId>[0-9a-fA-F-]{36})",
-            GroupForReplace = "opId",
-            Value = "sanitized"
+            Regex = "&operationId=[^&]+",
+            Value = string.Empty
         })
     ];
 
