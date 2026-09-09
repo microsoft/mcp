@@ -100,7 +100,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Give me the CLI and PowerShell scripts to remediate recommendation type id <recommendation-type-id> | none |
 | advisor_remediation_get | Get the ARM and Bicep artifacts to fix Advisor recommendation type id <recommendation-type-id> | none |
 | advisor_remediation_get | Get the terraform to fix Advisor recommendation type id <recommendation-type-id> | none |
-| advisor_remediation_get | Resolve or remdiate Advisor recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | Resolve or remediate Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | What are the steps to remediate recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Give me a ready-to-run script to remediate recommendation type id <recommendation-type-id> | none |
 | advisor_remediation_get | Get the executable automation artifacts to remediate recommendation type id <recommendation-type-id> | none |
