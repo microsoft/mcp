@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
         connectivityStatusCode returned by the service (401/403 points at auth or entitlements, 404 usually means a
         bad endpoint, and other 4xx often means an unknown data partition).
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

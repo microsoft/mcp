@@ -25,6 +25,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         a 'sourcePath' field formatted as '<workspaceId>/<itemId>' — this is NOT a
         OneLake file path; it identifies the workspace/item granting inherited access.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

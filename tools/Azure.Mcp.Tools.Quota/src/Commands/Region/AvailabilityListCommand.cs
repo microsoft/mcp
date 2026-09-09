@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Quota.Commands.Region;
     Name = "list",
     Title = "Get available regions for Azure resource types",
     Description = "Given a list of Azure resource types, this tool will return a list of regions where the resource types are available. Always get the user's subscription ID before calling this tool.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

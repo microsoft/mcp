@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
         'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use 'azmcp adme schema list' to
         discover which kinds and versions exist before calling this tool.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

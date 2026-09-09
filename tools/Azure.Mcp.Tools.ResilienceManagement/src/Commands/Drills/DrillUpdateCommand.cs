@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
         resources by changing their subscription and region together. This tool modifies the drill; it does
         not get drill details or get a recoveryplan. Only supplied properties are changed.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

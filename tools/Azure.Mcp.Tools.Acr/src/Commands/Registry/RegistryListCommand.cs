@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Acr.Commands.Registry;
         includes: name, location, loginServer, skuName, skuTier. If no registries are found the tool returns null results
         (consistent with other list commands).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

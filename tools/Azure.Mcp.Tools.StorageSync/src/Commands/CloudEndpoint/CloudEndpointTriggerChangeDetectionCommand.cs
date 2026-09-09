@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
     Name = "changedetection",
     Title = "Trigger Change Detection",
     Description = "Trigger change detection on a cloud endpoint to sync file changes.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

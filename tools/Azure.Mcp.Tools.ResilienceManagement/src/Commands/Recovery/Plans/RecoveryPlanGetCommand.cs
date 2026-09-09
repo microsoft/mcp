@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         full details of that plan (including its properties and provisioning state). Omit the name to list all
         recovery plans in the service group, returning only their id and name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

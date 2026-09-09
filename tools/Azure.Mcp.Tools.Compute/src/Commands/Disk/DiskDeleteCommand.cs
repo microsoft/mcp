@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Name = "delete",
     Title = "Delete Managed Disk",
     Description = "Deletes an Azure managed disk from the specified resource group. This is an idempotent operation that returns Deleted = true if the disk was successfully removed, or Deleted = false if the disk was not found. The disk must not be attached to a virtual machine; detach it first before deleting.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

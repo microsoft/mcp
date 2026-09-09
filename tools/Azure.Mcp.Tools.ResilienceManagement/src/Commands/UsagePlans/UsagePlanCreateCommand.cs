@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
         and provisioning state. If the usage plan already exists, its properties are updated.
         This tool can also be used to set up a new usage plan.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

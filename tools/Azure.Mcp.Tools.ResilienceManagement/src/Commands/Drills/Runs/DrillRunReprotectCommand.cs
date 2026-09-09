@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Name = "reprotect",
     Title = "Reprotect a Resilience Drill Run",
     Description = "Initiates reprotection for failed-over resources in a resilience drill run.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

@@ -47,6 +47,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Name = "start",
     Title = "Start MCP Server",
     Description = "Starts Azure MCP Server.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     ReadOnly = true)]
 public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
     Name = "retry",
     Title = "Retry Resilience Recovery Job",
     Description = "Retries or reruns a failed resilience recovery job for a recoveryplan in an Azure service group. Use when asked to retry a failed recovery job. This destructive operation returns after the retry is accepted with an operation ID. Use recoveryjob get to monitor the existing job. The recovery job must currently be Failed.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

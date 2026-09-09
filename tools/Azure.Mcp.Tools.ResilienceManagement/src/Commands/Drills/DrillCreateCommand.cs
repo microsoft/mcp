@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
         Supports zonal and regional drills, system-assigned managed identity, RBAC setup, and an optional recovery
         plan in the same service group. Returns the created drill definition and provisioning state.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
