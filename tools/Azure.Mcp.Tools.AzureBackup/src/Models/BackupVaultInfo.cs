@@ -24,4 +24,5 @@ public sealed record BackupVaultInfo(
     string? MuaResourceGuardId = null,
     string? CrossRegionRestoreState = null,
     string? EncryptionState = null,
-    string? EncryptionKeyUri = null);
+    string? EncryptionKeyUri = null,
+    BackupVaultIdentityDetails? IdentityDetails = null);
