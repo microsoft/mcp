@@ -6,6 +6,7 @@ using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Adme.Commands;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -14,6 +15,39 @@ namespace Azure.Mcp.Tools.Adme.Tests;
 
 public sealed class AdmeServiceHelperTests
 {
+    [Theory]
+    [InlineData("opendes:master-data--Well:W-99")]
+    [InlineData("opendes:work-product-component--SeismicBinGrid:grid-1")]
+    public void ValidateRecordId_WithValidId_DoesNotAddError(string id)
+    {
+        var validationResult = new ValidationResult();
+
+        AdmeServiceHelper.ValidateRecordId(id, "--id", validationResult);
+
+        Assert.Empty(validationResult.Errors);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(":master-data--Well:W-99")]
+    [InlineData("opendes::W-99")]
+    [InlineData("opendes:master-data-Well:W-99")]
+    [InlineData("opendes:master-data--:W-99")]
+    [InlineData("opendes:master-data--Well:")]
+    [InlineData("opendes:master data--Well:W-99")]
+    [InlineData("opendes:master-data--Well:W-99:")]
+    public void ValidateRecordId_WithInvalidId_AddsError(string? id)
+    {
+        var validationResult = new ValidationResult();
+
+        AdmeServiceHelper.ValidateRecordId(id, "--id", validationResult);
+
+        var error = Assert.Single(validationResult.Errors);
+        Assert.StartsWith("--id", error);
+    }
+
     [Theory]
     [InlineData(TestConstants.Endpoint)]
     [InlineData("https://sample.oep.ppe.azure-int.net")]

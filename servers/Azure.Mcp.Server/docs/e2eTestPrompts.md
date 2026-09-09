@@ -17,6 +17,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | adme_schema_get | Get ADME schema <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_schema_list | List shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition> | none |
 
+## Azure Data Manager for Energy
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| adme_health_check | Check authentication and connectivity for ADME endpoint <endpoint> and data partition <data-partition> | none |
+| adme_schema_get | Get ADME schema <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_get | Get ADME record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List ADME records of kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_version_list | List versions of ADME record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+
 ## Azure Advisor
 
 | Tool Name | Test Prompt | Interaction |
