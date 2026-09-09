@@ -19,6 +19,8 @@ public class StorageServiceDiskDiagnoseTests
     private const string ScopeEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE";
     private const string TenantEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID";
     private const string ResourceId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm";
+    private const string DefaultStorageIntelligenceEndpoint = "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze";
+    private const string DefaultStorageIntelligenceScope = "a5965d26-227b-4df0-a516-d86aba489cb6/.default";
     private const string StorageIntelligenceEndpoint = "https://storage-intelligence.example.com/api/Disk/analyze";
     private const string StorageIntelligenceScope = "00000000-0000-0000-0000-000000000002/.default";
     private const string StorageIntelligenceTenantId = "00000000-0000-0000-0000-000000000003";
@@ -155,18 +157,25 @@ public class StorageServiceDiskDiagnoseTests
     }
 
     [Fact]
-    public async Task DiagnoseDiskAsync_MissingEndpointConfigurationThrows()
+    public async Task DiagnoseDiskAsync_WithoutEndpointOrScopeOverridesUsesProductionDefaults()
     {
-        var handler = new RecordingHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var (service, _, _, _) = CreateService(handler);
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"status":"Healthy"}""")
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, credential) = CreateService(handler);
         Environment.SetEnvironmentVariable(EndpointEnvironmentVariable, null);
+        Environment.SetEnvironmentVariable(ScopeEnvironmentVariable, null);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.DiagnoseDiskAsync(
+        await service.DiagnoseDiskAsync(
             ResourceId,
-            cancellationToken: TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Contains(EndpointEnvironmentVariable, exception.Message);
-        Assert.Null(handler.Request);
+        Assert.Equal(DefaultStorageIntelligenceEndpoint, handler.Request?.RequestUri?.AbsoluteUri);
+        await credential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context => context.Scopes.SequenceEqual(new[] { DefaultStorageIntelligenceScope })),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
