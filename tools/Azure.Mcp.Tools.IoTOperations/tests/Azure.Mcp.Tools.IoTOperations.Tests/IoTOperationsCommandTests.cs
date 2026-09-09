@@ -21,8 +21,7 @@ public class IoTOperationsCommandTests(ITestOutputHelper output, TestProxyFixtur
             "iotoperations_instance_list",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
+                { "subscription", Settings.SubscriptionId }
             });
 
         var instances = result.AssertProperty("instances");
@@ -38,8 +37,7 @@ public class IoTOperationsCommandTests(ITestOutputHelper output, TestProxyFixtur
             "iotoperations_instance_list",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
+                { "subscription", Settings.SubscriptionId }
             });
 
         var instances = result.AssertProperty("instances");
@@ -72,8 +70,7 @@ public class IoTOperationsCommandTests(ITestOutputHelper output, TestProxyFixtur
             "iotoperations_instance_list",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
+                { "subscription", Settings.SubscriptionId }
             });
 
         var instances = listResult.AssertProperty("instances");
@@ -86,7 +83,6 @@ public class IoTOperationsCommandTests(ITestOutputHelper output, TestProxyFixtur
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId },
                 { "resource-group", resourceGroup! },
                 { "instance", name! }
             });

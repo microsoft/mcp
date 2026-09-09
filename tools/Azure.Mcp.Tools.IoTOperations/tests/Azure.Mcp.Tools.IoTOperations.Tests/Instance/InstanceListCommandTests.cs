@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.IoTOperations.Commands;
 using Azure.Mcp.Tools.IoTOperations.Commands.Instance;
 using Azure.Mcp.Tools.IoTOperations.Models;
 using Azure.Mcp.Tools.IoTOperations.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -47,8 +46,6 @@ public class InstanceListCommandTests : SubscriptionCommandUnitTestsBase<Instanc
         Service.ListInstancesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -72,8 +69,6 @@ public class InstanceListCommandTests : SubscriptionCommandUnitTestsBase<Instanc
         Service.ListInstancesAsync(
             Arg.Is(subscription),
             Arg.Is(resourceGroup),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -93,8 +88,6 @@ public class InstanceListCommandTests : SubscriptionCommandUnitTestsBase<Instanc
         Service.ListInstancesAsync(
             Arg.Is(subscription),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ResourceQueryResults<IoTOperationsInstanceInfo>([], false));
 
@@ -114,8 +107,7 @@ public class InstanceListCommandTests : SubscriptionCommandUnitTestsBase<Instanc
         if (shouldSucceed)
         {
             Service.ListInstancesAsync(
-                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new ResourceQueryResults<IoTOperationsInstanceInfo>([CreateInstance("aio-01")], false));
         }
 
@@ -139,8 +131,7 @@ public class InstanceListCommandTests : SubscriptionCommandUnitTestsBase<Instanc
         var subscription = "sub123";
 
         Service.ListInstancesAsync(
-            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync("--subscription", subscription);
@@ -155,8 +146,7 @@ public class InstanceListCommandTests : SubscriptionCommandUnitTestsBase<Instanc
         var subscription = "sub123";
 
         Service.ListInstancesAsync(
-            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found"));
 
         var response = await ExecuteCommandAsync("--subscription", subscription);
@@ -170,8 +160,7 @@ public class InstanceListCommandTests : SubscriptionCommandUnitTestsBase<Instanc
         var subscription = "sub123";
 
         Service.ListInstancesAsync(
-            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var response = await ExecuteCommandAsync("--subscription", subscription);

@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.IoTOperations.Commands.Instance;
         schema registry resource ID. Not for listing multiple instances. Required: --instance, --resource-group,
         and --subscription.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -61,8 +62,6 @@ public sealed class InstanceGetCommand(ILogger<InstanceGetCommand> logger, IIoTO
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Instance!,
-                options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

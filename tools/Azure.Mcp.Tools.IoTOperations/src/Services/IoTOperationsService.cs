@@ -3,24 +3,19 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTOperations.Models;
 using Azure.Mcp.Tools.IoTOperations.Services.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTOperations.Services;
 
-public sealed class IoTOperationsService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IIoTOperationsService
+public sealed class IoTOperationsService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IIoTOperationsService
 {
     private const string InstanceResourceType = "Microsoft.IoTOperations/instances";
 
     public async Task<ResourceQueryResults<IoTOperationsInstanceInfo>> ListInstancesAsync(
         string subscription,
         string? resourceGroup = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -29,9 +24,7 @@ public sealed class IoTOperationsService(ISubscriptionService subscriptionServic
             InstanceResourceType,
             resourceGroup,
             subscription,
-            retryPolicy,
             ConvertToInstanceInfoModel,
-            tenant: tenant,
             cancellationToken: cancellationToken);
     }
 
@@ -39,8 +32,6 @@ public sealed class IoTOperationsService(ISubscriptionService subscriptionServic
         string subscription,
         string resourceGroup,
         string instance,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -52,10 +43,8 @@ public sealed class IoTOperationsService(ISubscriptionService subscriptionServic
             InstanceResourceType,
             resourceGroup: resourceGroup,
             subscription: subscription,
-            retryPolicy: retryPolicy,
             converter: ConvertToInstanceInfoModel,
             additionalFilter: $"name =~ '{EscapeKqlString(instance)}'",
-            tenant: tenant,
             cancellationToken: cancellationToken);
 
         if (result == null)

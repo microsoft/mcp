@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.IoTOperations.Commands.Instance;
         associated schema registry resource ID. If a resource group is specified, only instances within that resource
         group are returned. Otherwise, all instances in the subscription are listed.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -45,8 +46,6 @@ public sealed class InstanceListCommand(ILogger<InstanceListCommand> logger, IIo
             var instances = await _iotOperationsService.ListInstancesAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

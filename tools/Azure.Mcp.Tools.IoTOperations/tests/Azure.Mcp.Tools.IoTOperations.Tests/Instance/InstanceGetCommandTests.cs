@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.IoTOperations.Commands;
 using Azure.Mcp.Tools.IoTOperations.Commands.Instance;
 using Azure.Mcp.Tools.IoTOperations.Models;
 using Azure.Mcp.Tools.IoTOperations.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -47,8 +46,6 @@ public class InstanceGetCommandTests : SubscriptionCommandUnitTestsBase<Instance
             Arg.Is(Subscription),
             Arg.Is(ResourceGroup),
             Arg.Is(InstanceName),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(CreateInstance());
 
@@ -76,8 +73,7 @@ public class InstanceGetCommandTests : SubscriptionCommandUnitTestsBase<Instance
         if (shouldSucceed)
         {
             Service.GetInstanceAsync(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(CreateInstance());
         }
 
@@ -94,8 +90,7 @@ public class InstanceGetCommandTests : SubscriptionCommandUnitTestsBase<Instance
     public async Task ExecuteAsync_ReturnsNotFound_WhenInstanceMissing()
     {
         Service.GetInstanceAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("IoT Operations instance 'aio-01' not found."));
 
         var response = await ExecuteCommandAsync(
@@ -111,8 +106,7 @@ public class InstanceGetCommandTests : SubscriptionCommandUnitTestsBase<Instance
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         Service.GetInstanceAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(
@@ -128,8 +122,7 @@ public class InstanceGetCommandTests : SubscriptionCommandUnitTestsBase<Instance
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         Service.GetInstanceAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var response = await ExecuteCommandAsync(
