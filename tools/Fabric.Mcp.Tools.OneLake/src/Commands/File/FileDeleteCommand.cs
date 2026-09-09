@@ -16,6 +16,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     Name = "delete-file",
     Title = "Delete OneLake File",
     Description = "Deletes a file from OneLake storage. Use this when the user wants to remove a specific file. Permanently removes the file at the specified path.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     LocalRequired = false,

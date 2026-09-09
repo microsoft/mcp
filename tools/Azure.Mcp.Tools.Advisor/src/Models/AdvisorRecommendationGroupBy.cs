@@ -17,5 +17,14 @@ public enum AdvisorRecommendationGroupBy
     Impact,
 
     [JsonStringEnumMemberName("resource-type")]
-    ResourceType
+    ResourceType,
+
+    [JsonStringEnumMemberName("status")]
+    Status,
+
+    [JsonStringEnumMemberName("sub-category")]
+    SubCategory,
+
+    [JsonStringEnumMemberName("retirement-date")]
+    RetirementDate
 }

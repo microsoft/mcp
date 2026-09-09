@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Architecture;
     Name = "plan",
     Title = "Plan Agent Architecture",
     Description = "Plan and generate an SRE Agent architecture. Analyzes requirements and produces a structured design for agents, tools, connectors, and triggers.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

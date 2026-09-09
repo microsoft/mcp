@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
     Name = "deactivate",
     Title = "Deactivate SRE Agent Thread Hook",
     Description = "Deactivate an on-demand hook for a thread on an Azure SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

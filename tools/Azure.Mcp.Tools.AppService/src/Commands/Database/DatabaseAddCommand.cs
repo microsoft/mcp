@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Database;
         settings for the specified App Service, allowing it to connect to a database server name. You must specify the App Service name, database name,
         database type, database server name, connection string, resource group name and subscription.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,

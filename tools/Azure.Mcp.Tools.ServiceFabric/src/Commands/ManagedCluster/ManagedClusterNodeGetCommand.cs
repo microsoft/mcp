@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
     Name = "get",
     Title = "Get Service Fabric Managed Cluster Nodes",
     Description = "Get nodes for a Service Fabric managed cluster. Returns all nodes by default or a single node when a node name is specified. Includes name, node type, status, IP address, fault domain, upgrade domain, health state, and seed node status.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

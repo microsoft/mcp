@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
         the vault-side connection object. The underlying Microsoft.Network/privateEndpoints resource must
         be deleted separately if it is no longer needed. Backup vaults (DPP) are not supported.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

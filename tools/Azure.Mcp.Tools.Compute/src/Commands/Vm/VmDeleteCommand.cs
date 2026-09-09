@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         Do not use this to stop or pause a VM; use the VM power-state command instead.
         Do not use this to delete Virtual Machine Scale Sets (use VMSS delete instead).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

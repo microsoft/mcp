@@ -11,6 +11,9 @@ internal static class AdvisorRecommendationGroupByExtensions
         AdvisorRecommendationGroupBy.Category => "category",
         AdvisorRecommendationGroupBy.Impact => "impact",
         AdvisorRecommendationGroupBy.ResourceType => "resource-type",
+        AdvisorRecommendationGroupBy.Status => "status",
+        AdvisorRecommendationGroupBy.SubCategory => "sub-category",
+        AdvisorRecommendationGroupBy.RetirementDate => "retirement-date",
         _ => throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, null)
     };
 }

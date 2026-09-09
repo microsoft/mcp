@@ -1478,6 +1478,16 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var immutabilityState = securitySettings?.ImmutabilityState?.ToString();
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
 
         string? crossRegionRestoreState = null;
         // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
@@ -1516,7 +1526,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             MuaResourceGuardId: muaResourceGuardId,
             CrossRegionRestoreState: crossRegionRestoreState,
             EncryptionState: encryptionState,
-            EncryptionKeyUri: encryptionKeyUri);
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)
@@ -1527,6 +1538,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string? policyName = null;
         DateTimeOffset? lastBackupTime = null;
         string? container = null;
+        ProtectedItemDetails? protectedItemDetails = null;
 
         if (data.Properties is BackupGenericProtectedItem genericItem)
         {
@@ -1537,14 +1549,141 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
             if (genericItem is IaasVmProtectedItem vmItem)
             {
-                protectionStatus = vmItem.ProtectionState?.ToString();
+                protectionStatus = vmItem.ProtectionStatus;
                 lastBackupTime = vmItem.LastBackupOn;
+
+                var extendedInfo = vmItem.ExtendedInfo;
+                var extendedProperties = vmItem.ExtendedProperties;
+                var diskExclusionProperties = extendedProperties?.DiskExclusionProperties;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: vmItem.BackupManagementType?.ToString(),
+                    WorkloadType: vmItem.WorkloadType?.ToString(),
+                    LastRecoverOn: vmItem.LastRecoverOn,
+                    BackupSetName: vmItem.BackupSetName,
+                    CreateMode: vmItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: vmItem.DeferredDeletedOn,
+                    IsScheduledForDeferredDelete: vmItem.IsScheduledForDeferredDelete,
+                    DeferredDeleteTimeRemaining: vmItem.DeferredDeleteTimeRemaining?.ToString(),
+                    IsDeferredDeleteScheduleUpcoming: vmItem.IsDeferredDeleteScheduleUpcoming,
+                    IsRehydrate: vmItem.IsRehydrate,
+                    ResourceGuardOperationRequests: vmItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: vmItem.IsArchiveEnabled,
+                    PolicyName: vmItem.PolicyName,
+                    SoftDeleteRetentionPeriodInDays: vmItem.SoftDeleteRetentionPeriodInDays,
+                    SoftDeleteRetentionPeriod: vmItem.SoftDeleteRetentionPeriod,
+                    VaultId: vmItem.VaultId?.ToString(),
+                    FriendlyName: vmItem.FriendlyName,
+                    VirtualMachineId: vmItem.VirtualMachineId?.ToString(),
+                    ProtectionStatus: vmItem.ProtectionStatus,
+                    ProtectionState: vmItem.ProtectionState?.ToString(),
+                    HealthStatus: vmItem.HealthStatus?.ToString(),
+                    HealthDetails: vmItem.HealthDetails?.Select(MapToProtectedItemHealthDetails).ToList(),
+                    KpisHealths: vmItem.KpisHealths?.ToDictionary(
+                        static kpi => kpi.Key,
+                        static kpi => new ProtectedItemKpiHealthDetails(
+                            kpi.Value?.ResourceHealthStatus?.ToString(),
+                            kpi.Value?.ResourceHealthDetails?.Select(MapToProtectedItemHealthDetails).ToList())),
+                    LastBackupStatus: vmItem.LastBackupStatus,
+                    ProtectedItemDataId: vmItem.ProtectedItemDataId,
+                    PolicyType: vmItem.PolicyType,
+                    LastBackupOn: vmItem.LastBackupOn,
+                    OldestRecoverOn: extendedInfo?.OldestRecoverOn,
+                    OldestRecoveryPointInVault: extendedInfo?.OldestRecoveryPointInVault,
+                    OldestRecoveryPointInArchive: extendedInfo?.OldestRecoveryPointInArchive,
+                    NewestRecoveryPointInArchive: extendedInfo?.NewestRecoveryPointInArchive,
+                    RecoveryPointCount: extendedInfo?.RecoveryPointCount,
+                    IsPolicyInconsistent: extendedInfo?.IsPolicyInconsistent,
+                    ExtendedProperties: extendedProperties is null
+                        ? null
+                        : new ProtectedItemExtendedProperties(
+                            diskExclusionProperties is null
+                                ? null
+                                : new ProtectedItemDiskExclusionProperties(
+                                    diskExclusionProperties.DiskLunList?.ToList(),
+                                    diskExclusionProperties.IsInclusionList),
+                            extendedProperties.LinuxVmApplicationName));
+
             }
             else if (genericItem is VmWorkloadProtectedItem workloadItem)
             {
                 protectionStatus = workloadItem.ProtectionState?.ToString();
                 lastBackupTime = workloadItem.LastBackupOn;
                 datasourceType = workloadItem.WorkloadType?.ToString();
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: null,
+                    BackupSetName: null,
+                    CreateMode: null,
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: null,
+                    IsArchiveEnabled: null,
+                    PolicyName: policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: null,
+                    FriendlyName: null,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: workloadItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: workloadItem.LastBackupStatus?.ToString(),
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
+            }
+            else if (genericItem is FileshareProtectedItem fileShareItem)
+            {
+                protectionStatus = fileShareItem.ProtectionState?.ToString();
+                lastBackupTime = fileShareItem.LastBackupOn;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: fileShareItem.LastRecoverOn,
+                    BackupSetName: fileShareItem.BackupSetName,
+                    CreateMode: fileShareItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: fileShareItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: fileShareItem.IsArchiveEnabled,
+                    PolicyName: fileShareItem.PolicyName ?? policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: fileShareItem.VaultId?.ToString(),
+                    FriendlyName: fileShareItem.FriendlyName,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: fileShareItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: fileShareItem.LastBackupStatus,
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
             }
         }
 
@@ -1557,8 +1696,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             datasourceId,
             policyName,
             lastBackupTime,
-            container);
+            container,
+            protectedItemDetails);
     }
+
+    private static ProtectedItemHealthDetails MapToProtectedItemHealthDetails(ResourceHealthDetails details) =>
+        new(details.Code, details.Title, details.Message, details.Recommendations?.ToList());
 
     private static BackupPolicyInfo MapToPolicyInfo(BackupProtectionPolicyData data)
     {

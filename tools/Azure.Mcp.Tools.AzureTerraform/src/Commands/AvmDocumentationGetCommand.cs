@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         output values, and resource descriptions. Use --module-name and --module-version
         to specify the module and version (e.g., --module-name avm-res-storage-storageaccount --module-version 0.4.0).
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

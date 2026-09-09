@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
         SavingsPlan is not a valid --price-type; use --include-savings-plan instead. Valid --price-type: Consumption, Reservation, DevTestConsumption. When --include-savings-plan is true, Consumption results include a nested savingsPlan array (1-year/3-year pricing, mainly Linux VMs). 
         For Bicep/ARM cost estimation, extract resource type and SKU, query per resource, and sum monthly costs (hourly x 730).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
