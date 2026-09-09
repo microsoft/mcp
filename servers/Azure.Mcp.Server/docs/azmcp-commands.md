@@ -440,7 +440,7 @@ azmcp advisor metadata list [--language <language>] \
 azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
                            [--language <language>]
 
-# Fix, resolve, or remediate a specific Azure Advisor recommendation type id. Use this whenever you ask
+# Fix, resolve, or remediate a specific Azure Advisor recommendation type id. Use this whenever you are asked
 # how to fix or how to resolve an Advisor recommendation. Returns its remediation package:
 # step-by-step remediation steps plus ready-to-run artifacts, scripts, and deployment templates in ARM
 # template, Bicep, Azure CLI, PowerShell, and terraform formats to remediate the issue. Also indicates
