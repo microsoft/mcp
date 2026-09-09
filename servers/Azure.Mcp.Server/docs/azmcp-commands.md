@@ -4022,6 +4022,12 @@ azmcp resilience usageplan create --subscription <subscription> \
                                   --usage-plan <usage-plan> \
                                   --plan-type <plan-type>
 
+# Delete a resilience usage plan from a resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan delete --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --usage-plan <usage-plan>
+
 # Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan enrollment get --subscription <subscription> \
@@ -4036,6 +4042,13 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --usage-plan <usage-plan> \
                                              --enrollment <enrollment> \
                                              --service-group <service-group>
+
+# Delete an enrollment from a resilience usage plan
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment delete --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --usage-plan <usage-plan> \
+                                             --enrollment <enrollment>
 
 # Get a resilience recoveryplan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

@@ -4,6 +4,18 @@
 
 Follow [add-azure-mcp-tools](../../add-azure-mcp-tools/SKILL.md) as the canonical command, options, service, security, registration, AOT, documentation, changelog, testing, recording, and pull-request workflow. This reference contains only Resilience Management-specific requirements and overrides.
 
+## Skill Synchronization Gate
+
+For every new or behaviorally changed Resilience Management tool, update this skill in the same change:
+
+1. Add or revise the exact tool name, purpose, required parameters, optional parameters, and allowed values in [tools.md](./tools.md).
+2. Add or revise its operation sequence, state gates, and destructive-action safeguards in [workflows.md](./workflows.md).
+3. Update [payloads.md](./payloads.md) when the tool accepts structured payloads or introduces conditional fields.
+4. Update the parent [SKILL.md](../SKILL.md) description and routing when the tool introduces a new resource or operation category.
+5. Compare the documented tool names with the registered `resilience` tools and update the total in `tools.md`. The sets must match before review.
+
+A Resilience Management tool is not documentation-complete when this skill omits it or describes a stale contract.
+
 ## Tool Description Evaluation Override
 
 For every new or behaviorally changed Resilience Management tool:

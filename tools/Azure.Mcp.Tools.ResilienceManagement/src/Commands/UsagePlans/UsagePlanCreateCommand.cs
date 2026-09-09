@@ -40,10 +40,7 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.UsagePlan.Length is < 3 or > 24 || !options.UsagePlan.All(IsValidUsagePlanNameCharacter))
-        {
-            validationResult.Errors.Add("The usage plan name must be 3 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
+        UsagePlanResourceNameValidator.Validate(options.UsagePlan, "usage plan", validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, UsagePlanCreateOptions options, CancellationToken cancellationToken)
@@ -72,9 +69,6 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
 
         return context.Response;
     }
-
-    private static bool IsValidUsagePlanNameCharacter(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-';
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
