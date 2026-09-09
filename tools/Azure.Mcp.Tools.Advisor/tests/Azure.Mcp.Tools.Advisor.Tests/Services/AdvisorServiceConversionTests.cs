@@ -264,4 +264,32 @@ public class AdvisorServiceConversionTests
 
         Assert.Equal("Medium", result.Properties.Impact);
     }
+
+    [Fact]
+    public void ConvertUpdateResponseToAdvisorRecommendationModel_MapsUpdateFieldNames()
+    {
+        const string json = """
+            {
+                "id": "/subscriptions/abc/providers/Microsoft.Advisor/recommendations/rec4",
+                "name": "rec4",
+                "type": "Microsoft.Advisor/recommendations",
+                "properties": {
+                    "category": "Cost",
+                    "recommendationStatus": "Postponed",
+                    "recommendationDismissReason": "Other",
+                    "postponedUntilDateTime": "2027-01-02T03:04:05Z"
+                }
+            }
+            """;
+
+        using var doc = JsonDocument.Parse(json);
+        var result = AdvisorService.ConvertUpdateResponseToAdvisorRecommendationModel(doc.RootElement);
+
+        Assert.Equal("rec4", result.Name);
+        Assert.Equal("Postponed", result.Properties.RecommendationStatus);
+        Assert.Equal("Other", result.Properties.RecommendationDismissReason);
+        Assert.Equal(
+            DateTimeOffset.Parse("2027-01-02T03:04:05Z", CultureInfo.InvariantCulture),
+            result.Properties.PostponedUntilDateTime);
+    }
 }
