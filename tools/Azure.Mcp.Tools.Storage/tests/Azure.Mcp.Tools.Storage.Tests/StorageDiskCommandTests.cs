@@ -32,7 +32,7 @@ public class StorageDiskCommandTests(
         if (TestMode == TestMode.Playback)
         {
             Settings.EnvironmentVariables[EndpointEnvironmentVariable] =
-                "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze";
+                "https://storageintelligenceweb.canary.production.portalrp.azure.com/api/Disk/analyze";
             Settings.EnvironmentVariables[ScopeEnvironmentVariable] =
                 "00000000-0000-0000-0000-000000000000/.default";
         }
