@@ -4015,7 +4015,7 @@ azmcp resilience usageplan get --subscription <subscription> \
                                [--resource-group <resource-group>] \
                                [--name <name>]
 
-# Create or update a resilience usage plan, waiting up to 10 minutes for provisioning to complete
+# Create a resilience usage plan in a resource group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan create --subscription <subscription> \
                                   --resource-group <resource-group> \
