@@ -352,6 +352,40 @@ azmcp adme schema list --endpoint <endpoint> \
                         [--latest-version] \
                         [--offset <offset>] \
                         [--limit <limit>]
+
+# Fetch multiple records by fully-qualified OSDU record id
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme storage record fetch --endpoint <endpoint> \
+                                  --data-partition <data-partition> \
+                                  --ids <id> [<id>...] \
+                                  [--attributes <path> [<path>...]] \
+                                  [--frame-of-reference] \
+                                  [--tenant <tenant>]
+
+# Get the latest or a specific version of an OSDU record, optionally projecting attributes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme storage record get --endpoint <endpoint> \
+                                --data-partition <data-partition> \
+                                --id <record-id> \
+                                [--version <version>] \
+                                [--attributes <path> [<path>...]] \
+                                [--tenant <tenant>]
+
+# List record ids for a fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme storage record list --endpoint <endpoint> \
+                                 --data-partition <data-partition> \
+                                 --kind <authority:source:entity-type:version> \
+                                 [--limit <limit>] \
+                                 [--cursor <cursor>] \
+                                 [--tenant <tenant>]
+
+# List all numeric versions of an OSDU record
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme storage record version list --endpoint <endpoint> \
+                                         --data-partition <data-partition> \
+                                         --id <record-id> \
+                                         [--tenant <tenant>]
 ```
 
 ### Azure Advisor Operations

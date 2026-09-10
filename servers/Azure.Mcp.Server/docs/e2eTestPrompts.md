@@ -13,9 +13,23 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| adme_health_check | Check authentication and connectivity for ADME endpoint <endpoint> and data partition <data-partition> | none |
-| adme_schema_get | Get ADME schema <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_schema_list | List shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_health_check | Check health and authentication for ADME endpoint <endpoint> and data partition <data-partition> | none |
+| adme_schema_get | Get ADME schema for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_get | Show the fields, types, and structure of OSDU schema <authority:source:entity-type:version> from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_get | Retrieve the full JSON definition for OSDU schema <authority:source:entity-type:version> from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List all shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List the latest published SHARED OSDU schemas for entity type master-data--Well from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List DEVELOPMENT OSDU schemas from authority <authority> and source <source> in ADME endpoint <endpoint> and data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch the full content of ADME records <record-id-1>, <record-id-2>, and <record-id-3> in one batch from endpoint <endpoint> and data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch only attributes data.Name and data.Description for ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_get | Get a OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_get | Get version <record-version> of OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record <record-id> at endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List ADME records of kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List the first 25 ADME record IDs for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | Continue listing ADME record IDs for kind <authority:source:entity-type:version> using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_version_list | List all versions of ADME record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 
 ## Azure Advisor
 
