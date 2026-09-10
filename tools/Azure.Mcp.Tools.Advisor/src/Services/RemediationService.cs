@@ -24,7 +24,7 @@ public sealed class RemediationService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(recommendationTypeId), recommendationTypeId));
 
-        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString();
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
         var url = BuildRemediationUrl(managementEndpoint, recommendationTypeId);
 
         using var httpClient = AzureService.GetClient();
