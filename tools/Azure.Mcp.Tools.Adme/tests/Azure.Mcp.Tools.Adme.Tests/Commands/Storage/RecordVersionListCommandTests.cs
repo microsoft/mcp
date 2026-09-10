@@ -36,7 +36,6 @@ public sealed class RecordVersionListCommandTests : CommandUnitTestsBase<RecordV
 
     [Theory]
     [InlineData("--id", "")]
-    [InlineData("--id", "opendes:work-product-component--SeismicBinGrid:grid-1:")]
     [InlineData("--endpoint", "https://example.com")]
     [InlineData("--data-partition", " ")]
     public async Task Execute_WithInvalidOption_DoesNotCallService(string option, string value)

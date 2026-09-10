@@ -59,7 +59,6 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
 
     [Theory]
     [InlineData("--id", "")]
-    [InlineData("--id", "opendes:work-product-component--SeismicBinGrid:grid-1:")]
     [InlineData("--id", "opendes::work-product-component--SeismicBinGrid:grid-1")]
     [InlineData("--id", "opendes:master-data-Well:W-99")]
     [InlineData("--version", "0")]

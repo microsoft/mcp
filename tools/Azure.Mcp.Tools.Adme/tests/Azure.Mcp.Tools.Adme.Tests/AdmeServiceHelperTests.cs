@@ -18,6 +18,8 @@ public sealed class AdmeServiceHelperTests
     [Theory]
     [InlineData("opendes:master-data--Well:W-99")]
     [InlineData("opendes:work-product-component--SeismicBinGrid:grid-1")]
+    [InlineData("opendes:master-data--Well:W-99:")]
+    [InlineData("opendes:reference-data--CoordinateReferenceSystem:Geographic2D:EPSG::4198:")]
     public void ValidateRecordId_WithValidId_DoesNotAddError(string id)
     {
         var validationResult = new ValidationResult();
@@ -37,7 +39,6 @@ public sealed class AdmeServiceHelperTests
     [InlineData("opendes:master-data--:W-99")]
     [InlineData("opendes:master-data--Well:")]
     [InlineData("opendes:master data--Well:W-99")]
-    [InlineData("opendes:master-data--Well:W-99:")]
     public void ValidateRecordId_WithInvalidId_AddsError(string? id)
     {
         var validationResult = new ValidationResult();

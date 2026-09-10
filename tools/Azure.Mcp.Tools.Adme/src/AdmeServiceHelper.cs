@@ -88,6 +88,7 @@ internal static class AdmeServiceHelper
             return;
         }
 
+        // Storage record IDs require partition, group-type--EntityType, and unique-id sections.
         var partitionSeparator = id.IndexOf(':');
         var entitySeparator = partitionSeparator < 0
             ? -1
@@ -101,7 +102,6 @@ internal static class AdmeServiceHelper
             && entitySeparator < id.Length - 1
             && typeSeparator > 0
             && typeSeparator < entityComponent.Length - 2
-            && !id.EndsWith(':')
             && !id.Any(char.IsWhiteSpace);
 
         if (!hasValidFormat)
@@ -266,7 +266,7 @@ internal static class AdmeServiceHelper
         return await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
             ?? throw new RequestFailedException(
                 (int)response.StatusCode,
-                "ADME schema request returned an empty response body.");
+                "ADME request returned an empty response body.");
     }
 
     private static string GetRequestFailureMessage(HttpStatusCode statusCode, string? reasonPhrase) => statusCode switch
