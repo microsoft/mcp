@@ -20,7 +20,7 @@ public class AuthorizationService(IAzureService azureService)
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(scope), scope));
+        ValidateRequiredParameter(nameof(scope), scope);
 
         // Match the scope itself, plus anything nested beneath it. The trailing separator keeps a scope
         // ending in "rg1" from also matching "rg10".
@@ -29,6 +29,13 @@ public class AuthorizationService(IAzureService azureService)
 
         if (ManagementGroupScope.TryParse(scope, out var managementGroup))
         {
+            if (!string.IsNullOrEmpty(subscription))
+            {
+                throw new ArgumentException(
+                    "Subscription must not be specified for a management group scope.",
+                    nameof(subscription));
+            }
+
             // Role assignments on a management group are not part of any subscription, so a
             // subscription-scoped Resource Graph query can never return them.
             return await ExecuteManagementGroupResourceQueryAsync(
@@ -41,12 +48,12 @@ public class AuthorizationService(IAzureService azureService)
                 cancellationToken: cancellationToken);
         }
 
-        ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameter(nameof(subscription), subscription);
 
         return await ExecuteResourceQueryAsync(
             RoleAssignmentResourceType,
             null, // all resource groups
-            subscription!,
+            subscription,
             ConvertToRoleAssignmentModel,
             RoleAssignmentsTable,
             additionalFilter: scopeFilter,

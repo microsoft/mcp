@@ -12,8 +12,8 @@ public interface IAuthorizationService
     /// Lists the role assignments at or below the requested scope.
     /// </summary>
     /// <param name="subscription">
-    /// The subscription ID or name to query. Not required when <paramref name="scope"/> is a management group scope,
-    /// because those assignments live outside any subscription.
+    /// The subscription ID or name to query. Must be <see langword="null"/> when <paramref name="scope"/> is a
+    /// management group scope because those assignments live outside any subscription.
     /// </param>
     /// <param name="scope">The scope that the role assignments apply against.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>

@@ -14,6 +14,6 @@ public sealed class RoleAssignmentListOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [Option(Description = OptionDescriptions.Subscription + " Not required when the scope is a management group.")]
+    [Option(Description = OptionDescriptions.Subscription + " Must not be specified when the scope is a management group.")]
     public string? Subscription { get; set; }
 }

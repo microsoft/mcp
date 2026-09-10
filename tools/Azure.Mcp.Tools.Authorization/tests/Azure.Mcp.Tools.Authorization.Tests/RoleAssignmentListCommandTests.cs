@@ -87,6 +87,7 @@ public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<R
     {
         // Arrange
         var scope = "/providers/Microsoft.Management/managementGroups/mg-contoso";
+        SubscriptionResolver.ResolveSubscription(null).Returns("default-subscription");
         var assignmentId = "00000000-0000-0000-0000-000000000003";
         var expected = new ResourceQueryResults<RoleAssignment>(
         [
@@ -110,6 +111,26 @@ public class RoleAssignmentListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         Assert.Equal(expected.Results, result.Assignments);
         await Service.Received(1).ListRoleAssignmentsAsync(null, scope, Arg.Any<string>(), Arg.Any<CancellationToken>());
+        SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsSubscription_ForManagementGroupScope()
+    {
+        // Arrange
+        var scope = "/providers/Microsoft.Management/managementGroups/mg-contoso";
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription",
+            "00000000-0000-0000-0000-000000000001",
+            "--scope",
+            scope);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--subscription", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]

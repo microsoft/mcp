@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
         List role assignments. This command retrieves and displays the Azure RBAC role assignments
         at the specified scope and at any scope nested beneath it. Assignments inherited from a parent
         scope are not included. The scope may be a subscription, resource group, resource, or management
-        group; a subscription is not required when the scope is a management group. Results include role
+        group; a subscription must not be specified when the scope is a management group. Results include role
         definition IDs and principal IDs.
         """,
     OperationPlane = ToolOperationPlane.Control,
@@ -36,16 +36,18 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
     private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
     private readonly IAuthorizationService _authorizationService = authorizationService;
 
+    protected override bool IsSubscriptionApplicable(RoleAssignmentListOptions options) =>
+        !ManagementGroupScope.TryParse(options.Scope, out _);
+
     public override void ValidateOptions(RoleAssignmentListOptions options, ValidationResult validationResult)
     {
-        // A management group scope sits outside every subscription, so the inherited --subscription
-        // requirement would reject a valid request. Skipping the base call skips only that check.
-        if (ManagementGroupScope.TryParse(options.Scope, out _))
-        {
-            return;
-        }
-
         base.ValidateOptions(options, validationResult);
+
+        if (!IsSubscriptionApplicable(options) && !string.IsNullOrEmpty(options.Subscription))
+        {
+            validationResult.Errors.Add(
+                "Omit --subscription when --scope is a management group because management groups are outside subscriptions.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RoleAssignmentListOptions options, CancellationToken cancellationToken)
@@ -62,12 +64,22 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred listing role assignments for scope {Scope}.", options.Scope);
+            _logger.LogError(
+                ex,
+                "An exception occurred listing role assignments for scope '{Scope}'.",
+                FormatScopeForLogging(options.Scope));
             HandleException(context, ex);
         }
 
         return context.Response;
     }
+
+    private static string FormatScopeForLogging(string? scope) => scope switch
+    {
+        null => "<null>",
+        "" => "<empty>",
+        _ => scope
+    };
 
     public sealed record RoleAssignmentListCommandResult(string Scope, List<RoleAssignment> Assignments, bool AreResultsTruncated);
 }
