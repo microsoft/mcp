@@ -45,6 +45,7 @@ public class AzureBackupSetupTests
         Assert.Contains("protecteditem", groupNames);
         Assert.Contains("protectableitem", groupNames);
         Assert.Contains("backup", groupNames);
+        Assert.Contains("container", groupNames);
         Assert.Contains("job", groupNames);
         Assert.Contains("recoverypoint", groupNames);
         Assert.Contains("governance", groupNames);
@@ -124,6 +125,18 @@ public class AzureBackupSetupTests
         Assert.Contains(policy.Commands, c => c.Key == "get");
         Assert.Contains(policy.Commands, c => c.Key == "create");
         Assert.Contains(policy.Commands, c => c.Key == "update");
+    }
+
+    [Fact]
+    public void RegisterCommands_ContainerGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var container = root.SubGroup.First(g => g.Name == "container");
+
+        Assert.Contains(container.Commands, c => c.Key == "get");
     }
 
     [Fact]

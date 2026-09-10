@@ -1206,6 +1206,24 @@ azmcp azurebackup job get --subscription <subscription> \
                           [--job <job>]
 ```
 
+#### Container
+
+```bash
+# Retrieves a single Recovery Services vault (RSV) protection container by name or by storage account.
+# Supply either --container (fully qualified RSV container name) or --storage-account (bare storage
+# account name or ARM resource ID); the container name is derived automatically for storage accounts.
+# When the container is not registered the response is HTTP 200 with 'registered: false' and
+# 'container: null' — this is the idempotency signal for register/refresh callers. --resource-group
+# identifies the vault; a storage account ARM ID may identify an account in a different resource group.
+# Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) return HTTP 400.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup container get --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --vault <vault> \
+                                [--container <container>] \
+                                [--storage-account <storage-account>]
+```
+
 #### Recovery Point
 
 ```bash
