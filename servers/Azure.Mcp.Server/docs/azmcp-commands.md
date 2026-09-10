@@ -1361,6 +1361,9 @@ azmcp extension cli install --cli-type <cli-type>
 
 ### Azure Communication Services Operations
 
+> [!NOTE]
+> The `communication email send` and `communication sms send` commands do not support `--auth-method` or any `--retry-*` options.
+
 #### Email
 
 ```bash
@@ -1460,6 +1463,9 @@ azmcp communication sms send --endpoint "https://mycomms.communication.azure.com
 
 
 ### Azure Compute Operations
+
+> [!NOTE]
+> The `compute disk`, `compute vm`, and `compute vmss` commands do not support `--auth-method` or any `--retry-*` options.
 
 #### Virtual Machines
 
