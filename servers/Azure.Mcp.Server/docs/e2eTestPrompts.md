@@ -317,7 +317,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | extension_cli_generate | What's the Azure CLI command for getting a storage account's details? | none |
 | extension_cli_generate | List all virtual machines in my subscription using Azure CLI | none |
 | extension_cli_generate | Show me the details of the storage account <account_name> using Azure CLI commands | none |
-| extension_cli_install | \<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate> | context-required |
 | extension_cli_install | How to install azd | none |
 | extension_cli_install | What is Azure Functions Core tools and how to install it | none |
 
