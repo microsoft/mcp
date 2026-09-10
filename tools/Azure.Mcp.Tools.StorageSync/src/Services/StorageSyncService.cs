@@ -398,6 +398,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string cloudEndpointName,
         string storageAccountResourceId,
         string azureFileShareName,
+        int? changeEnumerationIntervalDays = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -435,13 +436,49 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         {
             StorageAccountResourceId = new(storageAccountResourceId),
             AzureFileShareName = azureFileShareName,
-            StorageAccountTenantId = storageAccountTenantId
+            StorageAccountTenantId = storageAccountTenantId,
+            ChangeEnumerationIntervalDays = changeEnumerationIntervalDays
         };
         var operation = await syncGroupResource.Value.GetCloudEndpoints().CreateOrUpdateAsync(
             WaitUntil.Started, cloudEndpointName, content, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         _logger.LogInformation("Successfully created Cloud Endpoint: {Endpoint}", cloudEndpointName);
+        return CloudEndpointDataSchema.FromResource(operation.Value);
+    }
+
+    public async Task<CloudEndpointDataSchema> UpdateCloudEndpointAsync(
+        string subscription,
+        string resourceGroup,
+        string storageSyncServiceName,
+        string syncGroupName,
+        string cloudEndpointName,
+        int changeEnumerationIntervalDays,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(storageSyncServiceName), storageSyncServiceName),
+            (nameof(syncGroupName), syncGroupName),
+            (nameof(cloudEndpointName), cloudEndpointName));
+
+        var armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var serviceResource = await resourceGroupResource.Value.GetStorageSyncServices().GetAsync(storageSyncServiceName, cancellationToken);
+        var syncGroupResource = await serviceResource.Value.GetStorageSyncGroups().GetAsync(syncGroupName, cancellationToken);
+        var endpointResource = await syncGroupResource.Value.GetCloudEndpoints().GetAsync(cloudEndpointName, cancellationToken);
+
+        var patch = new CloudEndpointPatch
+        {
+            ChangeEnumerationIntervalDays = changeEnumerationIntervalDays
+        };
+        var operation = await endpointResource.Value.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        _logger.LogInformation("Successfully updated Cloud Endpoint: {Endpoint}", cloudEndpointName);
         return CloudEndpointDataSchema.FromResource(operation.Value);
     }
 

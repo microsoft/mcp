@@ -21,12 +21,13 @@ public sealed record CloudEndpointDataSchema(
     [property: JsonPropertyName("lastOperationName")] string? LastOperationName = null,
     [property: JsonPropertyName("lastWorkflowId")] string? LastWorkflowId = null,
     [property: JsonPropertyName("friendlyName")] string? FriendlyName = null,
-    [property: JsonPropertyName("changeEnumerationStatus")] string? ChangeEnumerationStatus = null)
+    [property: JsonPropertyName("changeEnumerationStatus")] string? ChangeEnumerationStatus = null,
+    [property: JsonPropertyName("changeEnumerationIntervalDays")] int? ChangeEnumerationIntervalDays = null)
 {
     /// <summary>
     /// Default constructor for deserialization.
     /// </summary>
-    public CloudEndpointDataSchema() : this(null, null, null, null, null, null, null, null, null, null, null, null) { }
+    public CloudEndpointDataSchema() : this(null, null, null, null, null, null, null, null, null, null, null, null, null) { }
 
     /// <summary>
     /// Creates a CloudEndpointDataSchema from a CloudEndpointResource.
@@ -46,7 +47,8 @@ public sealed record CloudEndpointDataSchema(
             data.LastOperationName,
             data.LastWorkflowId,
             data.FriendlyName,
-            data.ChangeEnumerationStatus?.ToString()
+            data.ChangeEnumerationStatus?.ToString(),
+            data.ChangeEnumerationIntervalDays
         );
     }
 }

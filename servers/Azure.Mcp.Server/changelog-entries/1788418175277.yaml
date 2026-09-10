@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Updated Azure Resource Manager Storage Sync to 1.4.0, added Cloud Endpoint change enumeration interval support, and exposed detailed sync activity progress."
