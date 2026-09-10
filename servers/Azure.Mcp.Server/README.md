@@ -1117,6 +1117,14 @@ Example prompts that generate Azure CLI commands:
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
 
+### 🐘 Azure Database for PostgreSQL
+
+* "List all PostgreSQL servers in my subscription"
+* "Show me the tables in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the schema of table 'users' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"
