@@ -2115,9 +2115,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     /// <summary>
     /// A storage account that is not registered with the vault must produce HTTP 200
     /// with 'registered: false' and 'container: null' - this is the idempotency signal for
-    /// register/refresh callers. Because the response is source-generated with
-    /// JsonIgnoreCondition.WhenWritingDefault, false booleans and null references are omitted
-    /// from the JSON payload; an empty results object is the expected shape.
+    /// register/refresh callers. These fields are explicitly preserved despite the toolset's
+    /// default omission of false booleans and null references.
     /// </summary>
     [Fact]
     public async Task ContainerGet_RsvVault_UnknownStorageAccount_ReturnsNotRegistered_Successfully()
@@ -2135,11 +2134,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             });
 
         Assert.True(result.HasValue);
-        // 'registered' defaults to false and 'container' defaults to null; both are omitted from the
-        // payload when unset. The presence of either non-default value would indicate an unexpected
-        // registered container.
-        Assert.False(result!.Value.TryGetProperty("registered", out var registeredEl) && registeredEl.GetBoolean());
-        Assert.False(result.Value.TryGetProperty("container", out var containerEl) && containerEl.ValueKind == JsonValueKind.Object);
+        Assert.False(result!.Value.AssertProperty("registered").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, result.Value.AssertProperty("container").ValueKind);
     }
 
     #endregion

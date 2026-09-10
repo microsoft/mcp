@@ -316,11 +316,11 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<BackupContainerInfo?> GetContainerAsync(
         string vaultName, string resourceGroup, string subscription,
-        string containerName, string? vaultType, string? tenant,
+        string containerName, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
 
         if (VaultTypeResolver.IsDpp(resolvedType))
         {

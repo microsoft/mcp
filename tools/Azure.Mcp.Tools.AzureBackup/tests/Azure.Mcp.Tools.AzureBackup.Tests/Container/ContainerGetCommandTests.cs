@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Container;
@@ -46,7 +47,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Service.GetContainerAsync(
             Arg.Is(Vault), Arg.Is(Rg), Arg.Is(Sub),
             Arg.Is(BareContainerName),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(SampleContainer());
 
         var response = await ExecuteCommandAsync(
@@ -69,7 +70,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Service.GetContainerAsync(
             Arg.Is(Vault), Arg.Is(Rg), Arg.Is(Sub),
             Arg.Is(BareContainerName),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(SampleContainer());
 
         var response = await ExecuteCommandAsync(
@@ -85,7 +86,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         await Service.Received(1).GetContainerAsync(
             Arg.Is(Vault), Arg.Is(Rg), Arg.Is(Sub),
             Arg.Is(BareContainerName),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -101,7 +102,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Service.GetContainerAsync(
             Arg.Is(Vault), Arg.Is(Rg), Arg.Is(Sub),
             Arg.Is(derivedName),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(SampleContainer(derivedName));
 
         var response = await ExecuteCommandAsync(
@@ -122,7 +123,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Service.GetContainerAsync(
             Arg.Is(Vault), Arg.Is(Rg), Arg.Is(Sub),
             Arg.Is(BareContainerName),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((BackupContainerInfo?)null);
 
         var response = await ExecuteCommandAsync(
@@ -165,25 +166,11 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     }
 
     [Fact]
-    public async Task ExecuteAsync_Fails_WhenVaultTypeIsDpp()
-    {
-        var response = await ExecuteCommandAsync(
-            "--subscription", Sub,
-            "--vault", Vault,
-            "--resource-group", Rg,
-            "--vault-type", "dpp",
-            "--storage-account", Account);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Backup vaults (DPP) do not use protection containers", response.Message);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_MapsForbidden_ToActionableMessage()
     {
         Service.GetContainerAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden"));
 
@@ -203,7 +190,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     {
         Service.GetContainerAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Vault gone"));
 
@@ -218,11 +205,50 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
     }
 
     [Fact]
+    public async Task ExecuteAsync_MissingVault_IsNotReportedAsUnregisteredContainer()
+    {
+        Service.GetContainerAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Vault 'myVault' not found in resource group 'myRg'."));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", Sub,
+            "--vault", Vault,
+            "--resource-group", Rg,
+            "--storage-account", Account);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Vault 'myVault' not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DppVault_ReturnsBadRequest()
+    {
+        Service.GetContainerAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new NotSupportedException(
+                "Backup vaults (DPP) do not use protection containers. This command is only supported for Recovery Services vaults (RSV)."));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", Sub,
+            "--vault", Vault,
+            "--resource-group", Rg,
+            "--storage-account", Account);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Backup vaults (DPP) do not use protection containers", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesGenericErrors()
     {
         Service.GetContainerAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Boom"));
 
@@ -248,7 +274,7 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         {
             Service.GetContainerAsync(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns((BackupContainerInfo?)null);
         }
 
@@ -272,8 +298,20 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Assert.Contains(options, o => o.Name == "--subscription");
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--vault");
-        Assert.Contains(options, o => o.Name == "--vault-type");
+        Assert.DoesNotContain(options, o => o.Name == "--vault-type");
         Assert.Contains(options, o => o.Name == "--container");
         Assert.Contains(options, o => o.Name == "--storage-account");
+    }
+
+    [Fact]
+    public void ResultSerialization_PreservesNotRegisteredFields()
+    {
+        var json = JsonSerializer.Serialize(
+            new ContainerGetCommand.ContainerGetCommandResult(false, null),
+            AzureBackupJsonContext.Default.ContainerGetCommandResult);
+
+        using var document = JsonDocument.Parse(json);
+        Assert.False(document.RootElement.GetProperty("registered").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty("container").ValueKind);
     }
 }

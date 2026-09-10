@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Core;
+using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options.Container;
@@ -15,9 +17,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Container;
 
 /// <summary>
 /// Looks up a single RSV protection container by name or by storage account.
-/// A 404 from the vault is surfaced as a successful response with 'registered: false'
-/// so callers can drive idempotent register/refresh flows without treating "not registered
-/// yet" as an error.
+/// A missing container is surfaced as a successful response with 'registered: false'
+/// so callers can drive idempotent register/refresh flows without treating "not registered yet"
+/// as an error. A missing vault remains an error.
 /// </summary>
 [CommandMetadata(
     Id = "b7d4e9a2-3f1c-4a5b-8d6e-2c1f9b4a7e83",
@@ -38,7 +40,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Container;
     Secret = false,
     LocalRequired = false)]
 public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
-    : BaseAzureBackupCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>(subscriptionResolver)
+    : SubscriptionCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ContainerGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -46,12 +48,6 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IAz
     public override void ValidateOptions(ContainerGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        if (VaultTypeResolver.IsVaultTypeSpecified(options.VaultType) && VaultTypeResolver.IsDpp(options.VaultType))
-        {
-            validationResult.Errors.Add(
-                "Backup vaults (DPP) do not use protection containers. This command is only supported for Recovery Services vaults (RSV).");
-        }
 
         var hasContainer = !string.IsNullOrWhiteSpace(options.Container);
         var hasStorageAccount = !string.IsNullOrWhiteSpace(options.StorageAccount);
@@ -68,7 +64,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IAz
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerGetOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, VaultTypeResolver.Rsv);
 
         try
         {
@@ -79,7 +75,6 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IAz
                 options.ResourceGroup!,
                 options.Subscription!,
                 containerName,
-                options.VaultType,
                 options.Tenant,
                 cancellationToken);
 
@@ -141,5 +136,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IAz
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record ContainerGetCommandResult(bool Registered, BackupContainerInfo? Container);
+    public sealed record ContainerGetCommandResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] bool Registered,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] BackupContainerInfo? Container);
 }
