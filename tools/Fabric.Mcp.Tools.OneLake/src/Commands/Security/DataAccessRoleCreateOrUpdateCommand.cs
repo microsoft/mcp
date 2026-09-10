@@ -26,6 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         Caller must be a workspace Admin or Member. Requires OneLake.ReadWrite.All and
         User.Read.All + GroupMember.Read.All for principal resolution.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

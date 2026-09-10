@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
         Each result includes: name, id, location, resourceGroup, provisioningState, endpoint.
         If no SRE Agent resources are found the tool returns an empty list.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

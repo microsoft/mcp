@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
         Lists all Azure Load Testing resources available in the selected subscription and resource group.
         Returns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

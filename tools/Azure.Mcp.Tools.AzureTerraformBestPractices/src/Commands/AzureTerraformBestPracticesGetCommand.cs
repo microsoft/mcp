@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
         generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to
         the Azure Best Practices category.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

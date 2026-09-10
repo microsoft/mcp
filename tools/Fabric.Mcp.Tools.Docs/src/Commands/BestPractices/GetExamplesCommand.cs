@@ -14,6 +14,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     Name = "api-examples",
     Title = "API Examples",
     Description = "Retrieves example API request and response files for a Microsoft Fabric item type. Use this when the user needs sample API calls or implementation examples. Returns a dictionary of example files with their contents.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

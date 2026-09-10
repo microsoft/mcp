@@ -2,15 +2,55 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.42 (Unreleased)
+## 3.0.0-beta.43 (2026-09-10)
 
 ### Features Added
 
+- `azmcp azurebackup protecteditem get` now exposes a richer Azure Backup protected-item representation for both RSV and DPP workloads, including lifecycle, recovery, protection-state, and workload-specific extended properties, so callers can inspect the current state before updating protection. [[#3600](https://github.com/microsoft/mcp/pull/3600)]
+- `azmcp azurebackup vault get` now returns managed identity details for RSV and DPP vaults, including identity type, principal ID, tenant ID, and attached user-assigned identity resource IDs with their principal and client IDs. [[#3600](https://github.com/microsoft/mcp/pull/3600)]
+- Added an `operationPlane` field to tool metadata in `azmcp tools list` output, identifying each tool as `data`, `control`, `both`, or `notApplicable`. A tool's plane is the API it acts against to produce the requested result; Resource Manager calls made only as setup, to locate the target, do not count toward it. Every tool is classified. [[#3368](https://github.com/microsoft/mcp/pull/3368)]
+- Added `monitor workspace log search` for synchronous, bounded searches of Basic and Auxiliary Log Analytics tables. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
+- Added commands to delete Azure Resilience Management usage plans and usage plan enrollments. [[#3601](https://github.com/microsoft/mcp/pull/3601)]
+
 ### Breaking Changes
+
+- Renamed the user-invocable `/resilience-recovery-operations` skill to `/resilience-management-operations`; update saved prompts and workflows to use the new invocation name. [[#3601](https://github.com/microsoft/mcp/pull/3601)]
 
 ### Bugs Fixed
 
+- Preserved configured consolidated-tool descriptions and structured output when single mode starts child namespace servers. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
+- Corrected Analytics-table routing guidance when Log Analytics table metadata omits the plan-change timestamp. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
+- Fixed log search playback tests to use sanitized workspace and column metadata. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
+
+## 3.0.0-beta.42 (2026-09-08)
+
+### Features Added
+
+- Added support for commands to provide sanitized telemetry messages for failed tool calls. [[#3426](https://github.com/microsoft/mcp/pull/3426)]
+- Added the Optimization toolset for Azure Advisor cost-optimization recommendations: [[#3429](https://github.com/microsoft/mcp/pull/3429)]
+  - optimization recommendation list: List top cost-saving recommendations for a subscription, ranked by impact and currency-normalized annual savings.
+  - optimization recommendation alternatives: Get alternative resize/SKU options for a VM or VM Scale Set, with inclusion/exclusion filters.
+  - optimization recommendation explain: Explain a recommendation and project current-versus-target-SKU utilization time-series from Azure Monitor.
+- Added Azure Data Manager for Energy health check and schema get and list tools. [[#3445](https://github.com/microsoft/mcp/pull/3445)]
+- Added the `azmcp resilience drill run add-notes` command to append notes to a resilience drill run. [[#3379](https://github.com/microsoft/mcp/pull/3379)]
+- Added the `azmcp resilience drill run failover` command to start failover for a resilience drill run. [[#3379](https://github.com/microsoft/mcp/pull/3379)]
+- Added the `azmcp resilience drill run reprotect` command to re-establish protection for failed-over resources in a drill run. [[#3379](https://github.com/microsoft/mcp/pull/3379)]
+- Added the `azmcp resilience drill run resume` command to resume a failover drill run paused after fault injection. [[#3379](https://github.com/microsoft/mcp/pull/3379)]
+- Expanded `advisor recommendation summary` with lifecycle status, metadata subcategory, service-retirement date, and recommendation type groupings and filters. [[#3520](https://github.com/microsoft/mcp/pull/3520)]
+- Added recoveryplan failover, finalize, and reprotect commands, plus recovery job retry and resume commands for Azure Resilience Management. [[#3447](https://github.com/microsoft/mcp/pull/3447)]
+
+### Breaking Changes
+
+- Changed `advisor recommendation summary --group-by recommendation-type` so `groups[].key` is the recommendation type ID GUID instead of recommendation problem text. Use `groups[].label` for the friendly display name; callers that relied on problem-text keys must migrate. [[#3520](https://github.com/microsoft/mcp/pull/3520)]
+
+### Bugs Fixed
+
+- Improved the `get_azure_ai_resources_details` consolidated tool description to explicitly mention Azure Cognitive Search, knowledge sources, knowledge bases, and indexes so that related prompts correctly trigger this tool in consolidated mode. [[#3041](https://github.com/microsoft/mcp/pull/3041)]
+- Corrected impacted resource type summary keys, added metadata-authoritative category and impact values, rejected invalid summary filters and top limits, excluded legacy non-64-character Advisor recommendation IDs to prevent old/new engine duplicates, and reserved nonempty `serviceGroupId` recommendations for the future service-group flavor. [[#3520](https://github.com/microsoft/mcp/pull/3520)]
+
 ### Other Changes
+
+- Standardized the Azure Resilience Management recovery plan option name as recoveryplan. [[#3447](https://github.com/microsoft/mcp/pull/3447)]
 
 ## 3.0.0-beta.41 (2026-09-03)
 

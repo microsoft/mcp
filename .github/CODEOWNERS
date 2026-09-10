@@ -99,6 +99,12 @@
 # ServiceLabel: %tools-Advisor
 # ServiceOwners:                       @ankiga-MSFT
 
+# PRLabel: %tools-ADME
+/tools/Azure.Mcp.Tools.Adme/           @aysriva @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ADME
+# ServiceOwners:                       @aysriva
+
 # PRLabel: %tools-Aks
 /tools/Azure.Mcp.Tools.Aks/            @feiskyer @gossion @microsoft/azure-mcp
 

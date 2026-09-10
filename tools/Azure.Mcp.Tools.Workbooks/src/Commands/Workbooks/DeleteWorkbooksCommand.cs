@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
         To learn more, visit: https://learn.microsoft.com/azure/azure-monitor/visualize/workbooks-manage
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

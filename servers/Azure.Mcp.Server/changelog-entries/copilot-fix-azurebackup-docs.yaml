@@ -1,0 +1,12 @@
+changes:
+  - section: "Bugs Fixed"
+    description: >-
+      Fixed Azure Backup documentation and option descriptions: moved the AKS-specific
+      options from `azurebackup policy create` to `azurebackup protecteditem protect`
+      in `azmcp-commands.md` (matching the option migration in PR #2888), and
+      enumerated the valid `--workload-type` aliases accepted by
+      `azurebackup protectableitem list` (`SQL`/`SQLDatabase`, `SQLInstance`,
+      `SAPHana`/`SAPHanaDatabase`, `SAPHanaSystem`, `SAPHanaDBInstance`/`SAPHanaDBI`,
+      `VM`/`IaaSVM`/`VirtualMachine`, `FileShare`/`AzureFileShare`/`AFS`,
+      `SAPAse`/`SAPAseDatabase`/`ASE`/`Sybase`) in both `azmcp-commands.md` and the
+      command's `--workload-type` option description.

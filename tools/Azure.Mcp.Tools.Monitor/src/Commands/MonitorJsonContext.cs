@@ -15,6 +15,7 @@ using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Models.HealthModels;
+using Azure.Mcp.Tools.Monitor.Models.Log;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -29,6 +30,15 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(HealthModelIdentity))]
 [JsonSerializable(typeof(HealthModelListCommand.HealthModelListCommandResult))]
 [JsonSerializable(typeof(HealthModelSummary))]
+[JsonSerializable(typeof(LogSearchApiColumn))]
+[JsonSerializable(typeof(LogSearchApiError))]
+[JsonSerializable(typeof(LogSearchApiErrorDetail))]
+[JsonSerializable(typeof(LogSearchApiRequest))]
+[JsonSerializable(typeof(LogSearchApiResponse))]
+[JsonSerializable(typeof(LogSearchApiTable))]
+[JsonSerializable(typeof(LogSearchColumn))]
+[JsonSerializable(typeof(LogSearchError))]
+[JsonSerializable(typeof(LogSearchErrorDetail))]
 [JsonSerializable(typeof(List<HealthModelSummary>))]
 [JsonSerializable(typeof(List<JsonNode>))]
 [JsonSerializable(typeof(MetricsBatchQueryCommand.MetricsBatchQueryCommandResult))]
@@ -49,6 +59,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandResult))]
 [JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
 [JsonSerializable(typeof(WorkspaceLogQueryCommand.WorkspaceLogQueryCommandResult))]
+[JsonSerializable(typeof(WorkspaceLogSearchResult))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]
 [JsonSerializable(typeof(object))]
@@ -56,6 +67,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(List<object>))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(JsonElement?))]
+[JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(int))]
 [JsonSerializable(typeof(int?))]

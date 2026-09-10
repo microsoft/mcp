@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 
 internal static class RecommendationFilterValidator
 {
-    private static readonly string[] AllowedCategories =
+    internal static readonly string[] AllowedCategories =
     [
         "Cost",
         "HighAvailability",
@@ -18,7 +18,7 @@ internal static class RecommendationFilterValidator
         "OperationalExcellence",
     ];
 
-    private static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
+    internal static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
 
     private static readonly string[] AllowedStatuses =
     [
@@ -37,14 +37,7 @@ internal static class RecommendationFilterValidator
         ValidateOptionalValue("--resource", options.Resource, validationResult);
         ValidateOptionalValue("--search", options.Search, validationResult);
         ValidateOptionalValue("--sub-category", options.SubCategory, validationResult);
-
-        if (options.RecommendationTypeId is not null &&
-            !Guid.TryParseExact(options.RecommendationTypeId.Trim(), "D", out _))
-        {
-            validationResult.Errors.Add(
-                $"Invalid --recommendation-type-id value '{options.RecommendationTypeId}'. " +
-                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.");
-        }
+        ValidateRecommendationTypeId(options.RecommendationTypeId, validationResult);
 
         if (options.TrackingIds?.Any(string.IsNullOrWhiteSpace) == true)
         {
@@ -58,10 +51,64 @@ internal static class RecommendationFilterValidator
             options.RetirementDate);
     }
 
+    internal static void ValidateCommon(
+        ValidationResult validationResult,
+        string? category,
+        string? impact,
+        string? recommendationTypeId,
+        string? resourceType,
+        string? resource,
+        string? search,
+        string? subCategory,
+        string? retirementDate,
+        bool serviceRetirementOnly = false)
+    {
+        ValidateAllowedValue("--category", category, AllowedCategories, validationResult);
+        ValidateAllowedValue("--impact", impact, AllowedImpacts, validationResult);
+        ValidateOptionalValue("--resource-type", resourceType, validationResult);
+        ValidateOptionalValue("--resource", resource, validationResult);
+        ValidateOptionalValue("--search", search, validationResult);
+        ValidateOptionalValue("--sub-category", subCategory, validationResult);
+        ValidateRecommendationTypeId(recommendationTypeId, validationResult);
+
+        ServiceRetirementFilterValidator.Validate(
+            validationResult,
+            subCategory,
+            trackingIds: null,
+            retirementDate,
+            serviceRetirementOnly);
+    }
+
     internal static string? NormalizeRecommendationTypeId(string? recommendationTypeId) =>
         Guid.TryParseExact(recommendationTypeId?.Trim(), "D", out var parsed)
             ? parsed.ToString("D")
             : null;
+
+    internal static string? NormalizeAllowedValue(
+        string? value,
+        IReadOnlyCollection<string> allowedValues)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return allowedValues.FirstOrDefault(
+            candidate => candidate.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void ValidateRecommendationTypeId(
+        string? recommendationTypeId,
+        ValidationResult validationResult)
+    {
+        if (recommendationTypeId is not null &&
+            !Guid.TryParseExact(recommendationTypeId.Trim(), "D", out _))
+        {
+            validationResult.Errors.Add(
+                $"Invalid --recommendation-type-id value '{recommendationTypeId}'. " +
+                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.");
+        }
+    }
 
     private static void ValidateAllowedValue(
         string optionName,
@@ -75,7 +122,8 @@ internal static class RecommendationFilterValidator
         }
 
         var normalized = value.Trim();
-        if (normalized.Length == 0 || !allowedValues.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+        if (normalized.Length == 0 ||
+            !allowedValues.Contains(normalized, StringComparer.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add(
                 $"Invalid {optionName} value '{value}'. Allowed values: {string.Join(", ", allowedValues)}.");

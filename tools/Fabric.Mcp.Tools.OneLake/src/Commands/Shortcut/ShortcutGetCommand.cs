@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         Get the properties of a single shortcut (name, path, target,
         configuration). Requires OneLake.Read.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
