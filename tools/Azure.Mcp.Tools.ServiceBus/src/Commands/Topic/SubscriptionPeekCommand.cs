@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
         Returns message content, properties, and metadata.  Messages remain in the subscription after peeking.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

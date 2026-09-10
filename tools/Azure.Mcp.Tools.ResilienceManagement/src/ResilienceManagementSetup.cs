@@ -36,8 +36,10 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<GoalResourceGetCommand>();
         services.AddSingleton<UsagePlanGetCommand>();
         services.AddSingleton<UsagePlanCreateCommand>();
+        services.AddSingleton<UsagePlanDeleteCommand>();
         services.AddSingleton<UsagePlanEnrollmentGetCommand>();
         services.AddSingleton<UsagePlanEnrollmentCreateCommand>();
+        services.AddSingleton<UsagePlanEnrollmentDeleteCommand>();
         services.AddSingleton<RecoveryPlanGetCommand>();
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
@@ -111,6 +113,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         usagePlans.AddCommand<UsagePlanGetCommand>(serviceProvider);
         usagePlans.AddCommand<UsagePlanCreateCommand>(serviceProvider);
+        usagePlans.AddCommand<UsagePlanDeleteCommand>(serviceProvider);
 
         // Create enrollment subgroup under usageplan
         var enrollments = new CommandGroup("enrollment", "Resilience usage plan enrollment operations - Commands for listing enrollments of a resilience usage plan.");
@@ -118,6 +121,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         enrollments.AddCommand<UsagePlanEnrollmentGetCommand>(serviceProvider);
         enrollments.AddCommand<UsagePlanEnrollmentCreateCommand>(serviceProvider);
+        enrollments.AddCommand<UsagePlanEnrollmentDeleteCommand>(serviceProvider);
 
         // Create recoveryplan subgroup
         var recoveryPlans = new CommandGroup("recoveryplan", "Resilience recoveryplan operations - Commands for listing and getting resilience recovery plans for an Azure service group.");

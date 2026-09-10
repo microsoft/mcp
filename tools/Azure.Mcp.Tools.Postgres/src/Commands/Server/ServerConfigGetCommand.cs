@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
     Name = "get",
     Title = "Get PostgreSQL Server Configuration",
     Description = "Retrieve the configuration of a PostgreSQL server.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

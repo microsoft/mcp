@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         are deployed, or see available models in a specific Foundry resource. Requires resource-name and resource-group.
         For Foundry resource-level details like endpoint URL, location, or SKU, use the resource get command instead.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

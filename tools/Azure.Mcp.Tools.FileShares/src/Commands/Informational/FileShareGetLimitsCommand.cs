@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
     Name = "limits",
     Title = "Get File Share Limits",
     Description = "Get file share limits for a subscription and location",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

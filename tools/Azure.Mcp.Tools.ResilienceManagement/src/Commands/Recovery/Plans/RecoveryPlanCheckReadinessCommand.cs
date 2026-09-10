@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Name = "checkreadiness",
     Title = "Check Resilience Recoveryplan Readiness",
     Description = "Checks whether a resilience recoveryplan and its protected resources are ready for recovery operations in an Azure service group.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

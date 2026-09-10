@@ -271,6 +271,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_get | Show the current workload-specific inclusion or exclusion settings and all protected-item properties for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
@@ -304,6 +305,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Get the managed identity details, including principal ID, tenant ID, and attached user-assigned identities, for backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Show the identity type and attached user-assigned identity resource IDs for Data Protection backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | investigation-required |
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
@@ -987,6 +990,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_workspace_list | Show me my Log Analytics workspaces | none |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription | none |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> | none |
+| monitor_workspace_log_search | Find records matching <search_query> in the Basic table <table_name> in Log Analytics workspace <workspace_name> in resource group <resource_group> over <timespan> | none |
+| monitor_workspace_log_search | Search the Auxiliary table <table_name> in workspace <workspace_name> in resource group <resource_group> for <search_query> during <timespan>, limited to <limit> results | none |
+| monitor_workspace_log_search | Search for <search_query> in the Basic or Auxiliary table <table_name> in Log Analytics workspace <workspace_name> in resource group <resource_group> over the last day | none |
 
 ## Azure Native ISV
 
@@ -1130,9 +1136,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
+| resilience_usageplan_delete | Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name> | none |
+| resilience_usageplan_delete | Permanently remove the usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_delete | Remove the usage plan of service group <service_group> | clarification-required |
+| resilience_usageplan_delete | Remove usage plan <usage_plan_name> entirely, not just one service group enrollment, from resource group <resource_group_name> | none |
+| resilience_usageplan_delete | Delete usage plan <usage_plan_name> from resource group <resource_group_name>. If dependent enrollments block deletion, list their exact names and ask for explicit confirmation before deleting any enrollment; do not remove them automatically | none |
+| resilience_usageplan_delete | Retry deleting usage plan <usage_plan_name> from resource group <resource_group_name> only after every separately confirmed dependent enrollment deletion succeeds; stop and report any enrollment cleanup failure | none |
 | resilience_usageplan_enrollment_create | Create a usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> associated with service group <service_group> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_create | Enroll service group <service_group> in usage plan <usage_plan_name> as <enrollment_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_create | Update enrollment <enrollment_name> under usage plan <usage_plan_name> to use service group <service_group> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_delete | Delete enrollment <enrollment_name> from usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_delete | Remove the service group association named <enrollment_name> from resilience usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_delete | Unenroll service group <service_group> from usage plan <usage_plan_name>, but keep the usage plan itself | clarification-required |
+| resilience_usageplan_enrollment_delete | Remove only enrollment <enrollment_name> from usage plan <usage_plan_name>; do not delete the parent plan | none |
 | resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_get | List all resilience usage plans in my subscription | none |

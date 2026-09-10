@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Name = "create",
     Title = "Create Managed Disk",
     Description = "Creates a new Azure managed disk in the specified resource group. Supports creating empty disks (specify --size-gb), disks from a source such as a snapshot, another managed disk, or a blob URI (specify --source), disks from a Shared Image Gallery image version (specify --gallery-image-reference), or disks ready for upload (specify --upload-type and --upload-size-bytes). If location is not specified, defaults to the resource group's location. Supports configuring disk size, storage SKU (e.g., Premium_LRS, Standard_LRS, UltraSSD_LRS), OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, on-demand bursting, and IOPS/throughput limits for UltraSSD disks. Create a disk with network access policy DenyAll, AllowAll, or AllowPrivate and associate a disk access resource during creation.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

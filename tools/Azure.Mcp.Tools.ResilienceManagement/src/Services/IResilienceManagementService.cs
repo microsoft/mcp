@@ -115,5 +115,9 @@ public interface IResilienceManagementService
 
     Task<UsagePlanInfo> CreateUsagePlanAsync(string resourceGroup, string usagePlan, UsagePlanKind planType, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 
+    Task<bool> DeleteUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
+
     Task<UsagePlanEnrollmentInfo> CreateUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string serviceGroup, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteUsagePlanEnrollmentAsync(string resourceGroup, string usagePlan, string enrollment, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 }

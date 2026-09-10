@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Name = "resume",
     Title = "Resume a Resilience Drill Run",
     Description = "Resumes a failover drill run paused after fault injection so it can proceed to the failover stage.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

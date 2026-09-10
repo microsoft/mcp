@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
         Returns aggregate device counts for the hub: disabledDeviceCount (the number of currently disabled devices), enabledDeviceCount (the number of currently enabled devices), and totalDeviceCount (the total number of devices registered for the IoT Hub).
         Hub names/IDs are case-sensitive and must match exactly.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

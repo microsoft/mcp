@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: "`azmcp azurebackup protecteditem get` now exposes a richer Azure Backup protected-item representation for both RSV and DPP workloads, including lifecycle, recovery, protection-state, and workload-specific extended properties, so callers can inspect the current state before updating protection."
+  - section: Features Added
+    description: "`azmcp azurebackup vault get` now returns managed identity details for RSV and DPP vaults, including identity type, principal ID, tenant ID, and attached user-assigned identity resource IDs with their principal and client IDs."

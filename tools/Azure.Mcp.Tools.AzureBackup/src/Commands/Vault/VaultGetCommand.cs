@@ -24,10 +24,13 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     Description = """
         Retrieves backup vault information. When --vault and --resource-group are specified,
         returns detailed information about a single vault including type, location, SKU, and
-        storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in
-        the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or
+        storage redundancy, plus managed identity details when configured. Identity details
+        include the identity type, principal ID, tenant ID, and attached user-assigned
+        identities. When omitted, lists all backup vaults (RSV and Backup vaults) in the
+        subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or
         --resource-group to narrow the listing results.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

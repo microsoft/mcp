@@ -19,6 +19,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         workspace, item, and optional path within the target item. Requires
         OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
         "Explains what an Advisor recommendation type means, including its display name, category, sub-category, " +
         "impact, supported resource type, description, potential benefits, and a learn-more documentation link " +
         "for the recommendation.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

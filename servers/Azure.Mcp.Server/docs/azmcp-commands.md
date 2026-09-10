@@ -956,7 +956,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                [--sku <sku>] \
                                [--storage-type <storage-type>]
 
-# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
+# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, storage redundancy, and managed identity details when configured. Identity details include the identity type, principal ID, tenant ID, and attached user-assigned identities with their resource IDs, principal IDs, and client IDs. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault get --subscription <subscription> \
                             [--resource-group <resource-group>] \
@@ -1135,7 +1135,7 @@ azmcp azurebackup policy get --subscription <subscription> \
 #### Protected Item
 
 ```bash
-# Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, and last backup time. When --protected-item is omitted, lists all protected items in the vault.
+# Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, lifecycle and recovery metadata, and workload-specific extended properties returned by Azure Backup. When --protected-item is omitted, lists all protected items in the vault. The explicit response contract mirrors the current Azure Backup SDK surface and must be revisited when the SDK version changes.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem get --subscription <subscription> \
                                     --resource-group <resource-group> \
@@ -3407,6 +3407,34 @@ azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
                                   --table "AppEvents_CL" \
                                   --query "| order by TimeGenerated desc"
+
+# Search a Basic or Auxiliary table in a Log Analytics workspace.
+# Use workspace log query for Analytics tables.
+# --query must begin with '|' and omit the primary table name.
+# The server binds --table and caps output at --limit (default 20, maximum 100).
+# --timespan is a positive ISO 8601 duration (such as "P1D") or a closed
+# RFC 3339 start/end interval, up to 30 days. Basic queries cover only the last 30 days.
+# Results preserve column types and flag service-reported partial results.
+# Scan cost depends on ingested volume across --timespan, not --limit.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor workspace log search --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --workspace <workspace> \
+                                   --table <table> \
+                                   --query <search-pipeline> \
+                                   --timespan <timespan> \
+                                   [--limit <limit>] \
+                                   [--tenant <tenant>]
+
+# Search the last day of a Basic or Auxiliary table for error records
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor workspace log search --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --workspace <workspace> \
+                                   --table "ContainerLogV2" \
+                                   --query "| where LogLevel == 'error' | project TimeGenerated, LogMessage" \
+                                   --timespan "P1D" \
+                                   --limit 50
 ```
 
 #### Health Models
@@ -4032,6 +4060,12 @@ azmcp resilience usageplan create --subscription <subscription> \
                                   --usage-plan <usage-plan> \
                                   --plan-type <plan-type>
 
+# Delete a resilience usage plan from a resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan delete --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --usage-plan <usage-plan>
+
 # Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan enrollment get --subscription <subscription> \
@@ -4046,6 +4080,13 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --usage-plan <usage-plan> \
                                              --enrollment <enrollment> \
                                              --service-group <service-group>
+
+# Delete an enrollment from a resilience usage plan
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment delete --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --usage-plan <usage-plan> \
+                                             --enrollment <enrollment>
 
 # Get a resilience recoveryplan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
