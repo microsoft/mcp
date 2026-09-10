@@ -4,6 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
+using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;

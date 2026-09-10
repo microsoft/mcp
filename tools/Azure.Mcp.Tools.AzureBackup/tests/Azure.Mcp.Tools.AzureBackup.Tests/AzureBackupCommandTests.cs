@@ -70,6 +70,23 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
             Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        // Container discovery can return storage accounts registered from other resource groups.
+        // These are not test resources, so sanitize their names in container identifiers and ARM IDs.
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """StorageContainer;Storage;[^;"/]+;[^"/]+""",
+            Value = "StorageContainer;Storage;Sanitized;Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """(?<=resourceGroups/)[^/"\\]+""",
+            Value = "Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """(?<=storageAccounts/)[^/"\\]+""",
+            Value = "Sanitized",
         })
     ];
 
