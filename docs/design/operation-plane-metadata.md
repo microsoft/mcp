@@ -19,8 +19,7 @@ Add a `ToolOperationPlane` value to `CommandMetadataAttribute` and propagate it 
 ```csharp
 public enum ToolOperationPlane
 {
-    Unspecified,
-    Data,
+    Data = 1,
     Control,
     Both,
     NotApplicable
@@ -54,9 +53,8 @@ A tool's plane is the plane of the API it acts against to produce the result the
 | `Control` | The tool performs its action(s) against Azure Resource Manager or another management-plane API. |
 | `Both` | The tool can act on either plane, so a single plane cannot be inferred from the tool alone. |
 | `NotApplicable` | The tool performs no service-plane operation, such as `tools list`, `server start`, or a local-only utility. |
-| `Unspecified` | The tool has not been classified. This is an unset marker, not a valid answer. |
 
-`NotApplicable` is a deliberate classification meaning "reviewed, and no service plane applies". `Unspecified` means "not yet reviewed" and fails validation.
+In command declarations, `NotApplicable` is a deliberate classification meaning "reviewed, and no service plane applies". It must not be used in place of classifying a tool that calls a service.
 
 Classify by the API the work ultimately reaches, not by how the tool reaches it. A tool that shells out to an external CLI is not `NotApplicable` if that CLI calls Azure on the user's behalf; `extension azqr` runs the Azure Quick Review CLI, which scans the subscription through ARM, so it is `Control`. `extension cli generate` and `extension cli install` call no service at all and are genuinely `NotApplicable`.
 
@@ -90,11 +88,11 @@ A tool that merely reaches ARM on its way to a data-plane call is `Data`, not `B
 
 ### Required Declaration
 
-`OperationPlane`, like every `CommandMetadataAttribute` property, must be set explicitly. `Unspecified` remains an unset marker rather than a shipping state.
+`OperationPlane`, like every `CommandMetadataAttribute` property, must be set explicitly to one of the supported classifications.
 
-Defaulting to `Data` would silently misclassify the many ARM-based tools. Requiring an explicit value prevents accidental omission, while validation rejects an explicit `Unspecified` value.
+Defaulting to `Data` would silently misclassify the many ARM-based tools. Requiring an explicit value prevents accidental omission, while validation rejects undefined numeric values, including zero. The supported enum members retain their existing numeric values.
 
-`CommandOperationPlaneTests.AllCommands_DeclareAnOperationPlane` enforces this: it walks every registered tool and fails on any that is still `Unspecified`. There is no allowlist, so a new tool must be classified before it can ship. A tool that calls no service is `NotApplicable`, which is an explicit classification and satisfies the test.
+`CommandOperationPlaneTests.AllCommands_DeclareAKnownOperationPlane` enforces this: it walks every registered tool and fails on any value not defined on the enum. A tool that calls no service is `NotApplicable`, which is an explicit classification and satisfies the test.
 
 ## JSON representation
 
@@ -112,9 +110,9 @@ The `tools list` and `--learn` output reports the plane as a string on the exist
 
 The behavioral flags use a `{ value, description }` shape because `"destructive": true` needs explanation. `"operationPlane": "control"` is self-describing, so it is emitted as a plain string rather than carrying a description that is a fixed function of the value.
 
-Stable serialized values are `unspecified`, `data`, `control`, `both`, and `notApplicable`. Unrecognized values, including any added by a future version, deserialize as `Unspecified` so older binaries keep reading newer metadata.
+Stable serialized values are `data`, `control`, `both`, and `notApplicable`. Unrecognized values, including the legacy `unspecified` value and any added by a future version, deserialize as `NotApplicable` so older binaries keep reading newer metadata. Undefined numeric enum values cannot be serialized.
 
-Metadata without `operationPlane` also deserializes as `Unspecified`.
+Metadata without `operationPlane`, or with a non-string value, also deserializes as `NotApplicable`. New `ToolMetadata` instances default to `NotApplicable`; command attributes still require an explicit classification.
 
 ## Scope
 
@@ -133,7 +131,6 @@ Tool families are not aggregated at runtime. A documentation generator holding t
 | Any `Both` | `Both` |
 | A mixture of `Data` and `Control` | `Both` |
 | Only `NotApplicable` | `NotApplicable` |
-| Any `Unspecified` | `Unspecified` |
 
 `NotApplicable` does not change an otherwise applicable aggregate. For example, `Data` plus `NotApplicable` aggregates to `Data`.
 
@@ -145,19 +142,19 @@ Delivered in this change:
 
 1. The enum, the attribute property, and the CLI JSON serialization.
 2. A classification for every tool in the repository.
-3. A test rejecting `Unspecified`, so a new tool cannot be added without a classification.
+3. A test rejecting undefined operation planes, so every registered tool has a supported classification.
 
 Left to a consumer:
 
 4. Documentation generation displaying the classification and deriving tool-family coverage.
 
-Classifying everything in one pass, rather than incrementally, keeps `Unspecified` from becoming a permanent resting state and means the annotation is useful the day it ships.
+Classifying everything in one pass, rather than incrementally, means the annotation is useful the day it ships.
 
 ## Compatibility
 
 - Tool syntax and option binding do not change.
 - The CLI JSON change is additive.
 - Consumers that ignore unknown JSON properties continue to work.
-- Older serialized metadata remains readable, and unknown future values degrade to `Unspecified`.
+- Older serialized metadata remains readable, and unknown future values fall back to `NotApplicable`.
 - MCP tool definitions and standard tool annotations are unchanged.
 - Serialization uses source-generated `System.Text.Json` metadata and is AOT-safe.

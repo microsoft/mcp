@@ -40,7 +40,7 @@ public sealed class CommandMetadataAttributeTests
             Name = name,
             Description = description,
             Title = title,
-            OperationPlane = ToolOperationPlane.Unspecified,
+            OperationPlane = ToolOperationPlane.NotApplicable,
             Destructive = true,
             Idempotent = false,
             OpenWorld = true,

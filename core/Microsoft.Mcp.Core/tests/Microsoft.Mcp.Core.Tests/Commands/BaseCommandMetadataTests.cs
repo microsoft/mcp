@@ -140,7 +140,7 @@ public sealed class BaseCommandMetadataTests
             Name = "default-test",
             Title = "Default Test",
             Description = "Checks attribute defaults.",
-            OperationPlane = ToolOperationPlane.Unspecified,
+            OperationPlane = ToolOperationPlane.NotApplicable,
             Destructive = true,
             Idempotent = false,
             OpenWorld = true,
@@ -150,7 +150,7 @@ public sealed class BaseCommandMetadataTests
         };
         var metadata = attr.ToToolMetadata();
 
-        Assert.Equal(ToolOperationPlane.Unspecified, metadata.OperationPlane);
+        Assert.Equal(ToolOperationPlane.NotApplicable, metadata.OperationPlane);
         Assert.True(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.True(metadata.OpenWorld);

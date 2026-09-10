@@ -23,7 +23,7 @@ public sealed class CommandValidationExceptionTests
         Name = "test-validation",
         Title = "Test Validation Command",
         Description = "A command used only to exercise HandleException in tests.",
-        OperationPlane = ToolOperationPlane.Unspecified,
+        OperationPlane = ToolOperationPlane.NotApplicable,
         Destructive = true,
         Idempotent = false,
         OpenWorld = true,

@@ -21,7 +21,7 @@ public sealed class AuthenticatedCommandTests
         Name = "test-auth",
         Title = "Test Auth Command",
         Description = "A command used only to exercise AuthenticatedCommand error handling in tests.",
-        OperationPlane = ToolOperationPlane.Unspecified,
+        OperationPlane = ToolOperationPlane.NotApplicable,
         Destructive = true,
         Idempotent = false,
         OpenWorld = true,

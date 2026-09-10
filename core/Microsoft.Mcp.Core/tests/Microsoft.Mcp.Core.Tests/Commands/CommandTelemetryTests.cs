@@ -20,7 +20,7 @@ public sealed class CommandTelemetryTests
         Name = "test-telemetry",
         Title = "Test Telemetry Command",
         Description = "A command used only to exercise command telemetry in tests.",
-        OperationPlane = ToolOperationPlane.Unspecified,
+        OperationPlane = ToolOperationPlane.NotApplicable,
         Destructive = true,
         Idempotent = false,
         OpenWorld = true,

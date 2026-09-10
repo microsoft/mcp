@@ -1,0 +1,6 @@
+changes:
+  - section: Breaking Changes
+    description: >-
+      Removed `Unspecified` from `ToolOperationPlane`. Tool metadata now defaults to
+      `NotApplicable`; missing, unknown, or legacy `unspecified` operation-plane JSON
+      values deserialize as `NotApplicable`.
