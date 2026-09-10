@@ -123,13 +123,22 @@ public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> log
             return DefaultBackupManagementType;
         }
 
-        return value.ToUpperInvariant() switch
+        if (value.Equals("AzureStorage", StringComparison.OrdinalIgnoreCase))
         {
-            "AZURESTORAGE" => "AzureStorage",
-            "AZUREIAASVM" => "AzureIaasVM",
-            "AZUREWORKLOAD" => "AzureWorkload",
-            _ => value
-        };
+            return "AzureStorage";
+        }
+
+        if (value.Equals("AzureIaasVM", StringComparison.OrdinalIgnoreCase))
+        {
+            return "AzureIaasVM";
+        }
+
+        if (value.Equals("AzureWorkload", StringComparison.OrdinalIgnoreCase))
+        {
+            return "AzureWorkload";
+        }
+
+        return value;
     }
 
     public sealed record ContainerRefreshCommandResult(
