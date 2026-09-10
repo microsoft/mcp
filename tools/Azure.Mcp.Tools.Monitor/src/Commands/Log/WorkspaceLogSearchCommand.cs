@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
         The server binds the table and appends a final take from limit (default 20, maximum 100). Returns typed columns and rows and explicitly marks partial results.
         Scan cost is based on table ingestion volume across the timespan, not limit. Use monitor_workspace_log_query for Analytics-plan tables.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

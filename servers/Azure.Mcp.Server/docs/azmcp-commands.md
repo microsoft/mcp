@@ -3399,6 +3399,7 @@ azmcp monitor workspace log query --subscription <subscription> \
                                   --query "| order by TimeGenerated desc"
 
 # Search a Basic or Auxiliary table in a Log Analytics workspace.
+# Operation plane: data. ARM workspace and table lookups are setup only.
 # Use workspace log query for Analytics tables.
 # --query must begin with '|' and omit the primary table name.
 # The server binds --table and caps output at --limit (default 20, maximum 100).

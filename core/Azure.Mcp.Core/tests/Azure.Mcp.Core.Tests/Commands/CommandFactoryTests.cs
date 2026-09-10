@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Text.Json;
+using Azure.Mcp.Core.Tests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -48,6 +49,23 @@ public class CommandFactoryTests
         _logger = Substitute.For<ILogger<CommandFactory>>();
         _telemetryService = Substitute.For<ITelemetryService>();
         _configurationOptions = Microsoft.Extensions.Options.Options.Create(_serverConfiguration);
+    }
+
+    [Fact]
+    public void AllRegisteredCommands_HaveValidUniqueIds()
+    {
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
+        var commandIds = new HashSet<Guid>();
+
+        Assert.NotEmpty(commandFactory.AllCommands);
+        Assert.All(commandFactory.AllCommands, entry =>
+        {
+            Assert.True(Guid.TryParse(entry.Value.Id, out var commandId),
+                $"{entry.Key} declares an invalid command ID: '{entry.Value.Id}'.");
+            Assert.NotEqual(Guid.Empty, commandId);
+            Assert.True(commandIds.Add(commandId),
+                $"{entry.Key} declares a duplicate command ID: '{entry.Value.Id}'.");
+        });
     }
 
     [Fact]
