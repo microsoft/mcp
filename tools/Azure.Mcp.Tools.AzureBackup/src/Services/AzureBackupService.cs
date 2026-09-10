@@ -439,27 +439,18 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task RefreshContainersAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? filter, string? vaultType, string? tenant,
+        string? backupManagementType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
-        if (VaultTypeResolver.IsDpp(vaultType))
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(resolved))
         {
-            throw new ArgumentException("Container refresh is only supported for Recovery Services (RSV) vaults. Backup vaults (DPP) do not use protection containers.");
+            throw new ArgumentException(
+                $"Vault '{vaultName}' is a Data Protection (DPP) vault. Container refresh is only supported for Recovery Services (RSV) vaults.");
         }
 
-        // Auto-detect vault type when not explicitly specified so DPP vaults do not get routed to RSV.
-        if (!VaultTypeResolver.IsVaultTypeSpecified(vaultType))
-        {
-            var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
-            if (VaultTypeResolver.IsDpp(resolved))
-            {
-                throw new ArgumentException(
-                    $"Vault '{vaultName}' is a Data Protection (DPP) vault. Container refresh is only supported for Recovery Services (RSV) vaults.");
-            }
-        }
-
-        await rsvOps.RefreshContainersAsync(vaultName, resourceGroup, subscription, filter, tenant, cancellationToken);
+        await rsvOps.RefreshContainersAsync(vaultName, resourceGroup, subscription, backupManagementType ?? "AzureStorage", tenant, cancellationToken);
     }
 
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(

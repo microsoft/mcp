@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests.Container;
 
 public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<ContainerRefreshCommand, IAzureBackupService>
 {
-    private const string DefaultFilter = "backupManagementType eq 'AzureStorage'";
+    private const string DefaultBackupManagementType = "AzureStorage";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -32,18 +32,17 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
         Assert.Contains(options, o => o.Name == "--subscription");
         Assert.Contains(options, o => o.Name == "--resource-group");
         Assert.Contains(options, o => o.Name == "--vault");
-        Assert.Contains(options, o => o.Name == "--vault-type");
-        Assert.Contains(options, o => o.Name == "--filter");
+        Assert.Contains(options, o => o.Name == "--backup-management-type");
     }
 
     [Fact]
-    public async Task ExecuteAsync_TriggersRefresh_WithDefaultFilter_WhenFilterOmitted()
+    public async Task ExecuteAsync_TriggersRefresh_WithDefaultBackupManagementType_WhenOmitted()
     {
         // Arrange
         Service.RefreshContainersAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Is<string?>(DefaultFilter),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is<string?>(DefaultBackupManagementType),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         // Act
@@ -58,24 +57,23 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ContainerRefreshCommandResult, HttpStatusCode.Accepted);
         Assert.Equal("Accepted", result.Status);
         Assert.Equal("v", result.Vault);
-        Assert.Equal("Azure", result.Fabric);
-        Assert.Equal(DefaultFilter, result.Filter);
+        Assert.Equal(DefaultBackupManagementType, result.BackupManagementType);
 
         await Service.Received(1).RefreshContainersAsync(
             "v", "rg", "sub",
-            DefaultFilter,
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+            DefaultBackupManagementType,
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_UsesProvidedFilter_WhenFilterSpecified()
+    public async Task ExecuteAsync_UsesProvidedBackupManagementType_WhenSpecified()
     {
         // Arrange
-        const string customFilter = "backupManagementType eq 'AzureIaasVM'";
+        const string backupManagementType = "AzureIaasVM";
         Service.RefreshContainersAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Is<string?>(customFilter),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is<string?>(backupManagementType),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         // Act
@@ -83,34 +81,34 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--filter", customFilter);
+            "--backup-management-type", backupManagementType);
 
         // Assert
         Assert.Equal(HttpStatusCode.Accepted, response.Status);
 
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ContainerRefreshCommandResult, HttpStatusCode.Accepted);
-        Assert.Equal(customFilter, result.Filter);
+        Assert.Equal(backupManagementType, result.BackupManagementType);
     }
 
     [Theory]
-    [InlineData("dpp")]
-    [InlineData("DPP")]
-    public async Task ExecuteAsync_Rejects_DppVaultType_AtValidation(string vaultType)
+    [InlineData("AzureStorage eq 'unsafe'")]
+    [InlineData("AzureBlob")]
+    public async Task ExecuteAsync_RejectsInvalidBackupManagementType_AtValidation(string backupManagementType)
     {
         // Act
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--vault-type", vaultType);
+            "--backup-management-type", backupManagementType);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Recovery Services", response.Message);
+        Assert.Contains("backup-management-type", response.Message);
 
         await Service.DidNotReceive().RefreshContainersAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -124,7 +122,7 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
         {
             Service.RefreshContainersAsync(
                 Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.CompletedTask);
         }
 
@@ -145,7 +143,7 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
     {
         Service.RefreshContainersAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(status: 403, message: "AuthorizationFailed"));
 
         var response = await ExecuteCommandAsync(
@@ -160,7 +158,7 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
     {
         Service.RefreshContainersAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(status: 404, message: "VaultNotFound"));
 
         var response = await ExecuteCommandAsync(
@@ -175,7 +173,7 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
     {
         Service.RefreshContainersAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Container refresh is only supported for Recovery Services (RSV) vaults."));
 
         var response = await ExecuteCommandAsync(
@@ -190,7 +188,7 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
     {
         Service.RefreshContainersAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("boom"));
 
         var response = await ExecuteCommandAsync(

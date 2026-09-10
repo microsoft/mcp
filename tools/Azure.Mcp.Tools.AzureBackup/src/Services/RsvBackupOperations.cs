@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
@@ -2091,7 +2092,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string vaultName,
         string resourceGroup,
         string subscription,
-        string? filter,
+        string backupManagementType,
         string? tenant,
         CancellationToken cancellationToken)
     {
@@ -2104,8 +2105,22 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
+        var filter = backupManagementType switch
+        {
+            "AzureStorage" or "AzureIaasVM" or "AzureWorkload" => $"backupManagementType eq '{backupManagementType}'",
+            _ => throw new ArgumentException("backupManagementType must be 'AzureStorage', 'AzureIaasVM', or 'AzureWorkload'.", nameof(backupManagementType))
+        };
 
-        await rgResource.RefreshProtectionContainerAsync(vaultName, FabricName, filter: filter, cancellationToken: cancellationToken);
+        var response = await rgResource.RefreshProtectionContainerAsync(
+            vaultName,
+            FabricName,
+            filter: filter,
+            cancellationToken: cancellationToken);
+
+        if (response.Status != (int)HttpStatusCode.Accepted)
+        {
+            throw new RequestFailedException(response.Status, "The container discovery request was not accepted.");
+        }
     }
 
     /// <summary>

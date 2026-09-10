@@ -1742,7 +1742,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     /// <summary>
     /// Validates that container refresh triggers RSV discovery successfully.
-    /// Uses the default AzureStorage filter (Azure File share discovery); the response is a
+    /// Uses the default AzureStorage backup management type (Azure File share discovery); the response is a
     /// fire-and-forget acceptance record, not a container list.
     /// </summary>
     [Fact]
@@ -1762,8 +1762,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         Assert.Equal("Accepted", result.AssertProperty("status").GetString());
         Assert.Equal(vaultName, result.AssertProperty("vault").GetString());
-        Assert.Equal("Azure", result.AssertProperty("fabric").GetString());
-        Assert.Equal("backupManagementType eq 'AzureStorage'", result.AssertProperty("filter").GetString());
+        Assert.Equal("AzureStorage", result.AssertProperty("backupManagementType").GetString());
     }
 
     #endregion

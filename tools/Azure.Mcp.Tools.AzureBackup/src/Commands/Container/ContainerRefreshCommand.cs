@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options.Container;
@@ -21,11 +22,11 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Container;
         Use this before registering a storage account for Azure File share backup so the vault
         picks up the caller's new/changed permissions on Storage Account List Keys. Also useful
         after enabling the vault system-assigned managed identity or assigning the
-        'Storage Account Backup Contributor' role. Filter defaults to
-        "backupManagementType eq 'AzureStorage'" (Azure Files); pass a different filter to
-        discover IaaS VM or in-guest workload containers instead. RSV only; DPP vaults are not
-        supported. This is a fire-and-forget POST that returns HTTP 202 Accepted with no body,
-        so the response reports acceptance status rather than a discovered container list. Follow
+        'Storage Account Backup Contributor' role. Backup management type defaults to
+        'AzureStorage' (Azure Files); select 'AzureIaasVM' or 'AzureWorkload' to discover
+        virtual machine or in-guest workload containers instead. RSV only; DPP vaults are not
+        supported. The Azure API is a fire-and-forget POST that returns HTTP 202 Accepted with no body;
+        this tool reports that acceptance status rather than a discovered container list. Follow
         up with 'azurebackup protectableitem list' or 'protectableitem inquire' to enumerate
         newly-discovered shares.
         """,
@@ -36,14 +37,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Container;
     Secret = false,
     LocalRequired = false)]
 public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
-    : BaseAzureBackupCommand<ContainerRefreshOptions, ContainerRefreshCommand.ContainerRefreshCommandResult>(subscriptionResolver)
+    : SubscriptionCommand<ContainerRefreshOptions, ContainerRefreshCommand.ContainerRefreshCommandResult>(subscriptionResolver)
 {
-    // The RSV RefreshContainers API only supports the Azure fabric today.
-    private const string FabricName = "Azure";
-
-    // Discovery of AFS storage accounts is the primary caller-facing scenario for this tool,
-    // so default the filter to AzureStorage when the caller does not specify one.
-    private const string DefaultFilter = "backupManagementType eq 'AzureStorage'";
+    private const string DefaultBackupManagementType = "AzureStorage";
 
     private readonly ILogger<ContainerRefreshCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
@@ -52,21 +48,19 @@ public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> log
     {
         base.ValidateOptions(options, validationResult);
 
-        // Fail closed on DPP at the command boundary so the caller sees a 400 ValidationError
-        // instead of an inner ArgumentException raised from the service layer.
-        if (VaultTypeResolver.IsDpp(options.VaultType))
+        if (!string.IsNullOrWhiteSpace(options.BackupManagementType) &&
+            !IsSupportedBackupManagementType(options.BackupManagementType))
         {
-            validationResult.Errors.Add(
-                "Container refresh is only supported for Recovery Services (RSV) vaults. Backup vaults (DPP) do not use protection containers.");
+            validationResult.Errors.Add("--backup-management-type must be 'AzureStorage', 'AzureIaasVM', or 'AzureWorkload'.");
         }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerRefreshOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType ?? VaultTypeResolver.Rsv, null);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, VaultTypeResolver.Rsv, null);
 
-        var effectiveFilter = string.IsNullOrWhiteSpace(options.Filter) ? DefaultFilter : options.Filter;
+        var backupManagementType = GetBackupManagementType(options.BackupManagementType);
 
         try
         {
@@ -74,16 +68,14 @@ public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> log
                 options.Vault,
                 options.ResourceGroup,
                 options.Subscription!,
-                effectiveFilter,
-                options.VaultType,
+                backupManagementType,
                 options.Tenant,
                 cancellationToken);
 
             var result = new ContainerRefreshCommandResult(
                 Status: "Accepted",
                 Vault: options.Vault,
-                Fabric: FabricName,
-                Filter: effectiveFilter,
+                BackupManagementType: backupManagementType,
                 Message: "Container discovery request accepted. The vault will asynchronously enumerate matching resources. Poll 'azurebackup protectableitem list' to see newly-discovered items.");
 
             context.Response.Results = ResponseResult.Create(
@@ -94,7 +86,7 @@ public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> log
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error refreshing containers. Vault: {Vault}, Filter: {Filter}", options.Vault, effectiveFilter);
+            _logger.LogError(ex, "Error refreshing containers. Vault: {Vault}, BackupManagementType: {BackupManagementType}", options.Vault, backupManagementType);
             HandleException(context, ex);
         }
 
@@ -119,10 +111,30 @@ public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> log
         _ => base.GetStatusCode(ex)
     };
 
+    private static bool IsSupportedBackupManagementType(string value) =>
+        value.Equals("AzureStorage", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("AzureIaasVM", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("AzureWorkload", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetBackupManagementType(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return DefaultBackupManagementType;
+        }
+
+        return value.ToUpperInvariant() switch
+        {
+            "AZURESTORAGE" => "AzureStorage",
+            "AZUREIAASVM" => "AzureIaasVM",
+            "AZUREWORKLOAD" => "AzureWorkload",
+            _ => value
+        };
+    }
+
     public sealed record ContainerRefreshCommandResult(
         string Status,
         string Vault,
-        string Fabric,
-        string? Filter,
+        string BackupManagementType,
         string Message);
 }

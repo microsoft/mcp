@@ -219,7 +219,7 @@ public interface IRsvBackupOperations
         string vaultName,
         string resourceGroup,
         string subscription,
-        string? filter,
+        string backupManagementType,
         string? tenant,
         CancellationToken cancellationToken);
 
