@@ -20,6 +20,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
     Name = "list-items",
     Title = "List OneLake Items",
     Description = "Lists OneLake items in a Fabric workspace using the high-level OneLake API. Use this when the user needs to see what items exist in a workspace. Returns item names, types, and metadata.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

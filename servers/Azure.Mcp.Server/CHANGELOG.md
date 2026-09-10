@@ -2,15 +2,25 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.43 (Unreleased)
+## 3.0.0-beta.43 (2026-09-10)
 
 ### Features Added
 
+- `azmcp azurebackup protecteditem get` now exposes a richer Azure Backup protected-item representation for both RSV and DPP workloads, including lifecycle, recovery, protection-state, and workload-specific extended properties, so callers can inspect the current state before updating protection. [[#3600](https://github.com/microsoft/mcp/pull/3600)]
+- `azmcp azurebackup vault get` now returns managed identity details for RSV and DPP vaults, including identity type, principal ID, tenant ID, and attached user-assigned identity resource IDs with their principal and client IDs. [[#3600](https://github.com/microsoft/mcp/pull/3600)]
+- Added an `operationPlane` field to tool metadata in `azmcp tools list` output, identifying each tool as `data`, `control`, `both`, or `notApplicable`. A tool's plane is the API it acts against to produce the requested result; Resource Manager calls made only as setup, to locate the target, do not count toward it. Every tool is classified. [[#3368](https://github.com/microsoft/mcp/pull/3368)]
+- Added `monitor workspace log search` for synchronous, bounded searches of Basic and Auxiliary Log Analytics tables. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
+- Added commands to delete Azure Resilience Management usage plans and usage plan enrollments. [[#3601](https://github.com/microsoft/mcp/pull/3601)]
+
 ### Breaking Changes
+
+- Renamed the user-invocable `/resilience-recovery-operations` skill to `/resilience-management-operations`; update saved prompts and workflows to use the new invocation name. [[#3601](https://github.com/microsoft/mcp/pull/3601)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Preserved configured consolidated-tool descriptions and structured output when single mode starts child namespace servers. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
+- Corrected Analytics-table routing guidance when Log Analytics table metadata omits the plan-change timestamp. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
+- Fixed log search playback tests to use sanitized workspace and column metadata. [[#3581](https://github.com/microsoft/mcp/pull/3581)]
 
 ## 3.0.0-beta.42 (2026-09-08)
 

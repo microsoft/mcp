@@ -11,7 +11,6 @@ The following options are available for most commands:
 |-----------|----------|---------|-------------|
 | `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
 | `--tenant-id` | No | - | Azure tenant ID for authentication |
-| `--auth-method` | No | 'credential' | Authentication method ('credential', 'key', 'connectionString') |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
@@ -415,6 +414,15 @@ azmcp advisor recommendation summary --subscription <subscription> \
                                      [--tenant <tenant>]
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
+# Supported --resource values:
+#   aad_domainservices, apimanagement_service, cognitiveservices_accounts,
+#   compute_virtualmachines, compute_virtualmachinescalesets,
+#   containerregistry_registries, containerservice_managedclusters,
+#   dbforpostgresql_flexibleservers, documentdb_databaseaccounts,
+#   keyvault_vaults, kubernetes_connectedclusters, kubernetesconfiguration_extensions,
+#   netapp_volumes, network_applicationgatewaywebapplicationfirewallpolicies,
+#   network_expressrouteports, network_frontdoorwebapplicationfirewallpolicies,
+#   sql_managedinstances, storage_storageaccounts, web_serverfarms, web_staticsites
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
@@ -632,9 +640,6 @@ azmcp appconfig kv set --subscription <subscription> \
 ```
 
 ### Azure App Lens Operations
-
-> [!NOTE]
-> The `applens resource diagnose` command does not support `--auth-method` or any `--retry-*` options.
 
 ```bash
 # Diagnose resource using Azure App Lens
@@ -1072,7 +1077,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--log-retention-days <int>] \
                                 [--is-compression <true|false>] \
                                 [--is-sql-compression <true|false>] \
-                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags / AKS ---
+                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags ---
                                 [--smart-tier <true|false>] \
                                 [--enable-snapshot-backup <true|false>] \
                                 [--snapshot-instant-rp-retention-days <int>] \
@@ -1081,12 +1086,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--vault-tier-copy-after-days <int>] \
                                 [--backup-mode <Continuous|Vaulted>] \
                                 [--pitr-retention-days <int>] \
-                                [--policy-tags <key=value[,key=value...]>] \
-                                [--aks-snapshot-resource-group <resource-group>] \
-                                [--aks-included-namespaces <ns[,ns...]>] \
-                                [--aks-excluded-namespaces <ns[,ns...]>] \
-                                [--aks-label-selectors <selector[,selector...]>] \
-                                [--aks-include-cluster-scope-resources <true|false>]
+                                [--policy-tags <key=value[,key=value...]>]
 
 # Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1144,6 +1144,11 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         [--vault-type <vault-type>] \
                                         [--container <container>] \
                                         [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>] \
+                                        [--aks-snapshot-resource-group <resource-group>] \
+                                        [--aks-included-namespaces <ns[,ns...]>] \
+                                        [--aks-excluded-namespaces <ns[,ns...]>] \
+                                        [--aks-label-selectors <selector[,selector...]>] \
+                                        [--aks-include-cluster-scope-resources <true|false>] \
                                         [--disk-list-setting <include|exclude|resetexclusionsettings>] \
                                         [--disks-list <lun[,lun...]>] \
                                         [--exclude-all-data-disks]
@@ -1180,7 +1185,7 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --vault <vault> \
                                        [--vault-type <vault-type>] \
-                                       [--workload-type <workload-type>] \
+                                       [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>] \
                                        [--container <container>]
 ```
 
@@ -2304,9 +2309,6 @@ azmcp containerapps list --subscription <subscription> \
 
 ### Azure Container Registry (ACR) Operations
 
-> [!NOTE]
-> The `acr registry list` and `acr registry repository list` commands do not support `--auth-method`.
-
 ```bash
 # List Azure Container Registries in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2343,7 +2345,8 @@ azmcp acr registry repository list --subscription <subscription> \
 azmcp cosmos list --subscription <subscription> \
                   [--account <account>] \
                   [--database <database>] \
-                  [--resource-group <resource-group>]
+                  [--resource-group <resource-group>] \
+                  [--auth-method <auth-method>]
 
 # Query items in a Cosmos DB container
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2351,7 +2354,8 @@ azmcp cosmos database container item query --subscription <subscription> \
                                            --account <account> \
                                            --database <database> \
                                            --container <container> \
-                                           [--query "SELECT * FROM c"]
+                                           [--query "SELECT * FROM c"] \
+                                           [--auth-method <auth-method>]
 
 # Infer an approximate schema for a Cosmos DB container by sampling documents. Reports top-level properties only; nested
 # objects/arrays appear as `object` / `array`. To discover nested paths (e.g., a vector property's dot-path), fetch a
@@ -2361,7 +2365,8 @@ azmcp cosmos database container schema infer --subscription <subscription> \
                                            --account <account> \
                                            --database <database> \
                                            --container <container> \
-                                           [--sample-size 10]
+                                           [--sample-size 10] \
+                                           [--auth-method <auth-method>]
 
 # Get the most recently modified documents from a Cosmos DB container.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2369,7 +2374,8 @@ azmcp cosmos database container item list-recent --subscription <subscription> \
                                                  --account <account> \
                                                  --database <database> \
                                                  --container <container> \
-                                                 [--count 10]
+                                                 [--count 10] \
+                                                 [--auth-method <auth-method>]
 
 # Get a single Cosmos DB document by id (provide --partition-key to scope to one partition; otherwise cross-partition).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2378,7 +2384,8 @@ azmcp cosmos database container item get --subscription <subscription> \
                                          --database <database> \
                                          --container <container> \
                                          --id <id> \
-                                         [--partition-key <partition-key>]
+                                         [--partition-key <partition-key>] \
+                                         [--auth-method <auth-method>]
 
 # Search Cosmos DB documents where a given --search-property matches a --search-phrase via Cosmos `FullTextContains`.
 # Matching is word-tokenized (not substring) and uses the container's full-text analyzer, so the configured language
@@ -2392,7 +2399,8 @@ azmcp cosmos database container item text-search --subscription <subscription> \
                                                  --search-property <property> \
                                                  --search-phrase <phrase> \
                                                  [--properties-to-select <p1,p2,...>] \
-                                                 [--count 10]
+                                                 [--count 10] \
+                                                 [--auth-method <auth-method>]
 
 # Vector similarity search against a Cosmos DB container. Provide --search-text plus --openai-endpoint and
 # --embedding-deployment; the tool generates the query vector via Azure OpenAI and runs the search against the
@@ -2414,7 +2422,8 @@ azmcp cosmos database container item vector-search --subscription <subscription>
                                                    --embedding-deployment <deployment> \
                                                    [--properties-to-select <p1,p2,...>] \
                                                    [--count 10] \
-                                                   [--embedding-dimensions <n>]
+                                                   [--embedding-dimensions <n>] \
+                                                   [--auth-method <auth-method>]
 ```
 
 ### Azure Optimization Operations
@@ -2905,7 +2914,8 @@ azmcp foundryextensions openai chat-completions-create \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
     --deployment <deployment-name> \
-    --message-array <json-message-array>
+    --message-array <json-message-array> \
+    [--auth-method <auth-method>]
 
 # Create text completions using Azure OpenAI in Microsoft Foundry
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2914,7 +2924,8 @@ azmcp foundryextensions openai create-completion \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
     --deployment <deployment-name> \
-    --prompt-text <prompt>
+    --prompt-text <prompt> \
+    [--auth-method <auth-method>]
 
 # Create embeddings using Azure OpenAI in Microsoft Foundry
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2923,14 +2934,16 @@ azmcp foundryextensions openai embeddings-create \
     --resource-group <resource-group> \
     --resource-name <resource-name> \
     --deployment <deployment-name> \
-    --input-text <text>
+    --input-text <text> \
+    [--auth-method <auth-method>]
 
 # List available Azure OpenAI model deployments in a Microsoft Foundry resource
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundryextensions openai models-list \
     --subscription <subscription> \
     --resource-group <resource-group> \
-    --resource-name <resource-name>
+    --resource-name <resource-name> \
+    [--auth-method <auth-method>]
 
 # List or get Microsoft Foundry resource details (endpoint, SKU, location). --resource-group is required when --resource-name is specified.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3119,9 +3132,6 @@ azmcp keyvault secret get --subscription <subscription> \
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
-
-> [!NOTE]
-> The `aks cluster get` and `aks nodepool get` commands do not support `--auth-method` (the `--retry-*` options are still supported).
 
 ```bash
 # Gets Azure Kubernetes Service (AKS) cluster details
@@ -3397,6 +3407,34 @@ azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
                                   --table "AppEvents_CL" \
                                   --query "| order by TimeGenerated desc"
+
+# Search a Basic or Auxiliary table in a Log Analytics workspace.
+# Use workspace log query for Analytics tables.
+# --query must begin with '|' and omit the primary table name.
+# The server binds --table and caps output at --limit (default 20, maximum 100).
+# --timespan is a positive ISO 8601 duration (such as "P1D") or a closed
+# RFC 3339 start/end interval, up to 30 days. Basic queries cover only the last 30 days.
+# Results preserve column types and flag service-reported partial results.
+# Scan cost depends on ingested volume across --timespan, not --limit.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor workspace log search --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --workspace <workspace> \
+                                   --table <table> \
+                                   --query <search-pipeline> \
+                                   --timespan <timespan> \
+                                   [--limit <limit>] \
+                                   [--tenant <tenant>]
+
+# Search the last day of a Basic or Auxiliary table for error records
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor workspace log search --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --workspace <workspace> \
+                                   --table "ContainerLogV2" \
+                                   --query "| where LogLevel == 'error' | project TimeGenerated, LogMessage" \
+                                   --timespan "P1D" \
+                                   --limit 50
 ```
 
 #### Health Models
@@ -3978,9 +4016,11 @@ azmcp role assignment list --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis create --subscription <subscription> \
                    --resource-group <resource-group> \
-                   --name <name> \
-                   --sku <sku> \
+                   --resource <resource> \
                    --location <location> \
+                   [--sku <sku>] \
+                   [--access-keys-authentication <true|false>] \
+                   [--public-network-access <true|false>] \
                    [--modules <modules>]
 ```
 
@@ -4022,6 +4062,12 @@ azmcp resilience usageplan create --subscription <subscription> \
                                   --usage-plan <usage-plan> \
                                   --plan-type <plan-type>
 
+# Delete a resilience usage plan from a resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan delete --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --usage-plan <usage-plan>
+
 # Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan enrollment get --subscription <subscription> \
@@ -4036,6 +4082,13 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --usage-plan <usage-plan> \
                                              --enrollment <enrollment> \
                                              --service-group <service-group>
+
+# Delete an enrollment from a resilience usage plan
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment delete --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --usage-plan <usage-plan> \
+                                             --enrollment <enrollment>
 
 # Get a resilience recoveryplan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -5328,7 +5381,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 ### Cloud Architect
 
 > [!NOTE]
-> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription`, `--tenant-id`, `--auth-method`, or any `--retry-*` options.
+> The `cloudarchitect design` command is a local, stateless tool and does not support `--subscription` or `--tenant-id`.
 
 ```bash
 # Design Azure cloud architectures through guided questions

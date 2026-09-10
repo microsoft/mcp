@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
     Name = "update",
     Title = "Update Server Endpoint",
     Description = "Update properties of a server endpoint.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

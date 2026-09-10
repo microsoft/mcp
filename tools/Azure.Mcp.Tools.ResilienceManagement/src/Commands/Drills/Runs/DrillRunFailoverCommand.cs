@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
     Description = "Initiates failover for a run of a resilience drill from specified physical Azure zones in an Azure service group.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

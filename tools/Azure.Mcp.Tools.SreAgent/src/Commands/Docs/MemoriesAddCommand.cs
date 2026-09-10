@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Name = "memories_add",
     Title = "Add Memory",
     Description = "Add a document to the SRE Agent knowledge base by name. Uploads markdown content that will be indexed for RAG-based knowledge retrieval.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

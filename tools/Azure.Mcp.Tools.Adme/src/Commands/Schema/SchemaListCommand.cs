@@ -35,6 +35,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
         With no status filter, results mix PUBLISHED/DEVELOPMENT/OBSOLETE. To enumerate usable kinds,
         prefer status='PUBLISHED' and surface each result's status to the user for clarity.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

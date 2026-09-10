@@ -11,6 +11,24 @@ Use these recipes after resolving the exact service group and target names. The 
 3. Create the association with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_create`.
 4. Get the enrollment and report its provisioning state and errors.
 
+## Delete a Usage Plan Enrollment
+
+1. Get the enrollment with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_get` and confirm the exact resource group, usage plan, and enrollment name.
+2. Call `mcp_azure_mcp_ser_resilience_usageplan_enrollment_delete` only for an explicit, unambiguous request; deletion permanently removes the service group association but does not delete the usage plan.
+3. Report `deleted: true` when the enrollment was removed and `deleted: false` when it was already absent.
+
+## Delete a Usage Plan
+
+1. Get the usage plan with `mcp_azure_mcp_ser_resilience_usageplan_get` and confirm the exact resource group and name.
+2. Call `mcp_azure_mcp_ser_resilience_usageplan_delete`. A request to delete the parent plan does not authorize deleting its enrollments.
+3. If deletion is blocked by dependent enrollments, list them with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_get`, report every exact enrollment name, and ask for explicit confirmation before removing any association. Do not delete enrollments until confirmation is received.
+4. After confirmation, delete only the listed enrollments by exact name with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_delete`. Stop on any failure and report which associations were removed and which remain; do not claim the plan was deleted.
+5. When all confirmed enrollment deletions succeed, retry the idempotent parent deletion once with `mcp_azure_mcp_ser_resilience_usageplan_delete`.
+6. Get the usage plan again. Treat `ResourceNotFound` as confirmation that the requested parent plan is gone; do not report success based only on enrollment deletion.
+7. Report `deleted: true` when the plan was removed and `deleted: false` when it was already absent.
+
+The mention of a service group supplies context for resolving a usage plan; it does not change the target from the parent plan to an enrollment. Use the enrollment-only workflow only when the user asks to unenroll a service group, remove an association, or explicitly retain the usage plan.
+
 ## Inspect Goals and Participation
 
 1. List templates with `mcp_azure_mcp_ser_resilience_goal_template_get`.
@@ -26,16 +44,22 @@ These tools do not create or mutate goals.
 2. Call `mcp_azure_mcp_ser_resilience_drill_create`.
 3. Get the drill and verify provisioning state.
 4. List targets with `mcp_azure_mcp_ser_resilience_drill_resource_get`.
-5. Do not start until provisioning and target state permit execution.
+5. Include, update, or exclude targets with `mcp_azure_mcp_ser_resilience_drill_resource_add-or-update`; require a positive fault duration and at least one resource payload.
+6. Re-read affected targets and verify their inclusion and fault configuration.
+7. Do not start until provisioning and target state permit execution.
 
 ## Execute a Drill
 
 1. Get the drill and confirm it is not already running.
-2. Ask for `Failover` versus `TestFailover` if not explicit.
-3. Start with `mcp_azure_mcp_ser_resilience_drill_start` and retain the operation ID.
-4. Inspect runs with `mcp_azure_mcp_ser_resilience_drill_run_get` when status is requested.
-5. Inspect run targets with `mcp_azure_mcp_ser_resilience_drill_run_resource_get` when per-resource results are needed.
-6. End only a running drill with `mcp_azure_mcp_ser_resilience_drill_end`; require outcome and notes.
+2. Run `mcp_azure_mcp_ser_resilience_drill_check-resync-readiness` when configuration may be stale or a current readiness result is required; retain the operation ID and do not treat acceptance as readiness.
+3. Validate with `mcp_azure_mcp_ser_resilience_drill_validate-for-execution` using the intended physical source locations.
+4. Stop and report blockers when validation does not qualify the drill for execution.
+5. Ask for `Failover` versus `TestFailover` if not explicit.
+6. Start with `mcp_azure_mcp_ser_resilience_drill_start` and retain the operation ID.
+7. Inspect runs with `mcp_azure_mcp_ser_resilience_drill_run_get` when status is requested.
+8. Inspect run targets with `mcp_azure_mcp_ser_resilience_drill_run_resource_get` when per-resource results are needed.
+9. Use `mcp_azure_mcp_ser_resilience_drill_run_mark-complete` only when the user explicitly wants to stop retries for the named active stage and allow the run to proceed.
+10. End only a running drill with `mcp_azure_mcp_ser_resilience_drill_end`; require outcome and notes.
 
 ## Create a Recovery Plan
 

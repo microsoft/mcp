@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
         query accepts KQL syntax.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
     Name = "list",
     Title = "List SRE Agent Hooks",
     Description = "List hooks configured on an Azure SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

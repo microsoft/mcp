@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
     Name = "resume",
     Title = "Resume Scheduled Task",
     Description = "Resume an SRE Agent scheduled task.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

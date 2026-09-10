@@ -40,6 +40,7 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
         "instead. " +
         "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +
         "NOT call the 'subscription list' tool first.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

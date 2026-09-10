@@ -16,6 +16,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     Name = "item-api-spec",
     Title = "Item API Specification",
     Description = "Retrieves the complete OpenAPI specification for a specific Microsoft Fabric item type. Use this when the user needs detailed API documentation for an item type such as notebook, lakehouse or report. Returns the full API spec in JSON format.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

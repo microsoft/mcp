@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed unclear error when using Azure File Shares tools in clouds where the Microsoft.FileShares resource provider is not yet available."
