@@ -24,10 +24,7 @@ public sealed class RemediationService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(recommendationTypeId), recommendationTypeId));
 
-        // TEMP (canary validation only — DO NOT MERGE): force the eastus2euap canary ARM host
-        // instead of the global endpoint so the remediations RC API can be validated pre-global-rollout.
-        // Revert to `AzureService.CloudConfiguration.ArmEnvironment.Endpoint` before opening/updating the PR.
-        var managementEndpoint = "https://eastus2euap.management.azure.com";
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString();
         var url = BuildRemediationUrl(managementEndpoint, recommendationTypeId);
 
         using var httpClient = AzureService.GetClient();

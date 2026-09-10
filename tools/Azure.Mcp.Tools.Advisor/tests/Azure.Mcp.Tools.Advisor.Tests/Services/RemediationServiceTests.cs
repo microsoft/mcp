@@ -29,7 +29,7 @@ public class RemediationServiceTests
         Assert.NotNull(handler.LastRequest);
         Assert.Equal(HttpMethod.Get, handler.LastRequest!.Method);
         Assert.Equal(
-            $"https://eastus2euap.management.azure.com/providers/Microsoft.Advisor/remediations/{RecommendationTypeId}?api-version=2026-09-01-preview",
+            $"https://management.azure.com/providers/Microsoft.Advisor/remediations/{RecommendationTypeId}?api-version=2026-09-01-preview",
             handler.LastRequest.RequestUri!.ToString());
     }
 
