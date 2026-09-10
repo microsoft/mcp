@@ -7,12 +7,15 @@ using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Validation;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
 public class RecommendationSummaryService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IRecommendationSummaryService
 {
+    private readonly AdvisorResourceGraphQueryExecutor _queryExecutor = new(azureService);
+
     internal const string GroupByRecommendationType = "recommendation-type";
     internal const string GroupByCategory = "category";
     internal const string GroupByImpact = "impact";
@@ -41,8 +44,45 @@ public class RecommendationSummaryService(IAzureService azureService)
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
+        var normalizedGroupBy = NormalizeGroupBy(groupBy);
+        var (scope, tenantResource) = await _queryExecutor.ResolveSubscriptionScopeAsync(
+            subscription,
+            resourceGroup,
+            tenant,
+            cancellationToken);
 
+        return await SummarizeRecommendationsCoreAsync(
+            scope,
+            tenantResource,
+            normalizedGroupBy,
+            filters,
+            cancellationToken);
+    }
+
+    public async Task<RecommendationSummary> SummarizeServiceGroupRecommendationsAsync(
+        string serviceGroup,
+        string groupBy,
+        RecommendationFilters? filters = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedGroupBy = NormalizeGroupBy(groupBy);
+        var (scope, tenantResource) = await _queryExecutor.ResolveServiceGroupScopeAsync(
+            serviceGroup,
+            tenant,
+            cancellationToken);
+
+        return await SummarizeRecommendationsCoreAsync(
+            scope,
+            tenantResource,
+            normalizedGroupBy,
+            filters,
+            cancellationToken);
+    }
+
+    private static string NormalizeGroupBy(string groupBy)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
         var normalizedGroupBy = groupBy.Trim().ToLowerInvariant();
         if (!AllowedGroupBy.Contains(normalizedGroupBy, StringComparer.Ordinal))
         {
@@ -51,46 +91,30 @@ public class RecommendationSummaryService(IAzureService azureService)
                 nameof(groupBy));
         }
 
-        var subscriptionResource = await AzureService.GetSubscription(
-            subscription,
-            tenant,
-            cancellationToken);
-        var subscriptionId = subscriptionResource.Data.SubscriptionId
-            ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
+        return normalizedGroupBy;
+    }
 
-        if (!string.IsNullOrWhiteSpace(resourceGroup))
-        {
-            var exists = await subscriptionResource
-                .GetResourceGroups()
-                .ExistsAsync(resourceGroup.Trim(), cancellationToken);
-            if (!exists.Value)
-            {
-                throw new KeyNotFoundException(
-                    $"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionId}'.");
-            }
-        }
-
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = tenants.FirstOrDefault(
-            candidate => candidate.Data.TenantId == subscriptionResource.Data.TenantId)
-            ?? throw new InvalidOperationException(
-                $"No accessible tenant was found for subscription '{subscription}'.");
-
+    private static async Task<RecommendationSummary> SummarizeRecommendationsCoreAsync(
+        RecommendationQueryScope scope,
+        TenantResource tenantResource,
+        string normalizedGroupBy,
+        RecommendationFilters? filters,
+        CancellationToken cancellationToken)
+    {
         var usesMetadata = RequiresMetadata(normalizedGroupBy, filters);
         var query = BuildSummaryQuery(
-            subscriptionId,
-            resourceGroup,
+            scope,
             normalizedGroupBy,
             filters,
             usesMetadata);
-        var queryContent = new ResourceQueryContent(query);
-        if (!usesMetadata)
-        {
-            queryContent.Subscriptions.Add(subscriptionId);
-        }
 
-        var response = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        var result = response.Value;
+        var result = await AdvisorResourceGraphQueryExecutor.ExecuteAsync(
+            tenantResource,
+            scope,
+            query,
+            useSubscriptionRequestScope:
+                !usesMetadata && scope.Kind == RecommendationQueryScopeKind.Subscription,
+            cancellationToken);
         EnsureCompleteResult(
             result.ResultTruncated == ResultTruncated.True,
             result.SkipToken);
@@ -121,23 +145,39 @@ public class RecommendationSummaryService(IAzureService azureService)
         string groupBy,
         RecommendationFilters? filters,
         bool? useMetadata = null)
+        => BuildSummaryQuery(
+            RecommendationQueryScope.ForSubscription(subscriptionId, resourceGroup),
+            groupBy,
+            filters,
+            useMetadata);
+
+    internal static string BuildServiceGroupSummaryQuery(
+        string serviceGroup,
+        string groupBy,
+        RecommendationFilters? filters,
+        bool? useMetadata = null)
+        => BuildSummaryQuery(
+            RecommendationQueryScope.ForServiceGroup(serviceGroup),
+            groupBy,
+            filters,
+            useMetadata);
+
+    internal static string BuildSummaryQuery(
+        RecommendationQueryScope scope,
+        string groupBy,
+        RecommendationFilters? filters,
+        bool? useMetadata = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscriptionId);
+        ArgumentNullException.ThrowIfNull(scope);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
 
-        var normalizedGroupBy = groupBy.Trim().ToLowerInvariant();
-        if (!AllowedGroupBy.Contains(normalizedGroupBy, StringComparer.Ordinal))
-        {
-            throw new ArgumentException(
-                $"Unsupported group-by value '{groupBy}'. Allowed values: {string.Join(", ", AllowedGroupBy)}.",
-                nameof(groupBy));
-        }
+        var normalizedGroupBy = NormalizeGroupBy(groupBy);
 
         ValidateFilters(filters, normalizedGroupBy);
 
         return useMetadata ?? RequiresMetadata(normalizedGroupBy, filters)
-            ? BuildMetadataSummaryQuery(subscriptionId, resourceGroup, normalizedGroupBy, filters)
-            : BuildInstanceSummaryQuery(subscriptionId, resourceGroup, normalizedGroupBy, filters);
+            ? BuildMetadataSummaryQuery(scope, normalizedGroupBy, filters)
+            : BuildInstanceSummaryQuery(scope, normalizedGroupBy, filters);
     }
 
     internal static void EnsureCompleteResult(bool isTruncated, string? skipToken)
@@ -201,18 +241,18 @@ public class RecommendationSummaryService(IAzureService azureService)
     }
 
     private static string BuildInstanceSummaryQuery(
-        string subscriptionId,
-        string? resourceGroup,
+        RecommendationQueryScope scope,
         string groupBy,
         RecommendationFilters? filters)
     {
-        var query = BuildRecommendationScope(subscriptionId, resourceGroup);
+        var query = BuildRecommendationScope(scope);
         var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
             filters,
             includeStatus: groupBy != GroupByStatus,
             useRequestedStatus: false,
             includeCategoryAndImpact: true,
-            resourceTypeUsesImpactedField: true);
+            resourceTypeUsesImpactedField: true,
+            scope: scope);
         if (predicates.Length > 0)
         {
             query += $" | where {predicates}";
@@ -238,18 +278,18 @@ public class RecommendationSummaryService(IAzureService azureService)
     }
 
     private static string BuildMetadataSummaryQuery(
-        string subscriptionId,
-        string? resourceGroup,
+        RecommendationQueryScope scope,
         string groupBy,
         RecommendationFilters? filters)
     {
-        var query = BuildRecommendationScope(subscriptionId, resourceGroup);
+        var query = BuildRecommendationScope(scope);
         var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
             filters,
             includeStatus: groupBy != GroupByStatus,
             useRequestedStatus: false,
             includeCategoryAndImpact: false,
-            resourceTypeUsesImpactedField: true);
+            resourceTypeUsesImpactedField: true,
+            scope: scope);
         if (predicates.Length > 0)
         {
             query += $" | where {predicates}";
@@ -294,16 +334,19 @@ public class RecommendationSummaryService(IAzureService azureService)
         return query + " | summarize count() by key, label";
     }
 
-    private static string BuildRecommendationScope(string subscriptionId, string? resourceGroup)
+    private static string BuildRecommendationScope(RecommendationQueryScope scope)
     {
-        var query =
-            "advisorresources" +
-            " | where type =~ 'microsoft.advisor/recommendations'" +
-            $" | where subscriptionId =~ '{RecommendationQueryBuilder.EscapeKqlString(subscriptionId.Trim())}'";
-        if (!string.IsNullOrWhiteSpace(resourceGroup))
+        var query = "advisorresources | where type =~ 'microsoft.advisor/recommendations'";
+        if (scope.SubscriptionId is { } subscriptionId)
         {
             query +=
-                $" | where resourceGroup =~ '{RecommendationQueryBuilder.EscapeKqlString(resourceGroup.Trim())}'";
+                $" | where subscriptionId =~ '{RecommendationQueryBuilder.EscapeKqlString(subscriptionId)}'";
+        }
+
+        if (scope.ResourceGroup is { } resourceGroup)
+        {
+            query +=
+                $" | where resourceGroup =~ '{RecommendationQueryBuilder.EscapeKqlString(resourceGroup)}'";
         }
 
         return query;

@@ -377,21 +377,27 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--tracking-ids <tracking-id1> <tracking-id2> ...] \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
 
-# Update the customer-provided state of an Advisor recommendation. Subscription context can come from --subscription,
-# which accepts an Azure subscription ID or name, or from the configured default subscription. --recommendation-id
+# Update the customer-provided state of an Advisor recommendation in a subscription or service group.
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
+# or omit both to use the configured default subscription. Do not specify both. --recommendation-id
 # is the stable ID, also called recommendation ID. Set the state to New, Postponed,
 # Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed,
 # an omitted reason or natural-language intent that cannot be mapped to a supported reason defaults to Other. New reactivates
-# a postponed or dismissed recommendation. Security and platform-resolved recommendations cannot
+# a postponed, dismissed, or completed recommendation. Security and platform-resolved recommendations cannot
 # be updated. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation update --subscription <subscription> \
+azmcp advisor recommendation update [--subscription <subscription>] \
+                                    [--service-group <service-group>] \
                                     --recommendation-id <recommendation-id> \
                                     --recommendation-status <New|Postponed|Dismissed|Completed> \
                                     [--postponed-until-date-time <date-time-with-offset>] \
-                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
+                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>] \
+                                    [--tenant <tenant>]
 
-# Summarize Advisor recommendation counts, totals, rankings, and distributions.
+# Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group.
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
+# or omit both to use the configured default subscription. Do not specify both.
+# --resource-group can only be used with subscription scope.
 # Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
 # --group-by defaults to category. All groupings except status include only active New recommendations.
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
@@ -400,7 +406,8 @@ azmcp advisor recommendation update --subscription <subscription> \
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation summary --subscription <subscription> \
+azmcp advisor recommendation summary [--subscription <subscription>] \
+                                     [--service-group <service-group>] \
                                      [--group-by <group-by>] \
                                      [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
                                      [--impact <High|Medium|Low>] \

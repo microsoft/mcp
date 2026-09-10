@@ -69,24 +69,44 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription <subscription> | none |
 | advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription <subscription> | none |
 | advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in subscription <subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> as completed in service group <service-group> | none |
+| advisor_recommendation_update | Change Advisor recommendation <recommendation-id> state to Completed for service group <service-group> | none |
+| advisor_recommendation_update | Mark Advisor recommendation <recommendation-id> done for service group <service-group> | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in subscription <subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in service group <service-group> | none |
+| advisor_recommendation_update | Ignore Advisor recommendation <recommendation-id> because the risk is acceptable for service group <service-group> | none |
+| advisor_recommendation_update | Set Advisor recommendation <recommendation-id> status to Dismissed in subscription <subscription> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in subscription <subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in service group <service-group> | none |
+| advisor_recommendation_update | Snooze Advisor recommendation <recommendation-id> until January 15, 2027 in subscription <subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in subscription <subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in service group <service-group> | none |
+| advisor_recommendation_update | Reopen completed Advisor recommendation <recommendation-id> in subscription <subscription> | none |
+| advisor_recommendation_update | Reset Advisor recommendation <recommendation-id> to New in service group <service-group> | none |
+| advisor_recommendation_update | Update the customer state of Advisor recommendation <recommendation-id> in subscription <subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | Summarize the key themes from Advisor recommendations in service group <service-group> | none |
 | advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
+| advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group <service-group> | none |
 | advisor_recommendation_summary | What are the main themes across my active Advisor recommendations? | none |
 | advisor_recommendation_summary | How many active Advisor recommendations do I have in each category? | none |
+| advisor_recommendation_summary | How many active Advisor recommendations are in each category for service group <service-group>? | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
+| advisor_recommendation_summary | Break down Advisor recommendations in service group <service-group> by impact | none |
 | advisor_recommendation_summary | Show the distribution of my Advisor recommendations by business impact | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types | none |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types in service group <service-group> | none |
 | advisor_recommendation_summary | Which Advisor recommendation type occurs most often for resources in my subscription? | none |
 | advisor_recommendation_summary | Rank impacted Azure resource types by the count of High-impact Advisor recommendations | none |
 | advisor_recommendation_summary | Rank the Azure resource types with the most critical Advisor recommendations | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by lifecycle status | none |
+| advisor_recommendation_summary | Break down Advisor recommendations in service group <service-group> by lifecycle status | none |
 | advisor_recommendation_summary | How many Advisor recommendations are new, completed, dismissed, or postponed? | none |
 | advisor_recommendation_summary | Group active Advisor recommendations by metadata subcategory | none |
 | advisor_recommendation_summary | Count my zone resiliency Advisor recommendations by impacted resource type | none |
+| advisor_recommendation_summary | Count zone resiliency Advisor recommendations in service group <service-group> by impacted resource type | none |
 | advisor_recommendation_summary | How many active service-retirement Advisor recommendations do I have for each retirement date? | none |
+| advisor_recommendation_summary | Group active service-retirement Advisor recommendations in service group <service-group> by retirement date | none |
 | advisor_recommendation_summary | How many overdue service-retirement Advisor recommendations are still active? | none |
 | advisor_recommendation_summary | Count active recommendations for services retiring on December 31, 2026 | none |
 | advisor_recommendation_summary | Count active service-retirement Advisor recommendations with retirement dates on or before December 31, 2026 | none |
