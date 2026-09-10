@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
         List role assignments. This command retrieves and displays the Azure RBAC role assignments
         at the specified scope and at any scope nested beneath it. Assignments inherited from a parent
         scope are not included. The scope may be a subscription, resource group, resource, or management
-        group; a subscription must not be specified when the scope is a management group. Results include role
+        group; a subscription is not required when the scope is a management group. Results include role
         definition IDs and principal IDs.
         """,
     OperationPlane = ToolOperationPlane.Control,
