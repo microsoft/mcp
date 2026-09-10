@@ -77,7 +77,9 @@ public sealed class PlatformLandingZoneService(IAzureService azureService)
         var result = await _httpHelper.SendJsonAsync(HttpMethod.Get, BuildCollectionUrl(context), null, cancellationToken);
         if (result.StatusCode == HttpStatusCode.NotFound)
         {
-            return [];
+            throw new InvalidOperationException(
+                $"Migrate project '{context.MigrateProjectName}' was not found in resource group '{context.ResourceGroupName}' under subscription '{context.SubscriptionId}'. " +
+                "Verify the project name, resource group and subscription, or use the 'createmigrateproject' action to create the project first.");
         }
 
         if (!result.IsSuccess)
