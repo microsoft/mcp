@@ -1,7 +1,7 @@
 ---
 name: resilience-recovery-operations
-description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, recovery plans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; run or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs; implement, add, test, or record a Resilience Management tool.'
-argument-hint: 'Describe the resilience operation and provide known service group, plan, drill, job, subscription, or resource identifiers'
+description: 'Operate all Azure Resilience Management MCP tools and automate new Resilience Management tool delivery from API selection through implementation, live testing, recording, PR creation, review fixes, and merge-conflict resolution. Use when: list/get/create/update/delete resilience resources; run or end drills; validate or execute recovery operations; add or deliver a Resilience Management MCP tool.'
+argument-hint: 'Name the Resilience Management API or operation, plus the test subscription and any existing test resources when developing a tool'
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -100,6 +100,14 @@ For operational Azure requests, use the Azure Resilience Management MCP tools ex
 For the generic authoring lifecycle, follow [add-azure-mcp-tools](../add-azure-mcp-tools/SKILL.md). Then apply the [Resilience Management development requirements](./references/development.md), including its stricter ToolDescriptionEvaluator gate.
 
 Every new or behaviorally changed Resilience Management tool must have at least two distinct E2E evaluation prompts. For every prompt, the expected tool must rank `#1` with a score of at least `0.6`. This is an intentional Resilience-specific override of the repository-wide top-three and `0.4` baseline.
+
+### Automated delivery workflow
+
+When the user asks to create or deliver a Resilience Management tool, own the workflow through human merge. The developer should need to name the API, provide the approved test subscription and reusable resources, clarify genuinely ambiguous contracts, approve publication, review human-requested changes, and merge the approved PR. Follow the resumable state machine in [development.md](./references/development.md#automated-delivery-state-machine).
+
+At every invocation or resume, and before every push, fetch the PR target branch and inspect mergeability. Resolve unambiguous conflicts, rerun affected validation, and update the existing PR branch. Never discard either side merely to make the conflict disappear. If preserving both changes requires a product or API decision, present the conflicting intents and ask the developer.
+
+The skill cannot run independently after the agent session ends. In resume-on-request mode, persist progress in the PR and re-check conflicts, checks, and comments whenever the workflow is invoked again. Add the required delivery manifest marker to the PR body so `.github/workflows/resilience-merge-conflict-monitor.yml` can detect conflicts every three hours; resume the skill to resolve any conflict it reports.
 
 ## Result Format
 

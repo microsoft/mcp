@@ -1,0 +1,135 @@
+name: Resilience Tool Merge Conflict Monitor
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: resilience-tool-merge-conflict-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    name: Check skill-created pull requests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Check merge conflicts
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const deliveryMarker = '<!-- resilience-tool-delivery:v1 -->';
+            const commentMarker = '<!-- resilience-merge-conflict-monitor -->';
+            const conflictLabel = 'resilience-merge-conflict';
+            const { owner, repo } = context.repo;
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: conflictLabel });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+
+              await github.rest.issues.createLabel({
+                owner,
+                repo,
+                name: conflictLabel,
+                color: 'b60205',
+                description: 'Skill-created Resilience Management tool PR has merge conflicts'
+              });
+            }
+
+            const pullRequests = await github.paginate(github.rest.pulls.list, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            const trackedPullRequests = pullRequests.filter(
+              pullRequest => pullRequest.body?.includes(deliveryMarker));
+
+            core.info(`Checking ${trackedPullRequests.length} skill-created pull request(s).`);
+
+            for (const trackedPullRequest of trackedPullRequests) {
+              const { data: pullRequest } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: trackedPullRequest.number
+              });
+
+              if (pullRequest.mergeable === null || pullRequest.mergeable_state === 'unknown') {
+                core.warning(`Mergeability is not available yet for PR #${pullRequest.number}; it will be checked again.`);
+                continue;
+              }
+
+              const hasConflict = pullRequest.mergeable === false || pullRequest.mergeable_state === 'dirty';
+              const hasConflictLabel = pullRequest.labels.some(label => label.name === conflictLabel);
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pullRequest.number,
+                per_page: 100
+              });
+              const statusComment = comments.find(comment => comment.body?.includes(commentMarker));
+
+              if (hasConflict) {
+                if (!hasConflictLabel) {
+                  await github.rest.issues.addLabels({
+                    owner,
+                    repo,
+                    issue_number: pullRequest.number,
+                    labels: [conflictLabel]
+                  });
+                }
+
+                const body = `${commentMarker}\n` +
+                  `This skill-created Resilience Management tool PR conflicts with \`${pullRequest.base.ref}\`. ` +
+                  'Resume the Resilience Management delivery workflow to resolve and validate the conflict.';
+
+                if (statusComment) {
+                  await github.rest.issues.updateComment({
+                    owner,
+                    repo,
+                    comment_id: statusComment.id,
+                    body
+                  });
+                } else {
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: pullRequest.number,
+                    body
+                  });
+                }
+
+                core.warning(`PR #${pullRequest.number} conflicts with ${pullRequest.base.ref}.`);
+                continue;
+              }
+
+              if (hasConflictLabel) {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: pullRequest.number,
+                  name: conflictLabel
+                });
+              }
+
+              if (statusComment) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: statusComment.id,
+                  body: `${commentMarker}\nMerge conflicts are no longer detected for this PR.`
+                });
+              }
+
+              core.info(`PR #${pullRequest.number} has no merge conflicts.`);
+            }
