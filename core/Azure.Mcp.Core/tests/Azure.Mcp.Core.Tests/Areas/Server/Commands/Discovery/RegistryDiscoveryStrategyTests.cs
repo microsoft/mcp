@@ -193,6 +193,21 @@ public class RegistryDiscoveryStrategyTests
     }
 
     [Fact]
+    public async Task DiscoverServersAsync_FoundryServersDisambiguateFoundryExtensions()
+    {
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var metadata = result.Select(provider => provider.CreateMetadata()).ToList();
+
+        var foundry = Assert.Single(metadata, item => item.Name == "foundry");
+        Assert.Contains("use `foundryextensions` instead", foundry.Description, StringComparison.OrdinalIgnoreCase);
+
+        var arm = Assert.Single(metadata, item => item.Name == "arm");
+        Assert.Contains("use `foundryextensions` instead", arm.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task DiscoverServersAsync_ServerNamesMatchIds()
     {
         // Arrange

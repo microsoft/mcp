@@ -18,14 +18,14 @@
         "foundry": {
             "url": "https://mcp.ai.azure.com",
             "title": "Microsoft Foundry MCP",
-            "description": "MCP server to manage Microsoft Foundry models, deployments, agents, evaluations, sessions, project connections, monitoring, and data-generation jobs. Do not use this tool for knowledge indexes or OpenAI-compatible inference; use `foundryextensions` instead.",
+            "description": "MCP server to manage Microsoft Foundry model deployments, agents, evaluations, sessions, project connections, monitoring, and data-generation jobs. Do not use this tool to list Foundry resources, knowledge indexes, index schemas, or deployed OpenAI models, or to create completions or embeddings; use `foundryextensions` instead.",
             "toolPrefix": "foundry_",
             "oauthScopes": ["https://mcp.ai.azure.com/Foundry.Mcp.Tools"]
         },
         "arm": {
             "url": "https://mcp.management.azure.com",
             "title": "Azure Resource Manager MCP",
-            "description": "MCP server with tools to use Azure Resource Graph to retrieve and filter information about Azure resources in a customer's subscription, and tools to manage ARM template deployments.",
+            "description": "MCP server with tools to use Azure Resource Graph to retrieve and filter general Azure resources in a customer's subscription, and tools to manage ARM template deployments. Do not use this tool for Microsoft Foundry resource inventory, knowledge indexes, index schemas, OpenAI models, completions, or embeddings; use `foundryextensions` instead.",
             "toolPrefix": "arm_",
             "oauthScopes": ["22bfbae3-f4e7-485f-be43-8cee15065084/.default"]
         }

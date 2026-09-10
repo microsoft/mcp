@@ -74,6 +74,20 @@ public class ConsolidatedToolDiscoveryStrategyTests
     }
 
     [Fact]
+    public void CreateConsolidatedCommandFactory_FoundryExtensionsToolsDisambiguateExternalServers()
+    {
+        var strategy = CreateStrategy();
+
+        var factory = strategy.CreateConsolidatedCommandFactory();
+
+        var inference = Assert.Single(factory.RootGroup.SubGroup, group => group.Name == "use_azure_openai_models");
+        Assert.Contains("not Microsoft Foundry MCP or Azure Resource Manager MCP", inference.Description, StringComparison.OrdinalIgnoreCase);
+
+        var resources = Assert.Single(factory.RootGroup.SubGroup, group => group.Name == "get_foundry_extensions_resources");
+        Assert.Contains("not Microsoft Foundry MCP or Azure Resource Manager MCP", resources.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void CreateConsolidatedCommandFactory_WithNamespaceFilter_FiltersCommands()
     {
         // Arrange

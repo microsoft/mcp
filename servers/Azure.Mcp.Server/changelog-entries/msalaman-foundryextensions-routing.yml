@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved Microsoft Foundry Extensions tool selection in namespace and all-tools modes by distinguishing resource, knowledge-index, and OpenAI inference requests from the external Microsoft Foundry and Azure Resource Manager MCP servers."

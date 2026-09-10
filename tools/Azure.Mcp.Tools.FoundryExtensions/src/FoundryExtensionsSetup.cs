@@ -33,10 +33,13 @@ public class FoundryExtensionsSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var description = """
-            Use this tool for Microsoft Foundry knowledge indexes and OpenAI-compatible APIs: list knowledge indexes, get 
-            index schemas, create completions, generate embeddings, list models, and inspect Foundry resources. Use this
-            tool for any knowledge-index request. Use foundry instead for deployments, agents, evaluations, sessions, 
-            connections, monitoring, and data-generation jobs.
+            Use this tool for Microsoft Foundry resource inventory, knowledge indexes, and OpenAI-compatible inference.
+            It lists or gets Foundry resources, knowledge indexes, index schemas, and deployed OpenAI models; it also
+            creates text completions, chat completions, and embeddings. Use this tool when a user refers generally to
+            "my Microsoft Foundry resource" or "my Microsoft Foundry project" for any of these operations.
+            Do not use Microsoft Foundry MCP for these requests. Do not use Azure Resource Manager MCP for these requests.
+            Use Microsoft Foundry MCP instead
+            for model deployments, agents, evaluations, sessions, connections, monitoring, and data-generation jobs.
             """;
         var foundryExtensions = new CommandGroup(Name, description, Title);
 

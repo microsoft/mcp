@@ -2111,7 +2111,7 @@
     },
     {
       "name": "use_azure_openai_models",
-      "description": "Generate text completions, chat responses, and embeddings using Azure OpenAI models in Microsoft Foundry. Create conversational AI interactions and vector embeddings for semantic search and analysis.",
+      "description": "Generate text completions, chat responses, and embeddings using Azure OpenAI models in Microsoft Foundry. Use this tool, not Microsoft Foundry MCP or Azure Resource Manager MCP, for OpenAI-compatible inference requests.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2245,7 +2245,7 @@
     },
     {
       "name": "get_foundry_extensions_resources",
-      "description": "Get details about Microsoft Foundry Extensions resources: list or retrieve AI/Cognitive Services resources, knowledge indexes and their schemas, and available Azure OpenAI model deployments.",
+      "description": "List or get Microsoft Foundry resource inventory, knowledge indexes and their schemas, and deployed Azure OpenAI models. Use this tool, not Microsoft Foundry MCP or Azure Resource Manager MCP, for these requests.",
       "toolMetadata": {
         "destructive": {
           "value": false,
