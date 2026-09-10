@@ -1,0 +1,3 @@
+changes:
+  - section: "Bug Fixes"
+    description: "`compute vm get` now includes `timeCreated` for each VM, so questions like \"which VMs were created in the last N days\" can be answered from the listing."
