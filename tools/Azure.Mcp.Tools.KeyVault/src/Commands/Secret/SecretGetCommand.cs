@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     Name = "get",
     Title = "Get Key Vault Secret",
     Description = """List all secrets in your Key Vault or get a specific secret by name. Shows all secret names in the vault (without values), or retrieves the secret value and full details including enabled status and expiration dates.""",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -245,7 +245,10 @@ internal sealed class SingleConsolidatedToolAreaSetup(
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create command group for this consolidated tool
-        var commandGroup = new CommandGroup(Name, Title);
+        var commandGroup = new CommandGroup(
+            Name,
+            _consolidatedTool.Description ?? Name,
+            Title);
 
         // Add all matching commands to this group
         foreach (var cmd in _matchingCommands)

@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
     Name = "orchestrator-start",
     Title = "Start Azure Monitor Instrumentation",
     Description = "START HERE for Azure Monitor instrumentation. Analyzes workspace and returns the first action to execute. After executing the action, call orchestrator-next to continue. DO NOT improvise. Execute EXACTLY what the 'instruction' field tells you.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

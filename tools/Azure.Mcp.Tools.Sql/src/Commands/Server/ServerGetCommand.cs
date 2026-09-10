@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
         'az sql server list' (list all Azure SQL servers in a resource group). Returns server information
         including configuration details and current state.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

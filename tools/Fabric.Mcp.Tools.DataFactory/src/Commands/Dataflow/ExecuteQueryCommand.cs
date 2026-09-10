@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     Name = "execute-query",
     Title = "Execute Dataflow Query",
     Description = "Executes an M (Power Query) expression against a dataflow in a Microsoft Fabric workspace.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     Name = "update",
     Title = "Update Private Endpoint Connection",
     Description = "Update the state of a private endpoint connection for a file share. Use this to approve or reject private endpoint connection requests.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
