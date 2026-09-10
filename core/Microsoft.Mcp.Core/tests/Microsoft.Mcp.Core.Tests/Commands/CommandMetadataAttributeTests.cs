@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Mcp.Core.Commands;
 using Xunit;
 
@@ -8,6 +10,18 @@ namespace Microsoft.Mcp.Core.Tests.Commands;
 
 public sealed class CommandMetadataAttributeTests
 {
+    [Fact]
+    public void CommandMetadataAttribute_AllPropertiesAreRequired()
+    {
+        var properties = typeof(CommandMetadataAttribute).GetProperties(
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+        Assert.NotEmpty(properties);
+        Assert.All(properties, property => Assert.True(
+            property.IsDefined(typeof(RequiredMemberAttribute), inherit: false),
+            $"{property.Name} must be required."));
+    }
+
     [Theory]
     [InlineData("id1", "name1", "desc1", "title1", true)]
     [InlineData("", "name1", "desc1", "title1", false)]
@@ -25,7 +39,14 @@ public sealed class CommandMetadataAttributeTests
             Id = id,
             Name = name,
             Description = description,
-            Title = title
+            Title = title,
+            OperationPlane = ToolOperationPlane.Unspecified,
+            Destructive = true,
+            Idempotent = false,
+            OpenWorld = true,
+            ReadOnly = false,
+            Secret = false,
+            LocalRequired = false
         };
         Assert.Equal(expected, attr.IsValid());
     }

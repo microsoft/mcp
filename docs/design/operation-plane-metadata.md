@@ -88,11 +88,11 @@ Both shapes are treated identically because consumers of this metadata reason ab
 
 A tool that merely reaches ARM on its way to a data-plane call is `Data`, not `Both`.
 
-### Default
+### Required Declaration
 
-`OperationPlane` defaults to `Unspecified`, which is an unset marker rather than a shipping state.
+`OperationPlane`, like every `CommandMetadataAttribute` property, must be set explicitly. `Unspecified` remains an unset marker rather than a shipping state.
 
-Defaulting to `Data` would silently misclassify the many ARM-based tools. Making the default an unset marker instead means a tool that is never classified fails loudly rather than publishing a wrong answer.
+Defaulting to `Data` would silently misclassify the many ARM-based tools. Requiring an explicit value prevents accidental omission, while validation rejects an explicit `Unspecified` value.
 
 `CommandOperationPlaneTests.AllCommands_DeclareAnOperationPlane` enforces this: it walks every registered tool and fails on any that is still `Unspecified`. There is no allowlist, so a new tool must be classified before it can ship. A tool that calls no service is `NotApplicable`, which is an explicit classification and satisfies the test.
 

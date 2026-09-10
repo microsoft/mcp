@@ -31,26 +31,26 @@ public sealed class CommandMetadataAttribute : Attribute
     /// </summary>
     public required string Title { get; init; }
 
-    /// <summary>The API plane the tool acts against. Default: unspecified.</summary>
-    public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.Unspecified;
+    /// <summary>The API plane the tool acts against.</summary>
+    public required ToolOperationPlane OperationPlane { get; init; }
 
-    /// <summary>Whether the tool may perform destructive updates. Default: true.</summary>
-    public bool Destructive { get; init; } = true;
+    /// <summary>Whether the tool may perform destructive updates.</summary>
+    public required bool Destructive { get; init; }
 
-    /// <summary>Whether repeated calls with the same arguments have no additional effect. Default: false.</summary>
-    public bool Idempotent { get; init; }
+    /// <summary>Whether repeated calls with the same arguments have no additional effect.</summary>
+    public required bool Idempotent { get; init; }
 
-    /// <summary>Whether the tool may interact with an open world of external entities. Default: true.</summary>
-    public bool OpenWorld { get; init; } = true;
+    /// <summary>Whether the tool may interact with an open world of external entities.</summary>
+    public required bool OpenWorld { get; init; }
 
-    /// <summary>Whether the tool only performs read operations. Default: false.</summary>
-    public bool ReadOnly { get; init; }
+    /// <summary>Whether the tool only performs read operations.</summary>
+    public required bool ReadOnly { get; init; }
 
-    /// <summary>Whether the tool handles sensitive or secret information. Default: false.</summary>
-    public bool Secret { get; init; }
+    /// <summary>Whether the tool handles sensitive or secret information.</summary>
+    public required bool Secret { get; init; }
 
-    /// <summary>Whether the tool requires local execution. Default: false.</summary>
-    public bool LocalRequired { get; init; }
+    /// <summary>Whether the tool requires local execution.</summary>
+    public required bool LocalRequired { get; init; }
 
     internal bool IsValid() => !string.IsNullOrWhiteSpace(Id) &&
         !string.IsNullOrWhiteSpace(Name) &&

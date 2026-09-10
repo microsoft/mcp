@@ -20,7 +20,14 @@ public sealed class AuthenticatedCommandTests
         Id = "00000000-0000-0000-0000-0000000000a1",
         Name = "test-auth",
         Title = "Test Auth Command",
-        Description = "A command used only to exercise AuthenticatedCommand error handling in tests.")]
+        Description = "A command used only to exercise AuthenticatedCommand error handling in tests.",
+        OperationPlane = ToolOperationPlane.Unspecified,
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false)]
     private sealed class AuthTestCommand : AuthenticatedCommand<EmptyOptions, string>
     {
         public override Task<CommandResponse> ExecuteAsync(
