@@ -675,7 +675,6 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         // microsoft.insights/webtests is only available in cloud-specific regions, and the
         // test runner geo-locations differ per cloud. Mirror the values used in
         // test-resources.webtests.module.bicep so the test works in sovereign clouds.
-        var webTestRegion = Settings.IsAzureUSGovernment ? "usgovvirginia" : "West US";
         var webTestGeoLocation = Settings.IsAzureUSGovernment ? "usgov-va-azr" : "us-ca-sjc-azr";
 
         var result = await CallToolAsync(
@@ -686,7 +685,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
                 { "resource-group", Settings.ResourceGroupName },
                 { "webtest-resource", webTestName },
                 { "appinsights-component", appInsightsComponentId },
-                { "location", webTestRegion },
+                { "location", Settings.IsAzureUSGovernment ? "usgovvirginia" : "West US" },
                 { "webtest-locations", webTestGeoLocation },
                 { "request-url", "https://example.com" },
                 { "webtest", "Test Web Test" },
