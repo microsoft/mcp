@@ -11,6 +11,41 @@ namespace Azure.Mcp.Tools.Deploy.Tests.Commands.Infrastructure;
 
 public class RulesGetCommandTests : CommandUnitTestsBase<RulesGetCommand, object>
 {
+    [Theory]
+    [InlineData("bicep")]
+    [InlineData("terraform")]
+    public async Task SecurityGuidance_DefaultsToPrivateAndLeastPrivilege(string iacType)
+    {
+        var result = await ExecuteCommandAsync("--deployment-tool", "AzCli", "--iac-type", iacType,
+            "--resource-types", "aks,azurecosmosdb,azuredatabaseforpostgresql,azuredatabaseformysql,azurestorageaccount");
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.Contains("Disable public network access", result.Message);
+        Assert.Contains("'Key Vault Secrets User' to the application managed identity", result.Message);
+        Assert.Contains("Use Azure Workload Identity", result.Message);
+        Assert.DoesNotContain("0.0.0.0", result.Message);
+        Assert.DoesNotContain("{{", result.Message);
+    }
+
+    [Fact]
+    public async Task SecurityGuidance_OnlyRelaxesExplicitlyEnabledSettings()
+    {
+        var result = await ExecuteCommandAsync("--deployment-tool", "AzCli", "--iac-type", "bicep",
+            "--resource-types", "aks,azurecosmosdb", "--enable-public-network-access", "true",
+            "--allow-azure-services", "true", "--allow-privileged-roles", "true", "--use-connection-strings", "true");
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.Contains("0.0.0.0", result.Message);
+        Assert.Contains("'Key Vault Secrets Officer' to the application managed identity", result.Message);
+        Assert.Contains("Secret-based connection strings are explicitly permitted", result.Message);
+        Assert.DoesNotContain("{{", result.Message);
+    }
+
+    [Fact]
+    public async Task SecurityGuidance_RejectsAzureExceptionWithoutPublicAccess()
+    {
+        var result = await ExecuteCommandAsync("--deployment-tool", "AzCli", "--allow-azure-services", "true");
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
+    }
+
     [Fact]
     public async Task Should_get_infrastructure_code_rules()
     {

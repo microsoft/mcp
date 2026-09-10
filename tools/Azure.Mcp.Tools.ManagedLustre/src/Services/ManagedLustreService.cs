@@ -217,9 +217,23 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         };
     }
 
-    private static AmlFileSystemRootSquashSettings GenerateRootSquashSettings(string rootSquashMode, string? noSquashNidLists, long? squashUid, long? squashGid)
+    internal static AmlFileSystemRootSquashSettings GenerateRootSquashSettings(string? rootSquashMode, string? noSquashNidLists, long? squashUid, long? squashGid)
     {
-        // Root squash: default to None if not provided; when not None, ensure required squash parameters are provided
+        if (string.IsNullOrWhiteSpace(rootSquashMode))
+        {
+            if (squashUid < 0 || squashGid < 0)
+            {
+                throw new ArgumentException("Squash UID and GID must be non-negative integers.");
+            }
+            return new()
+            {
+                Mode = AmlFileSystemSquashMode.RootOnly,
+                SquashUID = squashUid ?? 65534,
+                SquashGID = squashGid ?? 65534,
+                NoSquashNidLists = noSquashNidLists
+            };
+        }
+
         var rootSquashSettings = new AmlFileSystemRootSquashSettings
         {
             Mode = AmlFileSystemSquashMode.None
@@ -419,7 +433,7 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             data.Zones.Add(zone);
         }
 
-        data.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
+        data.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode, noSquashNidLists, squashUid, squashGid);
         data.MaintenanceWindow = GenerateMaintenanceWindow(maintenanceDay, maintenanceTime);
         data.Hsm = GenerateHsmSettings(hsmContainer, hsmLogContainer, importPrefix);
 

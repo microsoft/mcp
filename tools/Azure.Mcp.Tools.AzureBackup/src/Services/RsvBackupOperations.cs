@@ -21,7 +21,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
-        CancellationToken cancellationToken)
+        bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -40,7 +40,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             Sku = vaultSku,
             Properties = new RecoveryServicesVaultProperties
             {
-                PublicNetworkAccess = VaultPublicNetworkAccess.Enabled
+                PublicNetworkAccess = enablePublicNetworkAccess ? VaultPublicNetworkAccess.Enabled : VaultPublicNetworkAccess.Disabled
             }
         };
 
@@ -57,8 +57,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, CancellationToken cancellationToken,
-        VaultExpand expand = VaultExpand.None)
+        string? tenant, VaultExpand expand = VaultExpand.None,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -79,8 +79,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? tenant,
-        CancellationToken cancellationToken,
-        VaultExpand expand = VaultExpand.None)
+        VaultExpand expand = VaultExpand.None,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 

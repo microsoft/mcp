@@ -171,6 +171,21 @@ Rationale:
 
 ## Implementation Guidelines
 
+### Secure Defaults for Resource Creation
+
+Commands that create or upsert resources should be **secure by default**, including any supporting resources or role assignments they create. Apply the same guidance to generated deployment templates and IaC recommendations. Less secure deployments must require explicit, documented parameters rather than permissive defaults.
+
+- **Restrict network access:** Prefer private connectivity where supported, disable public access by default, and do not automatically assign public IPs or open inbound management ports to all sources. Require explicit source ranges or an intentional broad-access choice. An "allow Azure services" firewall exception can include other customers' subscriptions; it is not tenant isolation.
+- **Prefer identity and least privilege:** Use Microsoft Entra ID with managed or workload identity where supported. Disable anonymous access and Shared Key or key-based SAS authentication by default when the service supports identity-based access. Grant only the required operations at the narrowest appropriate resource or data-path scope. For example, secret-consuming applications should use Key Vault Secrets User, not Secrets Officer; keep provisioning permissions separate from runtime permissions.
+- **Protect data:** Require encrypted transport and a current supported minimum TLS version. Preserve service-provided encryption at rest and enable applicable resource-specific protections, such as root squashing for shared file systems.
+- **Enforce effective defaults:** Set security controls in the service's creation request, not only in option descriptions or CLI defaults. Verify the selected SDK/API version's behavior for omitted values against official documentation; an unset property does not necessarily mean access is disabled. Do not assume Azure Policy will harden the request later.
+- **Make exceptions granular:** Expose separate opt-in parameters for broader network access, key authentication, or elevated permissions, such as `--enable-public-network-access` and `--allow-shared-key-access`. Each option should explain its risk and leave unrelated protections enabled. Validate unsupported or contradictory combinations before any resource writes, and never silently weaken security to work around a deployment error.
+- **Distinguish creation from updates:** For upserts, apply creation defaults only to new resources and preserve omitted security settings on existing resources. Use nullable options when necessary to distinguish omission from an explicit `false`. Do not implicitly reuse a permissive supporting resource without an explicit caller choice.
+- **Test both paths:** Unit tests must verify the effective request's secure defaults when options are omitted, each explicit opt-in, rejected combinations, and preservation of existing settings on updates. Recorded live tests should assert the resulting resource's security settings; option-binding tests alone are insufficient.
+- **Document prerequisites and migration:** Explain private endpoints, virtual network integration, private DNS, and client connectivity requirements. Include secure-default and explicit opt-in examples and end-to-end prompts. Document breaking default changes for existing users in the changelog.
+
+See [Resource Creation Security Defaults](azmcp-commands.md#resource-creation-security-defaults) for existing tool defaults and opt-in parameters.
+
 ### 1. Azure Resource Manager Integration
 
 When creating commands that interact with Azure services, you'll need to:
@@ -2764,6 +2779,11 @@ Before submitting:
 - [ ] `servers/Azure.Mcp.Server/README.md` includes a representative prompt and an updated supported-service description when applicable
 - [ ] `servers/Azure.Mcp.Server/docs/azmcp-commands.md` documents the command
 - [ ] `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` includes command prompts
+
+### Resource Creation Security
+- [ ] Creation requests and supporting resources enforce secure defaults; broader access requires explicit, granular opt-in parameters
+- [ ] Tests verify effective default settings, each opt-in, invalid combinations, and preservation of omitted security settings on updates; recorded live tests verify resulting Azure resource settings
+- [ ] Defaults, opt-in risks, private connectivity/DNS prerequisites, and migration impacts are documented
 
 ### **CRITICAL: Live Test Infrastructure (Required for Azure Service Commands)**
 

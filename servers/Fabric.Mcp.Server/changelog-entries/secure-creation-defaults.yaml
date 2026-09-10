@@ -1,0 +1,4 @@
+changes:
+  - section: Breaking Changes
+    description: |
+      OneLake data access role creation and updates now require explicit path restrictions by default, including roles supplied as JSON. Use --allow-full-item-access true to intentionally grant whole-item access without a path restriction. Explicit wildcard paths remain supported.

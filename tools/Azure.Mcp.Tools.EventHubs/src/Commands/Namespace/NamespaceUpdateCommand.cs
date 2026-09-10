@@ -58,6 +58,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
             !options.MaximumThroughputUnits.HasValue &&
             !options.KafkaEnabled.HasValue &&
             !options.ZoneRedundant.HasValue &&
+            !options.EnablePublicNetworkAccess.HasValue &&
+            !options.EnableSasAuthentication.HasValue &&
             string.IsNullOrEmpty(options.Tags))
         {
             validationResult.Errors.Add("At least one update property must be provided (location, sku-name, sku-tier, sku-capacity, is-auto-inflate-enabled, maximum-throughput-units, kafka-enabled, zone-redundant, or tags).");
@@ -102,6 +104,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 options.ZoneRedundant,
                 tags,
                 options.Tenant,
+                options.EnablePublicNetworkAccess,
+                options.EnableSasAuthentication,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

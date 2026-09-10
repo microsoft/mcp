@@ -45,6 +45,20 @@ Before starting, determine:
 - Use `ValidateOptions` for semantic constraints beyond nullability (name length, format, mutual exclusivity, and allowed value sets). Only reject characters that are provably invalid for the specific resource type. This applies to both the new two-generic `SubscriptionCommand` pattern and the legacy one-generic pattern — see the `ValidateOptions` override guidance in [Phase 1d](#1d-command-class).
 - Prefer SDK/runtime validators and deterministic checks first (`Length`, explicit allowed-value sets, character/category checks).
 
+### Secure Resource Creation Defaults
+
+Resource creation must be **secure by default**. This includes create-or-update commands, supporting resources and role assignments, and generated IaC or deployment guidance.
+
+- Default to private or restricted networking where supported. Do not automatically add public IPs, wildcard inbound management rules, or all-Azure-services firewall exceptions. Such exceptions can permit other customers' subscriptions, not just the caller's resources.
+- Prefer Microsoft Entra ID with managed or workload identity. Disable anonymous access and Shared Key or key-based SAS authentication by default where identity-based access is supported. Assign the minimum required permissions at the narrowest appropriate resource or data-path scope, keeping provisioning roles separate from runtime roles.
+- Require encrypted transport and a current supported minimum TLS version. Preserve encryption at rest and enable resource-specific protections such as root squashing for shared file systems.
+- Enforce these defaults in service creation requests as well as the tool contract. Verify omitted SDK/API values against official documentation instead of assuming they are secure or that Azure Policy will fix them later.
+- Offer explicit, granular opt-in parameters for less secure deployments, such as public network access, key authentication, or broader permissions. Document each risk, retain unrelated safeguards, and reject unsupported or contradictory options before any writes. Never silently relax security to recover from a deployment error.
+- For upserts, apply secure defaults to new resources and preserve omitted security settings on existing resources. Use nullable options to distinguish omission from explicit `false` where needed. Require an explicit caller choice before reusing permissive supporting resources.
+- Document private connectivity and DNS prerequisites, safe examples, intentional opt-in examples, and any migration impact from changed defaults.
+
+See [Secure Defaults for Resource Creation](../../../servers/Azure.Mcp.Server/docs/new-command.md#secure-defaults-for-resource-creation) for the command-authoring guidance.
+
 ### Secure Logging
 - **Never log raw option objects** (`{@Options}`) — they may contain secrets, connection strings, or PII.
 - Log only individually named, known-safe parameters. For example: `options.Subscription`, `options.ResourceGroup`, `Name`.
@@ -92,6 +106,8 @@ When using an AI assistant (such as GitHub Copilot) to scaffold or generate comm
 Requirements:
 - Validate user-controlled inputs in `ValidateOptions` using resource-specific rules (naming rules, allowed values, length caps) where applicable; do not use one generic rule for all options.
 - Prefer SDK/runtime validators and deterministic checks for user input validation.
+- Create resources with secure defaults enforced in service requests; expose explicit, documented opt-in parameters for broader access without weakening unrelated protections.
+- Test omitted security options, explicit opt-ins, invalid combinations, and preservation of existing security settings during updates.
 - Log only individually named, known-safe parameters; never log option objects, credentials, keys, connection strings, or other secret-bearing fields.
 - For endpoint/URL inputs, use `EndpointValidator` methods appropriate to the scenario (`ValidateAzureServiceEndpoint`, `ValidateExternalUrl`, or `ValidatePublicTargetUrl`). Avoid direct interpolation of unvalidated input into URLs or downstream queries.
 - Add negative tests for relevant security cases introduced by the command (for example malformed names, invalid endpoint hosts, or unsafe query text) rather than a one-size-fits-all set of tests.
@@ -711,6 +727,8 @@ public class {Resource}{Operation}CommandTests
 
 **Prefer string args over constructing options directly.** Using `ExecuteCommandAsync("--account", ...)` tests the full pipeline: `[Option]` attribute registration, `OptionBinder` parsing, and `SubscriptionResolver` post-processing.
 
+For resource creation, also test the service request builder or serialized SDK/API request. Assert secure values when security options are omitted, that each opt-in relaxes only the requested setting, that invalid combinations fail before writes, and that upserts preserve omitted security settings. Option-binding assertions alone do not establish secure resource defaults.
+
 Mock rules:
 - Use `Arg.Any<CancellationToken>()` for CancellationToken in mocks
 - Use `TestContext.Current.CancellationToken` when invoking real code
@@ -776,6 +794,8 @@ Write-Host "{Toolset} post-deployment setup completed."
 Validate: `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 
 ### 3b. Live Test Class
+
+For creation commands, assert the resulting resource's security settings for both default and explicitly opted-in configurations. Arrange the required private connectivity and DNS for default-path tests rather than enabling public access merely to make the test pass. Record and verify both paths.
 
 File: `tests/Azure.Mcp.Tools.{Toolset}.Tests/{Toolset}CommandTests.cs`
 
@@ -1192,6 +1212,9 @@ Before creating the PR, verify all of these:
 
 ### Security
 - [ ] `ValidateOptions` enforces format, length, and allowed-value constraints on all inputs — not only nullability
+- [ ] Resource creation and supporting resources enforce secure defaults in service requests; less secure settings require explicit, granular opt-ins
+- [ ] Unit tests cover effective defaults, opt-ins, invalid combinations, and preservation of omitted update settings; recorded live tests verify resulting Azure resource settings
+- [ ] Security defaults, opt-in risks, private connectivity/DNS prerequisites, and migration impacts are documented
 - [ ] No raw option objects logged — only individually named, known-safe parameters (e.g., `options.Subscription`, `Name`)
 - [ ] No user input concatenated directly into URLs, resource identifiers, or command strings without prior allowlist validation
 - [ ] Data-plane endpoints validated with `EndpointValidator.ValidateAzureServiceEndpoint` (Azure services), `ValidateExternalUrl` (known external hosts), or `ValidatePublicTargetUrl` (arbitrary user-supplied targets) — never derived from raw user input without validation

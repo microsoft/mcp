@@ -125,10 +125,11 @@ public sealed class FileSharesService(IAzureService azureService, ILogger<FileSh
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-        var fileShareData = new FileShareData(new(location))
-        {
-            Properties = new()
-        };
+        var existing = await resourceGroupResource.Value.GetFileShares().GetIfExistsAsync(fileShareName, cancellationToken: cancellationToken);
+        var fileShareData = existing.HasValue && existing.Value is { } resource
+            ? resource.Data
+            : new FileShareData(new(location)) { Properties = new() };
+        ConfigureFileShareSecurity(fileShareData, !existing.HasValue, protocol);
 
         // Populate properties from parameters
         if (!string.IsNullOrEmpty(mountName))
@@ -166,6 +167,7 @@ public sealed class FileSharesService(IAzureService azureService, ILogger<FileSh
 
         if (allowedSubnets != null && allowedSubnets.Length > 0)
         {
+            fileShareData.Properties.PublicAccessAllowedSubnets.Clear();
             foreach (var subnet in allowedSubnets)
             {
                 fileShareData.Properties.PublicAccessAllowedSubnets.Add(subnet);
@@ -192,6 +194,24 @@ public sealed class FileSharesService(IAzureService azureService, ILogger<FileSh
             fileShareName, resourceGroup, location);
 
         return FileShareInfo.FromResource(operation.Value);
+    }
+
+    internal static void ConfigureFileShareSecurity(FileShareData data, bool isNew, string? protocol)
+    {
+        if (!isNew)
+        {
+            return;
+        }
+        data.Properties ??= new();
+        data.Properties.PublicNetworkAccess = new("Disabled");
+        if (string.IsNullOrWhiteSpace(protocol) || protocol.Equals("NFS", StringComparison.OrdinalIgnoreCase))
+        {
+            data.Properties.NfsProtocolProperties = new()
+            {
+                RootSquash = new("RootSquash"),
+                EncryptionInTransitRequired = new("Enabled")
+            };
+        }
     }
 
     public async Task<FileShareInfo> PatchFileShareAsync(

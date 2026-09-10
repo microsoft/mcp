@@ -1,0 +1,7 @@
+changes:
+  - section: Breaking Changes
+    description: |
+      Resource creation now defaults to restricted network access for virtual machines, scale sets, managed disks, Storage accounts, Event Hubs namespaces, NFS file shares, Recovery Services vaults, and Storage Sync services. New Storage accounts disable Shared Key authentication, new Event Hubs namespaces disable SAS authentication, and new NFS shares require encrypted transit. New Lustre and NFS file systems enable root squashing. Explicit parameters remain available for broader access. Existing Event Hubs namespaces and file shares retain omitted security settings during updates. Private-only deployments require private connectivity and DNS configuration before data access.
+  - section: Bugs Fixed
+    description: |
+      Deployment IaC guidance now defaults to private networking, workload identity, and least-privilege application roles. Separate opt-in parameters permit public networking, all-Azure-services firewall exceptions, privileged application roles, and secret-based connections. VM networking applies NSGs to NICs when reusing existing virtual networks and requires explicit selection before reusing an existing NSG.

@@ -24,6 +24,8 @@ public interface IStorageService
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
+        bool enablePublicNetworkAccess = false,
+        bool allowSharedKeyAccess = false,
         CancellationToken cancellationToken = default);
 
     Task<List<BlobInfo>> GetBlobDetails(

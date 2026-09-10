@@ -102,42 +102,46 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
         string location, string? sku, string? storageType, string? tenant,
-        CancellationToken cancellationToken)
+        bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default)
     {
         // Perform validations that don't require a network call first so invalid input
         // fails fast without going through ResolveSubscriptionIdAsync (which may call ARM).
         VaultTypeResolver.ValidateVaultType(vaultType);
+        if (enablePublicNetworkAccess && !VaultTypeResolver.IsRsv(vaultType))
+        {
+            throw new ArgumentException("Public network access configuration is only supported for Recovery Services vaults.", nameof(enablePublicNetworkAccess));
+        }
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(vaultType)
-            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, cancellationToken)
+            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, enablePublicNetworkAccess, cancellationToken)
             : await dppOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, cancellationToken);
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? vaultType, string? tenant,
-        CancellationToken cancellationToken,
-        VaultExpand expand = VaultExpand.None)
+        VaultExpand expand = VaultExpand.None,
+        CancellationToken cancellationToken = default)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         if (VaultTypeResolver.IsVaultTypeSpecified(vaultType))
         {
             return VaultTypeResolver.IsRsv(vaultType)
-                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand)
-                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand);
+                ? await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, expand, cancellationToken)
+                : await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, expand: expand, cancellationToken: cancellationToken);
         }
 
         return await AutoDetectAndExecuteAsync(
-            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand),
-            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken, expand),
+            () => rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, expand, cancellationToken),
+            () => dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, expand: expand, cancellationToken: cancellationToken),
             vaultName);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? resourceGroup, string? vaultType, string? tenant,
-        CancellationToken cancellationToken,
-        VaultExpand expand = VaultExpand.None)
+        VaultExpand expand = VaultExpand.None,
+        CancellationToken cancellationToken = default)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         List<BackupVaultInfo> FilterByResourceGroup(List<BackupVaultInfo> vaults) =>
@@ -147,16 +151,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         if (VaultTypeResolver.IsRsv(vaultType))
         {
-            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand));
+            return FilterByResourceGroup(await rsvOps.ListVaultsAsync(subscription, tenant, expand, cancellationToken));
         }
 
         if (VaultTypeResolver.IsDpp(vaultType))
         {
-            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand));
+            return FilterByResourceGroup(await dppOps.ListVaultsAsync(subscription, tenant, expand: expand, cancellationToken: cancellationToken));
         }
 
-        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand);
-        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, cancellationToken, expand);
+        var rsvTask = rsvOps.ListVaultsAsync(subscription, tenant, expand, cancellationToken);
+        var dppTask = dppOps.ListVaultsAsync(subscription, tenant, expand: expand, cancellationToken: cancellationToken);
 
         try
         {
@@ -576,7 +580,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         // Step 1: List all vaults (RSV + DPP) in the subscription (parallelized)
-        var rsvVaultsTask = rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken);
+        var rsvVaultsTask = rsvOps.ListVaultsAsync(subscription, tenant, cancellationToken: cancellationToken);
         var dppVaultsTask = dppOps.ListVaultsAsync(subscription, tenant, cancellationToken);
 
         try
@@ -1187,7 +1191,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         try
         {
-            await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
+            await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken: cancellationToken);
             return VaultTypeResolver.Rsv;
         }
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)

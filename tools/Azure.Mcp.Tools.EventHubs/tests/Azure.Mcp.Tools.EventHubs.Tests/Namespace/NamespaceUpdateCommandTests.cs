@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
+using Azure.ResourceManager.EventHubs;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -13,6 +14,34 @@ namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
 
 public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<NamespaceUpdateCommand, IEventHubsService>
 {
+    [Theory]
+    [InlineData(true, null, null, "Disabled", true)]
+    [InlineData(true, true, true, "Enabled", false)]
+    [InlineData(true, true, false, "Enabled", true)]
+    [InlineData(false, null, null, "Enabled", false)]
+    [InlineData(false, false, false, "Disabled", true)]
+    public void NamespaceSecurity_DefaultsAndUpdates(bool isNew, bool? publicAccess, bool? sasAuth, string networkAccess, bool disableLocalAuth)
+    {
+        var data = new EventHubsNamespaceData("eastus") { PublicNetworkAccess = new("Enabled"), DisableLocalAuth = false };
+        EventHubsService.ConfigureNamespaceSecurity(data, isNew, publicAccess, sasAuth);
+        Assert.Equal(networkAccess, data.PublicNetworkAccess?.ToString());
+        Assert.Equal(disableLocalAuth, data.DisableLocalAuth);
+    }
+
+    [Theory]
+    [InlineData("--location eastus", null, null)]
+    [InlineData("--enable-public-network-access true", true, null)]
+    [InlineData("--enable-sas-authentication true", null, true)]
+    [InlineData("--enable-public-network-access false --enable-sas-authentication false", false, false)]
+    public async Task ExecuteAsync_ForwardsExplicitSecuritySettings(string options, bool? publicAccess, bool? sasAuth)
+    {
+        var response = await ExecuteCommandAsync($"--subscription test-sub --resource-group test-rg --namespace test-ns {options}");
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var call = Assert.Single(Service.ReceivedCalls());
+        Assert.Equal(publicAccess, call.GetArguments()[13]);
+        Assert.Equal(sasAuth, call.GetArguments()[14]);
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -55,7 +84,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
                 Arg.Any<bool?>(),
                 Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(updatedNamespace);
         }
 
@@ -98,7 +127,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null, // zoneRedundant
             null, // tags
             null, // tenant
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -127,7 +156,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null,
             null,
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -149,7 +178,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -195,7 +224,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
                 tags.ContainsKey("team") &&
                 tags["team"] == "platform"),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -245,7 +274,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -278,7 +307,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -299,7 +328,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Update failed"));
 
         // Act
@@ -332,7 +361,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
@@ -366,7 +395,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -393,7 +422,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null,
             null,
             "test-tenant-123",
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]

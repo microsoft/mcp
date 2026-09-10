@@ -115,7 +115,7 @@ public class ComputeService(
             subnet,
             publicIpAddress,
             networkSecurityGroup,
-            noPublicIp ?? false,
+            noPublicIp ?? true,
             effectiveOsType,
             sourceAddressPrefix,
             cancellationToken);
@@ -296,7 +296,6 @@ public class ComputeService(
         string? sourceAddressPrefix,
         CancellationToken cancellationToken)
     {
-        var effectiveSourceAddressPrefix = sourceAddressPrefix ?? "*";
         var vnetName = virtualNetwork ?? $"{vmName}-vnet";
         var subnetName = subnet ?? "default";
         var nsgName = networkSecurityGroup ?? $"{vmName}-nsg";
@@ -309,60 +308,15 @@ public class ComputeService(
         try
         {
             var existingNsg = await nsgCollection.GetAsync(nsgName, cancellationToken: cancellationToken);
+            if (string.IsNullOrWhiteSpace(networkSecurityGroup))
+            {
+                throw new InvalidOperationException($"Network security group '{nsgName}' already exists. Explicitly select --network-security-group to reuse it, or choose a different VM name.");
+            }
             nsgResource = existingNsg.Value;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
-            var nsgData = new NetworkSecurityGroupData
-            {
-                Location = new(location)
-            };
-
-            // Add appropriate security rule based on OS type
-            // WARNING: These rules allow access from any source IP for quick-start scenarios.
-            // For production use, restrict SourceAddressPrefix to specific IP ranges.
-            var isWindows = osType.Equals("Windows", StringComparison.OrdinalIgnoreCase);
-
-            if (isWindows)
-            {
-                if (effectiveSourceAddressPrefix == "*")
-                {
-                    _logger.LogWarning("Creating NSG with RDP (port 3389) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
-                }
-
-                nsgData.SecurityRules.Add(new()
-                {
-                    Name = "AllowRDP",
-                    Priority = 1000,
-                    Access = SecurityRuleAccess.Allow,
-                    Direction = SecurityRuleDirection.Inbound,
-                    Protocol = SecurityRuleProtocol.Tcp,
-                    SourceAddressPrefix = effectiveSourceAddressPrefix,
-                    SourcePortRange = "*",
-                    DestinationAddressPrefix = "*",
-                    DestinationPortRange = "3389"
-                });
-            }
-            else
-            {
-                if (effectiveSourceAddressPrefix == "*")
-                {
-                    _logger.LogWarning("Creating NSG with SSH (port 22) open to all sources. For production, restrict the source IP range using --source-address-prefix.");
-                }
-
-                nsgData.SecurityRules.Add(new()
-                {
-                    Name = "AllowSSH",
-                    Priority = 1000,
-                    Access = SecurityRuleAccess.Allow,
-                    Direction = SecurityRuleDirection.Inbound,
-                    Protocol = SecurityRuleProtocol.Tcp,
-                    SourceAddressPrefix = effectiveSourceAddressPrefix,
-                    SourcePortRange = "*",
-                    DestinationAddressPrefix = "*",
-                    DestinationPortRange = "22"
-                });
-            }
+            var nsgData = CreateNetworkSecurityGroupData(location, osType, sourceAddressPrefix);
 
             var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
                 WaitUntil.Started,
@@ -447,7 +401,8 @@ public class ComputeService(
         var nicCollection = resourceGroup.GetNetworkInterfaces();
         var nicData = new NetworkInterfaceData
         {
-            Location = new(location)
+            Location = new(location),
+            NetworkSecurityGroup = new() { Id = nsgResource.Id }
         };
 
         var ipConfig = new NetworkInterfaceIPConfigurationData
@@ -473,6 +428,41 @@ public class ComputeService(
         await WaitForLroCompletionAsync(nicOperation, cancellationToken);
 
         return nicOperation.Value.Id;
+    }
+
+    internal static NetworkSecurityGroupData CreateNetworkSecurityGroupData(string location, string? osType = null, string? sourceAddressPrefix = null)
+    {
+        var data = new NetworkSecurityGroupData { Location = new(location) };
+        if (!string.IsNullOrWhiteSpace(sourceAddressPrefix))
+        {
+            var isWindows = string.Equals(osType, "Windows", StringComparison.OrdinalIgnoreCase);
+            data.SecurityRules.Add(new()
+            {
+                Name = isWindows ? "AllowRDP" : "AllowSSH",
+                Priority = 1000,
+                Access = SecurityRuleAccess.Allow,
+                Direction = SecurityRuleDirection.Inbound,
+                Protocol = SecurityRuleProtocol.Tcp,
+                SourceAddressPrefix = sourceAddressPrefix,
+                SourcePortRange = "*",
+                DestinationAddressPrefix = "*",
+                DestinationPortRange = isWindows ? "3389" : "22"
+            });
+        }
+
+        data.SecurityRules.Add(new()
+        {
+            Name = "DenyAllInbound",
+            Priority = 4096,
+            Access = SecurityRuleAccess.Deny,
+            Direction = SecurityRuleDirection.Inbound,
+            Protocol = SecurityRuleProtocol.Asterisk,
+            SourceAddressPrefix = "*",
+            SourcePortRange = "*",
+            DestinationAddressPrefix = "*",
+            DestinationPortRange = "*"
+        });
+        return data;
     }
 
     private static async Task<(string? PublicIp, string? PrivateIp)> GetVmIpAddressesAsync(
@@ -723,6 +713,8 @@ public class ComputeService(
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
+        string? networkSecurityGroup = null,
+        bool disableNetworkSecurityGroup = false,
         CancellationToken cancellationToken = default)
     {
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
@@ -755,6 +747,31 @@ public class ComputeService(
             virtualNetwork,
             subnet,
             cancellationToken);
+
+        ResourceIdentifier? networkSecurityGroupId = null;
+        if (!disableNetworkSecurityGroup)
+        {
+            var groups = resourceGroupResource.GetNetworkSecurityGroups();
+            if (!string.IsNullOrWhiteSpace(networkSecurityGroup))
+            {
+                networkSecurityGroupId = (await groups.GetAsync(networkSecurityGroup, cancellationToken: cancellationToken)).Value.Id;
+            }
+            else
+            {
+                var groupName = $"{vmssName}-nsg";
+                var existingGroup = await groups.GetIfExistsAsync(groupName, cancellationToken: cancellationToken);
+                if (existingGroup.HasValue)
+                {
+                    throw new InvalidOperationException($"Network security group '{groupName}' already exists. Explicitly select --network-security-group to reuse it, or choose a different scale set name.");
+                }
+                else
+                {
+                    var groupOperation = await groups.CreateOrUpdateAsync(WaitUntil.Started, groupName, CreateNetworkSecurityGroupData(location), cancellationToken);
+                    await WaitForLroCompletionAsync(groupOperation, cancellationToken);
+                    networkSecurityGroupId = groupOperation.Value.Id;
+                }
+            }
+        }
 
         // Build VMSS data using Flexible orchestration mode (default since Nov 2023)
         var vmssData = new VirtualMachineScaleSetData(new(location))
@@ -795,6 +812,7 @@ public class ComputeService(
                         new($"{vmssName}-nic")
                         {
                             Primary = true,
+                            NetworkSecurityGroupId = networkSecurityGroupId,
                             IPConfigurations =
                             {
                                 new($"{vmssName}-ipconfig")
@@ -1563,6 +1581,7 @@ public class ComputeService(
         var diskData = new ManagedDiskData(new(resolvedLocation))
         {
             CreationData = creationData,
+            NetworkAccessPolicy = new(networkAccessPolicy ?? "DenyAll"),
             DiskSizeGB = sizeGb,
             MaxShares = maxShares,
             BurstingEnabled = enableBursting,
@@ -1599,11 +1618,6 @@ public class ComputeService(
         if (!string.IsNullOrEmpty(hyperVGeneration))
         {
             diskData.HyperVGeneration = new(hyperVGeneration);
-        }
-
-        if (!string.IsNullOrEmpty(networkAccessPolicy))
-        {
-            diskData.NetworkAccessPolicy = new(networkAccessPolicy);
         }
 
         if (tags is not null)

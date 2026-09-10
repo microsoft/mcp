@@ -18,6 +18,10 @@ public sealed class IaCRulesTemplateParameters
     public string FinalInstructions { get; set; } = string.Empty;
     public string RequiredTools { get; set; } = string.Empty;
     public string AdditionalNotes { get; set; } = string.Empty;
+    public bool EnablePublicNetworkAccess { get; set; }
+    public bool AllowAzureServices { get; set; }
+    public bool AllowPrivilegedRoles { get; set; }
+    public bool UseConnectionStrings { get; set; }
 
     /// <summary>
     /// Converts the parameters to a dictionary for template processing.

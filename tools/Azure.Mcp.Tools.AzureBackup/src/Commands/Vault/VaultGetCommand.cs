@@ -94,8 +94,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    cancellationToken,
-                    expand);
+                    expand,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
                     new([vault]),
@@ -108,8 +108,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.ResourceGroup,
                     options.VaultType,
                     options.Tenant,
-                    cancellationToken,
-                    expand);
+                    expand,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
                     new(vaults),

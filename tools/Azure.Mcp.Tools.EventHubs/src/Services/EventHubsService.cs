@@ -165,6 +165,8 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         bool? zoneRedundant = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
+        bool? enablePublicNetworkAccess = null,
+        bool? enableSasAuthentication = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
@@ -180,8 +182,12 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         // Use resource group location if no location is provided
         var namespaceLocation = location ?? resourceGroupResource.Value.Data.Location.ToString();
 
-        // Create namespace data with required properties
-        var namespaceData = new EventHubsNamespaceData(namespaceLocation);
+        var namespaceCollection = resourceGroupResource.Value.GetEventHubsNamespaces();
+        var existing = await namespaceCollection.GetIfExistsAsync(namespaceName, cancellationToken: cancellationToken);
+        var namespaceData = existing.HasValue && existing.Value is { } resource
+            ? resource.Data
+            : new EventHubsNamespaceData(namespaceLocation);
+        ConfigureNamespaceSecurity(namespaceData, !existing.HasValue, enablePublicNetworkAccess, enableSasAuthentication);
 
         // Set SKU if provided
         if (!string.IsNullOrEmpty(skuName))
@@ -246,6 +252,18 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
             namespaceName, resourceGroup);
 
         return ConvertToNamespace(operation.Value.Data, resourceGroup);
+    }
+
+    internal static void ConfigureNamespaceSecurity(EventHubsNamespaceData data, bool isNew, bool? enablePublicNetworkAccess, bool? enableSasAuthentication)
+    {
+        if (isNew || enablePublicNetworkAccess.HasValue)
+        {
+            data.PublicNetworkAccess = new(enablePublicNetworkAccess == true ? "Enabled" : "Disabled");
+        }
+        if (isNew || enableSasAuthentication.HasValue)
+        {
+            data.DisableLocalAuth = enableSasAuthentication != true;
+        }
     }
 
     public async Task<bool> DeleteNamespaceAsync(
