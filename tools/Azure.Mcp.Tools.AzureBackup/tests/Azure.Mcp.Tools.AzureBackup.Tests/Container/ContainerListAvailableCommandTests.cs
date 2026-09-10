@@ -42,9 +42,9 @@ public class ContainerListAvailableCommandTests : SubscriptionCommandUnitTestsBa
     }
 
     [Fact]
-    public async Task ExecuteAsync_PassesFilterAndStorageAccount()
+    public async Task ExecuteAsync_PassesAzureStorageFilterAndStorageAccount()
     {
-        const string filter = "backupManagementType eq 'AzureIaasVM'";
+        const string filter = "backupManagementType eq 'AzureStorage'";
         Service.ListAvailableContainersAsync("v", "rg", "sub", filter, "storage", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync(
