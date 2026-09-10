@@ -36,6 +36,11 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
     /// </summary>
     public string Transport { get; set; } = TransportTypes.StdIo;
 
+    /// <summary>
+    /// Gets or sets the structured output mode forwarded to the child server.
+    /// </summary>
+    public StructuredOutputMode? StructuredOutputMode { get; set; }
+
     /// <inheritdoc/>
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
@@ -68,6 +73,12 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
         if (ReadOnly)
         {
             arguments.Add($"--read-only");
+        }
+
+        if (StructuredOutputMode.HasValue)
+        {
+            arguments.Add("--structured-output-mode");
+            arguments.Add(StructuredOutputMode.Value.ToString().ToLowerInvariant());
         }
 
         return [.. arguments];

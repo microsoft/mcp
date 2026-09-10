@@ -49,6 +49,12 @@ public class ResilienceManagementCommandTests(
             Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
             GroupForReplace = "value",
             Value = "sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Azure-AsyncOperation")
+        {
+            Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
+            GroupForReplace = "value",
+            Value = "sanitized"
         })
     ];
 
@@ -66,6 +72,13 @@ public class ResilienceManagementCommandTests(
             Regex = @"resource[Gg]roups/([^?\\/]+)",
             GroupForReplace = "1",
             Value = "Sanitized"
+        }),
+        // The Drills backend requires a fresh operationId query parameter per invocation. Remove it from the
+        // sanitized URI so recordings made before the parameter was added still match current requests.
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "&operationId=[^&]+",
+            Value = string.Empty
         })
     ];
 
@@ -505,6 +518,217 @@ public class ResilienceManagementCommandTests(
         var returnedDrillRun = result.AssertProperty("drillRun");
         Assert.True(returnedDrillRun.AssertProperty("id").GetString()?.EndsWith(drillRun, StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public async Task Should_add_notes_to_drill_run()
+    {
+        const string note = "Recorded MCP add-notes validation.";
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
+
+        var result = await CallToolAsync(
+            "resilience_drill_run_add-notes",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "notes", note }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+        await WaitForDrillRunNoteAsync(serviceGroup, drill, drillRun, note);
+    }
+
+    [Fact]
+    public async Task Should_start_resume_and_reprotect_drill_run_failover()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
+        var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("drillRunSourceLocation", "DRILLRUNSOURCELOCATION");
+
+        var result = await CallToolAsync(
+            "resilience_drill_run_failover",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "source-locations", new[] { sourceLocation } },
+                { "auto-failover", false }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+
+        // FaultInjection only offers MarkAsComplete once it finishes; Failover does not unlock its own
+        // Start verb until that stage is explicitly marked complete.
+        await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "FaultInjection", "MarkAsComplete");
+
+        result = await CallToolWithConflictRetryAsync(
+            "resilience_drill_run_mark-complete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "stage", "FaultInjection" }
+            });
+
+        Assert.False(string.IsNullOrEmpty(result.AssertProperty("result").AssertProperty("operationId").GetString()));
+
+        await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Failover", "Start");
+
+        result = await CallToolAsync(
+            "resilience_drill_run_resume",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+
+        // Same lifecycle rule applies to Failover -> Reprotect: mark Failover complete explicitly.
+        await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Failover", "MarkAsComplete");
+
+        result = await CallToolWithConflictRetryAsync(
+            "resilience_drill_run_mark-complete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "stage", "Failover" }
+            });
+
+        Assert.False(string.IsNullOrEmpty(result.AssertProperty("result").AssertProperty("operationId").GetString()));
+
+        await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Reprotect", "Start", "Retry");
+
+        result = await CallToolAsync(
+            "resilience_drill_run_reprotect",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun }
+            });
+
+        Assert.True(result.AssertProperty("accepted").GetBoolean());
+        Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+    }
+
+    /// <summary>
+    /// Polls resilience_drill_run_get until the given drill run stage advertises one of the expected verbs,
+    /// failing the test if it never does within the timeout.
+    /// </summary>
+    private async Task WaitForStageVerbAsync(string serviceGroup, string drill, string drillRun, string stageName, params string[] expectedVerbs)
+    {
+        bool reachedExpectedVerb = false;
+        for (int attempt = 0; attempt < 60 && !reachedExpectedVerb; attempt++)
+        {
+            var getResult = await CallToolAsync(
+                "resilience_drill_run_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "name", drillRun }
+                });
+
+            reachedExpectedVerb = getResult
+                .AssertProperty("drillRun")
+                .AssertProperty("properties")
+                .AssertProperty("supportedVerbsForStage")
+                .EnumerateArray()
+                .Any(stage =>
+                    stage.AssertProperty("drillRunStage").GetString() == stageName &&
+                    stage.AssertProperty("supportedVerbs").EnumerateArray().Any(verb =>
+                        expectedVerbs.Contains(verb.GetString())));
+
+            if (!reachedExpectedVerb && TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            }
+        }
+
+        Assert.True(reachedExpectedVerb, $"Drill run stage '{stageName}' did not offer verb(s) [{string.Join(", ", expectedVerbs)}] within the timeout.");
+    }
+
+    private async Task WaitForDrillRunNoteAsync(string serviceGroup, string drill, string drillRun, string expectedNote)
+    {
+        bool notePersisted = false;
+        for (int attempt = 0; attempt < 60 && !notePersisted; attempt++)
+        {
+            var getResult = await CallToolAsync(
+                "resilience_drill_run_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "name", drillRun }
+                });
+
+            JsonElement notes = getResult
+                .AssertProperty("drillRun")
+                .AssertProperty("properties")
+                .AssertProperty("notes");
+            notePersisted = notes.ValueKind == JsonValueKind.Array &&
+                notes.EnumerateArray().Any(note => note.GetString()?.Contains(expectedNote, StringComparison.Ordinal) == true);
+
+            if (!notePersisted && TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+            {
+                await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+            }
+        }
+
+        Assert.True(notePersisted, $"Drill run note '{expectedNote}' was not persisted within the timeout.");
+    }
+
+    /// <summary>
+    /// Calls a tool, retrying on the known transient 409 InvalidResourceOperation lock the Drills backend returns
+    /// immediately after a prior long-running operation on the same drill run completes. CallToolAsync does not
+    /// throw on non-success responses, so retryable failures are detected by the absence of the expected
+    /// "result" payload shape rather than by catching an exception.
+    /// </summary>
+    private async Task<JsonElement?> CallToolWithConflictRetryAsync(string toolName, Dictionary<string, object?> parameters)
+    {
+        JsonElement? response = null;
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            response = await CallToolAsync(toolName, parameters);
+            if (response?.TryGetProperty("result", out _) == true)
+            {
+                return response;
+            }
+
+            if (TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken);
+            }
+        }
+
+        return response;
+    }
+
 
     [Fact]
     public async Task Should_list_drill_run_resources()
@@ -1548,6 +1772,49 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_delete_usage_plan()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("deleteResourceGroupName", Settings.ResourceGroupName);
+        const string usagePlanName = "mcp-delete-plan";
+
+        await CallToolAsync(
+            "resilience_usageplan_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName },
+                { "plan-type", "Basic" }
+            });
+
+        var result = await CallToolAsync(
+            "resilience_usageplan_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName }
+            });
+
+        Assert.True(result.AssertProperty("deleted").GetBoolean());
+        Assert.Equal(usagePlanName, result.AssertProperty("usagePlan").GetString());
+
+        var repeatedResult = await CallToolAsync(
+            "resilience_usageplan_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", resourceGroupName },
+                { "usage-plan", usagePlanName }
+            });
+
+        Assert.False(repeatedResult.AssertProperty("deleted").GetBoolean());
+    }
+
+    [Fact]
     public async Task Should_create_usage_plan_enrollment()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
@@ -1569,5 +1836,59 @@ public class ResilienceManagementCommandTests(
 
         var enrollment = result.AssertProperty("enrollment");
         Assert.False(string.IsNullOrEmpty(enrollment.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_delete_usage_plan_enrollment()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("deleteEnrollmentResourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentServiceGroupName", "SERVICEGROUPNAME");
+        var usagePlanName = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentUsagePlanName", "USAGEPLANNAME");
+        var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentName", "ENROLLMENTNAME");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "resilience_usageplan_enrollment_delete",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName },
+                    { "enrollment", enrollmentName }
+                });
+
+            Assert.True(result.AssertProperty("deleted").GetBoolean());
+            Assert.Equal(usagePlanName, result.AssertProperty("usagePlan").GetString());
+            Assert.Equal(enrollmentName, result.AssertProperty("enrollment").GetString());
+
+            var repeatedResult = await CallToolAsync(
+                "resilience_usageplan_enrollment_delete",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName },
+                    { "enrollment", enrollmentName }
+                });
+
+            Assert.False(repeatedResult.AssertProperty("deleted").GetBoolean());
+        }
+        finally
+        {
+            await CallToolAsync(
+                "resilience_usageplan_enrollment_create",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName },
+                    { "enrollment", enrollmentName },
+                    { "service-group", serviceGroup }
+                });
+        }
     }
 }

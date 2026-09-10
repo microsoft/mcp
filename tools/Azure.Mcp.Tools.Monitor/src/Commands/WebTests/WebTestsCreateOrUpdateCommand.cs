@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
         Use this to set up new web tests or modify existing ones with monitoring configurations like URL, frequency, locations, and expected responses.
         Automatically creates a new test if it doesn't exist, or updates an existing test with new settings.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

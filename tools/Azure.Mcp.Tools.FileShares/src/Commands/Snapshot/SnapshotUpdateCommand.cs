@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Name = "update",
     Title = "Update File Share Snapshot",
     Description = "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

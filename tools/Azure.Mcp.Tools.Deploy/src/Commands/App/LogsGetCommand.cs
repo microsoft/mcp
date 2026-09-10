@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Deploy.Commands.App;
     Name = "get",
     Title = "Get AZD deployed App Logs",
     Description = "Shows application logs for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace. Supports Container Apps, App Services, and Function Apps deployed via 'azd up'. Requires local workspace access to read the azure.yaml project file. Automatically discovers the correct Log Analytics workspace and resources based on azd environment configuration. Returns console log entries for checking deployment status or troubleshooting post-deployment issues.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

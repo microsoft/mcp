@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
         When --webtest-resource is provided, returns detailed information about a single web test.
         When --webtest-resource is omitted, returns a list of all web tests in the subscription (optionally filtered by resource group).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

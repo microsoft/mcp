@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     Name = "delete",
     Title = "Delete OneLake Blob",
     Description = "Delete a blob from OneLake using the blob endpoint while returning request metadata for auditing.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     LocalRequired = false,

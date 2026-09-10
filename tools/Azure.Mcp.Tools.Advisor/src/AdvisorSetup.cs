@@ -18,6 +18,7 @@ public class AdvisorSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAdvisorService, AdvisorService>();
+        services.AddSingleton<IRecommendationSummaryService, RecommendationSummaryService>();
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationUpdateCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
@@ -34,7 +35,7 @@ public class AdvisorSetup : IAreaSetup
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List and summarize active recommendations, update a recommendation's customer-provided state to New, Postponed, Dismissed, or Completed, or apply recommendation guidance to infrastructure-as-code files.");
+            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; update customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(

@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 
         Returns: The next action to execute, or 'complete' status when all steps are done.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

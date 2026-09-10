@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
         Retrieves the application settings for an App Service web app, returning key-value pairs that represent the
         setting. Application settings may contain sensitive information.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

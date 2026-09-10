@@ -320,6 +320,40 @@ The `azmcp server start` command supports the following options:
 azmcp server info
 ```
 
+### Azure Data Manager for Energy Operations
+
+```bash
+# Check authentication and connectivity for an ADME endpoint and data partition
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme health check --endpoint <endpoint> \
+                         --data-partition <data-partition> \
+                         [--tenant <tenant>]
+
+# Get a schema by its fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme schema get --endpoint <endpoint> \
+                       --data-partition <data-partition> \
+                       --kind <authority:source:entity-type:version> \
+                       [--tenant <tenant>]
+
+# List schemas with optional identity, lifecycle, scope, version, and paging filters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme schema list --endpoint <endpoint> \
+                        --data-partition <data-partition> \
+                        [--tenant <tenant>] \
+                        [--authority <authority>] \
+                        [--source <source>] \
+                        [--entity-type <entity-type>] \
+                        [--status <PUBLISHED|DEVELOPMENT|OBSOLETE>] \
+                        [--scope <SHARED|INTERNAL>] \
+                        [--schema-version-major <major>] \
+                        [--schema-version-minor <minor>] \
+                        [--schema-version-patch <patch>] \
+                        [--latest-version] \
+                        [--offset <offset>] \
+                        [--limit <limit>]
+```
+
 ### Azure Advisor Operations
 
 ```bash
@@ -356,20 +390,39 @@ azmcp advisor recommendation update --subscription <subscription> \
                                     [--postponed-until-date-time <date-time-with-offset>] \
                                     [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
 
-# Summarize Advisor recommendations grouped by a chosen field (recommendation-type, category, impact, or resource-type)
-# --group-by is optional and defaults to 'category' when omitted
-# Only active recommendations (status 'New') are aggregated; dismissed and postponed ones are excluded
+# Summarize Advisor recommendation counts, totals, rankings, and distributions.
+# Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
+# --group-by defaults to category. All groupings except status include only active New recommendations.
+# Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
+# properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
+# retirement data prefer metadata values with recommendation-instance fallback.
+# Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
+# next-N window.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation summary --subscription <subscription> \
                                      [--group-by <group-by>] \
-                                     [--top <top>] \
-                                     [--category <category>] \
-                                     [--impact <impact>] \
+                                     [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
+                                     [--impact <High|Medium|Low>] \
+                                     [--recommendation-type-id <recommendation-type-id>] \
                                      [--resource-type <resource-type>] \
                                      [--resource <resource>] \
-                                     [--search <search>]
+                                     [--search <search>] \
+                                     [--sub-category <sub-category>] \
+                                     [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>] \
+                                     [--top <1-100>] \
+                                     [--resource-group <resource-group>] \
+                                     [--tenant <tenant>]
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
+# Supported --resource values:
+#   aad_domainservices, apimanagement_service, cognitiveservices_accounts,
+#   compute_virtualmachines, compute_virtualmachinescalesets,
+#   containerregistry_registries, containerservice_managedclusters,
+#   dbforpostgresql_flexibleservers, documentdb_databaseaccounts,
+#   keyvault_vaults, kubernetes_connectedclusters, kubernetesconfiguration_extensions,
+#   netapp_volumes, network_applicationgatewaywebapplicationfirewallpolicies,
+#   network_expressrouteports, network_frontdoorwebapplicationfirewallpolicies,
+#   sql_managedinstances, storage_storageaccounts, web_serverfarms, web_staticsites
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
@@ -898,7 +951,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                [--sku <sku>] \
                                [--storage-type <storage-type>]
 
-# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, and storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
+# Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, storage redundancy, and managed identity details when configured. Identity details include the identity type, principal ID, tenant ID, and attached user-assigned identities with their resource IDs, principal IDs, and client IDs. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault get --subscription <subscription> \
                             [--resource-group <resource-group>] \
@@ -1024,7 +1077,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--log-retention-days <int>] \
                                 [--is-compression <true|false>] \
                                 [--is-sql-compression <true|false>] \
-                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags / AKS ---
+                                # --- Stage 2: smart tiering / snapshot / vault-tier copy / backup mode / PITR / tags ---
                                 [--smart-tier <true|false>] \
                                 [--enable-snapshot-backup <true|false>] \
                                 [--snapshot-instant-rp-retention-days <int>] \
@@ -1033,12 +1086,7 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--vault-tier-copy-after-days <int>] \
                                 [--backup-mode <Continuous|Vaulted>] \
                                 [--pitr-retention-days <int>] \
-                                [--policy-tags <key=value[,key=value...]>] \
-                                [--aks-snapshot-resource-group <resource-group>] \
-                                [--aks-included-namespaces <ns[,ns...]>] \
-                                [--aks-excluded-namespaces <ns[,ns...]>] \
-                                [--aks-label-selectors <selector[,selector...]>] \
-                                [--aks-include-cluster-scope-resources <true|false>]
+                                [--policy-tags <key=value[,key=value...]>]
 
 # Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1077,7 +1125,7 @@ azmcp azurebackup policy get --subscription <subscription> \
 #### Protected Item
 
 ```bash
-# Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, and last backup time. When --protected-item is omitted, lists all protected items in the vault.
+# Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, lifecycle and recovery metadata, and workload-specific extended properties returned by Azure Backup. When --protected-item is omitted, lists all protected items in the vault. The explicit response contract mirrors the current Azure Backup SDK surface and must be revisited when the SDK version changes.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem get --subscription <subscription> \
                                     --resource-group <resource-group> \
@@ -1096,6 +1144,11 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         [--vault-type <vault-type>] \
                                         [--container <container>] \
                                         [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>] \
+                                        [--aks-snapshot-resource-group <resource-group>] \
+                                        [--aks-included-namespaces <ns[,ns...]>] \
+                                        [--aks-excluded-namespaces <ns[,ns...]>] \
+                                        [--aks-label-selectors <selector[,selector...]>] \
+                                        [--aks-include-cluster-scope-resources <true|false>] \
                                         [--disk-list-setting <include|exclude|resetexclusionsettings>] \
                                         [--disks-list <lun[,lun...]>] \
                                         [--exclude-all-data-disks]
@@ -1132,7 +1185,7 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --vault <vault> \
                                        [--vault-type <vault-type>] \
-                                       [--workload-type <workload-type>] \
+                                       [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>] \
                                        [--container <container>]
 ```
 
@@ -3354,6 +3407,34 @@ azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
                                   --table "AppEvents_CL" \
                                   --query "| order by TimeGenerated desc"
+
+# Search a Basic or Auxiliary table in a Log Analytics workspace.
+# Use workspace log query for Analytics tables.
+# --query must begin with '|' and omit the primary table name.
+# The server binds --table and caps output at --limit (default 20, maximum 100).
+# --timespan is a positive ISO 8601 duration (such as "P1D") or a closed
+# RFC 3339 start/end interval, up to 30 days. Basic queries cover only the last 30 days.
+# Results preserve column types and flag service-reported partial results.
+# Scan cost depends on ingested volume across --timespan, not --limit.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor workspace log search --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --workspace <workspace> \
+                                   --table <table> \
+                                   --query <search-pipeline> \
+                                   --timespan <timespan> \
+                                   [--limit <limit>] \
+                                   [--tenant <tenant>]
+
+# Search the last day of a Basic or Auxiliary table for error records
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor workspace log search --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --workspace <workspace> \
+                                   --table "ContainerLogV2" \
+                                   --query "| where LogLevel == 'error' | project TimeGenerated, LogMessage" \
+                                   --timespan "P1D" \
+                                   --limit 50
 ```
 
 #### Health Models
@@ -3935,9 +4016,11 @@ azmcp role assignment list --subscription <subscription> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis create --subscription <subscription> \
                    --resource-group <resource-group> \
-                   --name <name> \
-                   --sku <sku> \
+                   --resource <resource> \
                    --location <location> \
+                   [--sku <sku>] \
+                   [--access-keys-authentication <true|false>] \
+                   [--public-network-access <true|false>] \
                    [--modules <modules>]
 ```
 
@@ -3979,6 +4062,12 @@ azmcp resilience usageplan create --subscription <subscription> \
                                   --usage-plan <usage-plan> \
                                   --plan-type <plan-type>
 
+# Delete a resilience usage plan from a resource group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan delete --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --usage-plan <usage-plan>
+
 # Get a usage plan enrollment, or list all enrollments of a usage plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience usageplan enrollment get --subscription <subscription> \
@@ -3993,6 +4082,13 @@ azmcp resilience usageplan enrollment create --subscription <subscription> \
                                              --usage-plan <usage-plan> \
                                              --enrollment <enrollment> \
                                              --service-group <service-group>
+
+# Delete an enrollment from a resilience usage plan
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience usageplan enrollment delete --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --usage-plan <usage-plan> \
+                                             --enrollment <enrollment>
 
 # Get a resilience recoveryplan, or list all recovery plans in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4202,12 +4298,40 @@ azmcp resilience drill run get --service-group <service-group> \
                                --drill <drill> \
                                [--name <name>]
 
+# Add notes to a drill run
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run add-notes --service-group <service-group> \
+                                     --drill <drill> \
+                                     --drill-run <drill-run> \
+                                     --notes <notes>
+
+# Start failover for a drill run. Repeat source locations and selected resource IDs as needed.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run failover --service-group <service-group> \
+                                    --drill <drill> \
+                                    --drill-run <drill-run> \
+                                    --source-locations <source-location> \
+                                    [--selected-resource-ids <selected-resource-id>] \
+                                    [--auto-failover <true|false>]
+
+# Resume a failover drill run paused after fault injection
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run resume --service-group <service-group> \
+                                  --drill <drill> \
+                                  --drill-run <drill-run>
+
 # Mark a drill run stage complete, disabling further retries on that stage
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience drill run mark-complete --service-group <service-group> \
                                          --drill <drill> \
                                          --drill-run <drill-run> \
                                          --stage <stage>
+
+# Reprotect failed-over resources in a drill run
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience drill run reprotect --service-group <service-group> \
+                                     --drill <drill> \
+                                     --drill-run <drill-run>
 
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         Notes:
             - Returns the index schema.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

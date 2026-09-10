@@ -14,6 +14,12 @@ namespace Microsoft.Mcp.Core.Commands;
 public sealed class ToolMetadata
 {
     /// <summary>
+    /// Gets or sets the API plane the tool acts against.
+    /// </summary>
+    [JsonIgnore]
+    public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.Unspecified;
+
+    /// <summary>
     /// Gets or sets whether the tool may perform destructive updates to its environment.
     /// </summary>
     /// <remarks>
@@ -184,6 +190,7 @@ public sealed class ToolMetadata
 
     [JsonConstructor]
     public ToolMetadata(
+        ToolOperationPlane operationPlane,
         MetadataDefinition destructive,
         MetadataDefinition idempotent,
         MetadataDefinition openWorld,
@@ -191,6 +198,7 @@ public sealed class ToolMetadata
         MetadataDefinition secret,
         MetadataDefinition localRequired)
     {
+        OperationPlane = operationPlane;
         Destructive = destructive?.Value ?? true;
         Idempotent = idempotent?.Value ?? false;
         OpenWorld = openWorld?.Value ?? true;

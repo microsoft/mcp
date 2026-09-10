@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
         or redundancy options to meet changing performance requirements.
         Returns the updated database configuration including applied scaling changes.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

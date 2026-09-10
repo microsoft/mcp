@@ -9,6 +9,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 - `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 - `investigation-required`: Tool ownership or command routing requires investigation before this prompt can be evaluated reliably. See https://github.com/microsoft/mcp/issues/3266.
 
+## Azure Data Manager for Energy
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| adme_health_check | Check authentication and connectivity for ADME endpoint <endpoint> and data partition <data-partition> | none |
+| adme_schema_get | Get ADME schema <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition> | none |
+
 ## Azure Advisor
 
 | Tool Name | Test Prompt | Interaction |
@@ -64,14 +72,27 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_update | Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in subscription <subscription> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation <recommendation-id> until December 31, 2026 in subscription <subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation <recommendation-id> in subscription <subscription> | none |
-| advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations in subscription <subscription> | none |
-| advisor_recommendation_summary | Summarize Advisor recommendations in subscription <subscription> by category | none |
-| advisor_recommendation_summary | Show the top 10 most common Advisor recommendations in subscription <subscription> | none |
-| advisor_recommendation_summary | Group Advisor recommendations by impact in subscription <subscription> | none |
-| advisor_recommendation_summary | Which resource types have the most high-impact recommendations in subscription <subscription>? | none |
-| advisor_recommendation_summary | Summarize high-impact Security recommendations by resource-type in subscription <subscription> | none |
-| advisor_recommendation_summary | Group Cost recommendations for storage accounts by impact in subscription <subscription> | none |
-| advisor_recommendation_summary | Summarize Advisor recommendations mentioning "encryption" by category in subscription <subscription> | none |
+| advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
+| advisor_recommendation_summary | What are the main themes across my active Advisor recommendations? | none |
+| advisor_recommendation_summary | How many active Advisor recommendations do I have in each category? | none |
+| advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
+| advisor_recommendation_summary | Show the distribution of my Advisor recommendations by business impact | none |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types | none |
+| advisor_recommendation_summary | Which Advisor recommendation type occurs most often for resources in my subscription? | none |
+| advisor_recommendation_summary | Rank impacted Azure resource types by the count of High-impact Advisor recommendations | none |
+| advisor_recommendation_summary | Rank the Azure resource types with the most critical Advisor recommendations | none |
+| advisor_recommendation_summary | Break down my Advisor recommendations by lifecycle status | none |
+| advisor_recommendation_summary | How many Advisor recommendations are new, completed, dismissed, or postponed? | none |
+| advisor_recommendation_summary | Group active Advisor recommendations by metadata subcategory | none |
+| advisor_recommendation_summary | Count my zone resiliency Advisor recommendations by impacted resource type | none |
+| advisor_recommendation_summary | How many active service-retirement Advisor recommendations do I have for each retirement date? | none |
+| advisor_recommendation_summary | How many overdue service-retirement Advisor recommendations are still active? | none |
+| advisor_recommendation_summary | Count active recommendations for services retiring on December 31, 2026 | none |
+| advisor_recommendation_summary | Count active service-retirement Advisor recommendations with retirement dates on or before December 31, 2026 | none |
+| advisor_recommendation_summary | Count active service-retirement Advisor recommendations with retirement dates on or after March 31, 2026 | none |
+| advisor_recommendation_summary | Show the impact breakdown for Advisor recommendations affecting resource my-web-app | none |
+| advisor_recommendation_summary | Break down counts by impact for Advisor recommendations whose problem text mentions "encryption" | none |
 
 ## Azure AI Search
 
@@ -204,8 +225,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
-| azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on GRS-enabled Recovery Services vault <vault_name> in resource group <resource_group> with vault-type rsv | investigation-required |
+| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for GRS-enabled DPP backup vault <vault_name> under resource group <resource_group> with vault-type dpp | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | investigation-required |
@@ -222,7 +243,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group> | investigation-required |
-| azurebackup_policy_create | Create a SQL backup policy <policy_name> with daily full at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Create a SQL backup policy <policy_name> with weekly full on Sundays at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | investigation-required |
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
@@ -235,8 +256,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_get | Show the current workload-specific inclusion or exclusion settings and all protected-item properties for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including only namespace <namespace> and cluster-scoped resources | investigation-required |
 | azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
 | azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected | investigation-required |
 | azurebackup_protecteditem_update-protection | Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name> | investigation-required |
@@ -268,6 +291,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Get the managed identity details, including principal ID, tenant ID, and attached user-assigned identities, for backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_get | Show the identity type and attached user-assigned identity resource IDs for Data Protection backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | investigation-required |
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
@@ -344,12 +369,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> | none |
+| compute_vm_create | Create a new Linux VM named <vm-name> in resource group <resource-group-name> | clarification-required |
 | compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in <resource-group-name> | clarification-required |
-| compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> | none |
-| compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication | none |
-| compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | none |
-| compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> | none |
+| compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> | clarification-required |
+| compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication | clarification-required |
+| compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | clarification-required |
+| compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> | clarification-required |
 | compute_vm_create | Create Linux VM <vm-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name> | none |
 | compute_vm_get | List all virtual machines in my subscription | none |
 | compute_vm_get | Show me all VMs in my subscription | none |
@@ -581,7 +606,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventgrid_subscription_list | Show all Event Grid subscriptions in my subscription | none |
 | eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> | none |
 | eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> | none |
-| eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> | none |
+| eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> | context-required |
 
 ## Azure Event Hubs
 
@@ -611,6 +636,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_create | Create file share <file_share_name> in resource group <resource_group_name> with 100 GB storage | none |
 | fileshares_fileshare_create | Create a file share named <file_share_name> in location <location> with resource group <resource_group_name> | none |
 | fileshares_fileshare_create | Set up a new file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_fileshare_create | Create an NFS file share <file_share_name> in location <location> in resource group <resource_group_name> with NFS encryption in transit enabled | none |
 | fileshares_fileshare_delete | Delete the file share <file_share_name> from resource group <resource_group_name> | none |
 | fileshares_fileshare_delete | Remove file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | List all file shares in my subscription | none |
@@ -647,6 +673,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_peconnection_update | Change the status of private endpoint connection <connection_name> to Rejected | clarification-required |
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB | none |
+| fileshares_fileshare_update | Enable NFS encryption in transit for file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_fileshare_update | Disable NFS encryption in transit on file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
 | fileshares_usage | Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_usage | Show me the usage statistics for file share <file_share_name> | none |
@@ -931,7 +959,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
 | monitor_metrics_batchquery | Compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period> | none |
 | monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |
-| monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace | none |
+| monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace <namespace> | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
 | monitor_metrics_query | Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
@@ -951,6 +979,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_workspace_list | Show me my Log Analytics workspaces | none |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription | none |
 | monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> | none |
+| monitor_workspace_log_search | Find records matching <search_query> in the Basic table <table_name> in Log Analytics workspace <workspace_name> in resource group <resource_group> over <timespan> | none |
+| monitor_workspace_log_search | Search the Auxiliary table <table_name> in workspace <workspace_name> in resource group <resource_group> for <search_query> during <timespan>, limited to <limit> results | none |
+| monitor_workspace_log_search | Search for <search_query> in the Basic or Auxiliary table <table_name> in Log Analytics workspace <workspace_name> in resource group <resource_group> over the last day | none |
 
 ## Azure Native ISV
 
@@ -972,7 +1003,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | quota_region_availability_list | Show me the available regions for these resource types <resource_types> | none |
-| quota_usage_check | Check usage information for <resource_type> in region <region> | none |
+| quota_usage_check | Check usage information for <resource_type> in region <region> | context-required |
 
 ## Azure RBAC
 
@@ -999,7 +1030,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:----------|:----------|
-| resilience_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recoveryplan <recoveryplan_name> | none |
+| resilience_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recovery plan <recovery_plan_name> | none |
 | resilience_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup | none |
 | resilience_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
 | resilience_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
@@ -1009,7 +1040,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_get | List all resilience drills in service group <service_group> | none |
 | resilience_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
-| resilience_drill_update | Associate recoveryplan <recoveryplan_name> with resilience drill <drill_name> in service group <service_group> | none |
+| resilience_drill_update | Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region> | none |
 | resilience_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
 | resilience_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
@@ -1027,8 +1058,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_start | Run resilience drill <drill_name> in service group <service_group> as a TestFailover | none |
 | resilience_drill_run_get | List all runs of drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_add-notes | Add the note <notes> to drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resilience_drill_run_failover | Start failover for drill run <drill_run_name> of drill <drill_name> in service group <service_group>, using source location <source_location> | none |
+| resilience_drill_run_failover | Fail over selected resources <resource_ids> in drill run <drill_run_name> from physical zones <source_locations>, and automatically continue after fault injection | none |
+| resilience_drill_run_resume | Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover | none |
 | resilience_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
 | resilience_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
+| resilience_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
@@ -1089,9 +1125,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
+| resilience_usageplan_delete | Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name> | none |
+| resilience_usageplan_delete | Permanently remove the usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_delete | Remove the usage plan of service group <service_group> | clarification-required |
+| resilience_usageplan_delete | Remove usage plan <usage_plan_name> entirely, not just one service group enrollment, from resource group <resource_group_name> | none |
+| resilience_usageplan_delete | Delete usage plan <usage_plan_name> from resource group <resource_group_name>. If dependent enrollments block deletion, list their exact names and ask for explicit confirmation before deleting any enrollment; do not remove them automatically | none |
+| resilience_usageplan_delete | Retry deleting usage plan <usage_plan_name> from resource group <resource_group_name> only after every separately confirmed dependent enrollment deletion succeeds; stop and report any enrollment cleanup failure | none |
 | resilience_usageplan_enrollment_create | Create a usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> associated with service group <service_group> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_create | Enroll service group <service_group> in usage plan <usage_plan_name> as <enrollment_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_create | Update enrollment <enrollment_name> under usage plan <usage_plan_name> to use service group <service_group> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_delete | Delete enrollment <enrollment_name> from usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_delete | Remove the service group association named <enrollment_name> from resilience usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_delete | Unenroll service group <service_group> from usage plan <usage_plan_name>, but keep the usage plan itself | clarification-required |
+| resilience_usageplan_enrollment_delete | Remove only enrollment <enrollment_name> from usage plan <usage_plan_name>; do not delete the parent plan | none |
 | resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_get | List all resilience usage plans in my subscription | none |
@@ -1151,7 +1197,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | servicebus_queue_details | Show me the details of service bus <service_bus_name> queue <queue_name> | none |
 | servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> | none |
-| servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> | none |
+| servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> | clarification-required |
 
 ## Azure Service Fabric
 
@@ -1205,18 +1251,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| sql_server_create | Create a new Azure SQL server named <server_name> in resource group <resource_group_name> | none |
-| sql_server_create | Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user> | none |
-| sql_server_create | Set up a new SQL server called <server_name> in my resource group <resource_group_name> | none |
+| sql_server_create | Create a new Azure SQL server named <server_name> in resource group <resource_group_name> | clarification-required |
+| sql_server_create | Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user> | clarification-required |
+| sql_server_create | Set up a new SQL server called <server_name> in my resource group <resource_group_name> | clarification-required |
 | sql_server_delete | Delete the Azure SQL server <server_name> from resource group <resource_group_name> | none |
 | sql_server_delete | Remove the SQL server <server_name> from my subscription | none |
 | sql_server_delete | Delete SQL server <server_name> permanently | none |
 | sql_server_entra-admin_list | List Microsoft Entra ID administrators for SQL server <server_name> | none |
 | sql_server_entra-admin_list | Show me the Entra ID administrators configured for SQL server <server_name> | none |
 | sql_server_entra-admin_list | What Microsoft Entra ID administrators are set up for my SQL server <server_name>? | none |
-| sql_server_firewall-rule_create | Create a firewall rule for my Azure SQL server <server_name> | none |
+| sql_server_firewall-rule_create | Create a firewall rule for my Azure SQL server <server_name> | clarification-required |
 | sql_server_firewall-rule_create | Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name> | none |
-| sql_server_firewall-rule_create | Create a new firewall rule named <rule_name> for SQL server <server_name> | none |
+| sql_server_firewall-rule_create | Create a new firewall rule named <rule_name> for SQL server <server_name> | clarification-required |
 | sql_server_firewall-rule_delete | Delete a firewall rule from my Azure SQL server <server_name> | none |
 | sql_server_firewall-rule_delete | Remove the firewall rule <rule_name> from SQL server <server_name> | none |
 | sql_server_firewall-rule_delete | Delete firewall rule <rule_name> for SQL server <server_name> | none |
@@ -1235,18 +1281,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | sreagent_agents_list | List all Azure SRE Agent resources in my subscription | none |
 | sreagent_agents_get | Show me the details of SRE Agent <agent_name> in resource group <resource_group> | none |
-| sreagent_agents_create | Use SRE Agent sub-agent management to create sub-agent <name> on SRE Agent <agent_name> | none |
+| sreagent_agents_create | Use SRE Agent sub-agent management to create sub-agent <name> on SRE Agent <agent_name> | clarification-required |
 | sreagent_agents_delete | Use SRE Agent sub-agent management to delete sub-agent <name> from SRE Agent <agent_name> | investigation-required |
 | sreagent_agents_tools_list | List the custom tools attached to SRE Agent <agent_name> | none |
 | sreagent_agents_tools_get | Get the definition of custom tool <tool_name> from SRE Agent <agent_name> | none |
-| sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> | none |
+| sreagent_agents_tools_create | Create a custom tool called <tool_name> on SRE Agent <agent_name> | clarification-required |
 | sreagent_skills_list | List all skills available on SRE Agent <agent_name> | none |
-| sreagent_skills_create | Add a new skill called <skill_name> to SRE Agent <agent_name> | none |
+| sreagent_skills_create | Add a new skill called <skill_name> to SRE Agent <agent_name> | clarification-required |
 | sreagent_skills_delete | Delete the skill <skill_name> from SRE Agent <agent_name> | none |
 | sreagent_connectors_list | List the connectors configured on SRE Agent <agent_name> | none |
 | sreagent_connectors_get | Show me the details of connector <connector_name> on SRE Agent <agent_name> | none |
-| sreagent_connectors_create_kusto | Create a Kusto connector on SRE Agent <agent_name> | none |
-| sreagent_connectors_create_mcp | Create an MCP connector on SRE Agent <agent_name> | none |
+| sreagent_connectors_create_kusto | Create a Kusto connector on SRE Agent <agent_name> | clarification-required |
+| sreagent_connectors_create_mcp | Create an MCP connector on SRE Agent <agent_name> | clarification-required |
 | sreagent_connectors_delete | Remove the connector <connector_name> from SRE Agent <agent_name> | none |
 | sreagent_connectors_test | Test the connector <connector_name> on SRE Agent <agent_name> and list its tools | none |
 | sreagent_hooks_list | List the hooks configured for SRE Agent <agent_name> | none |
@@ -1257,8 +1303,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_hooks_thread_deactivate | Deactivate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name> | none |
 | sreagent_threads_list | List the active threads on SRE Agent <agent_name> | none |
 | sreagent_threads_get | Show me thread <thread_id> on SRE Agent <agent_name> | none |
-| sreagent_threads_create | Start a new thread on SRE Agent <agent_name> | none |
-| sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> | none |
+| sreagent_threads_create | Start a new thread on SRE Agent <agent_name> | clarification-required |
+| sreagent_threads_send_message | Send a message to thread <thread_id> on SRE Agent <agent_name> | context-required |
 | sreagent_threads_investigate | Use SRE Agent <agent_name> to investigate this issue: <issue> | none |
 | sreagent_threads_investigate_yolo | Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting | none |
 | sreagent_threads_delete | Delete thread <thread_id> from SRE Agent <agent_name> | none |
@@ -1269,11 +1315,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_scheduledtasks_resume | Resume the scheduled task <task_id> on SRE Agent <agent_name> | none |
 | sreagent_scheduledtasks_delete | Delete the scheduled task <task_id> from SRE Agent <agent_name> | none |
 | sreagent_incidents_active_list | List the active incidents on SRE Agent <agent_name> | none |
-| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> | none |
+| sreagent_incidents_create | Create a new incident investigation for SRE Agent <agent_name> with title <title> | clarification-required |
 | sreagent_incidents_plans_list | List the incident response plans configured on SRE Agent <agent_name> | none |
-| sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> | none |
-| sreagent_incidents_setup_pagerduty | Configure the PagerDuty incident-management integration for SRE Agent <agent_name> | none |
-| sreagent_incidents_setup_servicenow | Configure the ServiceNow incident-management integration for SRE Agent <agent_name> | none |
+| sreagent_incidents_plans_create | Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler> | clarification-required |
+| sreagent_incidents_setup_pagerduty | Configure the PagerDuty incident-management integration for SRE Agent <agent_name> | clarification-required |
+| sreagent_incidents_setup_servicenow | Configure the ServiceNow incident-management integration for SRE Agent <agent_name> | clarification-required |
 | sreagent_workflows_generate | Generate a YAML workflow for a tool named <tool_name> | clarification-required |
 | sreagent_workflows_validate | Validate the following SRE Agent workflow YAML | context-required |
 | sreagent_workflows_apply | Apply the workflow YAML to SRE Agent <agent_name> | none |
@@ -1286,7 +1332,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sreagent_architecture_plan | Use SRE Agent architecture planning for these requirements: <requirements> | investigation-required |
 | sreagent_commonprompts_list | List the common prompts on SRE Agent <agent_name> | none |
 | sreagent_commonprompts_get | Show me the common prompt <prompt_name> on SRE Agent <agent_name> | none |
-| sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> | none |
+| sreagent_commonprompts_create | Create a common prompt called <prompt_name> on SRE Agent <agent_name> | clarification-required |
 | sreagent_commonprompts_delete | Permanently remove and erase common prompt <prompt_name> from SRE Agent <agent_name> | none |
 
 ## Azure Storage
@@ -1437,16 +1483,16 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| foundryextensions_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project | none |
-| foundryextensions_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project | none |
-| foundryextensions_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource | none |
-| foundryextensions_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> | none |
-| foundryextensions_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource | none |
-| foundryextensions_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource | none |
-| foundryextensions_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource | none |
-| foundryextensions_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource | none |
-| foundryextensions_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource | none |
-| foundryextensions_openai_models-list | Use Microsoft Foundry Extensions to list the OpenAI model deployments in my Microsoft Foundry resource | investigation-required |
+| foundryextensions_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project | context-required |
+| foundryextensions_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project | context-required |
+| foundryextensions_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource | context-required |
+| foundryextensions_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> | context-required |
+| foundryextensions_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource | context-required |
+| foundryextensions_openai_models-list | Use Microsoft Foundry Extensions to list the OpenAI model deployments in my Microsoft Foundry resource | context-required |
 | foundryextensions_resource_get | Use Microsoft Foundry Extensions to list all Microsoft Foundry resources in my subscription | none |
 | foundryextensions_resource_get | Use Microsoft Foundry Extensions to list Microsoft Foundry resources in resource group <resource_group_name> | none |
 | foundryextensions_resource_get | Use Microsoft Foundry Extensions to get details for resource <resource_name> in resource group <resource_group_name> | none |
