@@ -7,9 +7,10 @@ Use these recipes after resolving the exact service group and target names. The 
 ## Usage Plan Enrollment
 
 1. Get or create the usage plan with `mcp_azure_mcp_ser_resilience_usageplan_get` or `mcp_azure_mcp_ser_resilience_usageplan_create`.
-2. Verify the target service group name.
-3. Create the association with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_create`.
-4. Get the enrollment and report its provisioning state and errors.
+2. If creation times out after 10 minutes, get the usage plan and verify its provisioning state before retrying or creating an enrollment.
+3. Verify the target service group name.
+4. Create the association with `mcp_azure_mcp_ser_resilience_usageplan_enrollment_create`.
+5. Get the enrollment and report its provisioning state and errors.
 
 ## Delete a Usage Plan Enrollment
 

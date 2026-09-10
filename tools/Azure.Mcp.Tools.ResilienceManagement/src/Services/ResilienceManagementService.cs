@@ -17,7 +17,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
-    private const string UsagePlanResourceType = "Microsoft.AzureResilienceManagement/usagePlans";
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan UsagePlanOperationTimeout = TimeSpan.FromMinutes(10);
@@ -2199,21 +2198,11 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         };
 
         ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Started, usagePlan, usagePlanData, cancellationToken);
+        await WaitForUsagePlanLroCompletionAsync(operation, "usage plan create or update", cancellationToken);
 
-        return new UsagePlanInfo(
-            $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{UsagePlanResourceType}/{usagePlan}",
-            usagePlan,
-            UsagePlanResourceType,
-            usagePlanData.Location.Name,
-            Properties: new(planType.ToString(), GetAcceptedUsagePlanProvisioningState(operation.GetRawResponse().Status)));
+        return MapUsagePlan(operation.Value.Data);
     }
 
-    internal static string GetAcceptedUsagePlanProvisioningState(int responseStatus) => responseStatus switch
-    {
-        200 => "Updating",
-        201 => "Creating",
-        _ => "Accepted"
-    };
     public async Task<bool> DeleteUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, CancellationToken cancellationToken = default)
     {
         var subscriptionId = AzureService.IsSubscriptionId(subscription)

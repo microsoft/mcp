@@ -20,9 +20,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
     Title = "Create or Update Resilience Usage Plan",
     Description = """
         Creates or updates a resilience usage plan in the specified resource group with the given plan type,
-        and returns immediately after Azure accepts the request. The response includes the usage plan id, name,
-        resource type, location, plan type, and provisioning state (Creating, Updating, or Accepted). Use the
-        usage plan get command to check whether asynchronous provisioning has completed.
+        waits up to 10 minutes for provisioning to complete, and returns the completed usage plan information
+        including id, name, resource type, location, tags, plan type, and provisioning state.
         If the usage plan already exists, its properties are updated.
         This tool can also be used to set up a new usage plan.
         """,
@@ -75,6 +74,7 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException => "The usage plan create or update request timed out. Check the usage plan state before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The usage plan could not be created or updated because it conflicts with the current resource state.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -85,6 +85,10 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
             "The usage plan request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)
     };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex is TimeoutException
+        ? HttpStatusCode.GatewayTimeout
+        : base.GetStatusCode(ex);
 
     public record UsagePlanCreateCommandResult(UsagePlanInfo UsagePlan);
 }
