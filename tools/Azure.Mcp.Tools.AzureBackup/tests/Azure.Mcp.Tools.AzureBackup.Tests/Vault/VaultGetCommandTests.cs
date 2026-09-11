@@ -39,7 +39,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedVaults);
 
         // Act
@@ -68,7 +68,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
         // Act
@@ -96,7 +96,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -119,7 +119,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -145,7 +145,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Vault not found"));
 
         // Act
@@ -179,7 +179,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
         Service.ListVaultsAsync(
-            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", "sub123", "--vault-type", vaultType);
@@ -194,11 +194,11 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         if (shouldSucceed)
         {
             Service.ListVaultsAsync(
-                Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetVaultAsync(
-                Arg.Is("myVault"), Arg.Is("myRg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("myVault"), Arg.Is("myRg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(new BackupVaultInfo("id1", "myVault", "rsv", "eastus", "myRg", "Succeeded", "Standard", "GeoRedundant", null, null, null, null, null, null));
         }
 
@@ -260,8 +260,8 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>(),
-            Arg.Is<VaultExpand>(e => e != VaultExpand.None))
+            Arg.Is<VaultExpand>(e => e != VaultExpand.None),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var response = await ExecuteCommandAsync(
@@ -273,8 +273,8 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>(),
-            Arg.Is<VaultExpand>(e => e != VaultExpand.None));
+            Arg.Is<VaultExpand>(e => e != VaultExpand.None),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -286,8 +286,8 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>(),
-            Arg.Is(VaultExpand.None))
+            Arg.Is(VaultExpand.None),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", subscription);
@@ -298,8 +298,8 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>(),
-            Arg.Is(VaultExpand.None));
+            Arg.Is(VaultExpand.None),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -341,7 +341,7 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
         var response = await ExecuteCommandAsync(

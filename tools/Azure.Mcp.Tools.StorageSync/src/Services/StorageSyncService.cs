@@ -103,6 +103,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string location,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
+        bool enablePublicNetworkAccess = false,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -115,7 +116,10 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-        var content = new StorageSyncServiceCreateOrUpdateContent(new(location));
+        var content = new StorageSyncServiceCreateOrUpdateContent(new(location))
+        {
+            IncomingTrafficPolicy = new(enablePublicNetworkAccess ? "AllowAllTraffic" : "AllowVirtualNetworksOnly")
+        };
         if (tags != null)
         {
             foreach (var tag in tags)

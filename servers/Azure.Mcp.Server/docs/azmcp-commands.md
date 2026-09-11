@@ -3,6 +3,27 @@
 > [!IMPORTANT]
 > The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`.  In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
 
+## Resource Creation Security Defaults
+
+Resource creation uses restricted networking and least-privilege access by default. Existing scripts that relied on permissive defaults must explicitly select the relevant options below. These options do not bypass authentication or authorization.
+
+| Command | Default | Explicit alternative |
+|---|---|---|
+| `compute vm create` | No public IP; new NSG denies all inbound traffic | `--no-public-ip false` enables a public IP. `--source-address-prefix <CIDR>` opens SSH/RDP only for that range; `"*"` explicitly allows any source. Use `--network-security-group <name>` to reuse an existing NSG. |
+| `compute vmss create` | New deny-inbound NSG attached to instance NICs | `--network-security-group <name>` selects an existing NSG. `--disable-network-security-group true` explicitly omits NIC-level NSG protection. |
+| `compute disk create` | Network import/export policy `DenyAll` | `--network-access-policy AllowPrivate` with `--disk-access <resource-id>` for private transfers, or `AllowAll` for transfers from any network. SAS authorization is still required. |
+| `storage account create` | Public networking and Shared Key authentication disabled; HTTPS/TLS 1.2 required; anonymous blob access disabled | `--enable-public-network-access true` and `--allow-shared-key-access true` independently enable the broader settings. |
+| `eventhubs namespace update` | New namespaces disable public networking and SAS authentication | `--enable-public-network-access true` and `--enable-sas-authentication true` independently enable the broader settings. Omitted security options preserve existing namespaces. |
+| `fileshares fileshare create` | New NFS shares use private networking, `RootSquash`, and encrypted transit | `--public-network-access Enabled`, `--nfs-root-squash NoRootSquash`, and `--nfs-encryption-in-transit Disabled` independently relax these settings. Omitted security options preserve existing shares. |
+| `managedlustre fs create` | `RootOnly` squash, UID/GID 65534, no exempt clients | `--root-squash-mode None` retains client root privileges. Explicit custom squash settings remain supported. |
+| `azurebackup vault create --vault-type rsv` | Public networking disabled | `--enable-public-network-access true` enables public access. This flag is not supported for DPP vaults. |
+| `storagesync service create` | `AllowVirtualNetworksOnly` | `--enable-public-network-access true` selects `AllowAllTraffic`. |
+| `deploy iac rules get` | Private networking, workload/managed identity, and least-privilege runtime roles | `--enable-public-network-access true`, `--allow-azure-services true`, `--allow-privileged-roles true`, and `--use-connection-strings true` control separate exceptions. The all-Azure-services exception requires public access and includes other customers' subscriptions. |
+
+Private-only resources need supported private endpoints or virtual network integration, private DNS, and a connected application/deployment runner before data access. Creation does not automatically provision those connections. Configure explicit NSG rules for required application traffic and health probes. An automatically generated NSG name that already exists must be explicitly selected for reuse, or a different VM/scale set name chosen.
+
+The deployment guidance opt-ins retain secret storage and authorization requirements; they do not recommend plaintext credentials or disabling transport encryption.
+
 ## Global Options
 
 The following options are available for most commands:
@@ -993,6 +1014,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                --location <location> \
                                --vault-type <vault-type> \
                                [--sku <sku>] \
+                               [--enable-public-network-access <true|false>] \
                                [--storage-type <storage-type>]
 
 # Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, storage redundancy, and managed identity details when configured. Identity details include the identity type, principal ID, tenant ID, and attached user-assigned identities with their resource IDs, principal IDs, and client IDs. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
@@ -1603,12 +1625,12 @@ azmcp compute vm create --subscription <subscription> \
                         [--public-ip-address <public-ip-address>] \
                         [--network-security-group <network-security-group>] \
                         [--source-address-prefix <source-address-prefix>] \
-                        [--no-public-ip] \
+                        [--no-public-ip <true|false>] \
                         [--zone <zone>] \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
-Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
+Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). No public IP is assigned and new NSGs deny all inbound access by default. Set `--no-public-ip false` to enable a public IP and `--source-address-prefix` to explicitly allow SSH/RDP from a source range; `"*"` allows any source. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted; file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -1729,8 +1751,8 @@ azmcp compute vm create --subscription "my-sub" \
 | `--subnet` | No | Subnet name |
 | `--public-ip-address` | No | Public IP address name |
 | `--network-security-group` | No | Network security group name |
-| `--source-address-prefix` | No | Source IP/CIDR for created NSG inbound rules (default: `*`) |
-| `--no-public-ip` | No | Do not create a public IP address |
+| `--source-address-prefix` | No | Source IP/CIDR for created SSH/RDP rules. No inbound access is allowed by default; `*` explicitly allows any source. |
+| `--no-public-ip` | No | Do not create a public IP address (default: `true`). Set `false` to enable a public IP, including when specifying `--public-ip-address`. |
 | `--zone` | No | Availability zone |
 | `--os-disk-size-gb` | No | OS disk size in GB |
 | `--os-disk-type` | No | OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS' |
@@ -1966,6 +1988,8 @@ azmcp compute vmss create --subscription <subscription> \
                           [--os-type <os-type>] \
                           [--virtual-network <virtual-network>] \
                           [--subnet <subnet>] \
+                          [--network-security-group <name>] \
+                          [--disable-network-security-group <true|false>] \
                           [--instance-count <instance-count>] \
                           [--upgrade-policy <upgrade-policy>] \
                           [--zone <zone>] \
@@ -2701,7 +2725,11 @@ azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy iac rules get --deployment-tool <deployment-tool> \
                            [--iac-type <iac-type>] \
-                           [--resource-types <resource-types>]
+                           [--resource-types <resource-types>] \
+                           [--enable-public-network-access <true|false>] \
+                           [--allow-azure-services <true|false>] \
+                           [--allow-privileged-roles <true|false>] \
+                           [--use-connection-strings <true|false>]
 
 # Get the ci/cd pipeline guidance
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2836,6 +2864,8 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--maximum-throughput-units <units>] \
                                  [--kafka-enabled <true/false>] \
                                  [--zone-redundant <true/false>] \
+                                 [--enable-public-network-access <true|false>] \
+                                 [--enable-sas-authentication <true|false>] \
                                  [--tags <json-tags>]
 ```
 
@@ -4985,6 +5015,8 @@ azmcp storage account create --subscription <subscription> \
                              [--sku <sku>] \
                              [--access-tier <access-tier>] \
                              [--enable-hierarchical-namespace <true|false>] \
+                             [--enable-public-network-access <true|false>] \
+                             [--allow-shared-key-access <true|false>] \
                              [--tenant <tenant>]
 ```
 
@@ -4999,6 +5031,8 @@ azmcp storage account create --subscription <subscription> \
 | `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
 | `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
 | `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
+| `--enable-public-network-access` | No | Enable access from public networks. Defaults to `false`; private connectivity is required for data access. |
+| `--allow-shared-key-access` | No | Allow Shared Key authentication. Defaults to `false`; use Microsoft Entra ID unless explicitly opting in. |
 | `--tenant` | No | Azure tenant ID or name. |
 
 ```bash
@@ -5063,6 +5097,7 @@ azmcp storagesync service create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
                                  --location <location> \
+                                 [--enable-public-network-access <true|false>] \
                                  [--tags <tag-key=tag-value>]
 
 # Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)

@@ -15,6 +15,24 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests.Vault;
 
 public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCreateCommand, IAzureBackupService>
 {
+    [Theory]
+    [InlineData("", false)]
+    [InlineData("--enable-public-network-access true", true)]
+    public async Task ExecuteAsync_PublicAccessRequiresOptIn(string options, bool publicAccess)
+    {
+        var response = await ExecuteCommandAsync($"--subscription sub --vault myVault --resource-group rg --vault-type rsv --location eastus {options}");
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(publicAccess, Assert.Single(Service.ReceivedCalls()).GetArguments()[8]);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsPublicAccessForUnsupportedVaultType()
+    {
+        var response = await ExecuteCommandAsync("--subscription sub --vault myVault --resource-group rg --vault-type dpp --location eastus --enable-public-network-access true");
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -29,7 +47,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("myVault"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new VaultCreateResult("id1", "myVault", "rsv", "eastus", "Succeeded"));
 
         // Act
@@ -52,7 +70,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -77,7 +95,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         {
             Service.CreateVaultAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(new VaultCreateResult("id", "v", "rsv", "eastus", "Succeeded"));
         }
 

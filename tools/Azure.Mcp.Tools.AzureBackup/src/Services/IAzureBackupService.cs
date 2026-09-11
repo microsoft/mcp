@@ -8,9 +8,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 public interface IAzureBackupService
 {
     // Vault operations
-    Task<VaultCreateResult> CreateVaultAsync(string vaultName, string resourceGroup, string subscription, string vaultType, string location, string? sku = null, string? storageType = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<BackupVaultInfo> GetVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default, VaultExpand expand = VaultExpand.None);
-    Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? resourceGroup = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default, VaultExpand expand = VaultExpand.None);
+    Task<VaultCreateResult> CreateVaultAsync(string vaultName, string resourceGroup, string subscription, string vaultType, string location, string? sku = null, string? storageType = null, string? tenant = null, bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default);
+    Task<BackupVaultInfo> GetVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, VaultExpand expand = VaultExpand.None, CancellationToken cancellationToken = default);
+    Task<List<BackupVaultInfo>> ListVaultsAsync(string subscription, string? resourceGroup = null, string? vaultType = null, string? tenant = null, VaultExpand expand = VaultExpand.None, CancellationToken cancellationToken = default);
     Task<OperationResult> UpdateVaultAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? redundancy = null, string? softDelete = null, string? softDeleteRetentionDays = null, string? immutabilityState = null, string? identityType = null, string? tags = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Policy operations

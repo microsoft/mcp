@@ -323,6 +323,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in <resource_group> | investigation-required |
 | azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in <resource_group> and disable MUA | investigation-required |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in <location> with public network access disabled | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in <location> and explicitly enable public network access for this test deployment | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -410,6 +412,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | clarification-required |
 | compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> | clarification-required |
 | compute_vm_create | Create Linux VM <vm-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name> | none |
+| compute_vm_create | Create Linux VM <vm-name> in <resource-group> in <location> using image Ubuntu2404, admin <admin-username>, and SSH public key <ssh-public-key>, with no public IP and no inbound access | none |
+| compute_vm_create | Create Linux VM <vm-name> in <resource-group> in <location> using Ubuntu2404, admin <admin-username>, and SSH key <ssh-public-key>; explicitly enable a public IP and allow SSH from any source for this isolated test | none |
 | compute_vm_get | List all virtual machines in my subscription | none |
 | compute_vm_get | Show me all VMs in my subscription | none |
 | compute_vm_get | What virtual machines do I have? | none |
@@ -446,6 +450,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances | clarification-required |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in <resource-group-name> | none |
 | compute_vmss_create | Create scale set <vmss-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name> | none |
+| compute_vmss_create | Create scale set <vmss-name> in <resource-group> in <location> using Ubuntu2404, admin <admin-username>, and SSH key <ssh-public-key> with the default deny-inbound NSG | none |
+| compute_vmss_create | Create scale set <vmss-name> in <resource-group> in <location> using Ubuntu2404, admin <admin-username>, and SSH key <ssh-public-key>; explicitly disable the instance NIC NSG for this isolated test | none |
 | compute_vmss_get | List all virtual machine scale sets in my subscription | none |
 | compute_vmss_get | List virtual machine scale sets in resource group <resource-group-name> | none |
 | compute_vmss_get | What scale sets are in resource group <resource-group-name>? | none |
@@ -469,6 +475,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_disk_get | What managed disks are available? | none |
 | compute_disk_get | Get information about disk <disk-name> | none |
 | compute_disk_create | Create a 128 GB managed disk named <disk-name> in resource group <resource-group> | none |
+| compute_disk_create | Create a 128 GB disk <disk-name> in <resource-group> with network import and export denied | none |
+| compute_disk_create | Create a 128 GB disk <disk-name> in <resource-group> and explicitly allow authorized network exports from any network | none |
 | compute_disk_create | Create a new Premium_LRS disk called <disk-name> in resource group <resource-group> with 256 GB | none |
 | compute_disk_create | Create a managed disk <disk-name> in resource group <resource-group> in eastus | none |
 | compute_disk_create | Create a disk from snapshot <snapshot-resource-id> in resource group <resource-group> | none |
@@ -611,6 +619,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | deploy_app_logs_get | Show me the log of the application deployed by azd | context-required |
 | deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application | context-required |
 | deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep | none |
+| deploy_iac_rules_get | Get Azure CLI and Bicep rules for AKS, Cosmos DB, Storage, and Key Vault with private networking, workload identity, and least-privilege runtime roles | none |
+| deploy_iac_rules_get | Get Azure CLI and Bicep rules for AKS, Cosmos DB, and Key Vault; explicitly permit public networking, all-Azure-services firewall exceptions, privileged application roles, and secret-based connections for this isolated test | none |
 | deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices | context-required |
 | deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates | context-required |
 
@@ -660,6 +670,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventhubs_namespace_get | List all Event Hubs namespaces in my subscription | none |
 | eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> | investigation-required |
 | eventhubs_namespace_update | Create a new Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name> | none |
+| eventhubs_namespace_update | Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> with public access and SAS authentication disabled | none |
+| eventhubs_namespace_update | Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> and explicitly enable public access and SAS authentication | none |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> | clarification-required |
 
 ## Azure File Shares
@@ -671,6 +683,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_create | Create a file share named <file_share_name> in location <location> with resource group <resource_group_name> | none |
 | fileshares_fileshare_create | Set up a new file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_create | Create an NFS file share <file_share_name> in location <location> in resource group <resource_group_name> with NFS encryption in transit enabled | none |
+| fileshares_fileshare_create | Create NFS share <file_share_name> in <resource_group_name> in <location> with private access, root squashing, and encrypted transit | none |
+| fileshares_fileshare_create | Create NFS share <file_share_name> in <resource_group_name> in <location>; explicitly enable public access, no root squashing, and unencrypted transit for an isolated test | none |
 | fileshares_fileshare_delete | Delete the file share <file_share_name> from resource group <resource_group_name> | none |
 | fileshares_fileshare_delete | Remove file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | List all file shares in my subscription | none |
@@ -899,6 +913,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | managedlustre_fs_blob_import_get | Get the details of import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_import_get | List all one-time import jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> | none |
+| managedlustre_fs_create | Create Lustre filesystem <filesystem_name> in <resource-group> with size <filesystem_size>, SKU <sku>, subnet <subnet_id>, zone <zone>, location <location>, and maintenance <maintenance_window_day> at <maintenance_window_time>; retain the default root-only squash mapping | none |
+| managedlustre_fs_create | Create Lustre filesystem <filesystem_name> in <resource-group> with size <filesystem_size>, SKU <sku>, subnet <subnet_id>, zone <zone>, location <location>, and maintenance <maintenance_window_day> at <maintenance_window_time>; explicitly disable root squashing for trusted clients | none |
 | managedlustre_fs_expansion_create | Create an expansion job to increase the storage capacity of the Azure Managed Lustre filesystem <filesystem_name> to <new_size_tib> TiB in resource group <resource_group_name> | none |
 | managedlustre_fs_expansion_delete | Delete the expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_expansion_get | Get the details of expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
@@ -1376,6 +1392,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_account_create | Create a new storage account called testaccount123 in East US region | clarification-required |
 | storage_account_create | Create a storage account with premium performance and LRS replication | clarification-required |
 | storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled | clarification-required |
+| storage_account_create | Create Storage account <account> in <resource-group> in <location> with private networking and Shared Key authentication disabled | none |
+| storage_account_create | Create Storage account <account> in <resource-group> in <location> and explicitly enable public networking and Shared Key authentication for an isolated test | none |
 | storage_account_get | Show me the details for my storage account <account> | none |
 | storage_account_get | Get details about the storage account <account> | none |
 | storage_account_get | List all storage accounts in my subscription including their location and SKU | none |
@@ -1400,6 +1418,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | storagesync_service_create | Create a new Storage Sync Service named <service-name> in resource group <resource-group-name> at location <location> | none |
+| storagesync_service_create | Create Storage Sync service <service-name> in <resource-group-name> in <location> allowing virtual network traffic only | none |
+| storagesync_service_create | Create Storage Sync service <service-name> in <resource-group-name> in <location> and explicitly enable its public endpoint | none |
 | storagesync_service_delete | Delete the Storage Sync Service <service-name> from resource group <resource-group-name> | none |
 | storagesync_service_get | Get the details of Storage Sync Service <service-name> in resource group <resource-group-name> | none |
 | storagesync_service_get | List all Storage Sync Services in resource group <resource-group-name> | none |

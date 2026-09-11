@@ -1,12 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using System.Text.Json;
+using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Services;
+using Azure.ResourceManager;
+using Azure.ResourceManager.FileShares;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using NSubstitute.Extensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FileShares.Tests.FileShare;
@@ -16,6 +24,85 @@ namespace Azure.Mcp.Tools.FileShares.Tests.FileShare;
 /// </summary>
 public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<FileShareCreateCommand, IFileSharesService>
 {
+    [Theory]
+    [InlineData(true, "Disabled", "RootSquash", "Enabled")]
+    [InlineData(false, "Enabled", "NoRootSquash", "Disabled")]
+    public void SecurityDefaults_OnlyApplyToNewShares(bool isNew, string networkAccess, string rootSquash, string encryption)
+    {
+        var data = new FileShareData("eastus")
+        {
+            Properties = new()
+            {
+                PublicNetworkAccess = new("Enabled"),
+                NfsProtocolProperties = new() { RootSquash = new("NoRootSquash"), EncryptionInTransitRequired = new("Disabled") }
+            }
+        };
+        FileSharesService.ConfigureFileShareSecurity(data, isNew, "NFS");
+        Assert.Equal(networkAccess, data.Properties.PublicNetworkAccess?.ToString());
+        Assert.Equal(rootSquash, data.Properties.NfsProtocolProperties.RootSquash?.ToString());
+        Assert.Equal(encryption, data.Properties.NfsProtocolProperties.EncryptionInTransitRequired?.ToString());
+    }
+
+    [Fact]
+    public static async Task CreateOrUpdateFileShareAsync_MergesExistingTags()
+    {
+        const string subscription = "00000000-0000-0000-0000-000000000000";
+        const string resourceGroupId = $"/subscriptions/{subscription}/resourceGroups/test-rg";
+        const string resourceGroupResponse = $$"""
+            {"id":"{{resourceGroupId}}","name":"test-rg","location":"eastus"}
+            """;
+        const string fileShareResponse = $$"""
+            {
+              "id": "{{resourceGroupId}}/providers/Microsoft.FileShares/fileShares/test-share",
+              "name": "test-share",
+              "type": "Microsoft.FileShares/fileShares",
+              "location": "eastus",
+              "tags": {"environment":"test","owner":"existing-owner"},
+              "properties": {"provisioningState":"Succeeded","protocol":"NFS","publicNetworkAccess":"Enabled"}
+            }
+            """;
+
+        JsonElement? requestBody = null;
+        using var handler = Substitute.For<HttpMessageHandler>();
+        handler.ReturnsForAll(async callInfo =>
+        {
+            var request = callInfo.Arg<HttpRequestMessage>();
+            if (request.Method == HttpMethod.Put)
+            {
+                using var document = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
+                requestBody = document.RootElement.Clone();
+            }
+
+            var responseBody = request.RequestUri!.AbsolutePath.EndsWith("/resourceGroups/test-rg", StringComparison.Ordinal)
+                ? resourceGroupResponse
+                : fileShareResponse;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(responseBody, null, "application/json")
+            };
+        });
+        using var httpClient = new HttpClient(handler);
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1)));
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetClient().Returns(httpClient);
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
+        azureService.CloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        var service = new FileSharesService(azureService, NullLogger<FileSharesService>.Instance);
+
+        await service.CreateOrUpdateFileShareAsync(
+            subscription, "test-rg", "test-share", "eastus",
+            tags: new() { ["environment"] = "production", ["project"] = "mcp" },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var tags = Assert.IsType<JsonElement>(requestBody).GetProperty("tags");
+        Assert.Equal("production", tags.GetProperty("environment").GetString());
+        Assert.Equal("existing-owner", tags.GetProperty("owner").GetString());
+        Assert.Equal("mcp", tags.GetProperty("project").GetString());
+        Assert.Equal(3, tags.EnumerateObject().Count());
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
