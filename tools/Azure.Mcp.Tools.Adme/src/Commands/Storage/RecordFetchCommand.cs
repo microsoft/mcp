@@ -33,6 +33,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         server, and reports per-record outcomes in conversionStatuses (empty for records without
         measured or spatial fields). It cannot be combined with --attributes.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
