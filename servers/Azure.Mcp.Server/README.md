@@ -1263,7 +1263,7 @@ Example prompts that generate Azure CLI commands:
 * "Generate a Platform Landing Zone"
 * "Create a Platform Landing Zone without DDoS protection"
 * "Create a Platform Landing Zone with no Bastion host and no Private DNS zones"
-* "Create a Platform Landing Zone with no ExpressRoute gateway and no VPN gateway"
+* "Create a Platform Landing Zone with no ExpressRoute gateway"
 * "Turn off DDoS protection in my Platform Landing Zone"
 * "Turn off Bastion host in my Platform Landing Zone"
 * "List the Platform Landing Zones in my migrate project"

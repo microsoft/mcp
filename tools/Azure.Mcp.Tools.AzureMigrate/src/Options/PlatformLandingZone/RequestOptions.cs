@@ -26,7 +26,7 @@ public sealed class RequestOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets the firewall type (azurefirewall, nva or none).
     /// </summary>
-    [Option(Description = "The firewall type for the Platform Landing Zone. Valid values: 'azurefirewall', 'nva', 'none'. Maps to connectivity.firewall.kind.")]
+    [Option(Description = "The firewall type for the Platform Landing Zone. Valid values: 'azurefirewall', 'nva'. Maps to connectivity.firewall.kind. A landing zone with no firewall is not supported by generation yet.")]
     public string? FirewallType { get; set; }
 
     /// <summary>
@@ -44,7 +44,7 @@ public sealed class RequestOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets whether private DNS zones are deployed.
     /// </summary>
-    [Option(Description = "Whether Private DNS zones and centralized resolution are deployed. Valid values: 'enabled', 'disabled'. Omit to accept the service default (enabled).")]
+    [Option(Description = "Whether Private DNS zones and centralized resolution are deployed. Valid values: 'enabled', 'disabled'. Omit to accept the service default (enabled). Disabling also switches off the Deploy-Private-DNS-Zones policy assignment, which this tool handles automatically.")]
     public string? PrivateDns { get; set; }
 
     /// <summary>
@@ -56,7 +56,7 @@ public sealed class RequestOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets whether a VPN gateway is deployed.
     /// </summary>
-    [Option(Description = "Whether a VPN gateway is deployed. Valid values: 'enabled', 'disabled'. Omit to accept the service default (enabled). Enabling requires --network-architecture in the same call.")]
+    [Option(Description = "Whether a VPN gateway is deployed. Valid value: 'enabled'. Omit to accept the service default (enabled). Enabling requires --network-architecture in the same call. Removing the VPN gateway is not supported by generation yet.")]
     public string? VpnGateway { get; set; }
 
     /// <summary>

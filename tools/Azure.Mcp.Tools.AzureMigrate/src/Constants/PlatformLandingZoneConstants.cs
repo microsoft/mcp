@@ -32,9 +32,22 @@ internal static class PlatformLandingZoneConstants
     public const string ArtifactApiVersion = "2026-06-01-preview";
 
     /// <summary>
-    /// Default Platform Landing Zone resource name when the caller does not supply one.
+    /// The only Platform Landing Zone resource name the service accepts. A migrate project holds
+    /// exactly one landing zone; any other name is rejected with 400.
     /// </summary>
     public const string DefaultLandingZoneName = "default";
+
+    /// <summary>
+    /// Azure Landing Zones policy assignment that deploys DDoS network protection. Disabling DDoS
+    /// protection under <c>connectivity</c> requires this assignment to be overridden off as well.
+    /// </summary>
+    public const string DdosPolicyAssignmentName = "Enable-DDoS-VNET";
+
+    /// <summary>
+    /// Azure Landing Zones policy assignment that deploys the Private DNS zones. Disabling Private
+    /// DNS under <c>connectivity</c> requires this assignment to be overridden off as well.
+    /// </summary>
+    public const string PrivateDnsPolicyAssignmentName = "Deploy-Private-DNS-Zones";
 
     /// <summary>
     /// Prefix applied to the Artifact Store artifact backing a Platform Landing Zone.

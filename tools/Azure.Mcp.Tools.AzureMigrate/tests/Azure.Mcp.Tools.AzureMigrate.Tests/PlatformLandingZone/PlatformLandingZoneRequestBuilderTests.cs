@@ -27,7 +27,6 @@ public class PlatformLandingZoneRequestBuilderTests
         options.Ddos = "disabled";
         options.PrivateDns = "disabled";
         options.ExpressRoute = "disabled";
-        options.VpnGateway = "disabled";
 
         var connectivity = Assert.IsType<JsonObject>(
             PlatformLandingZoneRequestBuilder.BuildProperties(options, existing: null)["connectivity"]);
@@ -36,7 +35,6 @@ public class PlatformLandingZoneRequestBuilderTests
         Assert.Equal("Disabled", (string?)connectivity["ddosProtection"]!["deploymentMode"]);
         Assert.Equal("None", (string?)connectivity["privateDns"]!["zoneMode"]);
         Assert.Equal("None", (string?)connectivity["expressRoute"]!["topology"]);
-        Assert.Equal("None", (string?)connectivity["vpnGateway"]!["topology"]);
     }
 
     [Fact]
@@ -224,6 +222,133 @@ public class PlatformLandingZoneRequestBuilderTests
         }
 
         Assert.Throws<ArgumentException>(() => PlatformLandingZoneRequestBuilder.BuildProperties(options, existing: null));
+    }
+
+    [Fact]
+    public void BuildProperties_DisablingDdos_AddsBothRequiredPolicyOverrides()
+    {
+        var options = CreateOptions();
+        options.Ddos = "disabled";
+
+        var properties = PlatformLandingZoneRequestBuilder.BuildProperties(options, existing: null);
+
+        var overrides = properties["governance"]!["policyAssignmentOverrides"]!.AsArray();
+        Assert.Equal(2, overrides.Count);
+        Assert.All(overrides, entry =>
+        {
+            Assert.Equal("Enable-DDoS-VNET", entry!["assignmentName"]!.GetValue<string>());
+            Assert.False(entry["enabled"]!.GetValue<bool>());
+        });
+        Assert.Contains(overrides, entry => entry!["scope"]!.GetValue<string>() == "Connectivity");
+        Assert.Contains(overrides, entry => entry!["scope"]!.GetValue<string>() == "LandingZones");
+    }
+
+    [Fact]
+    public void BuildProperties_DisablingPrivateDns_AddsOverrideAndTurnsOffCentralizedResolution()
+    {
+        var options = CreateOptions();
+        options.PrivateDns = "disabled";
+
+        var properties = PlatformLandingZoneRequestBuilder.BuildProperties(options, existing: null);
+
+        var privateDns = properties["connectivity"]!["privateDns"]!;
+        Assert.Equal("None", privateDns["zoneMode"]!.GetValue<string>());
+        Assert.False(privateDns["centralizedResolutionEnabled"]!.GetValue<bool>());
+
+        var singleOverride = Assert.Single(properties["governance"]!["policyAssignmentOverrides"]!.AsArray());
+        Assert.Equal("Deploy-Private-DNS-Zones", singleOverride!["assignmentName"]!.GetValue<string>());
+        Assert.Equal("Corp", singleOverride["scope"]!.GetValue<string>());
+        Assert.False(singleOverride["enabled"]!.GetValue<bool>());
+    }
+
+    [Fact]
+    public void BuildProperties_ReenablingDdos_RemovesTheDisablingOverrides()
+    {
+        // The service never rewrites caller-supplied governance, so a stale disabling override would
+        // otherwise survive the round-trip and keep the policy switched off.
+        var existing = new JsonObject
+        {
+            ["governance"] = new JsonObject
+            {
+                ["policyAssignmentOverrides"] = new JsonArray(
+                    new JsonObject { ["scope"] = "Connectivity", ["assignmentName"] = "Enable-DDoS-VNET", ["enabled"] = false },
+                    new JsonObject { ["scope"] = "LandingZones", ["assignmentName"] = "Enable-DDoS-VNET", ["enabled"] = false },
+                    new JsonObject { ["scope"] = "Corp", ["assignmentName"] = "Deploy-Private-DNS-Zones", ["enabled"] = false })
+            }
+        };
+
+        var options = CreateOptions();
+        options.Ddos = "enabled";
+
+        var properties = PlatformLandingZoneRequestBuilder.BuildProperties(options, existing);
+
+        var remaining = Assert.Single(properties["governance"]!["policyAssignmentOverrides"]!.AsArray());
+        Assert.Equal("Deploy-Private-DNS-Zones", remaining!["assignmentName"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void BuildProperties_DisablingDdos_PreservesUnrelatedOverridesAndDoesNotDuplicate()
+    {
+        var existing = new JsonObject
+        {
+            ["governance"] = new JsonObject
+            {
+                ["policyAssignmentOverrides"] = new JsonArray(
+                    new JsonObject { ["scope"] = "Corp", ["assignmentName"] = "Deny-Public-IP", ["enabled"] = false },
+                    // Already present, and matched case-insensitively like the service-side validator.
+                    new JsonObject { ["scope"] = "Connectivity", ["assignmentName"] = "enable-ddos-vnet", ["enabled"] = false })
+            }
+        };
+
+        var options = CreateOptions();
+        options.Ddos = "disabled";
+
+        var properties = PlatformLandingZoneRequestBuilder.BuildProperties(options, existing);
+
+        var overrides = properties["governance"]!["policyAssignmentOverrides"]!.AsArray();
+        Assert.Equal(3, overrides.Count);
+        Assert.Contains(overrides, entry => entry!["assignmentName"]!.GetValue<string>() == "Deny-Public-IP");
+        Assert.Equal(
+            2,
+            overrides.Count(entry => string.Equals(
+                entry!["assignmentName"]!.GetValue<string>(), "Enable-DDoS-VNET", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    [Fact]
+    public void BuildProperties_UntouchedToggles_LeaveGovernanceAlone()
+    {
+        var options = CreateOptions();
+        options.Bastion = "disabled";
+
+        var properties = PlatformLandingZoneRequestBuilder.BuildProperties(options, existing: null);
+
+        Assert.Null(properties["governance"]);
+    }
+
+    [Theory]
+    [InlineData("none")]
+    [InlineData("disabled")]
+    public void BuildProperties_FirewallNone_IsRejectedBecauseGenerationCannotHandleIt(string firewallType)
+    {
+        var options = CreateOptions();
+        options.FirewallType = firewallType;
+
+        var exception = Assert.Throws<ArgumentException>(
+            () => PlatformLandingZoneRequestBuilder.BuildProperties(options, existing: null));
+
+        Assert.Contains("does not support a landing zone without a firewall", exception.Message);
+    }
+
+    [Fact]
+    public void BuildProperties_DisablingVpnGateway_IsRejectedBecauseGenerationCannotHandleIt()
+    {
+        var options = CreateOptions();
+        options.VpnGateway = "disabled";
+
+        var exception = Assert.Throws<ArgumentException>(
+            () => PlatformLandingZoneRequestBuilder.BuildProperties(options, existing: null));
+
+        Assert.Contains("does not support removing this gateway", exception.Message);
     }
 
     private static RequestOptions CreateOptions() => new()

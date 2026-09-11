@@ -3837,12 +3837,12 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --action create \
                                                   [--regions <comma-separated-regions>] \
                                                   [--network-architecture <hubspoke|vwan>] \
-                                                  [--firewall-type <azurefirewall|nva|none>] \
+                                                  [--firewall-type <azurefirewall|nva>] \
                                                   [--bastion <enabled|disabled>] \
                                                   [--ddos <enabled|disabled>] \
                                                   [--private-dns <enabled|disabled>] \
                                                   [--express-route <enabled|disabled>] \
-                                                  [--vpn-gateway <enabled|disabled>] \
+                                                  [--vpn-gateway <enabled>] \
                                                   [--scale-tier <full|managementonly>] \
                                                   [--version-control-system <local|github|azuredevops>] \
                                                   [--organization-name <organization-name>] \

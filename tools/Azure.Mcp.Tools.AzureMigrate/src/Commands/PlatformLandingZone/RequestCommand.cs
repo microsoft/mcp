@@ -47,12 +47,12 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         |-----------|--------|-------|
         | --regions | comma-separated, e.g. eastus,westus2 | first is primary; two or more makes it multi-region |
         | --network-architecture | hubspoke, vwan | |
-        | --firewall-type | azurefirewall, nva, none | |
+        | --firewall-type | azurefirewall, nva | 'none' is not supported by generation yet |
         | --bastion | enabled, disabled | |
         | --ddos | enabled, disabled | disabling removes the largest cost line item |
-        | --private-dns | enabled, disabled | |
+        | --private-dns | enabled, disabled | disabling also turns off centralized DNS resolution |
         | --express-route | enabled, disabled | enabling also requires --network-architecture |
-        | --vpn-gateway | enabled, disabled | enabling also requires --network-architecture |
+        | --vpn-gateway | enabled | cannot be disabled yet; generation would fail |
         | --scale-tier | full, managementonly | managementonly omits connectivity entirely |
         | --version-control-system | local, github, azuredevops | |
         | --identity-subscription-id, --management-subscription-id, --connectivity-subscription-id, --security-subscription-id | GUID | supply together; any one supplied replaces the whole subscription block |
@@ -66,6 +66,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         **Updating an existing landing zone is incremental.** The supplied parameters are layered over the
         current configuration, so `--ddos disabled` on its own is enough to turn DDoS protection off
         without restating anything else.
+
+        **Turning off DDoS protection or Private DNS also switches off the matching Azure Landing Zones
+        policy assignment**, because those components are policy-driven as well. This tool sends the
+        required governance overrides automatically, so no extra parameter is needed.
 
         **Workflow:**
         1. action='list' or 'get' - see what already exists

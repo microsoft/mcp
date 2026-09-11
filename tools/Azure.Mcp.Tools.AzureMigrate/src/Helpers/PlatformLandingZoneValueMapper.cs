@@ -24,13 +24,21 @@ internal static class PlatformLandingZoneValueMapper
     /// <summary>
     /// Maps a firewall type to a <c>connectivity.firewall.kind</c> discriminator.
     /// </summary>
+    /// <remarks>
+    /// <c>None</c> is a valid value on the wire and the API will persist it, but infrastructure-as-code
+    /// generation still rejects a landing zone without a firewall, so the run would fail. It is refused
+    /// here rather than after a create has been accepted.
+    /// </remarks>
     public static string MapFirewallKind(string value) => value.ToLowerInvariant() switch
     {
         "azurefirewall" or "azure-firewall" => "AzureFirewall",
         "nva" or "thirdpartynva" or "third-party-nva" => "ThirdPartyNva",
-        "none" or "disabled" => "None",
+        "none" or "disabled" => throw new ArgumentException(
+            "'--firewall-type none' is stored by the API, but infrastructure-as-code generation does not " +
+            "support a landing zone without a firewall yet, so the generation run would fail. " +
+            "Use 'azurefirewall' or 'nva'."),
         _ => throw new ArgumentException(
-            $"Invalid firewall type '{value}'. Valid values are: azurefirewall, nva, none.")
+            $"Invalid firewall type '{value}'. Valid values are: azurefirewall, nva.")
     };
 
     /// <summary>
@@ -79,11 +87,25 @@ internal static class PlatformLandingZoneValueMapper
     /// The already-mapped connectivity topology the gateway is deployed into. Required when enabling a
     /// gateway, because the gateway shape is selected by the same topology discriminator.
     /// </param>
-    public static string MapGatewayTopology(string value, string optionName, string? connectivityTopology)
+    /// <param name="canDisable">
+    /// Whether infrastructure-as-code generation supports removing this gateway. The API stores
+    /// <c>None</c> for either gateway, but generation still rejects a landing zone without a VPN
+    /// gateway, so that run would fail.
+    /// </param>
+    public static string MapGatewayTopology(
+        string value,
+        string optionName,
+        string? connectivityTopology,
+        bool canDisable = true)
     {
         if (!ParseToggle(value, optionName))
         {
-            return "None";
+            return canDisable
+                ? "None"
+                : throw new ArgumentException(
+                    $"'--{optionName} disabled' is stored by the API, but infrastructure-as-code generation " +
+                    "does not support removing this gateway yet, so the generation run would fail. " +
+                    "Omit this option to keep the gateway.");
         }
 
         if (string.IsNullOrEmpty(connectivityTopology))
@@ -96,6 +118,12 @@ internal static class PlatformLandingZoneValueMapper
 
         return connectivityTopology;
     }
+
+    /// <summary>
+    /// Parses an enabled/disabled toggle. Exposed so callers that need the caller's intent rather
+    /// than a mapped ARM value (such as deriving governance overrides) share one parser.
+    /// </summary>
+    public static bool IsEnabled(string value, string optionName) => ParseToggle(value, optionName);
 
     /// <summary>
     /// Parses an enabled/disabled toggle.

@@ -36,6 +36,10 @@ public sealed class PlatformLandingZoneService(IAzureService azureService)
         RequestOptions options,
         CancellationToken cancellationToken = default)
     {
+        // Validated before the read, so an unsupported combination fails immediately rather than
+        // after a network round-trip.
+        PlatformLandingZoneRequestBuilder.ValidateGenerationSupport(options);
+
         var existing = await GetPropertiesAsync(context, cancellationToken);
         var properties = PlatformLandingZoneRequestBuilder.BuildProperties(options, existing);
         var body = new JsonObject { ["properties"] = properties }.ToJsonString();
