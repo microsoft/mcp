@@ -65,7 +65,7 @@ public class RemediationServiceTests
         var package = await service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken);
 
         Assert.Equal(RecommendationTypeId, package.Name);
-        Assert.Equal("Microsoft.Advisor/remediationTypes", package.Type);
+        Assert.Equal("Microsoft.Advisor/remediations", package.Type);
         Assert.NotNull(package.Properties);
         Assert.Equal("executable", package.Properties!.OutputType);
         Assert.NotNull(package.Properties.Destructive);
@@ -139,18 +139,18 @@ public class RemediationServiceTests
 
     private const string MinimalPackageJson = """
         {
-          "id": "/providers/Microsoft.Advisor/remediationTypes/18745007-438b-4c68-bfa3-b6576d85a831",
+          "id": "/providers/Microsoft.Advisor/remediations/18745007-438b-4c68-bfa3-b6576d85a831",
           "name": "18745007-438b-4c68-bfa3-b6576d85a831",
-          "type": "Microsoft.Advisor/remediationTypes",
+          "type": "Microsoft.Advisor/remediations",
           "properties": { "recommendationTypeId": "18745007-438b-4c68-bfa3-b6576d85a831" }
         }
         """;
 
     private const string FullPackageJson = """
         {
-          "id": "/providers/Microsoft.Advisor/remediationTypes/18745007-438b-4c68-bfa3-b6576d85a831",
+          "id": "/providers/Microsoft.Advisor/remediations/18745007-438b-4c68-bfa3-b6576d85a831",
           "name": "18745007-438b-4c68-bfa3-b6576d85a831",
-          "type": "Microsoft.Advisor/remediationTypes",
+          "type": "Microsoft.Advisor/remediations",
           "properties": {
             "recommendationTypeId": "18745007-438b-4c68-bfa3-b6576d85a831",
             "outputType": "executable",

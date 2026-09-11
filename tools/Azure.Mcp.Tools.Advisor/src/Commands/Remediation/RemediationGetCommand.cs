@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Remediation;
         "reversible, or grounded, along with its confidence, effort, and output type. Use whenever you need " +
         "to fix, resolve, remediate, or verify a recommendation, or want " +
         "the ARM, Bicep, CLI, PowerShell, or terraform artifacts and scripts to remediate it.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
