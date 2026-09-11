@@ -5457,9 +5457,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 azmcp cloudarchitect design [--question <question>] \
                             [--question-number <question-number>] \
                             [--total-questions <total-questions>] \
-                            [--answer <answer>] \
                             [--next-question-needed <true/false>] \
-                            [--confidence-score <confidence-score>] \
                             [--state <state>]
 
 # Example:
@@ -5467,8 +5465,7 @@ azmcp cloudarchitect design [--question <question>] \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cloudarchitect design --question "What type of application are you building?" \
                             --question-number 1 \
-                            --total-questions 5 \
-                            --confidence-score 0.1
+                            --total-questions 5
 ```
 
 ## Response Format

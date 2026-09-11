@@ -53,12 +53,6 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger)
     {
         base.ValidateOptions(options, validationResult);
 
-        // Validate confidence score is between 0.0 and 1.0
-        if (options.ConfidenceScore < 0.0 || options.ConfidenceScore > 1.0)
-        {
-            validationResult.Errors.Add("Confidence score must be between 0.0 and 1.0");
-        }
-
         // Validate question number is not negative
         if (options.QuestionNumber < 0)
         {
