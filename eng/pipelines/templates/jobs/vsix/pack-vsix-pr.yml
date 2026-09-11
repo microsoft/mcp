@@ -1,4 +1,5 @@
 jobs:
+# cspell:ignore changedfiles
 - job: PackVSIXForPR
   displayName: "Pack VSIX"
   steps:
