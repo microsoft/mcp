@@ -1168,6 +1168,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | group_resource_list | Show me what resources are in the resource group myRG | none |
 | group_resource_list | What resources exist in resource group myRG? | none |
 
+## Azure Resiliency Agent
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| resiliencyagent_conversation_ask | Is my application zone redundant? | clarification-required |
+| resiliencyagent_conversation_ask | My app uses an App Service plan, a SQL database and a storage account in East US 2. Assess its zonal resilience and tell me what to change. | none |
+| resiliencyagent_conversation_ask | Generate a zone-resilient Bicep template for a new Azure Container Registry in East US 2 | none |
+| resiliencyagent_conversation_ask | I am starting a new workload on Azure - where do I start with availability zones? | clarification-required |
+
 ## Azure Resource Health
 
 | Tool Name | Test Prompt | Interaction |

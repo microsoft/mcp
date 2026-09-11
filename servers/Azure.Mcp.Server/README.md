@@ -1303,6 +1303,13 @@ Example prompts that generate Azure CLI commands:
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
+
+### 🧭 Azure Resiliency Agent
+
+* "Is my application zone redundant?"
+* "My app uses an App Service plan, a SQL database and a storage account in East US 2. Assess its zonal resilience and tell me what to change."
+* "Generate a zone-resilient Bicep template for a new Azure Container Registry in East US 2"
+* "I am starting a new workload on Azure - where do I start with availability zones?"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
 * "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
@@ -1379,6 +1386,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, and drills
+- 🧭 **Azure Resiliency Agent** - Zonal resilience assessment for an application described in natural language, resilience recommendations and posture reports, and generation of zone-resilient Bicep, ARM and Terraform templates
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

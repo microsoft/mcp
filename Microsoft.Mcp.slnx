@@ -432,6 +432,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/tests/">
     <Project Path="tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResiliencyAgent/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ResiliencyAgent/src/">
+    <Project Path="tools/Azure.Mcp.Tools.ResiliencyAgent/src/Azure.Mcp.Tools.ResiliencyAgent.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResiliencyAgent/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.ResiliencyAgent/tests/Azure.Mcp.Tools.ResiliencyAgent.Tests/Azure.Mcp.Tools.ResiliencyAgent.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/src/">
     <Project Path="tools/Azure.Mcp.Tools.ResourceHealth/src/Azure.Mcp.Tools.ResourceHealth.csproj" />

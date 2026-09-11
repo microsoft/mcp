@@ -5368,6 +5368,39 @@
       "mappedToolList": [
         "insights_get"
       ]
+    },
+    {
+      "name": "ask_azure_resiliency_agent",
+      "description": "Ask the Azure Resiliency Agent about the zonal resilience of an Azure application. Assesses an application described in natural language, returns resilience recommendations and a posture report, and generates zone-resilient Bicep, ARM or Terraform templates for new resources. The agent asks its own clarifying questions and collects the answers itself, so a single call carries a whole multi-turn conversation and may run for several minutes.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it asks the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_conversation_ask"
+      ]
     }
   ]
 }

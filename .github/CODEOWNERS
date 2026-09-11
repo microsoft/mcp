@@ -382,6 +382,12 @@
 # ServiceLabel: %tools-ResilienceManagement
 # ServiceOwners:                                @g2vinay @gautam714
 
+# PRLabel: %tools-ResiliencyAgent
+/tools/Azure.Mcp.Tools.ResiliencyAgent/    @psaswata @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResiliencyAgent
+# ServiceOwners:                           @psaswata
+
 # PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp
 

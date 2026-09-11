@@ -4375,6 +4375,20 @@ azmcp resilience drill run resource get --service-group <service-group> \
                                         [--name <name>]
 ```
 
+### Azure Resiliency Agent Operations
+
+```bash
+# Ask the Azure Resiliency Agent about the zonal resilience of an Azure application.
+# Assesses an application described in natural language and generates zone-resilient
+# Bicep, ARM or Terraform templates for new resources.
+# The agent asks its own clarifying questions through MCP elicitation, so one call
+# carries a whole multi-turn conversation and may run for several minutes.
+# Pass the returned conversationId back to continue the same conversation.
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent conversation ask --request <request> \
+                                        [--conversation-id <conversation-id>]
+```
+
 ### Azure Resource Group Operations
 
 ```bash

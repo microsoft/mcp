@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the `resiliencyagent` tool area, exposing the Azure Resiliency Agent as a single conversation-level tool `resiliencyagent_conversation_ask`. It assesses the zonal resilience of an application described in natural language and generates zone-resilient Bicep, ARM and Terraform templates for new resources. The agent's clarifying questions are put to the user through MCP elicitation, so a full multi-turn conversation completes within one tool call, and generated templates and reports are written to the caller's working directory and returned as file paths."
