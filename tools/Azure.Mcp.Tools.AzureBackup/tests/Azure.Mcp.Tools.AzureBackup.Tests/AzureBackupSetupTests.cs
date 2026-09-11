@@ -128,6 +128,7 @@ public class AzureBackupSetupTests
         var root = setup.RegisterCommands(services);
         var container = root.SubGroup.First(g => g.Name == "container");
 
+        Assert.Contains(container.Commands, c => c.Key == "list-available");
         Assert.Contains(container.Commands, c => c.Key == "refresh");
     }
 

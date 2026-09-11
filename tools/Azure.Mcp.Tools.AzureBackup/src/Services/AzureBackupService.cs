@@ -441,6 +441,22 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, cancellationToken);
     }
 
+    public async Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? filter, string? storageAccount, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(resolved))
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' is a Data Protection (DPP) vault. Available container discovery is only supported for Recovery Services (RSV) vaults.");
+        }
+
+        return await rsvOps.ListAvailableContainersAsync(vaultName, resourceGroup, subscription, filter, storageAccount, tenant, cancellationToken);
+    }
+
     public async Task RefreshContainersAsync(
         string vaultName, string resourceGroup, string subscription,
         string? backupManagementType, string? tenant,

@@ -28,6 +28,7 @@ public interface IAzureBackupService
     Task<OperationResult> UndeleteProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string? vaultType = null, string? containerName = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Container operations (RSV only)
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(string vaultName, string resourceGroup, string subscription, string? filter = null, string? storageAccount = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task RefreshContainersAsync(string vaultName, string resourceGroup, string subscription, string? backupManagementType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Job operations
