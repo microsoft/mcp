@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Removed the unused `answer` and `confidence-score` parameters from the `cloudarchitect design` tool."
