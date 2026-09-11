@@ -31,6 +31,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
 
         For several records in one call use 'azmcp adme storage record fetch'.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
