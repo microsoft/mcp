@@ -783,6 +783,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
 
+## Azure IoT Operations
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iotoperations_instance_get | Get details for Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_get | Show the Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_list | List all Azure IoT Operations instances in my subscription |
+| iotoperations_instance_list | What Azure IoT Operations instances do I have in resource group <resource_group_name>? |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt | Interaction |

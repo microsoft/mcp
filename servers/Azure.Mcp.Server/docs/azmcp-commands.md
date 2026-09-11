@@ -3116,6 +3116,21 @@ azmcp iothub query run --subscription <subscription> \
                        [--max-count <max-count>]
 ```
 
+### Azure IoT Operations
+
+```bash
+# List Azure IoT Operations instances in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iotoperations instance list --subscription <subscription> \
+                                  [--resource-group <resource-group>]
+
+# Get details of a specific Azure IoT Operations instance
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iotoperations instance get --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --instance <instance-name>
+```
+
 ### Azure Key Vault Operations
 
 #### Administration
