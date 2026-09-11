@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Container;
     Name = "list-available",
     Title = "List Available Backup Containers",
     Description = "Lists storage accounts that a Recovery Services vault can register as Azure File share backup containers. Run container refresh first when the storage account is not yet discoverable. Only supported for Recovery Services vaults; use --storage-account to filter by account name or ARM resource ID.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

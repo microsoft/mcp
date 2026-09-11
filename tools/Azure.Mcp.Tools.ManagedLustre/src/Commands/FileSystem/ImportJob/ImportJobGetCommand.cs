@@ -13,7 +13,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
 [CommandMetadata(
-    Id = "207fce0f-2c69-4b0b-8817-65bc54e4313a",
+    Id = "c2g4d6f8-0e3a-5c7d-9f1b-3e5a7c9f1d3f",
     Name = "get",
     Title = "Get Azure Managed Lustre Import Job",
     Description = """

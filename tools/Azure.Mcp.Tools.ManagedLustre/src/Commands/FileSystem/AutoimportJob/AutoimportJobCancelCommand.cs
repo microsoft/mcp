@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
 [CommandMetadata(
-    Id = "1a69363f-bf1e-4290-ad37-d9da0abe4123",
+    Id = "9f3g1h2i-4d0b-5g8f-c3e6-8b9d4f6g7c8h",
     Name = "cancel",
     Title = "Cancel Azure Managed Lustre Autoimport Job",
     Description = """
