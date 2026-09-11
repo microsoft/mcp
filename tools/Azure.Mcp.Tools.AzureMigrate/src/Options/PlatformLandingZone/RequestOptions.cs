@@ -14,14 +14,8 @@ public sealed class RequestOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets the action to perform.
     /// </summary>
-    [Option(Description = "The action to perform: 'createmigrateproject' (create a new Azure Migrate project), 'list' (list landing zones under the project), 'get' (read one landing zone and its generation status), 'create' (create or update a landing zone and start generation), 'wait' (poll until generation reaches a terminal status), 'download' (download the generated output).")]
+    [Option(Description = "The action to perform: 'createmigrateproject' (create a new Azure Migrate project), 'list' (list landing zones under the project), 'get' (read the landing zone and its generation status), 'create' (create or update the landing zone and start generation), 'wait' (poll until generation reaches a terminal status), 'download' (download the generated output).")]
     public required string Action { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Platform Landing Zone resource name.
-    /// </summary>
-    [Option(Description = "The Platform Landing Zone resource name. Defaults to 'default'. A migrate project can hold several landing zones, each with its own name.")]
-    public string? LandingZoneName { get; set; }
 
     /// <summary>
     /// Gets or sets the network architecture (hubspoke or vwan).

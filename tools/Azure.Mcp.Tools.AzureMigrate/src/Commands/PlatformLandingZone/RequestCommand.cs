@@ -32,14 +32,15 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         **Actions:**
         - createmigrateproject: Create a new Azure Migrate project (requires --location)
         - list: List the landing zones under the migrate project
-        - get: Read one landing zone, its generation status, and its full effective configuration
-        - create: Create a landing zone, or update an existing one, and start a generation run
+        - get: Read the landing zone, its generation status, and its full effective configuration
+        - create: Create the landing zone, or update the existing one, and start a generation run
         - wait: Poll until the generation run reaches a terminal status (Succeeded or Failed)
         - download: Download the generated output.zip once generation has succeeded
 
         **Context (required for all actions except createmigrateproject):**
         - --subscription, --resource-group, --migrate-project-name
-        - --landing-zone-name is optional and defaults to 'default'
+        - A migrate project has exactly one Platform Landing Zone, always named 'default'. There is no
+          name parameter, and a project cannot hold more than one landing zone.
 
         **Configuration parameters (for 'create'):**
         | Parameter | Values | Notes |
@@ -100,9 +101,7 @@ public sealed class RequestCommand(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.MigrateProjectName,
-                string.IsNullOrWhiteSpace(options.LandingZoneName)
-                    ? PlatformLandingZoneConstants.DefaultLandingZoneName
-                    : options.LandingZoneName);
+                PlatformLandingZoneConstants.DefaultLandingZoneName);
 
             var result = options.Action.ToLowerInvariant() switch
             {
@@ -135,7 +134,7 @@ public sealed class RequestCommand(
         var landingZones = await service.ListAsync(context, cancellationToken);
         if (landingZones.Count == 0)
         {
-            return $"No Platform Landing Zones exist under migrate project '{context.MigrateProjectName}' in resource group " +
+            return $"No Platform Landing Zone exists under migrate project '{context.MigrateProjectName}' in resource group " +
                    $"'{context.ResourceGroupName}'. Use the 'create' action to create one.";
         }
 
@@ -147,7 +146,7 @@ public sealed class RequestCommand(
                 $"  - {landingZone.Name} (generation status: {landingZone.Status ?? "unknown"}, provisioning state: {landingZone.ProvisioningState ?? "unknown"})");
         }
 
-        builder.Append("Use the 'get' action with --landing-zone-name to see the full configuration of any of these.");
+        builder.Append("Use the 'get' action to see the full configuration.");
         return builder.ToString();
     }
 
@@ -159,7 +158,7 @@ public sealed class RequestCommand(
         var landingZone = await service.GetAsync(context, cancellationToken);
         if (landingZone is null)
         {
-            return $"No Platform Landing Zone named '{context.LandingZoneName}' exists under migrate project " +
+            return $"No Platform Landing Zone exists under migrate project " +
                    $"'{context.MigrateProjectName}'. Use the 'create' action to create one.";
         }
 

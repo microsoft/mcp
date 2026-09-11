@@ -126,7 +126,7 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
     }
 
     [Fact]
-    public async Task ExecuteAsync_DefaultsLandingZoneName()
+    public async Task ExecuteAsync_AlwaysUsesDefaultLandingZoneName()
     {
         Service.GetAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
             .Returns(CreateView());
@@ -143,21 +143,13 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
     }
 
     [Fact]
-    public async Task ExecuteAsync_HonorsExplicitLandingZoneName()
+    public void Command_DoesNotExposeALandingZoneNameOption()
     {
-        Service.GetAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
-            .Returns(CreateView("contoso-lz"));
+        // A migrate project holds exactly one Platform Landing Zone, always named 'default',
+        // so the tool must not offer a name parameter.
+        var command = Command.GetCommand();
 
-        await ExecuteCommandAsync(
-            "--action", "get",
-            "--subscription", Subscription,
-            "--resource-group", ResourceGroup,
-            "--migrate-project-name", ProjectName,
-            "--landing-zone-name", "contoso-lz");
-
-        await Service.Received(1).GetAsync(
-            Arg.Is<PlatformLandingZoneContext>(ctx => ctx.LandingZoneName == "contoso-lz"),
-            Arg.Any<CancellationToken>());
+        Assert.DoesNotContain(command.Options, option => option.Name == "landing-zone-name");
     }
 
     [Fact]
@@ -173,7 +165,7 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
             "--migrate-project-name", ProjectName);
 
         var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-        Assert.Contains("No Platform Landing Zone named 'default'", result.Message);
+        Assert.Contains("No Platform Landing Zone exists", result.Message);
     }
 
     [Fact]
@@ -206,7 +198,7 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
             "--migrate-project-name", ProjectName);
 
         var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-        Assert.Contains("No Platform Landing Zones exist", result.Message);
+        Assert.Contains("No Platform Landing Zone exists", result.Message);
     }
 
     [Fact]
@@ -381,7 +373,6 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
             "--subscription", Subscription,
             "--resource-group", ResourceGroup,
             "--migrate-project-name", ProjectName,
-            "--landing-zone-name", "contoso-lz",
             "--network-architecture", "hubspoke",
             "--firewall-type", "azurefirewall",
             "--bastion", "disabled",

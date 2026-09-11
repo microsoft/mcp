@@ -3818,12 +3818,11 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
 
 2. **Get Landing Zone** (`--action get`)
    ```bash
-   # Read one landing zone, its generation status, and its full effective configuration
+   # Read the landing zone, its generation status, and its full effective configuration
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
-                                                  --action get \
-                                                  [--landing-zone-name <landing-zone-name>]
+                                                  --action get
    ```
 
 3. **Create or Update Landing Zone** (`--action create`)
@@ -3836,7 +3835,6 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
                                                   --action create \
-                                                  [--landing-zone-name <landing-zone-name>] \
                                                   [--regions <comma-separated-regions>] \
                                                   [--network-architecture <hubspoke|vwan>] \
                                                   [--firewall-type <azurefirewall|nva|none>] \
@@ -3870,7 +3868,6 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
                                                   --action wait \
-                                                  [--landing-zone-name <landing-zone-name>] \
                                                   [--timeout-minutes <minutes>]
    ```
 
@@ -3881,7 +3878,6 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
                                                   --resource-group <resource-group> \
                                                   --migrate-project-name <migrate-project-name> \
                                                   --action download \
-                                                  [--landing-zone-name <landing-zone-name>] \
                                                   [--include-design-document]
    ```
 
