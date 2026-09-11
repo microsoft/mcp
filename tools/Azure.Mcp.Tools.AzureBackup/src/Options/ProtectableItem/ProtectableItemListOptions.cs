@@ -9,7 +9,4 @@ public sealed class ProtectableItemListOptions : BaseAzureBackupOptions
 {
     [Option(Description = AzureBackupOptionDefinitions.ProtectableItemWorkloadType)]
     public string? WorkloadType { get; set; }
-
-    [Option(Description = AzureBackupOptionDefinitions.Container)]
-    public string? Container { get; set; }
 }

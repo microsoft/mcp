@@ -64,7 +64,6 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
                 options.ResourceGroup,
                 options.Subscription!,
                 options.WorkloadType,
-                options.Container,
                 options.VaultType,
                 options.Tenant,
                 cancellationToken);
