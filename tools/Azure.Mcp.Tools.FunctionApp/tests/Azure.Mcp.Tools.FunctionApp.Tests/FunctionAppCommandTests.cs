@@ -206,4 +206,146 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
         var missingSubType = missingSub.Value.AssertProperty("type");
         Assert.Equal("RequestFailedException", missingSubType.GetString());
     }
+
+    [Theory]
+    [LiveTestOnly]
+    [InlineData("consumption", null, "python", null, "linux", null)]
+    [InlineData("flex", null, "dotnet-isolated", null, "linux", null)]
+    [InlineData("premium", null, "powershell", "windows", "windows", null)]
+    [InlineData("appservice", "B2", "node", "windows", "windows", "22.0.0")]
+    [InlineData("appservice", "P0V3", "java", "linux", "linux", "17.0")]
+    public async Task Should_create_function_app(
+        string planType,
+        string? planSku,
+        string runtime,
+        string? operatingSystem,
+        string expectedOperatingSystem,
+        string? runtimeVersion)
+    {
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-test-{planType}-{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "functionapp_create",
+            WithoutNulls(new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "plan-type", planType },
+                { "plan-sku", planSku },
+                { "runtime", runtime },
+                { "os", operatingSystem },
+                { "runtime-version", runtimeVersion }
+            }));
+
+        var functionApp = result.AssertProperty("functionApp");
+        Assert.Equal(JsonValueKind.Object, functionApp.ValueKind);
+        Assert.Equal(uniqueName, functionApp.AssertProperty("name").GetString());
+        Assert.Equal(uniqueName, functionApp.AssertProperty("resourceGroupName").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(functionApp.AssertProperty("appServicePlanName").GetString()));
+        Assert.Equal(expectedOperatingSystem, functionApp.AssertProperty("operatingSystem").GetString());
+    }
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task Should_create_function_app_with_connection_string_auth()
+    {
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-test-cs-{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "functionapp_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "plan-type", "appservice" },
+                { "plan-sku", "B1" },
+                { "runtime", "node" },
+                { "os", "windows" },
+                { "runtime-version", "22" },
+                { "storage-auth-mode", "connection-string" }
+            });
+
+        var functionApp = result.AssertProperty("functionApp");
+        Assert.Equal(uniqueName, functionApp.AssertProperty("name").GetString());
+        Assert.Equal("windows", functionApp.AssertProperty("operatingSystem").GetString());
+    }
+
+    [Theory]
+    [LiveTestOnly]
+    [InlineData("dotnet-isolated", null)]
+    [InlineData("node", "22")]
+    [InlineData("python", "3.12")]
+    public async Task Should_create_containerapp_function_app(string runtime, string? runtimeVersion)
+    {
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-test-ca-{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "functionapp_containerapp_create",
+            WithoutNulls(new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "runtime", runtime },
+                { "runtime-version", runtimeVersion }
+            }));
+
+        var functionApp = result.AssertProperty("functionApp");
+        Assert.Equal(uniqueName, functionApp.AssertProperty("name").GetString());
+        Assert.Equal("linux", functionApp.AssertProperty("operatingSystem").GetString());
+    }
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task Should_create_containerapp_function_app_with_connection_string_auth()
+    {
+        var uniqueName = RegisterOrRetrieveVariable("uniqueName", $"mcp-test-ca-cs-{DateTime.UtcNow:MMddHHmmss}");
+
+        var result = await CallToolAsync(
+            "functionapp_containerapp_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "runtime", "java" },
+                { "runtime-version", "17" },
+                { "storage-auth-mode", "connection-string" }
+            });
+
+        var functionApp = result.AssertProperty("functionApp");
+        Assert.Equal(uniqueName, functionApp.AssertProperty("name").GetString());
+        Assert.Equal("linux", functionApp.AssertProperty("operatingSystem").GetString());
+    }
+
+    [Theory]
+    [LiveTestOnly]
+    [InlineData("python", "windows")]
+    [InlineData("dotnet", "invalid-os")]
+    public async Task Should_reject_invalid_or_conflicting_os(string runtime, string os)
+    {
+        var result = await CallToolAsync(
+            "functionapp_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "function-app", $"mcp-test-invalid-{runtime}" },
+                { "location", "westus" },
+                { "runtime", runtime },
+                { "os", os }
+            });
+
+        Assert.True(result.HasValue);
+        result.Value.AssertProperty("message");
+    }
+
+    private static Dictionary<string, object?> WithoutNulls(Dictionary<string, object?> arguments) =>
+        arguments.Where(kvp => kvp.Value is not null).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 }

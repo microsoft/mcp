@@ -4,7 +4,9 @@
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.ResourceManager.AppService;
+using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
@@ -93,6 +95,109 @@ public sealed class FunctionAppService(IAzureService azureService, ICacheService
         return functionApps;
     }
 
+    public async Task<FunctionAppInfo> CreateFunctionApp(
+        string subscription,
+        string resourceGroup,
+        string functionApp,
+        string location,
+        string? appServicePlan = null,
+        string? planType = null,
+        string? planSku = null,
+        string? runtime = null,
+        string? runtimeVersion = null,
+        string? operatingSystem = null,
+        string? storageAccount = null,
+        string? storageAuthMode = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var useManagedIdentity = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode) ?? true;
+        var inputs = FunctionAppValidation.ValidateAndNormalizeInputs(
+            subscription, resourceGroup, functionApp, location,
+            runtime, runtimeVersion, planType, planSku, operatingSystem,
+            storageAccount, containerAppsEnvironmentName: null);
+
+        if (FunctionAppValidation.ParseHostingKind(inputs.PlanType) == HostingKind.ContainerApp)
+        {
+            throw new ArgumentException("Use the 'functionapp containerapp create' command to host a Function App in Azure Container Apps.");
+        }
+
+        var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
+        var resourceGroupResource = await EnsureResourceGroup(subscriptionResource, resourceGroup, location, cancellationToken);
+
+        var site = await FunctionAppAppServiceStrategy.CreateFunctionAppAsync(
+            resourceGroupResource, functionApp, location, appServicePlan, options, inputs.StorageAccountName, GetStorageEndpointSuffix(), cancellationToken);
+
+        return ToFunctionAppInfo(site);
+    }
+
+    public async Task<FunctionAppInfo> CreateContainerAppFunctionApp(
+        string subscription,
+        string resourceGroup,
+        string functionApp,
+        string location,
+        string? runtime = null,
+        string? runtimeVersion = null,
+        string? storageAccount = null,
+        string? storageAuthMode = null,
+        string? containerAppsEnvironment = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var useManagedIdentity = FunctionAppValidation.ParseStorageAuthMode(storageAuthMode) ?? true;
+        var inputs = FunctionAppValidation.ValidateAndNormalizeInputs(
+            subscription, resourceGroup, functionApp, location,
+            runtime, runtimeVersion, planType: "containerapp", planSku: null, operatingSystem: null,
+            storageAccount, containerAppsEnvironment);
+
+        var options = FunctionAppValidation.BuildCreateOptions(inputs, useManagedIdentity);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
+        var resourceGroupResource = await EnsureResourceGroup(subscriptionResource, resourceGroup, location, cancellationToken);
+
+        var site = await FunctionAppContainerAppStrategy.CreateFunctionAppAsync(
+            resourceGroupResource, functionApp, location, options, inputs.StorageAccountName, inputs.ContainerAppsEnvironmentName, GetStorageEndpointSuffix(), cancellationToken);
+
+        return ToFunctionAppInfo(site);
+    }
+
+    internal static async Task<ResourceGroupResource> EnsureResourceGroup(
+        SubscriptionResource subscription,
+        string resourceGroup,
+        string location,
+        CancellationToken cancellationToken)
+    {
+        var resourceGroups = subscription.GetResourceGroups();
+        if (await resourceGroups.ExistsAsync(resourceGroup, cancellationToken))
+        {
+            return (await resourceGroups.GetAsync(resourceGroup, cancellationToken)).Value;
+        }
+
+        var operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, resourceGroup, new ResourceGroupData(location), cancellationToken);
+        return operation.Value;
+    }
+
+    internal static FunctionAppInfo ToFunctionAppInfo(WebSiteResource site)
+    {
+        var data = site.Data;
+        return new FunctionAppInfo(
+            data.Name,
+            data.Id.ResourceGroupName,
+            data.Location.ToString(),
+            data.AppServicePlanId?.Name,
+            data.State,
+            data.DefaultHostName,
+            FunctionAppValidation.GetOperatingSystem(data.Kind),
+            data.Tags);
+    }
+
+    private string GetStorageEndpointSuffix() => AzureService.CloudConfiguration.CloudType switch
+    {
+        AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "core.chinacloudapi.cn",
+        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "core.usgovcloudapi.net",
+        _ => FunctionAppStorageProvisioner.DefaultStorageEndpointSuffix
+    };
+
     private static async Task RetrieveAndAddFunctionApp(
         AsyncPageable<WebSiteResource> sites,
         List<FunctionAppInfo> functionApps,
@@ -112,11 +217,9 @@ public sealed class FunctionAppService(IAzureService azureService, ICacheService
 
     private static void TryAddFunctionApp(WebSiteResource site, List<FunctionAppInfo> functionApps)
     {
-        if (site?.Data != null && site?.Data.Kind?.Contains("functionapp", StringComparison.OrdinalIgnoreCase) == true)
+        if (site?.Data != null && FunctionAppValidation.IsFunctionApp(site.Data))
         {
-            var data = site.Data;
-            functionApps.Add(new(data.Name, data.Id.ResourceGroupName, data.Location.ToString(), data.AppServicePlanId.Name,
-                data.State, data.DefaultHostName, data.Tags));
+            functionApps.Add(ToFunctionAppInfo(site));
         }
     }
 }
