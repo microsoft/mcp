@@ -2589,18 +2589,14 @@ azmcp mysql list --subscription <subscription> \
 
 # Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql database query --subscription <subscription> \
-                           --resource-group <resource-group> \
-                           --user <user> \
+azmcp mysql database query --user <user> \
                            --server <server> \
                            --database <database> \
                            --query <query>
 
 # Get the schema of a specific table in a MySQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql table schema get --subscription <subscription> \
-                             --resource-group <resource-group> \
-                             --user <user> \
+azmcp mysql table schema get --user <user> \
                              --server <server> \
                              --database <database> \
                              --table <table>

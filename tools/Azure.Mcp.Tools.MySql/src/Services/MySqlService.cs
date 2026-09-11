@@ -255,7 +255,7 @@ public sealed class MySqlService(IAzureService azureService)
         return dbs;
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query, CancellationToken cancellationToken)
+    public async Task<List<string>> ExecuteQueryAsync(string user, string server, string database, string query, CancellationToken cancellationToken)
     {
         ValidateQuerySafety(query);
 
@@ -301,7 +301,7 @@ public sealed class MySqlService(IAzureService azureService)
         return rows;
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table, CancellationToken cancellationToken)
+    public async Task<List<string>> GetTableSchemaAsync(string user, string server, string database, string table, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
