@@ -390,6 +390,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/tests/">
     <Project Path="tools/Azure.Mcp.Tools.MySql/tests/Azure.Mcp.Tools.MySql.Tests/Azure.Mcp.Tools.MySql.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/src/">
+    <Project Path="tools/Azure.Mcp.Tools.NetAppFiles/src/Azure.Mcp.Tools.NetAppFiles.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.NetAppFiles/tests/Azure.Mcp.Tools.NetAppFiles.UnitTests/Azure.Mcp.Tools.NetAppFiles.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Optimization/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Optimization/src/">
     <Project Path="tools/Azure.Mcp.Tools.Optimization/src/Azure.Mcp.Tools.Optimization.csproj" />
