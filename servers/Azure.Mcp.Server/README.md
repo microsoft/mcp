@@ -954,10 +954,18 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "Summarize the key themes from my Advisor recommendations"
+* "Show the top 10 most common Advisor recommendation types"
+* "Break down my Advisor recommendations by lifecycle status"
+* "Summarize active service-retirement recommendations by retirement date"
+* "Mark an Advisor recommendation as completed"
+* "Dismiss an Advisor recommendation because the risk is acceptable"
+* "Postpone an Advisor recommendation until December 31, 2026"
 * "Apply Advisor recommendations to IaaC files"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
 * "Get Advisor metadata for a recommendation type id"
+* "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
 ### 🔎 Azure AI Search
 
@@ -1099,10 +1107,28 @@ Example prompts that generate Azure CLI commands:
 * "Search documents in container 'items' from database 'mydb' where 'description' contains 'wireless headphones'"
 * "Find documents similar to 'noise cancelling earbuds' in container 'items' of database 'mydb' using vector property 'embedding'"
 
+### Azure Data Manager for Energy
+
+* "Check authentication and connectivity for my ADME endpoint and data partition"
+* "Get an ADME schema by kind"
+* "List shared Well schemas from my ADME data partition"
+* "Fetch multiple OSDU records by id from my ADME data partition"
+* "Get an OSDU record by id or version from my ADME data partition"
+* "List OSDU record ids for a kind in my ADME data partition"
+* "List all versions of an OSDU record in my ADME data partition"
+
 ### 🧮 Azure Data Explorer
 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
+
+### 🐘 Azure Database for PostgreSQL
+
+* "List all PostgreSQL servers in my subscription"
+* "Show me the tables in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the schema of table 'users' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
 
 ### 📣 Azure Event Grid
 
@@ -1185,7 +1211,8 @@ Example prompts that generate Azure CLI commands:
 
 ### 📊 Azure Monitor
 
-* "Query my Log Analytics workspace"
+* "Query an Analytics table in my Log Analytics workspace"
+* "Search a Basic or Auxiliary table in my Log Analytics workspace over the last day"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
 
@@ -1275,6 +1302,10 @@ Example prompts that generate Azure CLI commands:
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
+* "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
+* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
@@ -1307,10 +1338,10 @@ Example prompts that generate Azure CLI commands:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **44+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
-- 📊 **Azure Advisor** - Advisor recommendations
+- 📊 **Azure Advisor** - Advisor recommendation records, aggregate summaries, lifecycle state management, and recommendation metadata
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management
@@ -1324,6 +1355,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema, record retrieval, and version history operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
@@ -1340,7 +1372,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Logging, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning

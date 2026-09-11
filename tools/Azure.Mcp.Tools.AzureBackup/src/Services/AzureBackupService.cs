@@ -206,15 +206,47 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string? aksIncludedNamespaces, string? aksExcludedNamespaces,
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
+        DiskExclusionSpec? diskExclusion,
         string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
 
-        return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, tenant, cancellationToken)
-            : await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, cancellationToken);
+        if (VaultTypeResolver.IsRsv(resolvedType))
+        {
+            return await rsvOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, containerName, datasourceType, diskExclusion, tenant, cancellationToken);
+        }
+
+        if (diskExclusion is not null && diskExclusion.HasAnyValue)
+        {
+            throw new ArgumentException(
+                "Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks) is only supported for RSV (Recovery Services vault) IaaS VM protected items. " +
+                "See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for details.");
+        }
+
+        return await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, cancellationToken);
+    }
+
+    public async Task<ProtectResult> UpdateProtectionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string? policyName,
+        DiskExclusionSpec? diskExclusion,
+        string? vaultType, string? containerName,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+
+        if (!VaultTypeResolver.IsRsv(resolvedType))
+        {
+            throw new NotSupportedException(
+                "The 'protecteditem update-protection' command is only supported for RSV (Recovery Services vault) IaaS VM protected items. " +
+                "For DPP (Backup vault) instances, delete and recreate the protection to change policy or disk exclusion settings.");
+        }
+
+        return await rsvOps.UpdateProtectionAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, diskExclusion, containerName, tenant, cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -419,6 +451,22 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         }
 
         return await rsvOps.ListAvailableContainersAsync(vaultName, resourceGroup, subscription, filter, storageAccount, tenant, cancellationToken);
+    }
+
+    public async Task RefreshContainersAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? backupManagementType, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(resolved))
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' is a Data Protection (DPP) vault. Container refresh is only supported for Recovery Services (RSV) vaults.");
+        }
+
+        await rsvOps.RefreshContainersAsync(vaultName, resourceGroup, subscription, backupManagementType ?? "AzureStorage", tenant, cancellationToken);
     }
 
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(
@@ -809,41 +857,50 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? vaultType, string? tenant,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
+        string? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
-        ArgumentException.ThrowIfNullOrWhiteSpace(immutabilityState, nameof(immutabilityState));
 
-        var normalizedState = NormalizeImmutabilityState(immutabilityState);
+        // 'Enabled' is a backward-compatible alias for 'Unlocked'; both RSV and DPP APIs
+        // require the canonical 'Unlocked' value on the wire.
+        var normalizedState = immutabilityState == AzureBackupImmutabilityState.Enabled
+            ? AzureBackupImmutabilityState.Unlocked
+            : immutabilityState;
+
+        // TimeBased requires a duration; AsPerPolicy ignores it. Validate here (single source of truth).
+        if (normalizedState != AzureBackupImmutabilityState.Disabled
+            && immutabilityType == AzureBackupImmutabilityType.TimeBased
+            && (immutabilityDurationDays is null || immutabilityDurationDays < 30 || immutabilityDurationDays > 36135))
+        {
+            throw new ArgumentException(
+                "'--immutability-duration-days' is required when '--immutability-type' is 'TimeBased' and must be between 30 and 36135.",
+                nameof(immutabilityDurationDays));
+        }
+
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)
-            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, cancellationToken)
-            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, tenant, cancellationToken);
+            ? await rsvOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, immutabilityType, immutabilityDurationDays, tenant, cancellationToken)
+            : await dppOps.ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedState, immutabilityType, immutabilityDurationDays, tenant, cancellationToken);
     }
-
-    /// <summary>
-    /// Normalizes user-friendly immutability state values to the API-expected values.
-    /// Both RSV and DPP APIs expect 'Unlocked' (not 'Enabled') for the active-but-unlocked state.
-    /// Valid API values are: Disabled, Unlocked, Locked.
-    /// </summary>
-    private static string NormalizeImmutabilityState(string immutabilityState) =>
-        immutabilityState.ToUpperInvariant() switch
-        {
-            "ENABLED" => "Unlocked",
-            "UNLOCKED" => "Unlocked",
-            "DISABLED" => "Disabled",
-            "LOCKED" => "Locked",
-            _ => throw new ArgumentException(
-                $"Invalid immutability state '{immutabilityState}'. Valid values are: Enabled, Disabled, Unlocked, Locked.",
-                nameof(immutabilityState))
-        };
 
     public async Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? vaultType, string? softDeleteRetentionDays,
-        string? tenant, CancellationToken cancellationToken)
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
+        string? vaultType, string? tenant,
+        CancellationToken cancellationToken)
     {
+        if (softDeleteRetentionDays < 14 || softDeleteRetentionDays > 180)
+        {
+            throw new ArgumentException(
+                "'--soft-delete-retention-days' must be between 14 and 180.",
+                nameof(softDeleteRetentionDays));
+        }
+
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
         return VaultTypeResolver.IsRsv(resolved)

@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
         Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
         including available plans, pricing, and product metadata.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
         Requires a backup policy name via --policy. The operation is asynchronous;
         use 'azurebackup job get' to monitor the protection job progress.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -41,6 +42,12 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     public override void ValidateOptions(ProtectedItemProtectOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+
+        DiskExclusionValidator.ValidateDiskExclusionOptions(
+            options.DiskListSetting,
+            options.DisksList,
+            options.ExcludeAllDataDisks,
+            validationResult);
 
         if (options.DatasourceType is null)
         {
@@ -95,6 +102,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
         try
         {
+            var diskExclusion = DiskExclusionValidator.BuildDiskExclusionSpec(
+                options.DiskListSetting,
+                options.DisksList,
+                options.ExcludeAllDataDisks);
+
             var result = await _azureBackupService.ProtectItemAsync(
                 options.Vault,
                 options.ResourceGroup,
@@ -109,6 +121,7 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 options.AksLabelSelectors,
                 options.AksIncludeClusterScopeResources ? "true" : null,
                 options.AksSnapshotResourceGroup,
+                diskExclusion,
                 options.Tenant,
                 cancellationToken);
 

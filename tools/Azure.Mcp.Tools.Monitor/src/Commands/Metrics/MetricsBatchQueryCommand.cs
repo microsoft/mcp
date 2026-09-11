@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
     Name = "batchquery",
     Title = "Query Azure Monitor Metrics for Multiple Resources",
     Description = "Query Azure Monitor metrics for multiple resources in a single batch request. Returns time series data for the specified metrics, grouped by resource. All resources must belong to the same subscription, Azure region, and resource type.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

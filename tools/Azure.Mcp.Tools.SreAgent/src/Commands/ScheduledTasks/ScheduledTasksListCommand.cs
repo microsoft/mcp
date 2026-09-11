@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
     Name = "list",
     Title = "List Scheduled Tasks",
     Description = "List SRE Agent scheduled tasks.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

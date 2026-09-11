@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -122,7 +123,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? containerName,
-        string? datasourceType, string? tenant,
+        string? datasourceType, DiskExclusionSpec? diskExclusion, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -143,6 +144,16 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             subscription, resourceGroup, vaultName, policyName);
 
         var profile = RsvDatasourceRegistry.ResolveOrDefault(datasourceType);
+
+        // Selective disk backup is only meaningful for IaaS VM protected items.
+        var hasDiskExclusion = diskExclusion is not null && diskExclusion.HasAnyValue;
+        if (hasDiskExclusion && profile.ProtectedItemType != RsvProtectedItemType.IaasVm)
+        {
+            throw new ArgumentException(
+                "Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks) is only supported for RSV IaaS VM protected items. " +
+                $"The specified datasource resolved to '{profile.FriendlyName}'. " +
+                "See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for details.");
+        }
 
         if (profile.IsWorkloadType)
         {
@@ -238,13 +249,17 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vmProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, container, vmProtectedItemName);
 
+        var vmProtectedItem = new IaasComputeVmProtectedItem
+        {
+            PolicyId = policyArmId,
+            SourceResourceId = new ResourceIdentifier(datasourceId)
+        };
+
+        ApplyDiskExclusionToProtectedItem(vmProtectedItem, diskExclusion);
+
         var vmProtectedItemData = new BackupProtectedItemData(vaultLocation)
         {
-            Properties = new IaasComputeVmProtectedItem
-            {
-                PolicyId = policyArmId,
-                SourceResourceId = new ResourceIdentifier(datasourceId)
-            }
+            Properties = vmProtectedItem
         };
 
         var vmProtectedItemResource = armClient.GetBackupProtectedItemResource(vmProtectedItemId);
@@ -576,12 +591,36 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         // since RSV vault patch only supports identity and tag updates.
         if (!string.IsNullOrEmpty(softDelete))
         {
-            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, cancellationToken);
+            if (!Enum.TryParse<AzureBackupSoftDeleteState>(softDelete, ignoreCase: true, out var softDeleteEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid soft delete state '{softDelete}'. Valid values: Off, On, AlwaysOn.",
+                    nameof(softDelete));
+            }
+            if (!int.TryParse(softDeleteRetentionDays, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
+            {
+                throw new ArgumentException(
+                    "Soft delete retention days is required (14-180) when updating soft delete state via 'vault update'.",
+                    nameof(softDeleteRetentionDays));
+            }
+            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteEnum, retentionDays, tenant, cancellationToken);
         }
 
         if (!string.IsNullOrEmpty(immutabilityState))
         {
-            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, cancellationToken);
+            if (!Enum.TryParse<AzureBackupImmutabilityState>(immutabilityState, ignoreCase: true, out var immutabilityEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid immutability state '{immutabilityState}'. Valid values: Disabled, Unlocked, Enabled, Locked.",
+                    nameof(immutabilityState));
+            }
+            var normalizedImmutability = immutabilityEnum == AzureBackupImmutabilityState.Enabled
+                ? AzureBackupImmutabilityState.Unlocked
+                : immutabilityEnum;
+            // 'vault update' does not currently plumb immutability-type / duration; default to
+            // AsPerPolicy which is safe for both Disabled and Unlocked. Users needing TimeBased
+            // should use 'governance immutability' instead.
+            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedImmutability, AzureBackupImmutabilityType.AsPerPolicy, immutabilityDurationDays: null, tenant, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
@@ -1071,84 +1110,146 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, CancellationToken cancellationToken)
-    {
-        ValidateRequiredParameters(
-            (nameof(vaultName), vaultName),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(immutabilityState), immutabilityState));
-
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
-        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
-        var vault = await vaultResource.GetAsync(cancellationToken);
-
-        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
-        {
-            Properties = new RecoveryServicesVaultProperties
-            {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    ImmutabilityState = new ImmutabilityState(immutabilityState)
-                }
-            }
-        };
-        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
-
-        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'");
-    }
-
-    public async Task<OperationResult> ConfigureSoftDeleteAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? softDeleteRetentionDays,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(softDeleteState), softDeleteState));
+            (nameof(subscription), subscription));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        var rsvSoftDeleteState = softDeleteState.ToUpperInvariant() switch
+        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
         {
-            "ON" => RecoveryServicesSoftDeleteState.Enabled,
-            "OFF" => RecoveryServicesSoftDeleteState.Disabled,
-            "ALWAYSON" => RecoveryServicesSoftDeleteState.AlwaysON,
-            _ => new RecoveryServicesSoftDeleteState(softDeleteState)
+            Properties = new RecoveryServicesVaultProperties
+            {
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
+            }
+        };
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for an immutability update.
+    /// Extracted for regression testing: api-version 2026-05-01+ requires
+    /// <c>ImmutabilitySettings.Configuration.Type</c> whenever the state is not <c>Disabled</c>.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        var immutabilitySettings = new ImmutabilitySettings
+        {
+            State = immutabilityState.ToString() switch
+            {
+                nameof(AzureBackupImmutabilityState.Disabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Disabled,
+                nameof(AzureBackupImmutabilityState.Unlocked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                nameof(AzureBackupImmutabilityState.Locked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Locked,
+                // 'Enabled' should have been normalized to 'Unlocked' upstream; guard here just in case.
+                nameof(AzureBackupImmutabilityState.Enabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+            },
         };
 
-        var softDeleteSettings = new RecoveryServicesSoftDeleteSettings()
+        // api-version 2026-05-01+ requires ImmutabilityConfiguration whenever state != Disabled.
+        // For Disabled, omit Configuration so we don't send a nonsensical Type/Duration pair.
+        if (immutabilityState != AzureBackupImmutabilityState.Disabled)
         {
-            SoftDeleteState = rsvSoftDeleteState,
-        };
-
-        if (int.TryParse(softDeleteRetentionDays, out var retentionDays))
-        {
-            softDeleteSettings.SoftDeleteRetentionPeriodInDays = retentionDays;
+            immutabilitySettings.Configuration = new ImmutabilityConfiguration
+            {
+                Type = immutabilityType switch
+                {
+                    AzureBackupImmutabilityType.AsPerPolicy => ImmutabilityType.AsPerPolicy,
+                    AzureBackupImmutabilityType.TimeBased => ImmutabilityType.TimeBased,
+                    _ => throw new ArgumentOutOfRangeException(nameof(immutabilityType), immutabilityType, "Unsupported immutability type."),
+                },
+                DurationInDays = immutabilityType == AzureBackupImmutabilityType.TimeBased ? immutabilityDurationDays : null,
+            };
         }
+
+        return new RecoveryServicesSecuritySettings
+        {
+            ImmutabilitySettings = immutabilitySettings,
+        };
+    }
+
+    public async Task<OperationResult> ConfigureSoftDeleteAsync(
+        string vaultName, string resourceGroup, string subscription,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
 
         var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
         {
             Properties = new RecoveryServicesVaultProperties
             {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    SoftDeleteSettings = softDeleteSettings
-                }
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
             }
         };
 
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'");
+        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing: api-version 2026-02-01+ requires both
+    /// <c>SoftDeleteRetentionPeriodInDays</c> and <c>EnhancedSecurityState</c> to be set
+    /// whenever the state changes; RP rejects state-only patches.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var rsvSoftDeleteState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesSoftDeleteState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesSoftDeleteState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesSoftDeleteState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        // Mirror EnhancedSecurityState from SoftDeleteState. api-version 2026-02-01+ rejects
+        // updates missing this field. AlwaysON is IRREVERSIBLE — mirror it exactly.
+        var enhancedSecurityState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesEnhancedSecurityState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesEnhancedSecurityState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesEnhancedSecurityState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new RecoveryServicesSecuritySettings
+        {
+            SoftDeleteSettings = new RecoveryServicesSoftDeleteSettings
+            {
+                SoftDeleteState = rsvSoftDeleteState,
+                SoftDeleteRetentionPeriodInDays = softDeleteRetentionDays,
+                EnhancedSecurityState = enhancedSecurityState,
+            },
+        };
     }
 
     public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
@@ -1386,6 +1487,16 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var immutabilityState = securitySettings?.ImmutabilityState?.ToString();
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
 
         string? crossRegionRestoreState = null;
         // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
@@ -1424,7 +1535,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             MuaResourceGuardId: muaResourceGuardId,
             CrossRegionRestoreState: crossRegionRestoreState,
             EncryptionState: encryptionState,
-            EncryptionKeyUri: encryptionKeyUri);
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)
@@ -1435,6 +1547,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string? policyName = null;
         DateTimeOffset? lastBackupTime = null;
         string? container = null;
+        ProtectedItemDetails? protectedItemDetails = null;
 
         if (data.Properties is BackupGenericProtectedItem genericItem)
         {
@@ -1445,14 +1558,141 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
             if (genericItem is IaasVmProtectedItem vmItem)
             {
-                protectionStatus = vmItem.ProtectionState?.ToString();
+                protectionStatus = vmItem.ProtectionStatus;
                 lastBackupTime = vmItem.LastBackupOn;
+
+                var extendedInfo = vmItem.ExtendedInfo;
+                var extendedProperties = vmItem.ExtendedProperties;
+                var diskExclusionProperties = extendedProperties?.DiskExclusionProperties;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: vmItem.BackupManagementType?.ToString(),
+                    WorkloadType: vmItem.WorkloadType?.ToString(),
+                    LastRecoverOn: vmItem.LastRecoverOn,
+                    BackupSetName: vmItem.BackupSetName,
+                    CreateMode: vmItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: vmItem.DeferredDeletedOn,
+                    IsScheduledForDeferredDelete: vmItem.IsScheduledForDeferredDelete,
+                    DeferredDeleteTimeRemaining: vmItem.DeferredDeleteTimeRemaining?.ToString(),
+                    IsDeferredDeleteScheduleUpcoming: vmItem.IsDeferredDeleteScheduleUpcoming,
+                    IsRehydrate: vmItem.IsRehydrate,
+                    ResourceGuardOperationRequests: vmItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: vmItem.IsArchiveEnabled,
+                    PolicyName: vmItem.PolicyName,
+                    SoftDeleteRetentionPeriodInDays: vmItem.SoftDeleteRetentionPeriodInDays,
+                    SoftDeleteRetentionPeriod: vmItem.SoftDeleteRetentionPeriod,
+                    VaultId: vmItem.VaultId?.ToString(),
+                    FriendlyName: vmItem.FriendlyName,
+                    VirtualMachineId: vmItem.VirtualMachineId?.ToString(),
+                    ProtectionStatus: vmItem.ProtectionStatus,
+                    ProtectionState: vmItem.ProtectionState?.ToString(),
+                    HealthStatus: vmItem.HealthStatus?.ToString(),
+                    HealthDetails: vmItem.HealthDetails?.Select(MapToProtectedItemHealthDetails).ToList(),
+                    KpisHealths: vmItem.KpisHealths?.ToDictionary(
+                        static kpi => kpi.Key,
+                        static kpi => new ProtectedItemKpiHealthDetails(
+                            kpi.Value?.ResourceHealthStatus?.ToString(),
+                            kpi.Value?.ResourceHealthDetails?.Select(MapToProtectedItemHealthDetails).ToList())),
+                    LastBackupStatus: vmItem.LastBackupStatus,
+                    ProtectedItemDataId: vmItem.ProtectedItemDataId,
+                    PolicyType: vmItem.PolicyType,
+                    LastBackupOn: vmItem.LastBackupOn,
+                    OldestRecoverOn: extendedInfo?.OldestRecoverOn,
+                    OldestRecoveryPointInVault: extendedInfo?.OldestRecoveryPointInVault,
+                    OldestRecoveryPointInArchive: extendedInfo?.OldestRecoveryPointInArchive,
+                    NewestRecoveryPointInArchive: extendedInfo?.NewestRecoveryPointInArchive,
+                    RecoveryPointCount: extendedInfo?.RecoveryPointCount,
+                    IsPolicyInconsistent: extendedInfo?.IsPolicyInconsistent,
+                    ExtendedProperties: extendedProperties is null
+                        ? null
+                        : new ProtectedItemExtendedProperties(
+                            diskExclusionProperties is null
+                                ? null
+                                : new ProtectedItemDiskExclusionProperties(
+                                    diskExclusionProperties.DiskLunList?.ToList(),
+                                    diskExclusionProperties.IsInclusionList),
+                            extendedProperties.LinuxVmApplicationName));
+
             }
             else if (genericItem is VmWorkloadProtectedItem workloadItem)
             {
                 protectionStatus = workloadItem.ProtectionState?.ToString();
                 lastBackupTime = workloadItem.LastBackupOn;
                 datasourceType = workloadItem.WorkloadType?.ToString();
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: null,
+                    BackupSetName: null,
+                    CreateMode: null,
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: null,
+                    IsArchiveEnabled: null,
+                    PolicyName: policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: null,
+                    FriendlyName: null,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: workloadItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: workloadItem.LastBackupStatus?.ToString(),
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
+            }
+            else if (genericItem is FileshareProtectedItem fileShareItem)
+            {
+                protectionStatus = fileShareItem.ProtectionState?.ToString();
+                lastBackupTime = fileShareItem.LastBackupOn;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: fileShareItem.LastRecoverOn,
+                    BackupSetName: fileShareItem.BackupSetName,
+                    CreateMode: fileShareItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: fileShareItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: fileShareItem.IsArchiveEnabled,
+                    PolicyName: fileShareItem.PolicyName ?? policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: fileShareItem.VaultId?.ToString(),
+                    FriendlyName: fileShareItem.FriendlyName,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: fileShareItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: fileShareItem.LastBackupStatus,
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
             }
         }
 
@@ -1465,8 +1705,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             datasourceId,
             policyName,
             lastBackupTime,
-            container);
+            container,
+            protectedItemDetails);
     }
+
+    private static ProtectedItemHealthDetails MapToProtectedItemHealthDetails(ResourceHealthDetails details) =>
+        new(details.Code, details.Title, details.Message, details.Recommendations?.ToList());
 
     private static BackupPolicyInfo MapToPolicyInfo(BackupProtectionPolicyData data)
     {
@@ -2037,6 +2281,40 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         _ => container.GetType().Name
     };
 
+    public async Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string backupManagementType,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var filter = backupManagementType switch
+        {
+            "AzureStorage" or "AzureIaasVM" or "AzureWorkload" => $"backupManagementType eq '{backupManagementType}'",
+            _ => throw new ArgumentException("backupManagementType must be 'AzureStorage', 'AzureIaasVM', or 'AzureWorkload'.", nameof(backupManagementType))
+        };
+
+        var response = await rgResource.RefreshProtectionContainerAsync(
+            vaultName,
+            FabricName,
+            filter: filter,
+            cancellationToken: cancellationToken);
+
+        if (response.Status != (int)HttpStatusCode.Accepted)
+        {
+            throw new RequestFailedException(response.Status, "The container discovery request was not accepted.");
+        }
+    }
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.
     /// The REST API filter expects specific types like "SAPHanaDatabase" but users

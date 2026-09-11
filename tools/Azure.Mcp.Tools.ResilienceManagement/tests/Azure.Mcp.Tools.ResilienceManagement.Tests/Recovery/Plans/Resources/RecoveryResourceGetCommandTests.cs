@@ -29,7 +29,7 @@ public class RecoveryResourceGetCommandTests : CommandUnitTestsBase<RecoveryReso
         Service.ListRecoveryResourcesAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryResourceGetCommandResult);
         Assert.NotNull(result.RecoveryResources);
@@ -42,7 +42,7 @@ public class RecoveryResourceGetCommandTests : CommandUnitTestsBase<RecoveryReso
         Service.GetRecoveryResourceAsync(ServiceGroup, RecoveryPlan, "member1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Element("member1"));
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--name", "member1");
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan, "--name", "member1");
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryResourceGetCommandResult);
         Assert.Null(result.RecoveryResources);
@@ -56,7 +56,7 @@ public class RecoveryResourceGetCommandTests : CommandUnitTestsBase<RecoveryReso
         Service.ListRecoveryResourcesAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
