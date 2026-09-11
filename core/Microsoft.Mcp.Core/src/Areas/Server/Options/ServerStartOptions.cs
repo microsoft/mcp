@@ -92,10 +92,16 @@ public sealed class ServerStartOptions
 
     /// <summary>
     /// Gets or sets the Azure cloud environment for authentication.
-    /// Supports well-known cloud names (AzureCloud, AzureChinaCloud, AzureUSGovernment).
+    /// Supports well-known cloud names (AzureCloud, AzureChinaCloud, AzureUSGovernment) and custom.
     /// </summary>
-    [Option(Description = "Azure cloud environment for authentication. Valid values: AzureCloud (default), AzureChinaCloud, or AzureUSGovernment")]
+    [Option(Description = "Azure cloud environment for authentication. Valid values: AzureCloud (default), AzureChinaCloud, AzureUSGovernment, or custom.")]
     public string? Cloud { get; set; }
+
+    /// <summary>
+    /// Gets or sets the path to the custom cloud metadata JSON file.
+    /// </summary>
+    [Option(Description = "Path to a JSON file describing a custom cloud. Required when --cloud custom is used.")]
+    public string? CustomCloudConfig { get; set; }
 
     /// <summary>
     /// Gets a value indicating whether the server is running in HTTP (remote) mode.

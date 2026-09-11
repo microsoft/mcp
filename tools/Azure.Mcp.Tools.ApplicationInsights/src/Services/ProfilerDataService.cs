@@ -184,7 +184,7 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://dataplane.diagnosticservices.azure.com",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://dataplane.diagnosticservices.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://dataplane.diagnosticservices.azure.us",
-            _ => "https://dataplane.diagnosticservices.azure.com"
+            _ => throw new NotSupportedException("Application Insights Profiler is not supported for custom clouds until its SDK supports custom endpoints.")
         };
     }
 
@@ -195,7 +195,7 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "api://dataplane.diagnosticservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "api://dataplane.diagnosticservices.azure.cn/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "api://dataplane.diagnosticservices.azure.us/.default",
-            _ => "api://dataplane.diagnosticservices.azure.com/.default"
+            _ => throw new NotSupportedException("Application Insights Profiler is not supported for custom clouds until its SDK supports custom endpoints.")
         };
     }
 }

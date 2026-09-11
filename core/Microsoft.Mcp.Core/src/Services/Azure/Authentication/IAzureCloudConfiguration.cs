@@ -25,4 +25,19 @@ public interface IAzureCloudConfiguration
     /// Gets the type of Azure cloud environment.
     /// </summary>
     AzureCloudConfiguration.AzureCloud CloudType { get; }
+
+    /// <summary>
+    /// Gets the Log Analytics endpoint for the configured cloud.
+    /// </summary>
+    Uri LogAnalyticsEndpoint { get; }
+
+    /// <summary>
+    /// Gets the OAuth scope used for Log Analytics queries.
+    /// </summary>
+    string LogAnalyticsScope { get; }
+
+    /// <summary>
+    /// Gets the Application Insights endpoint for the configured cloud.
+    /// </summary>
+    Uri ApplicationInsightsEndpoint { get; }
 }
