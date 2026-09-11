@@ -18,6 +18,8 @@ public abstract class AdmeRecordedTestsBase(
 {
     private const string PlaybackEndpoint = "https://recording.energy.azure.com";
     private const string PlaybackDataPartition = "recording-partition";
+    private const string PlaybackCursor = "recording-cursor";
+    private const string SanitizedEntraObjectId = "00000000-0000-0000-0000-000000000000";
 
     /// <inheritdoc />
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
@@ -37,6 +39,19 @@ public abstract class AdmeRecordedTestsBase(
         {
             Value = PlaybackDataPartition,
         }),
+        // Storage audit fields contain the live caller's Entra object ID.
+        new(new("$..createUser")
+        {
+            Value = SanitizedEntraObjectId,
+        }),
+        new(new("$..modifyUser")
+        {
+            Value = SanitizedEntraObjectId,
+        }),
+        new(new("$..cursor")
+        {
+            Value = PlaybackCursor,
+        }),
     ];
 
     /// <inheritdoc />
@@ -47,6 +62,12 @@ public abstract class AdmeRecordedTestsBase(
         {
             Regex = "https://[^/]+",
             Value = PlaybackEndpoint,
+        }),
+        new(new()
+        {
+            Regex = "[?&]cursor=(?<cursor>[^&#]+)",
+            GroupForReplace = "cursor",
+            Value = PlaybackCursor,
         }),
     ];
 

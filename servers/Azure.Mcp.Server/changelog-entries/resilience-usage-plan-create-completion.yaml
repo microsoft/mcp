@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Bounded resilience usage plan and enrollment creation and updates to 10 minutes while waiting for provisioning to complete."

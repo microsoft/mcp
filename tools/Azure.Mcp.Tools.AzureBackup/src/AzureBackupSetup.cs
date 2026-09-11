@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
+using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
@@ -46,6 +47,8 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectedItemUpdateProtectionCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
+
+        services.AddSingleton<ContainerRefreshCommand>();
 
         services.AddSingleton<BackupStatusCommand>();
 
@@ -114,6 +117,11 @@ public sealed class AzureBackupSetup : IAreaSetup
         var protectableItem = new CommandGroup("protectableitem", "Protectable item operations - List discovered databases available for protection.");
         azureBackup.AddSubGroup(protectableItem);
         protectableItem.AddCommand<ProtectableItemListCommand>(serviceProvider);
+
+        var container = new CommandGroup("container",
+            "Container operations - Manage RSV protection containers: trigger discovery (refresh) so the vault picks up new/changed storage accounts, VMs, or workload servers. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
+        azureBackup.AddSubGroup(container);
+        container.AddCommand<ContainerRefreshCommand>(serviceProvider);
 
         var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);

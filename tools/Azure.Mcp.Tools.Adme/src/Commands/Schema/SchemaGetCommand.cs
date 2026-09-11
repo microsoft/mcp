@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     Name = "get",
     Title = "Get ADME Schema",
     Description = """
-        Get the full JSON schema definition for one OSDU kind - its fields, types, and structure - from a data
+        Get one ADME schema's full JSON definition for specified OSDU kind from a data
         partition.
 
         Required: --kind, --endpoint, and --data-partition. Optional: --tenant for cross-tenant authentication.

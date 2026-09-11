@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
+using Azure.ResourceManager.MySql.FlexibleServers.Models;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MySqlConnector;
@@ -412,6 +413,7 @@ public sealed class MySqlService(IAzureService azureService)
 
         var configData = configuration.Value.Data;
         configData.Value = value;
+        configData.Source = MySqlFlexibleServerConfigurationSource.UserOverride;
 
         var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
         await WaitForLroCompletionAsync(updateOperation, cancellationToken);

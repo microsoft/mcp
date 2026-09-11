@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
@@ -26,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareCreateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareCreateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareCreateOptions options, CancellationToken cancellationToken)
     {

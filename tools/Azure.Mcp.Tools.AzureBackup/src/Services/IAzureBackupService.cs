@@ -27,6 +27,9 @@ public interface IAzureBackupService
     Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(string vaultName, string resourceGroup, string subscription, AzureBackupProtectableItemWorkloadType? workloadType = null, string? containerName = null, AzureBackupVaultType? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<OperationResult> UndeleteProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, AzureBackupVaultType? vaultType = null, string? containerName = null, string? tenant = null, CancellationToken cancellationToken = default);
 
+    // Container operations (RSV only)
+    Task RefreshContainersAsync(string vaultName, string resourceGroup, string subscription, string? backupManagementType = null, string? tenant = null, CancellationToken cancellationToken = default);
+
     // Job operations
     Task<BackupJobInfo> GetJobAsync(string vaultName, string resourceGroup, string subscription, string jobId, AzureBackupVaultType? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<List<BackupJobInfo>> ListJobsAsync(string vaultName, string resourceGroup, string subscription, AzureBackupVaultType? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);

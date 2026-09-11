@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectableItem;
 
 public sealed class ProtectableItemListOptions : BaseAzureBackupOptions
 {
-    [Option(Description = AzureBackupOptionDefinitions.WorkloadType)]
+    [Option(Description = AzureBackupOptionDefinitions.ProtectableItemWorkloadType)]
     public AzureBackupProtectableItemWorkloadType? WorkloadType { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.Container)]
