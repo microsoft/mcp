@@ -121,12 +121,16 @@ internal static class PlatformLandingZoneRequestBuilder
 
         if (disabled)
         {
-            overrides.Add(new JsonObject
+            // Typed as JsonNode so the non-generic overload is selected: JsonArray.Add<T> is annotated
+            // RequiresUnreferencedCode and fails the trimmed publish.
+            JsonNode entry = new JsonObject
             {
                 ["scope"] = scope,
                 ["assignmentName"] = assignmentName,
                 ["enabled"] = false
-            });
+            };
+
+            overrides.Add(entry);
         }
     }
 
@@ -199,11 +203,15 @@ internal static class PlatformLandingZoneRequestBuilder
         var array = new JsonArray();
         for (var index = 0; index < regions.Length; index++)
         {
-            array.Add(new JsonObject
+            // Typed as JsonNode so the non-generic overload is selected: JsonArray.Add<T> is annotated
+            // RequiresUnreferencedCode and fails the trimmed publish.
+            JsonNode region = new JsonObject
             {
                 ["name"] = regions[index],
                 ["role"] = index == 0 ? "Primary" : "Secondary"
-            });
+            };
+
+            array.Add(region);
         }
 
         properties["regions"] = array;
