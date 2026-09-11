@@ -121,7 +121,7 @@ Describes the properties for the target.
 | Name | Type | Required | Description |
 |--|--|--|--|
 | `defaultSchema` | String | false | The default schema for the target. |
-| `enableDeltaChangeDataFeed` | Boolean | false | Enables the Delta Change Data Feed for the mirrored database when set to `true`. |
+| `enableDeltaChangeDataFeed` | Boolean | false | When `true`, enables Delta Change Data Feed (CDF) for the mirrored database. This property is specified as `target.typeProperties.enableDeltaChangeDataFeed`. |
 | `format` | String | true | The format for the target (currently only `Delta` is supported). |
 | `retentionInDays` | Integer | false | The number of days to retain mirrored data. Supported values are from 1 through 30; the default value is 7. |
 

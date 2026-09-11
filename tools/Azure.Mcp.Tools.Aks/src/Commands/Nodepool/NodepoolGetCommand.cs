@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
     Name = "get",
     Title = "Get Azure Kubernetes Service (AKS) Node Pool Details",
     Description = "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -38,7 +39,6 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger, IAksS
                 options.Cluster!,
                 options.Nodepool,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolGetCommandResult);

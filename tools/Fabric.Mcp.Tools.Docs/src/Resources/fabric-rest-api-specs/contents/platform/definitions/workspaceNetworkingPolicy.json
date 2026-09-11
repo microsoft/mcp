@@ -219,6 +219,16 @@
         ]
       }
     },
+    "WorkspaceInboundExternalDataSharesPolicy": {
+      "type": "object",
+      "description": "The inbound networking exception policy for External Data Shares in a workspace.",
+      "properties": {
+        "defaultAction": {
+          "description": "Defines whether External Data Shares traffic is allowed to bypass inbound networking restrictions.",
+          "$ref": "#/definitions/DefaultAction"
+        }
+      }
+    },
     "InboundFirewallConfiguration": {
       "type": "object",
       "description": "This object defines the complete set of firewall rules to manage inbound access protection as part of a workspace’s networking communication policy. It ensures that only explicitly authorized IP addresses are permitted for inbound communication. \nWhen submitted via the PUT API, this object creates or fully replaces the existing IP firewall configuration for the workspace. These rules are enforced only when the workspace’s network communication policy has inbound.publicAccessRules.defaultAction set to Deny.",

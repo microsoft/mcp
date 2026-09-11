@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Knowledge;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -28,7 +27,6 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedSources);
 
@@ -47,7 +45,6 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is("source1"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([expectedSource]);
 
@@ -65,7 +62,6 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync("--service", "service123");
@@ -84,7 +80,6 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is(serviceName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

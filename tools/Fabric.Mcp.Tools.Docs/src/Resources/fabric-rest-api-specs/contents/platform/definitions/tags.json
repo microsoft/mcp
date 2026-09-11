@@ -18,8 +18,7 @@
                     "type": "array",
                     "items": {
                     "type": "string",
-                    "format": "uuid",
-                    "readOnly": false
+                    "format": "uuid"
                     }
                 }
             }
@@ -36,8 +35,7 @@
                     "type": "array",
                     "items": {
                     "type": "string",
-                    "format": "uuid",
-                    "readOnly": false
+                    "format": "uuid"
                     }
                 }
             }

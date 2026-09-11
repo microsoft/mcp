@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
         You can set the display name and serialized data JSON content for the workbook.
         Returns the created workbook information upon successful completion.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -48,7 +49,6 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
                  * otherwise the workbook will display an error when opening.
                  */
                 options.SourceId ?? "azure monitor",
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken) ?? throw new InvalidOperationException("Failed to create workbook");
 

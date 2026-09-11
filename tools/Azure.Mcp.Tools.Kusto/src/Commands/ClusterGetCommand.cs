@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Name = "get",
     Title = "Get Kusto Cluster Details",
     Description = "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -38,7 +39,6 @@ public sealed class ClusterGetCommand(
                 options.Subscription!,
                 options.Cluster,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = cluster is null ?

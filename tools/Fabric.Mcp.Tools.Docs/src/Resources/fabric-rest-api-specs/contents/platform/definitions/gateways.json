@@ -200,8 +200,19 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways.",
-                    "type": "integer"
+                    "description": "The number of member gateways. A number between 1 and 9.",
+                    "type": "integer",
+                    "readOnly": false
+                },
+                "maxMemberGatewayCount": {
+                    "description": "The maximum number of member gateways. A number between 1 and 9.",
+                    "type": "integer",
+                    "readOnly": false
+                },
+                "minMemberGatewayCount": {
+                    "description": "The minimum number of member gateways. A number between 1 and 9.",
+                    "type": "integer",
+                    "readOnly": false
                 }
             }
         },
@@ -257,7 +268,7 @@
             }
         },
         "CreateVirtualNetworkGatewayRequest": {
-            "required": ["displayName", "capacityId", "virtualNetworkAzureResource", "inactivityMinutesBeforeSleep", "numberOfMemberGateways"],
+            "required": ["displayName", "capacityId", "virtualNetworkAzureResource", "inactivityMinutesBeforeSleep"],
             "type": "object",
             "allOf": [
                 {
@@ -284,8 +295,19 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways. A number between 1 and 9.",
-                    "type": "integer"
+                    "description": "The number of member gateways. A number between 1 and 9. Cannot be used together with maxMemberGatewayCount and minMemberGatewayCount.",
+                    "type": "integer",
+                    "readOnly": false
+                },
+                "maxMemberGatewayCount": {
+                  "description": "The maximum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. minMemberGatewayCount must also be specified. maxMemberGatewayCount value must be greater than or equal to minMemberGatewayCount value.",
+                  "type": "integer",
+                  "readOnly": false
+                },
+                "minMemberGatewayCount": {
+                  "description": "The minimum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. maxMemberGatewayCount must also be specified. minMemberGatewayCount value must be less than or equal to maxMemberGatewayCount value.",
+                  "type": "integer",
+                  "readOnly": false
                 }
             }
         },
@@ -368,8 +390,19 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways. A number between 1 and 9.",
-                    "type": "integer"
+                    "description": "The number of member gateways. A number between 1 and 9. Cannot be used together with maxMemberGatewayCount and minMemberGatewayCount.",
+                    "type": "integer",
+                    "readOnly": false
+                },
+                "maxMemberGatewayCount": {
+                  "description": "The maximum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. minMemberGatewayCount must also be specified. maxMemberGatewayCount value must be greater than or equal to minMemberGatewayCount value.",
+                  "type": "integer",
+                  "readOnly": false
+                },
+                "minMemberGatewayCount": {
+                  "description": "The minimum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. maxMemberGatewayCount must also be specified. minMemberGatewayCount value must be less than or equal to maxMemberGatewayCount value.",
+                  "type": "integer",
+                  "readOnly": false
                 }
             }
         },

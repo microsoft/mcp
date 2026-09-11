@@ -160,7 +160,7 @@ For each file that needs changes, provide:
 Depending on the gap, verify the relevant doc file follows the expected format:
 
 **`servers/Azure.Mcp.Server/docs/azmcp-commands.md`** — must include:
-- A global options table at the top (subscription, resource-group, tenant, retry-max-retries, retry-delay)
+- A global options table at the top (subscription, resource-group, tenant)
 - One `## azmcp <service> <resource> <operation>` section per command, containing a description, parameters table, and example usage block
 
 **`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`** — must include:

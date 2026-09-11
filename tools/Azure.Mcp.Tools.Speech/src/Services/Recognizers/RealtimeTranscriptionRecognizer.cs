@@ -4,12 +4,10 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechRecognitionResult;
 
@@ -18,10 +16,9 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// <summary>
 /// Recognizer for real-time speech transcription using Azure AI Services Speech SDK.
 /// </summary>
-public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogger<RealtimeTranscriptionRecognizer> logger)
-    : BaseAzureService(tenantService), IRealtimeTranscriptionRecognizer
+public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger<RealtimeTranscriptionRecognizer> logger)
+    : BaseAzureService(azureService), IRealtimeTranscriptionRecognizer
 {
-    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<RealtimeTranscriptionRecognizer> _logger = logger;
 
     /// <inheritdoc/>
@@ -32,7 +29,6 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         string[]? phrases = null,
         string? format = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
@@ -51,11 +47,8 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             throw new FileNotFoundException($"Audio file not found: {filePath}");
         }
 
-        // Apply retry policy configuration
-        var maxRetries = retryPolicy?.MaxRetries ?? 3;
-        var delaySeconds = retryPolicy?.DelaySeconds ?? 1.0;
-        var maxDelaySeconds = retryPolicy?.MaxDelaySeconds ?? 30.0;
-        var isExponentialBackoff = retryPolicy?.Mode == RetryMode.Exponential;
+        const int maxRetries = 3;
+        const double delaySeconds = 1.0;
 
         Exception? lastException = null;
 
@@ -64,7 +57,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             try
             {
                 // Get Azure AD credential and token
-                var credential = await GetCredential(cancellationToken);
+                var credential = await GetCredential(null, cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
                 var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
@@ -227,12 +220,8 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                 // Calculate delay for next attempt
                 if (attempt < maxRetries)
                 {
-                    var delay = isExponentialBackoff
-                        ? Math.Min(delaySeconds * Math.Pow(2, attempt), maxDelaySeconds)
-                        : delaySeconds;
-
-                    _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delay, attempt + 2);
-                    await Task.Delay(TimeSpan.FromSeconds(delay), cancellationToken);
+                    _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delaySeconds, attempt + 2);
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
                 }
             }
             catch (Exception ex)
@@ -499,7 +488,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
 
     private string GetCognitiveServicesScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",

@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Services;
 using NSubstitute;
 using Xunit;
@@ -12,7 +13,7 @@ namespace Azure.Mcp.Tools.Kusto.Tests;
 public sealed class KustoClientTests
 {
     private readonly TokenCredential _tokenCredential;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IAzureService _azureService;
 
     public KustoClientTests()
     {
@@ -20,7 +21,7 @@ public sealed class KustoClientTests
         _tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken("noop-token", DateTimeOffset.UtcNow.AddHours(1)));
 
-        _httpClientFactory = Substitute.For<IHttpClientFactory>();
+        _azureService = Substitute.For<IAzureService>();
     }
 
     [Fact]
@@ -33,10 +34,10 @@ public sealed class KustoClientTests
 
         using var httpClient = new HttpClient(new MockHttpMessageHandler());
 
-        var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetClient(Arg.Any<string>()).Returns(httpClient);
 
-        var kustoClient = new KustoClient("https://test.kusto.windows.net", tokenCredential, "azmcp", httpClientFactory);
+        var kustoClient = new KustoClient("https://test.kusto.windows.net", tokenCredential, "azmcp", azureService);
 
         // Act
         var result = await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", CancellationToken.None);
@@ -60,7 +61,7 @@ public sealed class KustoClientTests
     {
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(
-            () => new KustoClient(invalidClusterUri, _tokenCredential, "azmcp", _httpClientFactory));
+            () => new KustoClient(invalidClusterUri, _tokenCredential, "azmcp", _azureService));
 
         Assert.Contains("Kusto cluster URI", exception.Message);
     }
@@ -73,7 +74,7 @@ public sealed class KustoClientTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => new KustoClient(invalidClusterUri, _tokenCredential, "azmcp", _httpClientFactory));
+            () => new KustoClient(invalidClusterUri, _tokenCredential, "azmcp", _azureService));
     }
 
     [Theory]
@@ -84,7 +85,7 @@ public sealed class KustoClientTests
     {
         // Act & Assert - ArgumentNullException is thrown for null, ArgumentException for empty/whitespace
         Assert.ThrowsAny<ArgumentException>(
-            () => new KustoClient(invalidClusterUri!, _tokenCredential, "azmcp", _httpClientFactory));
+            () => new KustoClient(invalidClusterUri!, _tokenCredential, "azmcp", _azureService));
     }
 
     [Theory]
@@ -111,7 +112,7 @@ public sealed class KustoClientTests
     public void Constructor_AcceptsValidKustoClusterUris(string validClusterUri)
     {
         // Act - should not throw
-        var client = new KustoClient(validClusterUri, _tokenCredential, "azmcp", _httpClientFactory);
+        var client = new KustoClient(validClusterUri, _tokenCredential, "azmcp", _azureService);
 
         // Assert - client was created successfully (no exception thrown)
         Assert.NotNull(client);
@@ -142,7 +143,7 @@ public sealed class KustoClientTests
     public void Constructor_AcceptsValidKustoExactHostnames(string validClusterUri)
     {
         // Act - should not throw
-        var client = new KustoClient(validClusterUri, _tokenCredential, "azmcp", _httpClientFactory);
+        var client = new KustoClient(validClusterUri, _tokenCredential, "azmcp", _azureService);
 
         // Assert - client was created successfully (no exception thrown)
         Assert.NotNull(client);
@@ -166,7 +167,7 @@ public sealed class KustoClientTests
     public void Constructor_AcceptsMultiSegmentClusterNames(string validClusterUri)
     {
         // Act - should not throw
-        var client = new KustoClient(validClusterUri, _tokenCredential, "azmcp", _httpClientFactory);
+        var client = new KustoClient(validClusterUri, _tokenCredential, "azmcp", _azureService);
 
         // Assert - client was created successfully (no exception thrown)
         Assert.NotNull(client);
@@ -190,7 +191,7 @@ public sealed class KustoClientTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => new KustoClient(invalidClusterUri, _tokenCredential, "azmcp", _httpClientFactory));
+            () => new KustoClient(invalidClusterUri, _tokenCredential, "azmcp", _azureService));
     }
 
     #endregion

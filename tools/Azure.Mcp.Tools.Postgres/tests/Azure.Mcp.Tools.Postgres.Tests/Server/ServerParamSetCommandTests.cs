@@ -20,7 +20,7 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     public async Task ExecuteAsync_ReturnsSuccessMessage_WhenParamIsSet()
     {
         var expectedMessage = "Parameter 'work_mem' updated successfully to '256MB'.";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "work_mem", "256MB", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "work_mem", "256MB", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -40,7 +40,7 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenParamDoesNotExist()
     {
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "shared_buffers", "512MB", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("");
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "shared_buffers", "512MB", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("");
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -83,7 +83,7 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         var expectedMessage = "Parameter updated successfully.";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
         await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -93,13 +93,13 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
             "--param", "max_connections",
             "--value", "200");
 
-        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_ForwardsTenantAndRetryPolicy()
+    public async Task ExecuteAsync_ForwardsTenant()
     {
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("ok");
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("ok");
 
         await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -108,10 +108,9 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
             "--server", "server123",
             "--param", "max_connections",
             "--value", "200",
-            "--tenant", "tenant123",
-            "--retry-max-retries", "3");
+            "--tenant", "tenant123");
 
-        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", "tenant123", Arg.Is<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(p => p != null && p.MaxRetries == 3), Arg.Any<CancellationToken>());
+        await Service.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200", "tenant123", Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -136,14 +135,14 @@ public class ServerParamSetCommandTests : SubscriptionCommandUnitTestsBase<Serve
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("security-sensitive", response.Message);
-        await Service.DidNotReceiveWithAnyArgs().SetServerParameterAsync("", "", "", "", "", "", null, null, TestContext.Current.CancellationToken);
+        await Service.DidNotReceiveWithAnyArgs().SetServerParameterAsync("", "", "", "", "", "", null, TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task ExecuteAsync_AllowsNonBlockedParameters()
     {
         var expectedMessage = "Parameter 'custom_setting' updated successfully.";
-        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "custom_setting", "42", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
+        Service.SetServerParameterAsync("sub123", "rg1", "user1", "server123", "custom_setting", "42", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedMessage);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",

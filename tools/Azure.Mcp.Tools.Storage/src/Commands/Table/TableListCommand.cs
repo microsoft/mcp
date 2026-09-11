@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Storage.Table.Commands;
     Name = "list",
     Title = "List Tables in Azure Storage",
     Description = "List all tables in an Azure Storage account. Shows table names for the specified storage account. Required: account, subscription. Optional: tenant. Returns: table names. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -37,7 +38,6 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
                 options.Account,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new TableListCommandResult(tables ?? []), StorageJsonContext.Default.TableListCommandResult);

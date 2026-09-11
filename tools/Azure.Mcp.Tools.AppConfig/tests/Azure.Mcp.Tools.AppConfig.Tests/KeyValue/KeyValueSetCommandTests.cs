@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,7 +31,6 @@ public class KeyValueSetCommandTests : SubscriptionCommandUnitTestsBase<KeyValue
             "my-value",
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             null,
             Arg.Any<string>(),
             Arg.Any<string[]>(),
@@ -62,7 +60,6 @@ public class KeyValueSetCommandTests : SubscriptionCommandUnitTestsBase<KeyValue
             "my-value",
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             "prod",
             Arg.Any<string>(),
             Arg.Any<string[]>(),
@@ -94,7 +91,6 @@ public class KeyValueSetCommandTests : SubscriptionCommandUnitTestsBase<KeyValue
             "my-value",
             "sub123",
             null,
-            Arg.Any<RetryPolicyOptions>(),
             null,
             "application/json",
             Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")),
@@ -120,7 +116,6 @@ public class KeyValueSetCommandTests : SubscriptionCommandUnitTestsBase<KeyValue
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),

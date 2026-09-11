@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
@@ -18,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Name = "update",
     Title = "Update File Share",
     Description = "Update an existing Azure managed file share resource. Allows updating mutable properties like provisioned storage, IOPS, throughput, and network access settings.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareUpdateOptions, FileShareUpdateCommand.FileShareUpdateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareUpdateOptions, FileShareUpdateCommand.FileShareUpdateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareUpdateOptions options, CancellationToken cancellationToken)
     {
@@ -68,7 +68,6 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 allowedSubnets,
                 tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareUpdateCommandResult);

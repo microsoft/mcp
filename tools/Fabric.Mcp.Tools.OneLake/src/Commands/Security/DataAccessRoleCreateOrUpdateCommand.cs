@@ -13,7 +13,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000003",
-    Name = "create_or_update_data_access_role",
+    Name = "create-or-update-data-access-role",
     Title = "Create or Update OneLake Data Access Role",
     Description = """
         Upsert a single data access role on a single item. Use flat options (--name,
@@ -26,6 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         Caller must be a workspace Admin or Member. Requires OneLake.ReadWrite.All and
         User.Read.All + GroupMember.Read.All for principal resolution.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -33,7 +34,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
     ReadOnly = false,
     Secret = false)]
 public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCreateOrUpdateCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<DataAccessRoleCreateOrUpdateOptions, DataAccessRole>()
+    : AuthenticatedCommand<DataAccessRoleCreateOrUpdateOptions, DataAccessRoleCreateOrUpdateCommand.DataAccessRoleCreateOrUpdateCommandResult>()
 {
     private readonly ILogger<DataAccessRoleCreateOrUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -116,7 +117,9 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 result = await _oneLakeService.CreateOrUpdateDataAccessRoleAsync(workspaceId!, options.ItemId, options.RoleDefinition!, cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRole);
+            context.Response.Results = ResponseResult.Create(
+                new DataAccessRoleCreateOrUpdateCommandResult(result),
+                OneLakeJsonContext.Default.DataAccessRoleCreateOrUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -192,4 +195,6 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
 
         return JsonSerializer.Serialize(role, OneLakeJsonContext.Default.DataAccessRole);
     }
+
+    public sealed record DataAccessRoleCreateOrUpdateCommandResult(DataAccessRole Role);
 }

@@ -15,10 +15,13 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Name = "run-pipeline",
     Title = "Run Pipeline",
     Description = "Triggers a run of a specified pipeline in a Microsoft Fabric workspace. Requires workspace ID and pipeline ID. Returns the run instance ID.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     ReadOnly = false,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class RunPipelineCommand(ILogger<RunPipelineCommand> logger, PipelineHandler handler)
     : AuthenticatedCommand<RunPipelineOptions, RunPipelineCommandResult>
 {

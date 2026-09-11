@@ -57,10 +57,10 @@
           "readOnly": true
         },
         "apiEndpoint": {
-            "description": "HTTP URL that represents the API endpoint specific to the workspace. This endpoint value is returned when the user enables preferWorkspaceSpecificEndpoints. It allows for API access over private links.",
-            "type": "string",
-            "format": "uri",
-            "readOnly": true
+          "description": "HTTP URL that represents the API endpoint specific to the workspace. This endpoint value is returned when the user enables preferWorkspaceSpecificEndpoints. It allows for API access over private links.",
+          "type": "string",
+          "format": "uri",
+          "readOnly": true
         },
         "domainId": {
           "description": "The ID of the domain the workspace is assigned to.",
@@ -82,8 +82,7 @@
           "$ref": "#/definitions/CapacityRegion",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "WorkspaceInfo": {
       "description": "A workspace object.",
@@ -110,8 +109,7 @@
           "$ref": "#/definitions/OneLakeEndpoints",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "CapacityRegion": {
       "type": "string",
@@ -580,8 +578,7 @@
           "$ref": "#/definitions/CapacityState",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "CapacityState": {
       "type": "string",
@@ -635,8 +632,7 @@
             "description": "Capacity assignment operation is currently running and has not yet completed."
           }
         ]
-      },
-      "readOnly": true
+      }
     },
     "WorkspaceIdentity": {
       "type": "object",
@@ -655,8 +651,7 @@
           "format": "uuid",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "AssignWorkspaceToDomainRequest": {
       "type": "object",
@@ -762,8 +757,7 @@
                     "$ref": "#/definitions/ImportItemDefinitionsDetails"
                 }
             }
-        },
-        "readOnly": true
+        }
     },
     "ItemDefinitionIndexEntry" : {
         "description": "An entry in the item definitions index.",
@@ -850,8 +844,7 @@
                 "$ref": "#/definitions/ImportItemDefinitionOperationStatus",
                 "readOnly": true
             }
-        },
-        "readOnly": true
+        }
     },
     "ItemDefinitionOperationType": {
         "type": "string",
@@ -2452,6 +2445,78 @@
           "readOnly": false
         }
       }
+    },
+    "RecoverableItem": {
+      "description": "Recoverable item.",
+      "type": "object",
+      "required": [ "id", "type", "retentionExpirationDateTime" ],
+      "properties": {
+        "id": {
+          "description": "The recoverable item ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The recoverable item display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The recoverable item description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "type": {
+          "description": "The recoverable item type.",
+          "$ref": "../../common/definitions.json#/definitions/ItemType",
+          "readOnly": false
+        },
+        "workspaceId": {
+          "description": "The workspace ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "parentItemId": {
+          "description": "The parent item ID of the recoverable item.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "retentionExpirationDateTime": {
+          "description": "The UTC retention expiration timestamp for the recoverable item, in ISO 8601 format (for example, '2025-12-31T23:59:59.999Z').",
+          "type": "string",
+          "readOnly": true
+        },
+        "tags": {
+          "description": "List of applied tags.",
+          "type": "array",
+          "items": {
+            "$ref": "../../common/definitions.json#/definitions/ItemTag"
+
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "RecoverableItems": {
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of recoverable items.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RecoverableItem"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
     },
     "ImmutabilityPolicyRequest": {
       "description": "Immutability policy request object.",

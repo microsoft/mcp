@@ -23,6 +23,7 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
         about each command, including its name, description, full command path, available subcommands, and all supported
         arguments. Use --name-only to return only tool names, and --namespace to filter by specific namespaces.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -224,7 +225,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
             var command = kvp.Value.GetCommand();
             return new CommandInfo
             {
-                Name = $"{commandPrefix.Replace(" ", "_")}{searchedGroup.Name}_{command.Name}",
+                Name = $"{commandPrefix.Replace(' ', CommandFactory.Separator)}{searchedGroup.Name}{CommandFactory.Separator}{command.Name}",
                 Description = command.Description ?? string.Empty,
                 Command = $"{(!string.IsNullOrEmpty(commandPrefix) ? commandPrefix : "")}{searchedGroup.Name} {command.Name}"
                 // Omit Options and Subcommands for surfaced commands as well.

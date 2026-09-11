@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
 
 [CommandMetadata(
     Id = "a1b2c3d4-3001-4000-8000-000000000002",
-    Name = "modify_diagnostics",
+    Name = "modify-diagnostics",
     Title = "Modify OneLake Diagnostics",
     Description = """
         Enable or disable workspace-level OneLake diagnostic logging. When enabling,
@@ -21,6 +21,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
         202 Accepted. Requires OneLake.ReadWrite.All. Caller must be a workspace Admin
         on the source workspace and Contributor+ on the destination workspace.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

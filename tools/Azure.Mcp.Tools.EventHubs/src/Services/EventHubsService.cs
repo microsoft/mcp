@@ -3,20 +3,16 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
 using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
-public sealed class EventHubsService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IEventHubsService
+public sealed class EventHubsService(IAzureService azureService, ILogger<EventHubsService> logger)
+    : BaseAzureResourceService(azureService), IEventHubsService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<EventHubsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     // Event Hub entity/consumer group creation exhibits read-after-write lag: the PUT can
@@ -64,13 +60,12 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string? resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         // Resource group is optional for subscription-wide listing.
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var namespaces = new List<Namespace>();
 
         if (!string.IsNullOrWhiteSpace(resourceGroup))
@@ -131,7 +126,6 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -139,7 +133,7 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
             (nameof(namespaceName), namespaceName),
             (nameof(resourceGroup), resourceGroup));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -171,12 +165,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         bool? zoneRedundant = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -260,18 +253,17 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {
-            var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+            var subscriptionId = AzureService.IsSubscriptionId(subscription)
                 ? subscription
-                : await _subscriptionService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
+                : await AzureService.GetSubscriptionIdByName(subscription, tenant, cancellationToken: cancellationToken);
 
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var namespaceId = EventHubsNamespaceResource.CreateResourceIdentifier(subscriptionId, resourceGroup, namespaceName);
 
             // Get the namespace resource
@@ -301,12 +293,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(namespaceName), namespaceName));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -337,12 +328,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(namespaceName), namespaceName), (nameof(eventHubName), eventHubName));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -393,12 +383,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         long? messageRetentionInHours = null,
         string? status = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(namespaceName), namespaceName));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -523,12 +512,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
 
         try
         {
@@ -580,12 +568,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string subscription,
         string? userMetadata = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(consumerGroupName), consumerGroupName), (nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -668,12 +655,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(consumerGroupName), consumerGroupName), (nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
 
         try
         {
@@ -730,12 +716,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -774,12 +759,11 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(consumerGroupName), consumerGroupName), (nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
-        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await ResolveSubscriptionResourceAsync(subscription, tenant, cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
         if (resourceGroupResource?.Value == null)
@@ -833,14 +817,13 @@ public sealed class EventHubsService(ISubscriptionService subscriptionService, I
     private async Task<ResourceManager.Resources.SubscriptionResource> ResolveSubscriptionResourceAsync(
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : await _subscriptionService.GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
+            : await AzureService.GetSubscriptionIdByName(subscription, tenant, cancellationToken: cancellationToken);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         return armClient.GetSubscriptionResource(
             ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscriptionId));
     }

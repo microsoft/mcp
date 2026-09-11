@@ -4,17 +4,16 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Subscription.Commands;
-using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
-public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, ISubscriptionService>
+public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, IAzureService>
 {
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
@@ -26,7 +25,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
             SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2")
         };
 
-        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
         Service.GetDefaultSubscriptionId().Returns((string?)null);
 
@@ -47,7 +46,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         Assert.Equal("Subscription 2", second.DisplayName);
         Assert.False(second.IsDefault);
 
-        await Service.Received(1).GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -56,7 +55,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         // Arrange
         var tenantId = "test-tenant-id";
 
-        Service.GetSubscriptions(Arg.Is(tenantId), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptions(Arg.Is(tenantId), Arg.Any<CancellationToken>())
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
         Service.GetDefaultSubscriptionId().Returns((string?)null);
 
@@ -68,7 +67,6 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         Assert.Equal(HttpStatusCode.OK, result.Status);
         await Service.Received(1).GetSubscriptions(
             Arg.Is(tenantId),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -76,7 +74,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
     public async Task ExecuteAsync_EmptySubscriptionList_ReturnsNotNullResults()
     {
         // Arrange
-        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns([]);
         Service.GetDefaultSubscriptionId().Returns((string?)null);
 
@@ -94,7 +92,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
     {
         // Arrange
         var expectedError = "Test error message";
-        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
@@ -117,7 +115,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         };
 
         Service
-            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
         Service.GetDefaultSubscriptionId().Returns("sub2");
 
@@ -154,7 +152,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
             SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2")
         };
 
-        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
         Service.GetDefaultSubscriptionId().Returns((string?)null);
 

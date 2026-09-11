@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
         Deletes a firewall rule from a SQL server, potentially restricting access for the IP addresses that were
         previously allowed by this rule. The operation is idempotent - if the rule doesn't exist, no error is returned.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -41,7 +42,6 @@ public sealed class FirewallRuleDeleteCommand(ISqlService sqlService, ILogger<Fi
                 options.ResourceGroup,
                 options.Subscription!,
                 options.FirewallRuleName,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);

@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -46,7 +47,6 @@ public sealed class AutoexportJobCreateCommand(IManagedLustreService service, IL
                 options.AutoexportPrefix,
                 options.AdminStatus,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.AutoexportJobCreateResult);

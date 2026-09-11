@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -53,7 +52,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Is(resourceGroup),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new OpenAiModelsListResult(expectedModels, resourceName));
 
@@ -99,7 +97,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Is(resourceGroup),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new OpenAiModelsListResult([], resourceName));
 
@@ -131,7 +128,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -177,7 +173,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Is(AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new OpenAiModelsListResult([], "myresource"));
         }
@@ -211,7 +206,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Is(resourceGroup),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new OpenAiModelsListResult([], resourceName));
 
@@ -228,7 +222,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             resourceGroup,
             Arg.Any<string?>(),
             AuthMethod.Credential,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -246,7 +239,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 

@@ -3,5 +3,5 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("ToolMetadataExporter.UnitTests")]
+[assembly: InternalsVisibleTo("ToolMetadataExporter.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

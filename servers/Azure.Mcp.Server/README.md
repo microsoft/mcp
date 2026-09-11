@@ -31,6 +31,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Eclipse IDE](#eclipse-ide)
+        - [Google Antigravity](#google-antigravity)
         - [Claude Code](#claude-code)
         - [Manual Setup](#manual-setup)
         - [GitHub Copilot CLI Configuration](#github-copilot-cli-configuration)
@@ -62,7 +63,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 # Overview
 
-**Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
+**Azure MCP Server** supercharges your agents with Azure context across numerous Azure services.
 
 # Local Setup
 <!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
@@ -158,6 +159,25 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://marketplace.eclipse.org/content/github-copilot) plugin.
 1. Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) plugin.
 
+### Google Antigravity
+
+1. Install and open [Google Antigravity](https://antigravity.google/).
+1. In the editor's agent side panel, select **...** > **MCP Servers** > **Manage MCP Servers** > **View raw config**.
+1. Add Azure MCP Server to the `mcpServers` object in `mcp_config.json`:
+
+     ```json
+     {
+         "mcpServers": {
+             "azure-mcp-server": {
+                 "command": "npx",
+                 "args": ["-y", "@azure/mcp@latest", "server", "start"]
+             }
+         }
+     }
+     ```
+
+Antigravity stores global configuration at `~/.gemini/config/mcp_config.json`. For workspace-only configuration, use `.agents/mcp_config.json`. For more information, see the [Google Antigravity MCP documentation](https://antigravity.google/docs/mcp).
+
 ### Claude Code
 
 The Azure plugin packages the Azure MCP Server along with Azure-related agents and skills, bringing Azure integration to Claude Code in one installation.
@@ -181,7 +201,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start npm;pypi remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
+- To use Azure MCP server from .NET, you must have the latest [.NET 10 SDK LTS](https://dotnet.microsoft.com/download/dotnet) installed. .NET 10 and later adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 To verify the .NET version, run the following command in the terminal: `dotnet --info`
 -  Configure the `mcp.json` file with the following:
 
@@ -209,7 +229,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 <!-- remove-section: start nuget;pypi remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend the latest Node.js LTS version. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure the `mcp.json` file with the following:
 
     ```json
@@ -263,6 +283,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 | **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://code.claude.com/docs/en/mcp-quickstart#add-a-local-server) |
 | **Eclipse IDE** | GitHub Copilot Chat -> Configure Tools -> MCP Servers  | [Eclipse MCP Documentation](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp#configuring-mcp-servers-in-eclipse) |
 | **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
+| **Google Antigravity** | `~/.gemini/config/mcp_config.json` (global)<br>`.agents/mcp_config.json` (workspace) | [Google Antigravity MCP Documentation](https://antigravity.google/docs/mcp) |
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
 | **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
@@ -933,8 +954,18 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "Summarize the key themes from my Advisor recommendations"
+* "Show the top 10 most common Advisor recommendation types"
+* "Break down my Advisor recommendations by lifecycle status"
+* "Summarize active service-retirement recommendations by retirement date"
+* "Mark an Advisor recommendation as completed"
+* "Dismiss an Advisor recommendation because the risk is acceptable"
+* "Postpone an Advisor recommendation until December 31, 2026"
 * "Apply Advisor recommendations to IaaC files"
-* "List all Advisor recommendation types from catalog"
+* "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
+* "Show Advisor service retirements on or after March 31, 2026"
+* "Get Advisor metadata for a recommendation type id"
+* "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
 ### 🔎 Azure AI Search
 
@@ -1076,10 +1107,28 @@ Example prompts that generate Azure CLI commands:
 * "Search documents in container 'items' from database 'mydb' where 'description' contains 'wireless headphones'"
 * "Find documents similar to 'noise cancelling earbuds' in container 'items' of database 'mydb' using vector property 'embedding'"
 
+### Azure Data Manager for Energy
+
+* "Check authentication and connectivity for my ADME endpoint and data partition"
+* "Get an ADME schema by kind"
+* "List shared Well schemas from my ADME data partition"
+* "Fetch multiple OSDU records by id from my ADME data partition"
+* "Get an OSDU record by id or version from my ADME data partition"
+* "List OSDU record ids for a kind in my ADME data partition"
+* "List all versions of an OSDU record in my ADME data partition"
+
 ### 🧮 Azure Data Explorer
 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
+
+### 🐘 Azure Database for PostgreSQL
+
+* "List all PostgreSQL servers in my subscription"
+* "Show me the tables in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the schema of table 'users' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
 
 ### 📣 Azure Event Grid
 
@@ -1128,6 +1177,13 @@ Example prompts that generate Azure CLI commands:
 
 * "Show me IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
 * "Get details for IoT Hub 'my-iot-hub' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "List devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show device 'my-device' in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show device statistics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Get the device twin for 'my-device' in IoT Hub 'my-iot-hub'"
+* "Query all devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
+* "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
 
 ### 🔑 Azure Key Vault
 
@@ -1155,7 +1211,8 @@ Example prompts that generate Azure CLI commands:
 
 ### 📊 Azure Monitor
 
-* "Query my Log Analytics workspace"
+* "Query an Analytics table in my Log Analytics workspace"
+* "Search a Basic or Auxiliary table in my Log Analytics workspace over the last day"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
 
@@ -1235,7 +1292,26 @@ Example prompts that generate Azure CLI commands:
 * "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
 * "List all resilience recovery plans in service group 'my-service-group'"
 * "Get the recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Create a Zonal recovery plan 'my-recovery-plan' in service group 'my-service-group' with a system-assigned identity"
+* "Update recovery plan 'my-recovery-plan' in service group 'my-service-group' to use user-assigned identity '/subscriptions/my-subscription/resourceGroups/my-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/my-identity'"
+* "Include recovery resource 'my-resource' in recovery plan 'my-recovery-plan' in service group 'my-service-group' and configure its protection settings"
+* "Exclude recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "List all runs of drill 'my-drill' in service group 'my-service-group'"
+* "Get drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "List all resources of drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Get resource 'my-resource' from drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
+* "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
+* "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
+* "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
+* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
+* "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
 ### Azure Resource Manager
 
@@ -1266,10 +1342,10 @@ Example prompts that generate Azure CLI commands:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **44+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
-- 📊 **Azure Advisor** - Advisor recommendations
+- 📊 **Azure Advisor** - Advisor recommendation records, aggregate summaries, lifecycle state management, and recommendation metadata
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management
@@ -1283,6 +1359,7 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema, record retrieval, and version history operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
@@ -1299,14 +1376,14 @@ The Azure MCP Server provides tools for interacting with **44+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Logging, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, and recovery job resources
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, drills, drill resources, drill runs, and drill run resources
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

@@ -5,39 +5,30 @@ using System.Text.Json;
 using Azure.Core.Pipeline;
 using Azure.Data.AppConfiguration;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppConfig.Models;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Identity;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
 using ETag = Microsoft.Mcp.Core.Models.ETag;
 
-public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger, IHttpClientFactory httpClientFactory)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAppConfigService
+public sealed class AppConfigService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAppConfigService
 {
-    private readonly ILogger<AppConfigService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-
     public async Task<ResourceQueryResults<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         return await ExecuteResourceQueryAsync(
             "Microsoft.AppConfiguration/configurationStores",
-            resourceGroup: resourceGroup,
+            resourceGroup,
             subscription,
-            retryPolicy,
             ConvertToAppConfigurationAccountModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -51,12 +42,11 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         string? keyFilter = null,
         string? labelFilter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
-        var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
+        var client = await GetConfigurationClient(accountName, subscription, tenant, cancellationToken);
         var settings = new List<KeyValueSetting>();
         if (!string.IsNullOrEmpty(key))
         {
@@ -100,12 +90,11 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         bool locked,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
-        var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
+        var client = await GetConfigurationClient(accountName, subscription, tenant, cancellationToken);
         await client.SetReadOnlyAsync(key, label, locked, cancellationToken: cancellationToken);
     }
 
@@ -115,14 +104,13 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         string value,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         string? contentType = null,
         string[]? tags = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(value), value), (nameof(subscription), subscription));
-        var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
+        var client = await GetConfigurationClient(accountName, subscription, tenant, cancellationToken);
 
         // Create a ConfigurationSetting object to include contentType if provided
         var setting = new ConfigurationSetting(key, value, label)
@@ -158,12 +146,11 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         string key,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
-        var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy, cancellationToken);
+        var client = await GetConfigurationClient(accountName, subscription, tenant, cancellationToken);
         var response = await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: cancellationToken);
         return KeyValueExistedFromDeleteStatus(response.Status);
     }
@@ -173,29 +160,28 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         return status == 200;
     }
 
-    private async Task<ConfigurationClient> GetConfigurationClient(string accountName, string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    private async Task<ConfigurationClient> GetConfigurationClient(string accountName, string subscription, string? tenant, CancellationToken cancellationToken)
     {
-        var configStore = await FindAppConfigStore(subscription, tenant, accountName, retryPolicy, cancellationToken);
+        var configStore = await FindAppConfigStore(subscription, tenant, accountName, cancellationToken);
         var endpoint = configStore.Endpoint;
         if (string.IsNullOrEmpty(endpoint))
         {
             throw new InvalidOperationException($"The App Configuration store '{accountName}' does not have a valid endpoint.");
         }
 
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", TenantService.CloudConfiguration.ArmEnvironment);
+        EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "appconfig", AzureService.CloudConfiguration.ArmEnvironment);
 
         var credential = await GetCredential(tenant, cancellationToken);
 
         var endpointUri = new Uri(endpoint);
-        var httpClient = _httpClientFactory.CreateClient();
-        var options = CreateConfigurationClientOptions(GetAppConfigurationAudience(), retryPolicy, httpClient, endpointUri);
+        var httpClient = AzureService.GetClient();
+        var options = CreateConfigurationClientOptions(GetAppConfigurationAudience(), httpClient, endpointUri);
 
         return new ConfigurationClient(endpointUri, credential, options);
     }
 
     internal static ConfigurationClientOptions CreateConfigurationClientOptions(
         AppConfigurationAudience audience,
-        RetryPolicyOptions? retryPolicy,
         HttpClient httpClient,
         Uri endpointUri)
     {
@@ -206,7 +192,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         httpClient.BaseAddress = endpointUri;
         options.Transport = new HttpClientTransport(httpClient);
-        ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+        AddDefaultPolicies(options);
 
         return options;
     }
@@ -215,15 +201,13 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         string subscription,
         string? tenant,
         string accountName,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         return await ExecuteSingleResourceQueryAsync(
             "Microsoft.AppConfiguration/configurationStores",
-            resourceGroup: null, // all resource groups
-            subscription: subscription,
-            retryPolicy: retryPolicy,
-            converter: ConvertToAppConfigurationAccountModel,
+            null, // all resource groups
+            subscription,
+            ConvertToAppConfigurationAccountModel,
             additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
             tenant: tenant,
             cancellationToken: cancellationToken)
@@ -287,7 +271,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     private AppConfigurationAudience GetAppConfigurationAudience()
     {
-        return TenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => AppConfigurationAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => AppConfigurationAudience.AzureChina,

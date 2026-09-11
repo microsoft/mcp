@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
     Name = "get",
     Title = "Get PostgreSQL Server Configuration",
     Description = "Retrieve the configuration of a PostgreSQL server.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -32,7 +33,7 @@ public sealed class ServerConfigGetCommand(IPostgresService postgresService, ILo
     {
         try
         {
-            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Tenant, options.RetryPolicy, cancellationToken);
+            var config = await _postgresService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup, options.User, options.Server, options.Tenant, cancellationToken);
             context.Response.Results = config?.Length > 0 ?
                 ResponseResult.Create(new(config), PostgresJsonContext.Default.ServerConfigGetCommandResult) :
                 null;

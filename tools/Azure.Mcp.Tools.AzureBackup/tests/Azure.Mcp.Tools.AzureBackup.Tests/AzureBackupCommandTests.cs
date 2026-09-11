@@ -70,6 +70,23 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
             Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        // Container discovery can return storage accounts registered from other resource groups.
+        // These are not test resources, so sanitize their names in container identifiers and ARM IDs.
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """StorageContainer;Storage;[^;"/]+;[^"/]+""",
+            Value = "StorageContainer;Storage;Sanitized;Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """(?<=resourceGroups/)[^/"\\]+""",
+            Value = "Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """(?<=storageAccounts/)[^/"\\]+""",
+            Value = "Sanitized",
         })
     ];
 
@@ -121,6 +138,11 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         // Verify the new detail fields are present (Bug 1.3 fix validation)
         vault.AssertProperty("skuName");
         vault.AssertProperty("redundancy");
+
+        var identityDetails = vault.AssertProperty("identityDetails");
+        Assert.Equal("SystemAssigned", identityDetails.AssertProperty("type").GetString());
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("principalId").GetString()));
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("tenantId").GetString()));
     }
 
     [Fact]
@@ -288,6 +310,11 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var vault = vaults.EnumerateArray().First();
         Assert.Equal("dpp", vault.AssertProperty("vaultType").GetString());
         Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+
+        var identityDetails = vault.AssertProperty("identityDetails");
+        Assert.Equal("SystemAssigned", identityDetails.AssertProperty("type").GetString());
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("principalId").GetString()));
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("tenantId").GetString()));
     }
 
     [Fact]
@@ -624,7 +651,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "vault", vaultName },
                 { "policy", policyName },
                 { "workload-type", "AzureVM" },
-                { "schedule-time", "02:00" }
+                { "schedule-times", "02:00" }
             });
 
         // Update schedule time to 04:00
@@ -1347,7 +1374,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     /// <summary>
     /// End-to-end Disk protection through DPP vault.
     /// Validates the Bug #2 (DPP) fix: <c>protecteditem protect</c> waits for the operation
-    /// to complete (<see cref="Azure.WaitUntil.Completed"/>), reads the backup-instance back,
+    /// to complete (<see cref="WaitUntil.Completed"/>), reads the backup-instance back,
     /// and surfaces a real <c>protectionStatus</c> rather than a fake <c>"Accepted"</c>.
     /// Also implicitly validates the Bug #1 fix because protection succeeds only when the
     /// DPP vault MSI created by <c>vault create</c> has the right RBAC on the disk + RG.
@@ -1738,6 +1765,35 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
+    #region Container Tests (RSV)
+
+    /// <summary>
+    /// Validates that container refresh triggers RSV discovery successfully.
+    /// Uses the default AzureStorage backup management type (Azure File share discovery); the response is a
+    /// fire-and-forget acceptance record, not a container list.
+    /// </summary>
+    [Fact]
+    public async Task ContainerRefresh_RsvVault_TriggersDiscovery_Successfully()
+    {
+        // Container refresh is RSV-only
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_refresh",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        Assert.Equal("Accepted", result.AssertProperty("status").GetString());
+        Assert.Equal(vaultName, result.AssertProperty("vault").GetString());
+        Assert.Equal("AzureStorage", result.AssertProperty("backupManagementType").GetString());
+    }
+
+    #endregion
+
     #region Governance Tests (RSV)
 
     [Fact]
@@ -1753,7 +1809,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "soft-delete", "On" }
+                { "soft-delete", "On" },
+                { "soft-delete-retention-days", "14" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -1792,7 +1849,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "immutability-state", "Disabled" }
+                { "immutability-state", "Disabled" },
+                { "immutability-type", "AsPerPolicy" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -1812,7 +1870,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "immutability-state", "Enabled" }
+                { "immutability-state", "Enabled" },
+                { "immutability-type", "AsPerPolicy" }
             });
 
         var opResult = result.AssertProperty("result");
@@ -1875,6 +1934,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "immutability-state", "Disabled" },
+                { "immutability-type", "AsPerPolicy" },
                 { "vault-type", "dpp" }
             });
 
@@ -1896,6 +1956,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "immutability-state", "Enabled" },
+                { "immutability-type", "AsPerPolicy" },
                 { "vault-type", "dpp" }
             });
 
@@ -2072,6 +2133,35 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
+    #region Container Tests (RSV)
+
+    [Fact]
+    public async Task ContainerListAvailable_RsvVault_ListsAvailableContainers_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_list-available",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var containers = result.AssertProperty("containers");
+        Assert.Equal(JsonValueKind.Array, containers.ValueKind);
+
+        foreach (var container in containers.EnumerateArray())
+        {
+            container.AssertProperty("name");
+            container.AssertProperty("friendlyName");
+            container.AssertProperty("containerType");
+        }
+    }
+
+    #endregion
+
     #region Backup Status Tests
 
     /// <summary>
@@ -2239,7 +2329,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Enable");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -2271,22 +2361,22 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task SecurityConfigureMua_RsvVault_DisableMua_Successfully()
+    public async Task SecurityDisableMua_RsvVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-rsv";
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_RSV_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityDisableMua_RSV");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_disable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "vault", vaultName }
-            });
+                { "vault", vaultName },
+                });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_RSV_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_RSV");
 
         if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
         {
@@ -2296,6 +2386,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             var msg = message.GetString() ?? "";
             bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("not configured", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
@@ -2306,7 +2397,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
         else
         {
-            Assert.Fail("Unexpected response from SecurityConfigureMua (RSV Disable)");
+            Assert.Fail("Unexpected response from SecurityDisableMua (RSV)");
         }
     }
 
@@ -2324,7 +2415,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Enable");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -2357,23 +2448,23 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
-    public async Task SecurityConfigureMua_DppVault_DisableMua_Successfully()
+    public async Task SecurityDisableMua_DppVault_Successfully()
     {
         var vaultName = $"{Settings.ResourceBaseName}-dpp";
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityConfigureMua_DPP_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SecurityDisableMua_DPP");
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_disable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
-                { "vault-type", "dpp" }
-            });
+                { "vault-type", "dpp" },
+                });
 
-        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityConfigureMua_DPP_Disable");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: SecurityDisableMua_DPP");
 
         if (result.HasValue && result.Value.TryGetProperty("result", out var opResult))
         {
@@ -2383,6 +2474,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             var msg = message.GetString() ?? "";
             bool isEnvironmentSpecific = msg.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                || msg.Contains("not configured", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Authorization", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("NotFound", StringComparison.OrdinalIgnoreCase)
                 || msg.Contains("Forbidden", StringComparison.OrdinalIgnoreCase)
@@ -2393,7 +2485,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         }
         else
         {
-            Assert.Fail("Unexpected response from SecurityConfigureMua (DPP Disable)");
+            Assert.Fail("Unexpected response from SecurityDisableMua (DPP)");
         }
     }
 
@@ -2405,7 +2497,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             ?? "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-security/providers/Microsoft.DataProtection/resourceGuards/test-guard";
 
         var result = await CallToolAsync(
-            "azurebackup_security_configure-mua",
+            "azurebackup_security_enable-mua",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -2463,5 +2555,86 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
-}
+    #region Selective Disk Backup Tests (RSV IaaS VM)
 
+    /// <summary>
+    /// End-to-end selective disk backup on an RSV IaaS VM.
+    /// Configures the SQL VM created by test-resources.bicep for backup using
+    /// <c>--exclude-all-data-disks</c>, then calls <c>update-protection</c> to reset
+    /// the disk exclusion. Exercises the new selective-disk options on both
+    /// <c>protecteditem protect</c> and <c>protecteditem update-protection</c>.
+    /// </summary>
+    [Fact]
+    [LiveTestOnly]
+    public async Task ProtectedItemProtect_RsvVault_SelectiveDiskBackup_E2E()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var vmName = $"{Settings.ResourceBaseName}-sqlvm";
+        var vmId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Compute/virtualMachines/{vmName}";
+        var policyName = RegisterOrRetrieveVariable("selectiveDiskPolicyName", $"test-selective-disk-{Random.Shared.NextInt64()}");
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: SelectiveDiskBackup lifecycle (vault={vaultName}, vm={vmName})");
+
+        // 1. Create a VM backup policy.
+        var policyResult = await CallToolAsync(
+            "azurebackup_policy_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "policy", policyName },
+                { "workload-type", "vm" },
+                { "daily-retention-days", "7" }
+            });
+
+        Assert.Equal("Succeeded", policyResult.AssertProperty("result").AssertProperty("status").GetString());
+
+        // 2. Protect the SQL VM with --exclude-all-data-disks (OS disk only).
+        var protectResult = await CallToolAsync(
+            "azurebackup_protecteditem_protect",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "datasource-id", vmId },
+                { "policy", policyName },
+                { "datasource-type", "vm" },
+                { "exclude-all-data-disks", "true" }
+            });
+
+        var protectOp = protectResult.AssertProperty("result");
+        var protectStatus = protectOp.AssertProperty("status").GetString();
+        Assert.True(protectStatus is "Succeeded" or "InProgress",
+            $"Unexpected protect status: {protectStatus}");
+        protectOp.AssertProperty("jobId");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] Protect (exclude-all-data-disks) submitted: {protectStatus}");
+
+        // 3. Reset the disk exclusion setting via update-protection.
+        var updateResult = await CallToolAsync(
+            "azurebackup_protecteditem_update-protection",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "datasource-id", vmId },
+                { "disk-list-setting", "resetexclusionsettings" }
+            });
+
+        var updateOp = updateResult.AssertProperty("result");
+        var updateStatus = updateOp.AssertProperty("status").GetString();
+        Assert.True(updateStatus is "Succeeded" or "InProgress",
+            $"Unexpected update-protection status: {updateStatus}");
+        updateOp.AssertProperty("jobId");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] UpdateProtection (reset) submitted: {updateStatus}");
+    }
+
+    #endregion
+
+
+}

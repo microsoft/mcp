@@ -12,13 +12,14 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000014",
-    Name = "create_shortcut_gcs",
+    Name = "create-shortcut-gcs",
     Title = "Create OneLake Shortcut (Google Cloud Storage Target)",
     Description = """
         Create a shortcut pointing to a Google Cloud Storage location. Requires a
         connection ID for authentication and a target URL. Requires
         OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -26,7 +27,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = false,
     Secret = false)]
 public sealed class ShortcutCreateGcsCommand(ILogger<ShortcutCreateGcsCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutCreateGcsOptions, OneLakeShortcut>()
+    : AuthenticatedCommand<ShortcutCreateGcsOptions, ShortcutCreateGcsCommand.ShortcutCreateGcsCommandResult>()
 {
     private readonly ILogger<ShortcutCreateGcsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -51,7 +52,9 @@ public sealed class ShortcutCreateGcsCommand(ILogger<ShortcutCreateGcsCommand> l
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId, options.ItemId, shortcut, options.ShortcutConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutCreateGcsCommandResult(result),
+                OneLakeJsonContext.Default.ShortcutCreateGcsCommandResult);
         }
         catch (Exception ex)
         {
@@ -61,4 +64,6 @@ public sealed class ShortcutCreateGcsCommand(ILogger<ShortcutCreateGcsCommand> l
 
         return context.Response;
     }
+
+    public sealed record ShortcutCreateGcsCommandResult(OneLakeShortcut Shortcut);
 }

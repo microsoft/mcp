@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
         requirements and design compliant cloud services. You can optionally filter by scope to list
         assignments at a specific resource group, resource, or management group level.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -43,7 +44,6 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
                 options.Subscription!,
                 options.Scope,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

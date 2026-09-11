@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager.CognitiveServices;
 using Azure.ResourceManager.CognitiveServices.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class CognitiveServicesUsageChecker(TokenCredential credential, string subscriptionId, ILogger<CognitiveServicesUsageChecker> logger, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
+public class CognitiveServicesUsageChecker(TokenCredential credential, string subscriptionId, ILogger<CognitiveServicesUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {

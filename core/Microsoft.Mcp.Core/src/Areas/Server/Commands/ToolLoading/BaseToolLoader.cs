@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -19,6 +20,10 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// <param name="logger">Logger instance for this tool loader.</param>
 public abstract class BaseToolLoader(ILogger logger) : IToolLoader
 {
+    private const string ElicitationDecisionPropertyName = "decision";
+    private const string ElicitationAcceptDecision = "accept";
+    private const string ElicitationRejectDecision = "reject";
+
     /// <summary>
     /// Logger instance for this tool loader.
     /// </summary>
@@ -147,12 +152,19 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         return ValueTask.CompletedTask;
     }
 
-    protected McpClientOptions CreateClientOptions(McpServer server)
+    protected static bool SupportsSampling(McpServer server)
+    {
+#pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
+        return server.ClientCapabilities?.Sampling != null;
+#pragma warning restore MCP9005
+    }
+
+    protected internal static McpClientOptions CreateClientOptions(McpServer server)
     {
         McpClientHandlers handlers = new();
 
 #pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
-        if (server.ClientCapabilities?.Sampling != null)
+        if (SupportsSampling(server))
         {
             handlers.SamplingHandler = (request, progress, token) =>
             {
@@ -195,7 +207,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// Null if elicitation was accepted or bypassed (operation should proceed).
     /// A CallToolResult with IsError=true if elicitation was rejected or failed (operation should not proceed).
     /// </returns>
-    protected static async Task<CallToolResult?> HandleElicitationAsync(
+    protected internal static async Task<CallToolResult?> HandleElicitationAsync(
         RequestContext<CallToolRequestParams> request,
         string toolName,
         IBaseCommand command,
@@ -264,30 +276,43 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 {
                     Properties = new Dictionary<string, ElicitRequestParams.PrimitiveSchemaDefinition>
                     {
-                        ["decision"] = new ElicitRequestParams.TitledSingleSelectEnumSchema
+                        [ElicitationDecisionPropertyName] = new ElicitRequestParams.TitledSingleSelectEnumSchema
                         {
                             Title = "Decision",
                             Description = "Approve or reject this sensitive operation.",
                             OneOf = new List<ElicitRequestParams.EnumSchemaOption>
                             {
-                                new() { Title = "Approve", Const = "accept" },
-                                new() { Title = "Reject", Const = "reject" }
+                                new() { Title = "Approve", Const = ElicitationAcceptDecision },
+                                new() { Title = "Reject", Const = ElicitationRejectDecision }
                             }
                         }
                     },
-                    Required = ["decision"]
+                    Required = [ElicitationDecisionPropertyName]
                 }
             };
 
             var protocolResponse = await request.Server.ElicitAsync(protocolRequest, cancellationToken);
 
-            if (protocolResponse.Action != "accept")
+            // Determine approval from BOTH the transport-level envelope action and the user's
+            // selection carried in the response content. The elicitation schema declares a
+            // required "decision" field, so the envelope action alone is not sufficient: a
+            // client that submits the form returns Action == "accept" even when the user picked
+            // "Reject" (their selection lives in Content["decision"]). Require the envelope
+            // action to be "accept" AND the decision value to be "accept"; otherwise treat the
+            // operation as not approved and do not execute it.
+            bool decisionProvided = TryGetElicitationDecision(protocolResponse.Content, out string? decision);
+            bool approved = protocolResponse.IsAccepted &&
+                decisionProvided &&
+                string.Equals(decision, ElicitationAcceptDecision, StringComparison.Ordinal);
+
+            if (!approved)
             {
-                logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
-                    protocolResponse.Action, toolName);
+                logger.LogInformation(
+                    "User did not approve the elicitation for tool '{Tool}' (action: '{Action}', decision: '{Decision}'). Operation not executed.",
+                    toolName, protocolResponse.Action, decision ?? "none");
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
-                    Content = [new TextContentBlock { Text = $"Operation cancelled by user ({protocolResponse.Action})." }],
+                    Content = [new TextContentBlock { Text = "Operation cancelled by user." }],
                     IsError = true
                 }, command.Id);
             }
@@ -304,5 +329,103 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 IsError = true
             }, command.Id);
         }
+    }
+
+    /// <summary>
+    /// Extracts the user's approve/reject decision from an elicitation response content payload.
+    /// The elicitation schema declares a required "decision" field whose value is either
+    /// "accept" or "reject". This value—not the transport envelope action—represents the user's
+    /// selection when a client submits the form, so it must be inspected to honor a rejection.
+    /// </summary>
+    /// <param name="content">The content payload returned in the elicitation response.</param>
+    /// <param name="decision">The decision string when present as a string value; otherwise, <c>null</c>.</param>
+    /// <returns><c>true</c> when a string decision was found; otherwise, <c>false</c>.</returns>
+    private static bool TryGetElicitationDecision(IDictionary<string, JsonElement>? content, out string? decision)
+    {
+        if (content != null &&
+            content.TryGetValue(ElicitationDecisionPropertyName, out var decisionElement) &&
+            decisionElement.ValueKind == JsonValueKind.String)
+        {
+            decision = decisionElement.GetString();
+            return decision != null;
+        }
+
+        decision = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Creates a tool definition from a command (same logic as CommandFactoryToolLoader).
+    /// </summary>
+    public static Tool CreateToolFromCommand(string fullName, IBaseCommand command)
+    {
+        var underlyingCommand = command.GetCommand();
+        var tool = new Tool
+        {
+            Name = fullName,
+            Description = underlyingCommand.Description,
+        };
+
+        var metadata = command.Metadata;
+        tool.Annotations = new ToolAnnotations()
+        {
+            DestructiveHint = metadata.Destructive,
+            IdempotentHint = metadata.Idempotent,
+            OpenWorldHint = metadata.OpenWorld,
+            ReadOnlyHint = metadata.ReadOnly,
+            Title = command.Title,
+        };
+
+        JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
+        // Add Secret metadata to tool.Meta if the property exists
+        if (metadata.Secret)
+        {
+            meta[McpHelper.SecretHintMetaKey] = metadata.Secret;
+        }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
+
+        var options = command.GetCommand().Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
+
+        if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
+        {
+            var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
+            tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
+            return tool;
+        }
+
+        var schema = OptionSchemaGenerator.CreateInputSchema(options);
+        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
+        return tool;
+    }
+
+    /// <summary>
+    /// Checks if the command should be kept based its metadata and the server runtime configuration.
+    /// </summary>
+    /// <param name="command">The command to check.</param>
+    /// <param name="configuration">The server runtime configuration.</param>
+    /// <returns>True if the command should be kept, false if it should be filtered.</returns>
+    public static bool ShouldKeepBaseCommand(IBaseCommand command, ServerRuntimeConfiguration configuration)
+    {
+        // Keep the command if and only if:
+        // - The server isn't running in read-only mode or the command is read-only.
+        // - The server isn't running in HTTP (remote) mode or the command doesn't require local resources. 
+        return (!configuration.ReadOnly || command.Metadata.ReadOnly) &&
+            (!configuration.IsHttpMode || !command.Metadata.LocalRequired);
+    }
+
+    public static bool ShouldKeepTool(Tool tool, ServerRuntimeConfiguration configuration)
+    {
+        // Keep the tool if and only if:
+        // - The server isn't running in read-only mode or the tool is read-only.
+        // - The server isn't running in HTTP (remote) mode or the tool doesn't require local resources. 
+        return (!configuration.ReadOnly || (tool.Annotations?.ReadOnlyHint == true)) &&
+            (!configuration.IsHttpMode || !McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey));
     }
 }

@@ -167,7 +167,7 @@ External MCP servers configured in the registry with `OAuthScopes` must meet the
 | **Issuer validation** | A deployment requirement: the server's issuer identity should be resolvable and validated by its OAuth provider. Azure Identity bearer tokens carry issuer/audience claims that the downstream resource validates; the Azure MCP registry client does not perform additional client-side issuer binding |
 | **Application type** | A deployment requirement: registry servers should be registered as the correct OAuth application type (confidential vs public client) with their OAuth provider |
 | **Scope registration** | A deployment requirement: all scopes in `OAuthScopes` should be registered with the OAuth provider |
-| **Protected resource metadata** | Recommended: Publish `.well-known/oauth-protected-resource` metadata per OAuth Protected Resources spec |
+| **Protected resource metadata** | Recommended: Publish `.well-known/oauth-protected-resource` metadata per [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) (OAuth 2.0 Protected Resource Metadata) |
 
 ### Known Limitation: MCP Protocol Resource Parameter
 

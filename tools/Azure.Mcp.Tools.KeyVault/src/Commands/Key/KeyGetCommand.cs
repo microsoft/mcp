@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     Name = "get",
     Title = "Get Key Vault Key",
     Description = """List all keys in your Key Vault or get a specific key by name. Shows all key names in the vault, or retrieves full key details including type, enabled status, and expiration dates. Use --include-managed to show managed keys.""",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -41,7 +42,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                     options.IncludeManaged,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(keys ?? [], null), KeyVaultJsonContext.Default.KeyGetCommandResult);
@@ -54,7 +54,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                     options.Key,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, KeyDetails.FromKey(key)), KeyVaultJsonContext.Default.KeyGetCommandResult);

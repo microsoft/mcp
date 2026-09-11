@@ -29,6 +29,25 @@
                 ]
             }
         },
+        "GitConnectionType": {
+            "type": "string",
+            "description": "The type of Git connection. Additional GitConnectionType types may be added over time.",
+            "enum": ["Full", "Selective"],
+            "x-ms-enum": {
+                "name": "GitConnectionType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Full",
+                        "description": "All items in the branch are synced to the workspace."
+                    },
+                    {
+                        "value": "Selective",
+                        "description": "Only user-selected items are synced to the workspace."
+                    }
+                ]
+            }
+        },
         "GitSyncDetails": {
             "description": "Contains the sync details.",
             "type": "object",
@@ -59,6 +78,10 @@
                 },
                 "gitConnectionState": {
                     "$ref": "#/definitions/GitConnectionState"
+                },
+                "gitConnectionType": {
+                    "$ref": "#/definitions/GitConnectionType",
+                    "readOnly": true
                 }
             }
         },
@@ -576,6 +599,96 @@
             "description": "The object ID of the connection.",
             "type": "string",
             "format": "uuid"
+        },
+        "WorkspaceRelationType": {
+            "type": "string",
+            "description": "The type of the related workspace in the relation. Additional related workspace types may be added over time.",
+            "enum": ["Base", "Branch", "RelatedWorkspace"],
+            "x-ms-enum": {
+                "name": "WorkspaceRelationType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Base",
+                        "description": "The related workspace is the base (source) workspace."
+                    },
+                    {
+                        "value": "Branch",
+                        "description": "The related workspace is a branch workspace."
+                    },
+                    {
+                        "value": "RelatedWorkspace",
+                        "description": "The related workspace has a general relation."
+                    }
+                ]
+            }
+        },
+        "WorkspaceRelation": {
+            "description": "A workspace relation object.",
+            "type": "object",
+            "required": ["id", "workspaceId", "relatedWorkspaceId", "relationType"],
+            "properties": {
+                "id": {
+                    "description": "The workspace relation ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "workspaceId": {
+                    "description": "The workspace ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "relatedWorkspaceId": {
+                    "description": "The related workspace ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "relationType": {
+                    "description": "The type of the related workspace in the relation.",
+                    "$ref": "#/definitions/WorkspaceRelationType",
+                    "readOnly": true
+                }
+            }
+        },
+        "WorkspaceRelations": {
+            "description": "A list of workspace relations.",
+            "type": "object",
+            "required": ["value"],
+            "properties": {
+                "value": {
+                    "description": "A list of workspace relations.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WorkspaceRelation"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateWorkspaceRelationRequest": {
+            "description": "The request payload for creating a workspace relation.",
+            "type": "object",
+            "required": ["relatedWorkspaceId", "relationType"],
+            "properties": {
+                "relatedWorkspaceId": {
+                    "description": "The related workspace ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "relationType": {
+                    "description": "The type of the related workspace to create in the relation. Only `Base` and `Branch` are valid for creation.",
+                    "$ref": "#/definitions/WorkspaceRelationType",
+                    "readOnly": false
+                }
+            }
         }
     }
 }

@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     Name = "get",
     Title = "Get Storage Sync Service",
     Description = "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use --name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -55,7 +56,6 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.ResourceGroup!,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (service == null)
@@ -77,7 +77,6 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(services ?? []), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Name = "get",
     Title = "Get SRE Agent",
     Description = "Show the configuration details of a named SRE Agent. Retrieves endpoint, provisioning state, location, and settings for a specific SRE Agent by name, optionally filtered by resource group. Required: --subscription, --agent.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -38,7 +39,6 @@ public sealed class AgentsGetCommand(ILogger<AgentsGetCommand> logger, ISreAgent
                 options.ResourceGroup,
                 options.Agent,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             if (agent is null)

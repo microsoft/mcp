@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000004",
-    Name = "delete_data_access_role",
+    Name = "delete-data-access-role",
     Title = "Delete OneLake Data Access Role",
     Description = """
         Delete a single data access role from a single item. Scoped to one role
@@ -21,6 +21,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         Caller must be a workspace Admin or Member on the item's workspace.
         Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     LocalRequired = false,

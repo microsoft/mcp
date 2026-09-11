@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
     Name = "unregister",
     Title = "Unregister Server",
     Description = "Unregister a server from a Storage Sync service.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -41,7 +42,6 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
                 options.Name,
                 options.ServerId,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Server unregistered successfully";

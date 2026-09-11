@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
         Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold.
         Creates a logical container for organizing blobs within a storage account.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -46,7 +47,6 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.Container,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new ContainerCreateCommandResult(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);

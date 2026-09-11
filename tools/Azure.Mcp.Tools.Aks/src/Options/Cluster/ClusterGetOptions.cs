@@ -17,9 +17,6 @@ public class ClusterGetOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
-
     [Option(Description = "AKS Cluster name.")]
     public string? Cluster { get; set; }
 }

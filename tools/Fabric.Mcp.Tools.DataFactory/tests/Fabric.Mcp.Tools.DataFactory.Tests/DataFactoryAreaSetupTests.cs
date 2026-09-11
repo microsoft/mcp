@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
 using Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.DataFactory.Tests;
 

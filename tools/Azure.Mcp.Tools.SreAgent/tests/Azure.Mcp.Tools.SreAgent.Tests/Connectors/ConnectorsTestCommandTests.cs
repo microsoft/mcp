@@ -47,7 +47,6 @@ public class ConnectorsTestCommandTests : SubscriptionCommandUnitTestsBase<Conne
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.TestConnectorAsync(
@@ -78,7 +77,6 @@ public class ConnectorsTestCommandTests : SubscriptionCommandUnitTestsBase<Conne
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.TestConnectorAsync(
@@ -103,7 +101,6 @@ public class ConnectorsTestCommandTests : SubscriptionCommandUnitTestsBase<Conne
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.TestConnectorAsync(
@@ -127,7 +124,6 @@ public class ConnectorsTestCommandTests : SubscriptionCommandUnitTestsBase<Conne
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.TestConnectorAsync("https://agent1.azuresre.ai", "connector1", null, Arg.Any<CancellationToken>())

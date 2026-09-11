@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Name = "plans_create",
     Title = "Create Incident Response Plan",
     Description = "Create and enable an incident response plan with a filter and handler.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

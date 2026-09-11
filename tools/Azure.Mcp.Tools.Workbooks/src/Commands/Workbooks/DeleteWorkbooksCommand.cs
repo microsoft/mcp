@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
         To learn more, visit: https://learn.microsoft.com/azure/azure-monitor/visualize/workbooks-manage
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -51,7 +52,6 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
         {
             var result = await _workbooksService.DeleteWorkbooksAsync(
                 options.WorkbookIds,
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 

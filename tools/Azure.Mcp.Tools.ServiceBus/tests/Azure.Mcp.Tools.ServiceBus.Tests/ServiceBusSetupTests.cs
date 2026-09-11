@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
@@ -164,7 +164,7 @@ public class ServiceBusSetupTests
         var services = new ServiceCollection();
         services.AddLogging();
         // Add required dependencies
-        services.AddSingleton(Substitute.For<ITenantService>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();
     }

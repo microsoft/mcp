@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -80,7 +79,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -136,7 +134,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -191,7 +188,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -251,7 +247,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -296,7 +291,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(existingDisks);
 
@@ -327,7 +321,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedDisk);
 
@@ -352,7 +345,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -388,7 +380,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service unavailable"));
 
@@ -426,7 +417,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundEx);
 
@@ -507,7 +497,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -539,7 +528,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -584,7 +572,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             diskAccess,
             tier,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -619,7 +606,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             diskAccess,
             tier,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -660,7 +646,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -717,7 +702,6 @@ public class DiskUpdateCommandTests : SubscriptionCommandUnitTestsBase<DiskUpdat
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

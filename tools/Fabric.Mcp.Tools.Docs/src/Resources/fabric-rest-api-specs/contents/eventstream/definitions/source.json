@@ -20,6 +20,7 @@
                 "AzureEventHub",
                 "AzureEventHubExtended",
                 "AzureIoTHub",
+                "AzureIoTHubExtended",
                 "AzureSQLDBCDC",
                 "AzureSQLMIDBCDC",
                 "AzureServiceBus",
@@ -32,9 +33,11 @@
                 "FabricWorkspaceItemEvents",
                 "GooglePubSub",
                 "Http",
+                "MirroredDatabaseChangeFeed",
                 "MongoDBCDC",
                 "Mqtt",
                 "MySQLCDC",
+                "OracleDBCDC",
                 "PostgreSQLCDC",
                 "RealTimeWeather",
                 "SQLServerOnVMDBCDC",
@@ -86,6 +89,10 @@
                         "description": "The Azure IoT Hub source type."
                     },
                     {
+                        "value": "AzureIoTHubExtended",
+                        "description": "The Azure IoT Hub Extended source type."
+                    },
+                    {
                         "value": "AzureSQLDBCDC",
                         "description": "The Azure SQL DB CDC source type."
                     },
@@ -134,6 +141,10 @@
                         "description": "The HTTP source type."
                     },
                     {
+                        "value": "MirroredDatabaseChangeFeed",
+                        "description": "The Mirrored Database Change Feed source type."
+                    },
+                    {
                         "value": "MongoDBCDC",
                         "description": "The MongoDB CDC source type."
                     },
@@ -144,6 +155,10 @@
                     {
                         "value": "MySQLCDC",
                         "description": "The MySQL CDC source type."
+                    },
+                    {
+                        "value": "OracleDBCDC",
+                        "description": "The Oracle DB CDC source type."
                     },
                     {
                         "value": "PostgreSQLCDC",
@@ -217,7 +232,7 @@
         },
         "SourceConnectionResponse": {
             "type": "object",
-            "description": "Represents the connection information for a source custom endpoint.",
+            "description": "Represents the connection information for an eventstream source.",
             "allOf": [
                 {
                     "$ref": "common.json#/definitions/BaseCustomEndpointConnection"
@@ -299,6 +314,25 @@
                 }
             ],
             "x-ms-discriminator-value": "AzureIoTHub"
+        },
+        "AzureIoTHubExtendedSourceResponse": {
+            "type": "object",
+            "description": "Represents an Azure IoT Hub Extended source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure IoT Hub Extended source.",
+                    "$ref": "#/definitions/AzureIoTHubExtendedSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureIoTHubExtended"
         },
         "AzureBlobStorageEventsSourceResponse": {
             "type": "object",
@@ -698,6 +732,25 @@
             ],
             "x-ms-discriminator-value": "Http"
         },
+        "MirroredDatabaseChangeFeedSourceResponse": {
+            "type": "object",
+            "description": "Represents a Mirrored Database Change Feed source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Mirrored Database Change Feed source.",
+                    "$ref": "#/definitions/MirroredDatabaseChangeFeedSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "MirroredDatabaseChangeFeed"
+        },
         "MongoDBCDCSourceResponse": {
             "type": "object",
             "description": "MongoDB CDC source response.",
@@ -735,6 +788,25 @@
                 }
             ],
             "x-ms-discriminator-value": "Mqtt"
+        },
+        "OracleDBCDCSourceResponse": {
+            "type": "object",
+            "description": "Represents an Oracle DB CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Oracle DB CDC source.",
+                    "$ref": "#/definitions/OracleDBCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "OracleDBCDC"
         },
         "FabricJobEventsSourceResponse": {
             "type": "object",
@@ -896,6 +968,48 @@
                 },
                 "inputSerialization": {
                     "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "AzureIoTHubExtendedSourceProperties": {
+            "type": "object",
+            "description": "Azure IoT Hub Extended source properties.",
+            "required": [
+                "dataConnectionId",
+                "consumerGroupName",
+                "startPosition"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure IoT Hub data connection identifier.",
+                    "format": "uuid"
+                },
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
+                },
+                "startPosition": {
+                    "type": "string",
+                    "description": "The start position in the Azure IoT Hub stream.",
+                    "enum": [
+                        "Earliest",
+                        "Latest"
+                    ],
+                    "x-ms-enum": {
+                        "name": "StartPosition",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Earliest",
+                                "description": "Start from the earliest event."
+                            },
+                            {
+                                "value": "Latest",
+                                "description": "Start from the latest event."
+                            }
+                        ]
+                    }
                 }
             }
         },
@@ -2129,6 +2243,124 @@
                 "retriableHttpStatusCodes": {
                     "type": "string",
                     "description": "The retriable HTTP status codes as a comma-separated string."
+                },
+                "responseDataJsonPointer": {
+                    "type": "string",
+                    "description": "The JSON Pointer expression to extract data from the HTTP response body."
+                },
+                "pagination": {
+                    "$ref": "#/definitions/HttpPagination"
+                }
+            }
+        },
+        "HttpPagination": {
+            "type": "object",
+            "description": "The base HTTP pagination configuration. The concrete pagination strategy is determined by the type field; see PagePagination and CursorPagination.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The pagination type. Additional pagination types may be added over time.",
+                    "enum": [
+                        "Cursor",
+                        "Page"
+                    ],
+                    "x-ms-enum": {
+                        "name": "PaginationMethod",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Cursor",
+                                "description": "Cursor-based pagination."
+                            },
+                            {
+                                "value": "Page",
+                                "description": "Page-based pagination."
+                            }
+                        ]
+                    }
+                }
+            },
+            "discriminator": "type"
+        },
+        "CursorPagination": {
+            "type": "object",
+            "description": "The cursor-based HTTP pagination configuration.",
+            "required": [
+                "cursorJsonPointer"
+            ],
+            "properties": {
+                "initialCursor": {
+                    "type": "string",
+                    "description": "The initial cursor value."
+                },
+                "cursorJsonPointer": {
+                    "type": "string",
+                    "description": "The JSON Pointer expression to extract the cursor value from the HTTP response body."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/HttpPagination"
+                }
+            ],
+            "x-ms-discriminator-value": "Cursor"
+        },
+        "PagePagination": {
+            "type": "object",
+            "description": "The page-based HTTP pagination configuration.",
+            "required": [
+                "initialPage",
+                "pageIncrement"
+            ],
+            "properties": {
+                "initialPage": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The initial page number. The value must be greater than or equal to 0.",
+                    "minimum": 0
+                },
+                "pageIncrement": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The number to increment per page. The value must be greater than or equal to 1.",
+                    "minimum": 1
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/HttpPagination"
+                }
+            ],
+            "x-ms-discriminator-value": "Page"
+        },
+        "MirroredDatabaseChangeFeedSourceProperties": {
+            "type": "object",
+            "description": "Mirrored Database Change Feed source properties.",
+            "required": [
+                "workspaceId",
+                "itemId",
+                "tableNames"
+            ],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The item identifier.",
+                    "format": "uuid"
+                },
+                "tableNames": {
+                    "type": "array",
+                    "description": "The list of table names. Currently, only `[\"*\"]` (all tables) is supported. Specific table selection will be supported in a future release.",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2226,6 +2458,103 @@
                 "tlsSettings": {
                     "description": "The TLS settings for the MQTT connection.",
                     "$ref": "#/definitions/TLSSettings"
+                }
+            }
+        },
+        "OracleDBCDCSourceProperties": {
+            "type": "object",
+            "description": "Oracle DB CDC source properties.",
+            "required": [
+                "dataConnectionId"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Oracle DB CDC data connection identifier.",
+                    "format": "uuid"
+                },
+                "tableNames": {
+                    "type": "array",
+                    "description": "The list of fully qualified table names to capture changes from. When not specified, all tables in the database are captured.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "decimalHandlingMode": {
+                    "type": "string",
+                    "description": "Specifies how decimal values are represented by the connector (precise decimal, double, or string).",
+                    "enum": [
+                        "Precise",
+                        "Double",
+                        "String"
+                    ],
+                    "x-ms-enum": {
+                        "name": "DecimalHandlingMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Precise",
+                                "description": "The decimal handling mode is Precise."
+                            },
+                            {
+                                "value": "Double",
+                                "description": "The decimal handling mode is Double."
+                            },
+                            {
+                                "value": "String",
+                                "description": "The decimal handling mode is String."
+                            }
+                        ]
+                    }
+                },
+                "snapshotMode": {
+                    "type": "string",
+                    "description": "Specifies the criteria for performing a snapshot when the connector starts.",
+                    "enum": [
+                        "Initial",
+                        "InitialOnly",
+                        "NoData"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SnapshotMode",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Initial",
+                                "description": "The snapshot mode is Initial."
+                            },
+                            {
+                                "value": "InitialOnly",
+                                "description": "The snapshot mode is InitialOnly."
+                            },
+                            {
+                                "value": "NoData",
+                                "description": "The snapshot mode is NoData."
+                            }
+                        ]
+                    }
+                },
+                "snapshotLockingMode": {
+                    "type": "string",
+                    "description": "Specifies the locking strategy used when taking the initial snapshot of Oracle tables.",
+                    "enum": [
+                        "Shared",
+                        "None"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SnapshotLockingModeForOracle",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Shared",
+                                "description": "The snapshot locking mode is Shared."
+                            },
+                            {
+                                "value": "None",
+                                "description": "The snapshot locking mode is None."
+                            }
+                        ]
+                    }
                 }
             }
         },

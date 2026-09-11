@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Service;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -24,7 +23,6 @@ public class ServiceListCommandTests : SubscriptionCommandUnitTestsBase<ServiceL
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServices);
 
@@ -45,7 +43,6 @@ public class ServiceListCommandTests : SubscriptionCommandUnitTestsBase<ServiceL
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -69,7 +66,6 @@ public class ServiceListCommandTests : SubscriptionCommandUnitTestsBase<ServiceL
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -87,7 +83,7 @@ public class ServiceListCommandTests : SubscriptionCommandUnitTestsBase<ServiceL
     {
         // Arrange
         const string resourceGroup = "test-rg";
-        Service.ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -95,6 +91,6 @@ public class ServiceListCommandTests : SubscriptionCommandUnitTestsBase<ServiceL
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListServices(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

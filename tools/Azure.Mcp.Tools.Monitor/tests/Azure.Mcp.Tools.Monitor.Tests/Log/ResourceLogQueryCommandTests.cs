@@ -4,9 +4,9 @@
 using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -47,7 +47,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
                 Arg.Any<int?>(),
                 Arg.Any<int?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(mockResults);
         }
@@ -86,7 +85,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
@@ -99,7 +97,9 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results);
+        ValidateAndDeserializeResponse(
+            response,
+            MonitorJsonContext.Default.ResourceLogQueryCommandResult);
 
         // Verify the mock was called
         await Service.Received(1).QueryResourceLogs(
@@ -110,7 +110,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -127,7 +126,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             int.Parse(_knownHours),
             int.Parse(_knownLimit),
             _knownTenant,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
@@ -151,7 +149,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             int.Parse(_knownHours),
             int.Parse(_knownLimit),
             _knownTenant,
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -168,7 +165,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
@@ -189,7 +185,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<int?>(), // Default hours
             Arg.Any<int?>(), // Default limit
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -205,7 +200,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -238,7 +232,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
@@ -259,7 +252,6 @@ public sealed class ResourceLogQueryCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 }

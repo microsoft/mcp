@@ -4,7 +4,6 @@
 using System.Net;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -40,7 +39,7 @@ public class KnowledgeIndexSchemaCommandTests : CommandUnitTestsBase<KnowledgeIn
                 Description = "desc",
                 Tags = new Dictionary<string, string?> { { "env", "test" } }
             };
-            Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(mockSchema);
         }
 
@@ -64,7 +63,7 @@ public class KnowledgeIndexSchemaCommandTests : CommandUnitTestsBase<KnowledgeIn
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -89,7 +88,7 @@ public class KnowledgeIndexSchemaCommandTests : CommandUnitTestsBase<KnowledgeIn
             Version = "1.0"
         };
 
-        Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedSchema);
 
         // Act

@@ -17,9 +17,10 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// </summary>
 [CommandMetadata(
     Id = "8925d0c4-becf-4b5a-8af1-3e998c1058ec",
-    Name = "list_items_dfs",
+    Name = "list-items-dfs",
     Title = "List OneLake Items (Data API)",
     Description = "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

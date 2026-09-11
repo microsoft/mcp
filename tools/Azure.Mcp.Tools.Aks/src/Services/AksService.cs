@@ -3,27 +3,18 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Models;
 using Azure.ResourceManager.ContainerService;
 using Azure.ResourceManager.ContainerService.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
-public sealed class AksService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ICacheService cacheService,
-    ILogger<AksService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IAksService
+public sealed class AksService(IAzureService azureService, ICacheService cacheService)
+    : BaseAzureResourceService(azureService), IAksService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly ILogger<AksService> _logger = logger;
 
     private const string CacheGroup = "aks";
     private const string AksClustersCacheKey = "clusters";
@@ -35,7 +26,6 @@ public sealed class AksService(
         string? clusterName,
         string? resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -62,7 +52,6 @@ public sealed class AksService(
                 "Microsoft.ContainerService/managedClusters",
                 resourceGroup,
                 subscription,
-                retryPolicy,
                 ConvertToClusterFromJson,
                 tenant: tenant,
                 cancellationToken: cancellationToken);
@@ -96,10 +85,9 @@ public sealed class AksService(
 
             var cluster = await ExecuteSingleResourceQueryAsync(
                 "Microsoft.ContainerService/managedClusters",
-                resourceGroup: resourceGroup,
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToClusterFromJson,
+                resourceGroup,
+                subscription,
+                ConvertToClusterFromJson,
                 additionalFilter: $"name =~ '{EscapeKqlString(clusterName!)}'",
                 tenant: tenant,
                 cancellationToken: cancellationToken);
@@ -124,7 +112,7 @@ public sealed class AksService(
         string clusterName,
         string? nodePoolName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -145,7 +133,7 @@ public sealed class AksService(
                 return cachedNodePools;
             }
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
             var nodePools = new List<NodePool>();
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -192,7 +180,7 @@ public sealed class AksService(
                 return cachedNodePool;
             }
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             if (resourceGroupResource?.Value == null)
             {

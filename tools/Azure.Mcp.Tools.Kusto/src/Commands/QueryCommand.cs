@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Name = "query",
     Title = "Query Kusto Database",
     Description = "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -41,7 +42,6 @@ public sealed class QueryCommand(
                     options.Database,
                     options.Query,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -52,7 +52,6 @@ public sealed class QueryCommand(
                     options.Database,
                     options.Query,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

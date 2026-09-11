@@ -39,7 +39,7 @@ This table lists the Org app definition parts.
 | Property | Type | Required | Description |
 |---|---|---|---|
 | `$schema` | string | true | Defines the schema to use for an Org app item. |
-| `settings` | [Settings](#settings) | true | Defines the [settings](#settings) for the Org app. |
+| `settings` | [Settings](#settings) | false | Defines the [settings](#settings) for the Org app. |
 | `elements` | [Element](#element)[] | true | Defines the list of [content elements](#element). |
 
 ### Settings

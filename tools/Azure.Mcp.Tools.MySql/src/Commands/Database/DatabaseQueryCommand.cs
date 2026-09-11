@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.MySql.Commands.Database;
     Name = "query",
     Title = "Query MySQL Database",
     Description = "Executes a SQL statement against a database on Azure Database for MySQL Flexible Server. Use this tool to explore or retrieve table data, or to modify data when the signed-in user has permission to do so. Only a single statement is executed per call; SQL comments and stacked statements are rejected. Best practices: List needed columns (avoid SELECT *), add WHERE filters, use LIMIT/OFFSET for paging, ORDER BY for deterministic results, and avoid unnecessary sensitive data. Example: SELECT id, name, status FROM customers WHERE status = 'Active' ORDER BY name LIMIT 50;",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -44,7 +43,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Is("sub1"),
             Arg.Is("eastus"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -81,7 +79,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Is("sub1"),
             Arg.Is("eastus"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -108,7 +105,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Is("sub1"),
             Arg.Is("eastus"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -132,7 +128,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Is("sub1"),
             Arg.Is("eastus"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
@@ -156,7 +151,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Is("sub1"),
             Arg.Is("eastus"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
@@ -185,7 +179,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
                 Arg.Is("sub1"),
                 Arg.Is("eastus"),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new BackupStatusResult("ds1", "Protected", "v1", "pol", null, null, null));
         }
@@ -223,7 +216,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Is("sub1"),
             Arg.Is("eastus"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -269,7 +261,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Is(expectedSubscription),
             Arg.Is(expectedLocation),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new BackupStatusResult(expectedDatasourceId, "Protected", null, null, null, null, null));
 
@@ -285,7 +276,6 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             expectedSubscription,
             expectedLocation,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

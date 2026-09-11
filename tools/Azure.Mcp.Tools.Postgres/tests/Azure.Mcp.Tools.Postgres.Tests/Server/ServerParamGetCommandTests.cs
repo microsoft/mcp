@@ -18,7 +18,7 @@ public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     public async Task ExecuteAsync_ReturnsParamValue_WhenParamExists()
     {
         var expectedValue = "value123";
-        Service.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedValue);
+        Service.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedValue);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -34,7 +34,7 @@ public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenParamDoesNotExist()
     {
-        Service.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("");
+        Service.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("");
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -70,9 +70,9 @@ public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<Serve
     }
 
     [Fact]
-    public async Task ExecuteAsync_ForwardsTenantAndRetryPolicy()
+    public async Task ExecuteAsync_ForwardsTenant()
     {
-        Service.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("value123");
+        Service.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("value123");
 
         await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -80,9 +80,8 @@ public class ServerParamGetCommandTests : SubscriptionCommandUnitTestsBase<Serve
             "--user", "user1",
             "--server", "server123",
             "--param", "param123",
-            "--tenant", "tenant123",
-            "--retry-max-retries", "3");
+            "--tenant", "tenant123");
 
-        await Service.Received(1).GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", "tenant123", Arg.Is<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(p => p != null && p.MaxRetries == 3), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", "tenant123", Arg.Any<CancellationToken>());
     }
 }

@@ -12,12 +12,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000015",
-    Name = "create_shortcut_s3_compatible",
+    Name = "create-shortcut-s3-compatible",
     Title = "Create OneLake Shortcut (S3 Compatible Target)",
     Description = """
         Create a shortcut pointing to an S3-compatible storage location. Requires
         a connection ID, target URL, and bucket name. Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -25,7 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = false,
     Secret = false)]
 public sealed class ShortcutCreateS3CompatibleCommand(ILogger<ShortcutCreateS3CompatibleCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutCreateS3CompatibleOptions, OneLakeShortcut>()
+    : AuthenticatedCommand<ShortcutCreateS3CompatibleOptions, ShortcutCreateS3CompatibleCommand.ShortcutCreateS3CompatibleCommandResult>()
 {
     private readonly ILogger<ShortcutCreateS3CompatibleCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -51,7 +52,9 @@ public sealed class ShortcutCreateS3CompatibleCommand(ILogger<ShortcutCreateS3Co
             };
 
             var result = await _oneLakeService.CreateShortcutAsync(options.WorkspaceId, options.ItemId, shortcut, options.ShortcutConflictPolicy, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutCreateS3CompatibleCommandResult(result),
+                OneLakeJsonContext.Default.ShortcutCreateS3CompatibleCommandResult);
         }
         catch (Exception ex)
         {
@@ -61,4 +64,6 @@ public sealed class ShortcutCreateS3CompatibleCommand(ILogger<ShortcutCreateS3Co
 
         return context.Response;
     }
+
+    public sealed record ShortcutCreateS3CompatibleCommandResult(OneLakeShortcut Shortcut);
 }

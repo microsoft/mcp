@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
         Note: Some properties like partition count cannot be changed after creation.
         This is a potentially long-running operation that waits for completion.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -52,7 +53,6 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
                 options.MessageRetentionInHours,
                 options.Status,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

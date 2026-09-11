@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands.Item;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -28,7 +27,7 @@ public class ItemGetCommandTests : SubscriptionCommandUnitTestsBase<ItemGetComma
             Arg.Is("acct"), Arg.Is("db"), Arg.Is("c"), Arg.Is("abc"),
             Arg.Is("pk1"),
             Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(item);
 
         var response = await ExecuteCommandAsync(
@@ -51,7 +50,7 @@ public class ItemGetCommandTests : SubscriptionCommandUnitTestsBase<ItemGetComma
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string>(), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns((JsonElement?)null);
 
         var response = await ExecuteCommandAsync(

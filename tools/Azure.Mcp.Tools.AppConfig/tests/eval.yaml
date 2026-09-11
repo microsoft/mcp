@@ -1,0 +1,44 @@
+name: Azure App Configuration evaluations
+description: Evaluation prompts for Azure App Configuration
+type: capability
+stimuli:
+  - name: List stores
+    prompt: List all App Configuration stores in my subscription
+    environment: ${ENVIRONMENT}
+    tags: 
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_account_list
+  - name: List key-value settings
+    prompt: List all key-value settings in App Configuration store AppConfigStore
+    environment: ${ENVIRONMENT}
+    tags: 
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_get
+  - name: List key-value settings with key prefix 'prod-'
+    prompt: List all key-value settings with key name starting with 'prod-' in App Configuration store AppConfigStore
+    environment: ${ENVIRONMENT}
+    tags: 
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_get
+  - name: Lock key Foo
+    prompt: Lock the key Foo in App Configuration store AppConfigStore
+    environment: ${ENVIRONMENT}
+    tags: 
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: appconfig
+              command: appconfig_kv_lock_set

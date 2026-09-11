@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tools.Speech.Commands.Tts;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -62,7 +61,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -118,7 +116,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
             Arg.Is(voice),
             Arg.Is(format),
             Arg.Is(endpointId),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -145,7 +142,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
                 voice,
                 format,
                 endpointId,
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>());
         }
         finally
@@ -173,7 +169,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Synthesis failed"));
 
@@ -214,7 +209,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -276,7 +270,6 @@ public class TtsSynthesizeCommandTests : CommandUnitTestsBase<TtsSynthesizeComma
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>());
         }
     }

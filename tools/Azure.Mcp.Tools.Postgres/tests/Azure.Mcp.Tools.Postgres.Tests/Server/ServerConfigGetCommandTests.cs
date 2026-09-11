@@ -18,7 +18,7 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     public async Task ExecuteAsync_ReturnsConfig_WhenConfigExists()
     {
         var expectedConfig = "config123";
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns(expectedConfig);
+        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expectedConfig);
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -33,7 +33,7 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenConfigDoesNotExist()
     {
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("");
+        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("");
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
@@ -67,18 +67,17 @@ public class ServerConfigGetCommandTests : SubscriptionCommandUnitTestsBase<Serv
     }
 
     [Fact]
-    public async Task ExecuteAsync_ForwardsTenantAndRetryPolicy()
+    public async Task ExecuteAsync_ForwardsTenant()
     {
-        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>()).Returns("config123");
+        Service.GetServerConfigAsync("sub123", "rg1", "user1", "server123", Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns("config123");
 
         await ExecuteCommandAsync(
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--user", "user1",
             "--server", "server123",
-            "--tenant", "tenant123",
-            "--retry-max-retries", "3");
+            "--tenant", "tenant123");
 
-        await Service.Received(1).GetServerConfigAsync("sub123", "rg1", "user1", "server123", "tenant123", Arg.Is<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(p => p != null && p.MaxRetries == 3), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetServerConfigAsync("sub123", "rg1", "user1", "server123", "tenant123", Arg.Any<CancellationToken>());
     }
 }

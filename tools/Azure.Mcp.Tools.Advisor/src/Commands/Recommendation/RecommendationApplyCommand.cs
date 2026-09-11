@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Name = "apply",
     Description = "This tool helps in applying advisor recommendations on IaaC files (like ARM, Terraform) for Azure resources. It returns the rules that can be applied to the IaaC file.",
     Title = "Apply Advisor Recommendations",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -24,7 +25,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Secret = false
 )]
 public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyCommand> logger)
-    : BaseCommand<RecommendationApplyOptions, List<string>>
+    : BaseCommand<RecommendationApplyOptions, RecommendationApplyCommand.RecommendationApplyCommandResult>
 {
     private readonly ILogger<RecommendationApplyCommand> _logger = logger;
     private static readonly ConcurrentDictionary<string, string> s_advisorRecommendationRulesCache = new();
@@ -51,7 +52,9 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
             var resourceFileName = $"{options.Resource}.json";
             var recommendationApplyRules = GetAdvisorRecommendationRules(resourceFileName);
 
-            context.Response.Results = ResponseResult.Create([recommendationApplyRules], AdvisorJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(
+                new([recommendationApplyRules]),
+                AdvisorJsonContext.Default.RecommendationApplyCommandResult);
 
             context.Activity?.AddTag("RecommendationRules_Resource", options.Resource);
         }
@@ -102,4 +105,6 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
 
         return resources;
     }
+
+    public sealed record RecommendationApplyCommandResult(List<string> Rules);
 }

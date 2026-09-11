@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
@@ -17,6 +16,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Name = "get",
     Title = "Get File Share",
     Description = "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(subscriptionResolver)
 {
     public override void ValidateOptions(FileShareGetOptions options, ValidationResult validationResult)
     {
@@ -51,7 +51,6 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.ResourceGroup!,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([fileShare]), FileSharesJsonContext.Default.FileShareGetCommandResult);
@@ -68,7 +67,6 @@ public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFi
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareGetCommandResult);

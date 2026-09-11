@@ -9,7 +9,4 @@ public sealed class ThreadsDeleteOptions : BaseSreAgentOptions
 {
     [Option(Description = SreAgentOptionDefinitions.ThreadIdDescription)]
     public required string ThreadId { get; set; }
-
-    [Option(Description = SreAgentOptionDefinitions.ConfirmDescription)]
-    public bool Confirm { get; set; }
 }

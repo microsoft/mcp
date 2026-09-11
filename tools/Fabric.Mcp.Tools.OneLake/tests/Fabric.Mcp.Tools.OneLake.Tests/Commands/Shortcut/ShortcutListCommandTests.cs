@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
+using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
 
@@ -12,7 +15,7 @@ public class ShortcutListCommandTests : CommandUnitTestsBase<ShortcutListCommand
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("list_shortcuts", Command.Name);
+        Assert.Equal("list-shortcuts", Command.Name);
         Assert.Equal("List OneLake Shortcuts", Command.Title);
         Assert.Contains("List shortcuts defined within an item", Command.Description);
         Assert.True(Command.Metadata.ReadOnly);
@@ -23,7 +26,7 @@ public class ShortcutListCommandTests : CommandUnitTestsBase<ShortcutListCommand
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("list_shortcuts", CommandDefinition.Name);
+        Assert.Equal("list-shortcuts", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);
     }
@@ -58,5 +61,27 @@ public class ShortcutListCommandTests : CommandUnitTestsBase<ShortcutListCommand
         Assert.False(metadata.OpenWorld);
         Assert.True(metadata.ReadOnly);
         Assert.False(metadata.Secret);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsShortcutsWrapper()
+    {
+        Service.ListShortcutsAsync("ws1", "item1", null, null, Arg.Any<CancellationToken>())
+            .Returns(new ShortcutListResponse
+            {
+                Value = [new OneLakeShortcut { Path = "Files/landing", Name = "shortcut1" }],
+                ContinuationToken = "next-token",
+                ContinuationUri = "https://example.test/shortcuts"
+            });
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "ws1",
+            "--item-id", "item1");
+
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.ShortcutListCommandResult);
+
+        Assert.Collection(result.Shortcuts, shortcut => Assert.Equal("shortcut1", shortcut.Name));
+        Assert.Equal("next-token", result.ContinuationToken);
+        Assert.Equal("https://example.test/shortcuts", result.ContinuationUri);
     }
 }

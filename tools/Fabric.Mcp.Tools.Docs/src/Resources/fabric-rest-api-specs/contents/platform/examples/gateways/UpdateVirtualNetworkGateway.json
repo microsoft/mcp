@@ -6,7 +6,8 @@
             "capacityId": "7cf7181f-9457-4178-b488-e7472b02faf4",
             "displayName": "ContosoVirtualNetworkGateway1",
             "inactivityMinutesBeforeSleep": 720,
-            "numberOfMemberGateways": 5
+            "maxMemberGatewayCount": 5,
+            "minMemberGatewayCount": 1
         }
     },
     "responses": {
@@ -23,7 +24,9 @@
                     "subnetName": "ContosoSubnet"
                 },
                 "inactivityMinutesBeforeSleep": 720,
-                "numberOfMemberGateways": 5
+                "numberOfMemberGateways": 5,
+                "maxMemberGatewayCount": 5,
+                "minMemberGatewayCount": 1
             }
         }
     }

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
     Name = "list",
     Title = "List Event Grid Topics",
     Description = "List Event Grid topics in an Azure subscription or resource group. Returns topic names, endpoints, locations, and provisioning status.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -37,8 +38,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger, IEventGri
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
-                cancellationToken);
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
         }

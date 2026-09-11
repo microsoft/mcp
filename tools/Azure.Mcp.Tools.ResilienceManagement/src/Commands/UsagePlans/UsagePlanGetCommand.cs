@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
         to list usage plans (id and name only): for the given resource group, or for the whole subscription when
         no resource group is provided.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -52,7 +53,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                     options.Name,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlan: usagePlan);
             }
@@ -62,7 +62,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlans: usagePlans.ToList());
             }
@@ -71,7 +70,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                 var usagePlans = await _resilienceManagementService.ListUsagePlansBySubscriptionAsync(
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlans: usagePlans.ToList());
             }

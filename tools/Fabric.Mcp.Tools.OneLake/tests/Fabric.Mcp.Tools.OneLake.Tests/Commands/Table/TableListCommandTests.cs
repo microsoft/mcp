@@ -9,6 +9,7 @@ using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Core.TestUtilities;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Table;
 
@@ -17,7 +18,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IOne
     [Fact]
     public void Constructor_InitializesMetadata()
     {
-        Assert.Equal("list_tables", Command.Name);
+        Assert.Equal("list-tables", Command.Name);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(Command.Metadata.Destructive);
@@ -26,7 +27,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IOne
     [Fact]
     public void GetCommand_ReturnsConfiguredCommand()
     {
-        Assert.Equal("list_tables", CommandDefinition.Name);
+        Assert.Equal("list-tables", CommandDefinition.Name);
         Assert.NotEmpty(CommandDefinition.Options);
     }
 

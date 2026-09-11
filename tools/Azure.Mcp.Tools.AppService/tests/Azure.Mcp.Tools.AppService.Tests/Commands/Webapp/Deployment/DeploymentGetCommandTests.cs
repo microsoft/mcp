@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -30,7 +29,7 @@ public class DeploymentGetCommandTests : SubscriptionCommandUnitTestsBase<Deploy
 
         // Set up the mock to return success for any arguments
         Service.GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId, Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .Returns(expectedDeployments);
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"];
@@ -45,7 +44,7 @@ public class DeploymentGetCommandTests : SubscriptionCommandUnitTestsBase<Deploy
         // Assert
         // Verify that the mock was called with the expected parameters
         await Service.Received(1).GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId,
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DeploymentGetResult);
 
@@ -75,7 +74,6 @@ public class DeploymentGetCommandTests : SubscriptionCommandUnitTestsBase<Deploy
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -86,7 +84,7 @@ public class DeploymentGetCommandTests : SubscriptionCommandUnitTestsBase<Deploy
     {
         // Arrange
         Service.GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId, Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app"];
@@ -103,6 +101,6 @@ public class DeploymentGetCommandTests : SubscriptionCommandUnitTestsBase<Deploy
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).GetDeploymentsAsync("sub123", "rg1", "test-app", deploymentId,
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

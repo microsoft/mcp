@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Account;
         Creates an Azure Storage account in the specified resource group and location and returns the created storage account
         information including name, location, SKU, access settings, and configuration details.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -46,7 +47,6 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
                 options.AccessTier,
                 options.EnableHierarchicalNamespace,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new AccountCreateCommandResult(account), StorageJsonContext.Default.AccountCreateCommandResult);

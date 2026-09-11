@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
         Only supported for RSV vaults; DPP datasources are protected by ARM resource ID directly.
         Filter results by --workload-type (e.g., SQL, SAPHana) or --container.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -66,7 +67,6 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
                 options.Container,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -44,7 +44,8 @@ The `.proxy` directory is recreated whenever a recorded test run needs the Test 
 1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
 2. **Re-parent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
 3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `IHttpClientFactory.CreateClient()` to benefit from playback redirection.
-4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<Tests.CsProj.Folder>/assets.json`:
+4. **Handle local-only tools** – For every test of a tool marked `LocalRequired = true`, call `AssertLocalToolIsUnavailableInHttpMode(toolName)` at the start of the test and return early when it returns `true`. The inherited helper verifies that remote HTTP mode does not expose the tool; do not duplicate this transport-specific assertion in individual test classes.
+5. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<Tests.CsProj.Folder>/assets.json`:
    ```json
    {
      "AssetsRepo": "Azure/azure-sdk-assets",
@@ -54,8 +55,8 @@ The `.proxy` directory is recreated whenever a recorded test run needs the Test 
    }
    ```
    If using `copilot` for initial migration, ensure that it indeed created this file.
-5. **Record and push** – Follow the workflow above to generate recordings and push them to the assets repo.
-6. **Document sanitizers** – Leave brief comments explaining why custom sanitizers exist to help future maintainers.
+6. **Record and push** – Follow the workflow above to generate recordings and push them to the assets repo.
+7. **Document sanitizers** – Leave brief comments explaining why custom sanitizers exist to help future maintainers.
 
 Example Migrations:
  - [Azure.Mcp.Tools.KeyVault](https://github.com/microsoft/mcp/pull/1080)

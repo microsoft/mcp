@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -22,7 +21,7 @@ public class GoalTemplateGetCommandTests : CommandUnitTestsBase<GoalTemplateGetC
     public async Task ExecuteAsync_ListsGoalTemplates_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "template1"), new("id2", "template2") };
-        Service.ListGoalTemplatesAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListGoalTemplatesAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);
@@ -37,7 +36,7 @@ public class GoalTemplateGetCommandTests : CommandUnitTestsBase<GoalTemplateGetC
     public async Task ExecuteAsync_GetsGoalTemplate_WhenNameProvided()
     {
         var expected = new GoalTemplateInfo("id1", "template1");
-        Service.GetGoalTemplateAsync(ServiceGroup, "template1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetGoalTemplateAsync(ServiceGroup, "template1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--name", "template1");
@@ -52,7 +51,7 @@ public class GoalTemplateGetCommandTests : CommandUnitTestsBase<GoalTemplateGetC
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListGoalTemplatesAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListGoalTemplatesAsync(ServiceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup);

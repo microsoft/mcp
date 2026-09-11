@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         Required arguments:
         - service
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -39,7 +40,7 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
     {
         try
         {
-            var sources = await _searchService.ListKnowledgeSources(options.Service, options.KnowledgeSource, options.RetryPolicy, cancellationToken);
+            var sources = await _searchService.ListKnowledgeSources(options.Service, options.KnowledgeSource, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(sources ?? []), SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
         }
         catch (Exception ex)

@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
         credentials and optional configuration settings. Returns the created server with its properties including the
         fully qualified domain name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -49,7 +50,6 @@ public sealed class ServerCreateCommand(ISqlService sqlService, ILogger<ServerCr
                 options.AdministratorPassword,
                 options.Version,
                 options.PublicNetworkAccess,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateResult);

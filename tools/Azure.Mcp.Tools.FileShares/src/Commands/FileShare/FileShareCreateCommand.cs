@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
@@ -18,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Name = "create",
     Title = "Create File Share",
     Description = "Create a new Azure managed file share resource in a resource group. This creates a high-performance, fully managed file share accessible via NFS protocol.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareCreateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareCreateOptions, FileShareCreateCommand.FileShareCreateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareCreateOptions options, CancellationToken cancellationToken)
     {
@@ -73,7 +73,6 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 allowedSubnets,
                 tags,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fileShare), FileSharesJsonContext.Default.FileShareCreateCommandResult);

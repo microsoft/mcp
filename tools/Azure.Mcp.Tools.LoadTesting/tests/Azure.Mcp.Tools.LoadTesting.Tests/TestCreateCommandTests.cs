@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class TestCreateCommandTests : SubscriptionCommandUnitTestsBase<TestCreat
             Arg.Is((int?)1),
             Arg.Is("https://example.com/api/test"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -81,7 +79,6 @@ public class TestCreateCommandTests : SubscriptionCommandUnitTestsBase<TestCreat
             Arg.Is((int?)1),
             Arg.Is((string?)null),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new Test());
 
@@ -108,7 +105,6 @@ public class TestCreateCommandTests : SubscriptionCommandUnitTestsBase<TestCreat
             Arg.Is<int?>(1),
             Arg.Is("https://example.com/api/test"),
             Arg.Is("tenant123"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 

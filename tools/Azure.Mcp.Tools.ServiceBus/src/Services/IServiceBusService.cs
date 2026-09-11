@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
@@ -16,7 +15,6 @@ public interface IServiceBusService
     /// <param name="topicName">The topic name containing the subscription</param>
     /// <param name="subscriptionName">The subscription name to get details for</param>
     /// <param name="tenantId">Optional tenant ID</param>
-    /// <param name="retryPolicy">Optional retry policy</param>
     /// <returns>Subscription details</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<SubscriptionDetails> GetSubscriptionDetails(
@@ -24,7 +22,6 @@ public interface IServiceBusService
         string topicName,
         string subscriptionName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -34,14 +31,12 @@ public interface IServiceBusService
     /// <param name="queueName">The queue name to get details for</param>
     /// <param name="subscription">Subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID</param>
-    /// <param name="retryPolicy">Optional retry policy</param>
     /// <returns>Queue details</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<QueueDetails> GetQueueDetails(
         string namespaceName,
         string queueName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -50,14 +45,12 @@ public interface IServiceBusService
     /// <param name="namespaceName">The Service Bus namespace name</param>
     /// <param name="topicName">The topic name to get details for</param>
     /// <param name="tenantId">Optional tenant ID</param>
-    /// <param name="retryPolicy">Optional retry policy</param>
     /// <returns>Topic details</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<TopicDetails> GetTopicDetails(
         string namespaceName,
         string topicName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -68,7 +61,6 @@ public interface IServiceBusService
     /// <param name="maxMessages">Maximum number of messages to peek (default: 1)</param>
     /// <param name="subscription">Subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID</param>
-    /// <param name="retryPolicy">Optional retry policy</param>
     /// <returns>List of peeked messages</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<List<ServiceBusReceivedMessage>> PeekQueueMessages(
@@ -76,7 +68,6 @@ public interface IServiceBusService
         string queueName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -88,7 +79,6 @@ public interface IServiceBusService
     /// <param name="maxMessages">Maximum number of messages to peek (default: 1)</param>
     /// <param name="subscription">Subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID</param>
-    /// <param name="retryPolicy">Optional retry policy</param>
     /// <returns>List of peeked messages</returns>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
     Task<List<ServiceBusReceivedMessage>> PeekSubscriptionMessages(
@@ -97,6 +87,5 @@ public interface IServiceBusService
         string subscriptionName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

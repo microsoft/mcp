@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Name = "investigate_yolo",
     Title = "Investigate With Agent YOLO",
     Description = "Yolo investigation mode: runs an investigation on an SRE Agent and automatically grants all pending approval requests without waiting for human confirmation. Use this when you want the agent to proceed without any approval gates.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,

@@ -4,6 +4,7 @@
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Xunit;
 
 namespace Fabric.Mcp.Tools.Docs.Tests.Services;
 

@@ -12,12 +12,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000002",
-    Name = "get_shortcut",
+    Name = "get-shortcut",
     Title = "Get OneLake Shortcut",
     Description = """
         Get the properties of a single shortcut (name, path, target,
         configuration). Requires OneLake.Read.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -25,7 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = true,
     Secret = false)]
 public sealed class ShortcutGetCommand(ILogger<ShortcutGetCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutGetOptions, OneLakeShortcut>()
+    : AuthenticatedCommand<ShortcutGetOptions, ShortcutGetCommand.ShortcutGetCommandResult>()
 {
     private readonly ILogger<ShortcutGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -35,7 +36,9 @@ public sealed class ShortcutGetCommand(ILogger<ShortcutGetCommand> logger, IOneL
         try
         {
             var result = await _oneLakeService.GetShortcutAsync(options.WorkspaceId, options.ItemId, options.ShortcutPath, options.ShortcutName, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeShortcut);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutGetCommandResult(result),
+                OneLakeJsonContext.Default.ShortcutGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -46,4 +49,6 @@ public sealed class ShortcutGetCommand(ILogger<ShortcutGetCommand> logger, IOneL
 
         return context.Response;
     }
+
+    public sealed record ShortcutGetCommandResult(OneLakeShortcut Shortcut);
 }

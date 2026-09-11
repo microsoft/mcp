@@ -6,12 +6,13 @@
 - Always put new classes and interfaces in separate files
 - Always make members static if they can be
 - All generated code needs to be AOT safe
+- Never expose `RetryPolicyOptions` through tool options or service contracts; use Azure SDK retry defaults
 - Always review your own code for consistency, maintainability, and testability
 - Always ask for clarifications if the request is ambiguous or lacks sufficient context.
 
 ## Engineering System
 
-- Use `./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx` to verify changes to powershell, c# project files and npm packages
+- Use `./eng/scripts/Build-Local.ps1 -VerifyNpx` to verify changes to powershell, c# project files and npm packages
 - Don't run local builds to check pipeline YAML files (e.g., files in `eng/pipelines/` with `.yml` extension)
 
 ## Pull Request Guidelines
@@ -34,6 +35,7 @@
 - Always convert `tool` services to inject `IHttpClientFactory` into its clients and use `IHttpClientFactory.CreateClient` method to instantiate the `HttpClient` for usage in the tool classes' methods.
   - If `IHttpClientFactory` is already injected into the client, ensure that `IHttpClientFactory.CreateClient` is used to instantiate the `HttpClient`. If this is done, then no further action is needed.
 - Always re-parent test classes parented by `CommandTestsBase` to `RecordedCommandTestsBase`. This will require minor fixture adjustments.
+- In test classes extending `RecordedCommandTestsBase`, every test for a `LocalRequired = true` tool must call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true`. This verifies that remote HTTP mode does not expose the local-only tool.
 - Always generate a new `assets.json` file alongside the livetest csproj file if one does not exist. This file should contain the following content:
   ```jsonc
   {
@@ -46,6 +48,8 @@
 - Copilot should utilize the [recorded test documentation](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) in `docs/recorded-tests.md` for more details on how to convert and validate recorded tests.
 
 ## Code Review Guidelines
+
+When reviewing a pull request, use the `mcp-code-reviewer` skill. In interactive IDE and CLI sessions, return draft findings for human approval before posting them. In GitHub Copilot Code Review, post qualified inline comments directly as a comment-only review. Keep the review read-only: never modify code or the branch, approve or request changes, resolve threads, or invoke an agent to implement changes.
 
 When reviewing PRs that add or modify MCP tools, cross-reference the [pre-merge checklist](PULL_REQUEST_TEMPLATE.md) and check the following repository-specific completeness requirements:
 

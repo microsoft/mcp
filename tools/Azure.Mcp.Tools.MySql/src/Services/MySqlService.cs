@@ -3,24 +3,18 @@
 
 using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
+using Azure.ResourceManager.MySql.FlexibleServers.Models;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
 
-public sealed class MySqlService(IResourceGroupService resourceGroupService, ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IMySqlService
+public sealed class MySqlService(IAzureService azureService)
+    : BaseAzureService(azureService), IMySqlService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     // Maximum number of rows to return to prevent DoS attacks and performance issues
     private const int MaxRowCount = 10_000;
 
@@ -33,14 +27,14 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-        var tokenCredential = await GetCredential(cancellationToken);
+        var tokenCredential = await GetCredential(null, cancellationToken);
         var accessToken = await tokenCredential.GetTokenAsync(new([GetOpenSourceRDBMSScope()]), cancellationToken);
         return accessToken.Token;
     }
 
     private string GetOpenSourceRDBMSScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 "https://ossrdbms-aad.database.windows.net/.default",
@@ -64,7 +58,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
     {
         if (!server.Contains('.'))
         {
-            return _tenantService.CloudConfiguration.CloudType switch
+            return AzureService.CloudConfiguration.CloudType switch
             {
                 AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                     server + ".mysql.database.azure.com",
@@ -250,7 +244,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
     public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var serverList = new List<string>();
@@ -263,7 +257,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
     public async Task<List<string>> ListServersInSubscriptionAsync(string subscriptionId, CancellationToken cancellationToken)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
         var serverList = new List<string>();
         await foreach (MySqlFlexibleServerResource server in subscriptionResource.GetMySqlFlexibleServersAsync(cancellationToken: cancellationToken))
         {
@@ -295,7 +289,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
     public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string server, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
@@ -315,7 +309,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
     public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
@@ -330,7 +324,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
     public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, string value, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
@@ -343,6 +337,7 @@ public sealed class MySqlService(IResourceGroupService resourceGroupService, ISu
 
         var configData = configuration.Value.Data;
         configData.Value = value;
+        configData.Source = MySqlFlexibleServerConfigurationSource.UserOverride;
 
         var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
         await WaitForLroCompletionAsync(updateOperation, cancellationToken);

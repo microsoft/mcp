@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tools.Search.Models;
-using Microsoft.Mcp.Core.Options;
+using Azure.Mcp.Tools.Search.Options.Index;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
@@ -13,32 +13,29 @@ public interface ISearchService
         string subscription,
         string? resourceGroup = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
         string? indexName,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
         string serviceName,
         string? knowledgeSourceName = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
         string serviceName,
         string? knowledgeBaseName = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> QueryIndex(
         string serviceName,
         string indexName,
         string searchText,
-        RetryPolicyOptions? retryPolicy = null,
+        IndexQueryType? queryType = null,
+        string? semanticConfiguration = null,
         CancellationToken cancellationToken = default);
 
     Task<string> RetrieveFromKnowledgeBase(
@@ -46,6 +43,5 @@ public interface ISearchService
         string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

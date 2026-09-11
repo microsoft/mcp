@@ -106,10 +106,4 @@ public sealed class RequestOptions : ISubscriptionOption
     /// </summary>
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    /// <summary>
-    /// Gets or sets the retry policy options for HTTP requests.
-    /// </summary>
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

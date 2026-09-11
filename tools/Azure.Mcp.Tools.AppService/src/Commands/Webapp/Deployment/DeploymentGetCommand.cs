@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Deployment;
         details for all deployments in the web app. You can specify a deployment ID to get details for a specific
         deployment.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -47,7 +48,6 @@ public sealed class DeploymentGetCommand(ILogger<DeploymentGetCommand> logger, I
                 options.App,
                 options.DeploymentId,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deployments), AppServiceJsonContext.Default.DeploymentGetResult);

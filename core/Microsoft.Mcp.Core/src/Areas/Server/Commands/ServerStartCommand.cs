@@ -29,6 +29,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using ModelContextProtocol.Protocol;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -46,8 +47,13 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Name = "start",
     Title = "Start MCP Server",
     Description = "Starts Azure MCP Server.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
-    ReadOnly = true)]
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 {
     private static readonly string[] s_stdioHostBuilderArgs =
@@ -121,7 +127,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     }
 
     /// <summary>
-    /// Executes the service start command, creating and starting the MCP server.
+    /// Executes the server start command, creating and starting the MCP server.
     /// </summary>
     /// <param name="context">The command execution context.</param>
     /// <param name="options">The parsed command options.</param>
@@ -216,8 +222,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 
     /// <summary>
     /// Validates the transport configuration, ensuring the transport type is valid and compatible with other options.
-    /// Verifies that HTTP transport is only used when available (ENABLE_HTTP), and that --dangerously-disable-http-incoming-auth
-    /// is only specified with HTTP transport.
+    /// Verifies that --dangerously-disable-http-incoming-auth is only specified with HTTP transport.
     /// </summary>
     /// <param name="options">The bound ServerStartOptions.</param>
     /// <param name="validationResult">Validation result to update on failure.</param>
@@ -234,12 +239,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 
         if (options.Transport == TransportTypes.Http)
         {
-#if ENABLE_HTTP
             return;
-#else
-            validationResult.Errors.Add($"{TransportTypes.Http} transport is only supported in the Docker image distribution of Azure MCP Server. Please use the Docker image or switch to {TransportTypes.StdIo} transport.");
-            return;
-#endif
         }
 
         validationResult.Errors.Add($"Invalid transport '{options.Transport}'. Valid transports are: {TransportTypes.StdIo}, {TransportTypes.Http}.");
@@ -270,16 +270,11 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     {
         if (options.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
-#if ENABLE_HTTP
             if (options.Transport != TransportTypes.Http || options.DangerouslyDisableHttpIncomingAuth)
             {
                 validationResult.Errors.Add($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --dangerously-disable-http-incoming-auth).");
             }
             return;
-#else
-            commandResult.AddError($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy is only supported in the Docker image distribution of Azure MCP Server. " +
-                "Please use the Docker image or switch to a different outgoing authentication strategy.");
-#endif
         }
     }
 
@@ -314,7 +309,6 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         // that require a user-facing terminal (e.g. DeviceCodeCredential) can refuse to activate.
         CustomChainedCredential.ActiveTransport = serverOptions.Transport;
 
-#if ENABLE_HTTP
         if (serverOptions.Transport == TransportTypes.Http)
         {
             if (serverOptions.DangerouslyDisableHttpIncomingAuth)
@@ -330,9 +324,6 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         {
             return CreateStdioHost(serverOptions);
         }
-#else
-        return CreateStdioHost(serverOptions);
-#endif
     }
 
     /// <summary>
@@ -685,9 +676,9 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     // server/discover, ping, notifications, etc.) require Mcp-Method only.
     private static readonly HashSet<string> McpNamedMethods = new(StringComparer.Ordinal)
     {
-        "tools/call",
-        "resources/read",
-        "prompts/get",
+        RequestMethods.ToolsCall,
+        RequestMethods.ResourcesRead,
+        RequestMethods.PromptsGet,
     };
 
     private static async Task ValidateMcpRoutingHeadersMiddleware(HttpContext context, Func<Task> next)
@@ -878,7 +869,6 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     /// <returns>The resolved OutgoingAuthStrategy.</returns>
     private static OutgoingAuthStrategy ResolveAuthStrategy(ServerStartOptions options)
     {
-#if ENABLE_HTTP
         if (options.OutgoingAuthStrategy == OutgoingAuthStrategy.NotSet)
         {
             if (options.Transport == TransportTypes.Http)
@@ -893,9 +883,6 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             }
         }
         return options.OutgoingAuthStrategy;
-#else
-        return OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
-#endif
     }
 
     private static WebApplication UseHttpsRedirectionIfEnabled(WebApplication app)

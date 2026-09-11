@@ -92,8 +92,8 @@
     },
     "/workspaces/{workspaceId}/sqlEndpoints/{sqlEndpointId}/refreshMetadata": {
       "post": {
-        "summary": "Refreshes all tables within a SQL analytics endpoint.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *contributor* or higher workspace role. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Refreshes tables within a SQL analytics endpoint.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen `tables` is provided in the request body, only the specified tables are refreshed. When omitted or empty, all tables are refreshed.\n\n## Permissions\n\nThe caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -179,6 +179,15 @@
         "x-ms-examples": {
           "Refresh all tables for a specified SQL analytics endpoint in a workspace": {
             "$ref": "./examples/RefreshAllTablesInSqlEndpoint.json"
+          },
+          "Refresh selective tables for a specified SQL analytics endpoint in a workspace": {
+            "$ref": "./examples/RefreshSelectiveTablesInSqlEndpoint.json"
+          },
+          "Refresh selective tables with recreate tables for a specified SQL analytics endpoint in a workspace": {
+            "$ref": "./examples/RefreshSelectiveTablesWithRecreateTables.json"
+          },
+          "Refresh selective tables with user defined schemas for a specified SQL analytics endpoint in a workspace": {
+            "$ref": "./examples/RefreshSelectiveTablesWithUserDefinedSchemas.json"
           }
         }
       }

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     Name = "create",
     Title = "Create Storage Sync Service",
     Description = "Create a new Azure Storage Sync service resource in a resource group. This is the top-level service container that manages sync groups, registered servers, and synchronization workflows.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -43,7 +44,6 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
                 options.Location,
                 options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=', 2)).ToDictionary(kv => kv[0], kv => kv[1]),
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(service), StorageSyncJsonContext.Default.StorageSyncServiceCreateCommandResult);

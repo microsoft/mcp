@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
@@ -18,6 +17,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Name = "update",
     Title = "Update File Share Snapshot",
     Description = "Update properties and metadata of an Azure managed file share snapshot, such as tags or retention policies.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Secret = false,
     LocalRequired = false)]
 public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<SnapshotUpdateOptions, SnapshotUpdateCommand.SnapshotUpdateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<SnapshotUpdateOptions, SnapshotUpdateCommand.SnapshotUpdateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotUpdateOptions options, CancellationToken cancellationToken)
     {
@@ -55,7 +55,6 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
                 options.SnapshotName,
                 metadata,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(snapshot), FileSharesJsonContext.Default.SnapshotUpdateCommandResult);

@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,7 +37,6 @@ public class OpenAiCompletionsCreateCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<double?>(),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -84,7 +82,6 @@ public class OpenAiCompletionsCreateCommandTests : SubscriptionCommandUnitTestsB
             Arg.Is(temperature),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -113,7 +110,6 @@ public class OpenAiCompletionsCreateCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<double?>(),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -138,7 +134,6 @@ public class OpenAiCompletionsCreateCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<double?>(),
             Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

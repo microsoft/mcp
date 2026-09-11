@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
         or other datasource is currently backed up. Requires the datasource ARM resource ID
         and the Azure region (location) where the resource exists.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -47,7 +48,6 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
                 options.Subscription!,
                 options.Location,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
