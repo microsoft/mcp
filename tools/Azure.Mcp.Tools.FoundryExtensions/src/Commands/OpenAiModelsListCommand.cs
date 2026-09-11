@@ -43,7 +43,6 @@ public sealed class OpenAiModelsListCommand(IFoundryExtensionsService foundryExt
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.AuthMethod ?? AuthMethod.Credential,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

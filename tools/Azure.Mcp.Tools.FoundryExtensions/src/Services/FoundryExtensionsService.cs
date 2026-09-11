@@ -263,9 +263,6 @@ public class FoundryExtensionsService(IAzureService azureService)
         string inputText,
         string subscription,
         string resourceGroup,
-        string? user = null,
-        string encodingFormat = "float",
-        int? dimensions = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
         CancellationToken cancellationToken = default)
@@ -322,7 +319,6 @@ public class FoundryExtensionsService(IAzureService azureService)
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        AuthMethod authMethod = AuthMethod.Credential,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
@@ -398,7 +394,6 @@ public class FoundryExtensionsService(IAzureService azureService)
         double? frequencyPenalty = null,
         double? presencePenalty = null,
         string? stop = null,
-        bool? stream = null,
         int? seed = null,
         string? user = null,
         string? tenant = null,

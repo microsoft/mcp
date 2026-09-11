@@ -38,9 +38,6 @@ public interface IFoundryExtensionsService
         string inputText,
         string subscription,
         string resourceGroup,
-        string? user = null,
-        string encodingFormat = "float",
-        int? dimensions = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
         CancellationToken cancellationToken = default
@@ -51,7 +48,6 @@ public interface IFoundryExtensionsService
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        AuthMethod authMethod = AuthMethod.Credential,
         CancellationToken cancellationToken = default
     );
 
@@ -67,7 +63,6 @@ public interface IFoundryExtensionsService
         double? frequencyPenalty = null,
         double? presencePenalty = null,
         string? stop = null,
-        bool? stream = null,
         int? seed = null,
         string? user = null,
         string? tenant = null,

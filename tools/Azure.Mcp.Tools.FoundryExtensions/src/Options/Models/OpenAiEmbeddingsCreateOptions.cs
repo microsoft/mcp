@@ -18,15 +18,6 @@ public sealed class OpenAiEmbeddingsCreateOptions : ISubscriptionOption
     [Option(Description = "The input text to generate embeddings for.")]
     public required string InputText { get; set; }
 
-    [Option(Description = FoundryExtensionsOptionDescriptions.User)]
-    public string? User { get; set; }
-
-    [Option(Description = "The format to return embeddings in (float or base64).", DefaultValue = "float")]
-    public string? EncodingFormat { get; set; }
-
-    [Option(Description = "The number of dimensions for the embedding output. Only supported in some models.")]
-    public int? Dimensions { get; set; }
-
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 
