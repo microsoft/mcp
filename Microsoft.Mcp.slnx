@@ -334,6 +334,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/tests/">
     <Project Path="tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.Tests/Azure.Mcp.Tools.IoTHub.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTOperations/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTOperations/src/">
+    <Project Path="tools/Azure.Mcp.Tools.IoTOperations/src/Azure.Mcp.Tools.IoTOperations.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTOperations/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.IoTOperations/tests/Azure.Mcp.Tools.IoTOperations.Tests/Azure.Mcp.Tools.IoTOperations.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/" />
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/src/">
     <Project Path="tools/Azure.Mcp.Tools.KeyVault/src/Azure.Mcp.Tools.KeyVault.csproj" />

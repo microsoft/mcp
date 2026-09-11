@@ -410,7 +410,7 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
 
     [LiveTestOnly]
     [Fact]
-    public async Task Should_RejectNonSelectQuery_WithValidationError()
+    public async Task Should_RejectStackedQuery_WithValidationError()
     {
         JsonElement error = await this.CallToolAsyncWithErrorExpected("postgres_database_query",
             new()
@@ -419,14 +419,14 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
                     { "database", TestDatabaseName },
                     { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                     { "user", AdminUsername },
-                    { "query", "DELETE FROM employees WHERE id = 1;" }
+                    { "query", "SELECT * FROM employees; DELETE FROM employees WHERE id = 1;" }
             });
 
         int errorStatus = error.GetProperty("status").GetInt32();
         Assert.Equal(400, errorStatus);
 
         string errorMessage = error.GetProperty("message").GetString()!;
-        Assert.Equal("Only single read-only SELECT statements are allowed.", errorMessage);
+        Assert.Equal("Multiple or stacked SQL statements are not allowed.", errorMessage);
     }
 
     [LiveTestOnly]
