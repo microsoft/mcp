@@ -57,6 +57,18 @@ public class RecommendationListOptions : ISubscriptionOption
         "TotalRecommendations always reflects the complete filtered population regardless of --top.")]
     public int? Top { get; set; }
 
+    [Option(Description = "List recommendations projected to an Azure Service Group, identified by its full ARM ID " +
+        "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'. " +
+        "This selects the independent Service Group scope: it cannot be combined with --subscription or --resource-group. " +
+        "Other filters (category, impact, status, search, etc.) and --mode still apply.")]
+    public string? ServiceGroupId { get; set; }
+
+    [Option(Description = "Selects the recommendation projection mode ('All' or 'Contextual'). Defaults to 'All'. " +
+        "Use 'Contextual' for prioritized, ranked, or 'what should I fix first' requests: it returns only recommendations " +
+        "that have contextual criticality scoring, ordered by criticality score (highest first). " +
+        "Applies to both the subscription and Service Group scopes.")]
+    public RecommendationMode? Mode { get; set; }
+
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 

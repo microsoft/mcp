@@ -51,6 +51,12 @@ internal static class RecommendationFilterValidator
             validationResult.Errors.Add("--tracking-ids cannot contain empty values.");
         }
 
+        if (options.Mode is { } mode && !Enum.IsDefined(mode))
+        {
+            validationResult.Errors.Add(
+                $"Invalid --mode value '{mode}'. Allowed values: {nameof(RecommendationMode.All)}, {nameof(RecommendationMode.Contextual)}.");
+        }
+
         ServiceRetirementFilterValidator.Validate(
             validationResult,
             options.SubCategory,

@@ -691,4 +691,167 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("Migrate off the retiring feature", recommendation.Properties.ShortDescription!.Problem);
         Assert.Equal("Move to the replacement SKU", recommendation.Properties.ShortDescription.Solution);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScope_SucceedsWithoutSubscription()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group-id", "  /providers/Microsoft.Management/serviceGroups/sg1  ");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("/providers/Microsoft.Management/serviceGroups/sg1", captured!.ServiceGroupId);
+
+        // Service Group scope must not pass a subscription.
+        await Service.Received(1).ListRecommendationsAsync(
+            Arg.Is<string?>(s => s == null),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithSubscription_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group-id", "/providers/Microsoft.Management/serviceGroups/sg1",
+            "--subscription", "sub123");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--service-group-id cannot be combined with --subscription", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithResourceGroup_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group-id", "/providers/Microsoft.Management/serviceGroups/sg1",
+            "--resource-group", "rg1");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-group cannot be combined with --service-group-id", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoScopeProvided_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync("--mode", "Contextual");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("subscription", response.Message.ToLower());
+    }
+
+    [Theory]
+    [InlineData("All", Models.RecommendationMode.All)]
+    [InlineData("Contextual", Models.RecommendationMode.Contextual)]
+    [InlineData("contextual", Models.RecommendationMode.Contextual)]
+    public async Task ExecuteAsync_ForwardsModeToService(string mode, Models.RecommendationMode expected)
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--mode", mode);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(expected, captured!.Mode);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedMode_IsNull()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.Mode);
+        Assert.Null(captured.ServiceGroupId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidMode_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--mode", "Bogus");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithContextualMode_ForwardsBoth()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group-id", "/providers/Microsoft.Management/serviceGroups/sg1",
+            "--mode", "Contextual",
+            "--category", "Cost");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("/providers/Microsoft.Management/serviceGroups/sg1", captured!.ServiceGroupId);
+        Assert.Equal(Models.RecommendationMode.Contextual, captured.Mode);
+        Assert.Equal("Cost", captured.Category);
+    }
 }

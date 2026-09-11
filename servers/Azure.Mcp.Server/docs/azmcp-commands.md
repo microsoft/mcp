@@ -362,9 +362,15 @@ azmcp adme schema list --endpoint <endpoint> \
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
+# Scope is either a subscription (--subscription, optionally narrowed by --resource-group) or an Azure Service Group
+# (--service-group-id); the two scopes are independent and cannot be combined
+# --mode Contextual returns only recommendations with contextual criticality scoring, ordered by criticality score (highest first), for both scopes; defaults to All
 # Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation list --subscription <subscription> \
+azmcp advisor recommendation list [--subscription <subscription>] \
+                                  [--resource-group <resource-group>] \
+                                  [--service-group-id <service-group-id>] \
+                                  [--mode <All|Contextual>] \
                                   [--top <top>] \
                                   [--category <category>] \
                                   [--impact <impact>] \

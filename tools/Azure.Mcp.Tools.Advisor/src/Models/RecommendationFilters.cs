@@ -14,4 +14,6 @@ public sealed record RecommendationFilters(
     string? SubCategory = null,
     IReadOnlyList<string>? TrackingIds = null,
     string? RetirementDateOperator = null,
-    DateOnly? RetirementDate = null);
+    DateOnly? RetirementDate = null,
+    string? ServiceGroupId = null,
+    RecommendationMode? Mode = null);

@@ -50,7 +50,7 @@ public class AdvisorService(IAzureService azureService)
     ];
 
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
-        string subscription,
+        string? subscription,
         string? resourceGroup,
         RecommendationFilters? filters = null,
         int top = 50,
@@ -60,37 +60,66 @@ public class AdvisorService(IAzureService azureService)
         ArgumentOutOfRangeException.ThrowIfLessThan(top, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(top, 100);
 
-        var subscriptionResource = await AzureService.GetSubscription(
-            subscription,
-            tenant,
-            cancellationToken: cancellationToken);
-        var metadataTenant = subscriptionResource.Data.TenantId.ToString();
+        var serviceGroupId = string.IsNullOrWhiteSpace(filters?.ServiceGroupId) ? null : filters!.ServiceGroupId!.Trim();
+        var isServiceGroupScope = serviceGroupId is not null;
+
+        // Resolve the subscription up front for subscription scope so the metadata join uses the same tenant
+        // and scope validation surfaces invalid subscriptions/resource groups. Service Group scope is
+        // subscription-independent and runs against the tenant directly.
+        SubscriptionResource? subscriptionResource = null;
+        string? metadataTenant = tenant;
+        if (!isServiceGroupScope)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+            subscriptionResource = await AzureService.GetSubscription(
+                subscription,
+                tenant,
+                cancellationToken: cancellationToken);
+            metadataTenant = subscriptionResource.Data.TenantId.ToString();
+        }
 
         Dictionary<string, RecommendationMetadata>? metadataByTypeId =
             await ResolveMetadataFilterMatchesAsync(filters, metadataTenant, cancellationToken);
 
         if (metadataByTypeId is { Count: 0 })
         {
-            // Validate the scope so an invalid subscription or resource group fails instead of returning an empty success.
-            await ValidateScopeAsync(subscription, resourceGroup, tenant, cancellationToken);
+            if (!isServiceGroupScope)
+            {
+                // Validate the scope so an invalid subscription or resource group fails instead of returning an empty success.
+                await ValidateScopeAsync(subscription!, resourceGroup, tenant, cancellationToken);
+            }
+
             return new([], false);
         }
 
-        var additionalFilter = BuildAdditionalFilter(filters, metadataByTypeId?.Keys);
+        var contextual = IsContextualMode(filters);
+        var additionalFilter = BuildAdditionalFilter(
+            filters,
+            metadataByTypeId?.Keys,
+            serviceGroupId,
+            excludeServiceGroupProjections: !isServiceGroupScope,
+            contextualOnly: contextual);
 
-        var recommendations = await ExecuteResourceQueryAsync(
-            "Microsoft.Advisor/recommendations",
-            resourceGroup,
-            subscription,
-            ConvertToAdvisorRecommendationModel,
-            tableName: "advisorresources",
-            additionalFilter: additionalFilter,
-            limit: top,
-            tenant: tenant,
-            cancellationToken: cancellationToken);
+        var query = BuildRecommendationListQuery(
+            isServiceGroupScope ? null : resourceGroup,
+            additionalFilter,
+            contextual,
+            top);
+
+        var recommendations = await ExecuteRecommendationListQueryAsync(
+            query,
+            subscriptionResource,
+            tenant,
+            cancellationToken);
 
         if (recommendations.Results.Count == 0)
         {
+            if (!isServiceGroupScope)
+            {
+                // Preserve the resource-group-not-found signal that the base resource query would have produced.
+                await ValidateScopeAsync(subscription!, resourceGroup, tenant, cancellationToken);
+            }
+
             return recommendations;
         }
 
@@ -105,6 +134,57 @@ public class AdvisorService(IAzureService azureService)
         return new(
             JoinWithMetadata(recommendations.Results, metadataByTypeId),
             recommendations.AreResultsTruncated);
+    }
+
+    private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueryAsync(
+        string query,
+        SubscriptionResource? subscriptionResource,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        TenantResource tenantResource;
+        ResourceQueryContent queryContent;
+        if (subscriptionResource is not null)
+        {
+            tenantResource = await GetTenantResourceForSubscriptionAsync(subscriptionResource, cancellationToken);
+            queryContent = new ResourceQueryContent(query)
+            {
+                Subscriptions = { subscriptionResource.Data.SubscriptionId },
+            };
+        }
+        else
+        {
+            // Service Group scope: query at the tenant level without subscription scoping.
+            tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
+            queryContent = new ResourceQueryContent(query);
+        }
+
+        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+
+        var results = new List<Recommendation>();
+        if (result is { Count: > 0 })
+        {
+            using var jsonDocument = JsonDocument.Parse(result.Data);
+            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in jsonDocument.RootElement.EnumerateArray())
+                {
+                    results.Add(ConvertToAdvisorRecommendationModel(item));
+                }
+            }
+        }
+
+        return new(results, result?.ResultTruncated == ResultTruncated.True);
+    }
+
+    private async Task<TenantResource> GetTenantResourceForSubscriptionAsync(
+        SubscriptionResource subscriptionResource,
+        CancellationToken cancellationToken)
+    {
+        var allTenants = await AzureService.GetTenants(cancellationToken);
+        return allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource.Data.TenantId)
+            ?? throw new InvalidOperationException(
+                $"No accessible tenant found for subscription '{subscriptionResource.Data.SubscriptionId}'.");
     }
 
     public async Task<Recommendation> UpdateRecommendationAsync(
@@ -782,7 +862,7 @@ public class AdvisorService(IAzureService azureService)
             query += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
         }
 
-        var additionalFilter = BuildAdditionalFilter(filters);
+        var additionalFilter = BuildAdditionalFilter(filters, excludeServiceGroupProjections: true);
         if (!string.IsNullOrEmpty(additionalFilter))
         {
             query += $" and {additionalFilter}";
@@ -814,7 +894,10 @@ public class AdvisorService(IAzureService azureService)
 
     internal static string? BuildAdditionalFilter(
         RecommendationFilters? filters,
-        IEnumerable<string>? recommendationTypeIds = null)
+        IEnumerable<string>? recommendationTypeIds = null,
+        string? serviceGroupId = null,
+        bool excludeServiceGroupProjections = false,
+        bool contextualOnly = false)
     {
         // New recommendations are active and actionable, so use that status unless the caller explicitly
         // requests another lifecycle state.
@@ -823,6 +906,25 @@ public class AdvisorService(IAzureService azureService)
         {
             $"tostring(properties.recommendationStatus) =~ '{status}'",
         };
+
+        var normalizedServiceGroupId = string.IsNullOrWhiteSpace(serviceGroupId) ? null : serviceGroupId.Trim();
+        if (normalizedServiceGroupId is not null)
+        {
+            // Service Group scope: select only recommendations projected to the requested Service Group.
+            clauses.Add($"tostring(properties.serviceGroupId) =~ '{SanitizeForKql(normalizedServiceGroupId)}'");
+        }
+        else if (excludeServiceGroupProjections)
+        {
+            // Subscription/resource scope: exclude SG-projected records so they are not returned as duplicates.
+            clauses.Add("isnull(properties.serviceGroupId)");
+        }
+
+        if (contextualOnly)
+        {
+            // Contextual mode surfaces only recommendations that carry criticality scoring.
+            clauses.Add("isnotempty(tostring(properties.criticality))");
+            clauses.Add("isnotnull(properties.criticalityScore)");
+        }
 
         if (filters is not null)
         {
@@ -874,6 +976,39 @@ public class AdvisorService(IAzureService azureService)
     // Default KQL clause that restricts results to active ('New') recommendations.
     internal const string ActiveRecommendationClause = "tostring(properties.recommendationStatus) =~ 'New'";
 
+    internal static bool IsContextualMode(RecommendationFilters? filters) =>
+        filters?.Mode == RecommendationMode.Contextual;
+
+    /// <summary>
+    /// Builds the recommendation list KQL query for either subscription or Service Group scope. Contextual mode
+    /// applies an implicit descending order by criticality score before the result set is capped.
+    /// </summary>
+    internal static string BuildRecommendationListQuery(
+        string? resourceGroup,
+        string? additionalFilter,
+        bool contextual,
+        int limit)
+    {
+        var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
+
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            query += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
+        }
+
+        if (!string.IsNullOrEmpty(additionalFilter))
+        {
+            query += $" and {additionalFilter}";
+        }
+
+        if (contextual)
+        {
+            query += " | order by todouble(properties.criticalityScore) desc";
+        }
+
+        return query + $" | limit {limit}";
+    }
+
     private static string SanitizeForKql(string value) => EscapeKqlString(value.Replace("|", string.Empty));
 
     internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)
@@ -915,7 +1050,12 @@ public class AdvisorService(IAzureService azureService)
                 Review: advisorRecommendation.Properties?.Review,
                 ResourceWorkload: advisorRecommendation.Properties?.ResourceWorkload,
                 SourceSystem: advisorRecommendation.Properties?.SourceSystem,
-                Notes: advisorRecommendation.Properties?.Notes),
+                Notes: advisorRecommendation.Properties?.Notes,
+                ServiceGroupId: advisorRecommendation.Properties?.ServiceGroupId,
+                Criticality: advisorRecommendation.Properties?.Criticality,
+                CriticalityScore: advisorRecommendation.Properties?.CriticalityScore,
+                ScoreChangedAt: advisorRecommendation.Properties?.ScoreChangedAt,
+                Savings: advisorRecommendation.Properties?.Savings),
             Id: advisorRecommendation.ResourceId,
             Type: advisorRecommendation.ResourceType,
             Name: advisorRecommendation.ResourceName);

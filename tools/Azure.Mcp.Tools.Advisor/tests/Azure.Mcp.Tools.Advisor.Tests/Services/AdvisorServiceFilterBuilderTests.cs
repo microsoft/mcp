@@ -236,4 +236,143 @@ public class AdvisorServiceFilterBuilderTests
         Assert.DoesNotContain('|', result!);
         Assert.Contains("'bad''id'", result);
     }
+
+    [Fact]
+    public void BuildAdditionalFilter_ExcludeServiceGroupProjections_AddsIsNullClause()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(null, excludeServiceGroupProjections: true);
+
+        Assert.Equal($"{StatusClause} and isnull(properties.serviceGroupId)", result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_ServiceGroupId_AddsEqualityClauseAndSkipsIsNull()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(
+            null,
+            serviceGroupId: "/providers/Microsoft.Management/serviceGroups/sg1",
+            excludeServiceGroupProjections: true);
+
+        Assert.Equal(
+            $"{StatusClause} and tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/sg1'",
+            result);
+        Assert.DoesNotContain("isnull(properties.serviceGroupId)", result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_ServiceGroupId_IsSanitized()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(null, serviceGroupId: "sg'|id");
+
+        Assert.NotNull(result);
+        Assert.DoesNotContain('|', result!);
+        Assert.Contains("'sg''id'", result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_ContextualOnly_AddsCriticalityPresenceClauses()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(null, contextualOnly: true);
+
+        Assert.Equal(
+            $"{StatusClause} and isnotempty(tostring(properties.criticality)) and isnotnull(properties.criticalityScore)",
+            result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_ServiceGroupScopeWithContextual_CombinesClauses()
+    {
+        var result = AdvisorService.BuildAdditionalFilter(
+            null,
+            serviceGroupId: "/providers/Microsoft.Management/serviceGroups/sg1",
+            contextualOnly: true);
+
+        Assert.Equal(
+            $"{StatusClause} and " +
+            "tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/sg1' and " +
+            "isnotempty(tostring(properties.criticality)) and isnotnull(properties.criticalityScore)",
+            result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_ContextualOff_DoesNotAddCriticalityClauses()
+    {
+        // Contextual presence filtering must only apply when explicitly requested.
+        var result = AdvisorService.BuildAdditionalFilter(null, excludeServiceGroupProjections: true);
+
+        Assert.DoesNotContain("criticality", result);
+    }
+
+    [Fact]
+    public void BuildAdditionalFilter_DefaultParameters_DoNotAddScopeOrContextualClauses()
+    {
+        // Preserves the legacy behavior for callers that pass only filters.
+        var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Category: "Security"));
+
+        Assert.DoesNotContain("serviceGroupId", result);
+        Assert.DoesNotContain("criticality", result);
+    }
+
+    [Fact]
+    public void BuildRecommendationListQuery_SubscriptionScope_NoContextual_HasNoOrder()
+    {
+        var query = AdvisorService.BuildRecommendationListQuery(
+            resourceGroup: null,
+            additionalFilter: $"{StatusClause} and isnull(properties.serviceGroupId)",
+            contextual: false,
+            limit: 25);
+
+        Assert.StartsWith("advisorresources | where type =~ 'Microsoft.Advisor/recommendations'", query);
+        Assert.Contains("and isnull(properties.serviceGroupId)", query);
+        Assert.DoesNotContain("order by", query);
+        Assert.EndsWith("| limit 25", query);
+    }
+
+    [Fact]
+    public void BuildRecommendationListQuery_Contextual_OrdersByCriticalityScoreDescBeforeLimit()
+    {
+        var query = AdvisorService.BuildRecommendationListQuery(
+            resourceGroup: null,
+            additionalFilter: StatusClause,
+            contextual: true,
+            limit: 10);
+
+        Assert.Contains("| order by todouble(properties.criticalityScore) desc", query);
+        var orderIndex = query.IndexOf("order by", StringComparison.Ordinal);
+        var limitIndex = query.IndexOf("| limit", StringComparison.Ordinal);
+        Assert.True(orderIndex < limitIndex, "Ordering must be applied before the result set is capped.");
+    }
+
+    [Fact]
+    public void BuildRecommendationListQuery_WithResourceGroup_AddsEscapedFilter()
+    {
+        var query = AdvisorService.BuildRecommendationListQuery(
+            resourceGroup: "rg'inject",
+            additionalFilter: StatusClause,
+            contextual: false,
+            limit: 50);
+
+        Assert.Contains("resourceGroup =~ 'rg''inject'", query);
+    }
+
+    [Fact]
+    public void BuildRecommendationListQuery_NullResourceGroup_OmitsResourceGroupFilter()
+    {
+        var query = AdvisorService.BuildRecommendationListQuery(
+            resourceGroup: null,
+            additionalFilter: StatusClause,
+            contextual: false,
+            limit: 50);
+
+        Assert.DoesNotContain("resourceGroup", query);
+    }
+
+    [Fact]
+    public void IsContextualMode_ReflectsFilterMode()
+    {
+        Assert.True(AdvisorService.IsContextualMode(new RecommendationFilters(Mode: RecommendationMode.Contextual)));
+        Assert.False(AdvisorService.IsContextualMode(new RecommendationFilters(Mode: RecommendationMode.All)));
+        Assert.False(AdvisorService.IsContextualMode(new RecommendationFilters()));
+        Assert.False(AdvisorService.IsContextualMode(null));
+    }
 }
