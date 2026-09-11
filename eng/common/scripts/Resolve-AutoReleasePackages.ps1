@@ -226,7 +226,7 @@ function Invoke-AutoReleaseResolution {
           else
           {
             Write-Host "AzsdkExePath is not set; skipping release plan update for package '$name'."
-          }
+          }          
         }
         catch
         {
