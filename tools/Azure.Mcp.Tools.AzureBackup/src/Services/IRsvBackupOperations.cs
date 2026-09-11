@@ -133,6 +133,15 @@ public interface IRsvBackupOperations
         string? tenant,
         CancellationToken cancellationToken);
 
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? storageAccount,
+        string? tenant,
+        CancellationToken cancellationToken);
+
     Task<BackupJobInfo> GetJobAsync(
         string vaultName,
         string resourceGroup,
@@ -212,6 +221,14 @@ public interface IRsvBackupOperations
         string vaultName,
         string resourceGroup,
         string subscription,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string backupManagementType,
         string? tenant,
         CancellationToken cancellationToken);
 

@@ -70,6 +70,23 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         {
             Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
             Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        // Container discovery can return storage accounts registered from other resource groups.
+        // These are not test resources, so sanitize their names in container identifiers and ARM IDs.
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """StorageContainer;Storage;[^;"/]+;[^"/]+""",
+            Value = "StorageContainer;Storage;Sanitized;Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """(?<=resourceGroups/)[^/"\\]+""",
+            Value = "Sanitized",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = """(?<=storageAccounts/)[^/"\\]+""",
+            Value = "Sanitized",
         })
     ];
 
@@ -1748,6 +1765,35 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
     #endregion
 
+    #region Container Tests (RSV)
+
+    /// <summary>
+    /// Validates that container refresh triggers RSV discovery successfully.
+    /// Uses the default AzureStorage backup management type (Azure File share discovery); the response is a
+    /// fire-and-forget acceptance record, not a container list.
+    /// </summary>
+    [Fact]
+    public async Task ContainerRefresh_RsvVault_TriggersDiscovery_Successfully()
+    {
+        // Container refresh is RSV-only
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_refresh",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        Assert.Equal("Accepted", result.AssertProperty("status").GetString());
+        Assert.Equal(vaultName, result.AssertProperty("vault").GetString());
+        Assert.Equal("AzureStorage", result.AssertProperty("backupManagementType").GetString());
+    }
+
+    #endregion
+
     #region Governance Tests (RSV)
 
     [Fact]
@@ -2083,6 +2129,35 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var recoveryPoints = result.AssertProperty("recoveryPoints");
         Assert.Equal(JsonValueKind.Array, recoveryPoints.ValueKind);
+    }
+
+    #endregion
+
+    #region Container Tests (RSV)
+
+    [Fact]
+    public async Task ContainerListAvailable_RsvVault_ListsAvailableContainers_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_list-available",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var containers = result.AssertProperty("containers");
+        Assert.Equal(JsonValueKind.Array, containers.ValueKind);
+
+        foreach (var container in containers.EnumerateArray())
+        {
+            container.AssertProperty("name");
+            container.AssertProperty("friendlyName");
+            container.AssertProperty("containerType");
+        }
     }
 
     #endregion

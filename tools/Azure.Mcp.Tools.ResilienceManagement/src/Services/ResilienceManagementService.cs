@@ -2198,7 +2198,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         };
 
         ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Started, usagePlan, usagePlanData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForUsagePlanLroCompletionAsync(operation, "usage plan create or update", cancellationToken);
 
         return MapUsagePlan(operation.Value.Data);
     }
@@ -2249,7 +2249,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         };
 
         ArmOperation<UsagePlanEnrollmentResource> operation = await enrollments.CreateOrUpdateAsync(WaitUntil.Started, enrollment, enrollmentData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        await WaitForUsagePlanLroCompletionAsync(operation, "usage plan enrollment create or update", cancellationToken);
 
         return MapUsagePlanEnrollment(operation.Value.Data);
     }
