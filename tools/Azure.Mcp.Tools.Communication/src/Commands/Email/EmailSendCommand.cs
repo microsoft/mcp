@@ -67,7 +67,6 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunic
             var result = await _communicationService.SendEmailAsync(
                 options.Endpoint,
                 options.From,
-                options.SenderName,
                 options.To,
                 options.Subject,
                 options.Message,

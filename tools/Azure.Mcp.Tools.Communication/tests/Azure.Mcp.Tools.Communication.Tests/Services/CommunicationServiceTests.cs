@@ -28,7 +28,6 @@ public class CommunicationServiceTests
         // Arrange
         string endpoint = string.Empty;
         string sender = "sender@example.com";
-        string? senderName = string.Empty;
         string[] to = ["recipient@example.com"];
         string subject = "Test Subject";
         string message = "Test Message";
@@ -36,7 +35,7 @@ public class CommunicationServiceTests
         // Act & Assert
         // Updated to use Assert.ThrowsAsync for async methods
         var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _service.SendEmailAsync(endpoint, sender, senderName, to, subject, message, false, null, null, null, null, TestContext.Current.CancellationToken));
+            () => _service.SendEmailAsync(endpoint, sender, to, subject, message, false, null, null, null, null, TestContext.Current.CancellationToken));
 
         Assert.Contains("endpoint", exception.Message, StringComparison.OrdinalIgnoreCase);
     }

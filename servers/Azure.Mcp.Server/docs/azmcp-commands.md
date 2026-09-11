@@ -1444,7 +1444,6 @@ azmcp communication email send --endpoint <endpoint> \
                                --subject <email-subject> \
                                --message <email-content> \
                                [--is-html] \
-                               [--sender-name <sender-display-name>] \
                                [--cc <cc-recipient-email>] \
                                [--bcc <bcc-recipient-email>] \
                                [--reply-to <reply-to-email>]
@@ -1458,11 +1457,10 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --subject "Important message" \
                                --message "Hello from Azure Communication Services!"
 
-# Send HTML-formatted email with CC and sender name
+# Send HTML-formatted email with CC
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
-                               --sender-name "Support Team" \
                                --to "recipient@example.com" \
                                --cc "manager@example.com" \
                                --subject "Monthly Report" \
@@ -1487,7 +1485,6 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 -   `--subject`: Email subject line (required)
 -   `--message`: Email content body (required)
 -   `--is-html`: Flag indicating the message content is HTML format (optional)
--   `--sender-name`: Display name of the sender (optional)
 -   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
 -   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
 -   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
