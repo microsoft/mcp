@@ -184,7 +184,7 @@ Commands that create or upsert resources should be **secure by default**, includ
 - **Test both paths:** Unit tests must verify the effective request's secure defaults when options are omitted, each explicit opt-in, rejected combinations, and preservation of existing settings on updates. Recorded live tests should assert the resulting resource's security settings; option-binding tests alone are insufficient.
 - **Document prerequisites and migration:** Explain private endpoints, virtual network integration, private DNS, and client connectivity requirements. Include secure-default and explicit opt-in examples and end-to-end prompts. Document breaking default changes for existing users in the changelog.
 
-See [Resource Creation Security Defaults](azmcp-commands.md#resource-creation-security-defaults) for existing tool defaults and opt-in parameters.
+See Resource Creation Security Defaults in azmcp-commands.md for existing tool defaults and opt-in parameters.
 
 ### 1. Azure Resource Manager Integration
 
