@@ -1433,6 +1433,7 @@ azmcp extension cli install --cli-type <cli-type>
 
 ### Azure Communication Services Operations
 
+> The `communication email send` and `communication sms send` commands do not support `--retry-*` options.
 #### Email
 
 ```bash
