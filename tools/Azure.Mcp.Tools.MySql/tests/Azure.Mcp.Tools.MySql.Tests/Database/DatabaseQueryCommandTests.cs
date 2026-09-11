@@ -53,7 +53,8 @@ public class DatabaseQueryCommandTests : SubscriptionCommandUnitTestsBase<Databa
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        Assert.False(Command.Metadata.Destructive);
-        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Destructive);
+        Assert.False(Command.Metadata.ReadOnly);
+        Assert.False(Command.Metadata.Idempotent);
     }
 }
