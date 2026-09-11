@@ -21,9 +21,6 @@ public sealed class OrchestratorNextOptions
 {
     [Option(Description = MonitorOptionDescriptions.SessionId)]
     public required string SessionId { get; set; }
-
-    [Option(Description = "One sentence describing what you executed, e.g., 'Ran dotnet add package command' or 'Added UseAzureMonitor() to Program.cs'")]
-    public required string CompletionNote { get; set; }
 }
 
 public sealed class SendBrownfieldAnalysisOptions

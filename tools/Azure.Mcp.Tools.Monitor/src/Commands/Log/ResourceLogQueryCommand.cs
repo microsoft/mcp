@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -31,8 +29,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<ResourceLogQueryOptions, ResourceLogQueryCommand.ResourceLogQueryCommandResult>(subscriptionResolver)
+public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService)
+    : AuthenticatedCommand<ResourceLogQueryOptions, ResourceLogQueryCommand.ResourceLogQueryCommandResult>
 {
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
@@ -42,7 +40,6 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
         try
         {
             var results = await _monitorService.QueryResourceLogs(
-                options.Subscription!,
                 options.ResourceId,
                 options.Query,
                 options.Table,

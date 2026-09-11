@@ -3462,8 +3462,7 @@ azmcp monitor workspace list --subscription <subscription> \
 # .delete, .set, .append, .set-or-append, .set-or-replace, .ingest, .purge, .execute)
 # are rejected.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor resource log query --subscription <subscription> \
-                                 --resource-id <resource-id> \
+azmcp monitor resource log query --resource-id <resource-id> \
                                  --table <table> \
                                  --query <kql-query> \
                                  [--hours <hours>] \
@@ -3603,8 +3602,7 @@ azmcp monitor metrics batchquery --subscription <subscription> \
                                  [--aggregation <aggregation>] \
                                  [--filter <filter>] \
                                  [--order-by <order-by>] \
-                                 [--top <top>] \
-                                 [--max-buckets <max-buckets>]
+                                 [--top <top>]
 
 # Query CPU metrics across multiple storage accounts at once
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3672,8 +3670,7 @@ azmcp monitor instrumentation orchestrator-start --workspace-path <absolute-work
 
 # Continue orchestration after completing the previous action
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp monitor instrumentation orchestrator-next --session-id <session-id> \
-                                                --completion-note <what-was-completed>
+azmcp monitor instrumentation orchestrator-next --session-id <session-id>
 
 # Send brownfield analysis findings JSON to continue migration flow
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired

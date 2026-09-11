@@ -43,7 +43,7 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
     {
         try
         {
-            var result = _orchestratorTool.Next(options.SessionId, options.CompletionNote);
+            var result = _orchestratorTool.Next(options.SessionId);
 
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(

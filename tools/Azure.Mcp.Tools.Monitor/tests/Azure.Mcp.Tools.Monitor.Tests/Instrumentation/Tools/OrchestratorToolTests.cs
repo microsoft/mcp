@@ -32,8 +32,8 @@ public sealed class OrchestratorToolTests
             var startResponse = ParseJson(tool.Start(workspacePath));
             var sessionId = startResponse.GetProperty("sessionId").GetString();
 
-            var nextResponse = ParseJson(tool.Next(sessionId!, "Completed step 1"));
-            var finalResponse = ParseJson(tool.Next(sessionId!, "Completed step 2"));
+            var nextResponse = ParseJson(tool.Next(sessionId!));
+            var finalResponse = ParseJson(tool.Next(sessionId!));
 
             // Assert
             Assert.Equal("in_progress", startResponse.GetProperty("status").GetString());
@@ -63,7 +63,7 @@ public sealed class OrchestratorToolTests
         var tool = new OrchestratorTool(analyzer);
 
         // Act
-        var response = ParseJson(tool.Next($"missing-{Guid.NewGuid():N}", "done"));
+        var response = ParseJson(tool.Next($"missing-{Guid.NewGuid():N}"));
 
         // Assert
         Assert.Equal("error", response.GetProperty("status").GetString());

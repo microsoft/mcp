@@ -10,7 +10,6 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public interface IMonitorService
 {
     Task<List<JsonNode>> QueryResourceLogs(
-        string subscription,
         string resourceId,
         string query,
         string table,

@@ -84,9 +84,4 @@ public sealed class MetricsBatchQueryOptions : ISubscriptionOption
     [Option(Description = "The maximum number of time series to retrieve per resource per metric. Only valid when '--filter' is specified. Defaults to 10.")]
     public int? Top { get; set; }
 
-    /// <summary>
-    /// The maximum number of time buckets to return per metric time series. Defaults to 50.
-    /// </summary>
-    [Option(Description = "The maximum number of time buckets to return per metric time series. Defaults to 50.", DefaultValue = 50)]
-    public int? MaxBuckets { get; set; }
 }

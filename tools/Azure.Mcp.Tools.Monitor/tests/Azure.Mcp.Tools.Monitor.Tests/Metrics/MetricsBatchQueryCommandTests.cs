@@ -54,7 +54,7 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
         Assert.Contains("--filter", options);
         Assert.Contains("--order-by", options);
         Assert.Contains("--top", options);
-        Assert.Contains("--max-buckets", options);
+        Assert.DoesNotContain("--max-buckets", options);
 
         var requiredOptions = CommandDefinition.Options.Where(o => o.Required).Select(o => o.Name).ToList();
         Assert.Contains("--resources", requiredOptions);
@@ -102,8 +102,7 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
             "--aggregation", "Average",
             "--filter", "dimension eq 'value'",
             "--order-by", "total asc",
-            "--top", "5",
-            "--max-buckets", "2000");
+            "--top", "5");
 
         // Assert
         await Service.Received(1).QueryMetricsBatchAsync(
@@ -355,173 +354,6 @@ public class MetricsBatchQueryCommandTests : SubscriptionCommandUnitTestsBase<Me
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.NotEmpty(response.Message);
         Assert.Null(response.Results);
-    }
-
-    #endregion
-
-    #region ExecuteAsync Tests - Bucket Limit Validation
-
-    [Fact]
-    public async Task ExecuteAsync_IntervalWouldExceedBucketLimit_ReturnsBadRequestWithoutCallingService()
-    {
-        // Act
-        // 24 hours at PT1M granularity is 1440 buckets, which exceeds the default limit of 50.
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
-            "--resources", "sa1",
-            "--metric-names", "CPU",
-            "--metric-namespace", "microsoft.compute/virtualmachines",
-            "--start-time", "2023-01-01T00:00:00Z",
-            "--end-time", "2023-01-02T00:00:00Z",
-            "--interval", "PT1M");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("exceeds the maximum allowed limit of 50", response.Message);
-        await Service.DidNotReceive().QueryMetricsBatchAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_IntervalWithinBucketLimit_CallsService()
-    {
-        // Arrange
-        // 2 hours at PT1H granularity is 2 buckets, well within the default limit of 50.
-        Service.QueryMetricsBatchAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns([]);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
-            "--resources", "sa1",
-            "--metric-names", "CPU",
-            "--metric-namespace", "microsoft.compute/virtualmachines",
-            "--start-time", "2023-01-01T00:00:00Z",
-            "--end-time", "2023-01-01T02:00:00Z",
-            "--interval", "PT1H");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_NoIntervalSpecified_UsesDefaultIntervalForBucketValidation()
-    {
-        // Arrange
-        // When '--interval' isn't specified, the up-front bucket estimate assumes PT1H (this is only used for
-        // validation and is not sent to the service): 30 days at PT1H granularity is 720 buckets, which exceeds
-        // the default limit of 50 -- the service must not be called.
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
-            "--resources", "sa1",
-            "--metric-names", "CPU",
-            "--metric-namespace", "microsoft.compute/virtualmachines",
-            "--start-time", "2023-01-01T00:00:00Z",
-            "--end-time", "2023-01-31T00:00:00Z");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("exceeds the maximum allowed limit of 50", response.Message);
-        await Service.DidNotReceive().QueryMetricsBatchAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_NoIntervalSpecified_WithinBucketLimit_CallsService()
-    {
-        // Arrange
-        // When '--interval' isn't specified, the up-front bucket estimate assumes PT1H: 2 hours at PT1H
-        // granularity is 2 buckets, well within the default limit of 50.
-        Service.QueryMetricsBatchAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .Returns([]);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
-            "--resources", "sa1",
-            "--metric-names", "CPU",
-            "--metric-namespace", "microsoft.compute/virtualmachines",
-            "--start-time", "2023-01-01T00:00:00Z",
-            "--end-time", "2023-01-01T02:00:00Z");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).QueryMetricsBatchAsync(
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string>(),
-            Arg.Any<IEnumerable<string>>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Is<string?>(t => t == null),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
     }
 
     #endregion

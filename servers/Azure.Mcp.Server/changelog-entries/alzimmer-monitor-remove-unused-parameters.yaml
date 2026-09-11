@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Removed the unused `completion-note` parameter from `monitor instrumentation orchestrator-next`, `subscription` from `monitor resource log query`, and `max-buckets` from `monitor metrics batchquery`."

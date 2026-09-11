@@ -32,11 +32,6 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
 {
     private const int MaxBatchResources = 50;
 
-    // Assumed granularity used only to estimate the expected bucket count up front when '--interval' isn't
-    // specified. It is never sent to the service -- when '--interval' is omitted, Azure Monitor still selects
-    // the actual granularity automatically.
-    private const string DefaultValidationInterval = "PT1H";
-
     private readonly ILogger<MetricsBatchQueryCommand> _logger = logger;
     private readonly IMonitorMetricsService _metricsService = metricsService;
 
@@ -65,49 +60,20 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
 
         // Validate the start/end time formats up front instead of letting the service throw once the request
         // is already in flight (PostBindOptions guarantees these are always populated by the time this runs).
-        bool validStartTime = DateTimeOffset.TryParse(options.StartTime, out var startTime);
-        if (!validStartTime)
+        if (!DateTimeOffset.TryParse(options.StartTime, out _))
         {
             validationResult.Errors.Add($"Invalid format for '--start-time': '{options.StartTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).");
         }
 
-        bool validEndTime = DateTimeOffset.TryParse(options.EndTime, out var endTime);
-        if (!validEndTime)
+        if (!DateTimeOffset.TryParse(options.EndTime, out _))
         {
             validationResult.Errors.Add($"Invalid format for '--end-time': '{options.EndTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).");
         }
 
-        // The expected number of time buckets is always derived from the start/end time range up front, so an
-        // oversized request is rejected before calling the service -- there's no need to fall back to validating
-        // the actual results after the query executes. When '--interval' isn't specified, Azure Monitor selects
-        // the granularity automatically, so a representative default is assumed for this estimate only; it is not
-        // sent to the service, so the actual query behavior is unaffected.
-        bool intervalProvided = !string.IsNullOrWhiteSpace(options.Interval);
-        string intervalToValidate = intervalProvided ? options.Interval! : DefaultValidationInterval;
-
-        if (!TryParseIsoDuration(intervalToValidate, out var interval) || interval <= TimeSpan.Zero)
+        if (!string.IsNullOrWhiteSpace(options.Interval) &&
+            (!TryParseIsoDuration(options.Interval, out var interval) || interval <= TimeSpan.Zero))
         {
-            // The internal default is always a valid duration, so a parse failure here only happens when the
-            // user explicitly supplied an invalid '--interval' value.
             validationResult.Errors.Add($"Invalid format for '--interval': '{options.Interval}'. Provide an ISO 8601 duration (e.g. PT1H, PT5M).");
-        }
-        else if (validStartTime && validEndTime)
-        {
-            int maxBuckets = options.MaxBuckets ?? 50;
-            int expectedBucketCount = (int)Math.Ceiling((endTime - startTime) / interval);
-
-            if (expectedBucketCount > maxBuckets)
-            {
-                string intervalDescription = intervalProvided
-                    ? $"'--interval' of '{options.Interval}'"
-                    : $"an assumed default interval of '{DefaultValidationInterval}' (since '--interval' was not specified)";
-
-                validationResult.Errors.Add(
-                    $"The requested time range ('--start-time' to '--end-time') combined with {intervalDescription} would produce " +
-                    $"approximately {expectedBucketCount} time buckets, which exceeds the maximum allowed limit of {maxBuckets}. " +
-                    $"To resolve this issue, either query a smaller time range, specify a larger '--interval' (e.g., PT1H), " +
-                    $"or increase the '--max-buckets' parameter.");
-            }
         }
     }
 
