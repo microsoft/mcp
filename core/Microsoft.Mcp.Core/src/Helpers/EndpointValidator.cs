@@ -1,20 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Frozen;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
+using Microsoft.Security.AntiSSRF;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
 /// <summary>
 /// Validates Azure service endpoints.
 /// </summary>
-public static class EndpointValidator
+// @vukelich notes: as this static class is growing, more anti-patterns are
+// being introduced, such as an abundance of unit test-only `internal static`
+// methods. This is a recognized stop-gap to a post-3.0 goal for cleanup, a
+// full design of which will be easier to propose when we see the final breadth
+// of SSRF protections added.
+public static partial class EndpointValidator
 {
+    /// <summary>
+    /// The special configured namespace value that disables SSRF protections for every tool namespace.
+    /// </summary>
+    internal const string AllNamespaces = "ALL";
+
+    private static IReadOnlyList<string>? s_dangerouslyDisabledSsrfProtectionNamespaces;
+
     private static readonly string[] s_reservedHosts =
     [
         "localhost",
@@ -28,33 +40,71 @@ public static class EndpointValidator
         "xip.io",                // Wildcard DNS - resolves to embedded IP
     ];
 
-    private record AllowedSuffixManager(string Public, string China, string UsGov, string Germany)
+    /// <summary>
+    /// Gets the configured namespaces for unit-test verification.
+    /// </summary>
+    /// <remarks>
+    /// This property is internal solely so unit tests can verify the write-once configuration and defensive copy.
+    /// Production code outside this class must not use it.
+    /// </remarks>
+    internal static IReadOnlyList<string> DangerouslyDisabledSsrfProtectionNamespaces =>
+        Volatile.Read(ref s_dangerouslyDisabledSsrfProtectionNamespaces) ?? [];
+
+    /// <summary>
+    /// Stores exactly once the tool namespaces for which SSRF protections will be disabled.
+    /// </summary>
+    /// <param name="namespaces">
+    /// The tool namespaces to configure, or <see langword="null"/> to initialize with no disabled namespaces.
+    /// The special value <see cref="AllNamespaces"/> represents every tool namespace.
+    /// </param>
+    /// <exception cref="SecurityException">
+    /// Thrown when an attempt is made to configure the setting more than once.
+    /// </exception>
+    public static void SetDangerouslyDisabledSsrfProtectionNamespaces(IEnumerable<string>? namespaces)
     {
-        public string GetSuffix(ArmEnvironment environment) =>
-            ArmEnvironment.AzurePublicCloud.Equals(environment) ? Public :
-            ArmEnvironment.AzureChina.Equals(environment) ? China :
-            ArmEnvironment.AzureGovernment.Equals(environment) ? UsGov :
-            ArmEnvironment.AzureGermany.Equals(environment) ? Germany :
-            Public;
+        IReadOnlyList<string> configuredNamespaces = Array.AsReadOnly(namespaces?.ToArray() ?? []);
+
+        if (Interlocked.CompareExchange(
+            ref s_dangerouslyDisabledSsrfProtectionNamespaces,
+            configuredNamespaces,
+            null) is not null)
+        {
+            throw new SecurityException(
+                "SSRF protection settings can only be configured once during application startup.");
+        }
     }
 
-    private static readonly FrozenDictionary<string, AllowedSuffixManager[]> s_allowedDomainSuffixes = new Dictionary<string, AllowedSuffixManager[]>
+    private static bool AreSsrfProtectionsDangerouslyDisabled(string? executingToolNamespaceName)
+        => AreSsrfProtectionsDangerouslyDisabled(
+            DangerouslyDisabledSsrfProtectionNamespaces,
+            executingToolNamespaceName);
+
+    /// <summary>
+    /// Determines whether a supplied namespace matches a supplied SSRF protection configuration.
+    /// </summary>
+    /// <remarks>
+    /// This method is internal solely so unit tests can verify matching independently of the process-wide,
+    /// write-once configuration. Production code outside this class must not use it.
+    /// </remarks>
+    /// <param name="disabledNamespaces">The namespace configuration to evaluate.</param>
+    /// <param name="executingToolNamespaceName">The executing tool namespace to match.</param>
+    /// <returns>
+    /// <see langword="true"/> when the executing namespace or <see cref="AllNamespaces"/> is configured;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    internal static bool AreSsrfProtectionsDangerouslyDisabled(
+        IReadOnlyList<string> disabledNamespaces,
+        string? executingToolNamespaceName)
     {
-        ["acr"] = [new AllowedSuffixManager(Public: ".azurecr.io", China: ".azurecr.cn", UsGov: ".azurecr.us", Germany: ".azurecr.de")],
-        ["adme"] = [
-            new AllowedSuffixManager(Public: ".energy.azure.com", China: ".energy.azure.com", UsGov: ".energy.azure.com", Germany: ".energy.azure.com"),
-            new AllowedSuffixManager(Public: ".oep.ppe.azure-int.net", China: ".oep.ppe.azure-int.net", UsGov: ".oep.ppe.azure-int.net", Germany: ".oep.ppe.azure-int.net")
-        ],
-        ["appconfig"] = [new AllowedSuffixManager(Public: ".azconfig.io", China: ".azconfig.azure.cn", UsGov: ".azconfig.azure.us", Germany: ".azconfig.azure.de")],
-        ["azure-openai"] = [
-            new AllowedSuffixManager(Public: ".openai.azure.com", China: ".openai.azure.cn", UsGov: ".openai.azure.us", Germany: ".openai.azure.de"),
-            new AllowedSuffixManager(Public: ".cognitiveservices.azure.com", China: ".cognitiveservices.azure.cn", UsGov: ".cognitiveservices.azure.us", Germany: ".cognitiveservices.azure.de")
-        ],
-        ["communication"] = [new AllowedSuffixManager(Public: ".communication.azure.com", China: ".communication.azure.cn", UsGov: ".communication.azure.us", Germany: ".communication.azure.de")],
-        ["foundry"] = [new AllowedSuffixManager(Public: ".services.ai.azure.com", China: ".services.ai.azure.cn", UsGov: ".services.ai.azure.us", Germany: ".services.ai.azure.de")],
-        ["servicebus"] = [new AllowedSuffixManager(Public: ".servicebus.windows.net", China: ".servicebus.chinacloudapi.cn", UsGov: ".servicebus.usgovcloudapi.net", Germany: ".servicebus.cloudapi.de")],
-        ["storage-blob"] = [new AllowedSuffixManager(Public: ".blob.core.windows.net", China: ".blob.core.chinacloudapi.cn", UsGov: ".blob.core.usgovcloudapi.net", Germany: ".blob.core.cloudapi.de")]
-    }.ToFrozenDictionary();
+        if (string.IsNullOrWhiteSpace(executingToolNamespaceName))
+        {
+            return false;
+        }
+
+        return disabledNamespaces.Any(configuredNamespace =>
+            string.Equals(configuredNamespace, AllNamespaces, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(configuredNamespace, executingToolNamespaceName, StringComparison.OrdinalIgnoreCase));
+    }
 
     /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
@@ -62,52 +112,101 @@ public static class EndpointValidator
     /// <param name="endpoint">The endpoint URL to validate.</param>
     /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
     /// <param name="armEnvironment">The Azure cloud environment (Public, China, Government, etc.).</param>
-    public static void ValidateAzureServiceEndpoint(string endpoint, string serviceType, ArmEnvironment armEnvironment)
+    /// <param name="executingToolNamespaceName">
+    /// The tool namespace executing the validation, which may differ from <paramref name="serviceType"/>.
+    /// A <see langword="null"/>, empty, or whitespace value cannot match a configured namespace and leaves
+    /// SSRF protections enabled, including when <see cref="AllNamespaces"/> is configured.
+    /// </param>
+    public static void ValidateAzureServiceEndpoint(
+        string endpoint,
+        string serviceType,
+        ArmEnvironment armEnvironment,
+        string? executingToolNamespaceName)
     {
+        if (AreSsrfProtectionsDangerouslyDisabled(executingToolNamespaceName))
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(endpoint))
         {
             throw new ArgumentException("Endpoint cannot be null or empty", nameof(endpoint));
         }
 
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri))
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uriUnderTest))
         {
             throw new SecurityException($"Invalid endpoint format: {endpoint}");
         }
 
         // Ensure HTTPS
-        if (!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+        if (!uriUnderTest.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
         {
             throw new SecurityException(
-                $"Endpoint must use HTTPS protocol. Got: {uri.Scheme}");
+                $"Endpoint must use HTTPS protocol. Got: {uriUnderTest.Scheme}");
         }
 
-        if (!s_allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixes))
+        if (!s_allowedDomainSuffixes.TryGetValue(serviceType, out var allowedSuffixManager))
         {
             throw new ArgumentException($"Unknown service type: {serviceType}", nameof(serviceType));
         }
 
-        // Validate domain: must exactly match suffix or be a proper subdomain
-        var isValid = allowedSuffixes.Any(s =>
+        string[] allowedSuffixes = allowedSuffixManager.GetSuffixes(armEnvironment);
+
+        bool isValid;
+
+        if (allowedSuffixManager.UseLegacyCheck)
         {
-            var suffix = s.GetSuffix(armEnvironment);
+            // Pre-migration to Microsoft.Security.AntiSSRF path.
+            //
+            // IMPORTANT NOTE: This code path treats suffixes differently depending on
+            // the presence or lack of a leading `.` character..
+            // - ".contoso.com" with a leading '.' allows both "contoso.com" and "sub.contoso.com"
+            // - "contoso.com" without a leading '.' ONLY "contoso.com"
+            //
+            // This is unlike the other branch of this `if`.
+            //
+            // Minor extra note: This path uses `Uri.Host` while the non-legacy path uses
+            // URIValidator which uses `Uri.IdnHost`, a Unicode to ASCII translation.
+            // There are various minor differences that mean this code path will falsely
+            // deny/block some acceptable URIs, but they are likely few and far between
+            // at the time of this comment being written for the service endpoints
+            // presently defined with allow-lists
 
-            // Exact match (e.g., "azconfig.io")
-            if (uri.Host.Equals(suffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
-                return true;
-
-            // Proper subdomain match (e.g., "myconfig.azconfig.io" matches ".azconfig.io")
-            // Ensure the suffix starts with a dot, then check if host ends with it
-            if (suffix.StartsWith('.') && uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            // Validate domain: must exactly match suffix or be a proper subdomain
+            isValid = allowedSuffixes.Any(suffix =>
             {
-                // Ensure there's a subdomain portion and it doesn't contain path separators
-                // This prevents path components from being interpreted as subdomains (e.g., "azconfig.io/evil")
-                // Note: Multi-level subdomains like "sub.myconfig.azconfig.io" are valid and allowed
-                var domainBeforeSuffix = uri.Host.Substring(0, uri.Host.Length - suffix.Length);
-                return !string.IsNullOrEmpty(domainBeforeSuffix) && !domainBeforeSuffix.Contains('/');
-            }
+                // Exact match (e.g., "azconfig.io")
+                if (uriUnderTest.Host.Equals(suffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
+                    return true;
 
-            return false;
-        });
+                // Proper subdomain match (e.g., "myconfig.azconfig.io" matches ".azconfig.io")
+                // Ensure the suffix starts with a dot, then check if host ends with it
+                if (suffix.StartsWith('.') && uriUnderTest.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Ensure there's a subdomain portion and it doesn't contain path separators
+                    // This prevents path components from being interpreted as subdomains (e.g., "azconfig.io/evil")
+                    // Note: Multi-level subdomains like "sub.myconfig.azconfig.io" are valid and allowed
+                    var domainBeforeSuffix = uriUnderTest.Host.Substring(0, uriUnderTest.Host.Length - suffix.Length);
+                    return !string.IsNullOrEmpty(domainBeforeSuffix) && !domainBeforeSuffix.Contains('/');
+                }
+
+                return false;
+            });
+        }
+        else
+        {
+            // IMPORTANT NOTE: As of Microsoft.Security.AntiSSRF 1.0.0, URIValidator.InDomain
+            // will a suffix with or without a leading `.` effectively the same.
+            // - ".contoso.com" with a leading '.' allows both "contoso.com" and "sub.contoso.com"
+            // - "contoso.com" without a leading '.' allows both "contoso.com" and "sub.contoso.com"
+            //
+            // This is unlike the other branch of this `if`.
+            //
+            // TO MAINTAINERS: It will need to be a feature ask on the Microsoft.Security.AntiSSRF
+            // to allow expressions of "exact match, only" in the URIValidator API. This may be
+            // a breaking change. Until such functionality is added, the other code path remains.
+            isValid = URIValidator.InDomain(uriUnderTest.Host, allowedSuffixes);
+        }
 
         if (!isValid)
         {
@@ -117,9 +216,9 @@ public static class EndpointValidator
                 : armEnvironment.Equals(ArmEnvironment.AzureGermany) ? "Azure Germany Cloud"
                 : "configured Azure cloud";
 
-            var expectedDomains = string.Join(", ", allowedSuffixes.Select(s => s.GetSuffix(armEnvironment)));
+            var expectedDomains = string.Join(", ", allowedSuffixes);
             throw new SecurityException(
-                $"Endpoint host '{uri.Host}' is not a valid {serviceType} domain for {cloudName}. " +
+                $"Endpoint host '{uriUnderTest.Host}' is not a valid {serviceType} domain for {cloudName}. " +
                 $"Expected domains: {expectedDomains}");
         }
     }
@@ -158,11 +257,36 @@ public static class EndpointValidator
     }
 
     /// <summary>
+    /// Test-only overload that validates a public target URL without an executing tool namespace.
+    /// </summary>
+    /// <remarks>
+    /// This overload is internal solely so unit tests can exercise validation without configuring an executing
+    /// tool namespace. Production callers must use the public namespace-aware overload.
+    /// </remarks>
+    internal static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
+        => ValidatePublicTargetUrl(url, logger, null);
+
+    /// <summary>
     /// Validates that a target URL (for load testing, etc.) isn't pointing to internal resources.
     /// Performs DNS resolution to detect hostnames that resolve to private/reserved IPs.
     /// </summary>
-    public static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
+    /// <param name="url">The public target URL to validate.</param>
+    /// <param name="logger">An optional logger for DNS resolution diagnostics.</param>
+    /// <param name="executingToolNamespaceName">
+    /// The tool namespace executing the validation.
+    /// A <see langword="null"/>, empty, or whitespace value cannot match a configured namespace and leaves
+    /// SSRF protections enabled, including when <see cref="AllNamespaces"/> is configured.
+    /// </param>
+    public static void ValidatePublicTargetUrl(
+        string url,
+        ILogger? logger,
+        string? executingToolNamespaceName)
     {
+        if (AreSsrfProtectionsDangerouslyDisabled(executingToolNamespaceName))
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(url))
         {
             throw new ArgumentException("URL cannot be null or empty", nameof(url));

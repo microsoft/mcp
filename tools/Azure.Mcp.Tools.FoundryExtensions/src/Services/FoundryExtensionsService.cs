@@ -30,7 +30,11 @@ public class FoundryExtensionsService(IAzureService azureService)
 
         try
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", GetArmEnvironment());
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: "foundry",
+                armEnvironment: GetArmEnvironment(),
+                executingToolNamespaceName: "foundryextensions");
         }
         catch (SecurityException ex)
         {
@@ -48,7 +52,11 @@ public class FoundryExtensionsService(IAzureService azureService)
 
         try
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "azure-openai", GetArmEnvironment());
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: "azure-openai",
+                armEnvironment: GetArmEnvironment(),
+                executingToolNamespaceName: "foundryextensions");
 
             // Azure OpenAI-specific structural checks beyond domain validation
             var parsedUri = new Uri(endpoint);

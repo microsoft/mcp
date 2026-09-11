@@ -68,6 +68,15 @@ public sealed class ServerStartOptions
     public bool DangerouslyDisableElicitation { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the tool namespaces for which SSRF protections will be disabled.
+    /// The special value <c>ALL</c> represents every tool namespace.
+    /// </summary>
+    [Option(
+        Name = "DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE",
+        Description = "DANGEROUSLY disables SSRF protections for specified tool namespaces. Repeat this option to include multiple namespaces, or specify ALL to cover every namespace.")]
+    public string[]? DangerouslyDisableSsrfProtectionsByNamespace { get; set; } = null;
+
+    /// <summary>
     /// Gets or sets the outgoing authentication strategy for requests.
     /// Determines whether to use hosting environment identity or on-behalf-of flow.
     /// </summary>
