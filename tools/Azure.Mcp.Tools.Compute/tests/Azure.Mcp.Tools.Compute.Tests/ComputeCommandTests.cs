@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -46,12 +47,12 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [
         new(new()
         {
-            Regex = Settings.ResourceGroupName,
+            Regex = $"(?i){Regex.Escape(Settings.ResourceGroupName)}",
             Value = "Sanitized",
         }),
         new(new()
         {
-            Regex = Settings.ResourceBaseName,
+            Regex = $"(?i){Regex.Escape(Settings.ResourceBaseName)}",
             Value = "Sanitized",
         }),
         new(new()
@@ -249,7 +250,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
-                { "vm-size", "Standard_B2s" },
+                { "vm-size", "Standard_D2s_v5" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
@@ -264,7 +265,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_B2s", vmSize.GetString());
+        Assert.Equal("Standard_D2s_v5", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("linux", osType.GetString());
@@ -287,7 +288,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
-                { "vm-size", "Standard_B2s" },
+                { "vm-size", "Standard_D2s_v5" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss123!" },
@@ -302,7 +303,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_B2s", vmSize.GetString());
+        Assert.Equal("Standard_D2s_v5", vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("windows", osType.GetString());
@@ -373,13 +374,13 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
-                { "vm-size", "Standard_B2s" },
+                { "vm-size", "Standard_D2s_v5" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss789!" },
                 { "image", "Win2022Datacenter" },
                 { "instance-count", "2" },
-                { "os-disk-size-gb", "40" }
+                { "os-disk-size-gb", "128" }
             });
 
         var vmss = result.AssertProperty("Vmss");
@@ -409,7 +410,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
-                { "vm-size", "Standard_B2s" },
+                { "vm-size", "Standard_D2s_v5" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "LinuxTestP@ss321!" },
@@ -493,7 +494,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", deleteVmName },
-                { "vm-size", "Standard_B2s" },
+                { "vm-size", "Standard_D2s_v5" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
@@ -536,7 +537,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", deleteVmssName },
-                { "vm-size", "Standard_B2s" },
+                { "vm-size", "Standard_D2s_v5" },
                 { "location", "eastus2" },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
