@@ -5031,6 +5031,33 @@ azmcp storage blob upload --subscription <subscription> \
                           --local-file-path <path-to-local-file>
 ```
 
+#### Disk Diagnostics
+
+Disk diagnostics use the production Storage Intelligence endpoint and application scope by default.
+Server operators can override them with `AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT` and
+`AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE`. For local single-tenant credentials, optionally configure
+`AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID`. Leave the tenant unset for remote HTTP on-behalf-of
+authentication so the authenticated caller tenant is used.
+
+```bash
+# Diagnose VM or managed disk performance using Storage Intelligence
+# Requires the caller to be authorized for the Storage Intelligence Disk.Read scope and have Reader and Monitoring Reader access to the target resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+
+# Diagnose a VM by friendly name, optionally selecting attached disks by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --vm <virtual-machine-name> \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+```
+
 #### Table Storage
 
 ```bash
