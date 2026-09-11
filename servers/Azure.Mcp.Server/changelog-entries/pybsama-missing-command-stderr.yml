@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Write parse-error diagnostics and help to stderr so MCP stdio stdout remains reserved for JSON-RPC messages."

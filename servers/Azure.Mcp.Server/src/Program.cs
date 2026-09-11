@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
@@ -120,7 +121,7 @@ internal class Program
                 (extendedCommand.BaseCommand is ServerStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
             {
                 // One of the special commands that need to be handled differently.
-                status = await parseResult.InvokeAsync();
+                status = await InvokeCommandAsync(parseResult);
             }
             else
             {
@@ -144,7 +145,7 @@ internal class Program
                 rootCommand = commandFactory.RootCommand;
                 parseResult = rootCommand.Parse(args);
 
-                status = await parseResult.InvokeAsync();
+                status = await InvokeCommandAsync(parseResult);
 
                 await host.StopAsync();
                 await host.WaitForShutdownAsync();
@@ -167,6 +168,22 @@ internal class Program
             });
             return 1;
         }
+    }
+
+    private static Task<int> InvokeCommandAsync(ParseResult parseResult)
+    {
+        if (parseResult.Errors.Count == 0)
+        {
+            return parseResult.InvokeAsync();
+        }
+
+        var configuration = new InvocationConfiguration
+        {
+            Output = Console.Error,
+            Error = Console.Error
+        };
+
+        return parseResult.InvokeAsync(configuration);
     }
 
     private static IAreaSetup[] RegisterAreas()
