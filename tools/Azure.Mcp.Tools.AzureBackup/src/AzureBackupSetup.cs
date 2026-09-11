@@ -47,6 +47,7 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectedItemUpdateProtectionCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
+        services.AddSingleton<ContainerListAvailableCommand>();
 
         services.AddSingleton<ContainerRefreshCommand>();
 
@@ -119,8 +120,9 @@ public sealed class AzureBackupSetup : IAreaSetup
         protectableItem.AddCommand<ProtectableItemListCommand>(serviceProvider);
 
         var container = new CommandGroup("container",
-            "Container operations - Manage RSV protection containers: trigger discovery (refresh) so the vault picks up new/changed storage accounts, VMs, or workload servers. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
+            "Container operations - Manage RSV protection containers: trigger discovery (refresh) and list storage accounts available for Azure File share backup registration. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
         azureBackup.AddSubGroup(container);
+        container.AddCommand<ContainerListAvailableCommand>(serviceProvider);
         container.AddCommand<ContainerRefreshCommand>(serviceProvider);
 
         var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");

@@ -1266,6 +1266,18 @@ azmcp azurebackup job get --subscription <subscription> \
                           [--job <job>]
 ```
 
+#### Container
+
+```bash
+# Lists storage accounts that a Recovery Services vault (RSV) can register as Azure File share backup containers. A storage-account filter can only be used with the default AzureStorage backup management type.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup container list-available --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --vault <vault> \
+                                           [--filter <filter>] \
+                                           [--storage-account <storage-account>]
+```
+
 #### Recovery Point
 
 ```bash
