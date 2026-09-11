@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Removed the unused `subscription` parameter from all Key Vault tools."
