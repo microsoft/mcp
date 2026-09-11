@@ -2,12 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
+using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
+using Azure.ResourceManager;
 using Azure.ResourceManager.EventHubs;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using NSubstitute.Extensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
@@ -26,6 +32,68 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
         EventHubsService.ConfigureNamespaceSecurity(data, isNew, publicAccess, sasAuth);
         Assert.Equal(networkAccess, data.PublicNetworkAccess?.ToString());
         Assert.Equal(disableLocalAuth, data.DisableLocalAuth);
+    }
+
+    [Fact]
+    public static async Task CreateOrUpdateNamespaceAsync_MergesExistingTags()
+    {
+        const string subscription = "00000000-0000-0000-0000-000000000000";
+        const string resourceGroupId = $"/subscriptions/{subscription}/resourceGroups/test-rg";
+        const string resourceGroupResponse = $$"""
+            {"id":"{{resourceGroupId}}","name":"test-rg","location":"eastus"}
+            """;
+        const string namespaceResponse = $$"""
+            {
+              "id": "{{resourceGroupId}}/providers/Microsoft.EventHub/namespaces/test-namespace",
+              "name": "test-namespace",
+              "type": "Microsoft.EventHub/namespaces",
+              "location": "eastus",
+              "tags": {"environment":"test","owner":"existing-owner"},
+              "sku": {"name":"Standard","tier":"Standard","capacity":1},
+              "properties": {"provisioningState":"Succeeded","publicNetworkAccess":"Enabled","disableLocalAuth":false}
+            }
+            """;
+
+        JsonElement? requestBody = null;
+        using var handler = Substitute.For<HttpMessageHandler>();
+        handler.ReturnsForAll(async callInfo =>
+        {
+            var request = callInfo.Arg<HttpRequestMessage>();
+            if (request.Method == HttpMethod.Put)
+            {
+                using var document = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
+                requestBody = document.RootElement.Clone();
+            }
+
+            var responseBody = request.RequestUri!.AbsolutePath.EndsWith("/resourceGroups/test-rg", StringComparison.Ordinal)
+                ? resourceGroupResponse
+                : namespaceResponse;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(responseBody, null, "application/json")
+            };
+        });
+        using var httpClient = new HttpClient(handler);
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1)));
+        var azureService = Substitute.For<IAzureService>();
+        azureService.IsSubscriptionId(subscription).Returns(true);
+        azureService.GetClient().Returns(httpClient);
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
+        azureService.CloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        var service = new EventHubsService(azureService, NullLogger<EventHubsService>.Instance);
+
+        await service.CreateOrUpdateNamespaceAsync(
+            "test-namespace", "test-rg", subscription,
+            tags: new() { ["environment"] = "production", ["project"] = "mcp" },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var tags = Assert.IsType<JsonElement>(requestBody).GetProperty("tags");
+        Assert.Equal("production", tags.GetProperty("environment").GetString());
+        Assert.Equal("existing-owner", tags.GetProperty("owner").GetString());
+        Assert.Equal("mcp", tags.GetProperty("project").GetString());
+        Assert.Equal(3, tags.EnumerateObject().Count());
     }
 
     [Theory]

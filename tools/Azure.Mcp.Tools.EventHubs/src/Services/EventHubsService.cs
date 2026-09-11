@@ -233,7 +233,7 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         {
             foreach (var tag in tags)
             {
-                namespaceData.Tags.Add(tag.Key, tag.Value);
+                namespaceData.Tags[tag.Key] = tag.Value;
             }
         }
 

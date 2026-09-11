@@ -178,7 +178,7 @@ public sealed class FileSharesService(IAzureService azureService, ILogger<FileSh
         {
             foreach (var tag in tags)
             {
-                fileShareData.Tags.Add(tag.Key, tag.Value);
+                fileShareData.Tags[tag.Key] = tag.Value;
             }
         }
 

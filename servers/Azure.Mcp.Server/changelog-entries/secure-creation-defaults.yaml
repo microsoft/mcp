@@ -5,3 +5,5 @@ changes:
   - section: Bugs Fixed
     description: |
       Deployment IaC guidance now defaults to private networking, workload identity, and least-privilege application roles. Separate opt-in parameters permit public networking, all-Azure-services firewall exceptions, privileged application roles, and secret-based connections. VM networking applies NSGs to NICs when reusing existing virtual networks and requires explicit selection before reusing an existing NSG.
+  - section: Bugs Fixed
+    description: Updating existing Event Hubs namespaces or file shares now replaces supplied tag values and preserves unrelated tags without duplicate-key errors.
