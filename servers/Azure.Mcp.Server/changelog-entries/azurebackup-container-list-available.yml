@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp azurebackup container list-available` to list storage accounts that a Recovery Services vault can register for Azure File share backup, with optional OData and storage-account filters."

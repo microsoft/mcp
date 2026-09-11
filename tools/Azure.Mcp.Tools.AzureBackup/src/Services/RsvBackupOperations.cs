@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -2230,6 +2231,90 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         return items;
     }
 
+    public async Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? storageAccount,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var containers = new List<ProtectableContainerInfo>();
+
+        await foreach (var container in rgResource.GetProtectableContainersAsync(
+            vaultName, FabricName, filter, cancellationToken))
+        {
+            var properties = container.Properties;
+            var info = new ProtectableContainerInfo(
+                container.Name,
+                properties?.FriendlyName,
+                GetProtectableContainerType(properties),
+                properties?.BackupManagementType?.ToString(),
+                properties?.ContainerId,
+                properties?.HealthStatus);
+
+            if (string.IsNullOrWhiteSpace(storageAccount)
+                || string.Equals(info.FriendlyName, storageAccount, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(info.SourceResourceId, storageAccount, StringComparison.OrdinalIgnoreCase))
+            {
+                containers.Add(info);
+            }
+        }
+
+        return containers;
+    }
+
+    private static string? GetProtectableContainerType(ProtectableContainer? container) => container switch
+    {
+        StorageProtectableContainer => "StorageContainer",
+        VmAppContainerProtectableContainer => "VMAppContainer",
+        null => null,
+        _ => container.GetType().Name
+    };
+
+    public async Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string backupManagementType,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var filter = backupManagementType switch
+        {
+            "AzureStorage" or "AzureIaasVM" or "AzureWorkload" => $"backupManagementType eq '{backupManagementType}'",
+            _ => throw new ArgumentException("backupManagementType must be 'AzureStorage', 'AzureIaasVM', or 'AzureWorkload'.", nameof(backupManagementType))
+        };
+
+        var response = await rgResource.RefreshProtectionContainerAsync(
+            vaultName,
+            FabricName,
+            filter: filter,
+            cancellationToken: cancellationToken);
+
+        if (response.Status != (int)HttpStatusCode.Accepted)
+        {
+            throw new RequestFailedException(response.Status, "The container discovery request was not accepted.");
+        }
+    }
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.
     /// The REST API filter expects specific types like "SAPHanaDatabase" but users
