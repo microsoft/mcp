@@ -4,6 +4,7 @@
 
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -16,6 +17,123 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class BaseToolLoaderTests
 {
+    [Fact]
+    public void CreateUnknownCommandResult_ReturnsSortedDistinctNamesOnly()
+    {
+        var result = BaseToolLoader.CreateUnknownCommandResult(
+            "storage", "invalid_command", ["storage_zeta", "storage_alpha", "storage_zeta", "storage_middle"]);
+
+        AssertUnknownCommandResult(result, "storage", "invalid_command",
+            "storage_alpha", "storage_middle", "storage_zeta");
+    }
+
+    [Fact]
+    public void CreateUnknownCommandResult_WithEmptyCatalog_ExplainsNoCommandsAreAvailable()
+    {
+        var result = BaseToolLoader.CreateUnknownCommandResult("storage", "invalid_command", []);
+
+        AssertUnknownCommandResult(result, "storage", "invalid_command");
+    }
+
+    [Fact]
+    public void CreateUnknownCommandResult_IncludesAllNamesWithoutTruncation()
+    {
+        var names = Enumerable.Range(0, 150).Select(index => $"storage_command_{index:D3}").ToArray();
+
+        var result = BaseToolLoader.CreateUnknownCommandResult("storage", "invalid_command", names.Reverse());
+
+        AssertUnknownCommandResult(result, "storage", "invalid_command", names);
+    }
+
+    internal static string AssertUnknownCommandResult(
+        CallToolResult result, string toolName, string commandName, params string[] availableNames)
+    {
+        Assert.True(result.IsError);
+        Assert.False(result.StructuredContent.HasValue);
+        Assert.Null(result.Meta);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains($"'{commandName}'", text, StringComparison.Ordinal);
+        Assert.Contains($"'{toolName}'", text, StringComparison.Ordinal);
+        Assert.Contains("not available", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("learn=true", text, StringComparison.Ordinal);
+        if (availableNames.Length == 0)
+        {
+            Assert.Contains("No commands are available for this tool in the current server configuration.", text);
+            Assert.DoesNotContain("Available commands:", text);
+        }
+        else
+        {
+            var namesLine = Assert.Single(text.Split('\n'), line => line.StartsWith("Available commands:", StringComparison.Ordinal));
+            Assert.Equal($"Available commands: {string.Join(", ", availableNames)}", namesLine.TrimEnd('\r'));
+        }
+
+        Assert.DoesNotContain("\"description\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"inputSchema\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"outputSchema\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"annotations\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"_meta\"", text, StringComparison.Ordinal);
+        return text;
+    }
+
+    internal static McpServer CreateSamplingServer(bool supportsSampling, string? samplingText = null, bool failSampling = false)
+    {
+        var server = Substitute.For<McpServer>();
+        server.ClientCapabilities.Returns(new ClientCapabilities
+        {
+            Sampling = supportsSampling ? new SamplingCapability() : null
+        });
+        var response = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new CreateMessageResult
+            {
+                Role = Role.Assistant,
+                Content = samplingText == null ? [] : [new TextContentBlock { Text = samplingText }],
+                Model = "test-model"
+            })
+        };
+        // Bound a buggy correction loop so it fails the call-count assertion instead of hanging the test.
+        var samplingRequests = 0;
+        server.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(_ => failSampling || ++samplingRequests > 1
+                ? throw new InvalidOperationException("Sampling failed.")
+                : response);
+        return server;
+    }
+
+    internal static RequestContext<CallToolRequestParams> CreateCommandRequest(
+        McpServer server,
+        string? command = "invalid_command",
+        string? intent = "list resources",
+        bool learn = false,
+        string parametersJson = "{}",
+        string toolName = "storage")
+    {
+        using var parameters = JsonDocument.Parse(parametersJson);
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["parameters"] = parameters.RootElement.Clone()
+        };
+        if (command != null)
+        {
+            arguments["command"] = JsonSerializer.SerializeToElement(command, ServerJsonContext.Default.String);
+        }
+        if (intent != null)
+        {
+            arguments["intent"] = JsonSerializer.SerializeToElement(intent, ServerJsonContext.Default.String);
+        }
+        if (learn)
+        {
+            arguments["learn"] = JsonSerializer.SerializeToElement(true, ServerJsonContext.Default.Boolean);
+        }
+
+        return McpTestUtilities.CreateToolCallRequest(new CallToolRequestParams
+        {
+            Name = toolName,
+            Arguments = arguments
+        }, server);
+    }
+
     [Fact]
     public void CreateClientOptions_WithNoCapabilities_ReturnsOptionsWithNoCapabilities()
     {
