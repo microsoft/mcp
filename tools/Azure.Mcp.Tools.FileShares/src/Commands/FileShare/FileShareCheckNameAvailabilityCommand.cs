@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
@@ -27,7 +26,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareCheckNameAvailabilityCommand(ILogger<FileShareCheckNameAvailabilityCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareCheckNameAvailabilityOptions, FileShareCheckNameAvailabilityCommand.FileShareCheckNameAvailabilityCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareCheckNameAvailabilityOptions, FileShareCheckNameAvailabilityCommand.FileShareCheckNameAvailabilityCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareCheckNameAvailabilityOptions options, CancellationToken cancellationToken)
     {

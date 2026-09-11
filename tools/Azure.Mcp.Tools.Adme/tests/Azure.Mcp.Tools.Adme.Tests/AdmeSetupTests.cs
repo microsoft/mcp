@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
+using Azure.Mcp.Tools.Adme.Commands.Storage;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -102,7 +103,18 @@ public sealed class AdmeSetupTests
         var schema = Assert.Single(adme.SubGroup, group => group.Name == "schema");
         Assert.True(schema.Commands.ContainsKey("get"));
         Assert.True(schema.Commands.ContainsKey("list"));
+        var storage = Assert.Single(adme.SubGroup, group => group.Name == "storage");
+        var record = Assert.Single(storage.SubGroup, group => group.Name == "record");
+        Assert.True(record.Commands.ContainsKey("fetch"));
+        Assert.True(record.Commands.ContainsKey("get"));
+        Assert.True(record.Commands.ContainsKey("list"));
+        var version = Assert.Single(record.SubGroup, group => group.Name == "version");
+        Assert.True(version.Commands.ContainsKey("list"));
         Assert.NotNull(serviceProvider.GetRequiredService<HealthCheckCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordFetchCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordGetCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordListCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordVersionListCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<SchemaGetCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<SchemaListCommand>());
     }

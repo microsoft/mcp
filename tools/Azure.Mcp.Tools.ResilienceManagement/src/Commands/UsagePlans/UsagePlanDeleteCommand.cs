@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
     Name = "delete",
     Title = "Delete Resilience Usage Plan",
     Description = "Deletes a named resilience usage plan from an Azure resource group or removes the usage plan of a service group. Deletes the entire parent plan and reports whether it existed; do not use this to remove only an enrollment or association. Dependent enrollments block plan deletion and are not deleted automatically; list the exact enrollments and obtain explicit confirmation before deleting each separately.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
