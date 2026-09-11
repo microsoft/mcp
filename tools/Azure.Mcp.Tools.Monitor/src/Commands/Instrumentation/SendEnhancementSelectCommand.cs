@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
     Secret = false,
     LocalRequired = true)]
 public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCommand> logger)
-    : BaseCommand<SendEnhancementSelectOptions, string>
+    : BaseCommand<SendEnhancementSelectOptions, SendEnhancementSelectCommand.SendEnhancementSelectCommandResult>
 {
     private readonly ILogger<SendEnhancementSelectCommand> _logger = logger;
 
@@ -39,7 +39,9 @@ public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCo
             var result = SendEnhancementSelectTool.Send(options.SessionId, options.EnhancementKeys);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                MonitorJsonContext.Default.SendEnhancementSelectCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -50,4 +52,6 @@ public sealed class SendEnhancementSelectCommand(ILogger<SendEnhancementSelectCo
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record SendEnhancementSelectCommandResult(string Result);
 }

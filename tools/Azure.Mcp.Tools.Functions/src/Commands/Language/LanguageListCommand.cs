@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.Functions.Commands.Language;
     Secret = false,
     LocalRequired = false)]
 public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger, IFunctionsService functionsService)
-    : BaseCommand<EmptyOptions, List<LanguageListResult>>
+    : BaseCommand<EmptyOptions, LanguageListResult>
 {
     private readonly ILogger<LanguageListCommand> _logger = logger;
     private readonly IFunctionsService _functionsService = functionsService;
@@ -39,7 +39,7 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger, IFu
             var result = await _functionsService.GetLanguageListAsync(cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([result], FunctionsJsonContext.Default.ListLanguageListResult);
+            context.Response.Results = ResponseResult.Create(result, FunctionsJsonContext.Default.LanguageListResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
