@@ -19,7 +19,9 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     Destructive = false,
     Idempotent = false,
     ReadOnly = false,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CreateDataflowCommand(ILogger<CreateDataflowCommand> logger, DataflowHandler handler)
     : AuthenticatedCommand<CreateDataflowOptions, CreateDataflowCommandResult>
 {

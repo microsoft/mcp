@@ -1,0 +1,11 @@
+changes:
+  - section: Breaking Changes
+    description: >-
+      Removed `Unspecified` from `ToolOperationPlane`. Tool metadata now defaults to
+      `NotApplicable`; missing, unknown, or legacy `unspecified` operation-plane JSON
+      values deserialize as `NotApplicable`.
+  - section: Bugs Fixed
+    description: >-
+      Fixed invalid command metadata by classifying `monitor workspace log search`
+      as a data-plane operation and replacing six malformed command IDs in Compute
+      and Managed Lustre with valid GUIDs.

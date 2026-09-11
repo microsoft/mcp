@@ -394,6 +394,7 @@ using Microsoft.Mcp.Core.Models.Command;
     Description = """
         What this command does. Include required options and return format.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -440,6 +441,7 @@ public sealed class {Resource}{Operation}Command(
 ```
 
 **Key points (two-generic pattern from `docs/option-conversion.md`):**
+- All `CommandMetadata` properties are required; choose `OperationPlane` to match the APIs the tool acts against
 - Two generic parameters: `SubscriptionCommand<TOptions, TResult>` — `TResult` is the command's result record
 - `ISubscriptionResolver` injected via primary constructor and passed to base
 - `ExecuteAsync` receives **pre-bound `TOptions options`** — no `ParseResult` parameter

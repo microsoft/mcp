@@ -6,6 +6,7 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Services;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -20,6 +21,7 @@ public class ContainerRefreshCommandTests : SubscriptionCommandUnitTestsBase<Con
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("refresh", CommandDefinition.Name);
+        Assert.Equal(ToolOperationPlane.Control, Command.Metadata.OperationPlane);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
     }

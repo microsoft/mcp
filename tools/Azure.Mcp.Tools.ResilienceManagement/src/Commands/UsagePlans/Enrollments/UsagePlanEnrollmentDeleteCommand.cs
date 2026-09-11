@@ -5,7 +5,6 @@ using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
 using Azure.Mcp.Tools.ResilienceManagement.Options.UsagePlans.Enrollments;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Microsoft.Extensions.Logging;
