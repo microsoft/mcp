@@ -1,4 +1,5 @@
 jobs:
+# cspell:ignore SOURCECOMMITID TARGETBRANCH
 - job: PackVSIXForPR
   displayName: "Pack VSIX"
   steps:
