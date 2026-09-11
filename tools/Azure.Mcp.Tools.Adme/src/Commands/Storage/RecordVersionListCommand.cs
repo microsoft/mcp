@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         Pass one of the returned versions to 'azmcp adme storage record get --version' to read that
         version of the record.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

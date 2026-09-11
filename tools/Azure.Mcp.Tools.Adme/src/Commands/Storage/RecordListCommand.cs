@@ -28,6 +28,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         response. A null cursor means there are no more pages. A kind can hold thousands of records,
         so confirm how many the user wants before paging through the whole set.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
