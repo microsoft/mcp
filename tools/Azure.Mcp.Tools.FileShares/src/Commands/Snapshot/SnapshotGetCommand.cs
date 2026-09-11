@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
@@ -25,7 +24,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Secret = false,
     LocalRequired = false)]
 public sealed class SnapshotGetCommand(ILogger<SnapshotGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<SnapshotGetOptions, SnapshotGetCommand.SnapshotGetCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<SnapshotGetOptions, SnapshotGetCommand.SnapshotGetCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotGetOptions options, CancellationToken cancellationToken)
     {

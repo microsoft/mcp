@@ -33,6 +33,7 @@ public sealed class WorkspaceLogSearchCommandTests
     {
         Assert.Equal("search", Command.Name);
         Assert.Equal("search", CommandDefinition.Name);
+        Assert.Equal(ToolOperationPlane.Data, Command.Metadata.OperationPlane);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.Idempotent);
         Assert.True(Command.Metadata.ReadOnly);

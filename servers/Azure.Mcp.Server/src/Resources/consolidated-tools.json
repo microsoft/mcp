@@ -1331,6 +1331,42 @@
       ]
     },
     {
+      "name": "get_azure_data_manager_for_energy_records",
+      "description": "Get, fetch, or list OSDU records and list record versions in an Azure Data Manager for Energy data partition.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "adme_storage_record_fetch",
+        "adme_storage_record_get",
+        "adme_storage_record_list",
+        "adme_storage_record_version_list"
+      ]
+    },
+    {
       "name": "get_azure_data_manager_for_energy_schemas",
       "description": "Get a specific OSDU schema definition or list schema descriptors in an Azure Data Manager for Energy data partition, with optional identity, lifecycle, scope, version, and paging filters.",
       "toolMetadata": {
@@ -1466,7 +1502,7 @@
     },
     {
       "name": "get_azure_advisor_recommendation_metadata",
-      "description": "Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.",
+      "description": "Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and a learn-more documentation link for the recommendation.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1495,6 +1531,39 @@
       },
       "mappedToolList": [
         "advisor_metadata_get"
+      ]
+    },
+    {
+      "name": "get_azure_advisor_remediation",
+      "description": "Fix, resolve, or remediate a specific Azure Advisor recommendation type id. Use this whenever you are asked how to fix or how to resolve an Advisor recommendation. Returns its remediation package: step-by-step remediation steps plus ready-to-run artifacts, scripts, and deployment templates in ARM template, Bicep, Azure CLI, PowerShell, and terraform formats to remediate the issue. Also indicates remediation characteristics such as whether it is destructive, reversible, or grounded, along with its confidence, effort, and output type. Use whenever you need to fix, resolve, remediate, or verify a recommendation, or want the ARM, Bicep, CLI, PowerShell, or terraform artifacts and scripts to remediate it.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_remediation_get"
       ]
     },
     {
@@ -4881,6 +4950,39 @@
         "azurebackup_resourceguard_delete",
         "azurebackup_vault_privateendpoint_delete",
         "azurebackup_vault_privateendpoint_approve-reject"
+      ]
+    },
+    {
+      "name": "refresh_azure_backup_containers",
+      "description": "Trigger Recovery Services vault container discovery refresh so newly eligible resources can be discovered for backup workflows.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool triggers a discovery refresh operation without deleting or mutating existing protected resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces equivalent refresh behavior without cumulative side effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool initiates a service operation and is not a pure read-only query."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_container_refresh"
       ]
     },
     {
