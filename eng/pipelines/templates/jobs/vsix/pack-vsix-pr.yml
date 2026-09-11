@@ -1,5 +1,4 @@
 jobs:
-# cspell:ignore changedfiles
 - job: PackVSIXForPR
   displayName: "Pack VSIX"
   steps:
@@ -7,7 +6,9 @@ jobs:
     fetchDepth: 0
 
   - pwsh: |
-      $changedFiles = & ./eng/common/scripts/get-changedfiles.ps1 -DiffFilterType ''
+      $sourceCommit = $env:SYSTEM_PULLREQUEST_SOURCECOMMITID
+      $targetBranch = "origin/$($env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', '')"
+      $changedFiles = git diff --no-renames "$targetBranch...$sourceCommit" --name-only
       $hasVsixDependencyChanges = @($changedFiles | Where-Object {
         $_ -match '^servers/[^/]+/vscode/package(-lock)?\.json$'
       }).Count -gt 0
@@ -17,21 +18,21 @@ jobs:
   - download: current
     artifact: build_info
     displayName: "Download build_info"
-    condition: eq(variables['RunVsixPackaging'], 'true')
+    condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
 
   - download: current
     displayName: "Download binaries"
-    condition: eq(variables['RunVsixPackaging'], 'true')
+    condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
 
   - task: UseNode@1
     displayName: "Install Node.js 24"
-    condition: eq(variables['RunVsixPackaging'], 'true')
+    condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
     inputs:
       version: "24.x"
 
   - task: Powershell@2
     displayName: "Prepare binaries for VSIX"
-    condition: eq(variables['RunVsixPackaging'], 'true')
+    condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Compress-ForSigning.ps1
@@ -44,7 +45,7 @@ jobs:
 
   - task: Powershell@2
     displayName: "Pack VSIX"
-    condition: eq(variables['RunVsixPackaging'], 'true')
+    condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Vsix.ps1
