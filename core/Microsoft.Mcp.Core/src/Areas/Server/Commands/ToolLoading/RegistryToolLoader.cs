@@ -3,11 +3,13 @@
 
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -29,6 +31,7 @@ public sealed class RegistryToolLoader(
     private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
     private List<McpClient> _discoveredClients = [];
     private Dictionary<McpClient, string?> _clientPrefixMap = [];
+    private Dictionary<McpClient, bool> _clientTenantScopeMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -68,11 +71,23 @@ public sealed class RegistryToolLoader(
             }
 
             var prefix = _clientPrefixMap.TryGetValue(mcpClient, out var p) ? p : null;
+            var tenantScoped = _clientTenantScopeMap.TryGetValue(mcpClient, out var ts) && ts;
             foreach (var tool in filteredTools)
             {
-                var exposedTool = string.IsNullOrEmpty(prefix)
+                var inputSchema = tenantScoped ? RegistryTenantScope.WithTenantProperty(tool.InputSchema) : tool.InputSchema;
+                var exposedTool = string.IsNullOrEmpty(prefix) && !tenantScoped
                     ? tool
-                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, OutputSchema = tool.OutputSchema, Annotations = tool.Annotations };
+                    : new Tool
+                    {
+                        Name = prefix + tool.Name,
+                        Title = tool.Title,
+                        Description = tool.Description,
+                        InputSchema = inputSchema,
+                        OutputSchema = tool.OutputSchema,
+                        Annotations = tool.Annotations,
+                        Icons = tool.Icons,
+                        Meta = tool.Meta
+                    };
                 allToolsResponse.Tools.Add(exposedTool);
             }
         }
@@ -182,9 +197,26 @@ public sealed class RegistryToolLoader(
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
 
+        // 'tenant' is ours, not the upstream server's: it selects the identity the outbound token
+        // is minted for. Consume it so it never reaches a server that does not declare it.
+        string? tenantId = null;
+        if (_clientTenantScopeMap.TryGetValue(kvp.Client, out var tenantScoped) && tenantScoped
+            && !RegistryTenantScope.SchemaDeclaresTenant(kvp.Tool.InputSchema)
+            && !RegistryTenantScope.TryConsumeTenantArgument(parameters, out tenantId, out var tenantError))
+        {
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            {
+                Content = [new TextContentBlock { Text = tenantError! }],
+                IsError = true,
+            }, toolId);
+        }
+
         // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
         // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
-        return await kvp.Client.CallToolAsync(kvp.OriginalToolName, parameters, cancellationToken: cancellationToken);
+        using (RegistryTenantScope.Enter(tenantId))
+        {
+            return await kvp.Client.CallToolAsync(kvp.OriginalToolName, parameters, cancellationToken: cancellationToken);
+        }
     }
 
     /// <summary>
@@ -258,7 +290,7 @@ public sealed class RegistryToolLoader(
                         if (mcpClient == null)
                         {
                             _logger.LogWarning("Failed to get MCP client for provider {ProviderName}.", serverMetadata.Name);
-                            return (serverMetadata.Name, serverMetadata.ToolPrefix, null, (IEnumerable<Tool>?)null);
+                            return (serverMetadata.Name, serverMetadata.ToolPrefix, serverMetadata.SupportsTenantScope, null, (IEnumerable<Tool>?)null);
                         }
                     }
                     catch (OperationCanceledException)
@@ -269,12 +301,12 @@ public sealed class RegistryToolLoader(
                     catch (InvalidOperationException ex)
                     {
                         _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, serverMetadata.ToolPrefix, null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, serverMetadata.SupportsTenantScope, null, (IEnumerable<Tool>?)null);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, serverMetadata.ToolPrefix, null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, serverMetadata.SupportsTenantScope, null, (IEnumerable<Tool>?)null);
                     }
 
                     try
@@ -284,7 +316,7 @@ public sealed class RegistryToolLoader(
                             .Select(t => t.ProtocolTool)
                             .ToArray();
 
-                        return (serverMetadata.Name, serverMetadata.ToolPrefix, mcpClient, (IEnumerable<Tool>?)allTools);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, serverMetadata.SupportsTenantScope, mcpClient, (IEnumerable<Tool>?)allTools);
                     }
                     catch (OperationCanceledException)
                     {
@@ -294,7 +326,7 @@ public sealed class RegistryToolLoader(
                     catch (Exception ex)
                     {
                         _logger.LogWarning("Failed to list tools for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
-                        return (serverMetadata.Name, serverMetadata.ToolPrefix, (McpClient?)null, (IEnumerable<Tool>?)null);
+                        return (serverMetadata.Name, serverMetadata.ToolPrefix, serverMetadata.SupportsTenantScope, (McpClient?)null, (IEnumerable<Tool>?)null);
                     }
                 }
                 catch (OperationCanceledException)
@@ -310,12 +342,13 @@ public sealed class RegistryToolLoader(
             var toolCount = 0;
 
             // Process results and populate the client cache and tool map
-            foreach (var (serverName, toolPrefix, mcpClient, tools) in results)
+            foreach (var (serverName, toolPrefix, supportsTenantScope, mcpClient, tools) in results)
             {
                 if (mcpClient != null && tools != null)
                 {
                     _discoveredClients.Add(mcpClient);
                     _clientPrefixMap[mcpClient] = toolPrefix;
+                    _clientTenantScopeMap[mcpClient] = supportsTenantScope;
 
                     foreach (var tool in tools)
                     {
@@ -354,6 +387,7 @@ public sealed class RegistryToolLoader(
         _discoveredClients.Clear();
         _toolClientMap.Clear();
         _clientPrefixMap.Clear();
+        _clientTenantScopeMap.Clear();
 
         await ValueTask.CompletedTask;
     }

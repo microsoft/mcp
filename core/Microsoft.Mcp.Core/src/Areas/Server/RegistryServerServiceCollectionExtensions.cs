@@ -4,6 +4,7 @@
 using System.Reflection;
 using Azure.Mcp.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -79,12 +80,13 @@ public static class RegistryServerServiceCollectionExtensions
                     // the token exchange — delegate back to the provider as usual.
                     if (provider is SingleIdentityTokenCredentialProvider)
                     {
-                        return new AccessTokenHandler(new CustomChainedCredential(forceBrowserFallback: true), oauthScopes);
+                        provider = sp.GetRequiredService<RegistryBrowserFallbackTokenCredentialProvider>();
                     }
                     return new AccessTokenHandler(provider, oauthScopes);
                 });
         }
 
+        services.TryAddSingleton<RegistryBrowserFallbackTokenCredentialProvider>();
         services.AddSingleton(registry);
 
         return services;
