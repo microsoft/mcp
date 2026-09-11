@@ -13,16 +13,21 @@ namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvider
 {
     private readonly ILoggerFactory _loggerFactory;
+    private readonly bool _forceBrowserFallback;
     private readonly TokenCredential _credential;
     private readonly Dictionary<string, TokenCredential> _tenantSpecificCredentials
         = new(StringComparer.OrdinalIgnoreCase);
 
-    public SingleIdentityTokenCredentialProvider(ILoggerFactory loggerFactory)
+    /// <param name="forceBrowserFallback">Allow an interactive browser prompt when every silent
+    /// credential fails. Only appropriate where the user's own identity drives auth.</param>
+    public SingleIdentityTokenCredentialProvider(ILoggerFactory loggerFactory, bool forceBrowserFallback = false)
     {
         _loggerFactory = loggerFactory;
+        _forceBrowserFallback = forceBrowserFallback;
         _credential = new CustomChainedCredential(
             null,
-            _loggerFactory.CreateLogger<CustomChainedCredential>()
+            _loggerFactory.CreateLogger<CustomChainedCredential>(),
+            forceBrowserFallback
         );
     }
 
@@ -44,7 +49,8 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
                 {
                     tenantCredential = new CustomChainedCredential(
                         tenantId,
-                        _loggerFactory.CreateLogger<CustomChainedCredential>()
+                        _loggerFactory.CreateLogger<CustomChainedCredential>(),
+                        _forceBrowserFallback
                     );
                     _tenantSpecificCredentials[tenantId] = tenantCredential;
                 }

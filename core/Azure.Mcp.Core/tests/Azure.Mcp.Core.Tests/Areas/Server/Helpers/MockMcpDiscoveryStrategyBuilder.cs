@@ -26,7 +26,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
     /// <param name="description">The description of the server. If null, uses a default description.</param>
     /// <param name="client">The mock client to return for this server.</param>
     /// <returns>The current instance for method chaining.</returns>
-    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName = null, string? description = null, McpClient? client = null, string? toolPrefix = null)
+    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName = null, string? description = null, McpClient? client = null, string? toolPrefix = null, bool supportsTenantScope = false)
     {
         var mockProvider = Substitute.For<IMcpServerProvider>();
         var metadata = new McpServerMetadata
@@ -34,7 +34,8 @@ public sealed class MockMcpDiscoveryStrategyBuilder
             Id = serverId,
             Name = serverName ?? serverId,
             Description = description ?? $"Mock server for {serverId}",
-            ToolPrefix = toolPrefix
+            ToolPrefix = toolPrefix,
+            SupportsTenantScope = supportsTenantScope
         };
 
         mockProvider.CreateMetadata().Returns(metadata);
@@ -65,10 +66,10 @@ public sealed class MockMcpDiscoveryStrategyBuilder
     /// <param name="description">The description of the server. If null, uses a default description.</param>
     /// <param name="clientBuilder">The MockMcpClientBuilder to use for creating the client.</param>
     /// <returns>The current instance for method chaining.</returns>
-    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName, string? description, MockMcpClientBuilder clientBuilder, string? toolPrefix = null)
+    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName, string? description, MockMcpClientBuilder clientBuilder, string? toolPrefix = null, bool supportsTenantScope = false)
     {
         var client = clientBuilder.Build();
-        return AddServer(serverId, serverName, description, client, toolPrefix);
+        return AddServer(serverId, serverName, description, client, toolPrefix, supportsTenantScope);
     }
 
     /// <summary>

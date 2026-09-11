@@ -50,7 +50,10 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         Name = _id,
         Title = _serverInfo.Title,
         Description = _serverInfo.Description ?? string.Empty,
-        ToolPrefix = _serverInfo.ToolPrefix
+        ToolPrefix = _serverInfo.ToolPrefix,
+        // OAuth scopes are what makes this server reachable with an Azure token, and therefore
+        // what makes a per-call tenant meaningful for the tools proxied from it.
+        SupportsTenantScope = _serverInfo.OAuthScopes is { Length: > 0 }
     };
 
     /// <summary>
