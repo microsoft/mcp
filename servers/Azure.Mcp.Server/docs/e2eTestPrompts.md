@@ -13,9 +13,23 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| adme_health_check | Check authentication and connectivity for ADME endpoint <endpoint> and data partition <data-partition> | none |
-| adme_schema_get | Get ADME schema <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_schema_list | List shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_health_check | Check health and authentication for ADME endpoint <endpoint> and data partition <data-partition> | none |
+| adme_schema_get | Get ADME schema for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_get | Show the fields, types, and structure of OSDU schema <authority:source:entity-type:version> from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_get | Retrieve the full JSON definition for OSDU schema <authority:source:entity-type:version> from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List all shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List the latest published SHARED OSDU schemas for entity type master-data--Well from ADME endpoint <endpoint> in data partition <data-partition> | none |
+| adme_schema_list | List DEVELOPMENT OSDU schemas from authority <authority> and source <source> in ADME endpoint <endpoint> and data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch the full content of ADME records <record-id-1>, <record-id-2>, and <record-id-3> in one batch from endpoint <endpoint> and data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch only attributes data.Name and data.Description for ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_get | Get a OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_get | Get version <record-version> of OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record <record-id> at endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List ADME records of kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List the first 25 ADME record IDs for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | Continue listing ADME record IDs for kind <authority:source:entity-type:version> using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_version_list | List all versions of ADME record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 
 ## Azure Advisor
 
@@ -225,8 +239,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
-| azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on GRS-enabled Recovery Services vault <vault_name> in resource group <resource_group> with vault-type rsv | investigation-required |
+| azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for GRS-enabled DPP backup vault <vault_name> under resource group <resource_group> with vault-type dpp | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |
 | azurebackup_governance_find-unprotected | Show me Azure resources that are not backed up for resource type <resource_type> | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected SQL databases and file shares discovered by backup vaults in my subscription | investigation-required |
@@ -243,7 +257,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group> | investigation-required |
-| azurebackup_policy_create | Create a SQL backup policy <policy_name> with daily full at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_create | Create a SQL backup policy <policy_name> with weekly full on Sundays at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | investigation-required |
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
@@ -259,6 +273,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protecteditem_get | Show the current workload-specific inclusion or exclusion settings and all protected-item properties for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including only namespace <namespace> and cluster-scoped resources | investigation-required |
 | azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
 | azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected | investigation-required |
 | azurebackup_protecteditem_update-protection | Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name> | investigation-required |
@@ -316,7 +331,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | extension_cli_generate | What's the Azure CLI command for getting a storage account's details? | none |
 | extension_cli_generate | List all virtual machines in my subscription using Azure CLI | none |
 | extension_cli_generate | Show me the details of the storage account <account_name> using Azure CLI commands | none |
-| extension_cli_install | \<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate> | context-required |
 | extension_cli_install | How to install azd | none |
 | extension_cli_install | What is Azure Functions Core tools and how to install it | none |
 
@@ -635,6 +649,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_create | Create file share <file_share_name> in resource group <resource_group_name> with 100 GB storage | none |
 | fileshares_fileshare_create | Create a file share named <file_share_name> in location <location> with resource group <resource_group_name> | none |
 | fileshares_fileshare_create | Set up a new file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_fileshare_create | Create an NFS file share <file_share_name> in location <location> in resource group <resource_group_name> with NFS encryption in transit enabled | none |
 | fileshares_fileshare_delete | Delete the file share <file_share_name> from resource group <resource_group_name> | none |
 | fileshares_fileshare_delete | Remove file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | List all file shares in my subscription | none |
@@ -671,6 +686,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_peconnection_update | Change the status of private endpoint connection <connection_name> to Rejected | clarification-required |
 | fileshares_fileshare_update | Update file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Update the provisioned storage for file share <file_share_name> to 200 GB | none |
+| fileshares_fileshare_update | Enable NFS encryption in transit for file share <file_share_name> in resource group <resource_group_name> | none |
+| fileshares_fileshare_update | Disable NFS encryption in transit on file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
 | fileshares_usage | Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_usage | Show me the usage statistics for file share <file_share_name> | none |

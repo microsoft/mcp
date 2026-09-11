@@ -1111,11 +1111,23 @@ Example prompts that generate Azure CLI commands:
 * "Check authentication and connectivity for my ADME endpoint and data partition"
 * "Get an ADME schema by kind"
 * "List shared Well schemas from my ADME data partition"
+* "Fetch multiple OSDU records by id from my ADME data partition"
+* "Get an OSDU record by id or version from my ADME data partition"
+* "List OSDU record ids for a kind in my ADME data partition"
+* "List all versions of an OSDU record in my ADME data partition"
 
 ### 🧮 Azure Data Explorer
 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
+
+### 🐘 Azure Database for PostgreSQL
+
+* "List all PostgreSQL servers in my subscription"
+* "Show me the tables in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the schema of table 'users' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
+* "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
 
 ### 📣 Azure Event Grid
 
@@ -1342,7 +1354,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
-- **Azure Data Manager for Energy** - Health checks and OSDU schema operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema, record retrieval, and version history operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
