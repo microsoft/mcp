@@ -3138,8 +3138,7 @@ azmcp iotoperations instance get --subscription <subscription> \
 ```bash
 # Gets Key Vault Managed HSM account settings
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault admin settings get --subscription <subscription> \
-                                  --vault <vault-name>
+azmcp keyvault admin settings get --vault <vault-name>
 ```
 
 #### Certificates
@@ -3147,20 +3146,17 @@ azmcp keyvault admin settings get --subscription <subscription> \
 ```bash
 # Creates a certificate in a key vault with the default policy
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate create --subscription <subscription> \
-                                  --vault <vault-name> \
+azmcp keyvault certificate create --vault <vault-name> \
                                   --name <certificate-name>
 
 # Get a specific certificate or list all certificates. If --name is provided, returns a specific certificate; otherwise, lists all certificates in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate get --subscription <subscription> \
-                               --vault <vault-name> \
+azmcp keyvault certificate get --vault <vault-name> \
                                [--name <certificate-name>]
 
 # Imports an existing certificate (PFX or PEM) into a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp keyvault certificate import --subscription <subscription> \
-                                  --vault <vault-name> \
+azmcp keyvault certificate import --vault <vault-name> \
                                   --certificate <certificate-name> \
                                   --certificate-data <path-or-base64-or-raw-pem> \
                                   [--password <pfx-password>]
@@ -3171,15 +3167,13 @@ azmcp keyvault certificate import --subscription <subscription> \
 ```bash
 # Creates a key in a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key create --subscription <subscription> \
-                          --vault <vault-name> \
+azmcp keyvault key create --vault <vault-name> \
                           --key <key-name> \
                           --key-type <key-type>
 
 # Get a specific key or list all keys. If --key is provided, returns a specific key; otherwise, lists all keys in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key get --subscription <subscription> \
-                       --vault <vault-name> \
+azmcp keyvault key get --vault <vault-name> \
                        [--key <key-name>] \
                        [--include-managed]
 ```
@@ -3201,15 +3195,13 @@ Tools that handle sensitive data such as secrets require user consent before exe
 ```bash
 # Creates a secret in a key vault (will prompt for user consent)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp keyvault secret create --subscription <subscription> \
-                             --vault <vault-name> \
+azmcp keyvault secret create --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
 
 # Get a specific secret or list all secrets. If --secret is provided, returns a specific secret with its value (requires user consent); otherwise, lists all secrets in the key vault (returns secret names and properties, not values).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp keyvault secret get --subscription <subscription> \
-                          --vault <vault-name> \
+azmcp keyvault secret get --vault <vault-name> \
                           [--secret <secret-name>]
 ```
 

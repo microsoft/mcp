@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -24,8 +22,8 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<KeyGetOptions, KeyGetCommand.KeyGetCommandResult>(subscriptionResolver)
+public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<KeyGetOptions, KeyGetCommand.KeyGetCommandResult>
 {
     private readonly ILogger<KeyGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
@@ -40,7 +38,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                 var keys = await _keyVaultService.ListKeys(
                     options.Vault,
                     options.IncludeManaged,
-                    options.Subscription!,
                     options.Tenant,
                     cancellationToken);
 
@@ -52,7 +49,6 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger, IKeyVaultServic
                 var key = await _keyVaultService.GetKey(
                     options.Vault,
                     options.Key,
-                    options.Subscription!,
                     options.Tenant,
                     cancellationToken);
 
