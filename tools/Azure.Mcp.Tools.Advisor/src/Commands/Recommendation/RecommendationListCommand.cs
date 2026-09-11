@@ -23,11 +23,14 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Do NOT use this to answer aggregate questions like 'how many', 'top N resource types', 'breakdown by category', " +
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' returns at most 100 records and reports when results are truncated). " +
+        "Do not use list to summarize, count, or group service retirements by retirement date; use summary for aggregate retirement requests. " +
         "Filter by --status to return New, Postponed, Dismissed, or Completed recommendations; status defaults to New when omitted. " +
         "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
         "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
         "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
+        "Each result uses the standard ARM resource shape; its name is the stable recommendation ID accepted by tools that operate on a recommendation. " +
         "--top caps the number of returned items (default 50, max 100).",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

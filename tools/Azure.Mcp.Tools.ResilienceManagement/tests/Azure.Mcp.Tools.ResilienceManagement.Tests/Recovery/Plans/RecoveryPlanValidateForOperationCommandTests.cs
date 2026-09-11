@@ -51,7 +51,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--operation-name", operationName.ToLowerInvariant());
 
         RecoveryPlanValidateForOperationResult result = ValidateAndDeserializeResponse(
@@ -65,7 +65,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--operation-name", "Delete");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -82,7 +82,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             "Reprotect",
             false,
             "RecoveryPlanStateDoesNotSupportOperation",
-            "Operation Reprotect is not allowed for the current recovery plan state.");
+            "Operation Reprotect is not allowed for the current recoveryplan state.");
         Service.ValidateRecoveryPlanForOperationAsync(
             "sg1",
             "plan1",
@@ -93,7 +93,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--operation-name", "Reprotect");
 
         RecoveryPlanValidateForOperationResult result = ValidateAndDeserializeResponse(
@@ -121,7 +121,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--operation-name", "Failover");
 
         Assert.Equal(status, response.Status);
@@ -143,7 +143,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--operation-name", "Failover");
 
         Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);

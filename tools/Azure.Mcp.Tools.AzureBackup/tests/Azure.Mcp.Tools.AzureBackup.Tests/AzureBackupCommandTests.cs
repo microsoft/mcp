@@ -121,6 +121,11 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         // Verify the new detail fields are present (Bug 1.3 fix validation)
         vault.AssertProperty("skuName");
         vault.AssertProperty("redundancy");
+
+        var identityDetails = vault.AssertProperty("identityDetails");
+        Assert.Equal("SystemAssigned", identityDetails.AssertProperty("type").GetString());
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("principalId").GetString()));
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("tenantId").GetString()));
     }
 
     [Fact]
@@ -288,6 +293,11 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var vault = vaults.EnumerateArray().First();
         Assert.Equal("dpp", vault.AssertProperty("vaultType").GetString());
         Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+
+        var identityDetails = vault.AssertProperty("identityDetails");
+        Assert.Equal("SystemAssigned", identityDetails.AssertProperty("type").GetString());
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("principalId").GetString()));
+        Assert.False(string.IsNullOrEmpty(identityDetails.AssertProperty("tenantId").GetString()));
     }
 
     [Fact]

@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     Name = "item-definitions",
     Title = "Item Definitions",
     Description = "Retrieves the JSON schema definition for a Microsoft Fabric item type. Use this when the user needs to understand an item's structure or validate an item definition. Returns the schema definition for the specified item type.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

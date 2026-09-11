@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Name = "plans_list",
     Title = "List Incident Response Plans",
     Description = "List incident response plans configured on an SRE Agent.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

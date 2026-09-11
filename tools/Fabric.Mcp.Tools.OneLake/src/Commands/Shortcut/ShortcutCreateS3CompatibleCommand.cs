@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
         Create a shortcut pointing to an S3-compatible storage location. Requires
         a connection ID, target URL, and bucket name. Requires OneLake.ReadWrite.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

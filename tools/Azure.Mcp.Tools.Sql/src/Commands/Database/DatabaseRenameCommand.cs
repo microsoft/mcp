@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
         database resource to a new identifier while preserving configuration and data. Equivalent to
         'az sql db rename'. Returns the updated database information using the new name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

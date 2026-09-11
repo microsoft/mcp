@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
@@ -180,5 +181,43 @@ public class CommandGroupServerProviderTests
         // Assert
         var expected = new[] { "server", "start", "--mode", "all", "--namespace", "testGroup", "--transport", "custom-transport" };
         Assert.Equal(expected, arguments);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated, "duplicated")]
+    [InlineData(StructuredOutputMode.Compact, "compact")]
+    public void BuildArguments_WithStructuredOutputMode_ForwardsMode(
+        StructuredOutputMode mode,
+        string expectedMode)
+    {
+        var provider = new CommandGroupServerProvider(new CommandGroup("testGroup", "Test Description"))
+        {
+            StructuredOutputMode = mode
+        };
+
+        var arguments = provider.BuildArguments();
+
+        Assert.Equal(
+            [
+                "server",
+                "start",
+                "--mode",
+                "all",
+                "--namespace",
+                "testGroup",
+                "--transport",
+                "stdio",
+                "--structured-output-mode",
+                expectedMode
+            ],
+            arguments);
+    }
+
+    [Fact]
+    public void BuildArguments_WithoutStructuredOutputMode_OmitsFlag()
+    {
+        var provider = new CommandGroupServerProvider(new CommandGroup("testGroup", "Test Description"));
+
+        Assert.DoesNotContain("--structured-output-mode", provider.BuildArguments());
     }
 }

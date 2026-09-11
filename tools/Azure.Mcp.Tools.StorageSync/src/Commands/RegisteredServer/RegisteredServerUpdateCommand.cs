@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
     Name = "update",
     Title = "Update Registered Server",
     Description = "Update properties of a registered server.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

@@ -111,8 +111,10 @@ public class ServerModeCoverageTests
         }
     }
 
-    [Fact]
-    public async Task AllMode_Should_List_Tools_Without_Initialize()
+    [Theory]
+    [InlineData("server start --mode all")]
+    [InlineData("server start --tool monitor_workspace_log_search")]
+    public async Task AllMode_Should_List_Tools_Without_Initialize(string arguments)
     {
         // "all" mode exposes every individual Azure tool directly.
         // Uses a longer timeout because registering all tools takes more time on slow CI runners.
@@ -121,7 +123,7 @@ public class ServerModeCoverageTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = AzmcpPath,
-            Arguments = "server start --mode all",
+            Arguments = arguments,
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -148,6 +150,7 @@ public class ServerModeCoverageTests
             Assert.NotNull(response);
             Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("monitor_workspace_log_search", response, StringComparison.Ordinal);
         }
         finally
         {

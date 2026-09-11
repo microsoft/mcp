@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
         also requires --immutability-duration-days (30-36135) unless --immutability-state
         is 'Disabled'.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
