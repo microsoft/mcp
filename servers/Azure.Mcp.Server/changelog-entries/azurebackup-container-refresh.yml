@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp azurebackup container refresh` to trigger the Recovery Services vault RefreshContainers (discovery) operation. Defaults to Azure File share storage account discovery (`backupManagementType eq 'AzureStorage'`); pass `--filter` to scope discovery to `AzureIaasVM` or `AzureWorkload` containers instead. RSV only; DPP (Backup) vaults return a 400 ValidationError. The command is a fire-and-forget POST that returns HTTP 202 Accepted with no body, so the response reports acceptance status rather than a discovered container list. This is a prerequisite for enabling Azure File share backup end-to-end from MCP."

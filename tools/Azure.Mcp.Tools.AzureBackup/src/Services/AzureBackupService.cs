@@ -437,6 +437,22 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, cancellationToken);
     }
 
+    public async Task RefreshContainersAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? backupManagementType, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(resolved))
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' is a Data Protection (DPP) vault. Container refresh is only supported for Recovery Services (RSV) vaults.");
+        }
+
+        await rsvOps.RefreshContainersAsync(vaultName, resourceGroup, subscription, backupManagementType ?? "AzureStorage", tenant, cancellationToken);
+    }
+
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(
         string datasourceId, string subscription, string location,
         string? tenant, CancellationToken cancellationToken)
