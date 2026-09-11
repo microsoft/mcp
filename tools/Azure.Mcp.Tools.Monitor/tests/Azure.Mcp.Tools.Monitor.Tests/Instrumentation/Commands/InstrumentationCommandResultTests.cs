@@ -51,8 +51,7 @@ public sealed class InstrumentationCommandResultTests
             tool);
         var options = new OrchestratorNextOptions
         {
-            SessionId = $"missing-{Guid.NewGuid():N}",
-            CompletionNote = "done"
+            SessionId = $"missing-{Guid.NewGuid():N}"
         };
 
         var response = await command.ExecuteAsync(

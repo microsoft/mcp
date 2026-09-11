@@ -130,7 +130,7 @@ public class OrchestratorTool(WorkspaceAnalyzer analyzer)
         });
     }
 
-    public string Next(string sessionId, string completionNote)
+    public string Next(string sessionId)
     {
         CleanupExpiredSessions();
 
