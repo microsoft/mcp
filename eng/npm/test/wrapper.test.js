@@ -11,7 +11,7 @@
 
 const { test } = require('node:test')
 const assert = require('node:assert')
-const { spawnSync } = require('node:child_process')
+const { spawn, spawnSync } = require('node:child_process')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
@@ -50,15 +50,29 @@ fs.appendFileSync(process.env.FAKE_NPM_LOG, JSON.stringify({ args, cwd: process.
 // off its own stdout.
 process.stdout.write('added 1 package in 1s\\n')
 
-if (process.env.FAKE_NPM_FAIL) {
+const failOnceMarker = process.env.FAKE_NPM_FAIL_ONCE
+if (process.env.FAKE_NPM_FAIL || (failOnceMarker && !fs.existsSync(failOnceMarker))) {
+  if (failOnceMarker) {
+    fs.writeFileSync(failOnceMarker, '')
+  }
   process.stderr.write('npm error network request failed\\n')
   process.exit(1)
 }
 
 const spec = args[1]
 const name = spec.slice(0, spec.lastIndexOf('@'))
-const prefix = args[args.indexOf('--prefix') + 1]
+const prefix = path.resolve(args[args.indexOf('--prefix') + 1])
 const dir = path.join(prefix, 'node_modules', name)
+
+// Like npm's reify, move the existing package out of the way before writing
+// the new one. A slow install widens that window, which is what concurrent
+// installs into one prefix trip over.
+fs.rmSync(dir, { recursive: true, force: true })
+const delayMs = Number(process.env.FAKE_NPM_DELAY_MS || 0)
+if (delayMs) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delayMs)
+}
+
 fs.mkdirSync(dir, { recursive: true })
 fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name, main: './index.js' }))
 fs.writeFileSync(path.join(dir, 'index.js'), ${JSON.stringify(platformIndexSource)})
@@ -80,10 +94,13 @@ function createFixture(t) {
   fs.writeFileSync(path.join(project, 'package.json'), projectManifest)
 
   const wrapperDir = path.join(root, 'node_modules', ...packageName.split('/'))
+  const home = path.join(root, 'home')
   fs.mkdirSync(wrapperDir, { recursive: true })
+  fs.mkdirSync(home)
   t.after(() => {
-    // Some tests make the wrapper directory read-only.
+    // Some tests make these read-only.
     fs.chmodSync(wrapperDir, 0o755)
+    fs.chmodSync(home, 0o755)
     fs.rmSync(root, { recursive: true, force: true })
   })
   fs.copyFileSync(wrapperSource, path.join(wrapperDir, 'index.js'))
@@ -102,9 +119,6 @@ function createFixture(t) {
     fs.writeFileSync(path.join(bin, 'npm'), `#!/bin/sh\nexec "${process.execPath}" "${path.join(bin, 'npm.js')}" "$@"\n`, { mode: 0o755 })
   }
 
-  const home = path.join(root, 'home')
-  fs.mkdirSync(home)
-
   const env = { ...process.env }
   const pathKey = Object.keys(env).find(key => key.toUpperCase() === 'PATH') || 'PATH'
   env[pathKey] = bin + path.delimiter + env[pathKey]
@@ -114,6 +128,7 @@ function createFixture(t) {
   env.XDG_CACHE_HOME = path.join(home, '.cache')
   env.FAKE_NPM_LOG = path.join(root, 'npm.log')
   delete env.NODE_PATH
+  delete env.NODE_OPTIONS
   delete env.DEBUG
 
   const cacheBase = {
@@ -126,14 +141,19 @@ function createFixture(t) {
     project,
     projectManifest,
     wrapperDir,
+    home,
     env,
     privateDir: path.join(wrapperDir, '.platform'),
     cacheDir: path.join(cacheBase, 'microsoft-mcp', platformPackageName, packageVersion)
   }
 }
 
+function wrapperArgs(fixture) {
+  return [path.join(fixture.wrapperDir, 'index.js'), 'server', 'start']
+}
+
 function runWrapper(fixture, extraEnv = {}) {
-  const result = spawnSync(process.execPath, [path.join(fixture.wrapperDir, 'index.js'), 'server', 'start'], {
+  const result = spawnSync(process.execPath, wrapperArgs(fixture), {
     cwd: fixture.project,
     env: { ...fixture.env, ...extraEnv },
     encoding: 'utf8',
@@ -143,12 +163,49 @@ function runWrapper(fixture, extraEnv = {}) {
   return result
 }
 
+function runWrapperAsync(fixture, extraEnv = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, wrapperArgs(fixture), {
+      cwd: fixture.project,
+      env: { ...fixture.env, ...extraEnv }
+    })
+    let stdout = ''
+    let stderr = ''
+    child.stdout.on('data', chunk => { stdout += chunk })
+    child.stderr.on('data', chunk => { stderr += chunk })
+    child.on('error', reject)
+    child.on('close', status => resolve({ status, stdout, stderr }))
+  })
+}
+
 function npmCalls(fixture) {
   if (!fs.existsSync(fixture.env.FAKE_NPM_LOG)) {
     return []
   }
   return fs.readFileSync(fixture.env.FAKE_NPM_LOG, 'utf8').trim().split('\n').map(line => JSON.parse(line))
 }
+
+// The directory npm was told to install into, resolved against the cwd it ran in.
+function installPrefix(call) {
+  return path.resolve(call.cwd, call.args[call.args.indexOf('--prefix') + 1])
+}
+
+// A process ID that is no longer running.
+function deadPid() {
+  return spawnSync(process.execPath, ['-e', '']).pid
+}
+
+// Replaces os.homedir() in the wrapper with one that throws, as it does when
+// HOME is unset and the user has no passwd entry.
+function noHomeDirEnv(fixture) {
+  const preload = path.join(fixture.root, 'no-home-dir.js')
+  fs.writeFileSync(preload, `require('os').homedir = () => { throw new Error('ENOENT: no home directory') }\n`)
+  return { NODE_OPTIONS: `--require ${JSON.stringify(preload)}` }
+}
+
+const permissionsSkip = process.platform === 'win32'
+  ? 'directory permissions are not enforced this way on Windows'
+  : process.getuid() === 0 && 'root ignores directory permissions'
 
 const expectedStdout = 'ran ["server","start"]'
 
@@ -162,6 +219,16 @@ test('does not run npm when the platform package is installed normally', (t) => 
   assert.strictEqual(result.stdout, expectedStdout)
   assert.deepStrictEqual(npmCalls(fixture), [])
   assert.ok(!fs.existsSync(fixture.privateDir), 'should not create the private install dir')
+})
+
+test('does not need a home directory when the platform package is installed normally', (t) => {
+  const fixture = createFixture(t)
+  writePlatformPackage(path.join(fixture.root, 'node_modules', ...platformPackageName.split('/')))
+
+  const result = runWrapper(fixture, noHomeDirEnv(fixture))
+
+  assert.strictEqual(result.status, 0, result.stderr)
+  assert.strictEqual(result.stdout, expectedStdout)
 })
 
 test('installs a missing platform package privately, not into the caller\'s project', (t) => {
@@ -182,13 +249,26 @@ test('installs a missing platform package privately, not into the caller\'s proj
   for (const flag of ['--no-save', '--no-audit', '--no-fund']) {
     assert.ok(args.includes(flag), `expected ${flag} in ${JSON.stringify(args)}`)
   }
-  assert.strictEqual(args[args.indexOf('--prefix') + 1], fixture.privateDir)
+  assert.strictEqual(installPrefix(calls[0]), fixture.privateDir)
   assert.strictEqual(cwd, fixture.privateDir)
 
   assert.ok(fs.existsSync(path.join(fixture.privateDir, 'node_modules', ...platformPackageName.split('/'), 'index.js')))
+  assert.ok(!fs.existsSync(path.join(fixture.privateDir, '.install.lock')), 'should release the install lock')
   assert.strictEqual(fs.readFileSync(path.join(fixture.project, 'package.json'), 'utf8'), fixture.projectManifest)
   assert.ok(!fs.existsSync(path.join(fixture.project, 'package-lock.json')), 'should not write a lockfile into the project')
   assert.ok(!fs.existsSync(path.join(fixture.project, 'node_modules')), 'should not install into the project')
+})
+
+test('installs into the wrapper directory without a home directory', (t) => {
+  const fixture = createFixture(t)
+
+  const result = runWrapper(fixture, noHomeDirEnv(fixture))
+
+  assert.strictEqual(result.status, 0, result.stderr)
+  assert.strictEqual(result.stdout, expectedStdout)
+  const calls = npmCalls(fixture)
+  assert.strictEqual(calls.length, 1)
+  assert.strictEqual(installPrefix(calls[0]), fixture.privateDir)
 })
 
 test('reuses an earlier private install instead of running npm again', (t) => {
@@ -217,11 +297,35 @@ test('reinstalls over a half-finished private install', (t) => {
   assert.strictEqual(npmCalls(fixture).length, 1)
 })
 
-test('falls back to a per-user cache when the wrapper directory is not writable', {
-  skip: process.platform === 'win32'
-    ? 'directory permissions are not enforced this way on Windows'
-    : process.getuid() === 0 && 'root ignores directory permissions'
-}, (t) => {
+test('installs once when several launches start at the same time', async (t) => {
+  const fixture = createFixture(t)
+
+  const results = await Promise.all(
+    Array.from({ length: 4 }, () => runWrapperAsync(fixture, { FAKE_NPM_DELAY_MS: '500' }))
+  )
+
+  for (const result of results) {
+    assert.strictEqual(result.status, 0, result.stderr)
+    assert.strictEqual(result.stdout, expectedStdout)
+  }
+  assert.strictEqual(npmCalls(fixture).length, 1)
+  assert.ok(!fs.existsSync(path.join(fixture.privateDir, '.install.lock')), 'should release the install lock')
+})
+
+test('takes over an install lock left by a process that died', (t) => {
+  const fixture = createFixture(t)
+  fs.mkdirSync(fixture.privateDir, { recursive: true })
+  fs.writeFileSync(path.join(fixture.privateDir, '.install.lock'), String(deadPid()))
+
+  const result = runWrapper(fixture)
+
+  assert.strictEqual(result.status, 0, result.stderr)
+  assert.strictEqual(result.stdout, expectedStdout)
+  assert.strictEqual(npmCalls(fixture).length, 1)
+  assert.ok(!fs.existsSync(path.join(fixture.privateDir, '.install.lock')), 'should release the install lock')
+})
+
+test('falls back to a per-user cache when the wrapper directory is not writable', { skip: permissionsSkip }, (t) => {
   const fixture = createFixture(t)
   // Like a root-owned global install, or a read-only filesystem.
   fs.chmodSync(fixture.wrapperDir, 0o555)
@@ -232,7 +336,7 @@ test('falls back to a per-user cache when the wrapper directory is not writable'
   assert.strictEqual(first.stdout, expectedStdout)
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 1)
-  assert.strictEqual(calls[0].args[calls[0].args.indexOf('--prefix') + 1], fixture.cacheDir)
+  assert.strictEqual(installPrefix(calls[0]), fixture.cacheDir)
   assert.ok(!fs.existsSync(fixture.privateDir), 'should not have created the private install dir')
 
   const second = runWrapper(fixture)
@@ -240,6 +344,32 @@ test('falls back to a per-user cache when the wrapper directory is not writable'
   assert.strictEqual(second.status, 0, second.stderr)
   assert.strictEqual(second.stdout, expectedStdout)
   assert.strictEqual(npmCalls(fixture).length, 1, 'should reuse the cached install')
+})
+
+test('reports troubleshooting steps when no install directory is writable', { skip: permissionsSkip }, (t) => {
+  const fixture = createFixture(t)
+  fs.chmodSync(fixture.wrapperDir, 0o555)
+  fs.chmodSync(fixture.home, 0o555)
+
+  const result = runWrapper(fixture)
+
+  assert.strictEqual(result.status, 1)
+  assert.strictEqual(result.stdout, '')
+  assert.match(result.stderr, /No writable directory to install into/)
+  assert.deepStrictEqual(npmCalls(fixture), [])
+})
+
+test('recovers when the first npm attempt fails', (t) => {
+  const fixture = createFixture(t)
+
+  const result = runWrapper(fixture, { FAKE_NPM_FAIL_ONCE: path.join(fixture.root, 'failed-once') })
+
+  assert.strictEqual(result.status, 0, result.stderr)
+  assert.strictEqual(result.stdout, expectedStdout)
+  const calls = npmCalls(fixture)
+  assert.strictEqual(calls.length, 2)
+  assert.ok(calls[1].args.includes('--prefer-online'))
+  assert.strictEqual(installPrefix(calls[1]), fixture.privateDir)
 })
 
 test('reports troubleshooting steps and exits non-zero when npm fails', (t) => {
@@ -251,6 +381,7 @@ test('reports troubleshooting steps and exits non-zero when npm fails', (t) => {
   assert.strictEqual(result.stdout, '')
   assert.match(result.stderr, /Troubleshooting steps/)
   assert.match(result.stderr, new RegExp(`You are running ${process.version.replace(/\./g, '\\.')}`))
+  assert.ok(!fs.existsSync(path.join(fixture.privateDir, '.install.lock')), 'should release the install lock')
 
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 2, 'should retry once')
