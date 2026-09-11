@@ -204,4 +204,27 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);
     }
+
+    [Fact]
+    public async Task Execute_WithLowercaseSortOrder_CallsService()
+    {
+        Service.QueryAsync(
+                TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchQueryRequest>(),
+                null, Arg.Any<CancellationToken>())
+            .Returns(new SearchQueryResponse { Results = [] });
+
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--kind", TestConstants.WellKind,
+            "--sort", "{\"field\":[\"id\"],\"order\":[\"asc\"]}");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
+        await Service.Received(1).QueryAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            Arg.Is<SearchQueryRequest>(request => request.Sort!.Order[0] == "asc"),
+            null,
+            TestContext.Current.CancellationToken);
+    }
 }

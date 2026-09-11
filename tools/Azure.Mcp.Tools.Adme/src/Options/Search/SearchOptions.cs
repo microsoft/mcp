@@ -23,7 +23,7 @@ public sealed class SearchOptions
     [Option(Description = "Starting offset for query pagination. Cannot be combined with cursor pagination, and offset + limit must be <= 10000.")]
     public int? Offset { get; set; }
 
-    [Option(Description = "Continuation token from a previous cursor response. Supplying it selects cursor pagination. Repeat every other search option unchanged. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
+    [Option(Description = "Continuation token from a previous cursor response. Supplying it selects cursor pagination; continue until results is empty. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
     public string? Cursor { get; set; }
 
     [Option(Description = "Optional field paths to project, e.g. ['id','kind','data.FacilityName']. Omit to return full records.")]
@@ -44,13 +44,13 @@ public sealed class SearchOptions
     [Option(Description = "If true, returns only records the user owns. Defaults to false.")]
     public bool? QueryAsOwner { get; set; }
 
-    [Option(Description = "Optional fields to exclude from the payload; currently ignored by ADME, use returnedFields instead.")]
+    [Option(Description = "Optional fields to exclude from the payload; may be ignored by ADME, so prefer returnedFields.")]
     public string[]? ExcludedFields { get; set; }
 
     [Option(Description = "Optional fields to highlight with matched snippets in the response.")]
     public string[]? HighlightedFields { get; set; }
 
-    [Option(Description = "Optional phrase for 'did you mean' spell-check; ADME currently returns no phrase suggestions.")]
+    [Option(Description = "Optional phrase for 'did you mean' spell-check; availability depends on ADME configuration.")]
     public string? SuggestPhrase { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]

@@ -20,6 +20,8 @@ namespace Azure.Mcp.Tools.Adme;
 /// </summary>
 internal static class AdmeServiceHelper
 {
+    private const int MaxErrorResponseLength = 1024;
+
     public const string HttpClientName = "adme";
     public const string NonRetryingHttpClientName = "adme-no-retry";
     public const string AuthScope = "https://energy.azure.com/.default";
@@ -176,9 +178,15 @@ internal static class AdmeServiceHelper
         using var response = await client.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
+            // ADME APIs ensure client-facing error responses do not expose sensitive information.
+            var responseContent = (await response.Content.ReadAsStringAsync(cancellationToken)).Trim();
+            var message = string.IsNullOrWhiteSpace(responseContent)
+                ? GetRequestFailureMessage(response.StatusCode, response.ReasonPhrase)
+                : responseContent[..Math.Min(responseContent.Length, MaxErrorResponseLength)];
+
             throw new RequestFailedException(
                 (int)response.StatusCode,
-                GetRequestFailureMessage(response.StatusCode, response.ReasonPhrase));
+                message);
         }
 
         if (typeInfo is null)

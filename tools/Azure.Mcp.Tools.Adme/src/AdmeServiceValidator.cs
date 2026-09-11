@@ -127,7 +127,9 @@ internal static class AdmeServiceValidator
                     || criteria.Field is not { Count: > 0 }
                     || criteria.Order is not { Count: > 0 }
                     || criteria.Field.Any(string.IsNullOrWhiteSpace)
-                    || criteria.Order.Any(order => order is not ("ASC" or "DESC")))
+                    || criteria.Order.Any(order =>
+                        !string.Equals(order, "ASC", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(order, "DESC", StringComparison.OrdinalIgnoreCase)))
                 {
                     validationResult.Errors.Add(
                         "--sort must contain non-empty field and order arrays using ASC or DESC order values.");

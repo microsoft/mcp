@@ -28,13 +28,13 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
         No matches return an empty result.
 
         CURSORPAGINATIONMODE starts a snapshot for bulk or more than 10000 results; false uses real-time
-        query pagination. Pass cursor for fetching subsequent pages.
+        query pagination. Continue until results is empty; the cursor may remain unchanged between pages.
         A CURSOR also selects cursor mode. Cursor mode rejects OFFSET and AGGREGATEBY; query mode requires
         OFFSET plus LIMIT to be at most 10000.
 
         LIMIT is 1-1000 and defaults to 10. RETURNEDFIELDS projects paths. AGGREGATEBY groups one field into
         up to 1000 buckets. SORT requires equal-length field and order arrays. SPATIALFILTER requires a
-        geo-point field and supported shape. EXCLUDEDFIELDS and SUGGESTPHRASE are accepted but ineffective.
+        geo-point field and supported shape. EXCLUDEDFIELDS and SUGGESTPHRASE may be ineffective in ADME.
         """,
     Destructive = false,
     Idempotent = false,
