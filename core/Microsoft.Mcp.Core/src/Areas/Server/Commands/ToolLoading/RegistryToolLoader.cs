@@ -32,7 +32,6 @@ public sealed class RegistryToolLoader(
     private List<McpClient> _discoveredClients = [];
     private Dictionary<McpClient, string?> _clientPrefixMap = [];
     private Dictionary<McpClient, bool> _clientTenantScopeMap = [];
-    private HashSet<string> _tenantScopedServers = new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -75,10 +74,20 @@ public sealed class RegistryToolLoader(
             var tenantScoped = _clientTenantScopeMap.TryGetValue(mcpClient, out var ts) && ts;
             foreach (var tool in filteredTools)
             {
-                var inputSchema = tenantScoped ? WithTenantProperty(tool.InputSchema) : tool.InputSchema;
+                var inputSchema = tenantScoped ? RegistryTenantScope.WithTenantProperty(tool.InputSchema) : tool.InputSchema;
                 var exposedTool = string.IsNullOrEmpty(prefix) && !tenantScoped
                     ? tool
-                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = inputSchema, OutputSchema = tool.OutputSchema, Annotations = tool.Annotations };
+                    : new Tool
+                    {
+                        Name = prefix + tool.Name,
+                        Title = tool.Title,
+                        Description = tool.Description,
+                        InputSchema = inputSchema,
+                        OutputSchema = tool.OutputSchema,
+                        Annotations = tool.Annotations,
+                        Icons = tool.Icons,
+                        Meta = tool.Meta
+                    };
                 allToolsResponse.Tools.Add(exposedTool);
             }
         }
@@ -190,87 +199,24 @@ public sealed class RegistryToolLoader(
 
         // 'tenant' is ours, not the upstream server's: it selects the identity the outbound token
         // is minted for. Consume it so it never reaches a server that does not declare it.
-        var tenantId = _tenantScopedServers.Contains(kvp.ServerName) && !SchemaDeclaresTenant(kvp.Tool.InputSchema)
-            ? ExtractTenantArgument(parameters)
-            : null;
+        string? tenantId = null;
+        if (_clientTenantScopeMap.TryGetValue(kvp.Client, out var tenantScoped) && tenantScoped
+            && !RegistryTenantScope.SchemaDeclaresTenant(kvp.Tool.InputSchema)
+            && !RegistryTenantScope.TryConsumeTenantArgument(parameters, out tenantId, out var tenantError))
+        {
+            return McpHelper.InjectToolIdMetadata(new CallToolResult
+            {
+                Content = [new TextContentBlock { Text = tenantError! }],
+                IsError = true,
+            }, toolId);
+        }
 
         // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
         // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
-        RegistryTenantContext.CurrentTenantId = tenantId;
-        try
+        using (RegistryTenantScope.Enter(tenantId))
         {
             return await kvp.Client.CallToolAsync(kvp.OriginalToolName, parameters, cancellationToken: cancellationToken);
         }
-        finally
-        {
-            RegistryTenantContext.CurrentTenantId = null;
-        }
-    }
-
-    private const string TenantPropertyName = "tenant";
-
-    private const string TenantPropertyDescription =
-        "Optional Microsoft Entra tenant ID (GUID) to run this call against. Defaults to the tenant of the " +
-        "identity the server is running as. Only tenants that have consented to this application can be used.";
-
-    /// <summary>
-    /// Adds an optional <c>tenant</c> property to a proxied tool's schema. A tool that declares its
-    /// own <c>tenant</c> is left untouched, since the upstream server owns that argument.
-    /// </summary>
-    private static JsonElement WithTenantProperty(JsonElement inputSchema)
-    {
-        if (SchemaDeclaresTenant(inputSchema))
-        {
-            return inputSchema;
-        }
-
-        if (JsonNode.Parse(inputSchema.GetRawText()) is not JsonObject schema)
-        {
-            return inputSchema;
-        }
-
-        if (schema["properties"] is not JsonObject properties)
-        {
-            properties = [];
-            schema["properties"] = properties;
-        }
-
-        properties[TenantPropertyName] = new JsonObject
-        {
-            ["type"] = "string",
-            ["description"] = TenantPropertyDescription
-        };
-
-        // Parse rather than serialize: keeps the result a self-contained JsonElement and needs no
-        // serializer context under trimming or AOT.
-        using var document = JsonDocument.Parse(schema.ToJsonString());
-        return document.RootElement.Clone();
-    }
-
-    private static bool SchemaDeclaresTenant(JsonElement inputSchema) =>
-        inputSchema.ValueKind == JsonValueKind.Object
-        && inputSchema.TryGetProperty("properties", out var properties)
-        && properties.ValueKind == JsonValueKind.Object
-        && properties.TryGetProperty(TenantPropertyName, out _);
-
-    /// <summary>
-    /// Removes the <c>tenant</c> argument and returns it, or null when absent or blank.
-    /// </summary>
-    private static string? ExtractTenantArgument(Dictionary<string, object?> parameters)
-    {
-        if (!parameters.Remove(TenantPropertyName, out var value))
-        {
-            return null;
-        }
-
-        var tenantId = value switch
-        {
-            JsonElement { ValueKind: JsonValueKind.String } element => element.GetString(),
-            string text => text,
-            _ => null
-        };
-
-        return string.IsNullOrWhiteSpace(tenantId) ? null : tenantId;
     }
 
     /// <summary>
@@ -403,10 +349,6 @@ public sealed class RegistryToolLoader(
                     _discoveredClients.Add(mcpClient);
                     _clientPrefixMap[mcpClient] = toolPrefix;
                     _clientTenantScopeMap[mcpClient] = supportsTenantScope;
-                    if (supportsTenantScope)
-                    {
-                        _tenantScopedServers.Add(serverName);
-                    }
 
                     foreach (var tool in tools)
                     {
@@ -446,7 +388,6 @@ public sealed class RegistryToolLoader(
         _toolClientMap.Clear();
         _clientPrefixMap.Clear();
         _clientTenantScopeMap.Clear();
-        _tenantScopedServers.Clear();
 
         await ValueTask.CompletedTask;
     }

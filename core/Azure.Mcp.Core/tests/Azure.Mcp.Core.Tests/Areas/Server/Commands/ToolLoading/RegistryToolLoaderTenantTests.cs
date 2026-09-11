@@ -87,4 +87,32 @@ public class RegistryToolLoaderTenantTests
         Assert.False(forwarded.ContainsKey("tenant"), "'tenant' is consumed locally and must not reach the upstream server.");
         Assert.Null(RegistryTenantContext.CurrentTenantId);
     }
+
+    [Fact]
+    public async Task CallToolHandler_WithMalformedTenantArgument_FailsInsteadOfUsingTheHostTenant()
+    {
+        var upstreamCalled = false;
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(EmptySchemaTool("execute_query"), _ =>
+            {
+                upstreamCalled = true;
+                return new CallToolResult();
+            });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("arm", "arm", "ARM", clientBuilder, supportsTenantScope: true)
+            .Build();
+
+        var request = McpTestUtilities.CreateToolCallRequest("execute_query", new Dictionary<string, object?>
+        {
+            ["tenant"] = 12345
+        });
+
+        var result = await CreateToolLoader(discoveryStrategy)
+            .CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.False(upstreamCalled, "A bad tenant must not run against the hosting identity's tenant.");
+    }
 }

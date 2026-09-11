@@ -51,9 +51,10 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         Title = _serverInfo.Title,
         Description = _serverInfo.Description ?? string.Empty,
         ToolPrefix = _serverInfo.ToolPrefix,
-        // OAuth scopes are what makes this server reachable with an Azure token, and therefore
-        // what makes a per-call tenant meaningful for the tools proxied from it.
+        // Must match AddRegistryRoot, which only installs the token handler for an HTTP server
+        // with scopes; advertising `tenant` anywhere else would silently swallow the argument.
         SupportsTenantScope = _serverInfo.OAuthScopes is { Length: > 0 }
+            && !string.IsNullOrWhiteSpace(_serverInfo.Url)
     };
 
     /// <summary>

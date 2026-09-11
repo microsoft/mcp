@@ -371,7 +371,12 @@ internal class CustomChainedCredential : TokenCredential
         // tenant that has consented to it. Allow that, and pin the requested tenant on every token
         // request so the per-call --tenant option is honored like it is for the other credentials.
         var envOptions = new EnvironmentCredentialOptions();
-        envOptions.AdditionallyAllowedTenants.Add("*");
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            // Only widen the credential when a tenant was actually asked for. Adding this
+            // unconditionally would let every caller pivot the host identity into any consented tenant.
+            envOptions.AdditionallyAllowedTenants.Add("*");
+        }
         if (CloudConfiguration != null)
         {
             envOptions.AuthorityHost = CloudConfiguration.AuthorityHost;

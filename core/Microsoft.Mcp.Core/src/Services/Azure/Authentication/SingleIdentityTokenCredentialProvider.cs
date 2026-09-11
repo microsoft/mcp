@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using Azure.Core;
 using Microsoft.Extensions.Logging;
 
@@ -15,7 +16,9 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
     private readonly ILoggerFactory _loggerFactory;
     private readonly bool _forceBrowserFallback;
     private readonly TokenCredential _credential;
-    private readonly Dictionary<string, TokenCredential> _tenantSpecificCredentials
+    // Concurrent: in HTTP mode the tenant comes from a per-call tool argument, so arbitrary keys
+    // arrive from several requests at once.
+    private readonly ConcurrentDictionary<string, TokenCredential> _tenantSpecificCredentials
         = new(StringComparer.OrdinalIgnoreCase);
 
     /// <param name="forceBrowserFallback">Allow an interactive browser prompt when every silent
@@ -41,21 +44,13 @@ public class SingleIdentityTokenCredentialProvider : IAzureTokenCredentialProvid
             return Task.FromResult(_credential);
         }
 
-        if (!_tenantSpecificCredentials.TryGetValue(tenantId, out TokenCredential? tenantCredential))
-        {
-            lock (_tenantSpecificCredentials)
-            {
-                if (!_tenantSpecificCredentials.TryGetValue(tenantId, out tenantCredential))
-                {
-                    tenantCredential = new CustomChainedCredential(
-                        tenantId,
-                        _loggerFactory.CreateLogger<CustomChainedCredential>(),
-                        _forceBrowserFallback
-                    );
-                    _tenantSpecificCredentials[tenantId] = tenantCredential;
-                }
-            }
-        }
+        var tenantCredential = _tenantSpecificCredentials.GetOrAdd(
+            tenantId,
+            id => new CustomChainedCredential(
+                id,
+                _loggerFactory.CreateLogger<CustomChainedCredential>(),
+                _forceBrowserFallback
+            ));
 
         return Task.FromResult(tenantCredential);
     }

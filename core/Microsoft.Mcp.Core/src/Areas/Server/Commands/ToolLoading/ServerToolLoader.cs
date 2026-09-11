@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -24,6 +25,7 @@ public sealed class ServerToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
     private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, bool> _tenantScopedServers = new(StringComparer.OrdinalIgnoreCase);
 
     private const string CommandCallProxySchema = """
         {
@@ -317,7 +319,21 @@ public sealed class ServerToolLoader(
             Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
                 .SetTag(TagName.ToolName, command);
 
+            // 'tenant' is ours, not the upstream server's: it selects the identity the outbound
+            // token is minted for. Consume it so it never reaches a server that does not declare it.
+            string? tenantId = null;
+            if (await IsTenantScopedAsync(tool, cancellationToken)
+                && !RegistryTenantScope.TryConsumeTenantArgument(parameters, out tenantId, out var tenantError))
+            {
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = tenantError! }],
+                    IsError = true,
+                }, toolId);
+            }
+
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
+            using var tenantScope = RegistryTenantScope.Enter(tenantId);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
             if (toolCallResponse.IsError is true)
             {
@@ -455,8 +471,11 @@ public sealed class ServerToolLoader(
             return [];
         }
 
+        var tenantScoped = await IsTenantScopedAsync(tool, cancellationToken);
         var list = listTools
-            .Select(t => t.ProtocolTool)
+            .Select(t => tenantScoped
+                ? RegistryTenantScope.WithTenantProperty(t.ProtocolTool)
+                : t.ProtocolTool)
             .ToList();
 
         _cachedAllToolLists[tool] = list;
@@ -470,6 +489,25 @@ public sealed class ServerToolLoader(
             .Where(t => !configuration.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
             .Where(t => !configuration.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey))
             .ToList();
+    }
+
+    /// <summary>
+    /// Whether the proxied server authenticates with Azure tokens and so accepts a per-call tenant.
+    /// </summary>
+    private async Task<bool> IsTenantScopedAsync(string serverName, CancellationToken cancellationToken)
+    {
+        if (_tenantScopedServers.TryGetValue(serverName, out var cached))
+        {
+            return cached;
+        }
+
+        var servers = await _serverDiscoveryStrategy.DiscoverServersAsync(cancellationToken);
+        var scoped = servers
+            .Select(p => p.CreateMetadata())
+            .Any(m => string.Equals(m.Name, serverName, StringComparison.OrdinalIgnoreCase) && m.SupportsTenantScope);
+
+        _tenantScopedServers[serverName] = scoped;
+        return scoped;
     }
 
     private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
