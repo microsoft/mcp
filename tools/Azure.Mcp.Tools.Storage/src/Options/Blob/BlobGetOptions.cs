@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob;
 
-public class BlobGetOptions : ISubscriptionOption
+public class BlobGetOptions
 {
     [Option(Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').")]
     public string? Blob { get; set; }
@@ -19,9 +19,6 @@ public class BlobGetOptions : ISubscriptionOption
 
     [Option(Description = "The name of the container to access within the storage account.")]
     public required string Container { get; set; }
-
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
