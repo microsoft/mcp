@@ -74,8 +74,6 @@ public interface IDppBackupOperations
         string datasourceId,
         string policyName,
         string? datasourceType,
-        string? aksIncludedNamespaces,
-        string? aksExcludedNamespaces,
         string? aksLabelSelectors,
         string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
