@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
@@ -31,22 +30,50 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
     Secret = false,
     LocalRequired = false)]
 public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand> logger, IAuthorizationService authorizationService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RoleAssignmentListOptions, RoleAssignmentListCommand.RoleAssignmentListCommandResult>(subscriptionResolver)
+    : AuthenticatedCommand<RoleAssignmentListOptions, RoleAssignmentListCommand.RoleAssignmentListCommandResult>
 {
     private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
     private readonly IAuthorizationService _authorizationService = authorizationService;
+    private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver;
 
-    protected override bool IsSubscriptionApplicable(RoleAssignmentListOptions options) =>
-        !ManagementGroupScope.TryParse(options.Scope, out _);
+    // Management groups are outside every subscription, so this command binds and validates
+    // --subscription itself rather than inheriting SubscriptionCommand's unconditional handling.
+    private static bool IsManagementGroupScope(RoleAssignmentListOptions options) =>
+        ManagementGroupScope.TryParse(options.Scope, out _);
+
+    public override void PostBindOptions(RoleAssignmentListOptions options)
+    {
+        base.PostBindOptions(options);
+
+        if (IsManagementGroupScope(options))
+        {
+            return;
+        }
+
+        // Always post-process subscription via resolver (env var / CLI profile fallback)
+        options.Subscription = _subscriptionResolver.ResolveSubscription(options.Subscription);
+        if (!string.IsNullOrEmpty(options.Subscription))
+        {
+            // Trim any surrounding quotes that may have been included in the input
+            options.Subscription = options.Subscription.Trim('"', '\'');
+        }
+    }
 
     public override void ValidateOptions(RoleAssignmentListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!IsSubscriptionApplicable(options) && !string.IsNullOrEmpty(options.Subscription))
+        if (IsManagementGroupScope(options))
         {
-            validationResult.Errors.Add(
-                "Omit --subscription when --scope is a management group because management groups are outside subscriptions.");
+            if (!string.IsNullOrEmpty(options.Subscription))
+            {
+                validationResult.Errors.Add(
+                    "Omit --subscription when --scope is a management group because management groups are outside subscriptions.");
+            }
+        }
+        else if (string.IsNullOrEmpty(options.Subscription))
+        {
+            validationResult.Errors.Add("Missing Required options: --subscription");
         }
     }
 
@@ -64,21 +91,33 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "An exception occurred listing role assignments for scope '{Scope}'.",
-                FormatScopeForLogging(options.Scope));
+            if (IsManagementGroupScope(options))
+            {
+                _logger.LogError(
+                    ex,
+                    "An exception occurred listing role assignments for scope '{Scope}'.",
+                    FormatForLogging(options.Scope));
+            }
+            else
+            {
+                _logger.LogError(
+                    ex,
+                    "An exception occurred listing role assignments for scope '{Scope}' in subscription '{Subscription}'.",
+                    FormatForLogging(options.Scope),
+                    FormatForLogging(options.Subscription));
+            }
+
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    private static string FormatScopeForLogging(string? scope) => scope switch
+    private static string FormatForLogging(string? value) => value switch
     {
         null => "<null>",
         "" => "<empty>",
-        _ => scope
+        _ => value
     };
 
     public sealed record RoleAssignmentListCommandResult(string Scope, List<RoleAssignment> Assignments, bool AreResultsTruncated);
