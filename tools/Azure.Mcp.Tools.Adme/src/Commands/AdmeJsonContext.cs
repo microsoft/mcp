@@ -11,7 +11,7 @@ using Azure.Mcp.Tools.Adme.Models.Storage;
 namespace Azure.Mcp.Tools.Adme;
 
 /// <summary>
-/// Provides source-generated JSON metadata for ADME responses.
+/// Provides source-generated JSON metadata for ADME/OSDU responses.
 /// </summary>
 [JsonSerializable(typeof(HealthCheckResult))]
 [JsonSerializable(typeof(FetchRecordsRequest))]

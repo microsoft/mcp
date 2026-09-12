@@ -10,28 +10,18 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Adme.Commands.Storage;
 
 /// <summary>
-/// Fetches multiple OSDU records by id in a single call.
+/// Fetches multiple ADME/OSDU records by id in a single call.
 /// </summary>
 [CommandMetadata(
     Id = "513e8747-ce60-43fd-99bf-19ff211f3679",
     Name = "fetch",
-    Title = "Fetch ADME Records",
+    Title = "Fetch ADME/OSDU Records",
     Description = """
-        Fetch the content of multiple ADME OSDU records in one batch using two or more record IDs.
+        Fetch multiple ADME/OSDU records in one batch using known record IDs.
+        Returns full record content, selected attributes, or conversion status and errors.
 
-        Required: --ids, --endpoint, and --data-partition. Each id is a fully-qualified
-        '{partition}:{group-type}--{EntityType}:{unique-id}', typically taken verbatim from
-        'azmcp adme storage record list'.
-
-        --attributes projects dotted-path fields such as 'data.Name'; use it only when the user asked
-        for particular fields, and prefer 'azmcp adme storage record get' for a single record. Without
-        it the full records are returned.
-
-        The id limit is 20 without --attributes and 100 with it.
-
-        --frame-of-reference converts measurements to SI, coordinates to WGS84 and dates to UTC on the
-        server, and reports per-record outcomes in conversionStatuses (empty for records without
-        measured or spatial fields). It cannot be combined with --attributes.
+        Optional parameters: attributes (projection, dotted-path fields) and frame-of-reference conversion
+        (SI measurements, WGS84 coordinates, UTC dates), limit (1-20, or 1-100 when using attributes),
         """,
     Destructive = false,
     Idempotent = true,

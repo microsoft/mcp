@@ -7,11 +7,11 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options.Storage;
 
 /// <summary>
-/// Specifies the OSDU record to retrieve.
+/// Specifies the record to retrieve.
 /// </summary>
 public sealed class RecordGetOptions
 {
-    [Option(Description = "The fully-qualified OSDU record id '{partition}:{group-type}--{EntityType}:{unique-id}', for example 'opendes:master-data--Well:W-99'. Pass it verbatim as returned by 'azmcp adme storage record list'.")]
+    [Option(Description = "The fully-qualified record id '{partition}:{group-type}--{EntityType}:{unique-id}', for example 'opendes:master-data--Well:W-99'. Pass it verbatim as returned by 'azmcp adme storage record list'.")]
     public required string Id { get; set; }
 
     [Option(Description = "The numeric record version to retrieve, for example 1704779151123456. Omit to get the latest version; use 'azmcp adme storage record version list' to discover valid versions.")]

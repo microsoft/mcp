@@ -29,8 +29,8 @@ public sealed class SearchServiceTests
             new SearchQueryRequest
             {
                 Kind = ["*:*:*:*"],
-                Query = "data.FieldID:*Volve*",
-                SuggestPhrase = "welll",
+                Query = "data.FieldID:Volve*",
+                SuggestPhrase = "well",
                 Limit = 5,
                 Offset = 20,
                 ReturnedFields = ["id"],
@@ -53,7 +53,7 @@ public sealed class SearchServiceTests
         Assert.Equal(2, Assert.Single(response.Aggregations!).Count);
         Assert.Equal("/api/search/v2/query", handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal(
-            """{"kind":["*:*:*:*"],"query":"data.FieldID:*Volve*","suggestPhrase":"welll","limit":5,"offset":20,"returnedFields":["id"],"aggregateBy":"kind","trackTotalCount":true,"sort":{"field":["data.Name.keyword"],"order":["DESC"],"filter":["data.Nested.Id:1"]},"spatialFilter":{"field":"data.Wgs84Coordinates"},"queryAsOwner":true,"excludedFields":["data.Big"],"highlightedFields":["data.FieldID"]} """.TrimEnd(),
+            """{"kind":["*:*:*:*"],"query":"data.FieldID:Volve*","suggestPhrase":"well","limit":5,"offset":20,"returnedFields":["id"],"aggregateBy":"kind","trackTotalCount":true,"sort":{"field":["data.Name.keyword"],"order":["DESC"],"filter":["data.Nested.Id:1"]},"spatialFilter":{"field":"data.Wgs84Coordinates"},"queryAsOwner":true,"excludedFields":["data.Big"],"highlightedFields":["data.FieldID"]} """.TrimEnd(),
             handler.LastRequestBody);
     }
 
@@ -88,6 +88,7 @@ public sealed class SearchServiceTests
                 Cursor = "PREV",
                 ReturnedFields = ["id"],
             },
+            false,
             TestConstants.Tenant, TestContext.Current.CancellationToken);
 
         Assert.Equal("NEXT", response.Cursor);
@@ -97,6 +98,26 @@ public sealed class SearchServiceTests
         Assert.Equal(
             $$"""{"kind":["{{TestConstants.WellKind}}"],"limit":1,"returnedFields":["id"],"cursor":"PREV"}""",
             handler.LastRequestBody);
+    }
+
+    [Fact]
+    public async Task QueryWithCursorAsync_SearchAfter_AddsQueryParameter()
+    {
+        var handler = JsonHandler(HttpStatusCode.OK, """{"results":[],"totalCount":0}""");
+        var service = CreateService(handler);
+
+        await service.QueryWithCursorAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            new SearchCursorRequest { Kind = [TestConstants.WellKind] },
+            true,
+            null,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            "/api/search/v2/query_with_cursor?search_after=true",
+            handler.LastRequest!.RequestUri!.PathAndQuery);
+        Assert.Equal($$"""{"kind":["{{TestConstants.WellKind}}"]}""", handler.LastRequestBody);
     }
 
     [Theory]

@@ -11,7 +11,6 @@ public sealed class AdmeServiceValidatorTests
     [Theory]
     [InlineData("opendes:master-data--Well:W-99")]
     [InlineData("opendes:work-product-component--SeismicBinGrid:grid-1")]
-    [InlineData("opendes:master-data--Well:")]
     [InlineData("opendes:master-data--Well:record:123:")]
     public void ValidateRecordId_WithValidId_DoesNotAddError(string id)
     {
@@ -30,6 +29,7 @@ public sealed class AdmeServiceValidatorTests
     [InlineData("opendes::W-99")]
     [InlineData("opendes:master-data-Well:W-99")]
     [InlineData("opendes:master-data--:W-99")]
+    [InlineData("opendes:master-data--Well:")]
     [InlineData("opendes:master data--Well:W-99")]
     public void ValidateRecordId_WithInvalidId_AddsError(string? id)
     {
@@ -47,11 +47,19 @@ public sealed class AdmeServiceValidatorTests
     [InlineData("*:wks:master-data--Well:1.0.0")]
     [InlineData("osdu:*:master-data--Well:1.*.*")]
     [InlineData("osdu:wks:*:*")]
-    public void ValidateKind_WithValidSelector_DoesNotAddError(string kind)
+    [InlineData("osdu:wks:master-data--*:*")]
+    [InlineData("os*du:wks:master-data--Well:1.0.0")]
+    [InlineData("osdu:wks:master-data--Well:1*.0.0")]
+    [InlineData("osdu:wks:master-data--Well:1*")]
+    [InlineData("osdu:wks:master-data--Well:*.*")]
+    [InlineData("osdu:wks:master-data--Well:1.*.3*")]
+    [InlineData("osdu:wks:master-data--Well:latest")]
+    [InlineData("osdu:wks:master.data--Well:1.0.0")]
+    public void ValidateSearchKind_WithStructurallyValidSelector_DoesNotAddError(string kind)
     {
         var validationResult = new ValidationResult();
 
-        AdmeServiceValidator.ValidateKind(kind, validationResult, allowWildcards: true);
+        AdmeServiceValidator.ValidateSearchKind(kind, validationResult);
 
         Assert.Empty(validationResult.Errors);
     }
@@ -60,23 +68,36 @@ public sealed class AdmeServiceValidatorTests
     [InlineData("")]
     [InlineData("garbage")]
     [InlineData("osdu:wks:master-data--Well")]
-    [InlineData("osdu:wks:master-data--Well:1.0")]
-    [InlineData("os*du:wks:master-data--Well:1.0.0")]
+    [InlineData(":wks:master-data--Well:1.0.0")]
+    [InlineData("osdu::master-data--Well:1.0.0")]
+    [InlineData("osdu:wks::1.0.0")]
+    [InlineData("osdu:wks:master-data--Well:")]
+    [InlineData("osdu:wks:master-data--Well:1.0.0:extra")]
     [InlineData("osdu:wks:master data--Well:1.0.0")]
-    public void ValidateKind_WithInvalidSelector_AddsError(string kind)
+    public void ValidateSearchKind_WithStructurallyInvalidSelector_AddsError(string kind)
     {
         var validationResult = new ValidationResult();
 
-        AdmeServiceValidator.ValidateKind(kind, validationResult, allowWildcards: true);
+        AdmeServiceValidator.ValidateSearchKind(kind, validationResult);
 
         Assert.Single(validationResult.Errors);
     }
 
     [Theory]
     [InlineData("osdu:wks:master-data--Well:1.0.0", false)]
+    [InlineData("osdu:wks:master-data--Well:1.0", true)]
+    [InlineData("osdu:wks:master-data--Well:1", true)]
+    [InlineData("osdu:wks:master-data--Well:1.0.0.0", true)]
+    [InlineData("osdu:wks:master-data--Well:latest", true)]
     [InlineData("osdu:wks:master-data--Well:*", true)]
+    [InlineData("osdu:wks:master-data--Well:1.*.0", true)]
+    [InlineData("osdu:wks:master-data--Well:*.*", true)]
+    [InlineData("*:wks:master-data--Well:1.0.0", true)]
+    [InlineData("osdu:*:master-data--Well:1.0.0", true)]
     [InlineData("osdu:wks:*:1.0.0", true)]
-    public void ValidateKind_WithoutWildcardSupport_RejectsSelectors(string kind, bool expectsError)
+    [InlineData("osdu:wks:master-data--*:1.0.0", true)]
+    [InlineData("os*du:wks:master-data--Well:1.0.0", true)]
+    public void ValidateKind_RejectsInvalidExactKinds(string kind, bool expectsError)
     {
         var validationResult = new ValidationResult();
 

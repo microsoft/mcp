@@ -39,45 +39,39 @@ internal static class AdmeServiceValidator
         }
     }
 
-    public static void ValidateKind(
-        string kind,
-        ValidationResult validationResult,
-        bool allowWildcards = false)
+    // ADME handles detailed search selector validation, which is complicated and should not be duplicated here.
+    public static void ValidateSearchKind(string kind, ValidationResult validationResult)
     {
         var components = kind.Split(':');
         var hasValidComponents = components.Length == 4
             && components.All(component => !string.IsNullOrWhiteSpace(component))
             && components.All(component => !component.Any(char.IsWhiteSpace));
+
+        if (!hasValidComponents)
+        {
+            validationResult.Errors.Add(
+                "--kind must contain four non-empty colon-separated components without whitespace.");
+        }
+    }
+
+    public static void ValidateKind(string kind, ValidationResult validationResult)
+    {
+        var components = kind.Split(':');
+        var hasValidComponents = components.Length == 4
+            && components.All(component => !string.IsNullOrWhiteSpace(component))
+            && components.All(component => !component.Any(char.IsWhiteSpace))
+            && components.All(component => !component.Contains('*', StringComparison.Ordinal));
         var versionComponents = components.Length == 4
             ? components[^1].Split('.')
             : [];
-
-        bool hasValidVersion;
-        if (allowWildcards)
-        {
-            hasValidComponents = hasValidComponents
-                && components[..^1].All(
-                    component => component == "*" || !component.Contains('*', StringComparison.Ordinal));
-            hasValidVersion = components.Length == 4 && components[^1] == "*"
-                || versionComponents.Length == 3
-                    && versionComponents.All(component => component == "*" || IsNumericVersionComponent(component));
-        }
-        else
-        {
-            hasValidComponents = hasValidComponents
-                && components.All(component => !component.Contains('*', StringComparison.Ordinal));
-            hasValidVersion = versionComponents.Length == 3
-                && versionComponents.All(IsNumericVersionComponent);
-        }
+        var hasValidVersion = versionComponents.Length == 3
+            && versionComponents.All(IsNumericVersionComponent);
 
         if (!hasValidComponents || !hasValidVersion)
         {
             validationResult.Errors.Add(
-                allowWildcards
-                    ? "--kind must contain fully-qualified kind selectors in the format "
-                        + "'authority:source:type:major.minor.patch', with optional '*' wildcard segments."
-                    : "--kind must be a fully-qualified kind in the format "
-                        + "'authority:source:type:major.minor.patch'.");
+                "--kind must be a fully-qualified kind in the format "
+                    + "'authority:source:type:major.minor.patch'.");
         }
     }
 
@@ -100,7 +94,7 @@ internal static class AdmeServiceValidator
         {
             foreach (var kind in kinds)
             {
-                ValidateKind(kind, validationResult, allowWildcards: true);
+                ValidateSearchKind(kind, validationResult);
             }
         }
 
@@ -183,6 +177,7 @@ internal static class AdmeServiceValidator
         var typeSeparator = entityComponent.IndexOf("--", StringComparison.Ordinal);
         var hasValidFormat = partitionSeparator > 0
             && entitySeparator > partitionSeparator + 1
+            && entitySeparator < id.Length - 1
             && typeSeparator > 0
             && typeSeparator < entityComponent.Length - 2
             && !id.Any(char.IsWhiteSpace);

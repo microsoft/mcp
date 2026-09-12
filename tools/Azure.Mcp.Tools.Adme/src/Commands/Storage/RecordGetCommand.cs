@@ -10,26 +10,17 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Adme.Commands.Storage;
 
 /// <summary>
-/// Gets a single OSDU record from a data partition.
+/// Gets a single ADME/OSDU record from a data partition.
 /// </summary>
 [CommandMetadata(
     Id = "9e14b28e-95bb-4bcb-9d68-46406ccba813",
     Name = "get",
-    Title = "Get ADME Record",
+    Title = "Get ADME/OSDU Record",
     Description = """
-        Get one OSDU record from a data partition, by default its latest version.
+        Get one ADME/OSDU record by known record ID.
+        Returns record content.
 
-        Required: --id, --endpoint, and --data-partition.
-
-        --id must be a fully-qualified record id '{partition}:{group-type}--{EntityType}:{unique-id}',
-        for example 'opendes:master-data--Well:W-99'. Pass ids verbatim as returned by
-        'azmcp adme storage record list'.
-
-        Optional: --version pins a specific numeric version (discover them with
-        'azmcp adme storage record version list'). --attributes projects dotted-path fields such as
-        'data.Name' to shrink the record payload.
-
-        For several records in one call use 'azmcp adme storage record fetch'.
+        Optional parameters: version (specific numeric version) and attributes (projection, dotted-path fields).
         """,
     Destructive = false,
     Idempotent = true,

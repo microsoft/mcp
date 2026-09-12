@@ -12,29 +12,16 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
 [CommandMetadata(
     Id = "7490b3ca-7c75-4f03-bf37-bceb50821d91",
     Name = "search",
-    Title = "Search ADME Records",
+    Title = "Search ADME/OSDU Records",
     Description = """
-        Search ADME records when record ID/kind is unknown by indexed fields. 
-        Use Lucene filters, wildcard or multiple kinds, projection, aggregation and exact counts,
-        sorting, geographic/bounding-box filters, query as owner, highlighting, or stable cursor pagination for bulk
-        retrieval or more than 10000 results. Continue snapshots with a cursor.
+        Search ADME/OSDU records across one or more exact or wildcard kinds using indexed criteria.
+        Returns full records, selected fields, or aggregate counts.
 
-        KIND requires one or more 'authority:source:type:version' selectors and supports '*' in any segment.
-        Use the narrowest kind because wildcards increase scan cost. Use schema commands to discover kinds
-        and field names if unsure.
+        Optional parameters: Lucene query, returned-field projection, spatial filter (geographic, bounding box),
+        sort (ascending, descending), aggregation, owner-scoped query, and highlighted fields.
 
-        QUERY is an optional Lucene filter over indexed fields. Payload fields use 'data.'; add '.keyword'
-        for exact, case-sensitive, or null matches. Quote full record IDs; leading wildcards are unsupported.
-        No matches return an empty result.
-
-        CURSORPAGINATIONMODE starts a snapshot for bulk or more than 10000 results; false uses real-time
-        query pagination. Continue until results is empty; the cursor may remain unchanged between pages.
-        A CURSOR also selects cursor mode. Cursor mode rejects OFFSET and AGGREGATEBY; query mode requires
-        OFFSET plus LIMIT to be at most 10000.
-
-        LIMIT is 1-1000 and defaults to 10. RETURNEDFIELDS projects paths. AGGREGATEBY groups one field into
-        up to 1000 buckets. SORT requires equal-length field and order arrays. SPATIALFILTER requires a
-        geo-point field and supported shape. EXCLUDEDFIELDS and SUGGESTPHRASE may be ineffective in ADME.
+        Pagination modes: offset and cursor (point-in-time snapshot, bulk processing, more than 10000 results,
+        search_after).
         """,
     Destructive = false,
     Idempotent = false,
@@ -134,6 +121,7 @@ public sealed class SearchCommand(ISearchService searchService)
                 ExcludedFields = AdmeServiceHelper.Normalize(options.ExcludedFields),
                 HighlightedFields = AdmeServiceHelper.Normalize(options.HighlightedFields),
             },
+            options.SearchAfter,
             options.Tenant,
             cancellationToken);
 
@@ -147,5 +135,6 @@ public sealed class SearchCommand(ISearchService searchService)
 
     private static bool UsesCursorPagination(SearchOptions options) =>
         !string.IsNullOrWhiteSpace(options.Cursor)
-        || options.CursorPaginationMode;
+        || options.CursorPaginationMode
+        || options.SearchAfter;
 }

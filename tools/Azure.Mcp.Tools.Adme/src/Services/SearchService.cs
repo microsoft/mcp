@@ -34,6 +34,7 @@ public sealed class SearchService(
         string endpoint,
         string dataPartition,
         SearchCursorRequest request,
+        bool searchAfter,
         string? tenant,
         CancellationToken cancellationToken)
     {
@@ -41,7 +42,8 @@ public sealed class SearchService(
         ValidateKinds(request.Kind);
         return AdmeServiceHelper.PostAsync(
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
-            $"{BasePath}/query_with_cursor", request, AdmeJsonContext.Default.SearchCursorRequest,
+            $"{BasePath}/query_with_cursor{(searchAfter ? "?search_after=true" : string.Empty)}",
+            request, AdmeJsonContext.Default.SearchCursorRequest,
             AdmeJsonContext.Default.SearchCursorResponse, extraHeaders: null, cancellationToken,
             disableRetries: true);
     }

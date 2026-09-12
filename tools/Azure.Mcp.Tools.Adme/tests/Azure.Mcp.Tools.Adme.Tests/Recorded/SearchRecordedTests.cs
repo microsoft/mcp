@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests.Recorded;
@@ -12,10 +13,29 @@ namespace Azure.Mcp.Tools.Adme.Tests.Recorded;
 public sealed class SearchRecordedTests(
     ITestOutputHelper output,
     TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : AdmeRecordedTestsBase(output, fixture, liveServerFixture)
+    LiveServerFixture liveServerFixture,
+    RecordSeeder seeder)
+    : AdmeRecordedTestsBase(output, fixture, liveServerFixture), IClassFixture<RecordSeeder>
 {
     private const string SearchTool = "adme_search";
+
+    private List<GeneralRegexSanitizer>? _generalRegexSanitizers;
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+        _generalRegexSanitizers ??=
+        [
+            .. base.GeneralRegexSanitizers,
+            new(new()
+            {
+                Regex = seeder.DataPartition,
+                Value = "recording-partition",
+            }),
+            new(new()
+            {
+                Regex = seeder.Marker,
+                Value = "recording",
+            }),
+        ];
 
     [Fact]
     public async Task Server_exposes_search_tool_over_mcp()
@@ -44,6 +64,39 @@ public sealed class SearchRecordedTests(
             Assert.True(record.TryGetProperty("id", out _));
             Assert.Equal(TestConstants.WellKind, record.GetProperty("kind").GetString());
         });
+    }
+
+    [Fact]
+    public async Task Search_matches_trailing_field_value_wildcard()
+    {
+        var arguments = CreateArguments();
+        arguments["kind"] = new[] { TestConstants.WellKind };
+        arguments["query"] = $"data.FacilityID:{seeder.Marker}*";
+        arguments["limit"] = 10;
+        arguments["returned-fields"] = new[] { "id", "kind", "data.FacilityID" };
+
+        var result = await CallToolResultsAsync(SearchTool, arguments);
+        var records = result.GetProperty("results");
+
+        Assert.NotEmpty(records.EnumerateArray());
+        Assert.All(records.EnumerateArray(), record =>
+        {
+            Assert.Equal(TestConstants.WellKind, record.GetProperty("kind").GetString());
+            Assert.Contains(
+                seeder.Marker,
+                record.GetProperty("data").GetProperty("FacilityID").GetString(),
+                StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public async Task Search_rejects_leading_field_value_wildcard()
+    {
+        var arguments = CreateArguments();
+        arguments["kind"] = new[] { TestConstants.WellKind };
+        arguments["query"] = $"data.FacilityID:*{seeder.Marker}";
+
+        Assert.True(await CallToolReturnsErrorAsync(SearchTool, arguments));
     }
 
     [Fact]

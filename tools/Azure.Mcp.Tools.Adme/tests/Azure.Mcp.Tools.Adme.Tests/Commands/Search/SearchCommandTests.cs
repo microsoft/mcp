@@ -42,7 +42,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Assert.Equal(100, captured.Limit);
         Assert.Equal(["id"], captured.ReturnedFields);
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
     {
         Service.QueryWithCursorAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
-                null, Arg.Any<CancellationToken>())
+                false, null, Arg.Any<CancellationToken>())
             .Returns(new SearchCursorResponse { Results = [], Cursor = "NEXT", TotalCount = 42 });
 
         var response = await ExecuteCommandAsync(
@@ -71,7 +71,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
     {
         Service.QueryWithCursorAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
-                null, Arg.Any<CancellationToken>())
+                false, null, Arg.Any<CancellationToken>())
             .Returns(new SearchCursorResponse { Results = [], Cursor = "NEXT" });
 
         var response = await ExecuteCommandAsync(
@@ -85,7 +85,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         await Service.Received(1).QueryWithCursorAsync(
             TestConstants.Endpoint, TestConstants.DataPartition,
             Arg.Is<SearchCursorRequest>(request => request.Cursor == "PREV"),
-            null, Arg.Any<CancellationToken>());
+            false, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             Arg.Is<SearchQueryRequest>(request => request.Offset == 0),
             null, Arg.Any<CancellationToken>());
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -139,7 +139,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Assert.NotNull(result.Aggregations);
         Assert.Equal(["well"], result.PhraseSuggestions);
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -158,7 +158,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         await Service.DidNotReceiveWithAnyArgs().QueryAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -177,7 +177,26 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         await Service.DidNotReceiveWithAnyArgs().QueryAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData("--offset", "1")]
+    [InlineData("--aggregate-by", "kind")]
+    public async Task Execute_WithSearchAfterAndQueryOnlyOption_DoesNotCallService(string option, string value)
+    {
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--kind", TestConstants.WellKind,
+            "--search-after",
+            option, value);
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceiveWithAnyArgs().QueryAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);
+        await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -202,7 +221,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         await Service.DidNotReceiveWithAnyArgs().QueryAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -226,5 +245,31 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             Arg.Is<SearchQueryRequest>(request => request.Sort!.Order[0] == "asc"),
             null,
             TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Execute_WithSearchAfter_UsesCursorApi()
+    {
+        Service.QueryWithCursorAsync(
+                TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
+                true, null, Arg.Any<CancellationToken>())
+            .Returns(new SearchCursorResponse { Results = [], Cursor = "NEXT", TotalCount = 42 });
+
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--kind", TestConstants.WellKind,
+            "--search-after");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.Status);
+        await Service.Received(1).QueryWithCursorAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            Arg.Any<SearchCursorRequest>(),
+            true,
+            null,
+            TestContext.Current.CancellationToken);
+        await Service.DidNotReceiveWithAnyArgs().QueryAsync(
+            default!, default!, default!, default, TestContext.Current.CancellationToken);
     }
 }

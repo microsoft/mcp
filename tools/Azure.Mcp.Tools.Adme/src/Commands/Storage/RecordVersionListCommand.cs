@@ -10,21 +10,15 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Adme.Commands.Storage;
 
 /// <summary>
-/// Lists the versions of an OSDU record.
+/// Lists the versions of an ADME/OSDU record.
 /// </summary>
 [CommandMetadata(
     Id = "d73458d9-8996-4836-ae4f-05cb83af7362",
     Name = "list",
-    Title = "List ADME Record Versions",
+    Title = "List ADME/OSDU Record Versions",
     Description = """
-        List the numeric versions of one OSDU record, oldest first.
-
-        Required: --id, --endpoint, and --data-partition. --id is a fully-qualified record id
-        '{partition}:{group-type}--{EntityType}:{unique-id}', for example
-        'opendes:master-data--Well:W-99'.
-
-        Pass one of the returned versions to 'azmcp adme storage record get --version' to read that
-        version of the record.
+        List only the versions of one ADME/OSDU record by known record ID.
+        Returns record versions ordered oldest first.
         """,
     Destructive = false,
     Idempotent = true,

@@ -27,16 +27,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | adme_storage_record_get | Get a OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get version <record-version> of OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record <record-id> at endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | List ADME records of kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | List the first 25 ADME record IDs for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | Continue listing ADME record IDs for kind <authority:source:entity-type:version> using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_version_list | List all versions of ADME record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_search | Find ADME records of kind <authority:source:entity-type:version> matching indexed-field Lucene filter <lucene-query> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_search | Find ADME records matching <lucene-query> across wildcard or multiple kinds <kind-selector-1> and <kind-selector-2>, returning only id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_search | Search more than 10000 ADME records across kind <authority:source:entity-type:*> as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_search | Continue an ADME snapshot search using cursor <cursor> and the original  kind <authority:source:entity-type:*>, returning id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_search | Find ADME records of kind <authority:source:entity-type:version> inside bounding box <bounding-box>, sorted by id descending, from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_search | Query records as owner for kind <authority:source:entity-type:version>, highlighting <field>, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter <lucene-query> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records matching <lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint <endpoint> in data partition <data-partition> | none |
 
 ## Azure Advisor
 

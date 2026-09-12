@@ -361,6 +361,7 @@ azmcp adme search --endpoint <endpoint> \
                   [--query <lucene-query>] \
                   [--limit <limit>] \
                   [--cursor-pagination-mode] \
+                  [--search-after] \
                   [--cursor <cursor>] \
                   [--offset <offset>] \
                   [--returned-fields <path> [<path>...]] \
@@ -374,12 +375,9 @@ azmcp adme search --endpoint <endpoint> \
                   [--suggest-phrase <phrase>] \
                   [--tenant <tenant>]
 
-Use `--cursor-pagination-mode` on the initial request when the user asks for a point-in-time
-snapshot, bulk processing, or more than 10000 results. Continue by passing the returned `--cursor`;
-a supplied cursor selects cursor pagination without requiring the flag again. Cursor pagination
-does not support `--offset` or `--aggregate-by`, always returns an exact total count, and reflects
-the index state at the time of the initial request. Query pagination is the default, is intended
-for real-time requests, and cannot access results beyond `--offset` plus `--limit` of 10000.
+Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
+Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
+Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
 
 # Fetch multiple records by fully-qualified OSDU record id
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

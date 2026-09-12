@@ -8,10 +8,10 @@ namespace Azure.Mcp.Tools.Adme.Options.Search;
 
 public sealed class SearchOptions
 {
-    [Option(Description = "One or more OSDU kind selectors 'authority:source:type:version' with optional '*' wildcards, e.g. ['osdu:wks:master-data--Well:1.0.0']. Several kinds are searched as a union. Use the narrowest kind; each '*' widens the scan and its cost.")]
+    [Option(Description = "One or more kind selectors 'authority:source:type:version' with optional '*' wildcards, e.g. ['osdu:wks:master-data--Well:1.0.0']. Several kinds are searched as a union. Use the narrowest kind; each '*' widens the scan and its cost.")]
     public required string[] Kind { get; set; }
 
-    [Option(Description = "Optional Lucene filter over indexed fields, e.g. 'data.FieldID:*Volve*'. Omit to match all records of the kind.")]
+    [Option(Description = "Optional Lucene filter over indexed fields, e.g. 'data.FieldID:Volve*'. Prefix payload fields with 'data.' and add '.keyword' for exact, case-sensitive, or null matches. Quote full record IDs. Trailing wildcards are supported; leading wildcard forms such as '*Volve' and '*Volve*' are rejected by ADME. Omit to match all records of the kind.")]
     public string? Query { get; set; }
 
     [Option(Description = "Page size (1-1000). Defaults to 10. Pair a large page with returnedFields.", DefaultValue = 10)]
@@ -20,10 +20,13 @@ public sealed class SearchOptions
     [Option(Description = "Use cursor pagination for a point-in-time snapshot, bulk processing, or more than 10000 results. Defaults to false for real-time query pagination. A supplied cursor also selects cursor pagination.")]
     public bool CursorPaginationMode { get; set; }
 
+    [Option(Description = "Allow index changes to affect later cursor pages instead of using a point-in-time snapshot. Keep enabled on continuation requests.")]
+    public bool SearchAfter { get; set; }
+
     [Option(Description = "Starting offset for query pagination. Cannot be combined with cursor pagination, and offset + limit must be <= 10000.")]
     public int? Offset { get; set; }
 
-    [Option(Description = "Continuation token from a previous cursor response. Supplying it selects cursor pagination; continue until results is empty. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
+    [Option(Description = "Continuation token from a previous cursor response. Supplying it selects cursor pagination; continue until results is empty. Resend all original cursor criteria unchanged because the service does not reliably retain page settings. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
     public string? Cursor { get; set; }
 
     [Option(Description = "Optional field paths to project, e.g. ['id','kind','data.FacilityName']. Omit to return full records.")]
@@ -44,13 +47,13 @@ public sealed class SearchOptions
     [Option(Description = "If true, returns only records the user owns. Defaults to false.")]
     public bool? QueryAsOwner { get; set; }
 
-    [Option(Description = "Optional fields to exclude from the payload; may be ignored by ADME, so prefer returnedFields.")]
+    [Option(Description = "Optional fields to exclude from the payload; may be ignored by the service, so prefer returnedFields.")]
     public string[]? ExcludedFields { get; set; }
 
     [Option(Description = "Optional fields to highlight with matched snippets in the response.")]
     public string[]? HighlightedFields { get; set; }
 
-    [Option(Description = "Optional phrase for 'did you mean' spell-check; availability depends on ADME configuration.")]
+    [Option(Description = "Optional phrase for 'did you mean' spell-check; availability depends on service configuration.")]
     public string? SuggestPhrase { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]

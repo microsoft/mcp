@@ -18,6 +18,7 @@ public interface ISearchService
         string endpoint,
         string dataPartition,
         SearchCursorRequest request,
+        bool searchAfter,
         string? tenant,
         CancellationToken cancellationToken);
 }

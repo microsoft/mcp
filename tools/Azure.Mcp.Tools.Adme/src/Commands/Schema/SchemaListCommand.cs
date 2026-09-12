@@ -10,29 +10,17 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Adme.Commands.Schema;
 
 /// <summary>
-/// Lists ADME schema descriptors matching the requested filters.
+/// Lists ADME/OSDU schema descriptors matching the requested filters.
 /// </summary>
 [CommandMetadata(
     Id = "456a50dc-cdfa-49d8-8f9f-7e8b063898f5",
     Name = "list",
-    Title = "List ADME Schemas",
+    Title = "List ADME/OSDU Schemas",
     Description = """
-        List multiple ADME OSDU schemas, optionally filtering by individual kind components (authority, source,
-        entity type, and version), lifecycle status, or scope. Returns metadata, not full field definitions.
+        List multiple ADME/OSDU schema descriptors.
 
-        Required: --endpoint and --data-partition. Optional: --tenant for cross-tenant authentication.
-
-        Filters: --authority (e.g. 'osdu'), --source (e.g. 'wks'), --entity-type (e.g. 'master-data--Well');
-        --status ('PUBLISHED', 'DEVELOPMENT', or 'OBSOLETE'); --scope ('SHARED' = system/OSDU schemas,
-        'INTERNAL' = tenant/partition-defined); --schema-version-major/minor/patch; --latest-version to
-        return only the newest version per entity; --offset and --limit for paging (the response carries
-        offset and totalCount).
-
-        When --latest-version is true, supply version filters in order: major, then minor, then patch.
-        A minor version without a major version, or a patch version without a minor version, is invalid.
-
-        With no status filter, results mix PUBLISHED/DEVELOPMENT/OBSOLETE. To enumerate usable kinds,
-        prefer status='PUBLISHED' and surface each result's status to the user for clarity.
+        Optional parameters: authority, source, entity type, status (PUBLISHED, DEVELOPMENT, OBSOLETE),
+        scope (SHARED, INTERNAL), schema version (major, minor, patch), latest version, offset, and limit.
         """,
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
