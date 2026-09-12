@@ -749,7 +749,6 @@ Eight per-target tools provide flat, typed options instead of requiring a JSON b
 - `--target-environment-domain`: Dataverse environment URI
 - `--target-connection-id`: Connection ID
 - `--target-deltalake-folder`: Delta Lake folder path
-- `--target-table-name`: (Optional) Table name
 
 **OneDrive/SharePoint target parameters:**
 - `--target-location`: Storage URL
