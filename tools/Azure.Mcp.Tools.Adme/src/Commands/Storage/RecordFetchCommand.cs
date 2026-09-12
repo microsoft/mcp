@@ -23,10 +23,10 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         Optional parameters: attributes (projection, dotted-path fields) and frame-of-reference conversion
         (SI measurements, WGS84 coordinates, UTC dates), limit (1-20, or 1-100 when using attributes),
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
-    OperationPlane = ToolOperationPlane.Data,
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]

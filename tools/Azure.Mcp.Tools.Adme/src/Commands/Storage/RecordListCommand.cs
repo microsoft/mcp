@@ -23,10 +23,10 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         Pagination parameters: limit (1-100, default 10) and cursor (continuation token).
         Confirm how many records the user wants before paging through the whole set.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
-    OperationPlane = ToolOperationPlane.Data,
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]

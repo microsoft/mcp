@@ -20,10 +20,10 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         List only the versions of one ADME/OSDU record by known record ID.
         Returns record versions ordered oldest first.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
-    OperationPlane = ToolOperationPlane.Data,
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]

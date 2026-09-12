@@ -22,10 +22,10 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
 
         Optional parameters: version (specific numeric version) and attributes (projection, dotted-path fields).
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
-    OperationPlane = ToolOperationPlane.Data,
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
