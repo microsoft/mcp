@@ -7,6 +7,7 @@ param(
     [string] $ArtifactsPath,
     [string] $ArtifactPrefix,
     [string] $OutputPath,
+    [switch] $PrepareForVsix,
     [switch] $CI
 )
 
@@ -98,7 +99,7 @@ foreach ($server in $buildInfo.servers) {
         Write-Host "Copying $platformSourcePath to $platformOutputPath`n" -ForegroundColor Yellow
         Copy-Item -Path $platformSourcePath -Destination $platformOutputPath -Recurse -Force -ProgressAction SilentlyContinue
 
-        if ($platform.operatingSystem -eq 'macos') {
+        if ($platform.operatingSystem -eq 'macos' -and !$PrepareForVsix) {
             # Only mac binaries need to be compressed. Linux binaries aren't signed and windows are signed uncompressed.
 
             # Mac requires code signing the binary with an entitlements file such that the signed and notarized binary will properly invoke on
@@ -125,7 +126,7 @@ foreach ($server in $buildInfo.servers) {
     }
 }
 
-if($isPipelineRun) {
+if($isPipelineRun -and !$PrepareForVsix) {
     if ($buildInfo.servers.Count -ne 1) {
         LogError "Compress-ForSigning.ps1 only supports single-server builds in a pipeline context."
         exit 1

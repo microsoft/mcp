@@ -6,6 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added Azure IoT Operations toolset with `iotoperations instance list` and `iotoperations instance get` commands to list and get Azure IoT Operations instances (Microsoft.IoTOperations/instances) in a subscription or resource group.
 - `azmcp azurebackup protecteditem get` now exposes a richer Azure Backup protected-item representation for both RSV and DPP workloads, including lifecycle, recovery, protection-state, and workload-specific extended properties, so callers can inspect the current state before updating protection. [[#3600](https://github.com/microsoft/mcp/pull/3600)]
 - `azmcp azurebackup vault get` now returns managed identity details for RSV and DPP vaults, including identity type, principal ID, tenant ID, and attached user-assigned identity resource IDs with their principal and client IDs. [[#3600](https://github.com/microsoft/mcp/pull/3600)]
 - Added an `operationPlane` field to tool metadata in `azmcp tools list` output, identifying each tool as `data`, `control`, `both`, or `notApplicable`. A tool's plane is the API it acts against to produce the requested result; Resource Manager calls made only as setup, to locate the target, do not count toward it. Every tool is classified. [[#3368](https://github.com/microsoft/mcp/pull/3368)]
