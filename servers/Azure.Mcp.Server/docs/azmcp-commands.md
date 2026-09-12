@@ -5031,29 +5031,25 @@ azmcp storage account get --subscription <subscription> \
 ```bash
 # Create a blob container with optional public access
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob container create --subscription <subscription> \
-                                    --account <account> \
+azmcp storage blob container create --account <account> \
                                     --container <container>
 
 # Get detailed properties of Storage containers
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob container get --subscription <subscription> \
-                                 --account <account> \
+azmcp storage blob container get --account <account> \
                                  [--container <container>] \
                                  [--prefix <prefix>]
 
 # Get detailed properties of Storage blobs
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob get --subscription <subscription> \
-                           --account <account> \
+azmcp storage blob get --account <account> \
                            --container <container> \
                            [--blob <blob>] \
                            [--prefix <prefix>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp storage blob upload --subscription <subscription> \
-                          --account <account> \
+azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
@@ -5064,8 +5060,7 @@ azmcp storage blob upload --subscription <subscription> \
 ```bash
 # List tables in an Azure Storage account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
+azmcp storage table list --account <account>
 ```
 
 ### Azure Storage Sync Operations
