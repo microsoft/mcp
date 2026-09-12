@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
+    OperationPlane = ToolOperationPlane.Data,
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]

@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
+    OperationPlane = ToolOperationPlane.Data,
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
