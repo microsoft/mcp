@@ -4086,10 +4086,12 @@ azmcp pricing get [--sku <sku>] \
 ### Azure RBAC Operations
 
 ```bash
-# List Azure RBAC role assignments
+# List Azure RBAC role assignments at a scope and any scope nested beneath it
+# Assignments inherited from a parent scope are not included.
+# --subscription must not be specified when --scope is a management group.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp role assignment list --subscription <subscription> \
-                           --scope <scope>
+azmcp role assignment list --scope <scope> \
+                           [--subscription <subscription>]
 ```
 
 ### Azure Redis Operations
