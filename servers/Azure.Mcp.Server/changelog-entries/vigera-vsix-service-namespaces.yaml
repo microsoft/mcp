@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added missing ADME, Insights, IoT Hub, IoT Operations, Optimization, and Resilience Management namespaces to the VS Code extension service selector."

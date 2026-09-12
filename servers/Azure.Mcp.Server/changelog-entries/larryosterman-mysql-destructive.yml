@@ -1,0 +1,6 @@
+pr: 3202
+changes:                                                         # Required
+  - section: "Breaking Changes"                                     # Required - Valid sections: "New Features", "Breaking Changes", "Bug Fixes", "Other Changes"
+    description: "Updated the MySQL `database query` tool to be destructive, non-idempotent, and non-read-only. The tool no longer rejects statements based on SQL verb or keyword filtering; the signed-in user's database permissions determine what a statement may do. Empty, oversized, commented, and stacked statements are still rejected."
+  - section: "Breaking Changes"
+    description: "In consolidated mode, `mysql_database_query` and `postgres_database_query` moved out of the read-only `get_azure_databases_details` tool into a new `execute_azure_database_query` tool that reflects their destructive metadata."
