@@ -264,7 +264,6 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
     public async Task<string> GetServerConfigAsync(
         string subscriptionId,
         string resourceGroup,
-        string user,
         string server,
         string? tenant = null,
         CancellationToken cancellationToken = default)
@@ -287,7 +286,6 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
     public async Task<string> GetServerParameterAsync(
         string subscriptionId,
         string resourceGroup,
-        string user,
         string server,
         string param,
         string? tenant = null,
@@ -309,7 +307,6 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
     public async Task<string> SetServerParameterAsync(
         string subscriptionId,
         string resourceGroup,
-        string user,
         string server,
         string param,
         string value,
