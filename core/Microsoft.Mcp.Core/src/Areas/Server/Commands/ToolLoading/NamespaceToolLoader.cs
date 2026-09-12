@@ -305,7 +305,7 @@ public sealed class NamespaceToolLoader(
         try
         {
             namespaceCommands = _commandFactory.GroupCommands([namespaceName]);
-            if (namespaceCommands == null || namespaceCommands.Count == 0)
+            if (namespaceCommands == null)
             {
                 _logger.LogError("Failed to get commands for namespace: {Namespace}", namespaceName);
                 return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
@@ -320,26 +320,29 @@ public sealed class NamespaceToolLoader(
         try
         {
             var availableTools = GetChildToolList(request, namespaceName);
+            var requestedCommand = command;
+            var resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
 
-            // When the specified command is not available, we try to learn about the tool's capabilities
-            // and infer the command and parameters from the users intent.
-            if (!availableTools.Any(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase)))
+            // Try one supported sampling correction without falling back to the full learn response.
+            if (resolvedTool == null)
             {
                 _logger.LogWarning("Namespace {Namespace} does not have a command {Command}.", namespaceName, command);
-                if (string.IsNullOrWhiteSpace(intent))
+                if (availableTools.Count == 0 || !SupportsSampling(request.Server) || string.IsNullOrWhiteSpace(intent))
                 {
-                    return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
+                    return CreateUnknownCommandResult(namespaceName, requestedCommand, availableTools.Select(t => t.Name));
                 }
 
                 var samplingResult = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
-                if (string.IsNullOrWhiteSpace(samplingResult.commandName))
+                resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, samplingResult.commandName, StringComparison.OrdinalIgnoreCase));
+                if (resolvedTool == null)
                 {
-                    return await InvokeToolLearn(request, intent ?? "", namespaceName, cancellationToken);
+                    return CreateUnknownCommandResult(namespaceName, requestedCommand, availableTools.Select(t => t.Name));
                 }
 
-                command = samplingResult.commandName;
                 parameters = samplingResult.parameters;
             }
+
+            command = resolvedTool.Name;
 
             // Here the parameters are now those for the tool call, instead of being the namespace parameters.
             Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
@@ -349,7 +352,7 @@ public sealed class NamespaceToolLoader(
             if (!namespaceCommands.TryGetValue(command, out var cmd))
             {
                 _logger.LogError("Command {Command} found in tools but missing from namespace {Namespace} commands.", command, namespaceName);
-                return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
+                return CreateUnknownCommandResult(namespaceName, requestedCommand, availableTools.Select(t => t.Name));
             }
 
             Activity.Current?.SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(cmd));
@@ -711,10 +714,15 @@ public sealed class NamespaceToolLoader(
                 }
             }
 
-            if (commandName != null && commandName != "Unknown")
+            var resolvedTool = !string.IsNullOrWhiteSpace(commandName) && commandName != "Unknown"
+                ? availableTools.FirstOrDefault(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase))
+                : null;
+            if (resolvedTool != null)
             {
-                return (commandName, parameters);
+                return (resolvedTool.Name, parameters);
             }
+
+            _logger.LogWarning("Sampling did not resolve to an available command for namespace: {Namespace}.", namespaceName);
         }
         catch
         {

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Return concise errors listing available command names instead of full help when namespace or consolidated tool routing cannot resolve a command, including external-server routing."
