@@ -18,12 +18,76 @@ internal static class PlatformLandingZoneConstants
     /// </summary>
     public const string ArchetypeDefinitionsBaseUrl = "https://aka.ms/azmcp/lzarchetypedefs";
 
-
+    /// <summary>
+    /// API version for the Platform Landing Zone ARM resource
+    /// (<c>Microsoft.Migrate/migrateProjects/platformLandingZones</c>).
+    /// </summary>
+    public const string PlatformLandingZoneApiVersion = "2026-02-01-preview";
 
     /// <summary>
-    /// API version for Azure Migrate operations.
+    /// API version for the Artifact Store ARM resource
+    /// (<c>Microsoft.Migrate/migrateProjects/artifacts</c>). Deliberately different from
+    /// <see cref="PlatformLandingZoneApiVersion"/>: the two resource types version independently.
     /// </summary>
-    public const string ApiVersion = "2020-06-01-preview";
+    public const string ArtifactApiVersion = "2026-06-01-preview";
+
+    /// <summary>
+    /// The only Platform Landing Zone resource name the service accepts. A migrate project holds
+    /// exactly one landing zone; any other name is rejected with 400.
+    /// </summary>
+    public const string DefaultLandingZoneName = "default";
+
+    /// <summary>
+    /// Azure Landing Zones policy assignment that deploys DDoS network protection. Disabling DDoS
+    /// protection under <c>connectivity</c> requires this assignment to be overridden off as well.
+    /// </summary>
+    public const string DdosPolicyAssignmentName = "Enable-DDoS-VNET";
+
+    /// <summary>
+    /// Azure Landing Zones policy assignment that deploys the Private DNS zones. Disabling Private
+    /// DNS under <c>connectivity</c> requires this assignment to be overridden off as well.
+    /// </summary>
+    public const string PrivateDnsPolicyAssignmentName = "Deploy-Private-DNS-Zones";
+
+    /// <summary>
+    /// Prefix applied to the Artifact Store artifact backing a Platform Landing Zone.
+    /// </summary>
+    public const string ArtifactNamePrefix = "plz-";
+
+    /// <summary>
+    /// Name of the committed artifact file holding the generated infrastructure-as-code output.
+    /// </summary>
+    public const string OutputZipFileName = "output.zip";
+
+    /// <summary>
+    /// Name of the committed artifact file holding the rendered design document.
+    /// </summary>
+    public const string DesignDocumentFileName = "design-document.md";
+
+    /// <summary>
+    /// Generation status indicating the run is still in flight.
+    /// </summary>
+    public const string StatusRunning = "Running";
+
+    /// <summary>
+    /// Generation status indicating the run completed successfully.
+    /// </summary>
+    public const string StatusSucceeded = "Succeeded";
+
+    /// <summary>
+    /// Generation status indicating the run failed.
+    /// </summary>
+    public const string StatusFailed = "Failed";
+
+    /// <summary>
+    /// Default overall timeout applied when waiting for a generation run to reach a terminal status.
+    /// </summary>
+    public static readonly TimeSpan DefaultWaitTimeout = TimeSpan.FromMinutes(30);
+
+    /// <summary>
+    /// Interval between polls while waiting for a generation run to reach a terminal status.
+    /// </summary>
+    public static readonly TimeSpan WaitPollInterval = TimeSpan.FromSeconds(15);
 
     /// <summary>
     /// Cache expiration time for policy location data.

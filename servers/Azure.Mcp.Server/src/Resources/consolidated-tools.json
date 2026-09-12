@@ -4593,7 +4593,7 @@
     },
     {
       "name": "generate_azure_platform_landing_zones",
-      "description": "Generate and download Azure platform landing zone configurations for Azure Migrate projects. Collect parameters, checks if a landing zone exists, generate new landing zones following Azure Landing Zone architecture patterns, and download the generated infrastructure code.",
+      "description": "Create, inspect and download Azure platform landing zone configurations for Azure Migrate projects. List and read landing zones, create or update one following Azure Landing Zone architecture patterns (including turning off Bastion, DDoS protection, Private DNS, ExpressRoute or VPN gateways), wait for generation to finish, and download the generated infrastructure code.",
       "toolMetadata": {
         "destructive": {
           "value": true,
