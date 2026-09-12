@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options.Schema;
 
 /// <summary>
-/// Specifies filters and paging for listing ADME schemas.
+/// Specifies filters and paging for listing schemas.
 /// </summary>
 public sealed class SchemaListOptions
 {
@@ -24,7 +24,7 @@ public sealed class SchemaListOptions
     [Option(Description = "Filter by lifecycle status: PUBLISHED, DEVELOPMENT, or OBSOLETE. Omit to return schemas in all lifecycle statuses.")]
     public SchemaStatus? Status { get; set; }
 
-    [Option(Description = "Filter by scope: SHARED for system-defined OSDU schemas, INTERNAL for schemas defined in this data partition. Omit to return both.")]
+    [Option(Description = "Filter by scope: SHARED for system-defined schemas, INTERNAL for schemas defined in this data partition. Omit to return both.")]
     public SchemaScope? Scope { get; set; }
 
     [Option(Description = "Filter by schema major version, for example 1. When combined with --latest-version, supply version filters in order (major, then minor).")]

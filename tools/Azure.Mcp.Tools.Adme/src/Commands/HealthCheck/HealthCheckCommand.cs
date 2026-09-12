@@ -10,22 +10,15 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 
 /// <summary>
-/// Checks authentication and connectivity for an ADME instance.
+/// Checks authentication and connectivity for an ADME/OSDU instance.
 /// </summary>
 [CommandMetadata(
     Id = "1f2b6c8a-3d4e-4f5a-9b6c-7d8e9f0a1b2c",
     Name = "check",
-    Title = "Check ADME Health",
+    Title = "Check ADME/OSDU Health",
     Description = """
-        Check ADME endpoint's health, platform connectivity and authentication for an endpoint and data partition.
-        Use this first when other tools fail, to tell a sign-in or token problem apart from a wrong endpoint,
-        wrong data partition, or blocked network path.
-
-        Required: --endpoint and --data-partition. Optional: --tenant for cross-tenant authentication.
-
-        Returns: authOk plus authError, connectivityOk plus connectivityError, and the HTTP
-        connectivityStatusCode returned by the service (401/403 points at auth or entitlements, 404 usually means a
-        bad endpoint, and other 4xx often means an unknown data partition).
+        Check an ADME/OSDU endpoint's health, authentication and connectivity.
+        Returns health status with error details and the service HTTP status code.
         """,
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
@@ -42,11 +35,11 @@ public sealed class HealthCheckCommand(IHealthService healthService)
     public override void ValidateOptions(HealthCheckOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
     }
 
     /// <summary>
-    /// Executes the requested ADME health checks.
+    /// Executes the requested ADME/OSDU health checks.
     /// </summary>
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context, HealthCheckOptions options, CancellationToken cancellationToken)

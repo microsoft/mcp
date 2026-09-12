@@ -7,11 +7,11 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options.Storage;
 
 /// <summary>
-/// Specifies the OSDU records to fetch in one call and how to shape them.
+/// Specifies the records to fetch in one call and how to shape them.
 /// </summary>
 public sealed class RecordFetchOptions
 {
-    [Option(Description = "The fully-qualified OSDU record ids to fetch, each '{partition}:{group-type}--{EntityType}:{unique-id}'. Up to 20 ids without --attributes, or 100 with it.")]
+    [Option(Description = "The fully-qualified record ids to fetch, each '{partition}:{group-type}--{EntityType}:{unique-id}'. Up to 20 ids without --attributes, or 100 with it.")]
     public required string[] Ids { get; set; }
 
     [Option(Description = "Dotted-path fields to return instead of whole records, for example 'data.Name' and 'data.FileSourceInfo'. Use it only when specific fields were requested; it cannot be combined with --frame-of-reference.")]

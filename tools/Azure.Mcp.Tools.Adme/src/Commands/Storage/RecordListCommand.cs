@@ -10,23 +10,18 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Adme.Commands.Storage;
 
 /// <summary>
-/// Lists OSDU record ids for a kind.
+/// Lists ADME/OSDU record ids for a kind.
 /// </summary>
 [CommandMetadata(
     Id = "b18a9dd5-252b-4bf0-85e1-4fdf63f996f2",
     Name = "list",
-    Title = "List ADME Records",
+    Title = "List ADME/OSDU Records",
     Description = """
-        List multiple ADME records of a specified OSDU kind, returning only a paged set of record IDs.
+        List multiple ADME/OSDU record IDs for one kind.
+        Returns IDs only, in pages.
 
-        Required: --kind, --endpoint, and --data-partition.
-
-        --kind must be a fully-qualified kind '{authority}:{source}:{entityType}:{version}', for example
-        'osdu:wks:master-data--Well:1.0.0'; use 'azmcp adme schema list' to discover valid kinds.
-
-        Paging: --limit (1-100, default 10) and --cursor, which takes the cursor from a previous
-        response. A null cursor means there are no more pages. A kind can hold thousands of records,
-        so confirm how many the user wants before paging through the whole set.
+        Pagination parameters: limit (1-100, default 10) and cursor (continuation token).
+        Confirm how many records the user wants before paging through the whole set.
         """,
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
@@ -45,8 +40,8 @@ public sealed class RecordListCommand(IStorageService storageService)
     public override void ValidateOptions(RecordListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
-        AdmeServiceHelper.ValidateKind(options.Kind, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
 
         if (options.Limit is < 1 or > MaxLimit)
         {
