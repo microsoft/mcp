@@ -11,12 +11,9 @@ public class AzureBackupTelemetryTagsTests
 {
     [Theory]
     [InlineData(null, "auto")]
-    [InlineData("", "auto")]
-    [InlineData("  ", "auto")]
-    [InlineData("RSV", "rsv")]
-    [InlineData("DPP", "dpp")]
-    [InlineData("Rsv", "rsv")]
-    public void NormalizeVaultType_ReturnsExpectedValue(string? input, string expected)
+    [InlineData(AzureBackupVaultType.Rsv, "rsv")]
+    [InlineData(AzureBackupVaultType.Dpp, "dpp")]
+    public void NormalizeVaultType_ReturnsExpectedValue(AzureBackupVaultType? input, string expected)
     {
         Assert.Equal(expected, AzureBackupTelemetryTags.NormalizeVaultType(input));
     }
@@ -36,7 +33,7 @@ public class AzureBackupTelemetryTagsTests
     [Fact]
     public void AddVaultTags_NullActivity_DoesNotThrow()
     {
-        AzureBackupTelemetryTags.AddVaultTags(null, "rsv");
+        AzureBackupTelemetryTags.AddVaultTags(null, AzureBackupVaultType.Rsv);
     }
 
     [Fact]
@@ -73,7 +70,7 @@ public class AzureBackupTelemetryTagsTests
         using var activity = source.StartActivity("test-op");
         Assert.NotNull(activity);
 
-        AzureBackupTelemetryTags.AddVaultTags(activity, "RSV");
+        AzureBackupTelemetryTags.AddVaultTags(activity, AzureBackupVaultType.Rsv);
 
         var tag = activity.GetTagItem(AzureBackupTelemetryTags.VaultType);
         Assert.Equal("rsv", tag);

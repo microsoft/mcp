@@ -32,7 +32,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("v"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Cross-region restore enabled"));
@@ -57,7 +57,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("v"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
@@ -81,7 +81,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("v"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
@@ -105,7 +105,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             Arg.Is("v"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "CRR not supported"));
@@ -126,7 +126,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
     {
         // Arrange
         Service.ConfigureCrossRegionRestoreAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "Already enabled"));
 
@@ -154,7 +154,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
             "--resource-group", "rg",
             "--vault-type", vaultType);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--vault-type must be", response.Message);
+        Assert.Contains("Invalid --vault-type", response.Message);
     }
 
     [Theory]
@@ -164,8 +164,11 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
     [InlineData("DPP")]
     public async Task ExecuteAsync_AcceptsValidVaultType(string vaultType)
     {
+        var expectedVaultType = vaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase)
+            ? AzureBackupVaultType.Rsv
+            : AzureBackupVaultType.Dpp;
         Service.ConfigureCrossRegionRestoreAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(vaultType),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(expectedVaultType),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
@@ -185,7 +188,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
         if (shouldSucceed)
         {
             Service.ConfigureCrossRegionRestoreAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
                 Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
@@ -222,7 +225,7 @@ public class DisasterRecoveryEnableCrrCommandTests : SubscriptionCommandUnitTest
     {
         // Arrange
         Service.ConfigureCrossRegionRestoreAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Cross-region restore enabled"));
 

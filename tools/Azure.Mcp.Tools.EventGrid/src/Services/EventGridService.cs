@@ -83,7 +83,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         string? resourceGroup,
         string topicName,
         string eventData,
-        string? eventSchema = null,
+        EventSchema? eventSchema = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -113,7 +113,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         var credential = await GetCredential(tenant, cancellationToken);
 
         // Parse and validate event data directly to EventGridEventSchema
-        var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
+        var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? EventSchema.EventGrid);
 
         // Create publisher client with HTTP client factory for test proxy support
         var httpClient = AzureService.GetClient(nameof(EventGridPublisherClient));
@@ -145,7 +145,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             PublishedAt: DateTime.UtcNow);
     }
 
-    private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
+    private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, EventSchema eventSchema)
     {
         try
         {
@@ -180,11 +180,11 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
-    private static EventGridEventSchema CreateEventGridEventFromJsonElement(JsonElement eventElement, string eventSchema)
+    private static EventGridEventSchema CreateEventGridEventFromJsonElement(JsonElement eventElement, EventSchema eventSchema)
     {
         var eventJson = eventElement.GetRawText();
 
-        if (eventSchema.Equals("CloudEvents", StringComparison.OrdinalIgnoreCase))
+        if (eventSchema == EventSchema.CloudEvents)
         {
             var cloudEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CloudEvent)
                 ?? throw new ArgumentException("Failed to deserialize CloudEvent");
@@ -207,7 +207,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
                 Data: cloudEvent.Data.HasValue ? JsonNode.Parse(cloudEvent.Data.Value.GetRawText()) : null,
                 EventTime: cloudEvent.Time ?? DateTimeOffset.UtcNow);
         }
-        else if (eventSchema.Equals("EventGrid", StringComparison.OrdinalIgnoreCase))
+        else if (eventSchema == EventSchema.EventGrid)
         {
             var eventGridEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.EventGridEventInput)
                 ?? throw new ArgumentException("Failed to deserialize EventGrid event");
@@ -220,7 +220,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
                 Data: eventGridEvent.Data.HasValue ? JsonNode.Parse(eventGridEvent.Data.Value.GetRawText()) : null,
                 EventTime: eventGridEvent.EventTime ?? DateTimeOffset.UtcNow);
         }
-        else // Custom schema - try both CloudEvents and EventGrid field names
+        else if (eventSchema == EventSchema.Custom)
         {
             var flexibleEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CustomEvent)
                 ?? throw new ArgumentException("Failed to deserialize custom event");
@@ -233,6 +233,8 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
                 Data: flexibleEvent.Data.HasValue ? JsonNode.Parse(flexibleEvent.Data.Value.GetRawText()) : null,
                 EventTime: flexibleEvent.EventTime ?? flexibleEvent.Time ?? DateTimeOffset.UtcNow);
         }
+
+        throw new ArgumentOutOfRangeException(nameof(eventSchema), eventSchema, null);
     }
 
     private async Task GetSubscriptionsForSpecificTopic(

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
@@ -15,7 +16,7 @@ public sealed class ProtectedItemUpdateProtectionOptions : BaseProtectedItemOpti
 
     // Selective Disk Backup (RSV IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
     [Option(Description = AzureBackupOptionDefinitions.DiskListSetting)]
-    public string? DiskListSetting { get; set; }
+    public AzureBackupDiskListSetting? DiskListSetting { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.DisksList)]
     public string? DisksList { get; set; }

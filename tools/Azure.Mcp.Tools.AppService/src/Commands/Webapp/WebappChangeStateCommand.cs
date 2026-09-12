@@ -40,47 +40,21 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
 {
     private readonly ILogger<WebappChangeStateCommand> _logger = logger;
 
-    private static readonly HashSet<string> s_validStateChanges = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "start",
-        "stop",
-        "restart"
-    };
-
     public override void ValidateOptions(WebappChangeStateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!ValidateStateChange(options.StateChange, out var errorMessage))
+        if (options.StateChange != WebappStateChange.Restart)
         {
-            validationResult.Errors.Add(errorMessage);
-        }
-        else
-        {
-            if (!"restart".Equals(options.StateChange, StringComparison.OrdinalIgnoreCase))
+            if (options.SoftRestart)
             {
-                if (options.SoftRestart)
-                {
-                    validationResult.Errors.Add("soft-restart only applies for change-state 'restart'.");
-                }
-                if (options.WaitForCompletion)
-                {
-                    validationResult.Errors.Add("wait-for-completion only applies for change-state 'restart'.");
-                }
+                validationResult.Errors.Add("soft-restart only applies for change-state 'restart'.");
+            }
+            if (options.WaitForCompletion)
+            {
+                validationResult.Errors.Add("wait-for-completion only applies for change-state 'restart'.");
             }
         }
-    }
-
-    internal static bool ValidateStateChange(string? stateChange, out string errorMessage)
-    {
-        if (string.IsNullOrEmpty(stateChange) || !s_validStateChanges.Contains(stateChange))
-        {
-            errorMessage = $"Invalid value '{stateChange}' for state change. Valid values are: start, stop, restart.";
-            return false;
-        }
-
-        errorMessage = "";
-        return true;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, WebappChangeStateOptions options, CancellationToken cancellationToken)
@@ -103,7 +77,7 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
         }
         catch (Exception ex)
         {
-            if ("restart".Equals(options.StateChange, StringComparison.OrdinalIgnoreCase))
+            if (options.StateChange == WebappStateChange.Restart)
             {
                 _logger.LogError(ex, "Failed to restart the Web App '{App}' in subscription {Subscription} and resource group {ResourceGroup} (Soft Restart: {SoftRestart}, Wait For Completion: {WaitForCompletion})",
                     options.App, options.Subscription, options.ResourceGroup, options.SoftRestart, options.WaitForCompletion);

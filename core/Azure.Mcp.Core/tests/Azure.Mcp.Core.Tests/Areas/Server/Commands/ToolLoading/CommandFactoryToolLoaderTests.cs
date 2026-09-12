@@ -650,7 +650,7 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task ListToolsHandler_EnumOption_IsExportedAsStringType()
+    public async Task ListToolsHandler_EnumOption_ExportsAllowedStringValues()
     {
         // Arrange
         // Build a fake command that declares a single enum-backed option using the same production
@@ -676,12 +676,6 @@ public class CommandFactoryToolLoaderTests
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
-        // Enum options are modeled as Option<string> by OptionTypeHandler (a JsonStringEnumConverter is
-        // registered so values round-trip as member names, never integers). The schema generator only sees
-        // Option.ValueType (string), so an enum surfaces as JSON "type": "string" with its allowed values
-        // described in prose - it does not emit a JSON "enum" keyword. This spot-check locks that contract:
-        // an enum-backed option must be exported as a string type, guarding against a regression to integer
-        // (ordinal) serialization.
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-enum-get");
         Assert.NotNull(tool);
 
@@ -690,34 +684,10 @@ public class CommandFactoryToolLoaderTests
 
         var sampleLevel = properties.AssertProperty("sample-level");
         Assert.Equal(JsonValueKind.Object, sampleLevel.ValueKind);
-
-        var typeProperty = sampleLevel.AssertProperty("type");
-
-        // The enum must map to the JSON string type and never to a numeric (ordinal) type. Tolerate a
-        // scalar ("string") or a union array (e.g. ["string", "null"]) representation of nullability.
-        static bool IsStringType(JsonElement type) =>
-            type.ValueKind == JsonValueKind.String && type.GetString() == "string";
-        static bool IsNullType(JsonElement type) =>
-            type.ValueKind == JsonValueKind.String && type.GetString() == "null";
-
-        if (typeProperty.ValueKind == JsonValueKind.Array)
-        {
-            var entries = typeProperty.EnumerateArray().ToArray();
-
-            // Assert.All invokes the predicate on every element, so a stray numeric (or any other
-            // unexpected) entry fails the test. Whitelisting "string"/"null" is stricter than
-            // blacklisting numeric, since it also rejects anything else the union should not contain.
-            Assert.All(entries, entry => Assert.True(IsStringType(entry) || IsNullType(entry),
-                $"'sample-level' type union should contain only 'string'/'null' but had '{entry}'."));
-
-            // The union must also actually include the string type (Assert.Contains is an existence check).
-            Assert.Contains(entries, IsStringType);
-        }
-        else
-        {
-            Assert.True(IsStringType(typeProperty),
-                $"'sample-level' enum option should be exported as a string type but was '{typeProperty}'.");
-        }
+        Assert.Equal("string", sampleLevel.AssertProperty("type").GetString());
+        Assert.Equal(
+            ["Critical", "Error", "Informational", "Verbose", "Warning"],
+            sampleLevel.AssertProperty("enum").EnumerateArray().Select(value => value.GetString()));
     }
 
     [Fact]
@@ -1127,7 +1097,7 @@ public class CommandFactoryToolLoaderTests
             mockServer);
     }
 
-    // A self-contained enum + options POCO used only by ListToolsHandler_EnumOption_IsExportedAsStringType.
+    // A self-contained enum + options POCO used only by ListToolsHandler_EnumOption_ExportsAllowedStringValues.
     // Declaring them here keeps the enum-to-schema contract test independent of any shipping tool.
     private enum SchemaSampleLevel
     {
@@ -1141,7 +1111,7 @@ public class CommandFactoryToolLoaderTests
     private sealed class EnumSchemaTestOptions
     {
         [Option(Name = "sample-level", Description = "A sample enum option for schema testing.")]
-        public SchemaSampleLevel? SampleLevel { get; set; }
+        public SchemaSampleLevel SampleLevel { get; set; }
     }
 
     private static bool UsesRawMcpToolInput(IBaseCommand command) =>

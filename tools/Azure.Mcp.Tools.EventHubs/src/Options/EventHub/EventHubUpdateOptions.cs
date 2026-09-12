@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventHubs.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Options.EventHub;
@@ -21,7 +22,7 @@ public sealed class EventHubUpdateOptions : ISubscriptionOption
     public long? MessageRetentionInHours { get; set; }
 
     [Option(Description = "The status of the event hub (Active, Disabled, etc.). Note: Status may be read-only in some operations.")]
-    public string? Status { get; set; }
+    public EventHubStatus? Status { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }

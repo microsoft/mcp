@@ -33,8 +33,8 @@ public class AdvisorMetadataServiceTests
             "de",
             new RecommendationMetadataFilters(
                 ResourceType: "microsoft.compute/virtualmachines",
-                Impact: "High",
-                Category: "HighAvailability",
+                Impact: AdvisorRecommendationImpact.High,
+                Category: AdvisorRecommendationCategory.HighAvailability,
                 SubCategory: "ServiceUpgradeAndRetirement",
                 TrackingIds: ["QNY1-HB8"],
                 RetirementDateOperator: "ge",
@@ -119,7 +119,7 @@ public class AdvisorMetadataServiceTests
         var query = AdvisorService.BuildMetadataListQuery(
             "en",
             new RecommendationMetadataFilters(
-                Category: "OperationalExcellence",
+                Category: AdvisorRecommendationCategory.OperationalExcellence,
                 TrackingIds: ["QNY1-HB8"],
                 RetirementDateOperator: "ge",
                 RetirementDate: new DateOnly(2026, 3, 31)));
@@ -143,7 +143,7 @@ public class AdvisorMetadataServiceTests
         var query = AdvisorService.BuildMetadataListQuery(
             "en",
             new RecommendationMetadataFilters(
-                Category: "OperationalExcellence",
+                Category: AdvisorRecommendationCategory.OperationalExcellence,
                 SubCategory: "ServiceUpgradeAndRetirement"));
 
         Assert.Contains("tostring(properties.recommendationCategory) =~ 'OperationalExcellence'", query);
@@ -170,20 +170,17 @@ public class AdvisorMetadataServiceTests
     }
 
     [Fact]
-    public void BuildMetadataListQuery_EscapesKqlValues()
+    public void BuildMetadataListQuery_EscapesFreeFormKqlValues()
     {
         var query = AdvisorService.BuildMetadataListQuery(
             "en",
             new RecommendationMetadataFilters(
-                ResourceType: @"microsoft.test/type\child",
-                Category: "Cost' or true"));
+                ResourceType: @"microsoft.test/type\child"));
         var trackingQuery = AdvisorService.BuildMetadataListQuery(
             "en",
             new RecommendationMetadataFilters(TrackingIds: ["QNY1-'HB8"]));
 
         Assert.Contains(@"microsoft.test/type\\child", query);
-        Assert.Contains("Cost'' or true", query);
-        Assert.DoesNotContain("Cost' or true'", query);
         Assert.Contains("where tostring(trackingId) in~ ('QNY1-''HB8')", trackingQuery);
     }
 

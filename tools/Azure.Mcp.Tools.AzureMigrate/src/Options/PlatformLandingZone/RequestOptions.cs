@@ -15,7 +15,7 @@ public sealed class RequestOptions : ISubscriptionOption
     /// Gets or sets the action to perform (update, generate, download, status, check).
     /// </summary>
     [Option(Description = "The action to perform: 'update' (set parameters), 'check' (check existing platform landing zone), 'generate' (generate platform landing zone), 'download' (get download instructions), 'status' (view parameter status), 'createmigrateproject' (create new migration project).")]
-    public required string Action { get; set; }
+    public required PlatformLandingZoneAction Action { get; set; }
 
     /// <summary>
     /// Gets or sets the region type (single or multi).

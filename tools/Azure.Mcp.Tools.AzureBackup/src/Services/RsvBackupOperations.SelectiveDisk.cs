@@ -116,10 +116,8 @@ public sealed partial class RsvBackupOperations
             return;
         }
 
-        var setting = diskExclusion.Setting?.Trim();
-
         // resetexclusionsettings clears any prior selective-disk configuration and backs up all disks.
-        if (string.Equals(setting, DiskExclusionSpec.SettingReset, StringComparison.OrdinalIgnoreCase))
+        if (diskExclusion.Setting == AzureBackupDiskListSetting.ResetExclusionSettings)
         {
             vmProtectedItem.ExtendedProperties = new IaasVmBackupExtendedProperties
             {
@@ -152,7 +150,7 @@ public sealed partial class RsvBackupOperations
         }
 
         // include / exclude paths must specify the LUN list explicitly.
-        var isInclusionList = string.Equals(setting, DiskExclusionSpec.SettingInclude, StringComparison.OrdinalIgnoreCase);
+        var isInclusionList = diskExclusion.Setting == AzureBackupDiskListSetting.Include;
         var luns = ParseDiskLuns(diskExclusion.DiskLunsCsv);
 
         var props = new DiskExclusionProperties { IsInclusionList = isInclusionList };

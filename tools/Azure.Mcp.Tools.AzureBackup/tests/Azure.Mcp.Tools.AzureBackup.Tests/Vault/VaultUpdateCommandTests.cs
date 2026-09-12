@@ -28,9 +28,9 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
     {
         // Arrange
         Service.UpdateVaultAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(AzureBackupManagedIdentityType.SystemAssigned), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Vault updated successfully"));
 
         // Act
@@ -51,9 +51,9 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
     {
         // Arrange
         Service.UpdateVaultAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(AzureBackupManagedIdentityType.SystemAssigned), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -87,9 +87,9 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
     {
         // Arrange
         Service.UpdateVaultAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(AzureBackupManagedIdentityType.SystemAssigned), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         // Act
@@ -116,9 +116,9 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         if (shouldSucceed)
         {
             Service.UpdateVaultAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Any<AzureBackupManagedIdentityType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -163,10 +163,19 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
     public async Task ExecuteAsync_AcceptsValidIdentityType(string identityType)
     {
         // Arrange
+        var expectedIdentityType = identityType switch
+        {
+            "SystemAssigned" => AzureBackupManagedIdentityType.SystemAssigned,
+            "UserAssigned" => AzureBackupManagedIdentityType.UserAssigned,
+            "None" => AzureBackupManagedIdentityType.None,
+            "SystemAssigned,UserAssigned" => AzureBackupManagedIdentityType.SystemAssignedUserAssigned,
+            _ => throw new ArgumentOutOfRangeException(nameof(identityType), identityType, null)
+        };
+
         Service.UpdateVaultAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is(identityType), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(expectedIdentityType), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         // Act
@@ -207,9 +216,9 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
     {
         // Arrange
         Service.UpdateVaultAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupManagedIdentityType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         // Act

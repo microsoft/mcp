@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Xunit;
@@ -15,7 +16,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureIaasVM",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureIaasVm,
         };
 
         var policy = (IaasVmProtectionPolicy)RsvPolicyBuilder.Build(req);
@@ -41,7 +42,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureIaasVM",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureIaasVm,
             PolicySubType = "Enhanced",
             ScheduleFrequency = "Hourly",
             HourlyIntervalHours = 4,
@@ -67,7 +68,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureIaasVM",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureIaasVm,
             ScheduleFrequency = "Weekly",
             ScheduleDaysOfWeek = "Monday,Wednesday",
             ScheduleTimes = "03:00",
@@ -124,7 +125,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "MSSQL",
+            WorkloadType = AzureBackupPolicyWorkloadType.MsSql,
             ScheduleTimes = "01:30",
             DailyRetentionDays = "20",
             LogFrequencyMinutes = 30,
@@ -147,7 +148,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "MSSQL",
+            WorkloadType = AzureBackupPolicyWorkloadType.MsSql,
             FullScheduleFrequency = "Weekly",
             FullScheduleDaysOfWeek = "Sunday",
             DifferentialScheduleDaysOfWeek = "Wednesday",
@@ -178,7 +179,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureFileShare",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureFileShare,
             DailyRetentionDays = "14",
         };
 
@@ -195,7 +196,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureIaasVM",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureIaasVm,
             MonthlyRetentionMonths = 6,
             MonthlyRetentionWeekOfMonth = "Last",
             MonthlyRetentionDaysOfWeek = "Friday",
@@ -218,7 +219,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureIaasVM",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureIaasVm,
             DailyRetentionDays = "30",
             SmartTier = true,
         };
@@ -235,7 +236,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureIaasVM",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureIaasVm,
             DailyRetentionDays = "30",
             ArchiveTierAfterDays = "60",
             SmartTier = true,
@@ -252,7 +253,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "SAPHANA",
+            WorkloadType = AzureBackupPolicyWorkloadType.SapHana,
             DailyRetentionDays = "30",
             EnableSnapshotBackup = true,
             SnapshotInstantRpRetentionDays = "5",
@@ -275,7 +276,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "SAPHANA",
+            WorkloadType = AzureBackupPolicyWorkloadType.SapHana,
             DailyRetentionDays = "30",
         };
 
@@ -291,7 +292,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "MSSQL",
+            WorkloadType = AzureBackupPolicyWorkloadType.MsSql,
             DailyRetentionDays = "30",
             ArchiveTierMode = "TierAfter",
             ArchiveTierAfterDays = "90",
@@ -311,7 +312,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureFileShare",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureFileShare,
             ScheduleFrequency = "Hourly",
             HourlyIntervalHours = 6,
             HourlyWindowStartTime = "09:00",
@@ -333,7 +334,7 @@ public class RsvPolicyBuilderTests
         var req = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "AzureFileShare",
+            WorkloadType = AzureBackupPolicyWorkloadType.AzureFileShare,
             DailyRetentionDays = "30",
             WeeklyRetentionWeeks = 12,
             WeeklyRetentionDaysOfWeek = "Sunday",

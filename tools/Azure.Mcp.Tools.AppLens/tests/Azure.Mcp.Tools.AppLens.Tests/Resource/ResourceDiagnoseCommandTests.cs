@@ -30,7 +30,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites",
+            AppLensResourceType.AppService,
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -70,7 +70,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "myapp",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -116,6 +116,25 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
     }
 
     [Fact]
+    public async Task ExecuteAsync_Returns400_WhenResourceTypeIsUnsupported()
+    {
+        var response = await ExecuteCommandAsync(
+            "--question", "Why is my app slow?",
+            "--resource", "myapp",
+            "--resource-type", "microsoft.compute/virtualmachines");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceive().DiagnoseResourceAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_SucceedsWithoutSubscription()
     {
         // Arrange - subscription is now optional
@@ -130,7 +149,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "myapp",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -161,7 +180,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "myapp",
             "sub123",
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -192,7 +211,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "myapp",
             "sub123",
             "rg1",
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -217,7 +236,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
@@ -247,7 +266,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(notFoundResult);
@@ -279,7 +298,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("AppLens session failed"));
@@ -306,7 +325,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
@@ -339,7 +358,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites",
+            AppLensResourceType.AppService,
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -395,7 +414,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites",
+            AppLensResourceType.AppService,
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -426,7 +445,7 @@ public class ResourceDiagnoseCommandTests : CommandUnitTestsBase<ResourceDiagnos
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<AppLensResourceType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));

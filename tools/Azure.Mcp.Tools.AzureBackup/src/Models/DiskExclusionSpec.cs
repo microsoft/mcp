@@ -18,17 +18,13 @@ namespace Azure.Mcp.Tools.AzureBackup.Models;
 /// <param name="DiskLunsCsv">Comma-separated data disk LUNs (non-negative integers).</param>
 /// <param name="ExcludeAllDataDisks">When true, only the OS disk is protected. Overrides <see cref="DiskLunsCsv"/>.</param>
 public sealed record DiskExclusionSpec(
-    string? Setting,
+    AzureBackupDiskListSetting? Setting,
     string? DiskLunsCsv,
     bool ExcludeAllDataDisks)
 {
-    public const string SettingInclude = "include";
-    public const string SettingExclude = "exclude";
-    public const string SettingReset = "resetexclusionsettings";
-
     /// <summary>Returns true when at least one selective disk option was provided by the caller.</summary>
     public bool HasAnyValue =>
-        !string.IsNullOrWhiteSpace(Setting) ||
+        Setting is not null ||
         !string.IsNullOrWhiteSpace(DiskLunsCsv) ||
         ExcludeAllDataDisks;
 }

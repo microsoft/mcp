@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Webapp;
+using Azure.Mcp.Tools.AppService.Options.Webapp;
 using Azure.Mcp.Tools.AppService.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -16,11 +17,11 @@ namespace Azure.Mcp.Tools.AppService.Tests.Commands.Webapp;
 public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<WebappChangeStateCommand, IAppServiceService>
 {
     [Theory]
-    [InlineData("start", false, false)]
-    [InlineData("stop", false, false)]
-    [InlineData("restart", false, false)]
-    [InlineData("restart", true, true)]
-    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(string stateChange, bool softRestart, bool waitForCompletion)
+    [InlineData(WebappStateChange.Start, false, false)]
+    [InlineData(WebappStateChange.Stop, false, false)]
+    [InlineData(WebappStateChange.Restart, false, false)]
+    [InlineData(WebappStateChange.Restart, true, true)]
+    public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(WebappStateChange stateChange, bool softRestart, bool waitForCompletion)
     {
         // Arrange
         var expected = $"Web app state change '{stateChange}' initiated successfully.";
@@ -30,7 +31,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             waitForCompletion, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange];
+        List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange.ToString()];
         if (softRestart)
         {
             unparsedArgs.Add("--soft-restart");
@@ -85,7 +86,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<WebappStateChange>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -110,7 +111,7 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<WebappStateChange>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -118,19 +119,19 @@ public class WebappChangeStateCommandTests : SubscriptionCommandUnitTestsBase<We
     }
 
     [Theory]
-    [InlineData("start", false, false)]
-    [InlineData("stop", false, false)]
-    [InlineData("restart", false, false)]
-    [InlineData("restart", true, true)]
+    [InlineData(WebappStateChange.Start, false, false)]
+    [InlineData(WebappStateChange.Stop, false, false)]
+    [InlineData(WebappStateChange.Restart, false, false)]
+    [InlineData(WebappStateChange.Restart, true, true)]
 
-    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(string stateChange, bool softRestart, bool waitForCompletion)
+    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(WebappStateChange stateChange, bool softRestart, bool waitForCompletion)
     {
         // Arrange
         Service.ChangeWebAppStateAsync("sub123", "rg1", "test-app", stateChange, softRestart,
             waitForCompletion, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
-        List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange];
+        List<string> unparsedArgs = ["--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--state-change", stateChange.ToString()];
         if (softRestart)
         {
             unparsedArgs.Add("--soft-restart");

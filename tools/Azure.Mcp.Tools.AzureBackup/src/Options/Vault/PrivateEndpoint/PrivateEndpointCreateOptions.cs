@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault.PrivateEndpoint;
@@ -14,7 +15,7 @@ public sealed class PrivateEndpointCreateOptions : BaseAzureBackupOptions
     public required string VnetSubnetId { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.PrivateEndpointGroupId)]
-    public string? GroupId { get; set; }
+    public AzureBackupPrivateEndpointGroupId? GroupId { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.PrivateEndpointLocation)]
     public string? Location { get; set; }

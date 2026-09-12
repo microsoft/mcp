@@ -9,30 +9,14 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 
 internal static class RecommendationFilterValidator
 {
-    internal static readonly string[] AllowedCategories =
-    [
-        "Cost",
-        "HighAvailability",
-        "Security",
-        "Performance",
-        "OperationalExcellence",
-    ];
-
-    internal static readonly string[] AllowedImpacts = ["High", "Medium", "Low"];
-
-    private static readonly string[] AllowedStatuses =
-    [
-        nameof(RecommendationStatus.New),
-        nameof(RecommendationStatus.Postponed),
-        nameof(RecommendationStatus.Dismissed),
-        nameof(RecommendationStatus.Completed),
-    ];
-
     internal static void Validate(RecommendationListOptions options, ValidationResult validationResult)
     {
-        ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);
-        ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
-        ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
+        if (options.Status is { } status && !Enum.IsDefined(status))
+        {
+            validationResult.Errors.Add(
+                $"Invalid --status value '{status}'. Allowed values: {string.Join(", ", Enum.GetNames<RecommendationStatus>())}.");
+        }
+
         ValidateOptionalValue("--resource-type", options.ResourceType, validationResult);
         ValidateOptionalValue("--resource", options.Resource, validationResult);
         ValidateOptionalValue("--search", options.Search, validationResult);
@@ -53,8 +37,8 @@ internal static class RecommendationFilterValidator
 
     internal static void ValidateCommon(
         ValidationResult validationResult,
-        string? category,
-        string? impact,
+        AdvisorRecommendationCategory? category,
+        AdvisorRecommendationImpact? impact,
         string? recommendationTypeId,
         string? resourceType,
         string? resource,
@@ -63,8 +47,8 @@ internal static class RecommendationFilterValidator
         string? retirementDate,
         bool serviceRetirementOnly = false)
     {
-        ValidateAllowedValue("--category", category, AllowedCategories, validationResult);
-        ValidateAllowedValue("--impact", impact, AllowedImpacts, validationResult);
+        ValidateAllowedValue("--category", category, validationResult);
+        ValidateAllowedValue("--impact", impact, validationResult);
         ValidateOptionalValue("--resource-type", resourceType, validationResult);
         ValidateOptionalValue("--resource", resource, validationResult);
         ValidateOptionalValue("--search", search, validationResult);
@@ -84,19 +68,6 @@ internal static class RecommendationFilterValidator
             ? parsed.ToString("D")
             : null;
 
-    internal static string? NormalizeAllowedValue(
-        string? value,
-        IReadOnlyCollection<string> allowedValues)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        return allowedValues.FirstOrDefault(
-            candidate => candidate.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
-    }
-
     private static void ValidateRecommendationTypeId(
         string? recommendationTypeId,
         ValidationResult validationResult)
@@ -110,23 +81,16 @@ internal static class RecommendationFilterValidator
         }
     }
 
-    private static void ValidateAllowedValue(
+    private static void ValidateAllowedValue<TEnum>(
         string optionName,
-        string? value,
-        IReadOnlyCollection<string> allowedValues,
+        TEnum? value,
         ValidationResult validationResult)
+        where TEnum : struct, Enum
     {
-        if (value is null)
-        {
-            return;
-        }
-
-        var normalized = value.Trim();
-        if (normalized.Length == 0 ||
-            !allowedValues.Contains(normalized, StringComparer.OrdinalIgnoreCase))
+        if (value is { } enumValue && !Enum.IsDefined(enumValue))
         {
             validationResult.Errors.Add(
-                $"Invalid {optionName} value '{value}'. Allowed values: {string.Join(", ", allowedValues)}.");
+                $"Invalid {optionName} value '{enumValue}'. Allowed values: {string.Join(", ", Enum.GetNames<TEnum>())}.");
         }
     }
 

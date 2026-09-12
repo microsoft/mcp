@@ -108,13 +108,20 @@ public class RecommendationQueryBuilderTests
             result);
     }
 
-    [Fact]
-    public void BuildInstancePredicates_AllInstanceFilters_UsesExpectedSemantics()
+    [Theory]
+    [InlineData(AdvisorRecommendationCategory.Security, AdvisorRecommendationImpact.High)]
+    [InlineData(AdvisorRecommendationCategory.Cost, AdvisorRecommendationImpact.Medium)]
+    [InlineData(AdvisorRecommendationCategory.HighAvailability, AdvisorRecommendationImpact.Low)]
+    [InlineData(AdvisorRecommendationCategory.Performance, AdvisorRecommendationImpact.High)]
+    [InlineData(AdvisorRecommendationCategory.OperationalExcellence, AdvisorRecommendationImpact.Low)]
+    public void BuildInstancePredicates_AllInstanceFilters_UsesExpectedSemantics(
+        AdvisorRecommendationCategory category,
+        AdvisorRecommendationImpact impact)
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
             new RecommendationFilters(
-                Category: "Security",
-                Impact: "High",
+                Category: category,
+                Impact: impact,
                 RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d",
                 ResourceType: "Microsoft.Web/sites",
                 Resource: "webapp",
@@ -127,8 +134,8 @@ public class RecommendationQueryBuilderTests
         Assert.Contains("properties.recommendationStatus", result);
         Assert.Contains(RecommendationQueryBuilder.CurrentRecommendationNameClause, result);
         Assert.Contains(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
-        Assert.Contains("tostring(properties.category) =~ 'Security'", result);
-        Assert.Contains("tostring(properties.impact) =~ 'High'", result);
+        Assert.Contains($"tostring(properties.category) =~ '{category}'", result);
+        Assert.Contains($"tostring(properties.impact) =~ '{impact}'", result);
         Assert.Contains("tostring(properties.recommendationTypeId) =~ '1d70919c-1a4a-4f79-8300-bb576c291e9d'", result);
         Assert.Contains("tostring(properties.impactedField) =~ 'Microsoft.Web/sites'", result);
         Assert.Contains("tostring(properties.resourceMetadata.resourceId) contains 'webapp'", result);
@@ -154,7 +161,9 @@ public class RecommendationQueryBuilderTests
     public void BuildInstancePredicates_ResolvedMetadataIds_SkipsCategoryAndImpact()
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
-            new RecommendationFilters(Category: "Security", Impact: "High"),
+            new RecommendationFilters(
+                Category: AdvisorRecommendationCategory.Security,
+                Impact: AdvisorRecommendationImpact.High),
             includeStatus: true,
             useRequestedStatus: false,
             includeCategoryAndImpact: true,
@@ -210,13 +219,22 @@ public class RecommendationQueryBuilderTests
     public void BuildInstancePredicates_EscapesKqlValuesAndRemovesPipes()
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
-            new RecommendationFilters(Search: @"it's\unsafe|"),
+            new RecommendationFilters(
+                RecommendationTypeId: "type'|id",
+                ResourceType: "Microsoft.Storage|/storageAccounts",
+                Resource: "my'|storage",
+                Search: @"it's\unsafe|"),
             includeStatus: true,
             useRequestedStatus: false,
             includeCategoryAndImpact: true,
-            resourceTypeUsesImpactedField: false);
+            resourceTypeUsesImpactedField: false,
+            recommendationTypeIds: ["Type|A", "it's"]);
 
         Assert.DoesNotContain('|', result);
         Assert.Contains(@"'it''s\\unsafe'", result);
+        Assert.Contains("'type''id'", result);
+        Assert.Contains("'Microsoft.Storage/storageAccounts'", result);
+        Assert.Contains("'my''storage'", result);
+        Assert.Contains("'TypeA', 'it''s'", result);
     }
 }

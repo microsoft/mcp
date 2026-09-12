@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
+
 namespace Azure.Mcp.Tools.AzureBackup.Services.Policy;
 
 /// <summary>
@@ -19,7 +21,7 @@ public sealed class PolicyCreateRequest
 {
     // Required identity
     public string Policy { get; set; } = string.Empty;
-    public string WorkloadType { get; set; } = string.Empty;
+    public required AzureBackupPolicyWorkloadType WorkloadType { get; set; }
 
     // Legacy daily retention (kept for backwards compatibility with existing live tests).
     public string? DailyRetentionDays { get; set; }

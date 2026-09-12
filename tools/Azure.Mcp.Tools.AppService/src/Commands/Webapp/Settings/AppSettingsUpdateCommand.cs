@@ -38,38 +38,20 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
     private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
     private readonly IAppServiceService _appServiceService = appServiceService;
 
-    private static readonly HashSet<string> s_validUpdateTypes = ["add", "set", "delete"];
-
     public override void ValidateOptions(AppSettingsUpdateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!ValidateUpdateType(options.SettingUpdateType, out var errorMessage))
-        {
-            validationResult.Errors.Add(errorMessage);
-        }
-
-        if (!ValidateSettingValue(options.SettingUpdateType, options.SettingValue, out errorMessage))
+        if (!ValidateSettingValue(options.SettingUpdateType, options.SettingValue, out var errorMessage))
         {
             validationResult.Errors.Add(errorMessage);
         }
     }
 
-    internal static bool ValidateUpdateType(string? settingUpdateType, out string errorMessage)
+    internal static bool ValidateSettingValue(AppSettingUpdateType settingUpdateType, string? settingValue, out string errorMessage)
     {
         errorMessage = string.Empty;
-        if (!s_validUpdateTypes.Contains(settingUpdateType, StringComparer.OrdinalIgnoreCase))
-        {
-            errorMessage = $"'{AppServiceOptionDefinitions.AppSettingUpdateTypeName}' must be one of the following values: {string.Join(", ", s_validUpdateTypes)}.";
-            return false;
-        }
-        return true;
-    }
-
-    internal static bool ValidateSettingValue(string? settingUpdateType, string? settingValue, out string errorMessage)
-    {
-        errorMessage = string.Empty;
-        if (("add".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase) || "set".Equals(settingUpdateType, StringComparison.OrdinalIgnoreCase))
+        if ((settingUpdateType is AppSettingUpdateType.Add or AppSettingUpdateType.Set)
             && string.IsNullOrWhiteSpace(settingValue))
         {
             errorMessage = $"'{AppServiceOptionDefinitions.AppSettingValueName}' is required when '{AppServiceOptionDefinitions.AppSettingUpdateTypeName}' is 'add' or 'set'.";

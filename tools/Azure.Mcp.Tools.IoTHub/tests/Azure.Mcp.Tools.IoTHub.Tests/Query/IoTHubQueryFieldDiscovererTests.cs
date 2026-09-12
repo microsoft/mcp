@@ -148,7 +148,7 @@ public class IoTHubQueryFieldDiscovererTests
 
             var request = new QueryCompileRequest
             {
-                From = "devices",
+                From = QuerySource.Devices,
                 Filters =
                 [
                     new QueryPredicate

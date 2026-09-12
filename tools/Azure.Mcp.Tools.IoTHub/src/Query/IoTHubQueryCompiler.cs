@@ -15,14 +15,6 @@ namespace Azure.Mcp.Tools.IoTHub.Query;
 /// </summary>
 public static partial class IoTHubQueryCompiler
 {
-    // IoT Hub query sources that are supported by the read/search query surface.
-    private static readonly HashSet<string> s_allowedSources = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "devices",
-        "devices.modules",
-        "devices.jobs"
-    };
-
     /// <summary>
     /// Compiles the supplied request into an IoT Hub query string.
     /// </summary>
@@ -33,20 +25,13 @@ public static partial class IoTHubQueryCompiler
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var source = string.IsNullOrWhiteSpace(request.From) ? "devices" : request.From.Trim();
-        if (!s_allowedSources.Contains(source))
+        var source = request.From.ToValue();
+        var logicalOperator = request.LogicalOperator switch
         {
-            throw new ArgumentException(
-                $"Unsupported query source '{source}'. Supported sources are: {string.Join(", ", s_allowedSources)}.");
-        }
-
-        var logicalOperator = (request.LogicalOperator ?? "AND").Trim();
-        if (!string.Equals(logicalOperator, "AND", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(logicalOperator, "OR", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException(
-                $"Unsupported logical operator '{request.LogicalOperator}'. Supported values are 'AND' and 'OR'.");
-        }
+            QueryLogicalOperator.And => "AND",
+            QueryLogicalOperator.Or => "OR",
+            _ => throw new ArgumentOutOfRangeException(nameof(request.LogicalOperator), request.LogicalOperator, null)
+        };
 
         if (request.Top is { } top && top <= 0)
         {
@@ -58,7 +43,7 @@ public static partial class IoTHubQueryCompiler
         if (request.Filters is { Count: > 0 })
         {
             builder.Append(" WHERE ");
-            var separator = $" {logicalOperator.ToUpperInvariant()} ";
+            var separator = $" {logicalOperator} ";
             for (var i = 0; i < request.Filters.Count; i++)
             {
                 if (i > 0)

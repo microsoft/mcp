@@ -142,20 +142,11 @@ public sealed partial class InsightsGetCommand(
             return context.Response;
         }
 
-        // Must have a valid scope (defaults to the subscription scope if not specified)
-        var scope = (options.Scope ?? InsightsOptionDefinitions.ScopeSubscription).Trim().ToLowerInvariant();
-        if (scope != InsightsOptionDefinitions.ScopeSubscription && scope != InsightsOptionDefinitions.ScopeTenant)
-        {
-            context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-            context.Response.Message =
-                $"Invalid --{InsightsOptionDefinitions.ScopeName} value '{options.Scope}'. " +
-                $"Allowed values: '{InsightsOptionDefinitions.ScopeSubscription}', '{InsightsOptionDefinitions.ScopeTenant}'.";
-            return context.Response;
-        }
+        var scope = options.Scope ?? InsightsScope.Subscription;
 
         // Error if tenant scope is specified with an explicit subscription
         var explicitSubscription = !string.IsNullOrEmpty(options.Subscription);
-        if (scope == InsightsOptionDefinitions.ScopeTenant && explicitSubscription)
+        if (scope == InsightsScope.Tenant && explicitSubscription)
         {
             context.Response.Status = System.Net.HttpStatusCode.BadRequest;
             context.Response.Message =
@@ -165,7 +156,7 @@ public sealed partial class InsightsGetCommand(
         }
 
         // Use default subscription if not provided
-        if (scope == InsightsOptionDefinitions.ScopeSubscription && !explicitSubscription)
+        if (scope == InsightsScope.Subscription && !explicitSubscription)
         {
             options.Subscription = _azureService.GetDefaultSubscriptionId();
             if (string.IsNullOrEmpty(options.Subscription))
@@ -182,9 +173,12 @@ public sealed partial class InsightsGetCommand(
         {
             IProgress<string> progress = new Progress<string>(msg => _ = NotifyProgressAsync(context, msg, cancellationToken));
 
-            var aggregation = scope == InsightsOptionDefinitions.ScopeTenant
-                ? await _insightsService.AggregateTenantAsync(options.Tenant, cancellationToken, progress, options.NoCache)
-                : await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, cancellationToken, progress, options.NoCache);
+            var aggregation = scope switch
+            {
+                InsightsScope.Tenant => await _insightsService.AggregateTenantAsync(options.Tenant, cancellationToken, progress, options.NoCache),
+                InsightsScope.Subscription => await _insightsService.AggregateSubscriptionAsync(options.Subscription!, options.Tenant, cancellationToken, progress, options.NoCache),
+                _ => throw new ArgumentOutOfRangeException(nameof(options.Scope), options.Scope, null)
+            };
 
             // Return empty list if no resources are found
             if (aggregation.ResourceTypes.Count == 0)

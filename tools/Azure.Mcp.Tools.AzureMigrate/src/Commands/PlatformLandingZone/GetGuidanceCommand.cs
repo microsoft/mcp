@@ -73,7 +73,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         {
             var response = new StringBuilder();
 
-            var guidance = await _guidanceService.GetGuidanceAsync(options.Scenario!, cancellationToken);
+            var guidance = await _guidanceService.GetGuidanceAsync(options.Scenario, cancellationToken);
             response.AppendLine(guidance);
 
             if (options.ListPolicies)
@@ -89,7 +89,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
             }
 
             if (!string.IsNullOrWhiteSpace(options.PolicyName) &&
-                options.Scenario is "policy-enforcement" or "policy-assignment")
+                options.Scenario is PlatformLandingZoneScenario.PolicyEnforcement or PlatformLandingZoneScenario.PolicyAssignment)
             {
                 var locations = await _guidanceService.SearchPoliciesAsync(options.PolicyName, cancellationToken);
                 if (locations.Count > 0)

@@ -11,14 +11,14 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 public class RecommendationSummaryServiceTests
 {
     [Theory]
-    [InlineData("recommendation-type", true)]
-    [InlineData("category", true)]
-    [InlineData("impact", true)]
-    [InlineData("resource-type", false)]
-    [InlineData("status", false)]
-    [InlineData("sub-category", true)]
-    [InlineData("retirement-date", true)]
-    public void RequiresMetadata_RoutesEveryGrouping(string groupBy, bool expected)
+    [InlineData(AdvisorRecommendationGroupBy.RecommendationType, true)]
+    [InlineData(AdvisorRecommendationGroupBy.Category, true)]
+    [InlineData(AdvisorRecommendationGroupBy.Impact, true)]
+    [InlineData(AdvisorRecommendationGroupBy.ResourceType, false)]
+    [InlineData(AdvisorRecommendationGroupBy.Status, false)]
+    [InlineData(AdvisorRecommendationGroupBy.SubCategory, true)]
+    [InlineData(AdvisorRecommendationGroupBy.RetirementDate, true)]
+    public void RequiresMetadata_RoutesEveryGrouping(AdvisorRecommendationGroupBy groupBy, bool expected)
     {
         Assert.Equal(expected, RecommendationSummaryService.RequiresMetadata(groupBy, null));
     }
@@ -27,8 +27,47 @@ public class RecommendationSummaryServiceTests
     public void RequiresMetadata_MetadataFilterOnInstanceGrouping_UsesJoin()
     {
         Assert.True(RecommendationSummaryService.RequiresMetadata(
-            "resource-type",
-            new RecommendationFilters(Impact: "High")));
+            AdvisorRecommendationGroupBy.ResourceType,
+            new RecommendationFilters(Impact: AdvisorRecommendationImpact.High)));
+    }
+
+    [Theory]
+    [InlineData(AdvisorRecommendationGroupBy.RecommendationType, "recommendation-type")]
+    [InlineData(AdvisorRecommendationGroupBy.Category, "category")]
+    [InlineData(AdvisorRecommendationGroupBy.Impact, "impact")]
+    [InlineData(AdvisorRecommendationGroupBy.ResourceType, "resource-type")]
+    [InlineData(AdvisorRecommendationGroupBy.Status, "status")]
+    [InlineData(AdvisorRecommendationGroupBy.SubCategory, "sub-category")]
+    [InlineData(AdvisorRecommendationGroupBy.RetirementDate, "retirement-date")]
+    public void BuildSummaryQuery_AllGroupings_HandleUnknownAndReturnCanonicalGroupName(
+        AdvisorRecommendationGroupBy groupBy,
+        string expectedGroupBy)
+    {
+        var query = RecommendationSummaryService.BuildSummaryQuery("subscription-id", null, groupBy, null);
+
+        Assert.Contains("'Unknown'", query);
+        Assert.Contains("isempty", query);
+        Assert.EndsWith("summarize count() by key, label", query);
+        Assert.Equal(
+            groupBy != AdvisorRecommendationGroupBy.Status,
+            query.Contains(RecommendationQueryBuilder.ActiveRecommendationClause, StringComparison.Ordinal));
+
+        using var document = JsonDocument.Parse("[]");
+        var summary = RecommendationSummaryService.ParseSummary(groupBy, document.RootElement);
+
+        Assert.Equal(expectedGroupBy, summary.GroupBy);
+        Assert.Equal(0, summary.TotalRecommendations);
+        Assert.Empty(summary.Groups);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(999)]
+    public void BuildSummaryQuery_UnsupportedGroupBy_Throws(int groupBy)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            RecommendationSummaryService.BuildSummaryQuery(
+                "subscription-id", null, (AdvisorRecommendationGroupBy)groupBy, null));
     }
 
     [Fact]
@@ -37,7 +76,7 @@ public class RecommendationSummaryServiceTests
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
             "rg-name",
-            "category",
+            AdvisorRecommendationGroupBy.Category,
             null);
 
         Assert.Contains("subscriptionId =~ 'subscription-id'", query);
@@ -59,7 +98,7 @@ public class RecommendationSummaryServiceTests
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
             null,
-            "recommendation-type",
+            AdvisorRecommendationGroupBy.RecommendationType,
             null);
 
         Assert.Contains("tolower(tostring(properties.recommendationTypeId))", query);
@@ -75,7 +114,7 @@ public class RecommendationSummaryServiceTests
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
             null,
-            "resource-type",
+            AdvisorRecommendationGroupBy.ResourceType,
             new RecommendationFilters(ResourceType: "Microsoft.Web/sites"));
 
         Assert.DoesNotContain("join kind=leftouter", query);
@@ -87,15 +126,18 @@ public class RecommendationSummaryServiceTests
     }
 
     [Fact]
-    public void BuildSummaryQuery_ResourceTypeWithImpactFilter_UsesMetadataJoin()
+    public void BuildSummaryQuery_ResourceTypeWithMetadataFilters_UsesMetadataJoin()
     {
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
             null,
-            "resource-type",
-            new RecommendationFilters(Impact: "High"));
+            AdvisorRecommendationGroupBy.ResourceType,
+            new RecommendationFilters(
+                Category: AdvisorRecommendationCategory.Security,
+                Impact: AdvisorRecommendationImpact.High));
 
         Assert.Contains("join kind=leftouter", query);
+        Assert.Contains("where category =~ 'Security'", query);
         Assert.Contains("where impact =~ 'High'", query);
         Assert.Contains("extend resourceType =", query);
     }
@@ -106,7 +148,7 @@ public class RecommendationSummaryServiceTests
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
             null,
-            "status",
+            AdvisorRecommendationGroupBy.Status,
             null);
 
         Assert.DoesNotContain(RecommendationQueryBuilder.ActiveRecommendationClause, query);
@@ -122,7 +164,7 @@ public class RecommendationSummaryServiceTests
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
             null,
-            "retirement-date",
+            AdvisorRecommendationGroupBy.RetirementDate,
             null);
 
         Assert.Contains("subCategory =~ 'ServiceUpgradeAndRetirement'", query);
@@ -138,7 +180,7 @@ public class RecommendationSummaryServiceTests
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
             null,
-            "impact",
+            AdvisorRecommendationGroupBy.Impact,
             new RecommendationFilters(
                 RetirementDateOperator: "le",
                 RetirementDate: new DateOnly(2026, 12, 31)));
@@ -153,7 +195,7 @@ public class RecommendationSummaryServiceTests
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "sub'|id",
             "rg'|name",
-            "resource-type",
+            AdvisorRecommendationGroupBy.ResourceType,
             new RecommendationFilters(Search: "it's|unsafe"));
 
         Assert.DoesNotContain("sub'|id", query);
@@ -177,7 +219,7 @@ public class RecommendationSummaryServiceTests
             """);
 
         var summary = RecommendationSummaryService.ParseSummary(
-            "category",
+            AdvisorRecommendationGroupBy.Category,
             document.RootElement);
 
         Assert.Equal(11, summary.TotalRecommendations);
@@ -197,7 +239,7 @@ public class RecommendationSummaryServiceTests
             """);
 
         var summary = RecommendationSummaryService.ParseSummary(
-            "retirement-date",
+            AdvisorRecommendationGroupBy.RetirementDate,
             document.RootElement);
 
         Assert.Equal(
@@ -217,7 +259,7 @@ public class RecommendationSummaryServiceTests
             """);
 
         var summary = RecommendationSummaryService.ParseSummary(
-            "recommendation-type",
+            AdvisorRecommendationGroupBy.RecommendationType,
             document.RootElement);
 
         var group = Assert.Single(summary.Groups);
@@ -233,7 +275,7 @@ public class RecommendationSummaryServiceTests
             """[{ "key": "Security", "label": "Security", "count_": 2147483648 }]""");
 
         Assert.Throws<OverflowException>(() =>
-            RecommendationSummaryService.ParseSummary("category", document.RootElement));
+            RecommendationSummaryService.ParseSummary(AdvisorRecommendationGroupBy.Category, document.RootElement));
     }
 
     [Theory]
@@ -260,7 +302,7 @@ public class RecommendationSummaryServiceTests
             RecommendationSummaryService.BuildSummaryQuery(
                 "subscription-id",
                 null,
-                "impact",
+                AdvisorRecommendationGroupBy.Impact,
                 filters));
     }
 }

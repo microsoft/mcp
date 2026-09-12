@@ -35,7 +35,7 @@ public class AppLensService(IAzureService azureService)
         string resource,
         string? subscription = null,
         string? resourceGroup = null,
-        string? resourceType = null,
+        AppLensResourceType? resourceType = null,
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
@@ -78,7 +78,7 @@ public class AppLensService(IAzureService azureService)
         string resourceName,
         string? subscription,
         string? resourceGroup,
-        string? resourceType,
+        AppLensResourceType? resourceType,
         string? tenantId,
         CancellationToken cancellationToken)
     {
@@ -117,10 +117,11 @@ public class AppLensService(IAzureService azureService)
         }
 
         // Progressive filtering by resource type
-        if (!string.IsNullOrEmpty(resourceType))
+        if (resourceType is { } specifiedResourceType)
         {
+            var resourceTypeValue = specifiedResourceType.ToResourceType();
             var typeFiltered = filteredResults
-                .Where(r => r.ResourceType.Equals(resourceType, StringComparison.OrdinalIgnoreCase))
+                .Where(r => r.ResourceType.Equals(resourceTypeValue, StringComparison.OrdinalIgnoreCase))
                 .ToImmutableArray();
 
             if (typeFiltered.Length == 0)
@@ -130,7 +131,7 @@ public class AppLensService(IAzureService azureService)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .Select(t => $"- {t}"));
                 return new DidNotFindResourceResult(
-                    $"Found resources with name '{resourceName}' but not of type '{resourceType}'.\n" +
+                    $"Found resources with name '{resourceName}' but not of type '{resourceTypeValue}'.\n" +
                     $"Found resources of the following types:\n{foundTypes}");
             }
 
@@ -259,9 +260,9 @@ public class AppLensService(IAzureService azureService)
     /// </summary>
     internal static IEnumerable<string> SupportedResourceTypes()
     {
-        yield return "microsoft.web/sites";
-        yield return "microsoft.containerservice/managedclusters";
-        yield return "microsoft.apimanagement/service";
+        yield return AppLensResourceType.AppService.ToResourceType();
+        yield return AppLensResourceType.Aks.ToResourceType();
+        yield return AppLensResourceType.ApiManagement.ToResourceType();
     }
 
     private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null, CancellationToken cancellationToken = default)

@@ -78,7 +78,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -134,7 +134,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -167,7 +167,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new JsonException("Invalid JSON format"));
@@ -204,7 +204,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException($"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'."));
@@ -246,7 +246,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                Arg.Any<EventSchema?>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
@@ -295,7 +295,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Is<string?>(resourceGroup => resourceGroup == null), // Resource group should be null
             Arg.Is(topicName),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -342,7 +342,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
             Arg.Any<string>(),
-            Arg.Is("CloudEvents"), // Verify CloudEvents schema is passed
+            Arg.Is(EventSchema.CloudEvents),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -390,7 +390,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
             Arg.Any<string>(),
-            Arg.Is("Custom"), // Verify Custom schema is passed
+            Arg.Is(EventSchema.Custom),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -411,10 +411,10 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
     }
 
     [Theory]
-    [InlineData("EventGrid")]
-    [InlineData("CloudEvents")]
-    [InlineData("Custom")]
-    public async Task ExecuteAsync_WithDifferentSchemas_PassesSchemaCorrectly(string schema)
+    [InlineData("EventGrid", EventSchema.EventGrid)]
+    [InlineData("CloudEvents", EventSchema.CloudEvents)]
+    [InlineData("Custom", EventSchema.Custom)]
+    public async Task ExecuteAsync_WithDifferentSchemas_PassesSchemaCorrectly(string schema, EventSchema expectedSchema)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -455,7 +455,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is(schema), // Verify the schema parameter is passed correctly
+            Arg.Is(expectedSchema),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -498,7 +498,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is<string?>(schema => schema == null), // Should be null when not specified
+            Arg.Is<EventSchema?>(schema => schema == null),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -533,7 +533,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Access denied to Event Grid topic"));
@@ -564,16 +564,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             dataVersion = "1.0"
         });
 
-        Service.PublishEventAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom."));
-
         // Act
         var response = await ExecuteCommandAsync(
             "--subscription", subscriptionId,
@@ -584,7 +574,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid event schema", response.Message);
+        Assert.Contains("InvalidSchema", response.Message);
     }
 
     [Fact]
@@ -606,7 +596,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "Invalid event data or schema format"));
@@ -668,7 +658,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<EventSchema?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -713,7 +703,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("CloudEvents"),
+            Arg.Is(EventSchema.CloudEvents),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -762,7 +752,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("CloudEvents"),
+            Arg.Is(EventSchema.CloudEvents),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -809,7 +799,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("Custom"),
+            Arg.Is(EventSchema.Custom),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -828,16 +818,16 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
     }
 
     [Theory]
-    [InlineData("cloudevents")]
-    [InlineData("CLOUDEVENTS")]
-    [InlineData("CloudEvents")]
-    [InlineData("eventgrid")]
-    [InlineData("EVENTGRID")]
-    [InlineData("EventGrid")]
-    [InlineData("custom")]
-    [InlineData("CUSTOM")]
-    [InlineData("Custom")]
-    public async Task ExecuteAsync_WithSchemaNameCaseInsensitive_ReturnsSuccess(string schema)
+    [InlineData("cloudevents", EventSchema.CloudEvents)]
+    [InlineData("CLOUDEVENTS", EventSchema.CloudEvents)]
+    [InlineData("CloudEvents", EventSchema.CloudEvents)]
+    [InlineData("eventgrid", EventSchema.EventGrid)]
+    [InlineData("EVENTGRID", EventSchema.EventGrid)]
+    [InlineData("EventGrid", EventSchema.EventGrid)]
+    [InlineData("custom", EventSchema.Custom)]
+    [InlineData("CUSTOM", EventSchema.Custom)]
+    [InlineData("Custom", EventSchema.Custom)]
+    public async Task ExecuteAsync_WithSchemaNameCaseInsensitive_ReturnsSuccess(string schema, EventSchema expectedSchema)
     {
         // Arrange - Test that schema names are case insensitive
         var subscriptionId = "test-sub";
@@ -863,7 +853,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is(schema),
+            Arg.Is(expectedSchema),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -921,7 +911,7 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Is("Custom"),
+            Arg.Is(EventSchema.Custom),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);

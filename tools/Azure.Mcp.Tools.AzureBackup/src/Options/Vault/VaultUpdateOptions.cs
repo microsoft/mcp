@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
@@ -20,7 +21,7 @@ public sealed class VaultUpdateOptions : BaseAzureBackupOptions
     public string? ImmutabilityState { get; set; }
 
     [Option(Description = "Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.")]
-    public string? IdentityType { get; set; }
+    public AzureBackupManagedIdentityType? IdentityType { get; set; }
 
     [Option(Description = "Resource tags as JSON key-value object.")]
     public string? Tags { get; set; }

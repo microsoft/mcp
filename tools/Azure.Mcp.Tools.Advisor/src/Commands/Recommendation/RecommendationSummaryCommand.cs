@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Azure.Mcp.Tools.Advisor.Validation;
@@ -52,15 +53,10 @@ public sealed class RecommendationSummaryCommand(
     {
         base.ValidateOptions(options, validationResult);
 
-        var normalizedGroupBy = options.GroupBy?.Trim();
-        if (options.GroupBy is not null &&
-            (string.IsNullOrEmpty(normalizedGroupBy) ||
-             !RecommendationSummaryService.AllowedGroupBy.Contains(
-                 normalizedGroupBy,
-                 StringComparer.OrdinalIgnoreCase)))
+        if (options.GroupBy is { } groupBy && !Enum.IsDefined(groupBy))
         {
             validationResult.Errors.Add(
-                $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", RecommendationSummaryService.AllowedGroupBy)}.");
+                $"Invalid --group-by value '{groupBy}'. Allowed values: {string.Join(", ", Enum.GetValues<AdvisorRecommendationGroupBy>().Select(value => value.ToValue()))}.");
         }
 
         if (options.Top is < MinTop or > MaxTop)
@@ -78,16 +74,12 @@ public sealed class RecommendationSummaryCommand(
             options.Search,
             options.SubCategory,
             options.RetirementDate,
-            serviceRetirementOnly: normalizedGroupBy?.Equals(
-                RecommendationSummaryService.GroupByRetirementDate,
-                StringComparison.OrdinalIgnoreCase) == true);
+            serviceRetirementOnly: options.GroupBy == AdvisorRecommendationGroupBy.RetirementDate);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationSummaryOptions options, CancellationToken cancellationToken)
     {
-        var groupBy = string.IsNullOrWhiteSpace(options.GroupBy)
-            ? RecommendationSummaryService.GroupByCategory
-            : options.GroupBy.Trim().ToLowerInvariant();
+        var groupBy = options.GroupBy ?? AdvisorRecommendationGroupBy.Category;
 
         try
         {
@@ -98,12 +90,8 @@ public sealed class RecommendationSummaryCommand(
                 out _);
 
             var filters = new Models.RecommendationFilters(
-                Category: RecommendationFilterValidator.NormalizeAllowedValue(
-                    options.Category,
-                    RecommendationFilterValidator.AllowedCategories),
-                Impact: RecommendationFilterValidator.NormalizeAllowedValue(
-                    options.Impact,
-                    RecommendationFilterValidator.AllowedImpacts),
+                Category: options.Category,
+                Impact: options.Impact,
                 RecommendationTypeId: RecommendationFilterValidator.NormalizeRecommendationTypeId(
                     options.RecommendationTypeId),
                 ResourceType: NormalizeOptionalFilter(options.ResourceType),

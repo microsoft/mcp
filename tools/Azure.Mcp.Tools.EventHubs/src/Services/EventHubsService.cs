@@ -157,7 +157,7 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         string subscription,
         string? location = null,
         string? skuName = null,
-        string? skuTier = null,
+        NamespaceSkuTier? skuTier = null,
         int? skuCapacity = null,
         bool? isAutoInflateEnabled = null,
         int? maximumThroughputUnits = null,
@@ -188,15 +188,13 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         {
             namespaceData.Sku = new ResourceManager.EventHubs.Models.EventHubsSku(skuName)
             {
-                Tier = skuTier?.ToUpperInvariant() switch
+                Tier = skuTier switch
                 {
-                    "BASIC" => EventHubsSkuTier.Basic,
-                    "STANDARD" => EventHubsSkuTier.Standard,
-                    "PREMIUM" => EventHubsSkuTier.Premium,
-                    null or "" => EventHubsSkuTier.Standard,
-                    _ => throw new ArgumentException(
-                        $"Invalid SKU tier '{skuTier}'. Valid values: Basic, Standard, Premium.",
-                        nameof(skuTier))
+                    NamespaceSkuTier.Basic => EventHubsSkuTier.Basic,
+                    NamespaceSkuTier.Standard => EventHubsSkuTier.Standard,
+                    NamespaceSkuTier.Premium => EventHubsSkuTier.Premium,
+                    null => EventHubsSkuTier.Standard,
+                    _ => throw new ArgumentOutOfRangeException(nameof(skuTier), skuTier, null)
                 },
                 Capacity = skuCapacity
             };
@@ -381,7 +379,7 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         string subscription,
         int? partitionCount = null,
         long? messageRetentionInHours = null,
-        string? status = null,
+        EventHubStatus? status = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -458,20 +456,18 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
 
         if (status is not null)
         {
-            eventHubData.Status = status.ToUpperInvariant() switch
+            eventHubData.Status = status switch
             {
-                "ACTIVE" => EventHubEntityStatus.Active,
-                "DISABLED" => EventHubEntityStatus.Disabled,
-                "RESTORING" => EventHubEntityStatus.Restoring,
-                "SENDDISABLED" => EventHubEntityStatus.SendDisabled,
-                "RECEIVEDISABLED" => EventHubEntityStatus.ReceiveDisabled,
-                "CREATING" => EventHubEntityStatus.Creating,
-                "DELETING" => EventHubEntityStatus.Deleting,
-                "RENAMING" => EventHubEntityStatus.Renaming,
-                "UNKNOWN" => EventHubEntityStatus.Unknown,
-                _ => throw new ArgumentException(
-                    $"Invalid status '{status}'. Valid values: Active, Disabled, Restoring, SendDisabled, ReceiveDisabled, Creating, Deleting, Renaming, Unknown.",
-                    nameof(status))
+                EventHubStatus.Active => EventHubEntityStatus.Active,
+                EventHubStatus.Disabled => EventHubEntityStatus.Disabled,
+                EventHubStatus.Restoring => EventHubEntityStatus.Restoring,
+                EventHubStatus.SendDisabled => EventHubEntityStatus.SendDisabled,
+                EventHubStatus.ReceiveDisabled => EventHubEntityStatus.ReceiveDisabled,
+                EventHubStatus.Creating => EventHubEntityStatus.Creating,
+                EventHubStatus.Deleting => EventHubEntityStatus.Deleting,
+                EventHubStatus.Renaming => EventHubEntityStatus.Renaming,
+                EventHubStatus.Unknown => EventHubEntityStatus.Unknown,
+                _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
             };
         }
         else if (existingData?.Status is not null)

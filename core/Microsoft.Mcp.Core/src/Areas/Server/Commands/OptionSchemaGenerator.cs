@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
@@ -39,6 +40,19 @@ internal static class OptionSchemaGenerator
     private static readonly JsonSchemaExporterOptions ExporterOptions = new()
     {
         TreatNullObliviousAsNonNullable = true,
+        TransformSchemaNode = static (context, schema) =>
+        {
+            var type = context.TypeInfo.Type;
+            var nullableType = Nullable.GetUnderlyingType(type);
+            if ((nullableType ?? type).IsEnum && schema is JsonObject schemaObject && !schemaObject.ContainsKey("type"))
+            {
+                schemaObject["type"] = nullableType is null
+                    ? "string"
+                    : new JsonArray("string", "null");
+            }
+
+            return schema;
+        },
     };
 
     private static readonly JsonSchemaExporterOptions OutputExporterOptions = new()
@@ -106,7 +120,7 @@ internal static class OptionSchemaGenerator
         foreach (var option in options)
         {
             var propName = NameNormalization.NormalizeOptionName(option.Name);
-            properties[propName] = CreatePropertySchema(option.ValueType, option.Description);
+            properties[propName] = CreatePropertySchema(OptionTypeHandler.GetDeclaredType(option), option.Description);
 
             if (option.Required)
             {

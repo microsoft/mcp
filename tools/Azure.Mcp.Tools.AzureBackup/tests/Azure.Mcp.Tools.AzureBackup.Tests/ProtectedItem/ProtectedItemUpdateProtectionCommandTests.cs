@@ -34,7 +34,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(VmId),
             Arg.Is<string?>("NewPolicy"),
             Arg.Is<DiskExclusionSpec?>(s => s == null),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", "ConfigureBackup started"));
 
@@ -61,7 +61,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", null));
 
@@ -77,7 +77,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(capturedSpec);
-        Assert.Equal("exclude", capturedSpec!.Setting);
+        Assert.Equal(AzureBackupDiskListSetting.Exclude, capturedSpec!.Setting);
         Assert.Equal("0,2", capturedSpec.DiskLunsCsv);
     }
 
@@ -91,7 +91,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Do<string?>(p => capturedPolicy = p),
             Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", null));
 
@@ -109,7 +109,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("NewPolicy", capturedPolicy);
         Assert.NotNull(capturedSpec);
-        Assert.Equal("include", capturedSpec!.Setting);
+        Assert.Equal(AzureBackupDiskListSetting.Include, capturedSpec!.Setting);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProtectResult("InProgress", "vm1-backup", "job123", null));
 
@@ -136,7 +136,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(capturedSpec);
-        Assert.Equal("resetexclusionsettings", capturedSpec!.Setting);
+        Assert.Equal(AzureBackupDiskListSetting.ResetExclusionSettings, capturedSpec!.Setting);
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         await Service.DidNotReceive().UpdateProtectionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -179,7 +179,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         Service.UpdateProtectionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("update-protection is only supported for RSV IaaS VM protected items."));
 
@@ -203,7 +203,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         Service.UpdateProtectionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "AuthorizationFailed"));
 
@@ -227,7 +227,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         Service.UpdateProtectionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "NotFound"));
 
@@ -286,7 +286,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         await Service.DidNotReceive().UpdateProtectionAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 }

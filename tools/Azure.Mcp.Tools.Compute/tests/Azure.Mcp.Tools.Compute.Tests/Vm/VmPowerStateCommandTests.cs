@@ -49,7 +49,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                Arg.Any<VmPowerAction>(),
                 Arg.Any<bool>(),
                 Arg.Any<bool>(),
                 Arg.Any<string?>(),
@@ -72,11 +72,11 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
     }
 
     [Theory]
-    [InlineData("start")]
-    [InlineData("stop")]
-    [InlineData("deallocate")]
-    [InlineData("restart")]
-    public async Task ExecuteAsync_ChangesVmPowerState(string powerAction)
+    [InlineData("start", VmPowerAction.Start)]
+    [InlineData("stop", VmPowerAction.Stop)]
+    [InlineData("deallocate", VmPowerAction.Deallocate)]
+    [InlineData("restart", VmPowerAction.Restart)]
+    public async Task ExecuteAsync_ChangesVmPowerState(string powerAction, VmPowerAction expectedPowerAction)
     {
         // Arrange
         var expectedResult = new VmPowerStateResult(
@@ -87,7 +87,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
-            Arg.Is(powerAction),
+            Arg.Is(expectedPowerAction),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -118,7 +118,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
-            Arg.Is("start"),
+            Arg.Is(VmPowerAction.Start),
             Arg.Is(true),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -141,7 +141,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             _knownVmName,
             _knownResourceGroup,
             _knownSubscription,
-            "start",
+            VmPowerAction.Start,
             true,
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -160,7 +160,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Is(_knownVmName),
             Arg.Is(_knownResourceGroup),
             Arg.Is(_knownSubscription),
-            Arg.Is("stop"),
+            Arg.Is(VmPowerAction.Stop),
             Arg.Any<bool>(),
             Arg.Is(true),
             Arg.Any<string?>(),
@@ -182,7 +182,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             _knownVmName,
             _knownResourceGroup,
             _knownSubscription,
-            "stop",
+            VmPowerAction.Stop,
             Arg.Any<bool>(),
             true,
             Arg.Any<string?>(),
@@ -199,7 +199,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<VmPowerAction>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -228,7 +228,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<VmPowerAction>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -257,7 +257,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<VmPowerAction>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
@@ -287,7 +287,7 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<VmPowerAction>(),
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),

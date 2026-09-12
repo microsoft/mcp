@@ -4,6 +4,8 @@
 using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Options;
 using Xunit;
@@ -57,12 +59,26 @@ public sealed class OptionBinderTests
         Blue,
     }
 
+    private enum CustomNamedColor
+    {
+        [JsonStringEnumMemberName("bright-red")]
+        Red,
+        [JsonStringEnumMemberName("deep-blue")]
+        Blue,
+    }
+
     private sealed class EnumOptions
     {
         [Option(Description = "The color of the item.")]
         public Color Color { get; set; }
         [Option(Description = "The background color of the item.")]
         public Color? Background { get; set; }
+    }
+
+    private sealed class CustomNamedEnumOptions
+    {
+        [Option(Description = "The custom-named color of the item.")]
+        public CustomNamedColor Color { get; set; }
     }
 
     private sealed class ArrayEnumOptions
@@ -249,6 +265,19 @@ public sealed class OptionBinderTests
     }
 
     [Fact]
+    public void RegisterOptions_EnumWithCustomNames_GeneratesEnumSchema()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<CustomNamedEnumOptions>(command);
+
+        var schema = OptionSchemaGenerator.CreateInputSchema(command.Options.ToList());
+        var enumValues = schema["properties"]?["color"]?["enum"]?.AsArray();
+
+        Assert.NotNull(enumValues);
+        Assert.Equal(["bright-red", "deep-blue"], enumValues.Select(value => value!.GetValue<string>()));
+    }
+
+    [Fact]
     public void RegisterOptions_ArrayEnum_RegistersAsStringArrayOption()
     {
         var command = new Command("test");
@@ -407,10 +436,22 @@ public sealed class OptionBinderTests
         var command = new Command("test");
         OptionBinder.RegisterOptions<EnumOptions>(command);
 
-        var parseResult = command.Parse("--color ReD");
+        var parseResult = command.Parse("--color \"  ReD  \"");
         var options = OptionBinder.BindOptions<EnumOptions>(parseResult);
 
         Assert.Equal(Color.Red, options.Color);
+    }
+
+    [Fact]
+    public void BindOptions_EnumWithCustomNames_BindsCaseInsensitive()
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<CustomNamedEnumOptions>(command);
+
+        var parseResult = command.Parse("--color \"  BRIGHT-RED  \"");
+        var options = OptionBinder.BindOptions<CustomNamedEnumOptions>(parseResult);
+
+        Assert.Equal(CustomNamedColor.Red, options.Color);
     }
 
     [Fact]

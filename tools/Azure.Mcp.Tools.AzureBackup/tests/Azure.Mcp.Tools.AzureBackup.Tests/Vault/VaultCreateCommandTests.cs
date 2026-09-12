@@ -28,8 +28,8 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
     {
         // Arrange
         Service.CreateVaultAsync(
-            Arg.Is("myVault"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("myVault"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(AzureBackupVaultType.Rsv), Arg.Is("eastus"),
+            Arg.Any<string?>(), Arg.Any<AzureBackupStorageType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new VaultCreateResult("id1", "myVault", "rsv", "eastus", "Succeeded"));
 
         // Act
@@ -51,8 +51,8 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
     {
         // Arrange
         Service.CreateVaultAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(AzureBackupVaultType.Rsv), Arg.Is("eastus"),
+            Arg.Any<string?>(), Arg.Any<AzureBackupStorageType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -76,8 +76,8 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         if (shouldSucceed)
         {
             Service.CreateVaultAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(AzureBackupVaultType.Rsv), Arg.Is("eastus"),
+                Arg.Any<string?>(), Arg.Any<AzureBackupStorageType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new VaultCreateResult("id", "v", "rsv", "eastus", "Succeeded"));
         }
 
@@ -93,6 +93,43 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         {
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
+    }
+
+    [Theory]
+    [InlineData("GeoRedundant")]
+    [InlineData("LocallyRedundant")]
+    [InlineData("ZoneRedundant")]
+    public async Task ExecuteAsync_AcceptsValidStorageType(string storageType)
+    {
+        Service.CreateVaultAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AzureBackupVaultType>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<AzureBackupStorageType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new VaultCreateResult("id", "v", "dpp", "eastus", "Succeeded"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--vault-type", "dpp",
+            "--location", "eastus",
+            "--storage-type", storageType);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidStorageType()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--vault-type", "dpp",
+            "--location", "eastus",
+            "--storage-type", "Invalid");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid --storage-type", response.Message);
     }
 
     [Fact]

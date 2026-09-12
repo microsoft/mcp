@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppService.Models;
+using Azure.Mcp.Tools.AppService.Options.Database;
+using Azure.Mcp.Tools.AppService.Options.Webapp;
+using Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 
 namespace Azure.Mcp.Tools.AppService.Services;
 
@@ -10,7 +13,7 @@ public interface IAppServiceService
     Task<DatabaseConnectionInfo> AddDatabaseAsync(
         string appName,
         string resourceGroup,
-        string databaseType,
+        DatabaseConnectionType databaseType,
         string databaseServer,
         string databaseName,
         string connectionString,
@@ -37,7 +40,7 @@ public interface IAppServiceService
         string resourceGroup,
         string appName,
         string settingName,
-        string settingUpdateType,
+        AppSettingUpdateType settingUpdateType,
         string? settingValue = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
@@ -72,7 +75,7 @@ public interface IAppServiceService
         string subscription,
         string resourceGroup,
         string appName,
-        string stateChange,
+        WebappStateChange stateChange,
         bool softRestart,
         bool waitForCompletion,
         string? tenant = null,

@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
+using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Tests.Client;
@@ -32,7 +33,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args)
     {
         // Arrange
-        Service.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(Arg.Any<PlatformLandingZoneScenario>(), Arg.Any<CancellationToken>())
             .Returns("Sample guidance response");
 
         // Act
@@ -48,7 +49,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     public async Task ExecuteAsync_ReturnsGuidance_ForValidScenario()
     {
         // Arrange
-        Service.GetGuidanceAsync("bastion", Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(PlatformLandingZoneScenario.Bastion, Arg.Any<CancellationToken>())
             .Returns("Bastion guidance: To enable Bastion, configure...");
 
         // Act
@@ -64,7 +65,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        Service.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(Arg.Any<PlatformLandingZoneScenario>(), Arg.Any<CancellationToken>())
             .Returns("DDoS guidance: To enable DDoS protection...");
 
         // Act
@@ -80,7 +81,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     public async Task ExecuteAsync_WithPolicyName_SearchesForPolicies()
     {
         // Arrange
-        Service.GetGuidanceAsync("policy-enforcement", Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(PlatformLandingZoneScenario.PolicyEnforcement, Arg.Any<CancellationToken>())
             .Returns("Policy enforcement guidance...");
 
         Service.SearchPoliciesAsync("ddos", Arg.Any<CancellationToken>())
@@ -101,7 +102,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     public async Task ExecuteAsync_WithListPolicies_ReturnsAllPolicies()
     {
         // Arrange
-        Service.GetGuidanceAsync("policy-assignment", Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(PlatformLandingZoneScenario.PolicyAssignment, Arg.Any<CancellationToken>())
             .Returns("Policy assignment guidance...");
 
         Service.GetAllPoliciesAsync(Arg.Any<CancellationToken>())
@@ -127,7 +128,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     public async Task ExecuteAsync_PolicyNotFound_SuggestsListPolicies()
     {
         // Arrange
-        Service.GetGuidanceAsync("policy-enforcement", Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(PlatformLandingZoneScenario.PolicyEnforcement, Arg.Any<CancellationToken>())
             .Returns("Policy enforcement guidance...");
 
         Service.SearchPoliciesAsync("nonexistent", Arg.Any<CancellationToken>())
@@ -148,7 +149,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     {
         // Arrange
         var expectedException = new InvalidOperationException("Service error occurred");
-        Service.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(Arg.Any<PlatformLandingZoneScenario>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
         // Act
@@ -172,7 +173,7 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     {
         // Arrange
         var httpException = new HttpRequestException("Network error", null, HttpStatusCode.ServiceUnavailable);
-        Service.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        Service.GetGuidanceAsync(Arg.Any<PlatformLandingZoneScenario>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(httpException);
 
         // Act
@@ -192,25 +193,15 @@ public class GetGuidanceCommandTests : CommandUnitTestsBase<GetGuidanceCommand, 
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesArgumentException()
+    public async Task ExecuteAsync_RejectsUnsupportedScenario()
     {
-        // Arrange
-        var argumentException = new ArgumentException("Invalid scenario", "scenario");
-        Service.GetGuidanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(argumentException);
-
-        // Act
         var response = await ExecuteCommandAsync("--scenario", "invalid-scenario");
 
-        // Assert
-        Assert.NotEqual(HttpStatusCode.OK, response.Status);
-
-        // Verify error was logged
-        Logger.Received(1).Log(
-            LogLevel.Error,
-            Arg.Any<EventId>(),
-            Arg.Any<object>(),
-            argumentException,
-            Arg.Any<Func<object, Exception?, string>>());
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid --scenario", response.Message);
+        Assert.Contains("Must be one of", response.Message);
+        await Service.DidNotReceive().GetGuidanceAsync(
+            Arg.Any<PlatformLandingZoneScenario>(),
+            Arg.Any<CancellationToken>());
     }
 }

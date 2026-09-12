@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureMigrate.Constants;
+using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
@@ -25,36 +26,37 @@ public sealed class PlatformLandingZoneGuidanceService(
     /// <summary>
     /// Available ALZ modification scenarios with their documentation URLs.
     /// </summary>
-    public static readonly FrozenDictionary<string, ScenarioInfo> Scenarios = new Dictionary<string, ScenarioInfo>(StringComparer.OrdinalIgnoreCase)
+    public static readonly FrozenDictionary<PlatformLandingZoneScenario, ScenarioInfo> Scenarios = new Dictionary<PlatformLandingZoneScenario, ScenarioInfo>
     {
-        ["resource-names"] = new("Customise Resource Names", "resource-names.md", "Update starter module resource naming prefixes and suffixes."),
-        ["management-groups"] = new("Customize Management Group Names and IDs", "management-groups.md", "Adjust management group IDs/names while keeping hierarchy consistent."),
-        ["ddos"] = new("Configure DDoS Protection Plan", "ddos.md", "Enable or disable the optional DDoS standard plan resources."),
-        ["bastion"] = new("Turn off Bastion host", "bastion.md", "Remove Azure Bastion resources from the platform landing zone."),
-        ["dns"] = new("Turn off Private DNS zones and resolvers", "dns.md", "Exclude Private DNS zones/resolvers from the deployment."),
-        ["gateways"] = new("Turn off Virtual Network Gateways", "gateways.md", "Skip VPN/ExpressRoute gateway deployments."),
-        ["regions"] = new("Additional Regions", "regions.md", "Add or remove secondary regions for hub deployments."),
-        ["ip-addresses"] = new("IP Address Ranges", "ip-addresses.md", "Adjust CIDR ranges used by the network topology."),
-        ["policy-enforcement"] = new("Change policy enforcement mode", "policy-enforcement.md", "Move a policy assignment into DoNotEnforce/Disabled mode."),
-        ["policy-assignment"] = new("Remove/Disable a policy assignment", "policy-assignment.md", "Add entries to policy_assignments_to_remove in override files."),
-        ["ama"] = new("Turn off Azure Monitoring Agent", "ama.md", "Stop deploying AMA extensions and dependencies."),
-        ["amba"] = new("Deploy Azure Monitoring Baseline Alerts", "amba.md", "Enable AMBA components through configuration blocks."),
-        ["defender"] = new("Turn off Defender Plans", "defender.md", "Disable specific Microsoft Defender plan enablement."),
-        ["zero-trust"] = new("Implement Zero Trust Networking", "zero-trust.md", "Apply zero-trust configuration guidance from the accelerator."),
-        ["slz"] = new("Implement Sovereign Landing Zone controls", "slz.md", "Apply SLZ-specific guardrails and parameters.")
-    }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+        [PlatformLandingZoneScenario.ResourceNames] = new("Customise Resource Names", "resource-names.md", "Update starter module resource naming prefixes and suffixes."),
+        [PlatformLandingZoneScenario.ManagementGroups] = new("Customize Management Group Names and IDs", "management-groups.md", "Adjust management group IDs/names while keeping hierarchy consistent."),
+        [PlatformLandingZoneScenario.Ddos] = new("Configure DDoS Protection Plan", "ddos.md", "Enable or disable the optional DDoS standard plan resources."),
+        [PlatformLandingZoneScenario.Bastion] = new("Turn off Bastion host", "bastion.md", "Remove Azure Bastion resources from the platform landing zone."),
+        [PlatformLandingZoneScenario.Dns] = new("Turn off Private DNS zones and resolvers", "dns.md", "Exclude Private DNS zones/resolvers from the deployment."),
+        [PlatformLandingZoneScenario.Gateways] = new("Turn off Virtual Network Gateways", "gateways.md", "Skip VPN/ExpressRoute gateway deployments."),
+        [PlatformLandingZoneScenario.Regions] = new("Additional Regions", "regions.md", "Add or remove secondary regions for hub deployments."),
+        [PlatformLandingZoneScenario.IpAddresses] = new("IP Address Ranges", "ip-addresses.md", "Adjust CIDR ranges used by the network topology."),
+        [PlatformLandingZoneScenario.PolicyEnforcement] = new("Change policy enforcement mode", "policy-enforcement.md", "Move a policy assignment into DoNotEnforce/Disabled mode."),
+        [PlatformLandingZoneScenario.PolicyAssignment] = new("Remove/Disable a policy assignment", "policy-assignment.md", "Add entries to policy_assignments_to_remove in override files."),
+        [PlatformLandingZoneScenario.Ama] = new("Turn off Azure Monitoring Agent", "ama.md", "Stop deploying AMA extensions and dependencies."),
+        [PlatformLandingZoneScenario.Amba] = new("Deploy Azure Monitoring Baseline Alerts", "amba.md", "Enable AMBA components through configuration blocks."),
+        [PlatformLandingZoneScenario.Defender] = new("Turn off Defender Plans", "defender.md", "Disable specific Microsoft Defender plan enablement."),
+        [PlatformLandingZoneScenario.ZeroTrust] = new("Implement Zero Trust Networking", "zero-trust.md", "Apply zero-trust configuration guidance from the accelerator."),
+        [PlatformLandingZoneScenario.Slz] = new("Implement Sovereign Landing Zone controls", "slz.md", "Apply SLZ-specific guardrails and parameters.")
+    }.ToFrozenDictionary();
 
     /// <inheritdoc/>
-    public async Task<string> GetGuidanceAsync(string scenario, CancellationToken cancellationToken = default)
+    public async Task<string> GetGuidanceAsync(PlatformLandingZoneScenario scenario, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(scenario) || !Scenarios.TryGetValue(scenario, out var info))
+        if (!Scenarios.TryGetValue(scenario, out var info))
         {
-            var available = string.Join(", ", Scenarios.Keys);
+            var available = string.Join(", ", Scenarios.Keys.Select(key => key.ToValue()));
             return $"Unknown scenario '{scenario}'. Available scenarios: {available}";
         }
 
-        return await FetchDocumentationAsync(scenario, info, cancellationToken)
-            ?? $"Could not fetch documentation for scenario '{scenario}'.";
+        var scenarioValue = scenario.ToValue();
+        return await FetchDocumentationAsync(scenarioValue, info, cancellationToken)
+            ?? $"Could not fetch documentation for scenario '{scenarioValue}'.";
     }
 
     /// <inheritdoc/>

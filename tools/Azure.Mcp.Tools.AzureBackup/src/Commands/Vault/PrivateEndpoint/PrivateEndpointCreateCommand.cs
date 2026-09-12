@@ -54,7 +54,7 @@ public sealed class PrivateEndpointCreateCommand(
                 options.Subscription!,
                 options.PrivateEndpointName,
                 options.VnetSubnetId,
-                options.GroupId ?? "AzureBackup",
+                options.GroupId ?? AzureBackupPrivateEndpointGroupId.Primary,
                 options.Location,
                 options.AutoApprove ?? false,
                 options.VaultType,

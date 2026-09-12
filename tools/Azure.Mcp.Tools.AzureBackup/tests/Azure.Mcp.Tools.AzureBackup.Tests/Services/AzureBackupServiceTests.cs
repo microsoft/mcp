@@ -145,7 +145,7 @@ public class AzureBackupServiceTests
         _rsvOps.GetVaultAsync("myVault", "rg", "22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
-        var result = await _service.GetVaultAsync("myVault", "rg", "22222222-2222-2222-2222-222222222222", vaultType: "rsv", tenant: null, cancellationToken: CancellationToken.None);
+        var result = await _service.GetVaultAsync("myVault", "rg", "22222222-2222-2222-2222-222222222222", vaultType: AzureBackupVaultType.Rsv, tenant: null, cancellationToken: CancellationToken.None);
 
         Assert.Equal("RSV", result.VaultType);
         await _dppOps.DidNotReceive().GetVaultAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>());
@@ -158,7 +158,7 @@ public class AzureBackupServiceTests
         _dppOps.GetVaultAsync("myVault", "rg", "22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedVault);
 
-        var result = await _service.GetVaultAsync("myVault", "rg", "22222222-2222-2222-2222-222222222222", vaultType: "dpp", tenant: null, cancellationToken: CancellationToken.None);
+        var result = await _service.GetVaultAsync("myVault", "rg", "22222222-2222-2222-2222-222222222222", vaultType: AzureBackupVaultType.Dpp, tenant: null, cancellationToken: CancellationToken.None);
 
         Assert.Equal("DPP", result.VaultType);
         await _rsvOps.DidNotReceive().GetVaultAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>());
@@ -326,7 +326,7 @@ public class AzureBackupServiceTests
     public async Task ListProtectableItemsAsync_DppVaultType_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: "dpp", tenant: null, cancellationToken: CancellationToken.None));
+            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: AzureBackupVaultType.Dpp, tenant: null, cancellationToken: CancellationToken.None));
 
         Assert.Contains("RSV", ex.Message);
     }
@@ -338,7 +338,7 @@ public class AzureBackupServiceTests
         _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: "rsv", tenant: null, cancellationToken: CancellationToken.None);
+        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: AzureBackupVaultType.Rsv, tenant: null, cancellationToken: CancellationToken.None);
 
         Assert.Single(result);
     }
@@ -386,7 +386,7 @@ public class AzureBackupServiceTests
         _rsvOps.GetVaultAsync("v", "rg", "22222222-2222-2222-2222-222222222222", tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new BackupVaultInfo(null, "v", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null));
         _rsvOps.CreatePolicyAsync(
-            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == "VM" && r.DailyRetentionDays == "30"),
+            Arg.Is<PolicyCreateRequest>(r => r.Policy == "p" && r.WorkloadType == AzureBackupPolicyWorkloadType.Vm && r.DailyRetentionDays == "30"),
             "v", "rg", "22222222-2222-2222-2222-222222222222",
             tenant: Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns(baseResult);
@@ -394,7 +394,7 @@ public class AzureBackupServiceTests
         var request = new PolicyCreateRequest
         {
             Policy = "p",
-            WorkloadType = "VM",
+            WorkloadType = AzureBackupPolicyWorkloadType.Vm,
             DailyRetentionDays = "30",
         };
 
@@ -413,31 +413,28 @@ public class AzureBackupServiceTests
     [Fact]
     public void VaultTypeResolver_InvalidType_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => VaultTypeResolver.ValidateVaultType("invalid"));
-        Assert.Throws<ArgumentException>(() => VaultTypeResolver.ValidateVaultType(""));
+        Assert.Throws<ArgumentException>(() => VaultTypeResolver.ValidateVaultType((AzureBackupVaultType)999));
         Assert.Throws<ArgumentException>(() => VaultTypeResolver.ValidateVaultType(null));
     }
 
     [Fact]
     public void VaultTypeResolver_IsVaultTypeSpecified_InvalidType_Throws()
     {
-        Assert.Throws<ArgumentException>(() => VaultTypeResolver.IsVaultTypeSpecified("invalid"));
+        Assert.Throws<ArgumentException>(() => VaultTypeResolver.IsVaultTypeSpecified((AzureBackupVaultType)999));
     }
 
     [Theory]
-    [InlineData("rsv", true)]
-    [InlineData("RSV", true)]
-    [InlineData("dpp", false)]
-    public void VaultTypeResolver_IsRsv_ReturnsExpected(string vaultType, bool expected)
+    [InlineData(AzureBackupVaultType.Rsv, true)]
+    [InlineData(AzureBackupVaultType.Dpp, false)]
+    public void VaultTypeResolver_IsRsv_ReturnsExpected(AzureBackupVaultType vaultType, bool expected)
     {
         Assert.Equal(expected, VaultTypeResolver.IsRsv(vaultType));
     }
 
     [Theory]
-    [InlineData("dpp", true)]
-    [InlineData("DPP", true)]
-    [InlineData("rsv", false)]
-    public void VaultTypeResolver_IsDpp_ReturnsExpected(string vaultType, bool expected)
+    [InlineData(AzureBackupVaultType.Dpp, true)]
+    [InlineData(AzureBackupVaultType.Rsv, false)]
+    public void VaultTypeResolver_IsDpp_ReturnsExpected(AzureBackupVaultType vaultType, bool expected)
     {
         Assert.Equal(expected, VaultTypeResolver.IsDpp(vaultType));
     }
@@ -640,13 +637,13 @@ public class AzureBackupServiceTests
         // Selective disk backup is a Recovery Services vault (RSV) IaaS VM concept only. If the
         // caller supplies disk-exclusion options against a DPP (Backup vault) datasource we must
         // fail fast at the routing layer BEFORE hitting DPP ops.
-        var spec = new DiskExclusionSpec("exclude", "1,2", ExcludeAllDataDisks: false);
+        var spec = new DiskExclusionSpec(AzureBackupDiskListSetting.Exclude, "1,2", ExcludeAllDataDisks: false);
 
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.ProtectItemAsync(
                 "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
-                vaultType: "DPP",
-                containerName: null, datasourceType: "AzureDisk",
+                vaultType: AzureBackupVaultType.Dpp,
+                containerName: null, datasourceType: AzureBackupDatasourceType.AzureDisk,
                 aksIncludedNamespaces: null, aksExcludedNamespaces: null,
                 aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
                 aksSnapshotResourceGroup: null,
@@ -668,14 +665,14 @@ public class AzureBackupServiceTests
         var expected = new ProtectResult("Succeeded", "vm1", null, "Protected", "ProtectionConfigured", null);
         _dppOps.ProtectItemAsync(
             "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
-            "AzureDisk", null, null, null, null, null, null,
+            AzureBackupDatasourceType.AzureDisk, null, null, null, null, null, null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var result = await _service.ProtectItemAsync(
             "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
-            vaultType: "DPP",
-            containerName: null, datasourceType: "AzureDisk",
+            vaultType: AzureBackupVaultType.Dpp,
+            containerName: null, datasourceType: AzureBackupDatasourceType.AzureDisk,
             aksIncludedNamespaces: null, aksExcludedNamespaces: null,
             aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
             aksSnapshotResourceGroup: null,
@@ -697,17 +694,17 @@ public class AzureBackupServiceTests
         var expected = new ProtectResult("Completed", "vm1", "job-1", "Protected");
         _rsvOps.ProtectItemAsync(
             "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
-            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<AzureBackupDatasourceType?>(),
             Arg.Do<DiskExclusionSpec?>(s => capturedSpec = s),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var spec = new DiskExclusionSpec("include", "0,1", ExcludeAllDataDisks: false);
+        var spec = new DiskExclusionSpec(AzureBackupDiskListSetting.Include, "0,1", ExcludeAllDataDisks: false);
 
         var result = await _service.ProtectItemAsync(
             "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
-            vaultType: "RSV",
-            containerName: null, datasourceType: "AzureVM",
+            vaultType: AzureBackupVaultType.Rsv,
+            containerName: null, datasourceType: AzureBackupDatasourceType.AzureVm,
             aksIncludedNamespaces: null, aksExcludedNamespaces: null,
             aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
             aksSnapshotResourceGroup: null,
@@ -715,7 +712,7 @@ public class AzureBackupServiceTests
 
         Assert.Equal("Completed", result.Status);
         Assert.NotNull(capturedSpec);
-        Assert.Equal("include", capturedSpec!.Setting);
+        Assert.Equal(AzureBackupDiskListSetting.Include, capturedSpec!.Setting);
         Assert.Equal("0,1", capturedSpec.DiskLunsCsv);
         Assert.False(capturedSpec.ExcludeAllDataDisks);
         await _dppOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
@@ -727,13 +724,13 @@ public class AzureBackupServiceTests
     {
         // 'update-protection' is a VM-only operation. DPP backup instances are immutable in this
         // respect - callers must delete and recreate. Reject at the routing layer.
-        var spec = new DiskExclusionSpec("include", "0", ExcludeAllDataDisks: false);
+        var spec = new DiskExclusionSpec(AzureBackupDiskListSetting.Include, "0", ExcludeAllDataDisks: false);
 
         var ex = await Assert.ThrowsAsync<NotSupportedException>(() =>
             _service.UpdateProtectionAsync(
                 "vault", "rg", SelectiveSub, SelectiveVmId,
                 policyName: null, diskExclusion: spec,
-                vaultType: "DPP", containerName: null, tenant: null,
+                vaultType: AzureBackupVaultType.Dpp, containerName: null, tenant: null,
                 cancellationToken: CancellationToken.None));
 
         Assert.Contains("update-protection", ex.Message);
@@ -756,18 +753,18 @@ public class AzureBackupServiceTests
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var spec = new DiskExclusionSpec("resetexclusionsettings", null, ExcludeAllDataDisks: false);
+        var spec = new DiskExclusionSpec(AzureBackupDiskListSetting.ResetExclusionSettings, null, ExcludeAllDataDisks: false);
 
         var result = await _service.UpdateProtectionAsync(
             "vault", "rg", SelectiveSub, SelectiveVmId,
             policyName: "new-policy", diskExclusion: spec,
-            vaultType: "RSV", containerName: null, tenant: null,
+            vaultType: AzureBackupVaultType.Rsv, containerName: null, tenant: null,
             cancellationToken: CancellationToken.None);
 
         Assert.Equal("Completed", result.Status);
         Assert.Equal("new-policy", capturedPolicy);
         Assert.NotNull(capturedSpec);
-        Assert.Equal("resetexclusionsettings", capturedSpec!.Setting);
+        Assert.Equal(AzureBackupDiskListSetting.ResetExclusionSettings, capturedSpec!.Setting);
     }
 
     #endregion

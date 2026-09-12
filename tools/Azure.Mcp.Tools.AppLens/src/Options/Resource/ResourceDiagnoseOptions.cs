@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AppLens.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppLens.Options.Resource;
@@ -33,7 +34,7 @@ public sealed class ResourceDiagnoseOptions
     /// The Resource Type of the resource to diagnose. This is optional and used to disambiguate between multiple resources with the same name.
     /// </summary>
     [Option(Description = "Resource type. Provide this when disambiguating between multiple resources of the same name.")]
-    public string? ResourceType { get; set; }
+    public AppLensResourceType? ResourceType { get; set; }
 
     /// <summary>
     /// The subscription of the resource to diagnose. This is optional and used to disambiguate between multiple resources with the same name.

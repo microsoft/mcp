@@ -35,19 +35,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
     private readonly ILogger<EventGridPublishCommand> _logger = logger;
     private readonly IEventGridService _eventGridService = eventGridService;
 
-    private static readonly string[] s_item = ["cloudevents", "eventgrid", "custom"];
-
-    public override void ValidateOptions(EventsPublishOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (!string.IsNullOrEmpty(options.Schema) &&
-            !s_item.Contains(options.Schema.Trim().ToLowerInvariant().Replace(" ", "")))
-        {
-            validationResult.Errors.Add("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.");
-        }
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, EventsPublishOptions options, CancellationToken cancellationToken)
     {
         try

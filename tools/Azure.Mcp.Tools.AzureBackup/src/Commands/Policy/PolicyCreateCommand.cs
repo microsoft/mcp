@@ -33,7 +33,7 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PolicyCreateOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType, options.WorkloadType);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType, options.WorkloadType.ToValue());
 
         var validation = Services.Policy.PolicyCreateValidator.Validate(options);
         if (!validation.IsValid)

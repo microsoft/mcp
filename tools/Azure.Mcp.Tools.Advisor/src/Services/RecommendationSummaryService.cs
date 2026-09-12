@@ -13,42 +13,18 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class RecommendationSummaryService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IRecommendationSummaryService
 {
-    internal const string GroupByRecommendationType = "recommendation-type";
-    internal const string GroupByCategory = "category";
-    internal const string GroupByImpact = "impact";
-    internal const string GroupByResourceType = "resource-type";
-    internal const string GroupByStatus = "status";
-    internal const string GroupBySubCategory = "sub-category";
-    internal const string GroupByRetirementDate = "retirement-date";
-
-    internal static readonly IReadOnlyList<string> AllowedGroupBy =
-    [
-        GroupByRecommendationType,
-        GroupByCategory,
-        GroupByImpact,
-        GroupByResourceType,
-        GroupByStatus,
-        GroupBySubCategory,
-        GroupByRetirementDate,
-    ];
-
     public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
-        string groupBy,
+        AdvisorRecommendationGroupBy groupBy,
         RecommendationFilters? filters = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
-
-        var normalizedGroupBy = groupBy.Trim().ToLowerInvariant();
-        if (!AllowedGroupBy.Contains(normalizedGroupBy, StringComparer.Ordinal))
+        if (!Enum.IsDefined(groupBy))
         {
-            throw new ArgumentException(
-                $"Unsupported group-by value '{groupBy}'. Allowed values: {string.Join(", ", AllowedGroupBy)}.",
-                nameof(groupBy));
+            throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, null);
         }
 
         var subscriptionResource = await AzureService.GetSubscription(
@@ -76,11 +52,11 @@ public class RecommendationSummaryService(IAzureService azureService)
             ?? throw new InvalidOperationException(
                 $"No accessible tenant was found for subscription '{subscription}'.");
 
-        var usesMetadata = RequiresMetadata(normalizedGroupBy, filters);
+        var usesMetadata = RequiresMetadata(groupBy, filters);
         var query = BuildSummaryQuery(
             subscriptionId,
             resourceGroup,
-            normalizedGroupBy,
+            groupBy,
             filters,
             usesMetadata);
         var queryContent = new ResourceQueryContent(query);
@@ -97,47 +73,42 @@ public class RecommendationSummaryService(IAzureService azureService)
 
         if (result.Count == 0)
         {
-            return new(normalizedGroupBy, 0, []);
+            return new(groupBy.ToValue(), 0, []);
         }
 
         using var document = JsonDocument.Parse(result.Data);
-        return ParseSummary(normalizedGroupBy, document.RootElement);
+        return ParseSummary(groupBy, document.RootElement);
     }
 
-    internal static bool RequiresMetadata(string groupBy, RecommendationFilters? filters) =>
-        groupBy is GroupByRecommendationType
-            or GroupByCategory
-            or GroupByImpact
-            or GroupBySubCategory
-            or GroupByRetirementDate ||
-        !string.IsNullOrWhiteSpace(filters?.Category) ||
-        !string.IsNullOrWhiteSpace(filters?.Impact) ||
+    internal static bool RequiresMetadata(AdvisorRecommendationGroupBy groupBy, RecommendationFilters? filters) =>
+        groupBy is AdvisorRecommendationGroupBy.RecommendationType
+            or AdvisorRecommendationGroupBy.Category
+            or AdvisorRecommendationGroupBy.Impact
+            or AdvisorRecommendationGroupBy.SubCategory
+            or AdvisorRecommendationGroupBy.RetirementDate ||
+        filters?.Category is not null ||
+        filters?.Impact is not null ||
         !string.IsNullOrWhiteSpace(filters?.SubCategory) ||
         filters?.RetirementDate is not null;
 
     internal static string BuildSummaryQuery(
         string subscriptionId,
         string? resourceGroup,
-        string groupBy,
+        AdvisorRecommendationGroupBy groupBy,
         RecommendationFilters? filters,
         bool? useMetadata = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscriptionId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
-
-        var normalizedGroupBy = groupBy.Trim().ToLowerInvariant();
-        if (!AllowedGroupBy.Contains(normalizedGroupBy, StringComparer.Ordinal))
+        if (!Enum.IsDefined(groupBy))
         {
-            throw new ArgumentException(
-                $"Unsupported group-by value '{groupBy}'. Allowed values: {string.Join(", ", AllowedGroupBy)}.",
-                nameof(groupBy));
+            throw new ArgumentOutOfRangeException(nameof(groupBy), groupBy, null);
         }
 
-        ValidateFilters(filters, normalizedGroupBy);
+        ValidateFilters(filters, groupBy);
 
-        return useMetadata ?? RequiresMetadata(normalizedGroupBy, filters)
-            ? BuildMetadataSummaryQuery(subscriptionId, resourceGroup, normalizedGroupBy, filters)
-            : BuildInstanceSummaryQuery(subscriptionId, resourceGroup, normalizedGroupBy, filters);
+        return useMetadata ?? RequiresMetadata(groupBy, filters)
+            ? BuildMetadataSummaryQuery(subscriptionId, resourceGroup, groupBy, filters)
+            : BuildInstanceSummaryQuery(subscriptionId, resourceGroup, groupBy, filters);
     }
 
     internal static void EnsureCompleteResult(bool isTruncated, string? skipToken)
@@ -149,7 +120,7 @@ public class RecommendationSummaryService(IAzureService azureService)
         }
     }
 
-    internal static RecommendationSummary ParseSummary(string groupBy, JsonElement data)
+    internal static RecommendationSummary ParseSummary(AdvisorRecommendationGroupBy groupBy, JsonElement data)
     {
         if (data.ValueKind != JsonValueKind.Array)
         {
@@ -197,19 +168,19 @@ public class RecommendationSummaryService(IAzureService azureService)
         var total = groups.Aggregate(
             0,
             static (current, group) => checked(current + group.Count));
-        return new(groupBy, total, groups);
+        return new(groupBy.ToValue(), total, groups);
     }
 
     private static string BuildInstanceSummaryQuery(
         string subscriptionId,
         string? resourceGroup,
-        string groupBy,
+        AdvisorRecommendationGroupBy groupBy,
         RecommendationFilters? filters)
     {
         var query = BuildRecommendationScope(subscriptionId, resourceGroup);
         var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
             filters,
-            includeStatus: groupBy != GroupByStatus,
+            includeStatus: groupBy != AdvisorRecommendationGroupBy.Status,
             useRequestedStatus: false,
             includeCategoryAndImpact: true,
             resourceTypeUsesImpactedField: true);
@@ -220,9 +191,9 @@ public class RecommendationSummaryService(IAzureService azureService)
 
         query += groupBy switch
         {
-            GroupByStatus =>
+            AdvisorRecommendationGroupBy.Status =>
                 " | extend groupValue = tostring(properties.recommendationStatus)",
-            GroupByResourceType =>
+            AdvisorRecommendationGroupBy.ResourceType =>
                 " | extend impactedResourceType = tolower(tostring(properties.impactedField))" +
                 " | extend resourceIdType = tolower(extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId)))" +
                 " | extend groupValue = iff(isnotempty(impactedResourceType), impactedResourceType, resourceIdType)",
@@ -240,13 +211,13 @@ public class RecommendationSummaryService(IAzureService azureService)
     private static string BuildMetadataSummaryQuery(
         string subscriptionId,
         string? resourceGroup,
-        string groupBy,
+        AdvisorRecommendationGroupBy groupBy,
         RecommendationFilters? filters)
     {
         var query = BuildRecommendationScope(subscriptionId, resourceGroup);
         var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
             filters,
-            includeStatus: groupBy != GroupByStatus,
+            includeStatus: groupBy != AdvisorRecommendationGroupBy.Status,
             useRequestedStatus: false,
             includeCategoryAndImpact: false,
             resourceTypeUsesImpactedField: true);
@@ -311,23 +282,23 @@ public class RecommendationSummaryService(IAzureService azureService)
 
     private static string AddMetadataFilters(
         string query,
-        string groupBy,
+        AdvisorRecommendationGroupBy groupBy,
         RecommendationFilters? filters)
     {
-        if (!string.IsNullOrWhiteSpace(filters?.Category))
+        if (filters?.Category is { } category)
         {
             query +=
-                $" | where category =~ '{RecommendationQueryBuilder.EscapeKqlString(filters.Category.Trim())}'";
+                $" | where category =~ '{category}'";
         }
 
-        if (!string.IsNullOrWhiteSpace(filters?.Impact))
+        if (filters?.Impact is { } impact)
         {
             query +=
-                $" | where impact =~ '{RecommendationQueryBuilder.EscapeKqlString(filters.Impact.Trim())}'";
+                $" | where impact =~ '{impact}'";
         }
 
         var serviceRetirementOnly =
-            groupBy == GroupByRetirementDate ||
+            groupBy == AdvisorRecommendationGroupBy.RetirementDate ||
             filters?.RetirementDate is not null;
         var subCategory = ServiceRetirementFilterValidator.ResolveSubCategory(
             filters?.SubCategory,
@@ -349,19 +320,19 @@ public class RecommendationSummaryService(IAzureService azureService)
         return query;
     }
 
-    private static string BuildMetadataGrouping(string groupBy)
+    private static string BuildMetadataGrouping(AdvisorRecommendationGroupBy groupBy)
     {
         var projection = groupBy switch
         {
-            GroupByRecommendationType =>
+            AdvisorRecommendationGroupBy.RecommendationType =>
                 " | extend key = iff(isempty(recommendationTypeId), 'Unknown', recommendationTypeId)" +
                 " | extend label = iff(key == 'Unknown', 'Unknown', iff(isempty(typeLabel), key, typeLabel))",
-            GroupByCategory => BuildKeyAndLabel("category"),
-            GroupByImpact => BuildKeyAndLabel("impact"),
-            GroupByResourceType => BuildKeyAndLabel("resourceType"),
-            GroupByStatus => BuildKeyAndLabel("recommendationStatus"),
-            GroupBySubCategory => BuildKeyAndLabel("subCategory"),
-            GroupByRetirementDate => BuildKeyAndLabel("retirementDate"),
+            AdvisorRecommendationGroupBy.Category => BuildKeyAndLabel("category"),
+            AdvisorRecommendationGroupBy.Impact => BuildKeyAndLabel("impact"),
+            AdvisorRecommendationGroupBy.ResourceType => BuildKeyAndLabel("resourceType"),
+            AdvisorRecommendationGroupBy.Status => BuildKeyAndLabel("recommendationStatus"),
+            AdvisorRecommendationGroupBy.SubCategory => BuildKeyAndLabel("subCategory"),
+            AdvisorRecommendationGroupBy.RetirementDate => BuildKeyAndLabel("retirementDate"),
             _ => throw new ArgumentException(
                 $"Unsupported group-by value '{groupBy}'.",
                 nameof(groupBy)),
@@ -375,11 +346,11 @@ public class RecommendationSummaryService(IAzureService azureService)
         " | extend label = key";
 
     private static List<RecommendationGroup> SortGroups(
-        string groupBy,
+        AdvisorRecommendationGroupBy groupBy,
         IEnumerable<RecommendationGroup> groups)
     {
         var known = groups.Where(group => !IsUnknown(group));
-        known = groupBy == GroupByRetirementDate
+        known = groupBy == AdvisorRecommendationGroupBy.RetirementDate
             ? known.OrderBy(group => group.Key, StringComparer.Ordinal)
             : known
                 .OrderByDescending(group => group.Count)
@@ -395,7 +366,7 @@ public class RecommendationSummaryService(IAzureService azureService)
     private static bool IsUnknown(RecommendationGroup group) =>
         group.Key.Equals("Unknown", StringComparison.OrdinalIgnoreCase);
 
-    private static void ValidateFilters(RecommendationFilters? filters, string groupBy)
+    private static void ValidateFilters(RecommendationFilters? filters, AdvisorRecommendationGroupBy groupBy)
     {
         if (filters is null)
         {
@@ -407,7 +378,7 @@ public class RecommendationSummaryService(IAzureService azureService)
         {
             ServiceRetirementFilterValidator.ResolveSubCategory(
                 filters.SubCategory,
-                groupBy == GroupByRetirementDate || filters.RetirementDate is not null);
+                groupBy == AdvisorRecommendationGroupBy.RetirementDate || filters.RetirementDate is not null);
             return;
         }
 

@@ -52,13 +52,6 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
             validationResult.Errors.Add("--resource-group is required when --vault is specified.");
         }
 
-        if (!string.IsNullOrEmpty(options.VaultType) &&
-            !options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
-            !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
-        }
-
         if (!string.IsNullOrEmpty(options.Expand))
         {
             try

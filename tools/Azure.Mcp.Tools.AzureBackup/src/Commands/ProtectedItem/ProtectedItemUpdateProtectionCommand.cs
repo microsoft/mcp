@@ -53,7 +53,7 @@ public sealed class ProtectedItemUpdateProtectionCommand(ILogger<ProtectedItemUp
         // Command must change something to be useful.
         var hasPolicy = !string.IsNullOrWhiteSpace(options.Policy);
         var hasDiskChange =
-            !string.IsNullOrWhiteSpace(options.DiskListSetting) ||
+            options.DiskListSetting is not null ||
             !string.IsNullOrWhiteSpace(options.DisksList) ||
             options.ExcludeAllDataDisks;
 

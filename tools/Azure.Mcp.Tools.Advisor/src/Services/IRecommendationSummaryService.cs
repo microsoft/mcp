@@ -10,7 +10,7 @@ public interface IRecommendationSummaryService
     Task<RecommendationSummary> SummarizeRecommendationsAsync(
         string subscription,
         string? resourceGroup,
-        string groupBy,
+        AdvisorRecommendationGroupBy groupBy,
         RecommendationFilters? filters = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);

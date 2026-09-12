@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Compute.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Options.Disk;
@@ -93,7 +94,7 @@ public sealed class DiskCreateOptions : ISubscriptionOption
     /// Gets or sets the Operating System type (Linux or Windows).
     /// </summary>
     [Option(Description = ComputeOptionDescriptions.OsType)]
-    public string? OsType { get; set; }
+    public DiskOperatingSystemType? OsType { get; set; }
 
     /// <summary>
     /// Gets or sets the size of the disk in GB.

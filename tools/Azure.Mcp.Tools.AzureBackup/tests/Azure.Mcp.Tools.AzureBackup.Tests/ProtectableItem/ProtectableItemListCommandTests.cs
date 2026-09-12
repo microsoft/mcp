@@ -34,8 +34,8 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         };
 
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupProtectableItemWorkloadType?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedItems);
 
         // Act
@@ -55,8 +55,8 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
     {
         // Arrange
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupProtectableItemWorkloadType?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -76,8 +76,8 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
     {
         // Arrange
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupProtectableItemWorkloadType?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -99,8 +99,8 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         if (shouldSucceed)
         {
             Service.ListProtectableItemsAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupProtectableItemWorkloadType?>(), Arg.Any<string?>(),
+                Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -160,9 +160,10 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
     public async Task ExecuteAsync_AcceptsKnownWorkloadType(string workloadType)
     {
         // Arrange
+        var expectedWorkloadType = Enum.Parse<AzureBackupProtectableItemWorkloadType>(workloadType, ignoreCase: true);
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is<string?>(workloadType), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is<AzureBackupProtectableItemWorkloadType?>(value => value == expectedWorkloadType), Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -194,13 +195,13 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
 
         // Assert: validation error (400), not service-layer 500
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Unknown workload type", response.Message);
+        Assert.Contains("Invalid --workload-type", response.Message);
         Assert.Contains(workloadType, response.Message);
 
         // And the service is never invoked once validation has rejected the input.
         await Service.DidNotReceive().ListProtectableItemsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<AzureBackupProtectableItemWorkloadType?>(), Arg.Any<string?>(), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 }

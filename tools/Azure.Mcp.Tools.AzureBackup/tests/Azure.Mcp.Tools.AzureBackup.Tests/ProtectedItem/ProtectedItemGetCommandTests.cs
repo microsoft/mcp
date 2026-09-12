@@ -40,7 +40,7 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedItems);
@@ -73,7 +73,7 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
             Arg.Is(itemName),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -102,7 +102,7 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
         var resourceGroup = "myRg";
 
         Service.ListProtectedItemsAsync(
-            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -122,7 +122,7 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
     {
         // Arrange
         Service.ListProtectedItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -141,7 +141,7 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
     {
         // Arrange
         Service.GetProtectedItemAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("nonexistent"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Item not found"));
 
         // Act
@@ -165,11 +165,11 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
         if (shouldSucceed)
         {
             Service.ListProtectedItemsAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetProtectedItemAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item1"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new ProtectedItemInfo("id", "item1", "rsv", "Protected", "VM", "/sub/vm", "pol", null, null)));
         }
 

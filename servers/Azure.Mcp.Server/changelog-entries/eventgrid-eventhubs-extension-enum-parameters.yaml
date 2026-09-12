@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Changed closed-set parameters in Event Grid, Event Hubs, and Extension tools from free-form strings to enums; their tool input schemas now advertise and enforce the allowed values."

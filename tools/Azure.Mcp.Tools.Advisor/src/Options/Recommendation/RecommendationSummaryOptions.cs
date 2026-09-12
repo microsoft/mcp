@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Advisor.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
@@ -12,13 +13,13 @@ public sealed class RecommendationSummaryOptions : ISubscriptionOption
     [Option(Description = "Optional field to group the summary by. One of: 'recommendation-type', 'category', 'impact', 'resource-type', 'status', 'sub-category', or 'retirement-date'. " +
         "Defaults to 'category' when omitted, which surfaces the high-level themes (Cost, Security, Reliability, etc.) " +
         "so prompts like 'summarize the key themes from my Advisor recommendations' work without naming a field.")]
-    public string? GroupBy { get; set; }
+    public AdvisorRecommendationGroupBy? GroupBy { get; set; }
 
     [Option(Description = "Filter recommendations by category. Allowed values are Cost, HighAvailability, Security, Performance, and OperationalExcellence. Matched case-insensitively against metadata with recommendation-instance fallback.")]
-    public string? Category { get; set; }
+    public AdvisorRecommendationCategory? Category { get; set; }
 
     [Option(Description = "Filter recommendations by business impact. Allowed values are High, Medium, and Low. Matched case-insensitively against metadata with recommendation-instance fallback.")]
-    public string? Impact { get; set; }
+    public AdvisorRecommendationImpact? Impact { get; set; }
 
     [Option(Description = "Filter recommendations by one recommendation type ID GUID. Uses a case-insensitive exact match.")]
     public string? RecommendationTypeId { get; set; }

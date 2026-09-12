@@ -43,16 +43,16 @@ internal static class RecommendationQueryBuilder
         {
             if (includeCategoryAndImpact &&
                 !metadataWasResolved &&
-                !string.IsNullOrWhiteSpace(filters.Category))
+                filters.Category is { } category)
             {
-                clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
+                clauses.Add($"tostring(properties.category) =~ '{category}'");
             }
 
             if (includeCategoryAndImpact &&
                 !metadataWasResolved &&
-                !string.IsNullOrWhiteSpace(filters.Impact))
+                filters.Impact is { } impact)
             {
-                clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
+                clauses.Add($"tostring(properties.impact) =~ '{impact}'");
             }
 
             if (!string.IsNullOrWhiteSpace(filters.RecommendationTypeId))

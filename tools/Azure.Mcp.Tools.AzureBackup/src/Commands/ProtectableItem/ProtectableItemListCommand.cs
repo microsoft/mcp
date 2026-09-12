@@ -35,27 +35,10 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
     private readonly ILogger<ProtectableItemListCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override void ValidateOptions(ProtectableItemListOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        // NEW-4: reject unknown --workload-type at the command boundary so it surfaces
-        // as a 400 ValidationError instead of leaking the inner ArgumentException
-        // from the service layer as a 500.
-        //
-        // Read the value directly (no HasOptionResult gate) so whitespace-only inputs --
-        // which System.CommandLine may report as "no result" -- still fail validation
-        // here instead of slipping past and being rejected by the service layer.
-        if (options.WorkloadType != null && !WorkloadTypeNormalizer.IsSupported(options.WorkloadType))
-        {
-            validationResult.Errors.Add(WorkloadTypeNormalizer.FormatUnknownMessage(options.WorkloadType));
-        }
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectableItemListOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType ?? "rsv", options.WorkloadType);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType ?? AzureBackupVaultType.Rsv, options.WorkloadType?.ToValue());
 
         try
         {

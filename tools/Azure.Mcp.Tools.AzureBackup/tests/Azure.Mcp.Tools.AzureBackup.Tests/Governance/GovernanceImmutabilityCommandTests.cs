@@ -33,7 +33,7 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Is(AzureBackupImmutabilityState.Unlocked),
             Arg.Is(AzureBackupImmutabilityType.AsPerPolicy),
             Arg.Any<int?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Immutability configured"));
 
         // Act
@@ -59,7 +59,7 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Is(AzureBackupImmutabilityState.Unlocked),
             Arg.Is(AzureBackupImmutabilityType.AsPerPolicy),
             Arg.Any<int?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -94,7 +94,7 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
                 Arg.Any<AzureBackupImmutabilityState>(),
                 Arg.Any<AzureBackupImmutabilityType>(),
                 Arg.Any<int?>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 

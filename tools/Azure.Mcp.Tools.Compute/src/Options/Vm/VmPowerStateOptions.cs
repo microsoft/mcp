@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Compute.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Options.Vm;
@@ -12,7 +13,7 @@ public sealed class VmPowerStateOptions : ISubscriptionOption
     public required string VmName { get; set; }
 
     [Option(Description = "The power action to apply to the VM (not the current power state). Accepted values: start, stop, deallocate, restart.")]
-    public required string PowerAction { get; set; }
+    public required VmPowerAction PowerAction { get; set; }
 
     [Option(Description = "Return immediately without waiting for the operation to complete.")]
     public bool NoWait { get; set; }

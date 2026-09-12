@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
+using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.Mcp.Tools.EventHubs.Services;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -31,6 +32,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
     [InlineData("--subscription test-sub --resource-group test-rg", false, "Missing Required")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns", false, "At least one update property must be provided")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --sku-name Standard", true, "")]
+    [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --sku-name Standard --sku-tier invalid", false, "")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --location eastus", true, "")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --is-auto-inflate-enabled true", false, "When enabling auto-inflate, maximum-throughput-units must be specified")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --is-auto-inflate-enabled true --maximum-throughput-units 20", true, "")]
@@ -47,7 +49,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>(),
+                Arg.Any<NamespaceSkuTier?>(),
                 Arg.Any<int?>(),
                 Arg.Any<bool?>(),
                 Arg.Any<int?>(),
@@ -90,7 +92,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-sub",
             null, // location
             "Premium",
-            "Premium",
+            NamespaceSkuTier.Premium,
             4,
             null, // isAutoInflateEnabled
             null, // maximumThroughputUnits
@@ -119,7 +121,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-sub",
             null,
             "Premium",
-            "Premium",
+            NamespaceSkuTier.Premium,
             4,
             null,
             null,
@@ -141,7 +143,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<NamespaceSkuTier?>(),
             Arg.Any<int?>(),
             true,
             20,
@@ -182,7 +184,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<NamespaceSkuTier?>(),
             Arg.Any<int?>(),
             Arg.Any<bool?>(),
             Arg.Any<int?>(),
@@ -237,7 +239,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-sub",
             "westus2",
             "Premium",
-            "Premium",
+            NamespaceSkuTier.Premium,
             2,
             null,
             null,
@@ -270,7 +272,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             "test-sub",
             "westus2",
             "Premium",
-            "Premium",
+            NamespaceSkuTier.Premium,
             2,
             null,
             null,
@@ -291,7 +293,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<NamespaceSkuTier?>(),
             Arg.Any<int?>(),
             Arg.Any<bool?>(),
             Arg.Any<int?>(),
@@ -324,7 +326,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<NamespaceSkuTier?>(),
             Arg.Any<int?>(),
             Arg.Any<bool?>(),
             Arg.Any<int?>(),
@@ -358,7 +360,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
+            Arg.Any<NamespaceSkuTier?>(),
             Arg.Any<int?>(),
             Arg.Any<bool?>(),
             Arg.Any<int?>(),
@@ -426,7 +428,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
         Assert.Equal("test-namespace", options.Namespace);
         Assert.Equal("eastus", options.Location);
         Assert.Equal("Standard", options.SkuName);
-        Assert.Equal("Standard", options.SkuTier);
+        Assert.Equal(NamespaceSkuTier.Standard, options.SkuTier);
         Assert.Equal(1, options.SkuCapacity);
         Assert.True(options.IsAutoInflateEnabled);
         Assert.Equal(10, options.MaximumThroughputUnits);

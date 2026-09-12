@@ -15,7 +15,7 @@ public class InsightsGetOptions : ISubscriptionOption
     public bool NoCache { get; set; }
 
     [Option(Description = InsightsOptionDefinitions.ScopeDescription, DefaultValue = InsightsOptionDefinitions.ScopeSubscription)]
-    public string? Scope { get; set; }
+    public InsightsScope? Scope { get; set; }
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }

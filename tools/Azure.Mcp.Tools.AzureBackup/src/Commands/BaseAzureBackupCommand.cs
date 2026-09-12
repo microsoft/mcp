@@ -15,12 +15,5 @@ public abstract class BaseAzureBackupCommand<[DynamicallyAccessedMembers(TrimAnn
     public override void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        if (!string.IsNullOrEmpty(options.VaultType) &&
-            !options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
-            !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
-        }
     }
 }

@@ -59,7 +59,7 @@ public sealed class ContainerRefreshCommand(ILogger<ContainerRefreshCommand> log
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerRefreshOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
-        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, VaultTypeResolver.Rsv, null);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, AzureBackupVaultType.Rsv, null);
 
         var backupManagementType = GetBackupManagementType(options.BackupManagementType);
 

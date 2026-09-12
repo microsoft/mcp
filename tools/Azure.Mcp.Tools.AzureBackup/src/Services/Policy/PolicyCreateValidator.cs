@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 
@@ -26,12 +27,12 @@ public static class PolicyCreateValidator
         ArgumentNullException.ThrowIfNull(options);
 
         var issues = new List<PolicyValidationIssue>();
-        var workload = (options.WorkloadType ?? string.Empty).Trim();
+        var workload = options.WorkloadType;
         var family = ClassifyWorkload(workload);
 
         // Reject unknown workload types at the command boundary with an actionable message
         // rather than letting invalid values reach the service layer.
-        if (family == WorkloadFamily.Unknown && !string.IsNullOrWhiteSpace(workload))
+        if (family == WorkloadFamily.Unknown)
         {
             issues.Add(new PolicyValidationIssue(
                 $"--{AzureBackupOptionDefinitions.WorkloadTypeName}",
@@ -130,7 +131,7 @@ public static class PolicyCreateValidator
         // as BMSUserErrorInvalidInput.
         if ((hasArchiveDays || hasArchiveMode) && IsArchiveUnsupportedDppFamily(family))
         {
-            var workloadLabel = DescribeArchiveUnsupportedWorkload((options.WorkloadType ?? string.Empty).Trim(), family);
+            var workloadLabel = DescribeArchiveUnsupportedWorkload(options.WorkloadType, family);
             issues.Add(new PolicyValidationIssue(
                 hasArchiveMode
                     ? $"--{AzureBackupOptionDefinitions.ArchiveTierModeName}"
@@ -404,45 +405,74 @@ public static class PolicyCreateValidator
     private static bool IsDppFamily(WorkloadFamily f) =>
         f is WorkloadFamily.DppDiscrete or WorkloadFamily.DppContinuous or WorkloadFamily.DppStorageBackupMode or WorkloadFamily.DppAks or WorkloadFamily.Aks;
 
-    private static WorkloadFamily ClassifyWorkload(string workloadType)
+    private static WorkloadFamily ClassifyWorkload(AzureBackupPolicyWorkloadType workloadType) => workloadType switch
     {
-        if (string.IsNullOrWhiteSpace(workloadType))
-        {
-            return WorkloadFamily.Unknown;
-        }
+        AzureBackupPolicyWorkloadType.Vm or
+        AzureBackupPolicyWorkloadType.AzureVm or
+        AzureBackupPolicyWorkloadType.IaasVm or
+        AzureBackupPolicyWorkloadType.AzureIaasVm or
+        AzureBackupPolicyWorkloadType.VirtualMachine or
+        AzureBackupPolicyWorkloadType.IaasVmContainer => WorkloadFamily.RsvVm,
+        AzureBackupPolicyWorkloadType.Sql or
+        AzureBackupPolicyWorkloadType.SqlDatabase or
+        AzureBackupPolicyWorkloadType.SqlDb or
+        AzureBackupPolicyWorkloadType.MsSql or
+        AzureBackupPolicyWorkloadType.AzureSql or
+        AzureBackupPolicyWorkloadType.SapHana or
+        AzureBackupPolicyWorkloadType.SapHanaDatabase or
+        AzureBackupPolicyWorkloadType.SapHanaDb or
+        AzureBackupPolicyWorkloadType.Hana or
+        AzureBackupPolicyWorkloadType.SapAse or
+        AzureBackupPolicyWorkloadType.Ase or
+        AzureBackupPolicyWorkloadType.Sybase => WorkloadFamily.RsvVmWorkload,
+        AzureBackupPolicyWorkloadType.AzureFileShare or
+        AzureBackupPolicyWorkloadType.FileShare or
+        AzureBackupPolicyWorkloadType.Afs => WorkloadFamily.RsvFileShare,
+        AzureBackupPolicyWorkloadType.AzureDisk or
+        AzureBackupPolicyWorkloadType.Disk or
+        AzureBackupPolicyWorkloadType.ElasticSan or
+        AzureBackupPolicyWorkloadType.Esan or
+        AzureBackupPolicyWorkloadType.PostgreSqlFlexible or
+        AzureBackupPolicyWorkloadType.Postgres or
+        AzureBackupPolicyWorkloadType.PgFlex or
+        AzureBackupPolicyWorkloadType.CosmosDb or
+        AzureBackupPolicyWorkloadType.Cosmos => WorkloadFamily.DppDiscrete,
+        AzureBackupPolicyWorkloadType.Aks or
+        AzureBackupPolicyWorkloadType.Kubernetes or
+        AzureBackupPolicyWorkloadType.KubernetesCluster => WorkloadFamily.DppAks,
+        AzureBackupPolicyWorkloadType.AzureBlob or
+        AzureBackupPolicyWorkloadType.Blob or
+        AzureBackupPolicyWorkloadType.Adls or
+        AzureBackupPolicyWorkloadType.AzureDataLakeStorage or
+        AzureBackupPolicyWorkloadType.DataLake or
+        AzureBackupPolicyWorkloadType.DataLakeStorage => WorkloadFamily.DppStorageBackupMode,
+        _ => WorkloadFamily.Unknown,
+    };
 
-        return workloadType.ToLowerInvariant() switch
-        {
-            "vm" or "azurevm" or "iaasvm" or "azureiaasvm" or "virtualmachine" or "iaasvmcontainer" => WorkloadFamily.RsvVm,
-            "sql" or "sqldatabase" or "sqldb" or "mssql" or "azuresql" or "saphana" or "saphanadatabase" or "saphanadb" or "hana" or "sapase" or "ase" or "sybase" => WorkloadFamily.RsvVmWorkload,
-            "azurefileshare" or "fileshare" or "afs" => WorkloadFamily.RsvFileShare,
-            "azuredisk" or "disk" or "elasticsan" or "esan" or "postgresqlflexible" or "postgres" or "pgflex" or "cosmosdb" or "cosmos" => WorkloadFamily.DppDiscrete,
-            "aks" or "kubernetes" or "kubernetescluster" => WorkloadFamily.DppAks,
-            "azureblob" or "blob" or "adls" or "azuredatalakestorage" or "datalake" or "datalakestorage" => WorkloadFamily.DppStorageBackupMode,
-            _ => WorkloadFamily.Unknown,
-        };
-    }
+    private static bool IsSapWorkload(AzureBackupPolicyWorkloadType workloadType) => workloadType is
+        AzureBackupPolicyWorkloadType.SapHana or
+        AzureBackupPolicyWorkloadType.SapHanaDatabase or
+        AzureBackupPolicyWorkloadType.SapHanaDb or
+        AzureBackupPolicyWorkloadType.Hana or
+        AzureBackupPolicyWorkloadType.SapAse or
+        AzureBackupPolicyWorkloadType.Ase or
+        AzureBackupPolicyWorkloadType.Sybase;
 
-    private static bool IsSapWorkload(string? workloadType) =>
-        workloadType is not null &&
-        (workloadType.Equals("SAPHANA", StringComparison.OrdinalIgnoreCase) ||
-         workloadType.Equals("SAPHanaDatabase", StringComparison.OrdinalIgnoreCase) ||
-         workloadType.Equals("SAPASE", StringComparison.OrdinalIgnoreCase));
+    private static bool IsSqlWorkload(AzureBackupPolicyWorkloadType workloadType) => workloadType is
+        AzureBackupPolicyWorkloadType.Sql or
+        AzureBackupPolicyWorkloadType.SqlDatabase or
+        AzureBackupPolicyWorkloadType.SqlDb or
+        AzureBackupPolicyWorkloadType.MsSql or
+        AzureBackupPolicyWorkloadType.AzureSql;
 
-    private static bool IsSqlWorkload(string? workloadType) =>
-        workloadType is not null &&
-        (workloadType.Equals("SQL", StringComparison.OrdinalIgnoreCase) ||
-         workloadType.Equals("SQLDatabase", StringComparison.OrdinalIgnoreCase));
+    private static bool IsHanaWorkload(AzureBackupPolicyWorkloadType workloadType) => workloadType is
+        AzureBackupPolicyWorkloadType.SapHana or
+        AzureBackupPolicyWorkloadType.SapHanaDatabase or
+        AzureBackupPolicyWorkloadType.SapHanaDb or
+        AzureBackupPolicyWorkloadType.Hana;
 
-    private static bool IsHanaWorkload(string? workloadType) =>
-        workloadType is not null &&
-        (workloadType.Equals("SAPHANA", StringComparison.OrdinalIgnoreCase) ||
-         workloadType.Equals("SAPHanaDatabase", StringComparison.OrdinalIgnoreCase));
-
-    private static bool IsAzureDiskWorkload(string? workloadType) =>
-        workloadType is not null &&
-        (workloadType.Equals("AzureDisk", StringComparison.OrdinalIgnoreCase) ||
-         workloadType.Equals("Disk", StringComparison.OrdinalIgnoreCase));
+    private static bool IsAzureDiskWorkload(AzureBackupPolicyWorkloadType workloadType) => workloadType is
+        AzureBackupPolicyWorkloadType.AzureDisk or AzureBackupPolicyWorkloadType.Disk;
 
     // No DPP (Backup vault) datasource supports ArchiveStore today. This includes:
     // AzureDisk, AKS, PostgreSQL Flexible Server, PostgreSQL, Cosmos DB, Elastic SAN,
@@ -452,22 +482,22 @@ public static class PolicyCreateValidator
     private static bool IsArchiveUnsupportedDppFamily(WorkloadFamily family) =>
         IsDppFamily(family);
 
-    private static string DescribeArchiveUnsupportedWorkload(string workloadType, WorkloadFamily family)
+    private static string DescribeArchiveUnsupportedWorkload(AzureBackupPolicyWorkloadType workloadType, WorkloadFamily family)
     {
         if (family is WorkloadFamily.DppAks or WorkloadFamily.Aks)
         {
             return "AKS";
         }
 
-        return workloadType.ToLowerInvariant() switch
+        return workloadType switch
         {
-            "azuredisk" or "disk" => "AzureDisk",
-            "elasticsan" or "esan" => "Elastic SAN",
-            "postgresqlflexible" or "pgflex" => "PostgreSQL Flexible Server",
-            "postgres" => "PostgreSQL",
-            "cosmosdb" or "cosmos" => "Cosmos DB",
-            "azureblob" or "blob" => "AzureBlob",
-            "adls" or "azuredatalakestorage" or "datalake" or "datalakestorage" => "AzureDataLakeStorage",
+            AzureBackupPolicyWorkloadType.AzureDisk or AzureBackupPolicyWorkloadType.Disk => "AzureDisk",
+            AzureBackupPolicyWorkloadType.ElasticSan or AzureBackupPolicyWorkloadType.Esan => "Elastic SAN",
+            AzureBackupPolicyWorkloadType.PostgreSqlFlexible or AzureBackupPolicyWorkloadType.PgFlex => "PostgreSQL Flexible Server",
+            AzureBackupPolicyWorkloadType.Postgres => "PostgreSQL",
+            AzureBackupPolicyWorkloadType.CosmosDb or AzureBackupPolicyWorkloadType.Cosmos => "Cosmos DB",
+            AzureBackupPolicyWorkloadType.AzureBlob or AzureBackupPolicyWorkloadType.Blob => "AzureBlob",
+            AzureBackupPolicyWorkloadType.Adls or AzureBackupPolicyWorkloadType.AzureDataLakeStorage or AzureBackupPolicyWorkloadType.DataLake or AzureBackupPolicyWorkloadType.DataLakeStorage => "AzureDataLakeStorage",
             _ => "this DPP workload",
         };
     }

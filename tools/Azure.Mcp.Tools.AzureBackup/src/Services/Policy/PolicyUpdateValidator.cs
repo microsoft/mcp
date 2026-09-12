@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 
@@ -27,7 +28,7 @@ public static class PolicyUpdateValidator
         var issues = new List<PolicyValidationIssue>();
 
         // Weekly schedule requires days-of-week.
-        if (IsWeekly(options.ScheduleFrequency) && string.IsNullOrWhiteSpace(options.ScheduleDaysOfWeek))
+        if (options.ScheduleFrequency == AzureBackupPolicyUpdateScheduleFrequency.Weekly && string.IsNullOrWhiteSpace(options.ScheduleDaysOfWeek))
         {
             issues.Add(new PolicyValidationIssue(
                 $"--{AzureBackupOptionDefinitions.ScheduleDaysOfWeekName}",
@@ -35,9 +36,7 @@ public static class PolicyUpdateValidator
         }
 
         // Reject unsupported frequencies (Hourly requires PolicySubType=Enhanced which update does not touch).
-        if (!string.IsNullOrWhiteSpace(options.ScheduleFrequency) &&
-            !IsDaily(options.ScheduleFrequency) &&
-            !IsWeekly(options.ScheduleFrequency))
+        if (options.ScheduleFrequency is { } scheduleFrequency && !Enum.IsDefined(scheduleFrequency))
         {
             issues.Add(new PolicyValidationIssue(
                 $"--{AzureBackupOptionDefinitions.ScheduleFrequencyName}",
@@ -164,6 +163,4 @@ public static class PolicyUpdateValidator
         }
     }
 
-    private static bool IsDaily(string? freq) => string.Equals(freq, "Daily", StringComparison.OrdinalIgnoreCase);
-    private static bool IsWeekly(string? freq) => string.Equals(freq, "Weekly", StringComparison.OrdinalIgnoreCase);
 }

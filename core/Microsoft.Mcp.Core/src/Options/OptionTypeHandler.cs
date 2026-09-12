@@ -3,7 +3,10 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Extensions;
 
 namespace Microsoft.Mcp.Core.Options;
@@ -13,6 +16,8 @@ namespace Microsoft.Mcp.Core.Options;
 /// </summary>
 public sealed class OptionTypeHandler
 {
+    private static readonly ConditionalWeakTable<Option, Type> s_declaredTypes = new();
+
     public OptionDescriptor Descriptor { get; }
     public Option Option { get; }
     public Func<ParseResult, object?> Binder { get; }
@@ -67,6 +72,7 @@ public sealed class OptionTypeHandler
         }
 
         var option = optionAndBinder.Value.Item1;
+        s_declaredTypes.Add(option, descriptor.Type);
         option.Description = descriptor.Description;
         option.Required = descriptor.Required;
         // For array/collection types, allow multiple values after a single option token
@@ -78,31 +84,31 @@ public sealed class OptionTypeHandler
         if (type.IsEnum)
         {
             // Handle enum options as Option<string> with constrained values.
-            var names = Enum.GetNames(type);
-            var allowed = string.Join(", ", names);
-            var namesSet = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+            var valueNames = GetEnumValueNames(type);
+            var externalNames = valueNames.Keys.ToArray();
+            var allowed = string.Join(", ", externalNames);
             option.Validators.Add(result =>
             {
                 foreach (Token token in result.Tokens)
                 {
-                    if (!namesSet.Contains(token.Value))
+                    if (!valueNames.ContainsKey(token.Value.Trim()))
                     {
                         result.AddError($"Invalid {option.Name} '{token.Value}'. Must be one of: {allowed}");
                     }
                 }
             });
 
-            option.CompletionSources.Add(names);
+            option.CompletionSources.Add(externalNames);
             Func<ParseResult, object?> enumBinder = parseResult =>
             {
                 var result = optionAndBinder.Value.Item2.Invoke(parseResult);
                 if (result is string s)
                 {
-                    return Enum.Parse(type, s, ignoreCase: true);
+                    return ParseEnumValue(type, valueNames, s);
                 }
                 if (result is IEnumerable<string> strings)
                 {
-                    var parsed = strings.Select(s => Enum.Parse(type, s, ignoreCase: true)).ToArray();
+                    var parsed = strings.Select(s => ParseEnumValue(type, valueNames, s)).ToArray();
 #pragma warning disable IL3050 // Enum array creation shouldn't be an AoT issue here.
                     var array = Array.CreateInstance(type, parsed.Length);
 #pragma warning restore IL3050
@@ -115,6 +121,40 @@ public sealed class OptionTypeHandler
         }
 
         return optionAndBinder.Value;
+    }
+
+    internal static Type GetDeclaredType(Option option) =>
+        s_declaredTypes.TryGetValue(option, out var declaredType)
+            ? declaredType
+            : option.ValueType;
+
+    [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",
+        Justification = "Enum option types are rooted by their declaring options types, including their public fields and attributes.")]
+    private static Dictionary<string, string> GetEnumValueNames(Type enumType)
+    {
+        var valueNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var memberName in Enum.GetNames(enumType))
+        {
+            var field = enumType.GetField(memberName, BindingFlags.Public | BindingFlags.Static)
+                ?? throw new InvalidOperationException($"Enum member '{memberName}' was not found on '{enumType.Name}'.");
+            var valueName = field.GetCustomAttribute<JsonStringEnumMemberNameAttribute>()?.Name ?? memberName;
+            if (!valueNames.TryAdd(valueName, memberName))
+            {
+                throw new InvalidOperationException($"Enum '{enumType.Name}' contains duplicate option value name '{valueName}'.");
+            }
+        }
+
+        return valueNames;
+    }
+
+    private static object ParseEnumValue(Type enumType, IReadOnlyDictionary<string, string> valueNames, string value)
+    {
+        if (!valueNames.TryGetValue(value.Trim(), out var memberName))
+        {
+            throw new ArgumentException($"Invalid value '{value}' for enum '{enumType.Name}'.");
+        }
+
+        return Enum.Parse(enumType, memberName);
     }
 
     private static (Option, Func<ParseResult, object?>)? CreateOptionAndBinder(

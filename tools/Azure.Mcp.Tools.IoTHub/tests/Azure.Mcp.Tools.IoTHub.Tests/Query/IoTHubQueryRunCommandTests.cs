@@ -367,6 +367,22 @@ public class IoTHubQueryRunCommandTests : SubscriptionCommandUnitTestsBase<IoTHu
         Assert.Contains("not valid JSON", response.Message);
     }
 
+    [Theory]
+    [InlineData("--from", "servers")]
+    [InlineData("--logical-operator", "XOR")]
+    public async Task ExecuteAsync_RejectsInvalidStructuredQueryOption(string option, string value)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--resource-group", "rg1", "--hub-name", "hub1",
+            "--filters", "[{\"scope\":\"device\",\"field\":\"status\",\"operator\":\"equals\",\"value\":\"enabled\"}]",
+            option, value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(value, response.Message);
+        await Service.DidNotReceiveWithAnyArgs().RunQuery(
+            default!, default!, default!, default!, default, default, default, TestContext.Current.CancellationToken);
+    }
+
     [Fact]
     public async Task ExecuteAsync_RejectsUnsupportedFilterScope()
     {

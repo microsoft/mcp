@@ -35,7 +35,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -60,7 +60,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -85,7 +85,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
             Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -139,7 +139,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -164,7 +164,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Forbidden"));
 
         // Act
@@ -186,7 +186,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not Found"));
 
         // Act
@@ -208,7 +208,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update."));
 
         // Act
@@ -230,7 +230,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Unsupported policy type 'SomePolicy'."));
 
         // Act
@@ -252,7 +252,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid schedule time 'not-a-time'. Provide a valid time in UTC HH:mm format (e.g., '04:00')."));
 
         // Act
@@ -275,7 +275,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid daily retention days '-5'. Provide a positive integer."));
 
         // Act
@@ -300,7 +300,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -324,7 +324,7 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         Service.UpdatePolicyAsync(
             Arg.Any<PolicyUpdateRequest>(),
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act

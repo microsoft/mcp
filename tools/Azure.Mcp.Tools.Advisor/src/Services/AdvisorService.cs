@@ -211,9 +211,9 @@ public class AdvisorService(IAzureService azureService)
     // This adds a catalog lookup and can produce a broad recommendationTypeId predicate.
     internal static bool HasMetadataFilters(RecommendationFilters? filters) =>
         HasMetadataOnlyFilters(filters) ||
-            (!string.IsNullOrWhiteSpace(filters?.Category) ||
-            !string.IsNullOrWhiteSpace(filters?.Impact) ||
-            !string.IsNullOrWhiteSpace(filters?.ResourceType));
+            filters?.Category is not null ||
+            filters?.Impact is not null ||
+            !string.IsNullOrWhiteSpace(filters?.ResourceType);
 
     /// <summary>
     /// Resolves metadata-backed filters against metadata first and returns matching recommendation type IDs.
@@ -500,14 +500,12 @@ public class AdvisorService(IAzureService azureService)
             query += $" | where tostring(properties.supportedResourceType) =~ '{EscapeKqlString(filters.ResourceType.Trim())}'";
         }
 
-        if (!string.IsNullOrWhiteSpace(filters?.Impact))
+        if (filters?.Impact is { } impact)
         {
-            query += $" | where tostring(properties.recommendationImpact) =~ '{EscapeKqlString(filters.Impact.Trim())}'";
+            query += $" | where tostring(properties.recommendationImpact) =~ '{impact}'";
         }
 
-        var category = string.IsNullOrWhiteSpace(filters?.Category)
-            ? null
-            : filters.Category.Trim();
+        var category = filters?.Category?.ToString();
         var subCategory = string.IsNullOrWhiteSpace(filters?.SubCategory)
             ? null
             : filters.SubCategory.Trim();

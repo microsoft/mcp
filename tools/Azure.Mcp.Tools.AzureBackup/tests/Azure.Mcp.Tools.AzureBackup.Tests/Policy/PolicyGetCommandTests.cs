@@ -40,7 +40,7 @@ public class PolicyGetCommandTests : SubscriptionCommandUnitTestsBase<PolicyGetC
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedPolicies);
@@ -72,7 +72,7 @@ public class PolicyGetCommandTests : SubscriptionCommandUnitTestsBase<PolicyGetC
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
             Arg.Is(policyName),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new BackupPolicyInfo("id1", policyName, "rsv", ["AzureIaasVM"], 5, null, null, null));
@@ -103,7 +103,7 @@ public class PolicyGetCommandTests : SubscriptionCommandUnitTestsBase<PolicyGetC
             Arg.Is(vault),
             Arg.Is(resourceGroup),
             Arg.Is(subscription),
-            Arg.Any<string?>(),
+            Arg.Any<AzureBackupVaultType?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
@@ -129,7 +129,7 @@ public class PolicyGetCommandTests : SubscriptionCommandUnitTestsBase<PolicyGetC
         var resourceGroup = "myRg";
 
         Service.ListPoliciesAsync(
-            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -153,7 +153,7 @@ public class PolicyGetCommandTests : SubscriptionCommandUnitTestsBase<PolicyGetC
         var policyName = "nonexistent";
 
         Service.GetPolicyAsync(
-            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Is(policyName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Is(policyName), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Policy not found"));
 
         // Act
@@ -177,11 +177,11 @@ public class PolicyGetCommandTests : SubscriptionCommandUnitTestsBase<PolicyGetC
         if (shouldSucceed)
         {
             Service.ListPoliciesAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetPolicyAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Is("p"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub123"), Arg.Is("p"), Arg.Any<AzureBackupVaultType?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new BackupPolicyInfo("id1", "p", "rsv", ["VM"], 1, null, null, null));
         }
 

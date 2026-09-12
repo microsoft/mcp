@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.IoTHub.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Options.Query;
@@ -24,10 +25,10 @@ public sealed class IoTHubQueryRunOptions : ISubscriptionOption
     public string? Filters { get; set; }
 
     [Option(Description = "The query source collection used when --filters is provided. Defaults to 'devices'. Supported values: devices, devices.modules, devices.jobs.")]
-    public string? From { get; set; }
+    public QuerySource? From { get; set; }
 
     [Option(Description = "The logical operator used to join --filters predicates. Supported values: AND (default), OR.")]
-    public string? LogicalOperator { get; set; }
+    public QueryLogicalOperator? LogicalOperator { get; set; }
 
     [Option(Description = "The maximum total number of query items to return. The tool pages through IoT Hub internally and aggregates the results, so this caps the whole result set (not a single page). If more matching items exist than this cap, the tool returns an error indicating the max-count limit was hit. Omit it to return every matching item.")]
     public int? MaxCount { get; set; }

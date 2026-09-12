@@ -18,13 +18,9 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 // See azurebackup-rsv-mcp-improvements-plan.md §PR 4.
 public sealed partial class RsvBackupOperations
 {
-    /// <summary>Sub-resource ("group") IDs supported by RSV. Primary region is <c>AzureBackup</c>;
-    /// <c>AzureBackup_secondary</c> is used only for Cross-Region Restore.</summary>
-    private static readonly string[] s_allowedGroupIds = ["AzureBackup", "AzureBackup_secondary"];
-
     public async Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
-        string privateEndpointName, string vnetSubnetId, string groupId,
+        string privateEndpointName, string vnetSubnetId, AzureBackupPrivateEndpointGroupId groupId,
         string? location, bool autoApprove,
         string? tenant,
         CancellationToken cancellationToken)
@@ -34,10 +30,8 @@ public sealed partial class RsvBackupOperations
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(privateEndpointName), privateEndpointName),
-            (nameof(vnetSubnetId), vnetSubnetId),
-            (nameof(groupId), groupId));
+            (nameof(vnetSubnetId), vnetSubnetId));
 
-        ValidateGroupId(groupId);
         var subnetResourceId = ParseSubnetId(vnetSubnetId);
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
@@ -61,7 +55,7 @@ public sealed partial class RsvBackupOperations
             Name = privateEndpointName,
             PrivateLinkServiceId = new ResourceIdentifier(vaultId.ToString()),
         };
-        connection.GroupIds.Add(groupId);
+        connection.GroupIds.Add(groupId.ToValue());
 
         var peData = new PrivateEndpointData
         {
@@ -213,15 +207,6 @@ public sealed partial class RsvBackupOperations
         var id = BackupPrivateEndpointConnectionResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, privateEndpointConnectionName);
         return armClient.GetBackupPrivateEndpointConnectionResource(id);
-    }
-
-    private static void ValidateGroupId(string groupId)
-    {
-        if (!s_allowedGroupIds.Contains(groupId, StringComparer.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException(
-                $"Invalid --group-id '{groupId}'. Recovery Services vaults support only 'AzureBackup' (primary region) or 'AzureBackup_secondary' (paired region, Cross-Region Restore).");
-        }
     }
 
     private static ResourceIdentifier ParseSubnetId(string subnetId)

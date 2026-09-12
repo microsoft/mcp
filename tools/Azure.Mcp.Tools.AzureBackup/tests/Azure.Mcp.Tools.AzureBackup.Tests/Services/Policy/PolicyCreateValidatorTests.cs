@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Xunit;
@@ -15,7 +16,7 @@ public class PolicyCreateValidatorTests
         ResourceGroup = "rg",
         Vault = "v",
         Policy = "p",
-        WorkloadType = workload,
+        WorkloadType = Enum.Parse<AzureBackupPolicyWorkloadType>(workload, ignoreCase: true),
     };
 
     // ----- Rule C: AKS support (Stage 2  -  AKS is now first-class) -----
@@ -61,13 +62,12 @@ public class PolicyCreateValidatorTests
 
     // ----- Unknown workload-type rejection (command-boundary validation) -----
 
-    [Theory]
-    [InlineData("garbage")]
-    [InlineData("s3bucket")]
-    [InlineData("'); DROP TABLE--")]
-    public void Validate_UnknownWorkloadType_RejectsWithActionableMessage(string workload)
+    [Fact]
+    public void Validate_UnknownWorkloadType_RejectsWithActionableMessage()
     {
-        var options = BaseOptions(workload);
+        var workload = (AzureBackupPolicyWorkloadType)int.MaxValue;
+        var options = BaseOptions();
+        options.WorkloadType = workload;
         options.DailyRetentionDays = "30";
 
         var result = PolicyCreateValidator.Validate(options);
@@ -75,7 +75,7 @@ public class PolicyCreateValidatorTests
         Assert.False(result.IsValid);
         Assert.Single(result.Issues);
         Assert.Contains("Unknown workload type", result.Issues[0].Message);
-        Assert.Contains(workload, result.Issues[0].Message);
+        Assert.Contains(workload.ToString(), result.Issues[0].Message);
         Assert.Contains("VM", result.Issues[0].Message);
         Assert.Contains("AzureDisk", result.Issues[0].Message);
     }

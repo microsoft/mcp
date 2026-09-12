@@ -100,8 +100,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         "Microsoft.DocumentDB/databaseAccounts"
     ];
     public async Task<VaultCreateResult> CreateVaultAsync(
-        string vaultName, string resourceGroup, string subscription, string vaultType,
-        string location, string? sku, string? storageType, string? tenant,
+        string vaultName, string resourceGroup, string subscription, AzureBackupVaultType vaultType,
+        string location, string? sku, AzureBackupStorageType? storageType, string? tenant,
         CancellationToken cancellationToken)
     {
         // Perform validations that don't require a network call first so invalid input
@@ -116,7 +116,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
@@ -135,7 +135,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
-        string subscription, string? resourceGroup, string? vaultType, string? tenant,
+        string subscription, string? resourceGroup, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken,
         VaultExpand expand = VaultExpand.None)
     {
@@ -201,8 +201,8 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
-        string datasourceId, string policyName, string? vaultType,
-        string? containerName, string? datasourceType,
+        string datasourceId, string policyName, AzureBackupVaultType? vaultType,
+        string? containerName, AzureBackupDatasourceType? datasourceType,
         string? aksIncludedNamespaces, string? aksExcludedNamespaces,
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
@@ -232,7 +232,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string? policyName,
         DiskExclusionSpec? diskExclusion,
-        string? vaultType, string? containerName,
+        AzureBackupVaultType? vaultType, string? containerName,
         string? tenant,
         CancellationToken cancellationToken)
     {
@@ -251,7 +251,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
-        string protectedItemName, string? vaultType, string? containerName,
+        string protectedItemName, AzureBackupVaultType? vaultType, string? containerName,
         string? tenant, CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -264,7 +264,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -277,7 +277,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> UndeleteProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
-        string datasourceId, string? vaultType, string? containerName,
+        string datasourceId, AzureBackupVaultType? vaultType, string? containerName,
         string? tenant, CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -290,7 +290,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<BackupPolicyInfo> GetPolicyAsync(
         string vaultName, string resourceGroup, string subscription,
-        string policyName, string? vaultType, string? tenant,
+        string policyName, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -303,7 +303,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -316,7 +316,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
-        string jobId, string? vaultType, string? tenant,
+        string jobId, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -329,7 +329,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -342,7 +342,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<RecoveryPointInfo> GetRecoveryPointAsync(
         string vaultName, string resourceGroup, string subscription,
-        string protectedItemName, string recoveryPointId, string? vaultType,
+        string protectedItemName, string recoveryPointId, AzureBackupVaultType? vaultType,
         string? containerName, string? tenant,
         CancellationToken cancellationToken)
     {
@@ -356,7 +356,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string protectedItemName, string? vaultType, string? containerName,
+        string protectedItemName, AzureBackupVaultType? vaultType, string? containerName,
         string? tenant, CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -370,9 +370,9 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? redundancy, string? softDelete,
+        AzureBackupVaultType? vaultType, string? redundancy, string? softDelete,
         string? softDeleteRetentionDays, string? immutabilityState,
-        string? identityType, string? tags, string? tenant,
+        AzureBackupManagedIdentityType? identityType, string? tags, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -385,7 +385,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<OperationResult> CreatePolicyAsync(
         Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType,
+        AzureBackupVaultType? vaultType,
         string? tenant, CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -398,7 +398,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<OperationResult> UpdatePolicyAsync(
         Policy.PolicyUpdateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType,
+        AzureBackupVaultType? vaultType,
         string? tenant, CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -413,7 +413,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? workloadType, string? containerName, string? vaultType, string? tenant,
+        AzureBackupProtectableItemWorkloadType? workloadType, string? containerName, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -860,7 +860,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         AzureBackupImmutabilityState immutabilityState,
         AzureBackupImmutabilityType immutabilityType,
         int? immutabilityDurationDays,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -891,7 +891,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string vaultName, string resourceGroup, string subscription,
         AzureBackupSoftDeleteState softDeleteState,
         int softDeleteRetentionDays,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         if (softDeleteRetentionDays < 14 || softDeleteRetentionDays > 180)
@@ -910,7 +910,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -924,7 +924,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string resourceGuardId, string? vaultType, string? tenant,
+        string resourceGuardId, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -936,7 +936,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -948,9 +948,9 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> ConfigureEncryptionAsync(
         string vaultName, string resourceGroup, string subscription,
-        string keyVaultUri, string keyName, string identityType,
+        string keyVaultUri, string keyName, AzureBackupEncryptionIdentityType identityType,
         string? keyVersion, string? userAssignedIdentityId,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
@@ -1133,22 +1133,22 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
-        string privateEndpointName, string vnetSubnetId, string groupId,
+        string privateEndpointName, string vnetSubnetId, AzureBackupPrivateEndpointGroupId groupId,
         string? location, bool autoApprove,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
         EnsurePrivateEndpointVaultType(await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken));
         return await rsvOps.CreatePrivateEndpointAsync(
             vaultName, resourceGroup, subscription, privateEndpointName, vnetSubnetId,
-            string.IsNullOrWhiteSpace(groupId) ? "AzureBackup" : groupId,
+            groupId,
             location, autoApprove, tenant, cancellationToken);
     }
 
     public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
-        string privateEndpointConnectionName, string? vaultType, string? tenant,
+        string privateEndpointConnectionName, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -1160,7 +1160,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -1171,7 +1171,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<OperationResult> DeletePrivateEndpointAsync(
         string vaultName, string resourceGroup, string subscription,
-        string privateEndpointConnectionName, string? vaultType, string? tenant,
+        string privateEndpointConnectionName, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -1184,7 +1184,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointConnectionName, PrivateEndpointConnectionAction action,
-        string? description, string? vaultType, string? tenant,
+        string? description, AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -1197,7 +1197,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             targetStatus, description, tenant, cancellationToken);
     }
 
-    private static void EnsurePrivateEndpointVaultType(string resolvedVaultType)
+    private static void EnsurePrivateEndpointVaultType(AzureBackupVaultType resolvedVaultType)
     {
         if (!VaultTypeResolver.IsRsv(resolvedVaultType))
         {
@@ -1207,20 +1207,20 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     }
 
 
-    private async Task<string> ResolveVaultTypeAsync(
+    private async Task<AzureBackupVaultType> ResolveVaultTypeAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? vaultType, string? tenant,
+        AzureBackupVaultType? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         if (VaultTypeResolver.IsVaultTypeSpecified(vaultType))
         {
-            return vaultType!;
+            return vaultType!.Value;
         }
 
         try
         {
             await rsvOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
-            return VaultTypeResolver.Rsv;
+            return AzureBackupVaultType.Rsv;
         }
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)
         {
@@ -1234,7 +1234,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         try
         {
             await dppOps.GetVaultAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
-            return VaultTypeResolver.Dpp;
+            return AzureBackupVaultType.Dpp;
         }
         catch (RequestFailedException ex) when (ex.Status is 401 or 403)
         {
