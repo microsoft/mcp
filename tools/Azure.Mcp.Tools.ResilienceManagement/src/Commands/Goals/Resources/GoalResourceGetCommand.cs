@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
         goal participation, exclusion reasons, provisioning state, the resource ARM id, and service group
         memberships). Omit the name to list all resources of the goal assignment, returning only their id and name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

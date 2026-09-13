@@ -1247,6 +1247,16 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var securitySettings = properties?.SecuritySettings;
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
 
         string? crossRegionRestoreState = null;
         string? encryptionState = null;
@@ -1279,21 +1289,130 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             MuaResourceGuardId: muaResourceGuardId,
             CrossRegionRestoreState: crossRegionRestoreState,
             EncryptionState: encryptionState,
-            EncryptionKeyUri: encryptionKeyUri);
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(DataProtectionBackupInstanceData data)
     {
+        var properties = data.Properties;
+        var dataSourceInfo = properties?.DataSourceInfo;
+        var dataSourceSetInfo = properties?.DataSourceSetInfo;
+        var policyInfo = properties?.PolicyInfo;
+        var protectionStatus = properties?.ProtectionStatus;
+        var resourceProtectionError = properties?.ResourceProtectionErrorDetails;
+        var identityDetails = properties?.IdentityDetails;
+
         return new ProtectedItemInfo(
             data.Id?.ToString(),
             data.Name,
             VaultType,
-            data.Properties?.ProtectionStatus?.Status?.ToString(),
-            data.Properties?.DataSourceInfo?.DataSourceType,
-            data.Properties?.DataSourceInfo?.ResourceId?.ToString(),
-            data.Properties?.PolicyInfo?.PolicyId?.Name,
+            protectionStatus?.Status?.ToString(),
+            dataSourceInfo?.DataSourceType,
+            dataSourceInfo?.ResourceId?.ToString(),
+            policyInfo?.PolicyId?.Name,
+            null,
+            null,
+            null,
+            new ProtectedItemDppDetails(
+                FriendlyName: properties?.FriendlyName,
+                CurrentProtectionState: properties?.CurrentProtectionState?.ToString(),
+                ProvisioningState: properties?.ProvisioningState?.ToString(),
+                ValidationType: properties?.ValidationType?.ToString(),
+                ObjectType: properties?.ObjectType,
+                ResourceGuardOperationRequests: properties?.ResourceGuardOperationRequests?.ToList(),
+                DataSourceInfo: dataSourceInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        ResourceId: dataSourceInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceInfo.ResourceName,
+                        DataSourceType: dataSourceInfo.DataSourceType,
+                        ResourceType: dataSourceInfo.ResourceType,
+                        ResourceLocation: dataSourceInfo.ResourceLocation,
+                        ObjectType: dataSourceInfo.ObjectType,
+                        ResourceUriString: dataSourceInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceInfo.ResourceProperties)),
+                DataSourceSetInfo: dataSourceSetInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        ResourceId: dataSourceSetInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceSetInfo.ResourceName,
+                        DataSourceType: dataSourceSetInfo.DataSourceType,
+                        ResourceType: dataSourceSetInfo.ResourceType,
+                        ResourceLocation: dataSourceSetInfo.ResourceLocation,
+                        ObjectType: dataSourceSetInfo.ObjectType,
+                        ResourceUriString: dataSourceSetInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceSetInfo.ResourceProperties)),
+                PolicyInfo: policyInfo is null
+                    ? null
+                    : new ProtectedItemDppPolicyInfo(
+                        PolicyId: policyInfo.PolicyId?.ToString(),
+                        PolicyVersion: policyInfo.PolicyVersion,
+                        PolicyParameters: ConvertToString(policyInfo.PolicyParameters)),
+                ProtectionStatus: protectionStatus is null
+                    ? null
+                    : new ProtectedItemDppProtectionStatus(
+                        Status: protectionStatus.Status?.ToString(),
+                        ErrorDetails: null,
+                        protectionStatus.ProtectionStatusErrorDetails is null
+                            ? null
+                            : [MapToDppError(protectionStatus.ProtectionStatusErrorDetails)]),
+                ResourceProtectionError: resourceProtectionError is null
+                    ? null
+                    : MapToDppError(resourceProtectionError),
+                DataSourceAuthCredentialsType: properties?.DataSourceAuthCredentials?.GetType().Name,
+                IdentityDetails: identityDetails is null
+                    ? null
+                    : new ProtectedItemDppIdentityDetails(
+                        UserAssignedIdentityArmUri: null,
+                        UseSystemAssignedIdentity: identityDetails.UseSystemAssignedIdentity,
+                        UserAssignedIdentityId: identityDetails.UserAssignedIdentityId)));
+    }
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupUserFacingError error) =>
+        new(
+            error.Code,
+            error.Message,
+            error.RecommendedAction?.ToList(),
+            error.Target,
+            error.IsRetryable,
+            error.IsUserError,
+            error.Details?.Select(MapToDppError).ToList(),
+            error.InnerError is null ? null : MapToDppError(error.InnerError),
+            error.Properties?.ToDictionary(p => p.Key, p => p.Value));
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupInnerError error) =>
+        new(
+            error.Code,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            error.EmbeddedInnerError is null ? null : MapToDppError(error.EmbeddedInnerError),
+            error.AdditionalInfo?.ToDictionary(p => p.Key, p => p.Value));
+
+    private static ProtectedItemDppError MapToDppError(Azure.ResponseError error) =>
+        new(
+            error.Code,
+            error.Message,
+            null,
+            null,
+            null,
+            null,
+            null,
             null,
             null);
+
+    private static string? ConvertToString(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        return value.ToString();
     }
 
     private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)

@@ -11,10 +11,10 @@ public sealed class RecoveryResourceGetOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = ResilienceManagementOptionDescriptions.RecoveryPlan)]
+    [Option(Name = "recoveryplan", Description = ResilienceManagementOptionDescriptions.RecoveryPlan)]
     public required string RecoveryPlan { get; set; }
 
-    [Option(Description = "The name of the recovery resource (member). Provide this argument to get the details of a particular recovery resource; omit it to list all resources (members) of the recovery plan (id and name only).")]
+    [Option(Description = "The name of the recovery resource (member). Provide this argument to get the details of a particular recovery resource; omit it to list all resources (members) of the recoveryplan (id and name only).")]
     public string? Name { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

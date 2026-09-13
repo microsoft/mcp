@@ -47,6 +47,9 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectedItemUpdateProtectionCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
+        services.AddSingleton<ContainerListAvailableCommand>();
+
+        services.AddSingleton<ContainerRefreshCommand>();
 
         services.AddSingleton<BackupStatusCommand>();
 
@@ -118,13 +121,16 @@ public sealed class AzureBackupSetup : IAreaSetup
         azureBackup.AddSubGroup(protectableItem);
         protectableItem.AddCommand<ProtectableItemListCommand>(serviceProvider);
 
+        var container = new CommandGroup("container",
+            "Container operations - Manage RSV protection containers: look up an existing container to check whether a storage account, VM, or workload server has been registered; trigger discovery (refresh); and list storage accounts available for Azure File share backup registration. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
+        azureBackup.AddSubGroup(container);
+        container.AddCommand<ContainerGetCommand>(serviceProvider);
+        container.AddCommand<ContainerListAvailableCommand>(serviceProvider);
+        container.AddCommand<ContainerRefreshCommand>(serviceProvider);
+
         var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);
         backup.AddCommand<BackupStatusCommand>(serviceProvider);
-
-        var container = new CommandGroup("container", "Container operations - Manage RSV protection containers: look up an existing container to check whether a storage account, VM, or workload server has been registered with the vault. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
-        azureBackup.AddSubGroup(container);
-        container.AddCommand<ContainerGetCommand>(serviceProvider);
 
         var job = new CommandGroup("job", "Backup job operations - Get job details or list all jobs in a vault.");
         azureBackup.AddSubGroup(job);

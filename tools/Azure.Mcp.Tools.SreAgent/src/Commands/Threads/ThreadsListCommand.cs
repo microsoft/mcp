@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Name = "list",
     Title = "List Threads",
     Description = "List SRE Agent chat threads.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

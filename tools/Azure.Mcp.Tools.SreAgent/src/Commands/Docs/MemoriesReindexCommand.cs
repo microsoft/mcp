@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Name = "memories_reindex",
     Title = "Reindex Memories",
     Description = "Trigger a knowledge base reindex.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

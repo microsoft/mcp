@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.MySql.Commands.Table;
     Name = "get",
     Title = "Get MySQL Table Schema",
     Description = "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

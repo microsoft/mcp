@@ -92,6 +92,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.1.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="10.9.0" />
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview4" /> <!-- This hasn't been released since 2021 and is a preview, review further. -->

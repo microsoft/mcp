@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
     Name = "unregister",
     Title = "Unregister Server",
     Description = "Unregister a server from a Storage Sync service.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

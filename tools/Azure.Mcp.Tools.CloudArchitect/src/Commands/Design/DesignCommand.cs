@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
         6. Cover all tiers: infrastructure, platform, application, data, security, operations.
         7. Provide actionable advice and high-level overview. Note: State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

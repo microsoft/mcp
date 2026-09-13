@@ -16,6 +16,8 @@ public class EndpointValidatorTests
 
     [Theory]
     [InlineData("https://mycomm.communication.azure.com", "communication")]
+    [InlineData("https://my-instance.energy.azure.com", "adme")]
+    [InlineData("https://my-instance.oep.ppe.azure-int.net", "adme")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://my-foundry.services.ai.azure.com", "foundry")]
@@ -33,6 +35,9 @@ public class EndpointValidatorTests
 
     [Theory]
     [InlineData("https://evil.com", "communication", "not a valid communication domain")]
+    [InlineData("https://evil.com", "adme", "not a valid adme domain")]
+    [InlineData("https://my-instance.energy.azure.com.evil.com", "adme", "not a valid adme domain")]
+    [InlineData("http://my-instance.energy.azure.com", "adme", "must use HTTPS")]
     [InlineData("https://evil.com/.communication.azure.com", "communication", "not a valid communication domain")]
     [InlineData("http://mycomm.communication.azure.com", "communication", "must use HTTPS")]
     [InlineData("ftp://myconfig.azconfig.io", "appconfig", "must use HTTPS")]

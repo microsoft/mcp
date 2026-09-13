@@ -42,6 +42,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
         - Cosmos DB: ARM (account level)
         - Elastic SAN: ARM (volume group level)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

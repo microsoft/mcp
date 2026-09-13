@@ -67,9 +67,9 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         // Arrange
         var expectedRecommendations = new List<Models.Recommendation>
         {
-            new(new Models.RecommendationProperties(Category: "HighAvailability"), Id: "recId1"),
-            new(new Models.RecommendationProperties(Category: "Cost"), Id: "recId2"),
-            new(new Models.RecommendationProperties(Category: "Performance"), Id: "recId3")
+            new(new Models.RecommendationProperties(Category: "HighAvailability"), Id: "/recommendations/recId1", Name: "recId1"),
+            new(new Models.RecommendationProperties(Category: "Cost"), Id: "/recommendations/recId2", Name: "recId2"),
+            new(new Models.RecommendationProperties(Category: "Performance"), Id: "/recommendations/recId3", Name: "recId3")
         };
         Service.ListRecommendationsAsync(
             Arg.Any<string>(),
@@ -88,6 +88,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
         Assert.Equal(expectedRecommendations[0].Id, result.Recommendations[0].Id);
+        Assert.Equal(expectedRecommendations[0].Name, result.Recommendations[0].Name);
         Assert.Equal(expectedRecommendations[0].Properties.Category, result.Recommendations[0].Properties.Category);
 
         // Verify the mock was called

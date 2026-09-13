@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Name = "list",
     Title = "List Kusto Tables",
     Description = "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

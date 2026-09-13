@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Name = "update",
     Title = "Update Managed Disk",
     Description = "Updates or modifies properties of an existing Azure managed disk that was previously created. If resource group is not specified, the disk is located by name within the subscription. Supports changing disk size (can only increase), storage SKU, IOPS and throughput limits (UltraSSD only), max shares for shared disk attachments, on-demand bursting, tags, encryption settings, disk access, and performance tier. Modify the network access policy to DenyAll, AllowAll, or AllowPrivate on an existing disk. Only specified properties are updated; unspecified properties remain unchanged.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

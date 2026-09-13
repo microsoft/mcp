@@ -21,6 +21,7 @@ namespace Azure.Mcp.Core.Areas.Group.Commands;
         in the specified subscription. Results include resource group names and IDs,
         returned as a JSON array.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

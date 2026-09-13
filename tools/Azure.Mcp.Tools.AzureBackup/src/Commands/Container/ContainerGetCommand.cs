@@ -33,6 +33,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Container;
         'registered: false' and 'container: null' — this is the idempotency signal for register/refresh
         callers. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) return HTTP 400.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

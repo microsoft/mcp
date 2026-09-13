@@ -44,6 +44,7 @@ public class AzureBackupSetupTests
         Assert.Contains("policy", groupNames);
         Assert.Contains("protecteditem", groupNames);
         Assert.Contains("protectableitem", groupNames);
+        Assert.Contains("container", groupNames);
         Assert.Contains("backup", groupNames);
         Assert.Contains("container", groupNames);
         Assert.Contains("job", groupNames);
@@ -83,6 +84,12 @@ public class AzureBackupSetupTests
         Assert.Contains(vault.Commands, c => c.Key == "get");
         Assert.Contains(vault.Commands, c => c.Key == "create");
         Assert.Contains(vault.Commands, c => c.Key == "update");
+
+        var privateEndpoint = vault.SubGroup.First(g => g.Name == "privateendpoint");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "create");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "get");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "delete");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "approve-reject");
     }
 
     [Fact]
@@ -114,6 +121,20 @@ public class AzureBackupSetupTests
     }
 
     [Fact]
+    public void RegisterCommands_ContainerGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var container = root.SubGroup.First(g => g.Name == "container");
+
+        Assert.Contains(container.Commands, c => c.Key == "get");
+        Assert.Contains(container.Commands, c => c.Key == "list-available");
+        Assert.Contains(container.Commands, c => c.Key == "refresh");
+    }
+
+    [Fact]
     public void RegisterCommands_PolicyGroup_ShouldHaveExpectedCommands()
     {
         var setup = new AzureBackupSetup();
@@ -128,15 +149,31 @@ public class AzureBackupSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_ContainerGroup_ShouldHaveExpectedCommands()
+    public void RegisterCommands_SecurityGroup_ShouldHaveExpectedCommands()
     {
         var setup = new AzureBackupSetup();
         var services = CreateServiceProvider(setup);
 
         var root = setup.RegisterCommands(services);
-        var container = root.SubGroup.First(g => g.Name == "container");
+        var security = root.SubGroup.First(g => g.Name == "security");
 
-        Assert.Contains(container.Commands, c => c.Key == "get");
+        Assert.Contains(security.Commands, c => c.Key == "enable-mua");
+        Assert.Contains(security.Commands, c => c.Key == "disable-mua");
+        Assert.Contains(security.Commands, c => c.Key == "configure-encryption");
+    }
+
+    [Fact]
+    public void RegisterCommands_ResourceGuardGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var resourceGuard = root.SubGroup.First(g => g.Name == "resourceguard");
+
+        Assert.Contains(resourceGuard.Commands, c => c.Key == "create");
+        Assert.Contains(resourceGuard.Commands, c => c.Key == "get");
+        Assert.Contains(resourceGuard.Commands, c => c.Key == "delete");
     }
 
     [Fact]

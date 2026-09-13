@@ -2,8 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Models;
+using Azure.Mcp.Tools.Advisor.Validation;
+using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
@@ -13,6 +18,7 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
+    private const string RecommendationUpdateApiVersion = "2026-03-01-preview";
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
@@ -29,19 +35,6 @@ public class AdvisorService(IAzureService azureService)
         ["Medium"] = 1,
         ["Low"] = 2,
     };
-
-    internal const string GroupByRecommendationType = "recommendation-type";
-    internal const string GroupByCategory = "category";
-    internal const string GroupByImpact = "impact";
-    internal const string GroupByResourceType = "resource-type";
-
-    internal static readonly IReadOnlyList<string> AllowedGroupBy =
-    [
-        GroupByRecommendationType,
-        GroupByCategory,
-        GroupByImpact,
-        GroupByResourceType,
-    ];
 
     public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
         string subscription,
@@ -70,7 +63,13 @@ public class AdvisorService(IAzureService azureService)
             return new([], false);
         }
 
-        var additionalFilter = BuildAdditionalFilter(filters, metadataByTypeId?.Keys);
+        var additionalFilter = RecommendationQueryBuilder.BuildInstancePredicates(
+            filters,
+            includeStatus: true,
+            useRequestedStatus: true,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false,
+            recommendationTypeIds: metadataByTypeId?.Keys);
 
         var recommendations = await ExecuteResourceQueryAsync(
             "Microsoft.Advisor/recommendations",
@@ -99,6 +98,86 @@ public class AdvisorService(IAzureService azureService)
         return new(
             JoinWithMetadata(recommendations.Results, metadataByTypeId),
             recommendations.AreResultsTruncated);
+    }
+
+    public async Task<Recommendation> UpdateRecommendationAsync(
+        string subscription,
+        string recommendationId,
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime = null,
+        RecommendationDismissReason? recommendationDismissReason = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(recommendationId), recommendationId));
+        RecommendationStateUpdateValidator.Validate(
+            recommendationStatus,
+            postponedUntilDateTime,
+            recommendationDismissReason);
+        recommendationDismissReason = RecommendationStateUpdateValidator.ResolveDismissReason(
+            recommendationStatus,
+            recommendationDismissReason);
+
+        var subscriptionResource = await AzureService.GetSubscription(
+            subscription,
+            tenant,
+            cancellationToken);
+        var subscriptionId = subscriptionResource.Id.SubscriptionId
+            ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
+        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
+        var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
+
+        var relativePath =
+            $"/subscriptions/{Uri.EscapeDataString(subscriptionId)}/providers/Microsoft.Advisor/recommendations/" +
+            $"{Uri.EscapeDataString(recommendationId.Trim())}?api-version={RecommendationUpdateApiVersion}";
+        var requestUri = new Uri(managementEndpoint, relativePath);
+        var properties = new Models.RecommendationStatePatchProperties(
+            recommendationStatus,
+            recommendationStatus == RecommendationStatus.Postponed ? postponedUntilDateTime : null,
+            recommendationStatus == RecommendationStatus.Dismissed ? recommendationDismissReason : null);
+
+        using var client = AzureService.GetClient();
+        using var response = await SendRecommendationUpdateAsync(
+            client,
+            requestUri,
+            accessToken.Token,
+            properties,
+            cancellationToken);
+
+        if (response.IsError)
+        {
+            throw CreateRecommendationUpdateException(response);
+        }
+
+        using var document = JsonDocument.Parse(response.Content.ToStream());
+
+        return ConvertUpdateResponseToAdvisorRecommendationModel(document.RootElement);
+    }
+
+    private static async Task<Response> SendRecommendationUpdateAsync(
+        HttpClient client,
+        Uri requestUri,
+        string accessToken,
+        Models.RecommendationStatePatchProperties properties,
+        CancellationToken cancellationToken)
+    {
+        var clientOptions = AddDefaultPolicies(new ArmClientOptions());
+        clientOptions.Transport = new HttpClientTransport(client);
+
+        var pipeline = HttpPipelineBuilder.Build(clientOptions);
+        using var request = pipeline.CreateRequest();
+        request.Method = RequestMethod.Patch;
+        request.Uri.Reset(requestUri);
+        request.Headers.Add("Authorization", $"Bearer {accessToken}");
+        request.Headers.Add("Accept", "application/json");
+        request.Headers.Add("Content-Type", "application/json");
+        request.Content = RequestContent.Create(JsonSerializer.SerializeToUtf8Bytes(
+            new Models.RecommendationStatePatchRequest(properties),
+            AdvisorJsonContext.Default.RecommendationStatePatchRequest));
+
+        return await pipeline.SendRequestAsync(request, cancellationToken);
     }
 
     private async Task<SubscriptionResource> ValidateScopeAsync(
@@ -258,7 +337,7 @@ public class AdvisorService(IAzureService azureService)
         "| project properties";
 
     private static string FormatKqlStringList(IEnumerable<string> values) =>
-        string.Join(", ", values.Select(value => $"'{SanitizeForKql(value)}'"));
+        string.Join(", ", values.Select(value => $"'{RecommendationQueryBuilder.SanitizeForKql(value)}'"));
 
     private static List<string> NormalizeFilterValues(IEnumerable<string>? values) =>
         values is null
@@ -640,156 +719,6 @@ public class AdvisorService(IAzureService azureService)
         return ConvertToRecommendationMetadataModel(dataArray[0]);
     }
 
-    public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
-        string subscription,
-        string? resourceGroup,
-        string groupBy,
-        RecommendationFilters? filters = null,
-        string? tenant = null,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
-
-        var subscriptionResource = await ValidateScopeAsync(subscription, resourceGroup, tenant, cancellationToken);
-        var allTenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == subscriptionResource.Data.TenantId)
-            ?? throw new InvalidOperationException($"No accessible tenant found for subscription '{subscription}'");
-
-        var query = BuildSummarizeQuery(groupBy, resourceGroup, filters);
-        var queryContent = new ResourceQueryContent(query)
-        {
-            Subscriptions = { subscriptionResource!.Data.SubscriptionId }
-        };
-
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-
-        var allGroups = new List<RecommendationGroup>();
-        if (result?.Count > 0)
-        {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            var dataArray = jsonDocument.RootElement;
-            if (dataArray.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var item in dataArray.EnumerateArray())
-                {
-                    var key = item.TryGetProperty("key", out var keyProp) && keyProp.ValueKind == JsonValueKind.String
-                        ? keyProp.GetString() ?? "Unknown"
-                        : "Unknown";
-                    var count = item.TryGetProperty("count_", out var countProp) ? countProp.GetInt64() : 0;
-                    allGroups.Add(new RecommendationGroup(key, (int)count));
-                }
-            }
-        }
-
-        var totalRecommendations = allGroups.Sum(g => g.Count);
-
-        return new(groupBy, totalRecommendations, allGroups);
-    }
-
-    internal static string BuildSummarizeQuery(string groupBy, string? resourceGroup, RecommendationFilters? filters)
-    {
-        var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
-
-        if (!string.IsNullOrEmpty(resourceGroup))
-        {
-            query += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
-        }
-
-        var additionalFilter = BuildAdditionalFilter(filters);
-        if (!string.IsNullOrEmpty(additionalFilter))
-        {
-            query += $" and {additionalFilter}";
-        }
-
-        var summarizeField = MapGroupByToKqlField(groupBy);
-        query += $" | summarize count() by key={summarizeField}";
-        // Push 'Unknown' to the end regardless of count so real categories are surfaced first.
-        query += " | order by iff(key == 'Unknown', 1, 0) asc, count_ desc, key asc";
-
-        return query;
-    }
-
-    internal static string MapGroupByToKqlField(string groupBy) => groupBy.ToLowerInvariant() switch
-    {
-        GroupByCategory =>
-            "iff(isempty(tostring(properties.category)), 'Unknown', tostring(properties.category))",
-        GroupByImpact =>
-            "iff(isempty(tostring(properties.impact)), 'Unknown', tostring(properties.impact))",
-        GroupByRecommendationType =>
-            "iff(isempty(tostring(properties.shortDescription.problem)), 'Unknown', tostring(properties.shortDescription.problem))",
-        GroupByResourceType =>
-            "iff(isempty(extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId))), 'Unknown', " +
-            "extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId)))",
-        _ => throw new ArgumentException(
-            $"Unsupported group-by value '{groupBy}'. Allowed values: {string.Join(", ", AllowedGroupBy)}.",
-            nameof(groupBy)),
-    };
-
-    internal static string? BuildAdditionalFilter(
-        RecommendationFilters? filters,
-        IEnumerable<string>? recommendationTypeIds = null)
-    {
-        // New recommendations are active and actionable, so use that status unless the caller explicitly
-        // requests another lifecycle state.
-        var status = filters?.Status ?? RecommendationStatus.New;
-        var clauses = new List<string>
-        {
-            $"tostring(properties.recommendationStatus) =~ '{status}'",
-        };
-
-        if (filters is not null)
-        {
-            var resolvedTypeIds = recommendationTypeIds?.ToList();
-            var metadataWasResolved = resolvedTypeIds is not null;
-
-            if (!metadataWasResolved && !string.IsNullOrWhiteSpace(filters.Category))
-            {
-                clauses.Add($"tostring(properties.category) =~ '{SanitizeForKql(filters.Category)}'");
-            }
-
-            if (!metadataWasResolved && !string.IsNullOrWhiteSpace(filters.Impact))
-            {
-                clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
-            }
-
-            if (!string.IsNullOrWhiteSpace(filters.RecommendationTypeId))
-            {
-                clauses.Add($"tostring(properties.recommendationTypeId) =~ '{SanitizeForKql(filters.RecommendationTypeId)}'");
-            }
-
-            if (!string.IsNullOrWhiteSpace(filters.ResourceType))
-            {
-                clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.ResourceType)}'");
-            }
-
-            if (!string.IsNullOrWhiteSpace(filters.Resource))
-            {
-                clauses.Add($"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.Resource)}'");
-            }
-
-            if (!string.IsNullOrWhiteSpace(filters.Search))
-            {
-                clauses.Add($"tostring(properties.shortDescription.problem) contains '{SanitizeForKql(filters.Search)}'");
-            }
-        }
-
-        // Metadata-backed filters arrive here as recommendation type IDs. Resource and search filters remain
-        // predicates on recommendation-instance properties.
-        var typeIds = recommendationTypeIds?.ToList();
-        if (typeIds is { Count: > 0 })
-        {
-            clauses.Add($"tostring(properties.recommendationTypeId) in~ ({FormatKqlStringList(typeIds)})");
-        }
-
-        return string.Join(" and ", clauses);
-    }
-
-    // Default KQL clause that restricts results to active ('New') recommendations.
-    internal const string ActiveRecommendationClause = "tostring(properties.recommendationStatus) =~ 'New'";
-
-    private static string SanitizeForKql(string value) => EscapeKqlString(value.Replace("|", string.Empty));
-
     internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)
     {
         var advisorRecommendation = Models.RecommendationData.FromJson(item)
@@ -833,6 +762,12 @@ public class AdvisorService(IAzureService azureService)
             Id: advisorRecommendation.ResourceId,
             Type: advisorRecommendation.ResourceType,
             Name: advisorRecommendation.ResourceName);
+    }
+
+    internal static Recommendation ConvertUpdateResponseToAdvisorRecommendationModel(JsonElement item)
+    {
+        return JsonSerializer.Deserialize(item, AdvisorJsonContext.Default.Recommendation)
+            ?? throw new InvalidOperationException("Failed to parse Advisor recommendation update response");
     }
 
     private static IReadOnlyDictionary<string, JsonElement>? AddMetadataSubCategory(
@@ -924,5 +859,36 @@ public class AdvisorService(IAzureService azureService)
         }
 
         return ns is null ? null : $"{ns}/{string.Join('/', typeParts)}";
+    }
+
+    private static RequestFailedException CreateRecommendationUpdateException(Response response)
+    {
+        string? errorCode = null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(response.Content.ToStream());
+            if (document.RootElement.TryGetProperty("error", out var error) &&
+                error.ValueKind == JsonValueKind.Object &&
+                error.TryGetProperty("code", out var code) &&
+                code.ValueKind == JsonValueKind.String)
+            {
+                errorCode = code.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            // The status code remains authoritative when the service returns a non-JSON error body.
+        }
+
+        var message = errorCode is not null
+            ? $"Advisor recommendation update failed with error code '{errorCode}'."
+            : $"Advisor recommendation update failed with status code {response.Status}.";
+
+        return new RequestFailedException(
+            response.Status,
+            message,
+            errorCode,
+            null);
     }
 }
