@@ -109,6 +109,22 @@ public static partial class EndpointValidator
     /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
     /// </summary>
+    /// <remarks>
+    /// This compatibility overload always keeps SSRF protections enabled. New tool callers should use the
+    /// namespace-aware overload so the server's namespace-scoped emergency override can be applied.
+    /// </remarks>
+    /// <param name="endpoint">The endpoint URL to validate.</param>
+    /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
+    /// <param name="armEnvironment">The Azure cloud environment (Public, China, Government, etc.).</param>
+    public static void ValidateAzureServiceEndpoint(
+        string endpoint,
+        string serviceType,
+        ArmEnvironment armEnvironment)
+        => ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment, executingToolNamespaceName: null);
+
+    /// <summary>
+    /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
+    /// </summary>
     /// <param name="endpoint">The endpoint URL to validate.</param>
     /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
     /// <param name="armEnvironment">The Azure cloud environment (Public, China, Government, etc.).</param>
@@ -257,13 +273,13 @@ public static partial class EndpointValidator
     }
 
     /// <summary>
-    /// Test-only overload that validates a public target URL without an executing tool namespace.
+    /// Validates a public target URL without an executing tool namespace.
     /// </summary>
     /// <remarks>
-    /// This overload is internal solely so unit tests can exercise validation without configuring an executing
-    /// tool namespace. Production callers must use the public namespace-aware overload.
+    /// This compatibility overload always keeps SSRF protections enabled. New tool callers should use the
+    /// namespace-aware overload so the server's namespace-scoped emergency override can be applied.
     /// </remarks>
-    internal static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
+    public static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
         => ValidatePublicTargetUrl(url, logger, null);
 
     /// <summary>

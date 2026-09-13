@@ -37,13 +37,21 @@ public class EndpointValidatorTests
         Assert.Throws<SecurityException>(() =>
             EndpointValidator.ValidateAzureServiceEndpoint(
                 endpoint: "http://127.0.0.1",
+                serviceType: "acr",
+                armEnvironment: ArmEnvironment.AzurePublicCloud));
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidatePublicTargetUrl("http://127.0.0.1"));
+
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "http://127.0.0.1",
                 serviceType: "unknown-service",
                 armEnvironment: ArmEnvironment.AzurePublicCloud,
                 executingToolNamespaceName: "storage"));
 
         var exception = Assert.Throws<SecurityException>(
             () => EndpointValidator.SetDangerouslyDisabledSsrfProtectionNamespaces(["storage"]));
-        Assert.Contains("possible attack", exception.Message);
+        Assert.Contains("can only be configured once", exception.Message);
     }
 
     [Theory]
