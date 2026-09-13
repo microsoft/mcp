@@ -221,7 +221,10 @@ public static partial class EndpointValidator
             // TO MAINTAINERS: It will need to be a feature ask on the Microsoft.Security.AntiSSRF
             // to allow expressions of "exact match, only" in the URIValidator API. This may be
             // a breaking change. Until such functionality is added, the other code path remains.
-            isValid = URIValidator.InDomain(uriUnderTest.Host, allowedSuffixes);
+            //
+            // Pass the already-parsed Uri (not uriUnderTest.Host) so URIValidator applies its
+            // own IdnHost normalization instead of matching against the raw Unicode host.
+            isValid = URIValidator.InDomain(uriUnderTest, allowedSuffixes);
         }
 
         if (!isValid)

@@ -135,8 +135,8 @@ public class ServerStartCommandTests
     {
         // Arrange & Act
         var options = BindOptions(
-            "--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE", "acr",
-            "--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE", EndpointValidator.AllNamespaces);
+            "--dangerously-disable-ssrf-protections-by-namespace", "acr",
+            "--dangerously-disable-ssrf-protections-by-namespace", EndpointValidator.AllNamespaces);
 
         // Assert
         Assert.NotNull(options.DangerouslyDisableSsrfProtectionsByNamespace);
@@ -151,7 +151,7 @@ public class ServerStartCommandTests
 
         // Assert
         var hasOption = command.Options.Any(
-            o => o.Name == "--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE");
+            o => o.Name == "--dangerously-disable-ssrf-protections-by-namespace");
         Assert.True(hasOption, "DangerouslyDisableSsrfProtectionsByNamespace option should be registered");
     }
 

@@ -280,7 +280,7 @@ The `azmcp server start` command supports the following options:
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
-| `--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE` | No | None | **⚠️ DANGEROUS**: Disable endpoint SSRF validation for a tool namespace. Repeat the option for multiple namespaces, or specify `ALL` to disable it for every namespace. |
+| `--dangerously-disable-ssrf-protections-by-namespace` | No | None | **⚠️ DANGEROUS**: Disable endpoint SSRF validation for a tool namespace. Repeat the option for multiple namespaces, or specify `ALL` to disable it for every namespace. |
 | `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
@@ -302,7 +302,7 @@ The `azmcp server start` command supports the following options:
 > azmcp server start --dangerously-disable-elicitation
 > ```
 
-> **⚠️ Security Warning for `--DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE`:**
+> **⚠️ Security Warning for `--dangerously-disable-ssrf-protections-by-namespace`:**
 >
 > This option disables endpoint SSRF validation used by tools in the selected namespaces, including protocol, hostname allow-list, and private-network checks. When enabled:
 > - Untrusted tool input may cause requests to attacker-controlled or internal endpoints
@@ -314,8 +314,8 @@ The `azmcp server start` command supports the following options:
 > **Example usage (use with extreme caution):**
 > ```bash
 > azmcp server start \
->     --DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE acr \
->     --DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE loadtesting
+>     --dangerously-disable-ssrf-protections-by-namespace acr \
+>     --dangerously-disable-ssrf-protections-by-namespace loadtesting
 > ```
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**

@@ -72,8 +72,8 @@ public sealed class ServerStartOptions
     /// The special value <c>ALL</c> represents every tool namespace.
     /// </summary>
     [Option(
-        Name = "DANGEROUSLY-DISABLE-SSRF-PROTECTIONS-BY-NAMESPACE",
-        Description = "DANGEROUSLY disables SSRF protections for specified tool namespaces. Repeat this option to include multiple namespaces, or specify ALL to cover every namespace.")]
+        Name = "dangerously-disable-ssrf-protections-by-namespace",
+        Description = "Dangerously disables SSRF protections for specified tool namespaces. Repeat this option to include multiple namespaces, or specify ALL to cover every namespace.")]
     public string[]? DangerouslyDisableSsrfProtectionsByNamespace { get; set; } = null;
 
     /// <summary>
