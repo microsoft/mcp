@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Globalization;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -23,7 +24,7 @@ public sealed class StorageService(
     private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    public Task<StorageRecord> GetRecordAsync(
+    public Task<AdmeResponse<StorageRecord>> GetRecordAsync(
         string endpoint,
         string dataPartition,
         string id,
@@ -46,7 +47,7 @@ public sealed class StorageService(
     /// <summary>
     /// Lists the numeric versions of a record.
     /// </summary>
-    public Task<RecordVersionsResponse> ListRecordVersionsAsync(
+    public Task<AdmeResponse<RecordVersionsResponse>> ListRecordVersionsAsync(
         string endpoint,
         string dataPartition,
         string id,
@@ -65,7 +66,7 @@ public sealed class StorageService(
             cancellationToken);
     }
 
-    public Task<QueryRecordsResponse> QueryRecordsByKindAsync(
+    public Task<AdmeResponse<QueryRecordsResponse>> QueryRecordsByKindAsync(
         string endpoint,
         string dataPartition,
         string kind,
@@ -87,7 +88,7 @@ public sealed class StorageService(
             sendJsonContentTypeHint: true);
     }
 
-    public Task<FetchRecordsResponse> FetchRecordsAsync(
+    public Task<AdmeResponse<FetchRecordsResponse>> FetchRecordsAsync(
         string endpoint,
         string dataPartition,
         IReadOnlyList<string> ids,
@@ -119,7 +120,7 @@ public sealed class StorageService(
             cancellationToken);
     }
 
-    public Task<UpsertRecordsResponse> UpsertRecordsAsync(
+    public Task<AdmeResponse<UpsertRecordsResponse>> UpsertRecordsAsync(
         string endpoint,
         string dataPartition,
         IReadOnlyList<StorageRecord> records,

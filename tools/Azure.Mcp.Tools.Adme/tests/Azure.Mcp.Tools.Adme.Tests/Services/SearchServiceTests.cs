@@ -50,8 +50,8 @@ public sealed class SearchServiceTests
             },
             TestConstants.Tenant, TestContext.Current.CancellationToken);
 
-        Assert.Equal(2, response.TotalCount);
-        Assert.Equal(2, Assert.Single(response.Aggregations!).Count);
+        Assert.Equal(2, response.Result.TotalCount);
+        Assert.Equal(2, Assert.Single(response.Result.Aggregations!).Count);
         Assert.Equal(AdmeServiceHelper.HttpClientName, httpClientFactory.LastClientName);
         Assert.Equal("/api/search/v2/query", handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal(
@@ -93,8 +93,8 @@ public sealed class SearchServiceTests
             false,
             TestConstants.Tenant, TestContext.Current.CancellationToken);
 
-        Assert.Equal("NEXT", response.Cursor);
-        Assert.Equal(42, response.TotalCount);
+        Assert.Equal("NEXT", response.Result.Cursor);
+        Assert.Equal(42, response.Result.TotalCount);
         Assert.Equal(AdmeServiceHelper.NonRetryingHttpClientName, httpClientFactory.LastClientName);
         Assert.Equal("/api/search/v2/query_with_cursor", handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal(

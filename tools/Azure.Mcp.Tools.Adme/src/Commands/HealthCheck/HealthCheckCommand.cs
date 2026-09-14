@@ -54,7 +54,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
 
             context.Response.Results = ResponseResult.Create(
                 result,
-                AdmeJsonContext.Default.HealthCheckResult);
+                AdmeJsonContext.Default.AdmeResponseHealthCheckResult);
         }
         catch (Exception ex)
         {

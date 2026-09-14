@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -15,7 +16,7 @@ public sealed class SearchService(
     private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    public Task<SearchQueryResponse> QueryAsync(
+    public Task<AdmeResponse<SearchQueryResponse>> QueryAsync(
         string endpoint,
         string dataPartition,
         SearchQueryRequest request,
@@ -30,7 +31,7 @@ public sealed class SearchService(
             AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, cancellationToken);
     }
 
-    public Task<SearchCursorResponse> QueryWithCursorAsync(
+    public Task<AdmeResponse<SearchCursorResponse>> QueryWithCursorAsync(
         string endpoint,
         string dataPartition,
         SearchCursorRequest request,

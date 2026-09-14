@@ -53,7 +53,8 @@ public sealed class RecordVersionListCommand(IStorageService storageService)
                 options.Id,
                 options.Tenant,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.RecordVersionsResponse);
+            context.Response.Results = ResponseResult.Create(
+                result, AdmeJsonContext.Default.AdmeResponseRecordVersionsResponse);
         }
         catch (Exception ex)
         {

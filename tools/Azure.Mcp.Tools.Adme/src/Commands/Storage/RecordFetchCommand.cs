@@ -82,7 +82,8 @@ public sealed class RecordFetchCommand(IStorageService storageService)
             var result = await _storageService.FetchRecordsAsync(
                 options.Endpoint, options.DataPartition, options.Ids, options.Attributes,
                 options.FrameOfReference, options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.FetchRecordsResponse);
+            context.Response.Results = ResponseResult.Create(
+                result, AdmeJsonContext.Default.AdmeResponseFetchRecordsResponse);
         }
         catch (Exception ex)
         {

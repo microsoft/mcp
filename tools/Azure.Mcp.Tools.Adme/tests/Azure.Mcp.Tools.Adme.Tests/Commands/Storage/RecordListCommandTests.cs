@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Tools.Adme.Commands.Storage;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Tests.Client;
@@ -21,7 +22,9 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
         Service.QueryRecordsByKindAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 25,
                 "prev-cursor", TestConstants.Tenant, Arg.Any<CancellationToken>())
-            .Returns(new QueryRecordsResponse { Cursor = "next-cursor", Results = [RecordId] });
+            .Returns(new AdmeResponse<QueryRecordsResponse>(
+                new QueryRecordsResponse { Cursor = "next-cursor", Results = [RecordId] },
+                "test-correlation-id"));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -31,9 +34,10 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
             "--cursor", "prev-cursor",
             "--tenant", TestConstants.Tenant);
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.QueryRecordsResponse);
-        Assert.Equal("next-cursor", result.Cursor);
-        Assert.Equal(RecordId, Assert.Single(result.Results));
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseQueryRecordsResponse);
+        Assert.Equal("next-cursor", result.Result.Cursor);
+        Assert.Equal(RecordId, Assert.Single(result.Result.Results));
+        Assert.Equal("test-correlation-id", result.CorrelationId);
     }
 
     [Fact]
@@ -42,15 +46,15 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
         Service.QueryRecordsByKindAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 10,
                 null, null, Arg.Any<CancellationToken>())
-            .Returns(new QueryRecordsResponse { Results = [] });
+            .Returns(new AdmeResponse<QueryRecordsResponse>(new QueryRecordsResponse { Results = [] }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
             "--data-partition", TestConstants.DataPartition,
             "--kind", TestConstants.WellKind);
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.QueryRecordsResponse);
-        Assert.Empty(result.Results);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseQueryRecordsResponse);
+        Assert.Empty(result.Result.Results);
     }
 
     [Theory]
