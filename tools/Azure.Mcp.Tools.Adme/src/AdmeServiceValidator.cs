@@ -39,8 +39,8 @@ internal static class AdmeServiceValidator
         }
     }
 
-    // ADME handles detailed search selector validation, which is complicated and should not be duplicated here.
-    public static void ValidateSearchKind(string kind, ValidationResult validationResult)
+    // ADME handles detailed kind validation, which is complicated and should not be duplicated here.
+    public static void ValidateKind(string kind, ValidationResult validationResult)
     {
         var components = kind.Split(':');
         var hasValidComponents = components.Length == 4
@@ -53,30 +53,6 @@ internal static class AdmeServiceValidator
                 "--kind must contain four non-empty colon-separated components without whitespace.");
         }
     }
-
-    public static void ValidateKind(string kind, ValidationResult validationResult)
-    {
-        var components = kind.Split(':');
-        var hasValidComponents = components.Length == 4
-            && components.All(component => !string.IsNullOrWhiteSpace(component))
-            && components.All(component => !component.Any(char.IsWhiteSpace))
-            && components.All(component => !component.Contains('*', StringComparison.Ordinal));
-        var versionComponents = components.Length == 4
-            ? components[^1].Split('.')
-            : [];
-        var hasValidVersion = versionComponents.Length == 3
-            && versionComponents.All(IsNumericVersionComponent);
-
-        if (!hasValidComponents || !hasValidVersion)
-        {
-            validationResult.Errors.Add(
-                "--kind must be a fully-qualified kind in the format "
-                    + "'authority:source:type:major.minor.patch'.");
-        }
-    }
-
-    private static bool IsNumericVersionComponent(string component)
-        => component.Length > 0 && component.All(character => character is >= '0' and <= '9');
 
     public static void ValidateSearch(
         IReadOnlyList<string>? kinds,
@@ -94,7 +70,7 @@ internal static class AdmeServiceValidator
         {
             foreach (var kind in kinds)
             {
-                ValidateSearchKind(kind, validationResult);
+                ValidateKind(kind, validationResult);
             }
         }
 
@@ -171,22 +147,16 @@ internal static class AdmeServiceValidator
         var entitySeparator = partitionSeparator < 0
             ? -1
             : id.IndexOf(':', partitionSeparator + 1);
-        var entityComponent = entitySeparator > partitionSeparator
-            ? id.AsSpan(partitionSeparator + 1, entitySeparator - partitionSeparator - 1)
-            : [];
-        var typeSeparator = entityComponent.IndexOf("--", StringComparison.Ordinal);
         var hasValidFormat = partitionSeparator > 0
             && entitySeparator > partitionSeparator + 1
             && entitySeparator < id.Length - 1
-            && typeSeparator > 0
-            && typeSeparator < entityComponent.Length - 2
             && !id.Any(char.IsWhiteSpace);
 
         if (!hasValidFormat)
         {
             validationResult.Errors.Add(
                 $"{optionName} must contain fully-qualified record ids in the format "
-                + "'{partition}:{group-type}--{EntityType}:{unique-id}'. ");
+                + "'{partition}:{object-type}:{unique-id}'. ");
         }
     }
 

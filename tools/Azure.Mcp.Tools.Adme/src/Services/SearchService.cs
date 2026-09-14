@@ -45,7 +45,7 @@ public sealed class SearchService(
             $"{BasePath}/query_with_cursor{(searchAfter ? "?search_after=true" : string.Empty)}",
             request, AdmeJsonContext.Default.SearchCursorRequest,
             AdmeJsonContext.Default.SearchCursorResponse, extraHeaders: null, cancellationToken,
-            disableRetries: true);
+            disableRetries: !string.IsNullOrWhiteSpace(request.Cursor));
     }
 
     private static void ValidateKinds(IReadOnlyList<string> kinds)

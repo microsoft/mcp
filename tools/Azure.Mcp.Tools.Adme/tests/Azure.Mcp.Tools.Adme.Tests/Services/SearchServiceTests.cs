@@ -21,7 +21,8 @@ public sealed class SearchServiceTests
     {
         var handler = JsonHandler(HttpStatusCode.OK,
             """{"results":[],"aggregations":[{"key":"kind","count":2}],"totalCount":2}""");
-        var service = CreateService(handler);
+        var httpClientFactory = new FakeHttpClientFactory(handler);
+        var service = CreateService(httpClientFactory);
         var spatialFilter = JsonDocument.Parse("""{"field":"data.Wgs84Coordinates"}""").RootElement.Clone();
 
         var response = await service.QueryAsync(
@@ -51,6 +52,7 @@ public sealed class SearchServiceTests
 
         Assert.Equal(2, response.TotalCount);
         Assert.Equal(2, Assert.Single(response.Aggregations!).Count);
+        Assert.Equal(AdmeServiceHelper.HttpClientName, httpClientFactory.LastClientName);
         Assert.Equal("/api/search/v2/query", handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal(
             """{"kind":["*:*:*:*"],"query":"data.FieldID:Volve*","suggestPhrase":"well","limit":5,"offset":20,"returnedFields":["id"],"aggregateBy":"kind","trackTotalCount":true,"sort":{"field":["data.Name.keyword"],"order":["DESC"],"filter":["data.Nested.Id:1"]},"spatialFilter":{"field":"data.Wgs84Coordinates"},"queryAsOwner":true,"excludedFields":["data.Big"],"highlightedFields":["data.FieldID"]} """.TrimEnd(),
@@ -104,7 +106,8 @@ public sealed class SearchServiceTests
     public async Task QueryWithCursorAsync_SearchAfter_AddsQueryParameter()
     {
         var handler = JsonHandler(HttpStatusCode.OK, """{"results":[],"totalCount":0}""");
-        var service = CreateService(handler);
+        var httpClientFactory = new FakeHttpClientFactory(handler);
+        var service = CreateService(httpClientFactory);
 
         await service.QueryWithCursorAsync(
             TestConstants.Endpoint,
@@ -118,6 +121,7 @@ public sealed class SearchServiceTests
             "/api/search/v2/query_with_cursor?search_after=true",
             handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal($$"""{"kind":["{{TestConstants.WellKind}}"]}""", handler.LastRequestBody);
+        Assert.Equal(AdmeServiceHelper.HttpClientName, httpClientFactory.LastClientName);
     }
 
     [Theory]

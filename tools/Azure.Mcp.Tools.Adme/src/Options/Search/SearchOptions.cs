@@ -26,7 +26,7 @@ public sealed class SearchOptions
     [Option(Description = "Starting offset for query pagination. Cannot be combined with cursor pagination, and offset + limit must be <= 10000.")]
     public int? Offset { get; set; }
 
-    [Option(Description = "Continuation token from a previous cursor response. Supplying it selects cursor pagination; continue until results is empty. Resend all original cursor criteria unchanged because the service does not reliably retain page settings. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
+    [Option(Description = "Continuation token from a previous cursor response. Supplying it selects cursor pagination; continue until results is empty. Resend all original cursor criteria unchanged because the service does not reliably retain page settings. If a continuation fails, restart from the first page to avoid missing records. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
     public string? Cursor { get; set; }
 
     [Option(Description = "Optional field paths to project, e.g. ['id','kind','data.FacilityName']. Omit to return full records.")]
