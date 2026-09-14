@@ -49,8 +49,8 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     [Fact]
     public void Metadata_IsConfiguredCorrectly()
     {
-        Assert.False(Command.Metadata.Destructive);
-        Assert.True(Command.Metadata.ReadOnly);
+        Assert.True(Command.Metadata.Destructive);
+        Assert.False(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Idempotent);
         Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
         Assert.DoesNotContain("--resource-group", CommandDefinition.Options.Select(option => option.Name));
