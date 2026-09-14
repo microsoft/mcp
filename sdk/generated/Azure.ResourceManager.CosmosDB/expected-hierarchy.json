@@ -1,0 +1,12 @@
+[
+  {
+    "Name": "CosmosDBAccountResource",
+    "ResourceType": "Microsoft.DocumentDB/databaseAccounts",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  }
+]

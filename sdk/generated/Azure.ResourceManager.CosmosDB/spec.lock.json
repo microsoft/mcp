@@ -1,0 +1,41 @@
+{
+  "package": {
+    "id": "Azure.ResourceManager.CosmosDB",
+    "version": "1.5.0"
+  },
+  "azureSdkForNet": {
+    "repository": "Azure/azure-sdk-for-net",
+    "tag": "Azure.ResourceManager.CosmosDB_1.5.0",
+    "commit": "6f7e0bb7c1e2b849503aa6daf1ecc9d4f3adecc3",
+    "emitterPackageJsonPath": "eng/azure-typespec-http-client-csharp-mgmt-emitter-package.json"
+  },
+  "azureRestApiSpecs": {
+    "repository": "Azure/azure-rest-api-specs",
+    "commit": "60d0f02991387ea7ed7483d5e70f061f962216cf",
+    "directory": "specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB",
+    "additionalDirectories": []
+  },
+  "tooling": {
+    "node": "24.15.0",
+    "packageLockSha256": "13d5951b0e28a337dea5b02f2a3056fd255e019b6970129748021da5b0d24684",
+    "emitter": "1.0.0-alpha.20260722.2",
+    "compiler": "1.13.0",
+    "apiVersion": "2026-03-15"
+  },
+  "runtimePackages": {
+    "Azure.Core": "1.60.0",
+    "Azure.Identity": "1.21.0",
+    "Azure.ResourceManager": "1.14.0"
+  },
+  "source": {
+    "sharedSource": {
+      "repository": "Azure/azure-sdk-for-net",
+      "commit": "6f7e0bb7c1e2b849503aa6daf1ecc9d4f3adecc3",
+      "directories": [
+        "sdk/core/Azure.Core/src/Shared",
+        "sdk/resourcemanager/Azure.ResourceManager/src/Shared"
+      ]
+    },
+    "serviceCustomizations": []
+  }
+}

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyTitle>Azure MCP projected SDK for Azure.ResourceManager.CosmosDB</AssemblyTitle>
+    <Description>Generated Cosmos DB management SDK projection used by Azure MCP.</Description>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableEnhancedAnalysis>true</DisableEnhancedAnalysis>
+    <NoWarn>$(NoWarn);SCM0005</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Core" />
+    <PackageReference Include="Azure.ResourceManager" />
+  </ItemGroup>
+</Project>

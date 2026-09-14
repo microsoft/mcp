@@ -1,0 +1,9 @@
+{
+  "packageId": "Azure.ResourceManager.CosmosDB",
+  "packageVersion": "1.5.0",
+  "areaProjects": [
+    "areas/cosmos/src/AzureMcp.Cosmos/AzureMcp.Cosmos.csproj"
+  ],
+  "selectionPolicy": "allOperationsForSelectedResource",
+  "outputDirectory": "sdk/generated/Azure.ResourceManager.CosmosDB"
+}

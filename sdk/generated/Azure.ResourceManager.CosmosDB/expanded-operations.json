@@ -1,0 +1,204 @@
+{
+  "selectionPolicy": "allOperationsForSelectedResource",
+  "resources": [
+    {
+      "resourceType": "Microsoft.DocumentDB/databaseAccounts",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.createOrUpdate",
+          "kind": "Create",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.update",
+          "kind": "Update",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.delete",
+          "kind": "Delete",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.list",
+          "kind": "List",
+          "operationPath": "/subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/databaseAccounts",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup",
+          "kind": "List",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.collectionListMetricDefinitions",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/collections/{collectionRid}/metricDefinitions",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.collectionListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/collections/{collectionRid}/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.collectionListUsages",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/collections/{collectionRid}/usages",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.collectionPartitionListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/collections/{collectionRid}/partitions/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.collectionPartitionListUsages",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/collections/{collectionRid}/partitions/usages",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.collectionPartitionRegionListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/region/{region}/databases/{databaseRid}/collections/{collectionRid}/partitions/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.collectionRegionListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/region/{region}/databases/{databaseRid}/collections/{collectionRid}/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.databaseAccountRegionListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/region/{region}/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.databaseListMetricDefinitions",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/metricDefinitions",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.databaseListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.databaseListUsages",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/usages",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.failoverPriorityChange",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/failoverPriorityChange",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listConnectionStrings",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/listConnectionStrings",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listKeys",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/listKeys",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listMetricDefinitions",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/metricDefinitions",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listReadOnlyKeys",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/readonlykeys",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listUsages",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/usages",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.offlineRegion",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/offlineRegion",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.onlineRegion",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/onlineRegion",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.partitionKeyRangeIdListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/databases/{databaseRid}/collections/{collectionRid}/partitionKeyRangeId/{partitionKeyRangeId}/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.partitionKeyRangeIdRegionListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/region/{region}/databases/{databaseRid}/collections/{collectionRid}/partitionKeyRangeId/{partitionKeyRangeId}/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.percentileListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/percentile/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.percentileSourceTargetListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/sourceRegion/{sourceRegion}/targetRegion/{targetRegion}/percentile/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.percentileTargetListMetrics",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/targetRegion/{targetRegion}/percentile/metrics",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.regenerateKey",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/regenerateKey",
+          "reason": "Complete selected resource"
+        }
+      ]
+    }
+  ],
+  "nonResourceOperations": []
+}

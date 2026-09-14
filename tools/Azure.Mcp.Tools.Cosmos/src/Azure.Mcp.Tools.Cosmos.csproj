@@ -1,20 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
+    <NoWarn>$(NoWarn);SCM0005;CS8603</NoWarn>
+    <CosmosManagementSdkSource Condition="'$(CosmosManagementSdkSource)' == ''">$(MSBuildThisFileDirectory)GeneratedSdk\src</CosmosManagementSdkSource>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\*.txt" />
     <EmbeddedResource Include="**\Resources\*.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="GeneratedSdk\src\**\*.cs" />
+    <Compile Include="$(CosmosManagementSdkSource)\Generated\**\*.cs;$(CosmosManagementSdkSource)\Shared\**\*.cs;$(CosmosManagementSdkSource)\Custom\**\*.cs;$(CosmosManagementSdkSource)\Properties\**\*.cs" Condition="'$(UseCosmosManagementSdkPackage)' != 'true'" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" />
+    <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.ResourceManager" />
-    <PackageReference Include="Azure.ResourceManager.CosmosDB" />
-    <PackageReference Include="Microsoft.HybridRow"/>
+    <PackageReference Include="Azure.ResourceManager.CosmosDB" Condition="'$(UseCosmosManagementSdkPackage)' == 'true'" />
+    <PackageReference Include="Microsoft.HybridRow" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Aot" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />

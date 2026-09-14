@@ -1,0 +1,22 @@
+{
+  "operations": [
+    {
+      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.list",
+      "sdkMembers": [
+        "SubscriptionResource.GetCosmosDBAccountsAsync"
+      ],
+      "usedBy": [
+        "areas/cosmos/src/AzureMcp.Cosmos/Services/CosmosService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listKeys",
+      "sdkMembers": [
+        "CosmosDBAccountResource.GetKeysAsync"
+      ],
+      "usedBy": [
+        "areas/cosmos/src/AzureMcp.Cosmos/Services/CosmosService.cs"
+      ]
+    }
+  ]
+}
