@@ -86,7 +86,7 @@ public class ProductDeserializationTests
     [Fact]
     public void Deserialize_ProductListPageWithOneUnknownValue_ReturnsEveryProduct()
     {
-        // A single unmodeled value must not fail the surrounding page (issue #3029).
+        // A single unrecognized value must not fail the surrounding page (issue #3029).
         const string json = """
         {
           "value": [
