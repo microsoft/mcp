@@ -47,9 +47,11 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectedItemUpdateProtectionCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
+        services.AddSingleton<ProtectableItemInquireCommand>();
         services.AddSingleton<ContainerListAvailableCommand>();
 
         services.AddSingleton<ContainerRefreshCommand>();
+        services.AddSingleton<ContainerRegisterCommand>();
 
         services.AddSingleton<BackupStatusCommand>();
 
@@ -117,16 +119,18 @@ public sealed class AzureBackupSetup : IAreaSetup
         protectedItem.AddCommand<ProtectedItemUndeleteCommand>(serviceProvider);
         protectedItem.AddCommand<ProtectedItemUpdateProtectionCommand>(serviceProvider);
 
-        var protectableItem = new CommandGroup("protectableitem", "Protectable item operations - List discovered databases available for protection.");
+        var protectableItem = new CommandGroup("protectableitem", "Protectable item operations - List discovered databases and file shares available for protection, and inquire registered containers to trigger discovery.");
         azureBackup.AddSubGroup(protectableItem);
         protectableItem.AddCommand<ProtectableItemListCommand>(serviceProvider);
+        protectableItem.AddCommand<ProtectableItemInquireCommand>(serviceProvider);
 
         var container = new CommandGroup("container",
-            "Container operations - Manage RSV protection containers: look up an existing container to check whether a storage account, VM, or workload server has been registered; trigger discovery (refresh); and list storage accounts available for Azure File share backup registration. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
+            "Container operations - Manage RSV protection containers: look up an existing container to check whether a storage account, VM, or workload server has been registered (get); trigger discovery (refresh); list storage accounts available for Azure File share backup registration; and register a storage account as a backup container. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
         azureBackup.AddSubGroup(container);
         container.AddCommand<ContainerGetCommand>(serviceProvider);
         container.AddCommand<ContainerListAvailableCommand>(serviceProvider);
         container.AddCommand<ContainerRefreshCommand>(serviceProvider);
+        container.AddCommand<ContainerRegisterCommand>(serviceProvider);
 
         var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);

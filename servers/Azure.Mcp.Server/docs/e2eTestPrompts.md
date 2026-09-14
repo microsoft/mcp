@@ -261,6 +261,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_container_refresh | Trigger container discovery on Recovery Services vault <vault_name> under resource group <resource_group> so the vault picks up newly authorized storage accounts | investigation-required |
 | azurebackup_container_refresh | Kick off backup container refresh on vault <vault_name> in resource group <resource_group> before registering my storage account for Azure Files backup | investigation-required |
 | azurebackup_container_refresh | Refresh Azure VM backup containers on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_container_register | Register storage account <storage_account> with Recovery Services vault <vault_name> in resource group <resource_group> as an Azure File share backup container | investigation-required |
+| azurebackup_container_register | Onboard my storage account <storage_account> for Azure Files backup on vault <vault_name> under resource group <resource_group> without acquiring a storage account lock | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on GRS-enabled Recovery Services vault <vault_name> in resource group <resource_group> with vault-type rsv | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for GRS-enabled DPP backup vault <vault_name> under resource group <resource_group> with vault-type dpp | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |
@@ -288,6 +290,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protectableitem_inquire | Inquire the registered storage account <storage_account> on vault <vault_name> in resource group <resource_group> to discover Azure File shares available for backup | investigation-required |
+| azurebackup_protectableitem_inquire | Discover file shares in backup container <container_name> on Recovery Services vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_container_list-available | List storage accounts available for registration as Azure File share backup containers in vault <vault_name> and resource group <resource_group> | investigation-required |

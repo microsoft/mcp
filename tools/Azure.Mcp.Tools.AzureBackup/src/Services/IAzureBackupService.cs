@@ -30,6 +30,8 @@ public interface IAzureBackupService
     // Container operations (RSV only)
     Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(string vaultName, string resourceGroup, string subscription, string? filter = null, string? storageAccount = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task RefreshContainersAsync(string vaultName, string resourceGroup, string subscription, string? backupManagementType = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<ContainerRegisterResult> RegisterContainerAsync(string vaultName, string resourceGroup, string subscription, string storageAccount, bool acquireLock = true, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<InquireResult> InquireContainerAsync(string vaultName, string resourceGroup, string subscription, string? container = null, string? storageAccount = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Job operations
     Task<BackupContainerInfo?> GetContainerAsync(string vaultName, string resourceGroup, string subscription, string containerName, string? tenant = null, CancellationToken cancellationToken = default);

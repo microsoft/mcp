@@ -1759,6 +1759,58 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal(JsonValueKind.Array, items.ValueKind);
     }
 
+    /// <summary>
+    /// Validates the AzureFileShare workload-type filter routing. The service maps an
+    /// AzureFileShare workload type to the AzureStorage backup management type, so the vault
+    /// returns the file shares it has discovered rather than the default AzureWorkload items.
+    /// </summary>
+    [Fact]
+    public async Task ProtectableItemList_RsvVault_ListsFileShares_Successfully()
+    {
+        // Protectable items is an RSV-only feature
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+
+        var result = await CallToolAsync(
+            "azurebackup_protectableitem_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "workload-type", "AzureFileShare" }
+            });
+
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+    }
+
+    /// <summary>
+    /// Validates that inquiring a registered storage-account container triggers Azure File share
+    /// discovery. The Azure API is an asynchronous fire-and-forget request that returns HTTP 202
+    /// Accepted, so the tool reports the acceptance status rather than a discovered item list.
+    /// </summary>
+    [Fact]
+    public async Task ProtectableItemInquire_RsvVault_InquiresStorageAccount_Successfully()
+    {
+        // Container inquiry for Azure File shares is an RSV-only feature
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var storageAccount = $"{Settings.ResourceBaseName.Replace("-", "")}sa";
+
+        var result = await CallToolAsync(
+            "azurebackup_protectableitem_inquire",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "storage-account", storageAccount }
+            });
+
+        var inquiry = result.AssertProperty("inquiry");
+        Assert.Equal("Accepted", inquiry.AssertProperty("status").GetString());
+        Assert.False(string.IsNullOrEmpty(inquiry.AssertProperty("container").GetString()));
+    }
+
     // Bug 3.3 fix validation: DPP vault routed to protectable items returns a clear error.
     // This is tested at the unit test level (ListProtectableItemsAsync_NoVaultType_DppVault_ThrowsArgumentException)
     // because the live test would need to handle the error response format differently from a success response.
@@ -1790,6 +1842,38 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Accepted", result.AssertProperty("status").GetString());
         Assert.Equal(vaultName, result.AssertProperty("vault").GetString());
         Assert.Equal("AzureStorage", result.AssertProperty("backupManagementType").GetString());
+    }
+
+    /// <summary>
+    /// Validates that registering an Azure Storage account as an Azure File share backup container
+    /// succeeds. Registration is idempotent: if the storage account is already registered the tool
+    /// returns its current state. The management lock is skipped (--acquire-lock false) to keep the
+    /// test resource free of leftover locks.
+    /// </summary>
+    [Fact]
+    public async Task ContainerRegister_RsvVault_RegistersStorageAccount_Successfully()
+    {
+        // Container registration is RSV-only
+        var vaultName = $"{Settings.ResourceBaseName}-rsv";
+        var storageAccount = $"{Settings.ResourceBaseName.Replace("-", "")}sa";
+
+        var result = await CallToolAsync(
+            "azurebackup_container_register",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "storage-account", storageAccount },
+                { "acquire-lock", "false" }
+            });
+
+        var registration = result.AssertProperty("registration");
+        Assert.False(string.IsNullOrEmpty(registration.AssertProperty("status").GetString()));
+
+        var container = registration.AssertProperty("container");
+        Assert.False(string.IsNullOrEmpty(container.AssertProperty("name").GetString()));
+        Assert.Equal("AzureStorage", container.AssertProperty("backupManagementType").GetString());
     }
 
     #endregion

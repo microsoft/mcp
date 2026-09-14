@@ -5050,7 +5050,9 @@
         }
       },
       "mappedToolList": [
-        "azurebackup_container_refresh"
+        "azurebackup_container_refresh",
+        "azurebackup_container_register",
+        "azurebackup_protectableitem_inquire"
       ]
     },
     {

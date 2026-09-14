@@ -1223,7 +1223,7 @@ azmcp azurebackup protecteditem undelete --subscription <subscription> \
 #### Protectable Item
 
 ```bash
-# Lists protectable items (SQL databases, SAP HANA databases) discovered in the Recovery Services vault.
+# Lists protectable items (SQL databases, SAP HANA databases, Azure File shares) discovered in the Recovery Services vault. For Azure File shares, first run 'container register' then 'protectableitem inquire' so the shares are discovered.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protectableitem list --subscription <subscription> \
                                        --resource-group <resource-group> \
@@ -1231,11 +1231,27 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        [--vault-type <vault-type>] \
                                        [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>] \
                                        [--container <container>]
+
+# Triggers the RSV Inquire (discovery) operation on a registered Azure File share protection container so the vault (re)discovers the file shares available for backup protection. Identify the container by --container (protection container name) or --storage-account (storage account name or ARM resource ID); exactly one is required. The Azure API is fire-and-forget and returns HTTP 202 Accepted with no body; the tool returns an acceptance record. RSV only; DPP vaults are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protectableitem inquire --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --vault <vault> \
+                                          [--container <container>] \
+                                          [--storage-account <storage-account>]
 ```
 
 #### Container
 
 ```bash
+# Registers an Azure Storage account with a Recovery Services vault (RSV) as an Azure File share backup container. Accepts a bare storage account name (assumed to live in the vault resource group) or a fully qualified ARM resource ID. Idempotent: if the storage account is already registered, the tool returns the existing registration. By default a management lock is acquired on the storage account to prevent accidental deletion; pass --acquire-lock false to skip. RSV only; DPP vaults are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup container register --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --vault <vault> \
+                                     --storage-account <storage-account> \
+                                     [--acquire-lock <true|false>]
+
 # Triggers the RSV RefreshContainers (discovery) operation on a Recovery Services vault so it picks up new/changed containers (default backup management type: AzureStorage for Azure File share storage accounts). The Azure API is fire-and-forget and returns HTTP 202 Accepted with no body; the tool returns an acceptance record. RSV only; DPP vaults are not supported.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup container refresh --subscription <subscription> \
