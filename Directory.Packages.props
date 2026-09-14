@@ -124,5 +124,9 @@
     <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
     <PackageVersion Include="coverlet.MTP" Version="10.0.1" />
+    <!-- Performance benchmark dependencies -->
+    <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageVersion Include="Microsoft.ML.Tokenizers" Version="0.22.0" />
+    <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="0.22.0" />
   </ItemGroup>
 </Project>
