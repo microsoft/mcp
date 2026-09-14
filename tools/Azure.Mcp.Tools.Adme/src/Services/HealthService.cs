@@ -28,7 +28,7 @@ public sealed class HealthService(
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
-        var endpointUri = AdmeServiceHelper.ValidateEndpoint(new Uri(endpoint));
+        var endpointUri = AdmeServiceValidator.ValidateEndpoint(new Uri(endpoint));
         string token;
 
         try

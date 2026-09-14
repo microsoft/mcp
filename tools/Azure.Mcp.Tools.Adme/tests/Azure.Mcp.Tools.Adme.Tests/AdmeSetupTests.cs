@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
+using Azure.Mcp.Tools.Adme.Commands.Search;
 using Azure.Mcp.Tools.Adme.Commands.Storage;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
@@ -103,6 +104,7 @@ public sealed class AdmeSetupTests
         var schema = Assert.Single(adme.SubGroup, group => group.Name == "schema");
         Assert.True(schema.Commands.ContainsKey("get"));
         Assert.True(schema.Commands.ContainsKey("list"));
+        Assert.True(adme.Commands.ContainsKey("search"));
         var storage = Assert.Single(adme.SubGroup, group => group.Name == "storage");
         var record = Assert.Single(storage.SubGroup, group => group.Name == "record");
         Assert.True(record.Commands.ContainsKey("fetch"));
@@ -117,6 +119,7 @@ public sealed class AdmeSetupTests
         Assert.NotNull(serviceProvider.GetRequiredService<RecordVersionListCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<SchemaGetCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<SchemaListCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<SearchCommand>());
     }
 
     private static ServiceProvider CreateServiceProvider(HttpMessageHandler handler)

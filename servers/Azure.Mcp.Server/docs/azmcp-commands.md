@@ -353,6 +353,32 @@ azmcp adme schema list --endpoint <endpoint> \
                         [--offset <offset>] \
                         [--limit <limit>]
 
+# Search OSDU records by kind and Lucene criteria; query pagination is the default
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme search --endpoint <endpoint> \
+                  --data-partition <data-partition> \
+                  --kind <authority:source:entity-type:version> [<kind>...] \
+                  [--query <lucene-query>] \
+                  [--limit <limit>] \
+                  [--cursor-pagination-mode] \
+                  [--search-after] \
+                  [--cursor <cursor>] \
+                  [--offset <offset>] \
+                  [--returned-fields <path> [<path>...]] \
+                  [--aggregate-by <path>] \
+                  [--track-total-count] \
+                  [--sort <json-object>] \
+                  [--spatial-filter <json-object>] \
+                  [--query-as-owner] \
+                  [--excluded-fields <path> [<path>...]] \
+                  [--highlighted-fields <path> [<path>...]] \
+                  [--suggest-phrase <phrase>] \
+                  [--tenant <tenant>]
+
+Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
+Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
+Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
+
 # Fetch multiple records by fully-qualified OSDU record id
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record fetch --endpoint <endpoint> \

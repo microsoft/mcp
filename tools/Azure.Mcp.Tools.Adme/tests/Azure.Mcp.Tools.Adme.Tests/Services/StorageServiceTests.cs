@@ -303,7 +303,7 @@ public sealed class StorageServiceTests
     }
 
     [Fact]
-    public async Task GetRecordAsync_DoesNotExposeBackendResponseBodyOnFailure()
+    public async Task GetRecordAsync_PreservesAdmeResponseBodyOnFailure()
     {
         var handler = JsonHandler(HttpStatusCode.NotFound, "sensitive backend details");
         var service = CreateService(handler);
@@ -313,7 +313,7 @@ public sealed class StorageServiceTests
             TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.NotFound, exception.Status);
-        Assert.DoesNotContain("sensitive backend details", exception.Message);
+        Assert.Equal("sensitive backend details", exception.Message);
     }
 
     [Theory]

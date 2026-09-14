@@ -10,21 +10,15 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.Adme.Commands.Schema;
 
 /// <summary>
-/// Gets the JSON definition for an ADME schema kind.
+/// Gets the JSON definition for an ADME/OSDU schema kind.
 /// </summary>
 [CommandMetadata(
     Id = "19fd0c96-dd65-4b8a-bfa7-4ef40b79d27a",
     Name = "get",
-    Title = "Get ADME Schema",
+    Title = "Get ADME/OSDU Schema",
     Description = """
-        Get one ADME schema's full JSON definition for specified OSDU kind from a data
-        partition.
-
-        Required: --kind, --endpoint, and --data-partition. Optional: --tenant for cross-tenant authentication.
-
-        --kind must be a FULLY-QUALIFIED kind 'authority:source:type:version', for example
-        'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use 'azmcp adme schema list' to
-        discover which kinds and versions exist before calling this tool.
+        Get one ADME/OSDU schema by exact kind.
+        Returns full JSON definition, fields, property types, and structure.
         """,
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
@@ -41,8 +35,8 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceHelper.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
-        AdmeServiceHelper.ValidateKind(options.Kind, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
     }
 
     /// <summary>

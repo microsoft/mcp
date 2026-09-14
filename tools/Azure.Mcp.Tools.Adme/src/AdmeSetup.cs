@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
+using Azure.Mcp.Tools.Adme.Commands.Search;
 using Azure.Mcp.Tools.Adme.Commands.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,8 +35,10 @@ public sealed class AdmeSetup : IAreaSetup
                     args.Outcome.Result is not { StatusCode: HttpStatusCode.InternalServerError }
                     && HttpClientResiliencePredicates.IsTransient(args.Outcome));
             });
+        services.AddHttpClient(AdmeServiceHelper.NonRetryingHttpClientName);
         services.AddSingleton<IHealthService, HealthService>();
         services.AddSingleton<ISchemaService, SchemaService>();
+        services.AddSingleton<ISearchService, SearchService>();
         services.AddSingleton<IStorageService, StorageService>();
         services.AddSingleton<HealthCheckCommand>();
         services.AddSingleton<RecordFetchCommand>();
@@ -44,6 +47,7 @@ public sealed class AdmeSetup : IAreaSetup
         services.AddSingleton<RecordVersionListCommand>();
         services.AddSingleton<SchemaGetCommand>();
         services.AddSingleton<SchemaListCommand>();
+        services.AddSingleton<SearchCommand>();
     }
 
     /// <summary>
@@ -54,8 +58,8 @@ public sealed class AdmeSetup : IAreaSetup
         var adme = new CommandGroup(
             Name,
             "Azure Data Manager for Energy operations for the OSDU data platform. Commands target a specific "
-                + "endpoint and data partition and cover platform health checks and "
-                + "OSDU schema discovery, record retrieval, and version history.",
+                + "endpoint and data partition and cover platform health checks,"
+                + " schema discovery, record search, and record retrieval.",
             Title);
 
         var health = new CommandGroup(
@@ -72,6 +76,8 @@ public sealed class AdmeSetup : IAreaSetup
         schema.AddCommand<SchemaGetCommand>(serviceProvider);
         schema.AddCommand<SchemaListCommand>(serviceProvider);
         adme.AddSubGroup(schema);
+
+        adme.AddCommand<SearchCommand>(serviceProvider);
 
         var storage = new CommandGroup(
             "storage",

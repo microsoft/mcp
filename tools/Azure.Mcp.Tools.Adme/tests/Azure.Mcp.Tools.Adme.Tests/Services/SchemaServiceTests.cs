@@ -135,7 +135,7 @@ public sealed class SchemaServiceTests
     }
 
     [Fact]
-    public async Task GetSchemaAsync_DoesNotExposeBackendResponseBodyOnFailure()
+    public async Task GetSchemaAsync_PreservesAdmeResponseBodyOnFailure()
     {
         var handler = JsonHandler(HttpStatusCode.NotFound, "sensitive backend details");
         var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
@@ -148,7 +148,7 @@ public sealed class SchemaServiceTests
             TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.NotFound, exception.Status);
-        Assert.DoesNotContain("sensitive backend details", exception.Message);
+        Assert.Equal("sensitive backend details", exception.Message);
     }
 
     private static IAzureTokenCredentialProvider CreateCredentialProvider(string token = "fake-token")

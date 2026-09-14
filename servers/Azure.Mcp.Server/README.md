@@ -1112,6 +1112,10 @@ Example prompts that generate Azure CLI commands:
 * "Check authentication and connectivity for my ADME endpoint and data partition"
 * "Get an ADME schema by kind"
 * "List shared Well schemas from my ADME data partition"
+* "Find ADME records matching an indexed-field Lucene query across multiple or wildcard kinds"
+* "Aggregate ADME search results by kind and sort them by id"
+* "Start a point-in-time ADME search snapshot to process more than 10,000 records"
+* "Continue an ADME snapshot search from its cursor"
 * "Fetch multiple OSDU records by id from my ADME data partition"
 * "Get an OSDU record by id or version from my ADME data partition"
 * "List OSDU record ids for a kind in my ADME data partition"
@@ -1364,7 +1368,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
-- **Azure Data Manager for Energy** - Health checks and OSDU schema, record retrieval, and version history operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema, record search, retrieval, and version history operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
