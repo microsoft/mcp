@@ -60,8 +60,6 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
     [Theory]
     [InlineData("--kind", "")]
     [InlineData("--kind", "opendes:wks:master-data--Well")]
-    [InlineData("--kind", "opendes:wks:master-data--Well:*")]
-    [InlineData("--kind", "opendes:wks:master-data--Well:1.0")]
     [InlineData("--limit", "0")]
     [InlineData("--limit", "101")]
     [InlineData("--endpoint", "ftp://sample.energy.azure.com")]

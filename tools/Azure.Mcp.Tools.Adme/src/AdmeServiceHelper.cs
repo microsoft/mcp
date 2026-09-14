@@ -181,6 +181,10 @@ internal static class AdmeServiceHelper
         var correlationId = response.Headers.TryGetValues(CorrelationIdHeader, out var correlationIds)
             ? correlationIds.FirstOrDefault()
             : null;
+        // Carried in failure messages so ADME support can trace the request that failed.
+        var correlationSuffix = string.IsNullOrWhiteSpace(correlationId)
+            ? string.Empty
+            : $" ({CorrelationIdHeader}: {correlationId})";
         if (!response.IsSuccessStatusCode)
         {
             // ADME APIs ensure client-facing error responses do not expose sensitive information.
@@ -191,7 +195,7 @@ internal static class AdmeServiceHelper
 
             throw new RequestFailedException(
                 (int)response.StatusCode,
-                message);
+                message + correlationSuffix);
         }
 
         if (typeInfo is null)
@@ -202,7 +206,7 @@ internal static class AdmeServiceHelper
         var result = await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
             ?? throw new RequestFailedException(
                 (int)response.StatusCode,
-                "ADME request returned an empty response body.");
+                "ADME request returned an empty response body." + correlationSuffix);
         return new(result, correlationId);
     }
 

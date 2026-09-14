@@ -316,6 +316,27 @@ public sealed class StorageServiceTests
         Assert.Equal("sensitive backend details", exception.Message);
     }
 
+    [Fact]
+    public async Task GetRecordAsync_IncludesCorrelationIdOnFailure()
+    {
+        var handler = new StubHttpMessageHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("record not found", Encoding.UTF8, "application/json"),
+            };
+            response.Headers.Add("correlation-id", "corr-42");
+            return response;
+        });
+        var service = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.GetRecordAsync(
+            TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null, null,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal("record not found (correlation-id: corr-42)", exception.Message);
+    }
+
     [Theory]
     [InlineData("https://evil.example")]
     [InlineData("https://sample.energy.azure.com.evil.example")]
