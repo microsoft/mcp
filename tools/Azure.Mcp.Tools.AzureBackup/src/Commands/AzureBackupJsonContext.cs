@@ -23,6 +23,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(VaultGetCommand.VaultGetCommandResult))]
 [JsonSerializable(typeof(VaultCreateCommand.VaultCreateCommandResult))]
 [JsonSerializable(typeof(VaultUpdateCommand.VaultUpdateCommandResult))]
+[JsonSerializable(typeof(ContainerGetCommand.ContainerGetCommandResult))]
+[JsonSerializable(typeof(BackupContainerInfo))]
 [JsonSerializable(typeof(PolicyGetCommand.PolicyGetCommandResult))]
 [JsonSerializable(typeof(PolicyCreateCommand.PolicyCreateCommandResult))]
 [JsonSerializable(typeof(PolicyUpdateCommand.PolicyUpdateCommandResult))]

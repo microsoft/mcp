@@ -32,6 +32,8 @@ public interface IAzureBackupService
     Task RefreshContainersAsync(string vaultName, string resourceGroup, string subscription, string? backupManagementType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Job operations
+    Task<BackupContainerInfo?> GetContainerAsync(string vaultName, string resourceGroup, string subscription, string containerName, string? tenant = null, CancellationToken cancellationToken = default);
+
     Task<BackupJobInfo> GetJobAsync(string vaultName, string resourceGroup, string subscription, string jobId, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<List<BackupJobInfo>> ListJobsAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 

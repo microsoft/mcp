@@ -254,6 +254,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
+| azurebackup_container_get | Look up storage account <storage_account_name> in RSV vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_container_get | Is container <container_name> registered in vault <vault_name> under resource group <resource_group>? | investigation-required |
+| azurebackup_container_get | Get the RSV protection container details for storage account <storage_account_name> in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_container_refresh | Refresh backup containers on vault <vault_name> in resource group <resource_group> to discover new Azure File share storage accounts | investigation-required |
 | azurebackup_container_refresh | Trigger container discovery on Recovery Services vault <vault_name> under resource group <resource_group> so the vault picks up newly authorized storage accounts | investigation-required |
 | azurebackup_container_refresh | Kick off backup container refresh on vault <vault_name> in resource group <resource_group> before registering my storage account for Azure Files backup | investigation-required |
