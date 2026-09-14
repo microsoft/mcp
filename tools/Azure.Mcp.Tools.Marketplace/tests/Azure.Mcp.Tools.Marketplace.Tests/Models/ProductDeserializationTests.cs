@@ -2,19 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Marketplace.Models;
+using Azure.Mcp.Tools.Marketplace.Commands;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.Tests.Models;
 
 public class ProductDeserializationTests
 {
-    private static readonly JsonSerializerOptions s_options = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true
-    };
-
     [Fact]
     public void Deserialize_ProductSummaryWithValuesOutsideDocumentedSet_DoesNotThrow()
     {
@@ -31,7 +25,7 @@ public class ProductDeserializationTests
         }
         """;
 
-        var product = JsonSerializer.Deserialize<ProductSummary>(json, s_options);
+        var product = JsonSerializer.Deserialize(json, MarketplaceJsonContext.Default.ProductSummary);
 
         Assert.NotNull(product);
         Assert.Equal(["Free", "RequestPrivateOffer", "SomeFutureValue"], product.PricingTypes);
@@ -53,12 +47,59 @@ public class ProductDeserializationTests
         }
         """;
 
-        var plan = JsonSerializer.Deserialize<PlanSummary>(json, s_options);
+        var plan = JsonSerializer.Deserialize(json, MarketplaceJsonContext.Default.PlanSummary);
 
         Assert.NotNull(plan);
         Assert.Equal(["SomeFutureValue"], plan.PricingTypes);
         Assert.Equal(["SomeFutureSecurityType"], plan.VmSecurityTypes);
         Assert.Equal("SomeFutureState", plan.CspState);
         Assert.Equal("SomeFutureArchitecture", plan.VmArchitectureType);
+    }
+
+    [Fact]
+    public void Deserialize_ProductDetailsWithValuesOutsideDocumentedSet_DoesNotThrow()
+    {
+        const string json = """
+        {
+          "uniqueProductId": "test-product",
+          "legalTermsType": "SomeFutureTermsType",
+          "stopSellInfo": {
+            "reason": "SomeFutureReason"
+          },
+          "artifacts": [
+            {
+              "name": "test-artifact",
+              "type": "SomeFutureArtifactType"
+            }
+          ]
+        }
+        """;
+
+        var product = JsonSerializer.Deserialize(json, MarketplaceJsonContext.Default.ProductDetails);
+
+        Assert.NotNull(product);
+        Assert.Equal("SomeFutureTermsType", product.LegalTermsType);
+        Assert.Equal("SomeFutureReason", product.StopSellInfo?.Reason);
+        Assert.Equal("SomeFutureArtifactType", Assert.Single(product.Artifacts!).Type);
+    }
+
+    [Fact]
+    public void Deserialize_ProductListPageWithOneUnknownValue_ReturnsEveryProduct()
+    {
+        // A single unmodeled value must not fail the surrounding page (issue #3029).
+        const string json = """
+        {
+          "value": [
+            { "uniqueProductId": "product-1", "pricingTypes": ["Free"] },
+            { "uniqueProductId": "product-2", "pricingTypes": ["SomeFutureValue"] },
+            { "uniqueProductId": "product-3", "pricingTypes": ["Payg"] }
+          ]
+        }
+        """;
+
+        var response = JsonSerializer.Deserialize(json, MarketplaceJsonContext.Default.ProductsListResponse);
+
+        Assert.NotNull(response);
+        Assert.Equal(3, response.Value?.Count);
     }
 }
