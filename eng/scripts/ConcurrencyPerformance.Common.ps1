@@ -128,22 +128,25 @@ function Invoke-ConcurrencyRegressionGate {
         # Error/timeout rate — an absolute percentage-point budget.
         $curError  = Get-MemberValue $level 'error_rate_pct'
         $baseError = Get-MemberValue $baseline 'error_rate_pct'
-        if ($null -ne $curError -and $null -ne $baseError) {
-            $evaluated++
-            $delta = $curError - $baseError
+        if ($null -ne $baseError) {
             $label = "c$concurrency error_rate_pct"
-            if ($delta -gt $ErrorRatePpLimit) {
-                $failures += $label
-                $status = 'FAIL'
-            }
-            elseif ($delta -gt 0) {
-                $status = 'PASS'
+            if ($null -eq $curError) {
+                $failures += "$label (missing in results)"
+                Write-Host ("  [FAIL] {0}: expected by baseline but absent in results" -f $label)
             }
             else {
-                $status = 'PASS'
+                $evaluated++
+                $delta = $curError - $baseError
+                if ($delta -gt $ErrorRatePpLimit) {
+                    $failures += $label
+                    $status = 'FAIL'
+                }
+                else {
+                    $status = 'PASS'
+                }
+                Write-Host ("  [{0}] {1}: current={2}%  baseline={3}%  (+{4} pp)" -f `
+                    $status, $label, $curError, $baseError, [math]::Round($delta, 3))
             }
-            Write-Host ("  [{0}] {1}: current={2}%  baseline={3}%  (+{4} pp)" -f `
-                $status, $label, $curError, $baseError, [math]::Round($delta, 3))
         }
     }
 
