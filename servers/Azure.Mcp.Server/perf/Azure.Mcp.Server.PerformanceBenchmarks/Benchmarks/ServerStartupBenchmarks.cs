@@ -58,9 +58,9 @@ public class ServerStartupBenchmarks
         // Providers may resolve async-only-disposable services (e.g. CosmosService implements
         // IAsyncDisposable but not IDisposable), for which a synchronous Dispose() throws.
         // Dispose asynchronously in the cleanup hook, outside the timed benchmark body.
-        if (_builtProvider is not null) { await _builtProvider.DisposeAsync(); }
-        if (_providerForInitialize is not null) { await _providerForInitialize.DisposeAsync(); }
-        if (_providerForCommandTree is not null) { await _providerForCommandTree.DisposeAsync(); }
+        await (_builtProvider?.DisposeAsync() ?? ValueTask.CompletedTask);
+        await (_providerForInitialize?.DisposeAsync() ?? ValueTask.CompletedTask);
+        await (_providerForCommandTree?.DisposeAsync() ?? ValueTask.CompletedTask);
         _builtProvider = null;
         _providerForInitialize = null;
         _providerForCommandTree = null;
