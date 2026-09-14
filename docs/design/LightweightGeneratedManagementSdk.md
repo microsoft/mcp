@@ -578,7 +578,7 @@ Exit criterion: the complete input identity reproduces the full SDK without unex
 6. Generate the projected SDK while capturing all diagnostics.
 7. Verify the database-account operation set and hierarchy against the full baseline subset with the strict validator.
 8. Verify unrelated resources disappear and no blocking missing-`Read` diagnostics occur.
-9. Gather preliminary size results for the four controlled configurations defined in Phase 5.
+9. Gather preliminary size results comparing the current package-based implementation with the projected source implementation defined in Phase 5.
 
 Exit criterion: operation scopes cleanly remove unrelated resources while preserving the complete selected resource. On failure, record the exact command, inputs, diagnostic, and required support, then stop before reusable discovery or orchestration work.
 
@@ -612,41 +612,34 @@ Exit criterion: every Cosmos SDK symbol has a reviewed operation or reachable-mo
 
 Exit criterion: existing MCP Cosmos commands preserve their observable management-plane behavior, and the dedicated executable proves the projected management SDK is AOT-safe for its declared coverage.
 
-### Phase 5: Measure four controlled configurations
+### Phase 5: Measure current main against the projection
 
-Use identical source configuration, publish options, RIDs, trimming, AOT, and compression settings to measure:
+Use identical production publish options, RIDs, trimming, AOT, and compression settings to compare:
 
-1. the current released `1.4.0-beta.13` package;
-2. the full released `1.5.0` package with migrated MCP code;
-3. the full generated `1.5.0` source compiled directly into the Cosmos area with the same migrated MCP code; and
-4. the projected generated source compiled directly into the Cosmos area.
+1. current `main`, which uses `Azure.ResourceManager.CosmosDB` 1.4.0-beta.13; and
+2. the projected 1.5.0 generated source compiled directly into the Cosmos area.
 
-This separates package-upgrade effects (1 to 2), package-versus-generated-source effects (2 to 3), projection effects (3 to 4), and the user-visible result (1 to 4). For each configuration report absolute bytes and percentage deltas for:
+The full generated SDK and released 1.5.0 package are temporary migration and validation inputs. They are not shipped states and are not size baselines.
 
-- generated source file count and bytes, where applicable;
-- service assembly bytes;
+For the two product configurations, report absolute bytes and percentage deltas for:
+
+- the Cosmos service footprint: `AzureMcp.Cosmos.dll` plus the management package assembly on current main, versus the merged `AzureMcp.Cosmos.dll` after projection;
 - self-contained publish directory bytes for supported RIDs;
-- compressed distribution package bytes;
-- native/AOT artifact bytes, when applicable; and
-- generation duration.
+- compressed distribution package bytes; and
+- native/AOT artifact bytes where the product includes Cosmos.
 
-The POC acceptance thresholds are all of:
+The POC acceptance criteria are:
 
-- at least a 50% reduction in the uncompressed Cosmos service assembly from configuration 3 to 4;
-- at least a 50% reduction in the compressed Cosmos service assembly from configuration 2 to 4; and
-- a positive same-version compressed production-distribution reduction from configuration 2 to 4, with no RID regression.
+- at least a 50% reduction in both the uncompressed and individually compressed Cosmos service footprint; and
+- a positive complete compressed production-distribution reduction with no RID regression.
 
 The Cosmos area does not publish a Release PDB after generated source is integrated, matching the released package's production symbol footprint and preventing generated symbols from obscuring the comparison. Symbol files, if needed for a separate diagnostic artifact, must not be included in the shipped distribution measurement.
 
-The configuration 1-to-4 delta remains an important overall user-visible measurement, but it cannot establish projection benefit because it includes the package upgrade. A report where only configuration 1 to 2 reduces the distribution does not pass. Configurations 2 through 4 must use identical migrated MCP source, publish options, trimming settings, RIDs, and compression.
+There is no fixed absolute per-service threshold. Percentage reduction shows whether projection removes most of that service's unused SDK surface. Product-level value is evaluated by aggregating absolute distribution savings as additional management SDKs are projected.
 
-There is no fixed absolute per-service threshold. A small SDK cannot reasonably save a fixed number of bytes after compression, while percentage reduction shows whether projection removes most of that SDK's unused surface. Product-level value is evaluated by aggregating the absolute and percentage distribution savings as additional management SDKs are projected.
+The report must also assess generation complexity and ongoing maintenance cost. NuGet global package-cache size is not an acceptance metric because it includes multiple target frameworks, documentation, and cached versions.
 
-The report must also assess generation complexity and ongoing maintenance cost.
-
-NuGet global package-cache size is not an acceptance metric because it includes multiple target frameworks, documentation, and cached versions.
-
-Exit criterion: the report labels each effect separately, states whether all three percentage/benefit thresholds are met, demonstrates a same-version shipped-distribution benefit attributable to projection, and records the maintenance-cost decision.
+Exit criterion: the report states whether the service-footprint thresholds are met, records the complete product-distribution reduction, and records the maintenance-cost decision.
 
 ## Validation and failure behavior
 
@@ -692,7 +685,7 @@ The Cosmos DB POC should produce:
 11. an MCP-owned strict hierarchy validator and its positive and negative regression fixtures;
 12. focused request-level, discovery-expansion, model-only-policy, and cache-state tests;
 13. a dedicated projected-SDK Native AOT smoke-test application and execution record; and
-14. a four-configuration size and feasibility report.
+14. a current-main-versus-projection size and feasibility report.
 
 ## Acceptance criteria
 
@@ -713,7 +706,7 @@ The POC is successful when all of the following are true:
 - a dedicated Native AOT executable roots and executes the projected management paths successfully for the declared RID coverage;
 - native CLI results are not used as projection coverage while Cosmos remains excluded;
 - normal builds do not access `azure-rest-api-specs`; and
-- the four controlled measurements meet all three documented size thresholds, or the POC is reported as unsuccessful.
+- the current-main-versus-projection measurements meet the documented service-footprint and product-distribution criteria, or the POC is reported as unsuccessful.
 
 ## Follow-up after the POC
 

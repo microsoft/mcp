@@ -6,7 +6,7 @@
 
 ## Status
 
-Initial feasibility, build, hierarchy, Linux Native AOT, and controlled `linux-x64` distribution measurements completed. The projection substantially reduces both the raw and compressed Cosmos service assembly and provides a positive same-version production-distribution benefit. It meets the percentage-based POC size criteria.
+Initial feasibility, build, hierarchy, Linux Native AOT, and `linux-x64` product comparison completed. Compared with current `main`, the projection substantially reduces both the raw and compressed Cosmos service footprint and reduces the complete production distribution. It meets the percentage-based POC size criteria.
 
 ## Pinned inputs
 
@@ -107,35 +107,24 @@ Generated source is compiled directly into `Azure.Mcp.Tools.Cosmos.dll`. Package
 
 | Configuration | Service assembly bytes | Individually compressed bytes |
 | --- | ---: | ---: |
-| Current 1.4.0-beta.13 package plus Cosmos area | 3,618,352 | 818,308 |
-| Released 1.5.0 package plus Cosmos area | 3,435,360 | 782,111 |
-| Full generated 1.5.0 source in Cosmos area | 3,376,128 | 759,765 |
-| Projected generated source in Cosmos area | 1,103,360 | 293,305 |
+| Current main: 1.4.0-beta.13 package plus Cosmos area | 3,618,352 | 818,308 |
+| Projected 1.5.0 source in Cosmos area | 1,103,360 | 293,305 |
 
-The projection reduced the merged full-generated Cosmos area assembly by 2,272,768 bytes, or 67.32%. Compared with the released 1.5.0 package plus its area assembly, the merged projected assembly is 62.50% smaller after individual compression. Both exceed the 50% POC thresholds.
+The projected implementation reduces the Cosmos service footprint by 2,514,992 bytes, or 69.51%, uncompressed. Individually compressed, it is 525,003 bytes, or 64.16%, smaller. Both exceed the 50% POC thresholds.
 
 The Cosmos project sets `DebugType=none` and `DebugSymbols=false` for Release builds, so it does not publish a PDB containing generated symbols. Before this correction, generated PDBs obscured the service-only and whole-distribution comparisons.
 
-## Controlled `linux-x64` distribution measurements
+## `linux-x64` product comparison
 
-Each configuration used a Release, self-contained, untrimmed `linux-x64` CLI publish and identical gzip compression. Configurations 2 through 4 used Azure Core 1.60.0, Azure Identity 1.21.0, Azure ResourceManager 1.14.0, and the same MCP source.
+Both configurations used a Release, self-contained, untrimmed `linux-x64` CLI publish and identical gzip compression.
 
-| Configuration | Publish bytes | Compressed bytes |
+| Product configuration | Publish bytes | Compressed bytes |
 | --- | ---: | ---: |
-| 1. Current released 1.4.0-beta.13 package | 264,782,113 | 111,719,121 |
-| 2. Released 1.5.0 package | 263,206,361 | 110,907,741 |
-| 3. Full generated 1.5.0 source | 263,146,370 | 110,883,385 |
-| 4. Projected generated source | 260,873,602 | 110,413,764 |
+| Current main with 1.4.0-beta.13 package | 264,782,113 | 111,719,121 |
+| Projected 1.5.0 source | 260,873,602 | 110,413,764 |
+| Reduction | 3,908,511 bytes (1.476%) | 1,305,357 bytes (1.168%) |
 
-Relevant deltas:
-
-| Comparison | Publish reduction | Compressed reduction |
-| --- | ---: | ---: |
-| 3 to 4: operation removal | 2,272,768 bytes (0.864%) | 469,621 bytes (0.424%) |
-| 2 to 4: same-version package to projection | 2,332,759 bytes (0.886%) | 493,977 bytes (0.445%) |
-| 1 to 4: current user-visible result | 3,908,511 bytes (1.476%) | 1,305,357 bytes (1.168%) |
-
-The same-version distribution is smaller, and the service assembly itself is reduced by more than 60% both raw and compressed. The whole-product percentage is necessarily smaller because a single management SDK is one component of an approximately 263 MB self-contained application. Product-level value should be evaluated cumulatively as additional management SDKs are projected.
+The whole-product percentage is necessarily smaller because Cosmos management is one component of an approximately 263 MB self-contained application. Product-level absolute savings should accumulate as additional management SDKs are projected.
 
 ## Remaining validation
 
