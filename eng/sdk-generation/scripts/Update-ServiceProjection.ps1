@@ -66,6 +66,8 @@ function Initialize-Project {
     <IsAotCompatible>true</IsAotCompatible>
     <DisableEnhancedAnalysis>true</DisableEnhancedAnalysis>
     <NoWarn>$(NoWarn);SCM0005</NoWarn>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Core" />

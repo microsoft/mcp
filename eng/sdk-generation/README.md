@@ -39,7 +39,7 @@ Temporary repositories and generation outputs are stored under `eng/sdk-generati
 
 `roots.json` contains operations directly required by MCP. The POC keeps every operation associated with a resource that owns a root operation. For Cosmos DB, account listing and key retrieval select `Microsoft.DocumentDB/databaseAccounts`, retaining all 32 operations associated with that resource at the pinned specification revision.
 
-The projected SDK intentionally omits upstream service customizations that MCP does not use. It includes pinned Azure SDK shared source required to compile generated clients outside `azure-sdk-for-net`.
+The projected SDK intentionally omits upstream service customizations that MCP does not use. It includes pinned Azure SDK shared source required to compile generated clients outside `azure-sdk-for-net`. The generated project disables PDB output so production publishes match the released SDK package's symbol footprint.
 
 ## Full-SDK discovery
 

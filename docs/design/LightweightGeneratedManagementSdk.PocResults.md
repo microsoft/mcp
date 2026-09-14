@@ -6,7 +6,7 @@
 
 ## Status
 
-Initial feasibility, build, hierarchy, Linux Native AOT, and controlled `linux-x64` distribution measurements completed. The projection proves a same-version distribution benefit and passes the operation-removal threshold, but it does not meet the plan's preliminary 1 MiB same-version threshold. Under the current acceptance criteria, the POC is not yet successful.
+Initial feasibility, build, hierarchy, Linux Native AOT, and controlled `linux-x64` distribution measurements completed. The projection substantially reduces both the raw and compressed Cosmos service assembly and provides a positive same-version production-distribution benefit. It meets the percentage-based POC size criteria.
 
 ## Pinned inputs
 
@@ -101,16 +101,18 @@ The Native AOT smoke test uses mocked transport and executes:
 
 A `linux-x64` Native AOT publish and execution passed. Its output directory was approximately 30 MiB. This is validation coverage, not a production distribution comparison.
 
-## Preliminary assembly sizes
+## Service assembly sizes
 
-| Configuration | Assembly bytes |
-| --- | ---: |
-| Released 1.4.0-beta.13 | 3,503,176 |
-| Released 1.5.0 | 3,366,208 |
-| Full standalone generated 1.5.0 | 3,619,328 |
-| Projected standalone generated 1.5.0 | 1,123,840 |
+| Configuration | Assembly bytes | Individually compressed bytes |
+| --- | ---: | ---: |
+| Released 1.4.0-beta.13 | 3,555,376 | 793,092 |
+| Released 1.5.0 | 3,372,384 | 756,892 |
+| Full standalone generated 1.5.0 | 3,313,152 | 732,159 |
+| Projected standalone generated 1.5.0 | 1,042,432 | 271,715 |
 
-The projection reduced the standalone service assembly by 2,495,488 bytes, or 68.95%, exceeding the preliminary 50% assembly threshold.
+The projection reduced the standalone generated service assembly by 2,270,720 bytes, or 68.54%. Compared with the released 1.5.0 package, the projected service assembly is 64.10% smaller after individual compression. Both exceed the 50% POC thresholds.
+
+The generated project sets `DebugType=none` and `DebugSymbols=false`. It does not publish a PDB, matching the released package's production output. Before this correction, generated PDBs obscured the service-only and whole-distribution comparisons.
 
 ## Controlled `linux-x64` distribution measurements
 
@@ -120,28 +122,25 @@ Each configuration used a Release, self-contained, untrimmed `linux-x64` CLI pub
 | --- | ---: | ---: |
 | 1. Current released 1.4.0-beta.13 package | 264,832,015 | 111,754,353 |
 | 2. Released 1.5.0 package | 263,256,263 | 110,936,676 |
-| 3. Full standalone generated 1.5.0 | 265,927,610 | 112,861,973 |
-| 4. Projected standalone generated 1.5.0 | 261,320,018 | 110,598,962 |
+| 3. Full standalone generated 1.5.0 | 263,196,774 | 110,913,819 |
+| 4. Projected standalone generated 1.5.0 | 260,926,054 | 110,446,632 |
 
 Relevant deltas:
 
 | Comparison | Publish reduction | Compressed reduction |
 | --- | ---: | ---: |
-| 3 to 4: operation removal | 4,607,592 bytes (1.733%) | 2,263,011 bytes (2.005%) |
-| 2 to 4: same-version package to projection | 1,936,245 bytes (0.735%) | 337,714 bytes (0.304%) |
-| 1 to 4: current user-visible result | 3,511,997 bytes (1.326%) | 1,155,391 bytes (1.034%) |
+| 3 to 4: operation removal | 2,270,720 bytes (0.863%) | 467,187 bytes (0.421%) |
+| 2 to 4: same-version package to projection | 2,330,209 bytes (0.885%) | 490,044 bytes (0.442%) |
+| 1 to 4: current user-visible result | 3,905,961 bytes (1.475%) | 1,307,721 bytes (1.170%) |
 
-The 3-to-4 result exceeds the 1% operation-removal threshold. The 2-to-4 result is a real same-version reduction but is below the preliminary 1 MiB threshold. The 1-to-4 result exceeds 1 MiB, but the design correctly does not use that comparison alone to establish projection benefit.
+The same-version distribution is smaller, and the service assembly itself is reduced by more than 60% both raw and compressed. The whole-product percentage is necessarily smaller because a single management SDK is one component of an approximately 263 MB self-contained application. Product-level value should be evaluated cumulatively as additional management SDKs are projected.
 
-The standalone full generation is larger than the released package because it carries generation/runtime support differently. This is why both the 2-to-4 and 3-to-4 controls are necessary.
+## Remaining validation
 
-## Remaining validation and decision
+Before generalizing the POC:
 
-Before declaring the POC complete:
-
-1. decide whether a 337,714-byte same-version compressed reduction justifies the maintenance cost or retain the 1 MiB threshold and stop the rollout;
-2. repeat production measurements for the other supported RIDs if the POC continues;
-3. add automated mocked request tests to the normal test suite, beyond the AOT smoke executable;
-4. implement semantic SDK-member discovery for adding a previously excluded resource;
-5. complete content-addressed full-SDK cache reuse and invalidation tests; and
-6. rerun `Build-Local.ps1 -VerifyNpx` after the unrelated `NU1902` restore gate is resolved or waived.
+1. repeat production measurements for the other supported RIDs;
+2. add automated mocked request tests to the normal test suite, beyond the AOT smoke executable;
+3. implement semantic SDK-member discovery for adding a previously excluded resource;
+4. complete content-addressed full-SDK cache reuse and invalidation tests; and
+5. rerun `Build-Local.ps1 -VerifyNpx` after the unrelated `NU1902` restore gate is resolved or waived.

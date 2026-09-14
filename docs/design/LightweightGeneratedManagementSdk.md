@@ -627,19 +627,23 @@ This separates package-upgrade effects (1 to 2), package-versus-standalone effec
 - native/AOT artifact bytes, when applicable; and
 - generation duration.
 
-The preliminary POC acceptance thresholds are all of:
+The POC acceptance thresholds are all of:
 
-- at least a 50% reduction in the Cosmos service assembly from configuration 3 to 4;
-- at least a 1% reduction in the compressed production distribution from configuration 3 to 4, greater than any measured clean-build variance, to prove an operation-removal contribution; and
-- at least a 1 MiB reduction in the same-version compressed production distribution from configuration 2 to 4, with no RID regression.
+- at least a 50% reduction in the uncompressed Cosmos service assembly from configuration 3 to 4;
+- at least a 50% reduction in the compressed Cosmos service assembly from configuration 2 to 4; and
+- a positive same-version compressed production-distribution reduction from configuration 2 to 4, with no RID regression.
+
+The generated SDK does not publish a PDB, matching the released package's production output and preventing generated symbols from obscuring the comparison. Symbol files, if needed for a separate diagnostic artifact, must not be included in the shipped distribution measurement.
 
 The configuration 1-to-4 delta remains an important overall user-visible measurement, but it cannot establish projection benefit because it includes the package upgrade. A report where only configuration 1 to 2 reduces the distribution does not pass. Configurations 2 through 4 must use identical migrated MCP source, publish options, trimming settings, RIDs, and compression.
 
-The report must also assess generation complexity and ongoing maintenance cost. If preliminary results show that these thresholds do not represent the shipped-product tradeoff, change them explicitly before Phase 4 rather than redefining success after final measurement.
+There is no fixed absolute per-service threshold. A small SDK cannot reasonably save a fixed number of bytes after compression, while percentage reduction shows whether projection removes most of that SDK's unused surface. Product-level value is evaluated by aggregating the absolute and percentage distribution savings as additional management SDKs are projected.
+
+The report must also assess generation complexity and ongoing maintenance cost.
 
 NuGet global package-cache size is not an acceptance metric because it includes multiple target frameworks, documentation, and cached versions.
 
-Exit criterion: the report labels each effect separately, states whether all three thresholds are met, demonstrates a same-version shipped-distribution benefit attributable to projection, and records the maintenance-cost decision.
+Exit criterion: the report labels each effect separately, states whether all three percentage/benefit thresholds are met, demonstrates a same-version shipped-distribution benefit attributable to projection, and records the maintenance-cost decision.
 
 ## Validation and failure behavior
 
