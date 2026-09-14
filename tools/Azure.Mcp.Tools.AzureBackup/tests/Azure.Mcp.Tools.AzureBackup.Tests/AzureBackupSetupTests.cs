@@ -130,6 +130,20 @@ public class AzureBackupSetupTests
 
         Assert.Contains(container.Commands, c => c.Key == "list-available");
         Assert.Contains(container.Commands, c => c.Key == "refresh");
+        Assert.Contains(container.Commands, c => c.Key == "register");
+    }
+
+    [Fact]
+    public void RegisterCommands_ProtectableItemGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var protectableItem = root.SubGroup.First(g => g.Name == "protectableitem");
+
+        Assert.Contains(protectableItem.Commands, c => c.Key == "list");
+        Assert.Contains(protectableItem.Commands, c => c.Key == "inquire");
     }
 
     [Fact]

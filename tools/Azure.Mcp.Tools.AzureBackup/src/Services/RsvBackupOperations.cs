@@ -2315,6 +2315,141 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             throw new RequestFailedException(response.Status, "The container discovery request was not accepted.");
         }
     }
+
+    public async Task<ContainerRegisterResult> RegisterContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string storageAccountId,
+        bool acquireLock,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(storageAccountId), storageAccountId));
+
+        ResourceIdentifier storageAccountResourceId;
+        try
+        {
+            storageAccountResourceId = new ResourceIdentifier(storageAccountId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid storage account ID '{storageAccountId}'. Expected a storage account name or a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{name}).", ex);
+        }
+
+        var storageAccountName = storageAccountResourceId.Name;
+        var storageAccountResourceGroup = storageAccountResourceId.ResourceGroupName ?? resourceGroup;
+        var containerName = $"StorageContainer;Storage;{storageAccountResourceGroup};{storageAccountName}";
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var collection = rgResource.GetBackupProtectionContainers();
+
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken: cancellationToken);
+        var vaultLocation = vault.Value.Data.Location;
+
+        // Idempotency pre-check: if the container is already registered, return early without
+        // issuing another registration request.
+        try
+        {
+            var existing = await collection.GetAsync(vaultName, FabricName, containerName, cancellationToken);
+            var existingProperties = existing.Value.Data.Properties;
+            if (string.Equals(existingProperties?.RegistrationStatus, "Registered", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ContainerRegisterResult(
+                    Status: "Succeeded",
+                    Container: MapRegisteredContainer(containerName, existingProperties),
+                    AlreadyRegistered: true,
+                    Message: $"Storage account '{storageAccountName}' is already registered with vault '{vaultName}'. Run 'azurebackup protectableitem inquire' to (re)discover file shares.");
+            }
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            // Container is not registered yet - continue with registration below.
+        }
+
+        var data = new BackupProtectionContainerData(vaultLocation)
+        {
+            Properties = new StorageContainer
+            {
+                BackupManagementType = BackupManagementType.AzureStorage,
+                SourceResourceId = storageAccountResourceId,
+                AcquireStorageAccountLock = acquireLock ? AcquireStorageAccountLock.Acquire : AcquireStorageAccountLock.NotAcquire,
+            }
+        };
+
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, FabricName, containerName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        var registeredProperties = operation.Value.Data.Properties;
+        return new ContainerRegisterResult(
+            Status: registeredProperties?.RegistrationStatus ?? "Succeeded",
+            Container: MapRegisteredContainer(containerName, registeredProperties),
+            AlreadyRegistered: false,
+            Message: $"Storage account '{storageAccountName}' registered with vault '{vaultName}'. Run 'azurebackup protectableitem inquire' to discover file shares, then 'azurebackup protecteditem protect' to enable backup.");
+    }
+
+    public async Task<InquireResult> InquireContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(containerName), containerName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var containerId = BackupProtectionContainerResource.CreateResourceIdentifier(
+            subscription, resourceGroup, vaultName, FabricName, containerName);
+        var containerResource = armClient.GetBackupProtectionContainerResource(containerId);
+
+        try
+        {
+            await containerResource.InquireAsync(filter: null, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            throw new KeyNotFoundException(
+                $"Protection container '{containerName}' was not found in vault '{vaultName}'. " +
+                "Register the storage account first with 'azurebackup container register'.");
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
+        {
+            return new InquireResult(
+                Status: "Accepted",
+                Container: containerName,
+                Message: "An inquiry is already in progress for this container. Poll 'azurebackup protectableitem list' to see discovered file shares.");
+        }
+
+        return new InquireResult(
+            Status: "Accepted",
+            Container: containerName,
+            Message: "Container inquiry accepted. The vault will asynchronously enumerate backup-able file shares. Poll 'azurebackup protectableitem list' to see discovered items.");
+    }
+
+    private static RegisteredContainerInfo MapRegisteredContainer(string name, BackupGenericProtectionContainer? properties) =>
+        new(
+            Name: name,
+            FriendlyName: properties?.FriendlyName,
+            BackupManagementType: properties?.BackupManagementType?.ToString(),
+            RegistrationStatus: properties?.RegistrationStatus,
+            HealthStatus: properties?.HealthStatus,
+            SourceResourceId: (properties as StorageContainer)?.SourceResourceId?.ToString());
+
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.
     /// The REST API filter expects specific types like "SAPHanaDatabase" but users

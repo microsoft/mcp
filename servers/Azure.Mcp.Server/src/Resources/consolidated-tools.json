@@ -4970,6 +4970,7 @@
         "azurebackup_vault_create",
         "azurebackup_policy_create",
         "azurebackup_protecteditem_protect",
+        "azurebackup_container_register",
         "azurebackup_resourceguard_create",
         "azurebackup_vault_privateendpoint_create"
       ]
@@ -5049,7 +5050,8 @@
         }
       },
       "mappedToolList": [
-        "azurebackup_container_refresh"
+        "azurebackup_container_refresh",
+        "azurebackup_protectableitem_inquire"
       ]
     },
     {
