@@ -22,6 +22,17 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
         })
     ];
 
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        .. base.HeaderRegexSanitizers,
+        // The CLI user agent embeds the host OS and framework moniker, which differ between the machine that
+        // produced the recording and the CI agents that replay it. Normalize it so matching is platform independent.
+        new(new("User-Agent")
+        {
+            Value = "Sanitized"
+        })
+    ];
+
     public override List<string> DisabledDefaultSanitizers =>
     [
         ..base.DisabledDefaultSanitizers,
@@ -52,7 +63,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
         Assert.NotNull(messageText);
         Assert.True(
             messageText.Contains("Platform Landing Zones under migrate project", StringComparison.OrdinalIgnoreCase) ||
-            messageText.Contains("No Platform Landing Zones exist", StringComparison.OrdinalIgnoreCase),
+            messageText.Contains("No Platform Landing Zone exists under migrate project", StringComparison.OrdinalIgnoreCase),
             "Expected list result message");
     }
 
@@ -80,7 +91,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
         Assert.NotNull(messageText);
         Assert.True(
             messageText.Contains("Generation status", StringComparison.OrdinalIgnoreCase) ||
-            messageText.Contains("No Platform Landing Zone named", StringComparison.OrdinalIgnoreCase),
+            messageText.Contains("No Platform Landing Zone exists under migrate project", StringComparison.OrdinalIgnoreCase),
             "Expected get result message");
     }
 
