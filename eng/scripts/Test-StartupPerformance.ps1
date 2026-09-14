@@ -25,11 +25,8 @@
 .PARAMETER BaselinePath
     Optional path to a JSON baseline file (previously produced by this script).
     When provided, the script compares results against the baseline and fails if any
-    median exceeds BaselineThreshold.
-
-.PARAMETER BaselineThreshold
-    Maximum allowed regression ratio (default 1.20 = 20% slower than baseline).
-    Only used when BaselinePath is specified.
+    scenario exceeds the tiered budgets from issue #3118 (p50/p95 +10%, p99 +20%,
+    discovery scaling efficiency +15%; changes above +5% are reported as warnings).
 
 .EXAMPLE
     # Default run against the Debug build
@@ -46,10 +43,9 @@
 
 param(
     [string]  $Executable,
-    [int]     $Runs = 5,
+    [int]     $Runs = 10,
     [string]  $OutputPath,
-    [string]  $BaselinePath,
-    [double]  $BaselineThreshold = 1.20
+    [string]  $BaselinePath
 )
 
 Set-StrictMode -Version Latest
@@ -74,6 +70,10 @@ if (-not $Executable) {
 if (-not (Test-Path $Executable)) {
     Write-Error "azmcp executable not found at: $Executable`nBuild first: dotnet build servers/Azure.Mcp.Server/src"
 }
+
+# Resolve to a full path so child transports (e.g. the stdio SDK client) don't
+# fail on a leading './' that Windows cmd cannot parse.
+$Executable = (Resolve-Path $Executable).Path
 
 $OutputPath = if ($OutputPath) { $OutputPath } else { Join-Path $RepoRoot '.perf-results/startup-e2e.json' }
 $OutputPath = Resolve-PerfOutputPath -Path $OutputPath -BaseDirectory $RepoRoot
@@ -162,7 +162,9 @@ function Invoke-BenchmarkMcpStartup {
         [string]   $BenchmarkExe,
         [string]   $ExePath,
         [string[]] $ServerArgTokens,
-        [int]      $TimeoutSeconds = 60
+        [int]      $TimeoutSeconds = 60,
+        # '--mcp-startup' (stdio) or '--mcp-startup-http' (HTTP transport).
+        [string]   $BenchmarkMode = '--mcp-startup'
     )
 
     $processStartInfo                      = [System.Diagnostics.ProcessStartInfo]::new()
@@ -171,7 +173,7 @@ function Invoke-BenchmarkMcpStartup {
     $processStartInfo.RedirectStandardError  = $true
     $processStartInfo.UseShellExecute      = $false
     $processStartInfo.CreateNoWindow       = $true
-    $null = $processStartInfo.ArgumentList.Add('--mcp-startup')
+    $null = $processStartInfo.ArgumentList.Add($BenchmarkMode)
     $null = $processStartInfo.ArgumentList.Add($ExePath)
     foreach ($serverArgToken in $ServerArgTokens) {
         $null = $processStartInfo.ArgumentList.Add($serverArgToken)
@@ -229,13 +231,16 @@ function Write-PayloadStats {
     Write-Host ("  Name+description exact tokens (GPT-4o)      : {0:N0}" -f $Payload.name_description_tokens_exact)
     Write-Host ("  Full schema bytes (incl. inputSchema)       : {0:N0}" -f $Payload.full_schema_bytes)
     Write-Host ("  Full schema exact tokens (GPT-4o) [LLM cost]: {0:N0}" -f $Payload.full_schema_tokens_exact)
+    Write-Host ("  Full schema serialization time (ms)         : {0}" -f $Payload.full_schema_serialize_ms)
     Write-Host ""
 }
 
 # ---------------------------------------------------------------------------
-# Helper: run one MCP stdio scenario (timing loop + stats + token measurement)
-# Uses the MCP C# SDK (via the benchmark binary) for accurate protocol timing.
-# Returns [ordered]@{ stats = ...; payload = ... }
+# Helper: run one MCP scenario (timing loop + cold/warm split + percentiles +
+# token/serialization measurement). Works for both stdio and HTTP transports
+# via the $BenchmarkMode switch. Uses the MCP C# SDK (via the benchmark binary)
+# for protocol-correct timing.
+# Returns [ordered]@{ stats = ...; coldWarm = ...; payload = ... }
 # ---------------------------------------------------------------------------
 function Invoke-McpScenario {
     param(
@@ -243,20 +248,29 @@ function Invoke-McpScenario {
         [string[]] $ServerArgs,
         [string]   $ExePath,
         [int]      $Runs,
-        [string]   $BenchmarkExe
+        [string]   $BenchmarkExe,
+        [string]   $BenchmarkMode = '--mcp-startup',
+        [int]      $TimeoutSeconds = 60
     )
     Write-Host "=== $Label ==="
     $ms              = @()
+    $readinessMs     = @()
     $lastBenchResult = $null
     for ($i = 1; $i -le $Runs; $i++) {
         $benchResult = Invoke-BenchmarkMcpStartup -BenchmarkExe $BenchmarkExe `
-                           -ExePath $ExePath -ServerArgTokens $ServerArgs
+                           -ExePath $ExePath -ServerArgTokens $ServerArgs `
+                           -BenchmarkMode $BenchmarkMode -TimeoutSeconds $TimeoutSeconds
         $ms += [long]$benchResult.elapsed_ms
+        if ($benchResult.PSObject.Properties.Name -contains 'readiness_ms') {
+            $readinessMs += [long]$benchResult.readiness_ms
+        }
         $lastBenchResult = $benchResult
         Write-Host ("  Run {0}: {1} ms" -f $i, $benchResult.elapsed_ms)
     }
-    $stats = Get-TimingStats -Samples $ms
-    Write-Host ("  → first={0} ms  average={1} ms  median={2} ms" -f $stats.first, $stats.average, $stats.median)
+    $stats    = Get-TimingStats -Samples $ms
+    $coldWarm = Split-ColdWarm -Samples $ms
+    Write-Host ("  → cold={0} ms  warm-median={1} ms  p95={2} ms  p99={3} ms" -f `
+        $coldWarm.cold_ms, $coldWarm.warm.median, $stats.p95, $stats.p99)
     Write-Host ""
     $payload = [ordered]@{
         tool_count                    = [int]$lastBenchResult.tool_count
@@ -264,9 +278,14 @@ function Invoke-McpScenario {
         name_description_tokens_exact = [int]$lastBenchResult.name_description.exact_tokens_gpt4o_o200k
         full_schema_bytes             = [int]$lastBenchResult.full_schema.bytes
         full_schema_tokens_exact      = [int]$lastBenchResult.full_schema.exact_tokens_gpt4o_o200k
+        full_schema_serialize_ms      = [double]$lastBenchResult.full_schema.serialize_ms
     }
     Write-PayloadStats -Label $Label -Payload $payload
-    return [ordered]@{ stats = $stats; payload = $payload }
+    $result = [ordered]@{ stats = $stats; coldWarm = $coldWarm; payload = $payload }
+    if ($readinessMs.Count -gt 0) {
+        $result.readiness = Get-TimingStats -Samples $readinessMs
+    }
+    return $result
 }
 
 # ---------------------------------------------------------------------------
@@ -280,8 +299,10 @@ for ($i = 1; $i -le $Runs; $i++) {
     Write-Host ("  Run {0}: {1} ms" -f $i, $ms)
 }
 
-$cli = Get-TimingStats -Samples $cliMs
-Write-Host ("  → first={0} ms  average={1} ms  median={2} ms" -f $cli.first, $cli.average, $cli.median)
+$cli         = Get-TimingStats -Samples $cliMs
+$cliColdWarm = Split-ColdWarm -Samples $cliMs
+Write-Host ("  → cold={0} ms  warm-median={1} ms  p95={2} ms  p99={3} ms" -f `
+    $cliColdWarm.cold_ms, $cliColdWarm.warm.median, $cli.p95, $cli.p99)
 Write-Host ""
 
 # ---------------------------------------------------------------------------
@@ -302,6 +323,20 @@ $s4 = Invoke-McpScenario -Label 'Scenario 4: MCP stdio startup (--mode all)' `
                           -BenchmarkExe $BenchmarkExe
 
 # ---------------------------------------------------------------------------
+# Scenario 5 – MCP remote HTTP startup (default mode)
+# The benchmark binary spawns the server with --transport http
+# --dangerously-disable-http-incoming-auth on a free loopback port, polls
+# readiness, then times the initialize + tools/list handshake over
+# HttpClientTransport. readiness_ms captures server-ready time separately.
+# HTTP startup includes web-host build + Kestrel bind, so it needs a longer
+# per-run timeout than stdio.
+# ---------------------------------------------------------------------------
+$s5 = Invoke-McpScenario -Label 'Scenario 5: MCP remote HTTP startup (default mode)' `
+                          -ServerArgs @('server', 'start') -ExePath $Executable -Runs $Runs `
+                          -BenchmarkExe $BenchmarkExe -BenchmarkMode '--mcp-startup-http' `
+                          -TimeoutSeconds 90
+
+# ---------------------------------------------------------------------------
 # Write results JSON
 # ---------------------------------------------------------------------------
 $gitCommit = (& git -C $RepoRoot rev-parse --short HEAD 2>$null) ?? 'unknown'
@@ -311,14 +346,23 @@ $results = [ordered]@{
     commit                      = $gitCommit
     executable                  = $Executable
     runs                        = $Runs
+    environment                 = (Get-PerfRunMetadata)
     scenarios                   = [ordered]@{
         cli_cold_start_ms                 = $cli
+        cli_cold_warm                     = $cliColdWarm
         mcp_stdio_to_tools_list_ms        = $s2.stats
+        mcp_stdio_cold_warm               = $s2.coldWarm
         tools_list_payload                = $s2.payload
         mcp_namespace_mode_startup_ms     = $s3.stats
+        mcp_namespace_cold_warm           = $s3.coldWarm
         namespace_mode_tools_list_payload = $s3.payload
         mcp_all_mode_startup_ms           = $s4.stats
+        mcp_all_cold_warm                 = $s4.coldWarm
         all_mode_tools_list_payload       = $s4.payload
+        mcp_http_default_startup_ms       = $s5.stats
+        mcp_http_cold_warm                = $s5.coldWarm
+        mcp_http_readiness_ms             = $s5.readiness
+        http_default_tools_list_payload   = $s5.payload
     }
 }
 
@@ -335,30 +379,21 @@ if ($BaselinePath) {
     }
     else {
         Write-Host ""
-        Write-Host "=== Regression check (threshold: +$([math]::Round(($BaselineThreshold - 1) * 100))%) ==="
+        Write-Host "=== Regression check (p50/p95 +10%, p99 +20%, scaling +15%, warn +5%) ==="
 
-        $baseline   = Get-Content $BaselinePath | ConvertFrom-Json
-        $failures   = @()
+        $baseline = Get-Content $BaselinePath | ConvertFrom-Json
+        $gate     = Invoke-StartupRegressionGate -ResultScenarios $results.scenarios `
+                                                 -BaselineScenarios $baseline.scenarios
 
-        $checks = @(
-            @{ Name = 'cli_cold_start_ms (median)';           Current = $cli.median;       Baseline = $baseline.scenarios.cli_cold_start_ms.median }
-            @{ Name = 'mcp_stdio_default (median)';           Current = $s2.stats.median;  Baseline = $baseline.scenarios.mcp_stdio_to_tools_list_ms.median }
-            @{ Name = 'mcp_namespace_mode (median)';          Current = $s3.stats.median;  Baseline = $baseline.scenarios.mcp_namespace_mode_startup_ms.median }
-            @{ Name = 'mcp_all_mode (median)';                Current = $s4.stats.median;  Baseline = $baseline.scenarios.mcp_all_mode_startup_ms.median }
-        )
-
-        foreach ($check in $checks) {
-            $limit  = [math]::Round($check.Baseline * $BaselineThreshold)
-            $status = if ($check.Current -le $limit) { 'PASS' } else { $failures += $check.Name; 'FAIL' }
-            Write-Host ("  [{0}] {1}: current={2} ms  baseline={3} ms  limit={4} ms" -f
-                $status, $check.Name, $check.Current, $check.Baseline, $limit)
+        if ($gate.Warnings.Count -gt 0) {
+            Write-Warning "Startup performance warnings (>5%): $($gate.Warnings -join ', ')"
         }
 
-        if ($failures.Count -gt 0) {
-            Write-Error "Startup regression detected in: $($failures -join ', ')"
+        if ($gate.Failures.Count -gt 0) {
+            Write-Error "Startup regression detected in: $($gate.Failures -join ', ')"
         }
         else {
-            Write-Host "  All checks passed."
+            Write-Host "  All budget checks passed."
         }
     }
 }
@@ -367,14 +402,26 @@ if ($BaselinePath) {
 # Emit Azure DevOps pipeline variables (no-op outside AzDO)
 # ---------------------------------------------------------------------------
 Write-Host "##vso[task.setvariable variable=CliColdStartMedianMs]$($cli.median)"
+Write-Host "##vso[task.setvariable variable=CliColdStartColdMs]$($cliColdWarm.cold_ms)"
+Write-Host "##vso[task.setvariable variable=CliColdStartWarmMedianMs]$($cliColdWarm.warm.median)"
+Write-Host "##vso[task.setvariable variable=CliColdStartP95Ms]$($cli.p95)"
+Write-Host "##vso[task.setvariable variable=CliColdStartP99Ms]$($cli.p99)"
 Write-Host "##vso[task.setvariable variable=McpStdioStartupMedianMs]$($s2.stats.median)"
+Write-Host "##vso[task.setvariable variable=McpStdioStartupP95Ms]$($s2.stats.p95)"
+Write-Host "##vso[task.setvariable variable=McpStdioStartupP99Ms]$($s2.stats.p99)"
 Write-Host "##vso[task.setvariable variable=ToolsListToolCount]$($s2.payload.tool_count)"
 Write-Host "##vso[task.setvariable variable=ToolsListNameDescTokensGpt4o]$($s2.payload.name_description_tokens_exact)"
 Write-Host "##vso[task.setvariable variable=ToolsListFullSchemaTokensGpt4o]$($s2.payload.full_schema_tokens_exact)"
+Write-Host "##vso[task.setvariable variable=ToolsListFullSchemaSerializeMs]$($s2.payload.full_schema_serialize_ms)"
 Write-Host "##vso[task.setvariable variable=McpNamespaceModeStartupMedianMs]$($s3.stats.median)"
 Write-Host "##vso[task.setvariable variable=NamespaceModeToolsListToolCount]$($s3.payload.tool_count)"
 Write-Host "##vso[task.setvariable variable=NamespaceModeToolsListFullSchemaTokensGpt4o]$($s3.payload.full_schema_tokens_exact)"
 Write-Host "##vso[task.setvariable variable=AllModeStartupMedianMs]$($s4.stats.median)"
+Write-Host "##vso[task.setvariable variable=AllModeStartupP95Ms]$($s4.stats.p95)"
+Write-Host "##vso[task.setvariable variable=AllModeStartupP99Ms]$($s4.stats.p99)"
 Write-Host "##vso[task.setvariable variable=AllModeToolsListToolCount]$($s4.payload.tool_count)"
 Write-Host "##vso[task.setvariable variable=AllModeToolsListFullSchemaTokensGpt4o]$($s4.payload.full_schema_tokens_exact)"
+Write-Host "##vso[task.setvariable variable=McpHttpDefaultStartupMedianMs]$($s5.stats.median)"
+Write-Host "##vso[task.setvariable variable=McpHttpDefaultStartupP95Ms]$($s5.stats.p95)"
+Write-Host "##vso[task.setvariable variable=McpHttpReadinessMedianMs]$(if ($s5.Contains('readiness')) { $s5.readiness.median } else { 'n/a' })"
 Write-Host "##vso[build.addbuildtag]perf-tracked"

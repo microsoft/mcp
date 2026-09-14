@@ -137,9 +137,14 @@ extends:
         jobs:
         - template: /eng/pipelines/templates/jobs/perf-test.yml
           parameters:
-            Runs: 5
+            Runs: 10
             # Uncomment to gate on regressions once a baseline is committed:
             # BaselinePath: eng/perf-baseline.json
+            # ResourceBaselinePath: eng/resource-baseline.json
+            # DispatchBaselinePath: eng/dispatch-baseline.json
+            # ConcurrencyBaselinePath: eng/concurrency-baseline.json
+            # Uncomment to run the (~30 min) BenchmarkDotNet micro-benchmarks:
+            # RunMicroBenchmarks: true
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test
