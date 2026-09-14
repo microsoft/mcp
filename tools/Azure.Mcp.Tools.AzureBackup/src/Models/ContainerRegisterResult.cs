@@ -8,11 +8,3 @@ public sealed record ContainerRegisterResult(
     RegisteredContainerInfo Container,
     bool AlreadyRegistered,
     string Message);
-
-public sealed record RegisteredContainerInfo(
-    string Name,
-    string? FriendlyName,
-    string? BackupManagementType,
-    string? RegistrationStatus,
-    string? HealthStatus,
-    string? SourceResourceId);

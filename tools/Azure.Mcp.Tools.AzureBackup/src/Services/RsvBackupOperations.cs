@@ -2173,16 +2173,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
-        string filter;
-        if (!string.IsNullOrEmpty(workloadType))
-        {
-            var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
-            filter = $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
-        }
-        else
-        {
-            filter = "backupManagementType eq 'AzureWorkload'";
-        }
+        var filter = BuildProtectableItemFilter(workloadType);
 
         var items = new List<ProtectableItemInfo>();
         await foreach (var item in rgResource.GetBackupProtectableItemsAsync(vaultName, filter: filter, cancellationToken: cancellationToken))
@@ -2191,6 +2182,26 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         }
 
         return items;
+    }
+
+    // Builds the OData $filter for GetBackupProtectableItems. Azure File shares are surfaced
+    // under the 'AzureStorage' backup management type (not 'AzureWorkload') and are not further
+    // discriminated by a workloadType clause, so an AzureFileShare request must route to
+    // AzureStorage; otherwise the register -> inquire -> list flow would return no file shares.
+    internal static string BuildProtectableItemFilter(string? workloadType)
+    {
+        if (string.IsNullOrEmpty(workloadType))
+        {
+            return "backupManagementType eq 'AzureWorkload'";
+        }
+
+        var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
+        if (string.Equals(normalizedType, "AzureFileShare", StringComparison.OrdinalIgnoreCase))
+        {
+            return "backupManagementType eq 'AzureStorage'";
+        }
+
+        return $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
     }
 
     public async Task<List<ProtectableItemInfo>> ListDiscoveredProtectableItemsAsync(
@@ -2382,6 +2393,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             Properties = new StorageContainer
             {
                 BackupManagementType = BackupManagementType.AzureStorage,
+                FriendlyName = storageAccountName,
                 SourceResourceId = storageAccountResourceId,
                 AcquireStorageAccountLock = acquireLock ? AcquireStorageAccountLock.Acquire : AcquireStorageAccountLock.NotAcquire,
             }
