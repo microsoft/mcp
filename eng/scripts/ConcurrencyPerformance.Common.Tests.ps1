@@ -130,4 +130,12 @@ Describe "Invoke-ConcurrencyRegressionGate" {
         $gate = Invoke-ConcurrencyRegressionGate -ResultLevels $s -BaselineLevels $b
         $gate.Failures | Should -Contain 'no_comparable_metrics'
     }
+
+    It "fails when a latency metric the baseline expects is missing from results (F-007)" {
+        $s = New-UniformLevels
+        $b = New-UniformLevels
+        $s[1].latency_ms.Remove('p95')   # results dropped p95 at concurrency 4
+        $gate = Invoke-ConcurrencyRegressionGate -ResultLevels $s -BaselineLevels $b
+        $gate.Failures | Should -Contain 'c4 latency_p95 (missing in results)'
+    }
 }

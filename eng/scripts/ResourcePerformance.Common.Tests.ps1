@@ -146,4 +146,16 @@ Describe "Invoke-ResourceRegressionGate" {
         $gate = Invoke-ResourceRegressionGate -ResultScenarios $s -BaselineScenarios $b
         $gate.Failures | Should -Contain 'default steady_cpu_percent'
     }
+
+    It "fails when a steady metric the baseline expects is missing from results (F-007)" {
+        $b = [ordered]@{ default = (New-ResourceScenario -SteadyMem 100 -SteadyCpu 10 -PeakMem 150) }
+        $s = [ordered]@{
+            default = [ordered]@{
+                phases = [ordered]@{ steady_state = [ordered]@{ working_set_mb = [ordered]@{ mean = 100; max = 100 } } }
+                peak   = [ordered]@{ working_set_mb = 150 }
+            }
+        }
+        $gate = Invoke-ResourceRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'default steady_cpu_percent (missing in results)'
+    }
 }

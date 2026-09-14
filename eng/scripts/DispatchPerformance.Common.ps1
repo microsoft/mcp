@@ -49,16 +49,26 @@ function Invoke-DispatchRegressionGate {
     foreach ($transport in $transports) {
         $curTransport  = Get-MemberValue $ResultScenarios $transport
         $baseTransport = Get-MemberValue $BaselineScenarios $transport
-        if ($null -eq $curTransport -or $null -eq $baseTransport) {
-            Write-Host ("  [SKIP] {0}: absent in results or baseline" -f $transport)
+        if ($null -eq $baseTransport) {
+            Write-Host ("  [SKIP] {0}: absent in baseline" -f $transport)
+            continue
+        }
+        if ($null -eq $curTransport) {
+            $failures += "$transport (missing in results)"
+            Write-Host ("  [FAIL] {0}: expected by baseline but absent in results" -f $transport)
             continue
         }
 
         foreach ($operation in $operations) {
             $curStats  = Get-MemberValue $curTransport $operation
             $baseStats = Get-MemberValue $baseTransport $operation
-            if ($null -eq $curStats -or $null -eq $baseStats) {
-                Write-Host ("  [SKIP] {0}/{1}: value absent" -f $transport, $operation)
+            if ($null -eq $baseStats) {
+                Write-Host ("  [SKIP] {0}/{1}: absent in baseline" -f $transport, $operation)
+                continue
+            }
+            if ($null -eq $curStats) {
+                $failures += "$transport/$operation (missing in results)"
+                Write-Host ("  [FAIL] {0}/{1}: expected by baseline but absent in results" -f $transport, $operation)
                 continue
             }
 

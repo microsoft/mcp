@@ -104,7 +104,12 @@ function Invoke-ConcurrencyRegressionGate {
         )
 
         foreach ($check in $checks) {
-            if ($null -eq $check.Cur -or $null -eq $check.Base) {
+            if ($null -eq $check.Base) {
+                continue
+            }
+            if ($null -eq $check.Cur) {
+                $failures += "c$concurrency $($check.Label) (missing in results)"
+                Write-Host ("  [FAIL] c{0} {1}: expected by baseline but absent in results" -f $concurrency, $check.Label)
                 continue
             }
             $evaluated++

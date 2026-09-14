@@ -100,8 +100,13 @@ function Invoke-ResourceRegressionGate {
         )
 
         foreach ($c in $checks) {
-            if ($null -eq $c.Cur -or $null -eq $c.Base) {
-                Write-Host ("  [SKIP] {0} {1}: value absent" -f $mode, $c.Label)
+            if ($null -eq $c.Base) {
+                Write-Host ("  [SKIP] {0} {1}: absent in baseline" -f $mode, $c.Label)
+                continue
+            }
+            if ($null -eq $c.Cur) {
+                $failures += "$mode $($c.Label) (missing in results)"
+                Write-Host ("  [FAIL] {0} {1}: expected by baseline but absent in results" -f $mode, $c.Label)
                 continue
             }
 

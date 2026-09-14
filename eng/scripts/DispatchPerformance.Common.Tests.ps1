@@ -105,4 +105,11 @@ Describe "Invoke-DispatchRegressionGate" {
         $gate = Invoke-DispatchRegressionGate -ResultScenarios $s -BaselineScenarios $b
         $gate.Failures | Should -Contain 'stdio/tools_list (p95)'
     }
+
+    It "fails when a transport the baseline expects is missing from results (F-007)" {
+        $b = New-UniformScenarios
+        $s = [ordered]@{ stdio = $b.stdio }   # results dropped http
+        $gate = Invoke-DispatchRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'http (missing in results)'
+    }
 }
