@@ -1,6 +1,6 @@
 # Azure MCP management SDK projection
 
-This directory contains the POC tooling for generating a lightweight Cosmos DB management SDK. The generated SDK is committed under `sdk/generated/Azure.ResourceManager.CosmosDB` so normal builds do not access the specification repository.
+This directory contains the POC tooling for generating lightweight Cosmos DB management source. The generated C# is committed under `tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk` and compiled directly into `Azure.Mcp.Tools.Cosmos`, so normal builds do not access the specification repository or build a separate SDK project.
 
 ## Pinned baseline
 
@@ -12,7 +12,7 @@ The Cosmos projection is based on `Azure.ResourceManager.CosmosDB` 1.5.0:
 - specification directory: `specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB`
 - API version: `2026-03-15`
 
-The complete machine-readable provenance is in `sdk/generated/Azure.ResourceManager.CosmosDB/spec.lock.json`.
+The complete machine-readable provenance is in `tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk/spec.lock.json`.
 
 ## Regeneration
 
@@ -39,8 +39,10 @@ Temporary repositories and generation outputs are stored under `eng/sdk-generati
 
 `roots.json` contains operations directly required by MCP. The POC keeps every operation associated with a resource that owns a root operation. For Cosmos DB, account listing and key retrieval select `Microsoft.DocumentDB/databaseAccounts`, retaining all 32 operations associated with that resource at the pinned specification revision.
 
-The projected SDK intentionally omits upstream service customizations that MCP does not use. It includes pinned Azure SDK shared source required to compile generated clients outside `azure-sdk-for-net`. The generated project disables PDB output so production publishes match the released SDK package's symbol footprint.
+The projected source intentionally omits upstream service customizations that MCP does not use. It includes pinned Azure SDK shared source required to compile generated clients outside `azure-sdk-for-net`. The Cosmos area disables Release PDB output so generated symbols are not added to the shipped product.
 
 ## Full-SDK discovery
 
-`AzureMcp.Cosmos.csproj` accepts `CosmosManagementSdkProject`. Setting it to a complete generated SDK project substitutes that project for the committed projection without loading both assemblies. Set `UseCosmosManagementSdkPackage=true` to use the released package for controlled comparisons.
+`Azure.Mcp.Tools.Cosmos.csproj` accepts `CosmosManagementSdkSource`. Setting it to a complete generated SDK `src` directory substitutes those source files for the committed projection. Set `UseCosmosManagementSdkPackage=true` to exclude generated source and use the released package for controlled comparisons.
+
+The emitter still receives a temporary project-shaped output directory because it creates project scaffolding when no project exists, even with `new-project=false`. The temporary project prevents emitter-owned scaffolding from entering the service area. Only `src/Generated` is copied into MCP; no generated SDK project is committed or shipped.

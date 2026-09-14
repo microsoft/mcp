@@ -22,7 +22,7 @@ Initial feasibility, build, hierarchy, Linux Native AOT, and controlled `linux-x
 | TypeSpec compiler | `1.13.0` |
 | Node.js | 24.15.0 |
 
-The package lock and complete provenance are committed under `eng/sdk-generation` and `sdk/generated/Azure.ResourceManager.CosmosDB/spec.lock.json`.
+The package lock and complete provenance are committed under `eng/sdk-generation` and `tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk/spec.lock.json`.
 
 ## Sparse checkout
 
@@ -79,10 +79,10 @@ The MCP-owned strict validator passed the unchanged full-baseline subset. Indepe
 The following checks passed:
 
 ```text
-Full generated 1.5.0 SDK build
-Projected generated 1.5.0 SDK build
-AzureMcp.Cosmos build against the full generated SDK
-AzureMcp.Cosmos build against the projected generated SDK
+Temporary full generated 1.5.0 SDK build
+Temporary projected generated 1.5.0 SDK build
+Azure.Mcp.Tools.Cosmos build with full generated source
+Azure.Mcp.Tools.Cosmos build with projected generated source
 Complete AzureMcp.sln build against the projection
 Cosmos unit tests: 3 passed
 ```
@@ -91,7 +91,7 @@ The local machine does not have the .NET 9 ASP.NET Core runtime. Cosmos tests we
 
 `Build-Local.ps1 -VerifyNpx` was attempted but stopped during restore because the repository's existing `OpenTelemetry.Exporter.OpenTelemetryProtocol` 1.12.0 vulnerability warning (`NU1902`) is treated as an error. The solution build succeeds when NuGet audit is disabled; this POC did not change the unrelated OpenTelemetry dependency.
 
-The Native AOT smoke test uses mocked transport and executes:
+The Native AOT smoke test compiles the projected source directly through linked compile items, uses mocked transport, and executes:
 
 - subscription account listing;
 - pageable response enumeration;
@@ -103,16 +103,18 @@ A `linux-x64` Native AOT publish and execution passed. Its output directory was 
 
 ## Service assembly sizes
 
-| Configuration | Assembly bytes | Individually compressed bytes |
+Generated source is compiled directly into `Azure.Mcp.Tools.Cosmos.dll`. Package configurations therefore include both the area assembly and released management assembly, while generated configurations contain one merged area assembly.
+
+| Configuration | Service assembly bytes | Individually compressed bytes |
 | --- | ---: | ---: |
-| Released 1.4.0-beta.13 | 3,555,376 | 793,092 |
-| Released 1.5.0 | 3,372,384 | 756,892 |
-| Full standalone generated 1.5.0 | 3,313,152 | 732,159 |
-| Projected standalone generated 1.5.0 | 1,042,432 | 271,715 |
+| Current 1.4.0-beta.13 package plus Cosmos area | 3,618,352 | 818,308 |
+| Released 1.5.0 package plus Cosmos area | 3,435,360 | 782,111 |
+| Full generated 1.5.0 source in Cosmos area | 3,376,128 | 759,765 |
+| Projected generated source in Cosmos area | 1,103,360 | 293,305 |
 
-The projection reduced the standalone generated service assembly by 2,270,720 bytes, or 68.54%. Compared with the released 1.5.0 package, the projected service assembly is 64.10% smaller after individual compression. Both exceed the 50% POC thresholds.
+The projection reduced the merged full-generated Cosmos area assembly by 2,272,768 bytes, or 67.32%. Compared with the released 1.5.0 package plus its area assembly, the merged projected assembly is 62.50% smaller after individual compression. Both exceed the 50% POC thresholds.
 
-The generated project sets `DebugType=none` and `DebugSymbols=false`. It does not publish a PDB, matching the released package's production output. Before this correction, generated PDBs obscured the service-only and whole-distribution comparisons.
+The Cosmos project sets `DebugType=none` and `DebugSymbols=false` for Release builds, so it does not publish a PDB containing generated symbols. Before this correction, generated PDBs obscured the service-only and whole-distribution comparisons.
 
 ## Controlled `linux-x64` distribution measurements
 
@@ -120,18 +122,18 @@ Each configuration used a Release, self-contained, untrimmed `linux-x64` CLI pub
 
 | Configuration | Publish bytes | Compressed bytes |
 | --- | ---: | ---: |
-| 1. Current released 1.4.0-beta.13 package | 264,832,015 | 111,754,353 |
-| 2. Released 1.5.0 package | 263,256,263 | 110,936,676 |
-| 3. Full standalone generated 1.5.0 | 263,196,774 | 110,913,819 |
-| 4. Projected standalone generated 1.5.0 | 260,926,054 | 110,446,632 |
+| 1. Current released 1.4.0-beta.13 package | 264,782,113 | 111,719,121 |
+| 2. Released 1.5.0 package | 263,206,361 | 110,907,741 |
+| 3. Full generated 1.5.0 source | 263,146,370 | 110,883,385 |
+| 4. Projected generated source | 260,873,602 | 110,413,764 |
 
 Relevant deltas:
 
 | Comparison | Publish reduction | Compressed reduction |
 | --- | ---: | ---: |
-| 3 to 4: operation removal | 2,270,720 bytes (0.863%) | 467,187 bytes (0.421%) |
-| 2 to 4: same-version package to projection | 2,330,209 bytes (0.885%) | 490,044 bytes (0.442%) |
-| 1 to 4: current user-visible result | 3,905,961 bytes (1.475%) | 1,307,721 bytes (1.170%) |
+| 3 to 4: operation removal | 2,272,768 bytes (0.864%) | 469,621 bytes (0.424%) |
+| 2 to 4: same-version package to projection | 2,332,759 bytes (0.886%) | 493,977 bytes (0.445%) |
+| 1 to 4: current user-visible result | 3,908,511 bytes (1.476%) | 1,305,357 bytes (1.168%) |
 
 The same-version distribution is smaller, and the service assembly itself is reduced by more than 60% both raw and compressed. The whole-product percentage is necessarily smaller because a single management SDK is one component of an approximately 263 MB self-contained application. Product-level value should be evaluated cumulatively as additional management SDKs are projected.
 
