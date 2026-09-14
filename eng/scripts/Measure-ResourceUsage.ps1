@@ -69,6 +69,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $ScriptDir = $PSScriptRoot
+$RepoRoot = (Get-Item (Join-Path $ScriptDir '../..')).FullName
 . (Join-Path $ScriptDir 'ResourcePerformance.Common.ps1')
 
 foreach ($path in @($Executable, $BenchmarkExe)) {
@@ -97,19 +98,18 @@ $env:PERF_STEADY_SECONDS = $SteadySeconds
 $env:PERF_SOAK_SECONDS  = $SoakSeconds
 $env:PERF_SAMPLE_MS     = $SampleMs
 
+# Per-mode timeout covers idle + steady + soak (plus startup/headroom) so a hung harness
+# fails fast instead of consuming the whole job.
+$resourceTimeoutSeconds = 180 + ($IdleSeconds + $SteadySeconds + $SoakSeconds) * 3
+
 $scenarios = [ordered]@{}
 
 foreach ($mode in $Modes) {
     $serverArgs = Get-ModeServerArgs -Mode $mode
     Write-Host "=== Resource usage: $mode mode (concurrency=$Concurrency, steady=${SteadySeconds}s, soak=${SoakSeconds}s) ==="
 
-    $stdout = & $BenchmarkExe --mcp-resource $Executable @serverArgs 2>$null
-    $jsonLine = $stdout | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
-    if (-not $jsonLine) {
-        throw "No JSON emitted by the resource harness for mode '$mode'. Raw output: $stdout"
-    }
-
-    $data = $jsonLine | ConvertFrom-Json
+    $data = Invoke-PerfHarnessJson -FilePath $BenchmarkExe `
+                -ArgumentList (@('--mcp-resource', $Executable) + $serverArgs) -TimeoutSeconds $resourceTimeoutSeconds
     $scenarios[$mode] = $data
 
     $steady = $data.phases.steady_state
@@ -127,12 +127,12 @@ foreach ($mode in $Modes) {
     Write-Host ""
 }
 
-$commit = try { (& git rev-parse --short HEAD 2>$null).Trim() } catch { '' }
+$commit = try { (& git -C $RepoRoot rev-parse --short HEAD 2>$null).Trim() } catch { '' }
 
 $results = [ordered]@{
     timestamp     = (Get-Date).ToUniversalTime().ToString('o')
     commit        = $commit
-    environment   = (Get-PerfRunMetadata)
+    environment   = (Get-PerfRunMetadata -RepoRoot $RepoRoot)
     concurrency   = $Concurrency
     idle_seconds  = $IdleSeconds
     steady_seconds = $SteadySeconds

@@ -36,6 +36,7 @@ function Invoke-DispatchRegressionGate {
 
     $failures = @()
     $warnings = @()
+    $evaluated = 0
 
     $transports = @('stdio', 'http')
     $operations = @('tools_list')
@@ -65,25 +66,32 @@ function Invoke-DispatchRegressionGate {
                 $metric   = $budget.Metric
                 $current  = Get-MemberValue $curStats $metric
                 $baseline = Get-MemberValue $baseStats $metric
-                if ($null -eq $current -or $null -eq $baseline) {
+                if ($null -eq $baseline) {
+                    continue
+                }
+                $label = "$transport/$operation ($metric)"
+                if ($null -eq $current) {
+                    $failures += "$label (missing in results)"
+                    Write-Host ("  [FAIL] {0}: expected by baseline but absent in results" -f $label)
                     continue
                 }
 
-                $ratio = if ($baseline -gt 0) { $current / $baseline } else { 1 }
-                $label = "$transport/$operation ($metric)"
-                if ($ratio -gt $budget.Limit) {
-                    $failures += $label
-                    $status = 'FAIL'
+                $evaluated++
+                if ($baseline -gt 0) {
+                    $ratio = $current / $baseline
+                    if ($ratio -gt $budget.Limit) { $failures += $label; $status = 'FAIL' }
+                    elseif ($ratio -gt $Warn)     { $warnings += $label; $status = 'WARN' }
+                    else                          { $status = 'PASS' }
+                    Write-Host ("  [{0}] {1}: current={2}ms  baseline={3}ms  (+{4}%)" -f `
+                        $status, $label, $current, $baseline, [math]::Round(($ratio - 1) * 100, 1))
                 }
-                elseif ($ratio -gt $Warn) {
-                    $warnings += $label
-                    $status = 'WARN'
+                elseif ($current -gt 0) {
+                    $failures += $label
+                    Write-Host ("  [FAIL] {0}: current={1}ms vs a zero baseline (not comparable)" -f $label, $current)
                 }
                 else {
-                    $status = 'PASS'
+                    Write-Host ("  [PASS] {0}: current=0ms  baseline=0ms (unchanged)" -f $label)
                 }
-                Write-Host ("  [{0}] {1}: current={2}ms  baseline={3}ms  (+{4}%)" -f `
-                    $status, $label, $current, $baseline, [math]::Round(($ratio - 1) * 100, 1))
             }
         }
     }
@@ -102,6 +110,11 @@ function Invoke-DispatchRegressionGate {
         }
         Write-Host ("  [{0}] transport_overhead (http-stdio tools/list p50): current={1}ms  baseline={2}ms  (+{3}%)" -f `
             $status, [math]::Round($curOverhead, 4), [math]::Round($baseOverhead, 4), [math]::Round(($ratio - 1) * 100, 1))
+    }
+
+    if ($evaluated -eq 0) {
+        $failures += 'no_comparable_metrics'
+        Write-Host "  [FAIL] no comparable dispatch metrics between results and baseline (incompatible or empty baseline)"
     }
 
     return [ordered]@{ Failures = $failures; Warnings = $warnings }

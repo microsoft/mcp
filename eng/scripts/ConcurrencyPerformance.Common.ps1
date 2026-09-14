@@ -66,25 +66,31 @@ function Invoke-ConcurrencyRegressionGate {
 
     $failures = @()
     $warnings = @()
+    $evaluated = 0
 
     $baselineByConcurrency = @{}
     foreach ($bl in $BaselineLevels) {
         $baselineByConcurrency[[string](Get-MemberValue $bl 'concurrency')] = $bl
     }
 
+    $seenConcurrency = @{}
+
     foreach ($level in $ResultLevels) {
         $concurrency = Get-MemberValue $level 'concurrency'
-        $baseline = $baselineByConcurrency[[string]$concurrency]
-        if ($null -eq $baseline) {
-            Write-Host ("  [SKIP] concurrency={0}: absent in baseline" -f $concurrency)
-            continue
-        }
+        $seenConcurrency[[string]$concurrency] = $true
 
-        # State leakage / thread safety — a hard failure regardless of the baseline.
+        # State leakage / thread safety — a hard failure regardless of the baseline, so it is
+        # evaluated before the baseline-presence check below can skip this level.
         $mismatches = Get-MemberValue $level 'tool_count_mismatches'
         if ($mismatches -and $mismatches -gt 0) {
             $failures += "c$concurrency state_leakage"
             Write-Host ("  [FAIL] c{0} tool_count_mismatches={1} (state leakage / thread-safety failure)" -f $concurrency, $mismatches)
+        }
+
+        $baseline = $baselineByConcurrency[[string]$concurrency]
+        if ($null -eq $baseline) {
+            Write-Host ("  [SKIP] concurrency={0}: absent in baseline (relative budgets)" -f $concurrency)
+            continue
         }
 
         $curLatency  = Get-MemberValue $level 'latency_ms'
@@ -101,6 +107,7 @@ function Invoke-ConcurrencyRegressionGate {
             if ($null -eq $check.Cur -or $null -eq $check.Base) {
                 continue
             }
+            $evaluated++
             $result = Test-ConcurrencyBudget -Current $check.Cur -Baseline $check.Base `
                 -FailFraction $check.Fail -WarnFraction $WarnPct -Direction $check.Dir
             $label = "c$concurrency $($check.Label)"
@@ -117,6 +124,7 @@ function Invoke-ConcurrencyRegressionGate {
         $curError  = Get-MemberValue $level 'error_rate_pct'
         $baseError = Get-MemberValue $baseline 'error_rate_pct'
         if ($null -ne $curError -and $null -ne $baseError) {
+            $evaluated++
             $delta = $curError - $baseError
             $label = "c$concurrency error_rate_pct"
             if ($delta -gt $ErrorRatePpLimit) {
@@ -132,6 +140,19 @@ function Invoke-ConcurrencyRegressionGate {
             Write-Host ("  [{0}] {1}: current={2}%  baseline={3}%  (+{4} pp)" -f `
                 $status, $label, $curError, $baseError, [math]::Round($delta, 3))
         }
+    }
+
+    # Baseline levels the results no longer cover are treated as an expected-but-missing metric.
+    foreach ($blKey in $baselineByConcurrency.Keys) {
+        if (-not $seenConcurrency.ContainsKey($blKey)) {
+            $failures += "c$blKey missing_in_results"
+            Write-Host ("  [FAIL] concurrency={0}: expected by baseline but absent in results" -f $blKey)
+        }
+    }
+
+    if ($evaluated -eq 0) {
+        $failures += 'no_comparable_metrics'
+        Write-Host "  [FAIL] no comparable concurrency metrics between results and baseline (incompatible or empty baseline)"
     }
 
     return [ordered]@{ Failures = $failures; Warnings = $warnings }

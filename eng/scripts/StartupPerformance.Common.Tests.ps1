@@ -175,3 +175,48 @@ Describe "Get-WorkloadCatalogVersion" {
         Get-WorkloadCatalogVersion -CatalogPath (Join-Path $script:RunFolder 'no-such-catalog.json') | Should -Be 'unknown'
     }
 }
+
+Describe "Get-TimingStats sub-millisecond precision" {
+    It "preserves fractional-millisecond percentiles instead of rounding to whole ms (F-004)" {
+        # Regression: double samples previously bound to [long[]] and were rounded to 0,0,1,1.
+        $stats = Get-TimingStats -Samples @(0.41, 0.49, 0.51, 0.59)
+        $stats.median | Should -Be 0.5
+        $stats.p95 | Should -BeGreaterThan 0.5
+        $stats.p95 | Should -BeLessThan 0.6
+    }
+}
+
+Describe "Invoke-StartupRegressionGate" {
+    It "reports no failures for an identical baseline" {
+        $s = [ordered]@{ mcp_stdio_to_tools_list_ms = [ordered]@{ p50 = 100; p95 = 120; p99 = 140 } }
+        $b = [ordered]@{ mcp_stdio_to_tools_list_ms = [ordered]@{ p50 = 100; p95 = 120; p99 = 140 } }
+        $gate = Invoke-StartupRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        @($gate.Failures).Count | Should -Be 0
+    }
+
+    It "fails when nothing overlaps results and baseline (F-007)" {
+        $s = [ordered]@{ mcp_stdio_to_tools_list_ms = [ordered]@{ p50 = 100; p95 = 120; p99 = 140 } }
+        $b = [ordered]@{ }
+        $gate = Invoke-StartupRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'no_comparable_metrics'
+    }
+
+    It "fails when a metric the baseline expects is missing from results (F-007)" {
+        $s = [ordered]@{ mcp_stdio_to_tools_list_ms = [ordered]@{ p50 = 100; p95 = 120 } }
+        $b = [ordered]@{ mcp_stdio_to_tools_list_ms = [ordered]@{ p50 = 100; p95 = 120; p99 = 140 } }
+        $gate = Invoke-StartupRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'mcp_stdio_default (p99, missing in results)'
+    }
+
+    It "treats a positive current against a zero baseline as a failure (F-010)" {
+        $s = [ordered]@{ mcp_stdio_to_tools_list_ms = [ordered]@{ p50 = 100; p95 = 120; p99 = 140 } }
+        $b = [ordered]@{ mcp_stdio_to_tools_list_ms = [ordered]@{ p50 = 0; p95 = 0; p99 = 0 } }
+        $gate = Invoke-StartupRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        @($gate.Failures).Count | Should -BeGreaterThan 0
+    }
+
+    It "accepts a -RepoRoot argument when stamping run metadata (F-009)" {
+        $m = Get-PerfRunMetadata -RepoRoot $PSScriptRoot
+        $m.Contains('commit') | Should -BeTrue
+    }
+}

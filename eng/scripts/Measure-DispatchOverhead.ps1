@@ -52,6 +52,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $ScriptDir = $PSScriptRoot
+$RepoRoot = (Get-Item (Join-Path $ScriptDir '../..')).FullName
 . (Join-Path $ScriptDir 'DispatchPerformance.Common.ps1')
 
 foreach ($path in @($Executable, $BenchmarkExe)) {
@@ -65,6 +66,10 @@ $OutputPath = Resolve-PerfOutputPath -Path $OutputPath
 
 $env:PERF_DISPATCH_ITERATIONS = $Iterations
 $env:PERF_DISPATCH_WARMUP = $Warmup
+
+# Generous per-invocation timeout so a hung/crashed harness fails fast instead of consuming
+# the whole job. tools/list is sub-second, so this scales gently with the iteration count.
+$harnessTimeoutSeconds = [math]::Max(180, $Iterations)
 
 function Get-DispatchStats {
     param([double[]] $Samples)
@@ -85,13 +90,8 @@ foreach ($transport in @('stdio', 'http')) {
     Write-Host "=== Dispatch overhead: $transport ($Iterations iterations) ==="
     $mode = "--mcp-dispatch-$transport"
 
-    $stdout = & $BenchmarkExe $mode $Executable server start 2>$null
-    $jsonLine = $stdout | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
-    if (-not $jsonLine) {
-        throw "No JSON emitted by the dispatch harness for transport '$transport'. Raw output: $stdout"
-    }
-
-    $data = $jsonLine | ConvertFrom-Json
+    $data = Invoke-PerfHarnessJson -FilePath $BenchmarkExe `
+                -ArgumentList @($mode, $Executable, 'server', 'start') -TimeoutSeconds $harnessTimeoutSeconds
     $toolsList = Get-DispatchStats -Samples ([double[]]$data.tools_list_ms)
 
     $scenario = [ordered]@{ tools_list = $toolsList }
@@ -110,12 +110,12 @@ if ($null -ne $overhead) {
     Write-Host ""
 }
 
-$commit = try { (& git rev-parse --short HEAD 2>$null).Trim() } catch { '' }
+$commit = try { (& git -C $RepoRoot rev-parse --short HEAD 2>$null).Trim() } catch { '' }
 
 $results = [ordered]@{
     timestamp                        = (Get-Date).ToUniversalTime().ToString('o')
     commit                           = $commit
-    environment                      = (Get-PerfRunMetadata)
+    environment                      = (Get-PerfRunMetadata -RepoRoot $RepoRoot)
     iterations                       = $Iterations
     warmup                           = $Warmup
     transport_overhead_tools_list_p50 = $overhead

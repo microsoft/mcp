@@ -21,8 +21,8 @@ Set-StrictMode -Version Latest
 function Get-Percentile {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)][long[]]  $Samples,
-        [Parameter(Mandatory)][double]  $Percentile
+        [Parameter(Mandatory)][double[]] $Samples,
+        [Parameter(Mandatory)][double]   $Percentile
     )
 
     if ($null -eq $Samples -or $Samples.Count -eq 0) {
@@ -54,7 +54,7 @@ function Get-Percentile {
 # ---------------------------------------------------------------------------
 function Get-TimingStats {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][long[]] $Samples)
+    param([Parameter(Mandatory)][double[]] $Samples)
 
     if ($null -eq $Samples -or $Samples.Count -eq 0) {
         throw "Get-TimingStats requires at least one sample."
@@ -76,9 +76,9 @@ function Get-TimingStats {
         first   = $Samples[0]
         average = [math]::Round(($Samples | Measure-Object -Average).Average, 1)
         median  = $median
-        p50     = [math]::Round((Get-Percentile -Samples $Samples -Percentile 0.50), 1)
-        p95     = [math]::Round((Get-Percentile -Samples $Samples -Percentile 0.95), 1)
-        p99     = [math]::Round((Get-Percentile -Samples $Samples -Percentile 0.99), 1)
+        p50     = [math]::Round((Get-Percentile -Samples $Samples -Percentile 0.50), 4)
+        p95     = [math]::Round((Get-Percentile -Samples $Samples -Percentile 0.95), 4)
+        p99     = [math]::Round((Get-Percentile -Samples $Samples -Percentile 0.99), 4)
         all     = $Samples
     }
 }
@@ -126,6 +126,80 @@ function Get-MemberValue {
 }
 
 # ---------------------------------------------------------------------------
+# Runs an external perf-harness process with a hard timeout, capturing stdout and
+# stderr and rejecting a non-zero exit code. Prevents a hung or crashed harness
+# from stalling the whole job or being mistaken for a successful measurement.
+# Returns the captured stdout string.
+# ---------------------------------------------------------------------------
+function Invoke-PerfHarnessProcess {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string] $FilePath,
+        [string[]] $ArgumentList = @(),
+        [int]      $TimeoutSeconds = 120
+    )
+
+    $psi = [System.Diagnostics.ProcessStartInfo]::new()
+    $psi.FileName = $FilePath
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError  = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow  = $true
+    foreach ($arg in $ArgumentList) { $null = $psi.ArgumentList.Add($arg) }
+
+    $proc = [System.Diagnostics.Process]::new()
+    $proc.StartInfo = $psi
+    try {
+        if (-not $proc.Start()) { throw "Failed to start process '$FilePath'." }
+
+        $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+        $stderrTask = $proc.StandardError.ReadToEndAsync()
+
+        if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
+            try   { $proc.Kill($true) }
+            catch { if (-not $proc.HasExited) { throw } }
+            $null   = $proc.WaitForExit(5000)
+            $errOut = $stderrTask.GetAwaiter().GetResult()
+            $errMsg = if ([string]::IsNullOrWhiteSpace($errOut)) { '<no stderr>' } else { $errOut.Trim() }
+            throw "Process '$FilePath' timed out after $TimeoutSeconds seconds. Stderr: $errMsg"
+        }
+
+        $outText = $stdoutTask.GetAwaiter().GetResult()
+        $errOut  = $stderrTask.GetAwaiter().GetResult()
+        if ($proc.ExitCode -ne 0) {
+            $errMsg = if ([string]::IsNullOrWhiteSpace($errOut)) { '<no stderr>' } else { $errOut.Trim() }
+            throw "Process '$FilePath' exited with code $($proc.ExitCode). Stderr: $errMsg"
+        }
+
+        return $outText
+    }
+    finally {
+        $proc.Dispose()
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Runs a perf-harness process (see Invoke-PerfHarnessProcess) and returns the last
+# JSON object it emitted on stdout, parsed. Throws if the harness produced no JSON
+# line (after already rejecting non-zero exits), so a silent/garbled run fails loudly.
+# ---------------------------------------------------------------------------
+function Invoke-PerfHarnessJson {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string] $FilePath,
+        [string[]] $ArgumentList = @(),
+        [int]      $TimeoutSeconds = 120
+    )
+
+    $stdout   = Invoke-PerfHarnessProcess -FilePath $FilePath -ArgumentList $ArgumentList -TimeoutSeconds $TimeoutSeconds
+    $jsonLine = @($stdout -split "`r?`n") | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+    if ([string]::IsNullOrWhiteSpace($jsonLine)) {
+        throw "Harness '$FilePath' did not emit a JSON result line."
+    }
+    return $jsonLine | ConvertFrom-Json
+}
+
+# ---------------------------------------------------------------------------
 # Tiered startup-regression gate shared by Test-StartupPerformance.ps1 and
 # Check-StartupPerformanceRegression.ps1. Compares p50/p95/p99 of each tracked
 # latency scenario against the baseline using the acceptance-criteria budgets
@@ -168,12 +242,19 @@ function Invoke-StartupRegressionGate {
         @{ Metric = 'p99'; Limit = $FailP99 }
     )
 
+    $evaluated = 0
+
     foreach ($name in $latencyScenarios.Keys) {
         $key         = $latencyScenarios[$name]
         $curStats    = Get-MemberValue $ResultScenarios $key
         $baseStats   = Get-MemberValue $BaselineScenarios $key
-        if ($null -eq $curStats -or $null -eq $baseStats) {
-            Write-Host ("  [SKIP] {0}: metric absent in results or baseline" -f $name)
+        if ($null -eq $baseStats) {
+            Write-Host ("  [SKIP] {0}: absent in baseline" -f $name)
+            continue
+        }
+        if ($null -eq $curStats) {
+            $failures += "$name (missing in results)"
+            Write-Host ("  [FAIL] {0}: expected by baseline but absent in results" -f $name)
             continue
         }
 
@@ -181,27 +262,36 @@ function Invoke-StartupRegressionGate {
             $metric   = $budget.Metric
             $current  = Get-MemberValue $curStats $metric
             $baseline = Get-MemberValue $baseStats $metric
-            if ($null -eq $current -or $null -eq $baseline) {
-                Write-Host ("  [SKIP] {0} ({1}): value absent" -f $name, $metric)
+            if ($null -eq $baseline) {
+                Write-Host ("  [SKIP] {0} ({1}): absent in baseline" -f $name, $metric)
+                continue
+            }
+            if ($null -eq $current) {
+                $failures += "$name ($metric, missing in results)"
+                Write-Host ("  [FAIL] {0} ({1}): expected by baseline but absent in results" -f $name, $metric)
                 continue
             }
 
-            $ratio  = if ($baseline -gt 0) { $current / $baseline } else { 1 }
-            $limit  = [math]::Round($baseline * $budget.Limit, 1)
-            $label  = "$name ($metric)"
-            if ($ratio -gt $budget.Limit) {
-                $failures += $label
-                $status = 'FAIL'
+            $label = "$name ($metric)"
+            $evaluated++
+            if ($baseline -gt 0) {
+                $ratio = $current / $baseline
+                $limit = [math]::Round($baseline * $budget.Limit, 1)
+                if ($ratio -gt $budget.Limit)   { $failures += $label; $status = 'FAIL' }
+                elseif ($ratio -gt $Warn)       { $warnings += $label; $status = 'WARN' }
+                else                            { $status = 'PASS' }
+                Write-Host ("  [{0}] {1}: current={2}ms  baseline={3}ms  limit={4}ms  (+{5}%)" -f `
+                    $status, $label, $current, $baseline, $limit, [math]::Round(($ratio - 1) * 100, 1))
             }
-            elseif ($ratio -gt $Warn) {
-                $warnings += $label
-                $status = 'WARN'
+            elseif ($current -gt 0) {
+                # Positive current against a zero baseline is not comparable — fail rather than
+                # silently pass with a fabricated 0% change.
+                $failures += $label
+                Write-Host ("  [FAIL] {0}: current={1}ms vs a zero baseline (not comparable)" -f $label, $current)
             }
             else {
-                $status = 'PASS'
+                Write-Host ("  [PASS] {0}: current=0ms  baseline=0ms (unchanged)" -f $label)
             }
-            Write-Host ("  [{0}] {1}: current={2}ms  baseline={3}ms  limit={4}ms  (+{5}%)" -f `
-                $status, $label, $current, $baseline, $limit, [math]::Round(($ratio - 1) * 100, 1))
         }
     }
 
@@ -218,6 +308,7 @@ function Invoke-StartupRegressionGate {
         $curPerTool  = $curP50 / $curCount
         $basePerTool = $baseP50 / $baseCount
         $ratio       = if ($basePerTool -gt 0) { $curPerTool / $basePerTool } else { 1 }
+        $evaluated++
         if ($ratio -gt $ScalingDegrade) {
             $failures += 'discovery_scaling_efficiency'
             $status = 'FAIL'
@@ -234,6 +325,13 @@ function Invoke-StartupRegressionGate {
     }
     else {
         Write-Host "  [SKIP] discovery_scaling_efficiency: all-mode metrics absent"
+    }
+
+    if ($evaluated -eq 0) {
+        # Nothing overlapped between results and baseline — an incompatible or empty baseline
+        # must not be reported as a pass.
+        $failures += 'no_comparable_metrics'
+        Write-Host "  [FAIL] no comparable latency metrics between results and baseline (incompatible or empty baseline)"
     }
 
     return [ordered]@{ Failures = $failures; Warnings = $warnings }
@@ -296,9 +394,13 @@ function Get-WorkloadCatalogVersion {
 # ---------------------------------------------------------------------------
 function Get-PerfRunMetadata {
     [CmdletBinding()]
-    param()
+    param([string] $RepoRoot)
 
-    $commit = try { (& git rev-parse --short HEAD 2>$null).Trim() } catch { '' }
+    # Resolve the commit against the repository that holds the script, not the caller's
+    # working directory, so invoking a harness by absolute path from another checkout
+    # (or from outside any repo) still stamps the correct commit.
+    $gitLocation = if ($RepoRoot) { @('-C', $RepoRoot) } else { @() }
+    $commit = try { (& git @gitLocation rev-parse --short HEAD 2>$null).Trim() } catch { '' }
 
     $memoryGb = $null
     try {

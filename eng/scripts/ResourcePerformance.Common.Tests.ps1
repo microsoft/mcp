@@ -116,10 +116,34 @@ Describe "Invoke-ResourceRegressionGate" {
         @($gate.Failures).Count | Should -Be 0
     }
 
-    It "skips a mode that is absent from the baseline" {
+    It "flags an incompatible (empty) baseline instead of silently passing (F-007)" {
         $s = [ordered]@{ default = (New-ResourceScenario -SteadyMem 999 -SteadyCpu 99 -PeakMem 999) }
         $b = [ordered]@{ }
         $gate = Invoke-ResourceRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'no_comparable_metrics'
+    }
+
+    It "compares overlapping modes and skips a newly added mode without failing" {
+        $s = [ordered]@{
+            default = (New-ResourceScenario -SteadyMem 100 -SteadyCpu 10 -PeakMem 150)
+            all     = (New-ResourceScenario -SteadyMem 200 -SteadyCpu 20 -PeakMem 280)
+        }
+        $b = [ordered]@{ default = (New-ResourceScenario -SteadyMem 100 -SteadyCpu 10 -PeakMem 150) }
+        $gate = Invoke-ResourceRegressionGate -ResultScenarios $s -BaselineScenarios $b
         @($gate.Failures).Count | Should -Be 0
+    }
+
+    It "flags soak unbounded growth even when the mode is absent from the baseline (F-008)" {
+        $s = [ordered]@{ all = (New-ResourceScenario -SteadyMem 200 -SteadyCpu 20 -PeakMem 280 -WithSoak -Unbounded $true) }
+        $b = [ordered]@{ default = (New-ResourceScenario -SteadyMem 100 -SteadyCpu 10 -PeakMem 150) }
+        $gate = Invoke-ResourceRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'all soak_unbounded_growth'
+    }
+
+    It "treats positive CPU against a zero baseline as a failure, not a pass (F-010)" {
+        $s = [ordered]@{ default = (New-ResourceScenario -SteadyMem 100 -SteadyCpu 25 -PeakMem 150) }
+        $b = [ordered]@{ default = (New-ResourceScenario -SteadyMem 100 -SteadyCpu 0 -PeakMem 150) }
+        $gate = Invoke-ResourceRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'default steady_cpu_percent'
     }
 }

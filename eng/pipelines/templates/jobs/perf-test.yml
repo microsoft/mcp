@@ -67,15 +67,7 @@ jobs:
     displayName: "Build benchmark tool (Release)"
     inputs:
       pwsh: true
-      targetType: inline
-      script: |
-        # NU1902 (NuGet audit) is already non-fatal via WarningsNotAsErrors in
-        # Directory.Build.props. Do NOT pass -p:NoWarn on the command line: a global
-        # NoWarn property overrides every project's own <NoWarn> (e.g. the Insights
-        # project's MCP9005 sampling-deprecation suppression), breaking a clean build.
-        dotnet build servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/Azure.Mcp.Server.PerformanceBenchmarks.csproj `
-          -c Release -consoleLoggerParameters:NoSummary
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-PerfBenchmarks.ps1
 
   - task: Powershell@2
     displayName: "Run performance measurements"
@@ -178,21 +170,11 @@ jobs:
       displayName: "Run micro-benchmarks (BenchmarkDotNet)"
       inputs:
         pwsh: true
-        targetType: inline
-        script: |
-          $exe = '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
-          $artifacts = '$(Build.ArtifactStagingDirectory)/perf/benchmark-dotnet'
-          New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
-          & $exe --filter '${{ parameters.MicroBenchmarkFilter }}' --artifacts $artifacts --buildTimeout 600 2>&1 | Tee-Object -FilePath "$artifacts/run.log"
-          $code = $LASTEXITCODE
-          if ($code -ne 0) { exit $code }
-          # BenchmarkDotNet can exit 0 even when the boilerplate build fails and nothing
-          # runs, so fail explicitly if no benchmarks executed.
-          $log = Get-Content "$artifacts/run.log" -Raw
-          if ($log -match 'failed to build the auto-generated boilerplate' -or $log -match 'executed benchmarks: 0') {
-            Write-Error 'BenchmarkDotNet executed no benchmarks (boilerplate build failure or empty filter).'
-            exit 1
-          }
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Invoke-PerfMicroBenchmarks.ps1
+        arguments: >
+          -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+          -ArtifactsPath '$(Build.ArtifactStagingDirectory)/perf/benchmark-dotnet'
+          -Filter '${{ parameters.MicroBenchmarkFilter }}'
 
   - task: Powershell@2
     displayName: "Publish metrics to Azure Monitor (optional)"

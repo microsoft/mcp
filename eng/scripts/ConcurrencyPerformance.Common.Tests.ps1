@@ -115,4 +115,19 @@ Describe "Invoke-ConcurrencyRegressionGate" {
         $gate = Invoke-ConcurrencyRegressionGate -ResultLevels $s -BaselineLevels $b
         @($gate.Failures).Count | Should -Be 0
     }
+
+    It "flags a state-leakage mismatch even when the level is absent from the baseline (F-008)" {
+        $s = New-UniformLevels
+        $s += (New-Level -Concurrency 16 -Throughput 900 -Scaling 0.7 -P95 20 -P99 30 -Mismatches 5)
+        $b = New-UniformLevels   # no concurrency 16
+        $gate = Invoke-ConcurrencyRegressionGate -ResultLevels $s -BaselineLevels $b
+        $gate.Failures | Should -Contain 'c16 state_leakage'
+    }
+
+    It "fails when no level overlaps the baseline (F-007)" {
+        $s = @(New-Level -Concurrency 32 -Throughput 100 -Scaling 1.0 -P95 5 -P99 7)
+        $b = New-UniformLevels   # concurrency 1 and 4 only
+        $gate = Invoke-ConcurrencyRegressionGate -ResultLevels $s -BaselineLevels $b
+        $gate.Failures | Should -Contain 'no_comparable_metrics'
+    }
 }

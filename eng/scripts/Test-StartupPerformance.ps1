@@ -167,57 +167,11 @@ function Invoke-BenchmarkMcpStartup {
         [string]   $BenchmarkMode = '--mcp-startup'
     )
 
-    $processStartInfo                      = [System.Diagnostics.ProcessStartInfo]::new()
-    $processStartInfo.FileName             = $BenchmarkExe
-    $processStartInfo.RedirectStandardOutput = $true
-    $processStartInfo.RedirectStandardError  = $true
-    $processStartInfo.UseShellExecute      = $false
-    $processStartInfo.CreateNoWindow       = $true
-    $null = $processStartInfo.ArgumentList.Add($BenchmarkMode)
-    $null = $processStartInfo.ArgumentList.Add($ExePath)
-    foreach ($serverArgToken in $ServerArgTokens) {
-        $null = $processStartInfo.ArgumentList.Add($serverArgToken)
-    }
-
-    $process           = [System.Diagnostics.Process]::new()
-    $process.StartInfo = $processStartInfo
-    try {
-        if (-not $process.Start()) {
-            throw "Failed to start benchmark process '$BenchmarkExe'."
-        }
-
-        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-        $stderrTask = $process.StandardError.ReadToEndAsync()
-
-        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
-            try   { $process.Kill($true) }
-            catch { if (-not $process.HasExited) { throw } }
-            $null          = $process.WaitForExit()
-            $stderr        = $stderrTask.GetAwaiter().GetResult()
-            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
-            throw "Benchmark process '$BenchmarkExe' timed out after $TimeoutSeconds seconds. Stderr: $stderrMessage"
-        }
-
-        $stdout = $stdoutTask.GetAwaiter().GetResult()
-        $stderr = $stderrTask.GetAwaiter().GetResult()
-
-        if ($process.ExitCode -ne 0) {
-            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
-            throw "Benchmark process '$BenchmarkExe' exited with code $($process.ExitCode). Stderr: $stderrMessage"
-        }
-
-        $output   = @($stdout -split "`r?`n")
-        $jsonLine = $output | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
-        if ([string]::IsNullOrWhiteSpace($jsonLine)) {
-            $stderrMessage = if ([string]::IsNullOrWhiteSpace($stderr)) { '<no stderr>' } else { $stderr.Trim() }
-            throw "Benchmark process '$BenchmarkExe' did not emit a JSON result. Stderr: $stderrMessage"
-        }
-
-        return $jsonLine | ConvertFrom-Json
-    }
-    finally {
-        $process.Dispose()
-    }
+    # Bounded execution (hard timeout, stderr capture, non-zero exit rejection) and JSON parsing
+    # are shared with the other perf runners via Invoke-PerfHarnessJson in StartupPerformance.Common.ps1.
+    return Invoke-PerfHarnessJson -FilePath $BenchmarkExe `
+        -ArgumentList (@($BenchmarkMode, $ExePath) + $ServerArgTokens) `
+        -TimeoutSeconds $TimeoutSeconds
 }
 
 # ---------------------------------------------------------------------------
@@ -346,7 +300,7 @@ $results = [ordered]@{
     commit                      = $gitCommit
     executable                  = $Executable
     runs                        = $Runs
-    environment                 = (Get-PerfRunMetadata)
+    environment                 = (Get-PerfRunMetadata -RepoRoot $RepoRoot)
     scenarios                   = [ordered]@{
         cli_cold_start_ms                 = $cli
         cli_cold_warm                     = $cliColdWarm

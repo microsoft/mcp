@@ -58,6 +58,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $ScriptDir = $PSScriptRoot
+$RepoRoot = (Get-Item (Join-Path $ScriptDir '../..')).FullName
 . (Join-Path $ScriptDir 'ConcurrencyPerformance.Common.ps1')
 
 foreach ($path in @($Executable, $BenchmarkExe)) {
@@ -76,13 +77,11 @@ $env:PERF_CONC_TIMEOUT_MS = $TimeoutMs
 
 Write-Host "=== Concurrency scaling: levels [$($Levels -join ', ')], ${DurationSeconds}s per level ==="
 
-$stdout = & $BenchmarkExe --mcp-concurrency $Executable server start 2>$null
-$jsonLine = $stdout | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
-if (-not $jsonLine) {
-    throw "No JSON emitted by the concurrency harness. Raw output: $stdout"
-}
-
-$data = $jsonLine | ConvertFrom-Json
+# The harness sweeps every level in a single invocation; size the timeout to the whole sweep
+# (plus headroom) so a hung run fails fast rather than consuming the entire job.
+$concurrencyTimeoutSeconds = 180 + $Levels.Count * ($DurationSeconds + $WarmupSeconds) * 3
+$data = Invoke-PerfHarnessJson -FilePath $BenchmarkExe `
+            -ArgumentList @('--mcp-concurrency', $Executable, 'server', 'start') -TimeoutSeconds $concurrencyTimeoutSeconds
 
 foreach ($level in $data.levels) {
     Write-Host ("  c{0,-3} throughput={1,8} rps  p50={2,7} ms  p95={3,7} ms  p99={4,7} ms  err={5}%  scaling={6}  mismatch={7}" -f `
@@ -91,12 +90,12 @@ foreach ($level in $data.levels) {
 }
 Write-Host ""
 
-$commit = try { (& git rev-parse --short HEAD 2>$null).Trim() } catch { '' }
+$commit = try { (& git -C $RepoRoot rev-parse --short HEAD 2>$null).Trim() } catch { '' }
 
 $results = [ordered]@{
     timestamp           = (Get-Date).ToUniversalTime().ToString('o')
     commit              = $commit
-    environment         = (Get-PerfRunMetadata)
+    environment         = (Get-PerfRunMetadata -RepoRoot $RepoRoot)
     duration_seconds    = $DurationSeconds
     expected_tool_count = $data.expected_tool_count
     levels              = $data.levels

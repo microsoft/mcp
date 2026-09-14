@@ -90,4 +90,19 @@ Describe "Invoke-DispatchRegressionGate" {
         $gate = Invoke-DispatchRegressionGate -ResultScenarios $s -BaselineScenarios $b
         @($gate.Failures).Count | Should -Be 0
     }
+
+    It "fails when no transport overlaps the baseline (F-007)" {
+        $s = New-UniformScenarios
+        $b = [ordered]@{ }   # empty baseline: nothing to compare
+        $gate = Invoke-DispatchRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'no_comparable_metrics'
+    }
+
+    It "treats a positive current against a zero baseline as a failure (F-010)" {
+        $b = New-UniformScenarios
+        $b.stdio.tools_list.p95 = 0
+        $s = New-UniformScenarios
+        $gate = Invoke-DispatchRegressionGate -ResultScenarios $s -BaselineScenarios $b
+        $gate.Failures | Should -Contain 'stdio/tools_list (p95)'
+    }
 }
