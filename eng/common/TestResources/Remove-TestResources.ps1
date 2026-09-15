@@ -5,10 +5,6 @@
 
 #Requires -Version 6.0
 #Requires -PSEdition Core
-#Requires -Modules @{ModuleName='Az.Accounts'; ModuleVersion='1.6.4'}
-#Requires -Modules @{ModuleName='Az.Resources'; ModuleVersion='1.8.0'}
-#Requires -Modules @{ModuleName='Az.Storage'; ModuleVersion='7.0.0'}
-#Requires -Modules @{ModuleName='Az.StorageSync'; ModuleVersion='2.1.1'}
 
 [CmdletBinding(DefaultParameterSetName = 'Default', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param (
@@ -45,6 +41,9 @@ param (
     [Parameter(ParameterSetName = 'ResourceGroup')]
     [Parameter(ParameterSetName = 'ResourceGroup+Provisioner')]
     [string] $ServiceDirectory,
+
+    [Parameter()]
+    [string] $TestResourcesDirectory,
 
     [Parameter()]
     [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'Dogfood')]
@@ -84,9 +83,6 @@ param (
     $RemoveTestResourcesRemainingArguments
 )
 
-. (Join-Path $PSScriptRoot .. scripts Helpers Resource-Helpers.ps1)
-. (Join-Path $PSScriptRoot TestResources-Helpers.ps1)
-
 # By default stop for any error.
 if (!$PSBoundParameters.ContainsKey('ErrorAction')) {
     $ErrorActionPreference = 'Stop'
@@ -103,10 +99,6 @@ trap {
     # Like using try..finally in PowerShell, but without keeping track of more braces or tabbing content.
     $exitActions.Invoke()
 }
-
-. $PSScriptRoot/SubConfig-Helpers.ps1
-# Source helpers to purge resources.
-. "$PSScriptRoot\..\scripts\Helpers\Resource-Helpers.ps1"
 
 function Log($Message) {
     Write-Host ('{0} - {1}' -f [DateTime]::Now.ToLongTimeString(), $Message)
@@ -132,6 +124,45 @@ function Retry([scriptblock] $Action, [int] $Attempts = 5) {
         }
     }
 }
+
+$root = $null
+$repositoryRoot = "$PSScriptRoot/../../.." | Resolve-Path
+if ($ServiceDirectory) {
+    $root = [System.IO.Path]::Combine($repositoryRoot, "sdk", $ServiceDirectory) | Resolve-Path
+}
+if ($TestResourcesDirectory) {
+    $root = $TestResourcesDirectory | Resolve-Path
+    if (!$root) {
+        throw "TestResourcesDirectory '$TestResourcesDirectory' does not exist."
+    }
+    Write-Verbose "Overriding test resources search directory to '$root'"
+}
+
+$customRemovalScripts = @($root ? (Get-ChildItem -Path $root -Filter "remove-$ResourceType-resources.ps1" -Recurse) : @())
+
+foreach ($customRemovalScript in $customRemovalScripts) {
+    Log "Invoking custom test resource cleanup '$($customRemovalScript.FullName)'"
+    $customParameters = @{
+        ResourceType = $ResourceType
+        TestResourcesDirectory = $root
+        CI = $CI
+        Force = $Force
+    }
+    & $customRemovalScript.FullName @customParameters
+}
+
+if ($customRemovalScripts) {
+    return
+}
+
+. (Join-Path $PSScriptRoot .. scripts Helpers Resource-Helpers.ps1)
+. (Join-Path $PSScriptRoot TestResources-Helpers.ps1)
+. $PSScriptRoot/SubConfig-Helpers.ps1
+
+Import-Module Az.Accounts -MinimumVersion 1.6.4 -ErrorAction Stop
+Import-Module Az.Resources -MinimumVersion 1.8.0 -ErrorAction Stop
+Import-Module Az.Storage -MinimumVersion 7.0.0 -ErrorAction Stop
+Import-Module Az.StorageSync -MinimumVersion 2.1.1 -ErrorAction Stop
 
 if ($ProvisionerApplicationId -and $ServicePrincipalAuth) {
     $null = Disable-AzContextAutosave -Scope Process
@@ -219,13 +250,7 @@ if ($wellKnownSubscriptions.ContainsKey($subscriptionName)) {
 
 Log "Selected subscription '$subscriptionName'"
 
-if ($ServiceDirectory) {
-    $root = "$PSScriptRoot/../../.."
-    if($ServiceDirectory) {
-      $root = "$root/sdk/$ServiceDirectory"
-    }
-    $root = $root | Resolve-Path
-    
+if ($ServiceDirectory -or $TestResourcesDirectory) {
     $preRemovalScript = Join-Path -Path $root -ChildPath "remove-$ResourceType-resources-pre.ps1"
     if (Test-Path $preRemovalScript) {
         Log "Invoking pre resource removal script '$preRemovalScript'"
@@ -284,11 +309,11 @@ $exitActions.Invoke()
 
 <#
 .SYNOPSIS
-Deletes the resource group deployed for a service directory from Azure.
+Deletes live test resources created for a service directory.
 
 .DESCRIPTION
-Removes a resource group and all its resources previously deployed using
-New-TestResources.ps1.
+Invokes a provider-owned cleanup script or removes an Azure resource group and
+all its resources previously deployed using New-TestResources.ps1.
 If you are not currently logged into an account in the Az PowerShell module,
 you will be asked to log in with Connect-AzAccount. Alternatively, you (or a
 build pipeline) can pass $ProvisionerApplicationId and
@@ -324,6 +349,10 @@ A service principal secret (password) to provision test resources when a provisi
 .PARAMETER ServiceDirectory
 A directory under 'sdk' in the repository root - optionally with subdirectories
 specified - in which to discover pre removal script named 'remove-test-resources-pre.json'.
+
+.PARAMETER TestResourcesDirectory
+The directory in which to discover a provider-owned remove-test-resources.ps1
+script or Azure test resource templates.
 
 .PARAMETER Environment
 Name of the cloud environment. The default is the Azure Public Cloud

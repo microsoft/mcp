@@ -1,15 +1,45 @@
 # Live Test Resource Management
 
 Running and recording live tests often requires first creating some resources
-in Azure. Service directories that include a `test-resources.json` or `test-resources.bicep`
-file require running [New-TestResources.ps1][] to create these resources and output
-environment variables you must set.
+for the service under test. Service directories can use an Azure deployment template or
+provider-owned PowerShell lifecycle scripts. Run [New-TestResources.ps1][] to create
+these resources and output the environment variables required by the tests.
 
 The following scripts can be used both in on your desktop for developer
 scenarios as well as on hosted agents for continuous integration testing.
 
 * [New-TestResources.ps1][] - Creates new test resources for a given service.
 * [Remove-TestResources.ps1][] - Deletes previously created resources.
+
+## Provider-owned Resources
+
+Resources that are not deployed through Azure Resource Manager use these conventional
+scripts in the test resources directory:
+
+* `<resource-type>-resources.ps1` creates or prepares resources. The default resource
+  type is `test`, so the usual filename is `test-resources.ps1`.
+* `remove-<resource-type>-resources.ps1` deletes resources created by the provisioner.
+
+The creation script receives `ResourceType`, `TestResourcesDirectory`,
+`AdditionalParameters`, `EnvironmentVariables`, `DeleteAfterHours`, `CI`, and `Force`.
+It must return a dictionary with at least one of the following dictionaries:
+
+```powershell
+@{
+  EnvironmentVariables = @{
+    SERVICE_RESOURCE_ID = $resourceId
+  }
+  SecretEnvironmentVariables = @{
+    SERVICE_ACCESS_TOKEN = $accessToken
+  }
+}
+```
+
+The cleanup script receives `ResourceType`, `TestResourcesDirectory`, `CI`, and `Force`.
+Both scripts are responsible for authenticating to their resource provider. Public and
+secret outputs are published as test environment variables; secret values are masked in
+Azure Pipelines logs. A test resources directory must use either ARM/Bicep templates or
+provider-owned scripts, not both.
 
 ## Prerequisites
 
