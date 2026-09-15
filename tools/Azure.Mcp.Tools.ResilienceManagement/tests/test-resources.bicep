@@ -84,15 +84,6 @@ resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' 
   }
 }
 
-// Usage plan (resource-group scoped). This resource type is only available in the 'global' location.
-resource usagePlan 'Microsoft.AzureResilienceManagement/usagePlans@2026-04-01-preview' = {
-  name: usagePlanName
-  location: 'global'
-  properties: {
-    planType: 'Standard'
-  }
-}
-
 output usagePlanName string = usagePlanName
 output enrollmentName string = enrollmentName
 output serviceGroupName string = serviceGroupName
