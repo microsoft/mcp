@@ -8,6 +8,7 @@ parameters:
   ResourceType: test
   EnvVars: {}
   UseFederatedAuth: true
+  Condition: succeededOrFailed()
 
 # SubscriptionConfiguration will be splat into the parameters of the test
 # resources script. It should be JSON in the form:
@@ -27,7 +28,7 @@ steps:
   - ${{ if eq('true', parameters.UseFederatedAuth) }}:
     - task: AzurePowerShell@5
       displayName: Remove test resources
-      condition: and(eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
+      condition: and(${{ parameters.Condition }}, eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
       continueOnError: true
       env:
         PoolSubnet: $(PoolSubnet)
@@ -71,7 +72,7 @@ steps:
           -Force `
           -Verbose
       displayName: Remove test resources
-      condition: and(eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
+      condition: and(${{ parameters.Condition }}, eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
       continueOnError: true
       env:
         PoolSubnet: $(PoolSubnet)

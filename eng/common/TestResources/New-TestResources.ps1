@@ -5,8 +5,6 @@
 
 #Requires -Version 6.0
 #Requires -PSEdition Core
-#Requires -Modules @{ModuleName='Az.Accounts'; ModuleVersion='1.6.4'}
-#Requires -Modules @{ModuleName='Az.Resources'; ModuleVersion='1.8.0'}
 
 [CmdletBinding(DefaultParameterSetName = 'Default', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param (
@@ -123,9 +121,7 @@ param (
 )
 
 . (Join-Path $PSScriptRoot .. scripts common.ps1)
-. (Join-Path $PSScriptRoot .. scripts Helpers Resource-Helpers.ps1)
 . $PSScriptRoot/TestResources-Helpers.ps1
-. $PSScriptRoot/SubConfig-Helpers.ps1
 
 $wellKnownTMETenants = @('70a036f6-8e4d-4615-bad6-149c02e7720d')
 
@@ -154,6 +150,76 @@ $exitActions = @({
     }
 })
 
+$root = $repositoryRoot = "$PSScriptRoot/../../.." | Resolve-Path
+
+if($ServiceDirectory) {
+    $root = [System.IO.Path]::Combine($repositoryRoot, "sdk", $ServiceDirectory) | Resolve-Path
+}
+
+if ($TestResourcesDirectory) {
+    $root = $TestResourcesDirectory | Resolve-Path
+    if (!$root) {
+        throw "TestResourcesDirectory '$TestResourcesDirectory' does not exist."
+    }
+    Write-Verbose "Overriding test resources search directory to '$root'"
+}
+
+$templateFiles = @()
+"$ResourceType-resources.json", "$ResourceType-resources.bicep" | ForEach-Object {
+    Write-Verbose "Checking for '$_' files under '$root'"
+    Get-ChildItem -Path $root -Filter "$_" -Recurse | ForEach-Object {
+        Write-Verbose "Found template '$($_.FullName)'"
+        if ($_.Extension -eq '.bicep') {
+            $templateFile = @{originalFilePath = $_.FullName; jsonFilePath = (BuildBicepFile $_)}
+            $templateFiles += $templateFile
+        } else {
+            $templateFile = @{originalFilePath = $_.FullName; jsonFilePath = $_.FullName}
+            $templateFiles += $templateFile
+        }
+    }
+}
+
+$customProvisioningScripts = @(Get-ChildItem -Path $root -Filter "$ResourceType-resources.ps1" -Recurse)
+if ($templateFiles -and $customProvisioningScripts) {
+    throw "Test resource directory '$root' contains both an ARM/Bicep template and a custom provisioner. Use only one provisioning model per directory."
+}
+
+$customEnvironmentVariables = @{}
+foreach ($customProvisioningScript in $customProvisioningScripts) {
+    Log "Invoking custom test resource provisioner '$($customProvisioningScript.FullName)'"
+    if ($CI) {
+        LogVsoCommand "##vso[task.setvariable variable=CI_HAS_DEPLOYED_RESOURCES;]true"
+    }
+
+    $customParameters = @{
+        ResourceType = $ResourceType
+        TestResourcesDirectory = $root
+        AdditionalParameters = $AdditionalParameters
+        EnvironmentVariables = $EnvironmentVariables
+        DeleteAfterHours = $DeleteAfterHours
+        CI = $CI
+        Force = $Force
+    }
+    $provisioningResult = & $customProvisioningScript.FullName @customParameters
+    $publishedVariables = PublishCustomTestResourceOutputs $provisioningResult $customEnvironmentVariables
+    $customEnvironmentVariables = $publishedVariables
+}
+
+if (!$templateFiles -and $customProvisioningScripts) {
+    return $customEnvironmentVariables
+}
+
+if (!$templateFiles) {
+    Write-Warning -Message "No test resource files found under '$root'"
+    exit
+}
+
+. (Join-Path $PSScriptRoot .. scripts Helpers Resource-Helpers.ps1)
+. $PSScriptRoot/SubConfig-Helpers.ps1
+
+Import-Module Az.Accounts -MinimumVersion 1.6.4 -ErrorAction Stop
+Import-Module Az.Resources -MinimumVersion 1.8.0 -ErrorAction Stop
+
 New-Variable -Name 'initialContext' -Value (Get-AzContext) -Option Constant
 if ($initialContext) {
     $exitActions += {
@@ -164,43 +230,6 @@ if ($initialContext) {
 
 # try..finally will also trap Ctrl+C.
 try {
-    # Enumerate test resources to deploy. Fail if none found.
-    $root = $repositoryRoot = "$PSScriptRoot/../../.." | Resolve-Path
-
-    if($ServiceDirectory) {
-        $root = [System.IO.Path]::Combine($repositoryRoot, "sdk", $ServiceDirectory) | Resolve-Path
-    }
-
-    if ($TestResourcesDirectory) {
-        $root = $TestResourcesDirectory | Resolve-Path
-        # Add an explicit check below in case ErrorActionPreference is overridden and Resolve-Path doesn't stop execution
-        if (!$root) {
-            throw "TestResourcesDirectory '$TestResourcesDirectory' does not exist."
-        }
-        Write-Verbose "Overriding test resources search directory to '$root'"
-    }
-
-    $templateFiles = @()
-
-    "$ResourceType-resources.json", "$ResourceType-resources.bicep" | ForEach-Object {
-        Write-Verbose "Checking for '$_' files under '$root'"
-        Get-ChildItem -Path $root -Filter "$_" -Recurse | ForEach-Object {
-            Write-Verbose "Found template '$($_.FullName)'"
-            if ($_.Extension -eq '.bicep') {
-                $templateFile = @{originalFilePath = $_.FullName; jsonFilePath = (BuildBicepFile $_)}
-                $templateFiles += $templateFile
-            } else {
-                $templateFile = @{originalFilePath = $_.FullName; jsonFilePath = $_.FullName}
-                $templateFiles += $templateFile
-            }
-        }
-    }
-
-    if (!$templateFiles) {
-        Write-Warning -Message "No template files found under '$root'"
-        exit
-    }
-
     # returns empty string if $ServiceDirectory is not set
     $serviceName = GetServiceLeafDirectoryName $ServiceDirectory
 
@@ -738,18 +767,17 @@ if ($CI) {
 
 <#
 .SYNOPSIS
-Deploys live test resources defined for a service directory to Azure.
+Creates live test resources defined for a service directory.
 
 .DESCRIPTION
-Deploys live test resouces specified in test-resources.json or test-resources.bicep
-files to a new resource group.
+Creates live test resources using a provider-owned PowerShell script or deploys
+test-resources.json or test-resources.bicep files to a new Azure resource group.
 
 This script searches the directory specified in $ServiceDirectory recursively
-for files named test-resources.json or test-resources.bicep. All found test-resources.json
-and test-resources.bicep files will be deployed to the test resource group.
+for a test-resources.ps1 script or files named test-resources.json or
+test-resources.bicep. A directory must use only one provisioning model.
 
-If no test-resources.json or test-resources.bicep files are located the script
-exits without making changes to the Azure environment.
+If no test resource files are located the script exits without making changes.
 
 A service principal may optionally be passed to $TestApplicationId and $TestApplicationSecret.
 Test resources will grant this service principal access to the created resources.
