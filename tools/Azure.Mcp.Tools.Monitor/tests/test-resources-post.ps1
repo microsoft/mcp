@@ -2,6 +2,7 @@ param(
     [string] $TenantId,
     [string] $TestApplicationId,
     [string] $ResourceGroupName,
+    [string] $Environment,
     [string] $BaseName,
     [hashtable] $DeploymentOutputs,
     [hashtable] $AdditionalParameters
@@ -30,7 +31,10 @@ foreach ($key in $staticDeploymentOutputs.Keys) {
 $PSBoundParameters['DeploymentOutputs'] = $DeploymentOutputs
 New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
 
-$storageAccountName = "$($BaseName)mon"
+# The bicep template appends a uniqueString suffix to the storage account name,
+# so read the actual deployed name from the deployment outputs (keys are upper-cased
+# by the test resources framework) rather than reconstructing it from BaseName.
+$storageAccountName = $DeploymentOutputs["STORAGEACCOUNTNAME"]
 $containerName = 'foo'
 $context = New-AzStorageContext -StorageAccountName $storageAccountName -UseConnectedAccount
 Write-Host "Uploading sample files to blob storage: $storageAccountName/$containerName" -ForegroundColor Yellow

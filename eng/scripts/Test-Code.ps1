@@ -6,6 +6,8 @@ param(
     [string[]] $Paths,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
+    [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')]
+    [string] $Environment = 'AzureCloud',
     [string] $TestResultsPath,
     [switch] $CollectCoverage,
     [switch] $OpenReport,
@@ -307,6 +309,7 @@ try {
         exit $LastExitCode
     }
 
+    $environmentArg = "--environment AZURE_CLOUD=$Environment"
     $coverageArg = $CollectCoverage ? "--coverlet --coverlet-output-format cobertura" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--report-xunit-trx --output 'Detailed'"
@@ -317,7 +320,7 @@ try {
         default { "" }
     }
 
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg $filterArg"
+    $command = "dotnet test $environmentArg $coverageArg $resultsArg $loggerArg $filterArg"
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)
 }

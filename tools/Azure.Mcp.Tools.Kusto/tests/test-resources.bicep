@@ -14,12 +14,13 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+var isGovCloud = environment().name == 'AzureUSGovernment'
 
 resource kustoCluster 'Microsoft.Kusto/clusters@2024-04-13' = {
   name: baseName
   location: location
   sku: {
-    name: 'Standard_E2ads_v5'
+    name: isGovCloud ? 'Standard_L4s' : 'Standard_E2ads_v5'
     tier: 'Standard'
     capacity: 2
   }

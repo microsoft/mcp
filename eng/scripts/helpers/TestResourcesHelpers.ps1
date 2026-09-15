@@ -15,6 +15,7 @@ function New-TestSettings {
         [string] $TenantId,
         [string] $TestApplicationId,
         [string] $ResourceGroupName,
+        [string] $Environment,
         [string] $BaseName,
         [hashtable] $DeploymentOutputs,
         [string] $OutputPath,
@@ -26,6 +27,7 @@ function New-TestSettings {
         Connect-AzAccount -ServicePrincipal `
             -TenantId $TenantId `
             -ApplicationId $TestApplicationId `
+            -Environment $Environment `
             -FederatedToken $env:ARM_OIDC_TOKEN
     }
 
@@ -56,8 +58,14 @@ function New-TestSettings {
             # Live test resources are deployed using Azure PowerShell, so we know it's already in the correct tenant
             # Force CustomChainedCredential to use AzurePowerShellCredential to avoid cross-tenant auth issues
             "AZURE_TOKEN_CREDENTIALS" = "AzurePowerShellCredential"
+            # Propagate cloud environment so MCP server targets the correct ARM endpoint (e.g., sovereign clouds)
+            "AZURE_CLOUD" = $context.Environment.Name
         }
         TestMode = "Live"
+    }
+
+    if (-not [string]::IsNullOrEmpty($Environment)) {
+        $testSettings.EnvironmentVariables["AZURE_CLOUD"] = $Environment
     }
 
     if ($AdditionalParameters -and $AdditionalParameters.ContainsKey("UseHttpTransport") -and $AdditionalParameters["UseHttpTransport"]) {

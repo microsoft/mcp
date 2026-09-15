@@ -72,3 +72,4 @@ resource roleAssignmentEmpty 'Microsoft.Authorization/roleAssignments@2022-04-01
 output eventHubsNamespaceName string = eventHubsNamespace.name
 output eventHubsNamespaceEmptyName string = eventHubsNamespaceEmpty.name
 output eventHubName string = eventHub.name
+output location string = location
