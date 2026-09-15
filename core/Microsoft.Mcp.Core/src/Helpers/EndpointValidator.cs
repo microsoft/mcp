@@ -109,22 +109,6 @@ public static partial class EndpointValidator
     /// <summary>
     /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
     /// </summary>
-    /// <remarks>
-    /// This compatibility overload always keeps SSRF protections enabled. New tool callers should use the
-    /// namespace-aware overload so the server's namespace-scoped emergency override can be applied.
-    /// </remarks>
-    /// <param name="endpoint">The endpoint URL to validate.</param>
-    /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
-    /// <param name="armEnvironment">The Azure cloud environment (Public, China, Government, etc.).</param>
-    public static void ValidateAzureServiceEndpoint(
-        string endpoint,
-        string serviceType,
-        ArmEnvironment armEnvironment)
-        => ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment, executingToolNamespaceName: null);
-
-    /// <summary>
-    /// Validates that an endpoint belongs to an allowed Azure service domain for the specified cloud environment.
-    /// </summary>
     /// <param name="endpoint">The endpoint URL to validate.</param>
     /// <param name="serviceType">The type of Azure service (e.g., "storage-blob", "keyvault").</param>
     /// <param name="armEnvironment">The Azure cloud environment (Public, China, Government, etc.).</param>
@@ -175,7 +159,7 @@ public static partial class EndpointValidator
             // Pre-migration to Microsoft.Security.AntiSSRF path.
             //
             // IMPORTANT NOTE: This code path treats suffixes differently depending on
-            // the presence or lack of a leading `.` character..
+            // the presence or lack of a leading `.` character.
             // - ".contoso.com" with a leading '.' allows both "contoso.com" and "sub.contoso.com"
             // - "contoso.com" without a leading '.' ONLY "contoso.com"
             //
@@ -212,7 +196,7 @@ public static partial class EndpointValidator
         else
         {
             // IMPORTANT NOTE: As of Microsoft.Security.AntiSSRF 1.0.0, URIValidator.InDomain
-            // will a suffix with or without a leading `.` effectively the same.
+            // treats a suffix with or without a leading `.` as effectively the same.
             // - ".contoso.com" with a leading '.' allows both "contoso.com" and "sub.contoso.com"
             // - "contoso.com" without a leading '.' allows both "contoso.com" and "sub.contoso.com"
             //
@@ -274,16 +258,6 @@ public static partial class EndpointValidator
                 $"Allowed hosts: {string.Join(", ", allowedHosts)}");
         }
     }
-
-    /// <summary>
-    /// Validates a public target URL without an executing tool namespace.
-    /// </summary>
-    /// <remarks>
-    /// This compatibility overload always keeps SSRF protections enabled. New tool callers should use the
-    /// namespace-aware overload so the server's namespace-scoped emergency override can be applied.
-    /// </remarks>
-    public static void ValidatePublicTargetUrl(string url, ILogger? logger = null)
-        => ValidatePublicTargetUrl(url, logger, null);
 
     /// <summary>
     /// Validates that a target URL (for load testing, etc.) isn't pointing to internal resources.
