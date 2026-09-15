@@ -48,6 +48,11 @@ public sealed class ServerRuntimeConfiguration
     public string? Cloud { get; set; }
 
     /// <summary>
+    /// Path to the custom cloud metadata JSON file.
+    /// </summary>
+    public string? CustomCloudConfig { get; set; }
+
+    /// <summary>
     /// Indicates whether the server is running in HTTP transport mode.
     /// </summary>
     public bool IsHttpMode => Transport == TransportTypes.Http;
