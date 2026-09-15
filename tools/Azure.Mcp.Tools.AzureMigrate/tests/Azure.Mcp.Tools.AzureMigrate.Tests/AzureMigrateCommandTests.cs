@@ -22,6 +22,17 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
         })
     ];
 
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        .. base.HeaderRegexSanitizers,
+        // The CLI user agent embeds the host OS and framework moniker, which differ between the machine that
+        // produced the recording and the CI agents that replay it. Normalize it so matching is platform independent.
+        new(new("User-Agent")
+        {
+            Value = "Sanitized"
+        })
+    ];
+
     public override List<string> DisabledDefaultSanitizers =>
     [
         ..base.DisabledDefaultSanitizers,
@@ -29,7 +40,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     ];
 
     [Fact]
-    public async Task Should_check_platform_landing_zone_exists()
+    public async Task Should_list_platform_landing_zones()
     {
         if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
         {
@@ -43,7 +54,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "migrate-project-name", Settings.ResourceBaseName },
-                { "action", "check" }
+                { "action", "list" }
             });
 
         var message = result.AssertProperty("message");
@@ -51,13 +62,13 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
         var messageText = message.GetString();
         Assert.NotNull(messageText);
         Assert.True(
-            messageText.Contains("exists", StringComparison.OrdinalIgnoreCase) ||
-            messageText.Contains("No Platform Landing zone found", StringComparison.OrdinalIgnoreCase),
-            "Expected check result message");
+            messageText.Contains("Platform Landing Zones under migrate project", StringComparison.OrdinalIgnoreCase) ||
+            messageText.Contains("No Platform Landing Zone exists under migrate project", StringComparison.OrdinalIgnoreCase),
+            "Expected list result message");
     }
 
     [Fact]
-    public async Task Should_update_platform_landing_zone_parameters()
+    public async Task Should_get_platform_landing_zone()
     {
         if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
         {
@@ -71,49 +82,17 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "migrate-project-name", Settings.ResourceBaseName },
-                { "action", "update" },
-                { "region-type", "single" },
-                { "firewall-type", "azurefirewall" },
-                { "network-architecture", "hubspoke" },
-                { "regions", "southeastasia" },
-                { "environment-name", "prod" },
-                { "version-control-system", "local" },
-                { "organization-name", "contoso" },
-                { "identity-subscription-id", Settings.SubscriptionId },
-                { "management-subscription-id", Settings.SubscriptionId },
-                { "connectivity-subscription-id", Settings.SubscriptionId }
+                { "action", "get" }
             });
 
         var message = result.AssertProperty("message");
         Assert.Equal(JsonValueKind.String, message.ValueKind);
         var messageText = message.GetString();
         Assert.NotNull(messageText);
-        Assert.Contains("Parameters updated successfully", messageText, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task Should_get_parameter_status()
-    {
-        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
-        {
-            return;
-        }
-
-        var result = await CallToolAsync(
-            "azuremigrate_platformlandingzone_request",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName },
-                { "migrate-project-name", Settings.ResourceBaseName },
-                { "action", "status" }
-            });
-
-        var message = result.AssertProperty("message");
-        Assert.Equal(JsonValueKind.String, message.ValueKind);
-        var messageText = message.GetString();
-        Assert.NotNull(messageText);
-        Assert.NotEmpty(messageText);
+        Assert.True(
+            messageText.Contains("Generation status", StringComparison.OrdinalIgnoreCase) ||
+            messageText.Contains("No Platform Landing Zone exists under migrate project", StringComparison.OrdinalIgnoreCase),
+            "Expected get result message");
     }
 
     [Fact]

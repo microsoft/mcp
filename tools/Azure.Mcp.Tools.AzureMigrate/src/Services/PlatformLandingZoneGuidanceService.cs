@@ -29,10 +29,14 @@ public sealed class PlatformLandingZoneGuidanceService(
     {
         ["resource-names"] = new("Customise Resource Names", "resource-names.md", "Update starter module resource naming prefixes and suffixes."),
         ["management-groups"] = new("Customize Management Group Names and IDs", "management-groups.md", "Adjust management group IDs/names while keeping hierarchy consistent."),
-        ["ddos"] = new("Configure DDoS Protection Plan", "ddos.md", "Enable or disable the optional DDoS standard plan resources."),
-        ["bastion"] = new("Turn off Bastion host", "bastion.md", "Remove Azure Bastion resources from the platform landing zone."),
-        ["dns"] = new("Turn off Private DNS zones and resolvers", "dns.md", "Exclude Private DNS zones/resolvers from the deployment."),
-        ["gateways"] = new("Turn off Virtual Network Gateways", "gateways.md", "Skip VPN/ExpressRoute gateway deployments."),
+        ["ddos"] = new("Configure DDoS Protection Plan", "ddos.md", "Enable or disable the optional DDoS standard plan resources.",
+            "azmcp azuremigrate platformlandingzone request --action create --ddos disabled"),
+        ["bastion"] = new("Turn off Bastion host", "bastion.md", "Remove Azure Bastion resources from the platform landing zone.",
+            "azmcp azuremigrate platformlandingzone request --action create --bastion disabled"),
+        ["dns"] = new("Turn off Private DNS zones and resolvers", "dns.md", "Exclude Private DNS zones/resolvers from the deployment.",
+            "azmcp azuremigrate platformlandingzone request --action create --private-dns disabled"),
+        ["gateways"] = new("Turn off Virtual Network Gateways", "gateways.md", "Skip VPN/ExpressRoute gateway deployments.",
+            "azmcp azuremigrate platformlandingzone request --action create --express-route disabled --vpn-gateway disabled"),
         ["regions"] = new("Additional Regions", "regions.md", "Add or remove secondary regions for hub deployments."),
         ["ip-addresses"] = new("IP Address Ranges", "ip-addresses.md", "Adjust CIDR ranges used by the network topology."),
         ["policy-enforcement"] = new("Change policy enforcement mode", "policy-enforcement.md", "Move a policy assignment into DoNotEnforce/Disabled mode."),
@@ -53,8 +57,27 @@ public sealed class PlatformLandingZoneGuidanceService(
             return $"Unknown scenario '{scenario}'. Available scenarios: {available}";
         }
 
-        return await FetchDocumentationAsync(scenario, info, cancellationToken)
+        var guidance = await FetchDocumentationAsync(scenario, info, cancellationToken)
             ?? $"Could not fetch documentation for scenario '{scenario}'.";
+
+        if (info.ParameterHint is null)
+        {
+            return guidance;
+        }
+
+        // The landing zone is regenerated from the ARM resource, so a hand-edit that the API models
+        // directly would be overwritten by the next generation run.
+        return $"""
+            This scenario is now a first-class parameter on the Platform Landing Zone API. Prefer changing
+            the landing zone resource itself rather than editing the generated files, because the files are
+            regenerated from the resource:
+
+                {info.ParameterHint}
+
+            The documentation below describes the manual file-editing alternative.
+
+            {guidance}
+            """;
     }
 
     /// <inheritdoc/>
@@ -217,7 +240,15 @@ public sealed class PlatformLandingZoneGuidanceService(
     private sealed record PolicyLocation(string ArchetypeName, string SourceFileName);
 
     /// <summary>Scenario metadata.</summary>
-    public sealed record ScenarioInfo(string DisplayName, string FileName, string Description);
+    /// <param name="DisplayName">The human-readable scenario name.</param>
+    /// <param name="FileName">The documentation file backing the scenario.</param>
+    /// <param name="Description">A short description of what the scenario changes.</param>
+    /// <param name="ParameterHint">
+    /// Set when the scenario is also exposed as a first-class parameter on the request command. The
+    /// generated output is regenerated from the landing zone resource, so hand-editing files to achieve
+    /// something the API models directly would be lost on the next generation run.
+    /// </param>
+    public sealed record ScenarioInfo(string DisplayName, string FileName, string Description, string? ParameterHint = null);
 
     /// <summary>Policy location lookup result.</summary>
     public sealed record PolicyLocationResult(string PolicyName, List<string> Archetypes);
