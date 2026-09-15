@@ -92,7 +92,6 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
     public async Task<Models.EmailSendResult> SendEmailAsync(
         string endpoint,
         string from,
-        string? senderName,
         string[] to,
         string subject,
         string message,
