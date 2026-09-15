@@ -1312,6 +1312,7 @@ Example prompts that generate Azure CLI commands:
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Validate which resources in recovery plan 'my-recovery-plan' in service group 'my-service-group' can fail over from 'eastus'"
 * "List all runs of drill 'my-drill' in service group 'my-service-group'"
 * "Get drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "List all resources of drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
@@ -1397,7 +1398,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, drills, drill resources, drill runs, and drill run resources
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
