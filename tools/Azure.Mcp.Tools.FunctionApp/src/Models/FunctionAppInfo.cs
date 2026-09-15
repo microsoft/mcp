@@ -12,5 +12,6 @@ public record FunctionAppInfo(
     [property: JsonPropertyName("appServicePlanName")] string? AppServicePlanName,
     [property: JsonPropertyName("status")] string? Status,
     [property: JsonPropertyName("defaultHostName")] string? DefaultHostName,
+    [property: JsonPropertyName("operatingSystem")] string? OperatingSystem,
     [property: JsonPropertyName("tags")] IDictionary<string, string>? Tags
 );
