@@ -1,7 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added `azmcp azurebackup container register` to register an Azure Storage account with a Recovery Services vault as an Azure File share backup container, with idempotent re-registration and an optional storage account management lock."
-  - section: "Features Added"
-    description: "Added `azmcp azurebackup protectableitem inquire` to trigger discovery of Azure File shares on a registered backup container, identified by container name or storage account."
-  - section: "Features Added"
-    description: "Enhanced `azmcp azurebackup protectableitem list` to document the Azure File share discovery workflow (register container, then inquire) and the `AzureFileShare` workload-type filter."
