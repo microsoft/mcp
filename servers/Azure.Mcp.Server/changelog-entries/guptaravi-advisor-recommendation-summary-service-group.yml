@@ -1,0 +1,5 @@
+changes:
+  - section: "Features Added"
+    description: "Added Azure service-group scope to `advisor recommendation summary` while preserving existing subscription and configured-default subscription behavior."
+  - section: "Other Changes"
+    description: "Added shared Advisor recommendation scope and ARG query infrastructure for reuse by update, summary, and future list service-group support, and exposed nullable `serviceGroupId` in recommendation properties."

@@ -11,6 +11,8 @@ internal static class RecommendationQueryBuilder
         "strlen(name) == 64";
     internal const string ServiceGroupExclusionClause =
         "isempty(properties.serviceGroupId)";
+    internal const string ServiceGroupResourceIdPrefix =
+        "/providers/Microsoft.Management/serviceGroups/";
     internal const string CurrentRecommendationEngineClause =
         CurrentRecommendationNameClause + " and " + ServiceGroupExclusionClause;
     internal const string ActiveRecommendationClause =
@@ -22,12 +24,13 @@ internal static class RecommendationQueryBuilder
         bool useRequestedStatus,
         bool includeCategoryAndImpact,
         bool resourceTypeUsesImpactedField,
-        IEnumerable<string>? recommendationTypeIds = null)
+        IEnumerable<string>? recommendationTypeIds = null,
+        RecommendationQueryScope? scope = null)
     {
         var clauses = new List<string>
         {
             CurrentRecommendationNameClause,
-            ServiceGroupExclusionClause,
+            BuildServiceGroupClause(scope),
         };
         if (includeStatus)
         {
@@ -92,6 +95,11 @@ internal static class RecommendationQueryBuilder
 
         return string.Join(" and ", clauses);
     }
+
+    internal static string BuildServiceGroupClause(RecommendationQueryScope? scope) =>
+        scope?.ServiceGroupResourceId is { } serviceGroupResourceId
+            ? $"tostring(properties.serviceGroupId) =~ '{SanitizeForKql(serviceGroupResourceId)}'"
+            : ServiceGroupExclusionClause;
 
     internal static string EscapeKqlString(string value) =>
         value.Replace("|", string.Empty)

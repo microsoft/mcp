@@ -54,6 +54,79 @@ public class RecommendationSummaryServiceTests
     }
 
     [Fact]
+    public void BuildServiceGroupSummaryQuery_Category_UsesExactScopeWithoutSubscription()
+    {
+        var query = RecommendationSummaryService.BuildServiceGroupSummaryQuery(
+            "service-group-test",
+            "category",
+            null);
+
+        Assert.DoesNotContain("subscriptionId =~", query);
+        Assert.DoesNotContain("resourceGroup =~", query);
+        Assert.Contains(
+            "tostring(properties.serviceGroupId) =~ " +
+            $"'{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test'",
+            query);
+        Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
+        Assert.Contains("join kind=leftouter", query);
+        Assert.Contains(RecommendationQueryBuilder.ActiveRecommendationClause, query);
+    }
+
+    [Fact]
+    public void BuildServiceGroupSummaryQuery_StatusIncludesEveryLifecycleState()
+    {
+        var query = RecommendationSummaryService.BuildServiceGroupSummaryQuery(
+            "service-group-test",
+            "status",
+            null);
+
+        Assert.DoesNotContain(RecommendationQueryBuilder.ActiveRecommendationClause, query);
+        Assert.Contains(
+            $"{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test",
+            query);
+        Assert.DoesNotContain("join kind=leftouter", query);
+        Assert.Contains("groupValue = tostring(properties.recommendationStatus)", query);
+    }
+
+    [Fact]
+    public void CreateQueryContent_SubscriptionInstanceQuery_AddsSubscriptionScope()
+    {
+        var scope = RecommendationQueryScope.ForSubscription("subscription-id", null);
+
+        var content = AdvisorResourceGraphQueryExecutor.CreateQueryContent(
+            scope,
+            "advisorresources | limit 1",
+            useSubscriptionRequestScope: true);
+
+        Assert.Equal(["subscription-id"], content.Subscriptions);
+    }
+
+    [Fact]
+    public void CreateQueryContent_ServiceGroupQuery_RemainsTenantScoped()
+    {
+        var scope = RecommendationQueryScope.ForServiceGroup("service-group-test");
+
+        var content = AdvisorResourceGraphQueryExecutor.CreateQueryContent(
+            scope,
+            "advisorresources | limit 1",
+            useSubscriptionRequestScope: false);
+
+        Assert.Empty(content.Subscriptions);
+    }
+
+    [Fact]
+    public void CreateQueryContent_ServiceGroupWithSubscriptionScope_Throws()
+    {
+        var scope = RecommendationQueryScope.ForServiceGroup("service-group-test");
+
+        Assert.Throws<ArgumentException>(() =>
+            AdvisorResourceGraphQueryExecutor.CreateQueryContent(
+                scope,
+                "advisorresources | limit 1",
+                useSubscriptionRequestScope: true));
+    }
+
+    [Fact]
     public void BuildSummaryQuery_RecommendationType_UsesStableIdAndMetadataLabel()
     {
         var query = RecommendationSummaryService.BuildSummaryQuery(
