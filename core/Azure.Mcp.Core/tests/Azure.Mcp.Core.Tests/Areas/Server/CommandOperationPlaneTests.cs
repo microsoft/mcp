@@ -10,33 +10,14 @@ namespace Azure.Mcp.Core.Tests.Areas.Server;
 /// Enforces that every registered tool declares an operation plane.
 /// </summary>
 /// <remarks>
-/// There is deliberately no allowlist. <see cref="ToolOperationPlane.Unspecified"/> is an unset
-/// marker rather than a valid answer, so a new tool must be classified before it can ship.
+/// Every tool must explicitly declare a defined operation plane on its
+/// <see cref="CommandMetadataAttribute"/> before it can ship.
 /// A tool that calls no service is <see cref="ToolOperationPlane.NotApplicable"/>, which
 /// is an explicit classification and satisfies this test.
 /// See <c>docs/design/operation-plane-metadata.md</c> for the classification rule.
 /// </remarks>
 public class CommandOperationPlaneTests
 {
-    [Fact]
-    public void AllCommands_DeclareAnOperationPlane()
-    {
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-
-        var unclassified = commandFactory.AllCommands
-            .Where(entry => entry.Value.Metadata.OperationPlane == ToolOperationPlane.Unspecified)
-            .Select(entry => $"{entry.Key} ({entry.Value.GetType().FullName})")
-            .Order()
-            .ToList();
-
-        Assert.True(unclassified.Count == 0,
-            $"{unclassified.Count} tool(s) do not declare an OperationPlane. Set OperationPlane on the " +
-            $"[CommandMetadata] attribute. Classify by the API the tool acts against to produce the result " +
-            $"the user asked for. An ARM call made only as setup, to locate the target, does not count. See " +
-            $"docs/design/operation-plane-metadata.md.\n" +
-            string.Join("\n", unclassified));
-    }
-
     [Fact]
     public void AllCommands_DeclareAKnownOperationPlane()
     {

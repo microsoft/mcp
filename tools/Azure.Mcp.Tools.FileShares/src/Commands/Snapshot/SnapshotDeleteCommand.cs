@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
 using Azure.Mcp.Tools.FileShares.Services;
@@ -27,7 +26,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Secret = false,
     LocalRequired = false)]
 public sealed class SnapshotDeleteCommand(ILogger<SnapshotDeleteCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<SnapshotDeleteOptions, SnapshotDeleteCommand.SnapshotDeleteCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<SnapshotDeleteOptions, SnapshotDeleteCommand.SnapshotDeleteCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotDeleteOptions options, CancellationToken cancellationToken)
     {

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Snapshot;
@@ -26,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Snapshot;
     Secret = false,
     LocalRequired = false)]
 public sealed class SnapshotCreateCommand(ILogger<SnapshotCreateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<SnapshotCreateOptions, SnapshotCreateCommand.SnapshotCreateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<SnapshotCreateOptions, SnapshotCreateCommand.SnapshotCreateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SnapshotCreateOptions options, CancellationToken cancellationToken)
     {

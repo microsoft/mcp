@@ -1,0 +1,187 @@
+parameters:
+- name: Runs
+  type: number
+  default: 10
+- name: BaselinePath
+  type: string
+  default: ''
+  # Path to a JSON baseline file. When set, a second run gates on the tiered
+  # budgets from issue #3118 (p50/p95 +10%, p99 +20%, scaling efficiency +15%).
+- name: ResourceConcurrency
+  type: number
+  default: 4
+- name: ResourceSoakSeconds
+  type: number
+  default: 45
+- name: ResourceBaselinePath
+  type: string
+  default: ''
+  # Path to a JSON resource baseline. When set, gates on the resource budgets
+  # from issue #3121 (steady CPU/memory +10%, peak memory +15%, no soak leak).
+- name: DispatchBaselinePath
+  type: string
+  default: ''
+  # Path to a JSON dispatch baseline. When set, gates on the dispatch budgets
+  # from issue #3119 (p50/p95 +10%, p99 +20%, transport change >5% reported).
+- name: ConcurrencyBaselinePath
+  type: string
+  default: ''
+  # Path to a JSON concurrency baseline. When set, gates on the concurrency budgets
+  # from issue #3122 (throughput -10%, p95/scaling -15%, p99 -20%, error +0.5pp).
+- name: RunMicroBenchmarks
+  type: boolean
+  default: false
+  # The BenchmarkDotNet micro-benchmarks are opt-in: the generated boilerplate
+  # references the whole server (60+ tool assemblies) and the full suite takes
+  # ~30 minutes, so enable this only for dedicated/nightly perf runs.
+- name: MicroBenchmarkFilter
+  type: string
+  default: '*'
+  # Glob passed to BenchmarkDotNet --filter (e.g. '*ServerStartup*' to scope a run).
+
+jobs:
+- job: PerfTest
+  displayName: "Performance test"
+  timeoutInMinutes: 60
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  templateContext:
+    outputs:
+    - output: pipelineArtifact
+      condition: always()
+      targetPath: $(Build.ArtifactStagingDirectory)/perf
+      artifactName: perf-results
+
+  steps:
+  - checkout: self
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: Powershell@2
+    displayName: "Build benchmark tool (Release)"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-PerfBenchmarks.ps1
+
+  - task: Powershell@2
+    displayName: "Run performance measurements"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Test-StartupPerformance.ps1
+      arguments: >
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
+        -Runs ${{ parameters.Runs }}
+        -OutputPath '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json'
+
+  # Regression gate — only active when BaselinePath is provided.
+  # Reads the already-written results JSON; does NOT re-run the benchmarks.
+  - ${{ if ne(parameters.BaselinePath, '') }}:
+    - task: Powershell@2
+      displayName: "Check regression against baseline"
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Check-StartupPerformanceRegression.ps1
+        arguments: >
+          -ResultsPath '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json'
+          -BaselinePath '${{ parameters.BaselinePath }}'
+
+  - task: Powershell@2
+    displayName: "Run resource-usage measurements"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Measure-ResourceUsage.ps1
+      arguments: >
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
+        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+        -Modes default,all
+        -Concurrency ${{ parameters.ResourceConcurrency }}
+        -SoakSeconds ${{ parameters.ResourceSoakSeconds }}
+        -OutputPath '$(Build.ArtifactStagingDirectory)/perf/resource-usage.json'
+
+  # Resource regression gate — only active when ResourceBaselinePath is provided.
+  - ${{ if ne(parameters.ResourceBaselinePath, '') }}:
+    - task: Powershell@2
+      displayName: "Check resource regression against baseline"
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Check-ResourceUsageRegression.ps1
+        arguments: >
+          -ResultsPath '$(Build.ArtifactStagingDirectory)/perf/resource-usage.json'
+          -BaselinePath '${{ parameters.ResourceBaselinePath }}'
+
+  - task: Powershell@2
+    displayName: "Run dispatch-overhead measurements"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Measure-DispatchOverhead.ps1
+      arguments: >
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
+        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/perf/dispatch-overhead.json'
+
+  # Dispatch regression gate — only active when DispatchBaselinePath is provided.
+  - ${{ if ne(parameters.DispatchBaselinePath, '') }}:
+    - task: Powershell@2
+      displayName: "Check dispatch regression against baseline"
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Check-DispatchOverheadRegression.ps1
+        arguments: >
+          -ResultsPath '$(Build.ArtifactStagingDirectory)/perf/dispatch-overhead.json'
+          -BaselinePath '${{ parameters.DispatchBaselinePath }}'
+
+  - task: Powershell@2
+    displayName: "Run concurrency-scaling measurements"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Measure-ConcurrencyScaling.ps1
+      arguments: >
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
+        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+        -Levels 1,2,4,8,16
+        -DurationSeconds 10
+        -OutputPath '$(Build.ArtifactStagingDirectory)/perf/concurrency-scaling.json'
+
+  # Concurrency regression gate — only active when ConcurrencyBaselinePath is provided.
+  - ${{ if ne(parameters.ConcurrencyBaselinePath, '') }}:
+    - task: Powershell@2
+      displayName: "Check concurrency regression against baseline"
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Check-ConcurrencyScalingRegression.ps1
+        arguments: >
+          -ResultsPath '$(Build.ArtifactStagingDirectory)/perf/concurrency-scaling.json'
+          -BaselinePath '${{ parameters.ConcurrencyBaselinePath }}'
+
+  # Runs the BenchmarkDotNet micro-benchmarks (per-phase startup allocations and
+  # tool-catalog serialization scaling). Opt-in via RunMicroBenchmarks because the
+  # generated boilerplate references the whole server (60+ tool assemblies) and the
+  # full suite takes ~30 minutes. --buildTimeout is raised because that boilerplate
+  # build exceeds BenchmarkDotNet's default 2-minute timeout. Each benchmark class
+  # carries its own job config, so no --job override is passed.
+  - ${{ if eq(parameters.RunMicroBenchmarks, true) }}:
+    - task: Powershell@2
+      displayName: "Run micro-benchmarks (BenchmarkDotNet)"
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Invoke-PerfMicroBenchmarks.ps1
+        arguments: >
+          -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+          -ArtifactsPath '$(Build.ArtifactStagingDirectory)/perf/benchmark-dotnet'
+          -Filter '${{ parameters.MicroBenchmarkFilter }}'
+
+  - task: Powershell@2
+    displayName: "Publish metrics to Azure Monitor (optional)"
+    condition: and(succeeded(), eq(variables['System.TeamProject'], 'internal'))
+    continueOnError: true
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Publish-StartupPerformanceMetrics.ps1
+      arguments: >
+        -ResultsPath '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json'

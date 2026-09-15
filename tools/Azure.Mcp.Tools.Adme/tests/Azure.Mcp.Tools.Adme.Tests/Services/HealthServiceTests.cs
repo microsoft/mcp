@@ -26,9 +26,9 @@ public sealed class HealthServiceTests
             TestConstants.Tenant,
             TestContext.Current.CancellationToken);
 
-        Assert.True(result.AuthOk);
-        Assert.True(result.ConnectivityOk);
-        Assert.Equal(200, result.ConnectivityStatusCode);
+        Assert.True(result.Result.AuthOk);
+        Assert.True(result.Result.ConnectivityOk);
+        Assert.Equal(200, result.Result.ConnectivityStatusCode);
         Assert.Equal("/api/storage/v2/info", handler.LastRequest!.RequestUri!.AbsolutePath);
         Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization!.Scheme);
         Assert.Equal(TestConstants.AccessToken, handler.LastRequest.Headers.Authorization.Parameter);
@@ -52,14 +52,14 @@ public sealed class HealthServiceTests
             null,
             TestContext.Current.CancellationToken);
 
-        Assert.False(result.AuthOk);
+        Assert.False(result.Result.AuthOk);
         Assert.Equal(
             "Microsoft Entra authentication failed. Verify your credentials and sign-in configuration.",
-            result.AuthError);
-        Assert.DoesNotContain("no credential available", result.AuthError);
-        Assert.False(result.ConnectivityOk);
-        Assert.Equal("Connectivity check skipped because authentication failed.", result.ConnectivityError);
-        Assert.Null(result.ConnectivityStatusCode);
+            result.Result.AuthError);
+        Assert.DoesNotContain("no credential available", result.Result.AuthError);
+        Assert.False(result.Result.ConnectivityOk);
+        Assert.Equal("Connectivity check skipped because authentication failed.", result.Result.ConnectivityError);
+        Assert.Null(result.Result.ConnectivityStatusCode);
         Assert.Null(handler.LastRequest);
     }
 
@@ -75,10 +75,10 @@ public sealed class HealthServiceTests
             null,
             TestContext.Current.CancellationToken);
 
-        Assert.True(result.AuthOk);
-        Assert.False(result.ConnectivityOk);
-        Assert.Equal(503, result.ConnectivityStatusCode);
-        Assert.Contains("503", result.ConnectivityError);
+        Assert.True(result.Result.AuthOk);
+        Assert.False(result.Result.ConnectivityOk);
+        Assert.Equal(503, result.Result.ConnectivityStatusCode);
+        Assert.Contains("503", result.Result.ConnectivityError);
     }
 
     [Theory]

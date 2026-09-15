@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.PrivateEndpointConnection;
@@ -26,7 +25,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     Secret = false,
     LocalRequired = false)]
 public sealed class PrivateEndpointConnectionGetCommand(ILogger<PrivateEndpointConnectionGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<PrivateEndpointConnectionGetOptions, PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<PrivateEndpointConnectionGetOptions, PrivateEndpointConnectionGetCommand.PrivateEndpointConnectionGetCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PrivateEndpointConnectionGetOptions options, CancellationToken cancellationToken)
     {

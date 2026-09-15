@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.Informational;
@@ -25,7 +24,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareGetProvisioningRecommendationCommand(ILogger<FileShareGetProvisioningRecommendationCommand> logger, IFileSharesService service, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareGetProvisioningRecommendationOptions, FileShareProvisioningRecommendationResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareGetProvisioningRecommendationOptions, FileShareProvisioningRecommendationResult>(subscriptionResolver)
 {
     private readonly ILogger<FileShareGetProvisioningRecommendationCommand> _logger = logger;
     private readonly IFileSharesService _service = service;

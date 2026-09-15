@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed `role_assignment_list` returning an empty result for management group scopes. The Resource Graph query was always scoped to a subscription, so assignments made directly on a management group were never visible. Scope matching is also anchored now, so a scope ending in `rg1` no longer matches `rg10`, and the queried scope is echoed in the response."

@@ -21,8 +21,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
     Title = "Create or Update Resilience Usage Plan Enrollment",
     Description = """
         Creates or updates an enrollment under a resilience usage plan, associating it with the specified
-        service group, and returns the enrollment information including id, name, the associated service group
-        id, provisioning state, and error details.
+        service group, waits up to 10 minutes for provisioning to complete, and returns the completed enrollment
+        information including id, name, the associated service group id, provisioning state, and error details.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -86,6 +86,7 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException => "The usage plan enrollment create or update request timed out. Check the enrollment state before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed creating or updating the usage plan enrollment. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -94,6 +95,10 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
             "The usage plan enrollment request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)
     };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex is TimeoutException
+        ? HttpStatusCode.GatewayTimeout
+        : base.GetStatusCode(ex);
 
     public record UsagePlanEnrollmentCreateCommandResult(UsagePlanEnrollmentInfo Enrollment);
 }
