@@ -21,6 +21,17 @@ namespace Azure.Mcp.Tools.Compute.Tests.Disk;
 /// </summary>
 public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreateCommand, IComputeService>
 {
+    [Theory]
+    [InlineData("", "DenyAll")]
+    [InlineData("--network-access-policy AllowAll", "AllowAll")]
+    [InlineData("--network-access-policy AllowPrivate", "AllowPrivate")]
+    public async Task ExecuteAsync_NetworkExportRequiresOptIn(string options, string expectedPolicy)
+    {
+        var response = await ExecuteCommandAsync($"--subscription test-sub --resource-group testrg --disk-name testdisk --size-gb 128 {options}");
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(expectedPolicy, Assert.Single(Service.ReceivedCalls()).GetArguments()[11]);
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {

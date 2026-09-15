@@ -29,6 +29,26 @@ public class AzureBackupServiceTests
         _service = new AzureBackupService(_rsvOps, _dppOps, _azureService, _logger);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CreateVaultAsync_ForwardsPublicAccessChoiceToRsv(bool publicAccess)
+    {
+        await _service.CreateVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", "rsv", "eastus", null, null, null, publicAccess, CancellationToken.None);
+
+        await _rsvOps.Received(1).CreateVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", "eastus", null, null, null, publicAccess, CancellationToken.None);
+        Assert.Empty(_dppOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task CreateVaultAsync_RejectsPublicAccessForDppBeforeNetworkCalls()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", "dpp", "eastus", null, null, null, true, CancellationToken.None));
+        Assert.Empty(_azureService.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
+        Assert.Empty(_rsvOps.ReceivedCalls());
+    }
+
     #region ResolveVaultType - Auto-detection fallback
 
     [Fact]
@@ -891,7 +911,7 @@ public class AzureBackupServiceTests
         Assert.Contains("discoverySource", ex.Message);
 
         // Fail-fast: no vault listing calls should have been issued.
-        await _rsvOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await _rsvOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>());
         await _dppOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
@@ -911,7 +931,7 @@ public class AzureBackupServiceTests
         Assert.Equal("InvalidResourceTypeFilter", ex.ErrorCode);
         Assert.Contains(bad, ex.Message);
 
-        await _rsvOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await _rsvOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>());
         await _dppOps.DidNotReceive().ListVaultsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 

@@ -1,4 +1,4 @@
-﻿- Add firewall rules to allow traffic from Azure Services (allow IP 0.0.0.0).
+﻿{{NetworkRules}}
 - If username and password are required, you MUST leave them as params.
 - Create secrets in Key Vault to store the connection string or credentials, and assign `Key Vault Secrets User` role to the user-assigned managed identity.
 - If app used Managed Identity to connect the database, MUST add a post-provision step to use Service Connector create a connection between containerapp and database: 
