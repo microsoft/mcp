@@ -6,13 +6,8 @@
     <TrimMode>full</TrimMode>
     <SelfContained>true</SelfContained>
     <IsAotCompatible>true</IsAotCompatible>
-    <NoWarn>$(NoWarn);SCM0005</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\..\tools\Azure.Mcp.Tools.Cosmos\src\GeneratedSdk\src\Generated\**\*.cs;..\..\..\..\tools\Azure.Mcp.Tools.Cosmos\src\GeneratedSdk\src\Shared\**\*.cs" Link="GeneratedSdk\%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Azure.Core" />
-    <PackageReference Include="Azure.ResourceManager" />
+    <ProjectReference Include="..\..\..\generated\Azure.ResourceManager.CosmosDB\Azure.ResourceManager.CosmosDB.csproj" />
   </ItemGroup>
 </Project>

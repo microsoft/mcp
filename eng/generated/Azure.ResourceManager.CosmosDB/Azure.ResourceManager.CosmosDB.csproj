@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Azure.ResourceManager.CosmosDB</AssemblyName>
+    <RootNamespace>Azure.ResourceManager.CosmosDB</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+    <NoWarn>$(NoWarn);SCM0005</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Core" />
+    <PackageReference Include="Azure.ResourceManager" />
+  </ItemGroup>
+</Project>

@@ -34,7 +34,19 @@ if (keys.Value.PrimaryMasterKey != "primary-key")
     throw new InvalidOperationException("The projected SDK did not deserialize the expected account key.");
 }
 
-if (!transport.SawAccountList || !transport.SawKeyList)
+CosmosDBLocationResource? location = null;
+await foreach (var candidate in subscription.GetCosmosDBLocations().GetAllAsync())
+{
+    location = candidate;
+    break;
+}
+
+if (location?.Data.Name != "West US" || location.Data.Properties?.IsSubscriptionRegionAccessAllowedForRegular != true)
+{
+    throw new InvalidOperationException("The projected SDK did not deserialize the expected location.");
+}
+
+if (!transport.SawAccountList || !transport.SawKeyList || !transport.SawLocationList)
 {
     throw new InvalidOperationException("The projected management operations were not executed.");
 }
@@ -56,6 +68,7 @@ internal sealed class CosmosMockTransport(string subscriptionId, string resource
 
     public bool SawAccountList { get; private set; }
     public bool SawKeyList { get; private set; }
+    public bool SawLocationList { get; private set; }
 
     public override Request CreateRequest() => _requestFactory.CreateRequest();
 
@@ -103,6 +116,26 @@ internal sealed class CosmosMockTransport(string subscriptionId, string resource
                   "secondaryMasterKey": "secondary-key",
                   "primaryReadonlyMasterKey": "readonly-primary",
                   "secondaryReadonlyMasterKey": "readonly-secondary"
+                }
+                """);
+        }
+
+        if (path.EndsWith("/providers/Microsoft.DocumentDB/locations", StringComparison.Ordinal))
+        {
+            ValidateRequest(request, RequestMethod.Get);
+            SawLocationList = true;
+            return MockResponse.Json($$"""
+                {
+                  "value": [
+                    {
+                      "id": "/subscriptions/{{subscriptionId}}/providers/Microsoft.DocumentDB/locations/westus",
+                      "name": "West US",
+                      "type": "Microsoft.DocumentDB/locations",
+                      "properties": {
+                        "isSubscriptionRegionAccessAllowedForRegular": true
+                      }
+                    }
+                  ]
                 }
                 """);
         }

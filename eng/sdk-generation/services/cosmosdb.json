@@ -1,10 +1,11 @@
 {
   "packageId": "Azure.ResourceManager.CosmosDB",
-  "packageVersion": "1.5.0",
   "areaProjects": [
     "tools/Azure.Mcp.Tools.Cosmos/src/Azure.Mcp.Tools.Cosmos.csproj",
     "tools/Azure.Mcp.Tools.Quota/src/Azure.Mcp.Tools.Quota.csproj"
   ],
-  "selectionPolicy": "allOperationsForSelectedResource",
-  "outputDirectory": "tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk"
+  "selectionPolicy": "minimumHierarchyClosure",
+  "productProject": "servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj",
+  "sdkPath": "sdk/cosmosdb/Azure.ResourceManager.CosmosDB",
+  "outputDirectory": "eng/generated/Azure.ResourceManager.CosmosDB"
 }

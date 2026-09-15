@@ -114,13 +114,21 @@ eng/sdk-generation/
   README.md
   services/cosmosdb.json
   scripts/
-    Update-ServiceProjection.ps1
+    Resolve-PackageConsumers.ps1
+    Resolve-PackageProvenance.ps1
+    Resolve-MinimumHierarchyClosure.ps1
+    New-ScopedSpec.ps1
+    Export-SelectedHierarchy.ps1
     Test-ResourceHierarchy.ps1
+    Update-ServiceProjection.ps1
   tests/
+    Test-PackageConsumers.Tests.ps1
+    Test-MinimumHierarchyClosure.Tests.ps1
     Test-ResourceHierarchy.Tests.ps1
     CosmosProjectionAotSmoke/
 
-tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk/
+eng/generated/Azure.ResourceManager.CosmosDB/
+  Azure.ResourceManager.CosmosDB.csproj
   spec.lock.json
   roots.json
   expanded-operations.json
@@ -225,13 +233,11 @@ When one tool is the sole package consumer, it can compile the source directly. 
 - Cosmos uses account get/list/key operations;
 - Quota uses location listing for region discovery.
 
-Changing Cosmos alone cannot remove the package from the server. The final integration must compile the combined projection once in a shared lightweight assembly referenced by both tools, or use another single-copy mechanism. Compiling identical public types into multiple tool assemblies is not the default because it duplicates code and creates conflicting type identities.
-
-The current POC compiles projected source into Cosmos to validate generation and behavior while this sharing decision remains open. The released package must remain until Quota is migrated.
+Changing Cosmos alone cannot remove the package from the server. The POC therefore compiles the combined projection once in an MCP-owned shared lightweight assembly referenced by both tools. Compiling identical public types into multiple tool assemblies is avoided because it duplicates code and creates conflicting type identities. The released package is removed from both consumers.
 
 ## Native AOT validation
 
-The existing server's native build may exclude or trim a service, so it is not sufficient proof by itself. A dedicated smoke executable compiles the projected source through linked `Compile` items and references only management runtime dependencies. Mocked transport roots and executes:
+The existing server's native build may exclude or trim a service, so it is not sufficient proof by itself. A dedicated smoke executable references the shared generated project and only its management runtime dependencies. Mocked transport roots and executes:
 
 - account get/list and paging;
 - account and key deserialization;
