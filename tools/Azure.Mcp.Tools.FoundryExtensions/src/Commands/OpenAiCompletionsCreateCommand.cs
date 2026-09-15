@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         completions, get AI-generated content, generate answers to questions, or produce text completions from Azure
         OpenAI based on any input prompt. Supports customization with temperature and max tokens.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

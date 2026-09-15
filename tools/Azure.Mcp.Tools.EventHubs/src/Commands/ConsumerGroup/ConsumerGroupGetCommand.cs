@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
         The Consumer Group parameter is only required for getting a specific consumer-group
         When retrieving a single consumer group and when listing all available consumer groups, return all available metadata on the consumer group.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

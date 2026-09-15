@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
                   "Optional filters include language, resource type, impact, category, subcategory, tracking ID, and retirement date. " +
                   "Returns localized type IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details, " +
                   "ordered by impact from High to Medium to Low and then by display name.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

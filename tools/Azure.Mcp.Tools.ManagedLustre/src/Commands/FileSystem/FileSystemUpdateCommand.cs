@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
     Name = "update",
     Title = "Update Azure Managed Lustre FileSystem",
     Description = "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

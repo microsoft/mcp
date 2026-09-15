@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
+using Azure.Mcp.Tools.Adme.Commands.Search;
+using Azure.Mcp.Tools.Adme.Commands.Storage;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -84,6 +86,26 @@ public sealed class AdmeSetupTests
     }
 
     [Fact]
+    public async Task Setup_NonRetryingClient_DoesNotRetryTransientResponse()
+    {
+        var requestCount = 0;
+        using var serviceProvider = CreateServiceProvider(new StubHttpMessageHandler(_ =>
+        {
+            requestCount++;
+            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        }), AdmeServiceHelper.NonRetryingHttpClientName);
+        using var client = serviceProvider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(AdmeServiceHelper.NonRetryingHttpClientName);
+
+        using var response = await client.GetAsync(
+            $"{TestConstants.Endpoint}/api/search/v2/query_with_cursor",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal(1, requestCount);
+    }
+
+    [Fact]
     public void Setup_RegistersAndExposesCommands()
     {
         var setup = new AdmeSetup();
@@ -102,17 +124,32 @@ public sealed class AdmeSetupTests
         var schema = Assert.Single(adme.SubGroup, group => group.Name == "schema");
         Assert.True(schema.Commands.ContainsKey("get"));
         Assert.True(schema.Commands.ContainsKey("list"));
+        Assert.True(adme.Commands.ContainsKey("search"));
+        var storage = Assert.Single(adme.SubGroup, group => group.Name == "storage");
+        var record = Assert.Single(storage.SubGroup, group => group.Name == "record");
+        Assert.True(record.Commands.ContainsKey("fetch"));
+        Assert.True(record.Commands.ContainsKey("get"));
+        Assert.True(record.Commands.ContainsKey("list"));
+        var version = Assert.Single(record.SubGroup, group => group.Name == "version");
+        Assert.True(version.Commands.ContainsKey("list"));
         Assert.NotNull(serviceProvider.GetRequiredService<HealthCheckCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordFetchCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordGetCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordListCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecordVersionListCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<SchemaGetCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<SchemaListCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<SearchCommand>());
     }
 
-    private static ServiceProvider CreateServiceProvider(HttpMessageHandler handler)
+    private static ServiceProvider CreateServiceProvider(
+        HttpMessageHandler handler,
+        string clientName = AdmeServiceHelper.HttpClientName)
     {
         var services = new ServiceCollection();
         services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
         new AdmeSetup().ConfigureServices(services);
-        services.AddHttpClient(AdmeServiceHelper.HttpClientName)
+        services.AddHttpClient(clientName)
             .ConfigurePrimaryHttpMessageHandler(() => handler);
         return services.BuildServiceProvider();
     }

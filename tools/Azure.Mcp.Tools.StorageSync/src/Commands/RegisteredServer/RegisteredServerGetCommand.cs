@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
     Name = "get",
     Title = "Get Registered Server",
     Description = "List all registered servers in a Storage Sync service or retrieve details about a specific registered server. Returns server properties including server ID, registration status, agent version, OS version, and last heartbeat. Use --server-id for a specific server.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

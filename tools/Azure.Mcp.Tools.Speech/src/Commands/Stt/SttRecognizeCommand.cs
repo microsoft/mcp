@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Speech.Commands.Stt;
         Supported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.
         Optional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

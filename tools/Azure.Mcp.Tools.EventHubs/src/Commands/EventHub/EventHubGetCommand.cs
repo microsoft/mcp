@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
         When retrieving a single Event Hub or listing multiple Event Hubs, detailed information including
         partition count, settings, and metadata is returned for all Event Hubs.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

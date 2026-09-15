@@ -16,6 +16,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
     Name = "get-table-config",
     Title = "Get OneLake Table Configuration",
     Description = "Retrieves table API configuration for OneLake. Use this when the user needs to understand table access settings.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

@@ -20,10 +20,12 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
     Title = "Create or Update Resilience Usage Plan",
     Description = """
         Creates or updates a resilience usage plan in the specified resource group with the given plan type,
-        and returns the usage plan information including id, name, resource type, location, tags, plan type,
-        and provisioning state. If the usage plan already exists, its properties are updated.
+        waits up to 10 minutes for provisioning to complete, and returns the completed usage plan information
+        including id, name, resource type, location, tags, plan type, and provisioning state.
+        If the usage plan already exists, its properties are updated.
         This tool can also be used to set up a new usage plan.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -40,10 +42,7 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.UsagePlan.Length is < 3 or > 24 || !options.UsagePlan.All(IsValidUsagePlanNameCharacter))
-        {
-            validationResult.Errors.Add("The usage plan name must be 3 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
+        UsagePlanResourceNameValidator.Validate(options.UsagePlan, "usage plan", validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, UsagePlanCreateOptions options, CancellationToken cancellationToken)
@@ -73,11 +72,9 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
         return context.Response;
     }
 
-    private static bool IsValidUsagePlanNameCharacter(char character) =>
-        character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-';
-
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException => "The usage plan create or update request timed out. Check the usage plan state before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The usage plan could not be created or updated because it conflicts with the current resource state.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -88,6 +85,10 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
             "The usage plan request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)
     };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex is TimeoutException
+        ? HttpStatusCode.GatewayTimeout
+        : base.GetStatusCode(ex);
 
     public record UsagePlanCreateCommandResult(UsagePlanInfo UsagePlan);
 }

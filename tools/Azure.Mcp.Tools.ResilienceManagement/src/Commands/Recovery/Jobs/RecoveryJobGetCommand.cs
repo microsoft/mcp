@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
         details of that job. Omit the name to list all recovery jobs of the recoveryplan, returning only their
         id and name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

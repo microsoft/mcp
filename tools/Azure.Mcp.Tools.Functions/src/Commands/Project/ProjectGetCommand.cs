@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Functions.Commands.Project;
     Name = "get",
     Title = "Get Project Template",
     Description = "Get project scaffolding information for a new Azure Functions app. Call this tool when the user wants to create, initialize, or set up a new Azure Functions project. Returns the complete project structure, required files configurations and setup instructions for the specific language that agents use to create files. Use after functions language list and before functions template get.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -23,7 +24,7 @@ namespace Azure.Mcp.Tools.Functions.Commands.Project;
     Secret = false,
     LocalRequired = false)]
 public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFunctionsService functionsService)
-    : BaseCommand<ProjectGetOptions, List<ProjectTemplateResult>>
+    : BaseCommand<ProjectGetOptions, ProjectTemplateResult>
 {
     private readonly ILogger<ProjectGetCommand> _logger = logger;
     private readonly IFunctionsService _functionsService = functionsService;
@@ -38,7 +39,7 @@ public sealed class ProjectGetCommand(ILogger<ProjectGetCommand> logger, IFuncti
             var result = await _functionsService.GetProjectTemplateAsync(options.Language, cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([result], FunctionsJsonContext.Default.ListProjectTemplateResult);
+            context.Response.Results = ResponseResult.Create(result, FunctionsJsonContext.Default.ProjectTemplateResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

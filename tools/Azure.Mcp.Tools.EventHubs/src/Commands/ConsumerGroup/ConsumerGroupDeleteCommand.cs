@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
         The tool requires specifying the resource group, Namespace name, Event Hub name, and Consumer
         Group name to identify the Consumer Group to delete.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

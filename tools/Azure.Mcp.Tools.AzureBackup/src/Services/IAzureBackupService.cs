@@ -27,7 +27,15 @@ public interface IAzureBackupService
     Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(string vaultName, string resourceGroup, string subscription, string? workloadType = null, string? containerName = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<OperationResult> UndeleteProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string? vaultType = null, string? containerName = null, string? tenant = null, CancellationToken cancellationToken = default);
 
+    // Container operations (RSV only)
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(string vaultName, string resourceGroup, string subscription, string? filter = null, string? storageAccount = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task RefreshContainersAsync(string vaultName, string resourceGroup, string subscription, string? backupManagementType = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<ContainerRegisterResult> RegisterContainerAsync(string vaultName, string resourceGroup, string subscription, string storageAccount, bool acquireLock = true, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<InquireResult> InquireContainerAsync(string vaultName, string resourceGroup, string subscription, string? container = null, string? storageAccount = null, string? tenant = null, CancellationToken cancellationToken = default);
+
     // Job operations
+    Task<BackupContainerInfo?> GetContainerAsync(string vaultName, string resourceGroup, string subscription, string containerName, string? tenant = null, CancellationToken cancellationToken = default);
+
     Task<BackupJobInfo> GetJobAsync(string vaultName, string resourceGroup, string subscription, string jobId, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<List<BackupJobInfo>> ListJobsAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 

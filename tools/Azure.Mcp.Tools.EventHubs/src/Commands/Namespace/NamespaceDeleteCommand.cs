@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
         The namespace must exist in the specified resource group. If the namespace is not found,
         an error will be returned.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
