@@ -205,7 +205,7 @@ azmcp server start \
     --structured-output-mode compact
 ```
 
-> For tool authors who want to emit `outputSchema` and `structuredContent` from their commands, see the [Output Schema Migration Guide](../../../docs/output-schema-migration.md).
+> For tool authors who want to emit `outputSchema` and `structuredContent` from their commands, see the [Output Schema Migration Guide](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md).
 
 #### Consolidated Mode
 
