@@ -37,9 +37,11 @@ Temporary repositories and generation outputs are stored under `eng/sdk-generati
 
 ## Selection policy
 
-`roots.json` contains operations directly required by MCP. The POC keeps every operation associated with a resource that owns a root operation. For Cosmos DB, account listing and key retrieval select `Microsoft.DocumentDB/databaseAccounts`, retaining all 32 operations associated with that resource at the pinned specification revision.
+`roots.json` contains operations directly required by MCP. The POC keeps every operation associated with a resource that owns a root operation. For Cosmos DB, account get/list/key operations select `Microsoft.DocumentDB/databaseAccounts`, retaining all 32 operations associated with that resource. Quota's region discovery selects `Microsoft.DocumentDB/locations`, retaining both operations associated with that resource. The complete projection therefore contains 2 resources and 34 operations at the pinned specification revision.
 
-The projected source intentionally omits upstream service customizations that MCP does not use. It includes pinned Azure SDK shared source required to compile generated clients outside `azure-sdk-for-net`. The Cosmos area disables Release PDB output so generated symbols are not added to the shipped product.
+The projected source intentionally omits upstream service customizations that MCP does not use. It includes pinned Azure SDK shared source required to compile generated clients outside `azure-sdk-for-net`.
+
+`Azure.ResourceManager.CosmosDB` is also consumed by the Quota tool. The package cannot be removed from the complete server until Cosmos and Quota share the projected implementation. The current POC compiles source into the Cosmos tool to validate generation and behavior; the cross-tool sharing model remains an integration decision.
 
 ## Full-SDK discovery
 

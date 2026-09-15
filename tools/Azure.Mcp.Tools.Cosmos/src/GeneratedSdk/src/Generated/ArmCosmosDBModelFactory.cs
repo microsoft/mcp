@@ -795,6 +795,44 @@ namespace Azure.ResourceManager.CosmosDB.Models
                 partitionKeyRangeId);
         }
 
+        /// <param name="id"> Fully qualified resource ID for the resource. Ex - /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}. </param>
+        /// <param name="name"> The name of the resource. </param>
+        /// <param name="resourceType"> The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or "Microsoft.Storage/storageAccounts". </param>
+        /// <param name="systemData"> Azure Resource Manager metadata containing createdBy and modifiedBy information. </param>
+        /// <param name="properties"> Cosmos DB location metadata. </param>
+        /// <returns> A new <see cref="CosmosDB.CosmosDBLocationData"/> instance for mocking. </returns>
+        public static CosmosDBLocationData CosmosDBLocationData(ResourceIdentifier id = default, string name = default, ResourceType resourceType = default, SystemData systemData = default, CosmosDBLocationProperties properties = default)
+        {
+            return new CosmosDBLocationData(
+                id,
+                name,
+                resourceType,
+                systemData,
+                properties,
+                default);
+        }
+
+        /// <param name="doesSupportAvailabilityZone"> Flag indicating whether the location supports availability zones or not. </param>
+        /// <param name="isResidencyRestricted"> Flag indicating whether the location is residency sensitive. </param>
+        /// <param name="backupStorageRedundancies"> The properties of available backup storage redundancies. </param>
+        /// <param name="isSubscriptionRegionAccessAllowedForRegular"> Flag indicating whether the subscription have access in region for Non-Availability Zones. </param>
+        /// <param name="isSubscriptionRegionAccessAllowedForAz"> Flag indicating whether the subscription have access in region for Availability Zones(Az). </param>
+        /// <param name="status"> Enum to indicate current buildout status of the region. </param>
+        /// <returns> A new <see cref="Models.CosmosDBLocationProperties"/> instance for mocking. </returns>
+        public static CosmosDBLocationProperties CosmosDBLocationProperties(bool? doesSupportAvailabilityZone = default, bool? isResidencyRestricted = default, IEnumerable<CosmosDBBackupStorageRedundancy> backupStorageRedundancies = default, bool? isSubscriptionRegionAccessAllowedForRegular = default, bool? isSubscriptionRegionAccessAllowedForAz = default, CosmosDBStatus? status = default)
+        {
+            backupStorageRedundancies ??= new ChangeTrackingList<CosmosDBBackupStorageRedundancy>();
+
+            return new CosmosDBLocationProperties(
+                doesSupportAvailabilityZone,
+                isResidencyRestricted,
+                (backupStorageRedundancies ?? new ChangeTrackingList<CosmosDBBackupStorageRedundancy>()).ToList(),
+                isSubscriptionRegionAccessAllowedForRegular,
+                isSubscriptionRegionAccessAllowedForAz,
+                status,
+                default);
+        }
+
         /// <param name="databaseName"> Name of the Cosmos DB SQL database. </param>
         /// <param name="restoreParameters"> Parameters to indicate the information about the restore. </param>
         /// <param name="createMode"> Enum to indicate the mode of account creation. </param>

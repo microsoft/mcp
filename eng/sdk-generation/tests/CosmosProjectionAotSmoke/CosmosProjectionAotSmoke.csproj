@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);SCM0005</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\..\areas\cosmos\src\Azure.Mcp.Tools.Cosmos\GeneratedSdk\src\Generated\**\*.cs;..\..\..\..\areas\cosmos\src\Azure.Mcp.Tools.Cosmos\GeneratedSdk\src\Shared\**\*.cs" Link="GeneratedSdk\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\..\..\tools\Azure.Mcp.Tools.Cosmos\src\GeneratedSdk\src\Generated\**\*.cs;..\..\..\..\tools\Azure.Mcp.Tools.Cosmos\src\GeneratedSdk\src\Shared\**\*.cs" Link="GeneratedSdk\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Core" />

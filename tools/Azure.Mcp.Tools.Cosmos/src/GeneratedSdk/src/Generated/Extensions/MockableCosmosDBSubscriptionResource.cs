@@ -7,6 +7,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
@@ -37,6 +38,63 @@ namespace Azure.ResourceManager.CosmosDB.Mocking
         private ClientDiagnostics DatabaseAccountsClientDiagnostics => _databaseAccountsClientDiagnostics ??= new ClientDiagnostics("Azure.ResourceManager.CosmosDB.Mocking", ProviderConstants.DefaultProviderNamespace, Diagnostics);
 
         private DatabaseAccounts DatabaseAccountsRestClient => _databaseAccountsRestClient ??= new DatabaseAccounts(DatabaseAccountsClientDiagnostics, Pipeline, Diagnostics.ApplicationId, Endpoint, "2026-03-15");
+
+        /// <summary> Gets a collection of CosmosDBLocations in the <see cref="SubscriptionResource"/>. </summary>
+        /// <returns> An object representing collection of CosmosDBLocations and their operations over a CosmosDBLocationResource. </returns>
+        public virtual CosmosDBLocationCollection GetCosmosDBLocations()
+        {
+            return GetCachedClient(client => new CosmosDBLocationCollection(client, Id));
+        }
+
+        /// <summary>
+        /// Get the properties of an existing Cosmos DB location
+        /// <list type="bullet">
+        /// <item>
+        /// <term> Request Path. </term>
+        /// <description> /subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/locations/{location}. </description>
+        /// </item>
+        /// <item>
+        /// <term> Operation Id. </term>
+        /// <description> LocationGetResults_Get. </description>
+        /// </item>
+        /// <item>
+        /// <term> Default Api Version. </term>
+        /// <description> 2026-03-15. </description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <param name="location"> Cosmos DB region, with spaces between words and each word capitalized. </param>
+        /// <param name="cancellationToken"> The cancellation token to use. </param>
+        [Core.ForwardsClientCallsAttribute]
+        public virtual async Task<Response<CosmosDBLocationResource>> GetCosmosDBLocationAsync(AzureLocation location, CancellationToken cancellationToken = default)
+        {
+            return await GetCosmosDBLocations().GetAsync(location, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Get the properties of an existing Cosmos DB location
+        /// <list type="bullet">
+        /// <item>
+        /// <term> Request Path. </term>
+        /// <description> /subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/locations/{location}. </description>
+        /// </item>
+        /// <item>
+        /// <term> Operation Id. </term>
+        /// <description> LocationGetResults_Get. </description>
+        /// </item>
+        /// <item>
+        /// <term> Default Api Version. </term>
+        /// <description> 2026-03-15. </description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <param name="location"> Cosmos DB region, with spaces between words and each word capitalized. </param>
+        /// <param name="cancellationToken"> The cancellation token to use. </param>
+        [Core.ForwardsClientCallsAttribute]
+        public virtual Response<CosmosDBLocationResource> GetCosmosDBLocation(AzureLocation location, CancellationToken cancellationToken = default)
+        {
+            return GetCosmosDBLocations().Get(location, cancellationToken);
+        }
 
         /// <summary>
         /// Lists all the Azure Cosmos DB database accounts available under the subscription.

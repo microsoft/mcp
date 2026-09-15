@@ -34,5 +34,14 @@ namespace Azure.ResourceManager.CosmosDB.Mocking
             CosmosDBAccountResource.ValidateResourceId(id);
             return new CosmosDBAccountResource(Client, id);
         }
+
+        /// <summary> Gets an object representing a <see cref="CosmosDBLocationResource"/> along with the instance operations that can be performed on it but with no data. </summary>
+        /// <param name="id"> The resource ID of the resource to get. </param>
+        /// <returns> Returns a <see cref="CosmosDBLocationResource"/> object. </returns>
+        public virtual CosmosDBLocationResource GetCosmosDBLocationResource(ResourceIdentifier id)
+        {
+            CosmosDBLocationResource.ValidateResourceId(id);
+            return new CosmosDBLocationResource(Client, id);
+        }
     }
 }

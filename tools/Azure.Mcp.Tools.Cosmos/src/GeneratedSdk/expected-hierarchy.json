@@ -8,5 +8,15 @@
     "Scopes": [
       "ResourceGroup"
     ]
+  },
+  {
+    "Name": "CosmosDBLocationResource",
+    "ResourceType": "Microsoft.DocumentDB/locations",
+    "ResourceId": "/subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/locations/{location}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [],
+    "Scopes": [
+      "Subscription"
+    ]
   }
 ]

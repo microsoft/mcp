@@ -54,7 +54,7 @@ function Initialize-Project {
     @'
 <Project>
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -149,7 +149,7 @@ foreach ($resource in $fullSchema.resources) {
 foreach ($id in $rootIds) {
     if (-not $selected.Contains([string] $id)) { throw "Root operation was not resolved to a resource: $id" }
 }
-if ($selectedResources.Count -ne 1) { throw "Cosmos POC expected one selected resource, found $($selectedResources.Count)." }
+if ($selectedResources.Count -eq 0) { throw 'No Cosmos resources were selected.' }
 
 $expandedManifest = [ordered]@{
     selectionPolicy = [string] $config.selectionPolicy

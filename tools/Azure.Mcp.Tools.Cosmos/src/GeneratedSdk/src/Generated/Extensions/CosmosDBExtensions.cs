@@ -56,6 +56,24 @@ namespace Azure.ResourceManager.CosmosDB
         }
 
         /// <summary>
+        /// Gets an object representing a <see cref="CosmosDBLocationResource"/> along with the instance operations that can be performed on it but with no data.
+        /// <item>
+        /// <term> Mocking. </term>
+        /// <description> To mock this method, please mock <see cref="MockableCosmosDBArmClient.GetCosmosDBLocationResource(ResourceIdentifier)"/> instead. </description>
+        /// </item>
+        /// </summary>
+        /// <param name="client"> The <see cref="ArmClient"/> the method will execute against. </param>
+        /// <param name="id"> The resource ID of the resource to get. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="client"/> is null. </exception>
+        /// <returns> Returns a <see cref="CosmosDBLocationResource"/> object. </returns>
+        public static CosmosDBLocationResource GetCosmosDBLocationResource(this ArmClient client, ResourceIdentifier id)
+        {
+            Argument.AssertNotNull(client, nameof(client));
+
+            return GetMockableCosmosDBArmClient(client).GetCosmosDBLocationResource(id);
+        }
+
+        /// <summary>
         /// Gets a collection of CosmosDBAccounts in the <see cref="ResourceGroupResource"/>
         /// <item>
         /// <term> Mocking. </term>
@@ -108,6 +126,61 @@ namespace Azure.ResourceManager.CosmosDB
             Argument.AssertNotNull(resourceGroupResource, nameof(resourceGroupResource));
 
             return GetMockableCosmosDBResourceGroupResource(resourceGroupResource).GetCosmosDBAccount(accountName, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets a collection of CosmosDBLocations in the <see cref="SubscriptionResource"/>
+        /// <item>
+        /// <term> Mocking. </term>
+        /// <description> To mock this method, please mock <see cref="MockableCosmosDBSubscriptionResource.GetCosmosDBLocations()"/> instead. </description>
+        /// </item>
+        /// </summary>
+        /// <param name="subscriptionResource"> The <see cref="SubscriptionResource"/> the method will execute against. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionResource"/> is null. </exception>
+        /// <returns> An object representing collection of CosmosDBLocations and their operations over a CosmosDBLocationResource. </returns>
+        public static CosmosDBLocationCollection GetCosmosDBLocations(this SubscriptionResource subscriptionResource)
+        {
+            Argument.AssertNotNull(subscriptionResource, nameof(subscriptionResource));
+
+            return GetMockableCosmosDBSubscriptionResource(subscriptionResource).GetCosmosDBLocations();
+        }
+
+        /// <summary>
+        /// Get the properties of an existing Cosmos DB location
+        /// <item>
+        /// <term> Mocking. </term>
+        /// <description> To mock this method, please mock <see cref="MockableCosmosDBSubscriptionResource.GetCosmosDBLocationAsync(AzureLocation, CancellationToken)"/> instead. </description>
+        /// </item>
+        /// </summary>
+        /// <param name="subscriptionResource"> The <see cref="SubscriptionResource"/> the method will execute against. </param>
+        /// <param name="location"> Cosmos DB region, with spaces between words and each word capitalized. </param>
+        /// <param name="cancellationToken"> The cancellation token to use. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionResource"/> is null. </exception>
+        [Core.ForwardsClientCallsAttribute]
+        public static async Task<Response<CosmosDBLocationResource>> GetCosmosDBLocationAsync(this SubscriptionResource subscriptionResource, AzureLocation location, CancellationToken cancellationToken = default)
+        {
+            Argument.AssertNotNull(subscriptionResource, nameof(subscriptionResource));
+
+            return await GetMockableCosmosDBSubscriptionResource(subscriptionResource).GetCosmosDBLocationAsync(location, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Get the properties of an existing Cosmos DB location
+        /// <item>
+        /// <term> Mocking. </term>
+        /// <description> To mock this method, please mock <see cref="MockableCosmosDBSubscriptionResource.GetCosmosDBLocation(AzureLocation, CancellationToken)"/> instead. </description>
+        /// </item>
+        /// </summary>
+        /// <param name="subscriptionResource"> The <see cref="SubscriptionResource"/> the method will execute against. </param>
+        /// <param name="location"> Cosmos DB region, with spaces between words and each word capitalized. </param>
+        /// <param name="cancellationToken"> The cancellation token to use. </param>
+        /// <exception cref="ArgumentNullException"> <paramref name="subscriptionResource"/> is null. </exception>
+        [Core.ForwardsClientCallsAttribute]
+        public static Response<CosmosDBLocationResource> GetCosmosDBLocation(this SubscriptionResource subscriptionResource, AzureLocation location, CancellationToken cancellationToken = default)
+        {
+            Argument.AssertNotNull(subscriptionResource, nameof(subscriptionResource));
+
+            return GetMockableCosmosDBSubscriptionResource(subscriptionResource).GetCosmosDBLocation(location, cancellationToken);
         }
 
         /// <summary>

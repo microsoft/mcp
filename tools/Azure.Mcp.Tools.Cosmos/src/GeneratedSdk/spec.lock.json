@@ -23,7 +23,7 @@
     "apiVersion": "2026-03-15"
   },
   "runtimePackages": {
-    "Azure.Core": "1.60.0",
+    "Azure.Core": "1.61.0",
     "Azure.Identity": "1.21.0",
     "Azure.ResourceManager": "1.14.0"
   },

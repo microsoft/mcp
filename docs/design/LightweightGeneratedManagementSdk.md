@@ -123,29 +123,9 @@ Reproducibility and MCP compatibility are separate requirements:
 
 Before projection, compare the generated full SDK with the selected package and its `azure-sdk-for-net` source. Identify handwritten customizations and shared source. Include the parts required by MCP or document, with usage evidence, why omission is safe. The full baseline must pass focused compile and request-behavior checks before scoped output is evaluated.
 
-### Cosmos DB bootstrap issue
+### Cosmos DB baseline
 
-Azure MCP currently references:
-
-```text
-Azure.ResourceManager.CosmosDB 1.4.0-beta.13
-```
-
-Its release snapshot points to Azure REST API specifications commit:
-
-```text
-2afa5b356adf6cf51209d2cf28d38644c69d9832
-```
-
-and to the Swagger entry point:
-
-```text
-specification/cosmos-db/resource-manager/readme.md
-```
-
-The `Microsoft.DocumentDB/DocumentDB/client.tsp` TypeSpec source does not exist at that commit. Therefore the current package cannot be projected with `@@scope` from its exact source revision.
-
-`Azure.ResourceManager.CosmosDB` version `1.5.0` is TypeSpec-generated and its release snapshot contains:
+The active `microsoft/mcp` repository references `Azure.ResourceManager.CosmosDB` 1.5.0. This version is TypeSpec-generated and its release snapshot contains:
 
 ```yaml
 directory: specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB
@@ -154,12 +134,7 @@ repo: Azure/azure-rest-api-specs
 additionalDirectories:
 ```
 
-The Cosmos DB POC should consequently use two explicit stages:
-
-1. validate Azure MCP against the full TypeSpec-generated `1.5.0` API; and
-2. project the lightweight SDK from that package's pinned specification commit.
-
-This keeps an SDK/spec migration separate from operation removal. If the move to `1.5.0` is not acceptable, the POC must stop rather than using an unrelated TypeSpec revision.
+The POC generates the projection directly from this package's corresponding specification commit. No package-version migration is part of the product comparison.
 
 ## Sparse specification checkout
 
@@ -213,7 +188,7 @@ eng/sdk-generation/
     Validate-ProjectedSdk.ps1
     Update-ServiceProjection.ps1
 
-areas/cosmos/src/Azure.Mcp.Tools.Cosmos/
+tools/Azure.Mcp.Tools.Cosmos/src/
   Azure.Mcp.Tools.Cosmos.csproj
   GeneratedSdk/
     spec.lock.json
@@ -284,32 +259,14 @@ The package version should normally match `Directory.Packages.props` while migra
 
 ### Root operation manifest
 
-`roots.json` records operations directly needed by Azure MCP and evidence for each mapping. For Cosmos DB the initial roots are expected to be:
+`roots.json` records operations directly needed by Azure MCP and evidence for each mapping. For Cosmos DB the direct roots are:
 
-```json
-{
-  "operations": [
-    {
-      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.list",
-      "sdkMembers": [
-        "SubscriptionResource.GetCosmosDBAccountsAsync"
-      ],
-      "usedBy": [
-        "areas/cosmos/src/Azure.Mcp.Tools.Cosmos/Services/CosmosService.cs"
-      ]
-    },
-    {
-      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listKeys",
-      "sdkMembers": [
-        "CosmosDBAccountResource.GetKeysAsync"
-      ],
-      "usedBy": [
-        "areas/cosmos/src/Azure.Mcp.Tools.Cosmos/Services/CosmosService.cs"
-      ]
-    }
-  ]
-}
-```
+- `Microsoft.DocumentDB.DatabaseAccounts.get`;
+- `Microsoft.DocumentDB.DatabaseAccounts.list`;
+- `Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup`; and
+- `Microsoft.DocumentDB.DatabaseAccounts.listKeys`.
+
+`roots.json` records the SDK members and source locations supporting each mapping.
 
 This file expresses direct MCP requirements. It does not contain manually expanded resource operations.
 
@@ -478,15 +435,17 @@ tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk/
     Shared/
 ```
 
-`Azure.Mcp.Tools.Cosmos.csproj` compiles these files directly into `Azure.Mcp.Tools.Cosmos.dll`. The generated types retain their `Azure.ResourceManager.CosmosDB` namespaces; their assembly identity is not a compatibility requirement because they are an internal implementation dependency of the Cosmos area.
+When one tool project is the only consumer, that project can compile the generated files directly. The generated types retain their `Azure.ResourceManager.CosmosDB` namespaces; their original assembly identity is not a compatibility requirement because they are internal implementation dependencies.
 
-The consuming project directly references required runtime packages, initially `Azure.Core` and `Azure.ResourceManager`, and continues to reference `Microsoft.Azure.Cosmos` for data-plane operations. Normal builds do not reference the released `Azure.ResourceManager.CosmosDB` package. A controlled comparison property may exclude generated source and restore the released package, but both must never be compiled together.
+Before integration, inventory every project that references the package. In the active `microsoft/mcp` repository, both Cosmos and Quota consume `Azure.ResourceManager.CosmosDB`: Cosmos uses the account resource, while Quota uses the location resource for region discovery. The package cannot be removed from the server by changing Cosmos alone. The final integration must compile the combined projection once in a shared lightweight assembly referenced by both tools, or adopt another single-copy sharing mechanism. Compiling identical generated public types into multiple tool assemblies is not the default because it duplicates code and creates conflicting type identities.
+
+The consuming projects directly reference required runtime packages, initially `Azure.Core` and `Azure.ResourceManager`. Cosmos continues to reference its data-plane dependency. Normal builds must not retain the released `Azure.ResourceManager.CosmosDB` package after all consumers are migrated. A controlled comparison property may restore the released package, but package and generated implementation must never be active together.
 
 For Release builds, the Cosmos area disables PDB output so generated symbols are not added to the shipped distribution. A separate diagnostic-symbol artifact may be considered later without changing production measurements.
 
 ### Dedicated Native AOT validation
 
-The existing native CLI build does not validate this projection. When `BuildNative=true`, `AzureMcp.Cli.csproj` removes the Cosmos area and `Microsoft.Azure.Cosmos`, so the projected management assembly would not participate in that publish.
+The existing native CLI build does not validate this projection. When `BuildNative=true`, `Azure.Mcp.Server.csproj` removes the Cosmos area and `Microsoft.Azure.Cosmos`, so the projected management assembly would not participate in that publish.
 
 The POC must add a dedicated Native AOT smoke-test executable that compiles the projected management source through linked `Compile` items and references only its required management runtime packages, not the Cosmos data-plane package. Through mocked transport, the executable must root and execute subscription account listing, paged response handling, account key retrieval, response deserialization, and access to `Data.Name` and `PrimaryMasterKey`. Merely including unused source is insufficient because trimming may remove it.
 
@@ -554,7 +513,7 @@ These changes should happen after the command and file contracts are stable, not
 
 ### Phase 1: Establish a reproducible full baseline
 
-1. Record the current `1.4.0-beta.13` Swagger provenance and why it cannot be used with the TypeSpec `@@scope` design.
+1. Record the current `1.5.0` package and its TypeSpec provenance.
 2. Resolve the `1.5.0` .NET SDK release tag and commit, `tsp-location.yaml`, specification SHA, API version, and emitter package manifest.
 3. Pin Node, the dependency lock, emitter options, temporary project template, consuming project settings, runtime dependencies, and all other inputs in the complete generation contract.
 4. Sparse-checkout only the DocumentDB directory and declared or validated dependencies.
@@ -562,7 +521,7 @@ These changes should happen after the command and file contracts are stable, not
 6. Generate the complete standalone SDK twice from clean directories and compare outputs.
 7. Compile the existing Cosmos area against the full generated SDK.
 8. Run focused request-behavior checks against the full baseline.
-9. Record all source changes needed for the `1.4.0-beta.13` to `1.5.0` transition separately.
+9. Confirm that no package-version migration is mixed into projection behavior.
 
 Exit criterion: the complete input identity reproduces the full SDK without unexplained differences, and existing Cosmos management behavior compiles and passes focused checks against it.
 
@@ -571,7 +530,9 @@ Exit criterion: the complete input identity reproduces the full SDK without unex
 1. Implement the strict hierarchy validator contract and its independent negative fixtures before relying on hierarchy results.
 2. Use a reviewed static inventory for the existing Cosmos usage.
 3. Confirm the direct operations:
+   - `Microsoft.DocumentDB.DatabaseAccounts.get`;
    - `Microsoft.DocumentDB.DatabaseAccounts.list`;
+   - `Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup`; and
    - `Microsoft.DocumentDB.DatabaseAccounts.listKeys`.
 4. Resolve the database-account resource and all its operations from the pinned full code model.
 5. Produce a temporary specification working copy and scope out unrelated operations.
@@ -598,17 +559,18 @@ Exit criterion: every Cosmos SDK symbol has a reviewed operation or reachable-mo
 
 ### Phase 4: Integrate and validate behavior
 
-1. Include the projected generated and shared source directly in `Azure.Mcp.Tools.Cosmos.csproj` and remove its normal service-package reference.
-2. Ensure the released package and generated source are never compiled together.
-3. Build the Cosmos project and solution normally against only the projected source.
-4. Run Cosmos unit tests.
-5. Add mocked transport tests for:
+1. Inventory all package consumers; for Cosmos DB this includes the Cosmos and Quota tools.
+2. Compile the combined account-and-location projection once and reference it from both consumers.
+3. Remove the service-package reference from both projects and ensure the released package is absent from the server dependency graph.
+4. Build the Cosmos and Quota projects and solution normally against only the projection.
+5. Run Cosmos and Quota unit tests.
+6. Add mocked transport tests for:
    - subscription-level account listing, including paging; and
    - account key retrieval, including request path and API version.
-6. Run the relevant Cosmos live scenarios when credentials and resources are available.
-7. Publish and execute the dedicated Native AOT smoke-test application against the projected management SDK for the declared RID coverage.
-8. Confirm the smoke test roots account listing, paging, key retrieval, and required serialization paths, and that the projected SDK participates in native compilation.
-9. Keep the existing native CLI build as a separate check, explicitly noting that it excludes Cosmos.
+7. Run the relevant Cosmos and Quota live scenarios when credentials and resources are available.
+8. Publish and execute the dedicated Native AOT smoke-test application against the projected management SDK for the declared RID coverage.
+9. Confirm the smoke test roots account listing, paging, key retrieval, location listing, and required serialization paths, and that the projected SDK participates in native compilation.
+10. Keep the existing native CLI build as a separate check, explicitly noting its Cosmos coverage.
 
 Exit criterion: existing MCP Cosmos commands preserve their observable management-plane behavior, and the dedicated executable proves the projected management SDK is AOT-safe for its declared coverage.
 
@@ -616,14 +578,14 @@ Exit criterion: existing MCP Cosmos commands preserve their observable managemen
 
 Use identical production publish options, RIDs, trimming, AOT, and compression settings to compare:
 
-1. current `main`, which uses `Azure.ResourceManager.CosmosDB` 1.4.0-beta.13; and
-2. the projected 1.5.0 generated source compiled directly into the Cosmos area.
+1. current `microsoft/mcp` `main`, which uses `Azure.ResourceManager.CosmosDB` 1.5.0; and
+2. the projected 1.5.0 account-and-location implementation shared by the Cosmos and Quota tools, with the released package absent.
 
 The full generated SDK and released 1.5.0 package are temporary migration and validation inputs. They are not shipped states and are not size baselines.
 
 For the two product configurations, report absolute bytes and percentage deltas for:
 
-- the Cosmos service footprint: `AzureMcp.Cosmos.dll` plus the management package assembly on current main, versus the merged `AzureMcp.Cosmos.dll` after projection;
+- the affected service footprint: Cosmos and Quota tool assemblies plus the management package assembly on current main, versus those tool assemblies plus the single shared projection after migration;
 - self-contained publish directory bytes for supported RIDs;
 - compressed distribution package bytes; and
 - native/AOT artifact bytes where the product includes Cosmos.

@@ -6,7 +6,7 @@
 
 ## Status
 
-Initial feasibility, build, hierarchy, Linux Native AOT, and `linux-x64` product comparison completed. Compared with current `main`, the projection substantially reduces both the raw and compressed Cosmos service footprint and reduces the complete production distribution. It meets the percentage-based POC size criteria.
+Initial feasibility, build, hierarchy, and Linux Native AOT validation completed after moving the POC to `microsoft/mcp`. The generated account-management source is substantially smaller than the released Cosmos management dependency, but the complete product is not smaller yet because `Azure.Mcp.Tools.Quota` also references `Azure.ResourceManager.CosmosDB`. The package therefore remains in the server output alongside the projected source.
 
 ## Pinned inputs
 
@@ -36,25 +36,27 @@ The SDK source checkout includes only the released Cosmos custom C# source requi
 
 Direct MCP roots:
 
+- `Microsoft.DocumentDB.DatabaseAccounts.get`
 - `Microsoft.DocumentDB.DatabaseAccounts.list`
+- `Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup`
 - `Microsoft.DocumentDB.DatabaseAccounts.listKeys`
 
-Both roots belong to `Microsoft.DocumentDB/databaseAccounts`. Applying the all-operations-for-selected-resource policy produced:
+The four account roots belong to `Microsoft.DocumentDB/databaseAccounts`; Quota's location-list root belongs to `Microsoft.DocumentDB/locations`. Applying the all-operations-for-selected-resource policy produced:
 
 | Metric | Full | Projected |
 | --- | ---: | ---: |
-| ARM resources | 46 | 1 |
-| Resource operations | 233 | 32 |
+| ARM resources | 46 | 2 |
+| Resource operations | 233 | 34 |
 | Non-resource operations | 3 | 0 |
-| Operations scoped out | — | 204 |
-| Generated C# files | 1,147 | 414 |
-| Generated C# bytes | 9,461,426 | 2,837,734 |
+| Operations scoped out | — | 202 |
+| Generated C# files | 1,147 | 427 |
+| Generated C# bytes | 9,461,426 | 2,935,928 |
 
-The emitter reported 25 `resource-model-not-associated-with-arm-resource` warnings for models whose operations were deliberately scoped out. They were non-blocking. The projected code model contains exactly one resource and the expected 32 operations.
+The emitter reported 24 `resource-model-not-associated-with-arm-resource` warnings for models whose operations were deliberately scoped out. They were non-blocking. The projected code model contains exactly the account and location resources and their expected 34 operations.
 
 ## Hierarchy validation
 
-The projected `Microsoft.DocumentDB/databaseAccounts` resource retained its exact:
+The projected `Microsoft.DocumentDB/databaseAccounts` and `Microsoft.DocumentDB/locations` resources retained their exact:
 
 - resource type;
 - resource ID pattern;
@@ -83,7 +85,7 @@ Temporary full generated 1.5.0 SDK build
 Temporary projected generated 1.5.0 SDK build
 Azure.Mcp.Tools.Cosmos build with full generated source
 Azure.Mcp.Tools.Cosmos build with projected generated source
-Complete AzureMcp.sln build against the projection
+Complete Microsoft.Mcp.slnx build against the projection
 Cosmos unit tests: 3 passed
 ```
 
@@ -103,35 +105,37 @@ A `linux-x64` Native AOT publish and execution passed. Its output directory was 
 
 ## Service assembly sizes
 
-Generated source is compiled directly into `Azure.Mcp.Tools.Cosmos.dll`. Package configurations therefore include both the area assembly and released management assembly, while generated configurations contain one merged area assembly.
+Generated source is compiled directly into `Azure.Mcp.Tools.Cosmos.dll`. The current package-based Cosmos tool footprint is the tool assembly plus the released management assembly.
 
 | Configuration | Service assembly bytes | Individually compressed bytes |
 | --- | ---: | ---: |
-| Current main: 1.4.0-beta.13 package plus Cosmos area | 3,618,352 | 818,308 |
-| Projected 1.5.0 source in Cosmos area | 1,103,360 | 293,305 |
+| Current `microsoft/mcp` main: Cosmos tool plus 1.5.0 package | 3,504,992 | 806,757 |
+| Cosmos tool with projected account-and-location source | 1,213,440 | 326,010 |
 
-The projected implementation reduces the Cosmos service footprint by 2,514,992 bytes, or 69.51%, uncompressed. Individually compressed, it is 525,003 bytes, or 64.16%, smaller. Both exceed the 50% POC thresholds.
+If the released management assembly can be removed from the complete server dependency graph, the projected Cosmos tool footprint is 2,291,552 bytes, or 65.38%, smaller uncompressed and 480,747 bytes, or 59.59%, smaller after individual compression. Both exceed the 50% POC thresholds.
 
 The Cosmos project sets `DebugType=none` and `DebugSymbols=false` for Release builds, so it does not publish a PDB containing generated symbols. Before this correction, generated PDBs obscured the service-only and whole-distribution comparisons.
 
 ## `linux-x64` product comparison
 
-Both configurations used a Release, self-contained, untrimmed `linux-x64` CLI publish and identical gzip compression.
+Both configurations used a Release, self-contained, untrimmed `linux-x64` server publish and identical gzip compression.
 
 | Product configuration | Publish bytes | Compressed bytes |
 | --- | ---: | ---: |
-| Current main with 1.4.0-beta.13 package | 264,782,113 | 111,719,121 |
-| Projected 1.5.0 source | 260,873,602 | 110,413,764 |
-| Reduction | 3,908,511 bytes (1.476%) | 1,305,357 bytes (1.168%) |
+| Current `microsoft/mcp` main | 308,284,413 | 121,247,863 |
+| Account-and-location projection branch | 309,300,450 | 121,476,909 |
+| Current branch change | +1,016,037 bytes | +229,046 bytes |
 
-The whole-product percentage is necessarily smaller because Cosmos management is one component of an approximately 263 MB self-contained application. Product-level absolute savings should accumulate as additional management SDKs are projected.
+The branch is currently larger because it adds projected source but cannot remove `Azure.ResourceManager.CosmosDB.dll`: `Azure.Mcp.Tools.Quota` still uses `SubscriptionResource.GetCosmosDBLocations()` for DocumentDB region discovery. Product savings must not be claimed until the operation inventory includes this consumer and the package is removed from both tool projects.
 
 ## Remaining validation
 
-Before generalizing the POC:
+Before evaluating product savings or generalizing the POC:
 
-1. repeat production measurements for the other supported RIDs;
-2. add automated mocked request tests to the normal test suite, beyond the AOT smoke executable;
-3. implement semantic SDK-member discovery for adding a previously excluded resource;
-4. complete content-addressed full-SDK cache reuse and invalidation tests; and
-5. rerun `Build-Local.ps1 -VerifyNpx` after the unrelated `NU1902` restore gate is resolved or waived.
+1. choose a sharing model that allows Cosmos and Quota to consume one generated implementation without duplicating it or retaining the released package;
+2. remove `Azure.ResourceManager.CosmosDB` from the complete server dependency graph and repeat the current-main comparison;
+3. repeat production measurements for the other supported RIDs;
+4. add automated mocked request tests to the normal test suite, beyond the AOT smoke executable;
+5. implement semantic SDK-member discovery for adding a previously excluded resource;
+6. complete content-addressed full-SDK cache reuse and invalidation tests; and
+7. run the current repository's required validation commands.

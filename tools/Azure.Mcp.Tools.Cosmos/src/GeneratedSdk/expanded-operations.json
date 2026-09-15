@@ -198,6 +198,24 @@
           "reason": "Complete selected resource"
         }
       ]
+    },
+    {
+      "resourceType": "Microsoft.DocumentDB/locations",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.DocumentDB.LocationGetResults.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/locations/{location}",
+          "reason": "Complete selected resource"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.LocationGetResults.list",
+          "kind": "List",
+          "operationPath": "/subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/locations",
+          "reason": "Complete selected resource"
+        }
+      ]
     }
   ],
   "nonResourceOperations": []
