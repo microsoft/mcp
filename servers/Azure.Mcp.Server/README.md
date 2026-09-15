@@ -1112,6 +1112,10 @@ Example prompts that generate Azure CLI commands:
 * "Check authentication and connectivity for my ADME endpoint and data partition"
 * "Get an ADME schema by kind"
 * "List shared Well schemas from my ADME data partition"
+* "Find ADME records matching an indexed-field Lucene query across multiple or wildcard kinds"
+* "Aggregate ADME search results by kind and sort them by id"
+* "Start a point-in-time ADME search snapshot to process more than 10,000 records"
+* "Continue an ADME snapshot search from its cursor"
 * "Fetch multiple OSDU records by id from my ADME data partition"
 * "Get an OSDU record by id or version from my ADME data partition"
 * "List OSDU record ids for a kind in my ADME data partition"
@@ -1210,9 +1214,13 @@ Example prompts that generate Azure CLI commands:
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
-* "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
-* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'
-* Create a 4 TIB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'
+* "How many IP addresses do I need to create a 128 TiB cluster of AMLFS 500?"
+* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'"
+* "Create a 4 TiB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'"
+* "Create an expansion job to increase the storage capacity of my AMLFS filesystem 'my-filesystem' to 128 TiB in resource group 'my-rg'"
+* "Get the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
+* "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
+* "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
 ### 📊 Azure Monitor
 
@@ -1304,6 +1312,8 @@ Example prompts that generate Azure CLI commands:
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Check whether recovery plan 'my-recovery-plan' and its protected resources are ready for recovery operations in service group 'my-service-group'"
+* "Validate which resources in recovery plan 'my-recovery-plan' in service group 'my-service-group' can fail over from 'eastus'"
 * "List all runs of drill 'my-drill' in service group 'my-service-group'"
 * "Get drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "List all resources of drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
@@ -1311,6 +1321,13 @@ Example prompts that generate Azure CLI commands:
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "List all resilience drills in service group 'my-service-group'"
+* "List all resources targeted by drill 'my-drill' in service group 'my-service-group'"
+* "Get drill resource 'my-resource' for drill 'my-drill' in service group 'my-service-group'"
+* "Start resilience drill 'my-drill' in service group 'my-service-group' in Failover mode"
+* "Run a TestFailover for resilience drill 'my-drill' in service group 'my-service-group'"
+* "End resilience drill 'my-drill' in service group 'my-service-group' and attest it as Success with notes 'Validation completed'"
+* "Stop the running resilience drill 'my-drill' in service group 'my-service-group' and attest it as Failed"
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
@@ -1364,7 +1381,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
-- **Azure Data Manager for Energy** - Health checks and OSDU schema, record retrieval, and version history operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema, record search, retrieval, and version history operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
@@ -1379,7 +1396,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
 - 🚀 **Azure Managed Grafana** - Monitoring dashboards
-- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
+- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
@@ -1389,7 +1406,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, drills, drill resources, drill runs, and drill run resources
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
