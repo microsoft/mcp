@@ -23,13 +23,21 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | adme_storage_record_fetch | Fetch ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_fetch | Fetch the full content of ADME records <record-id-1>, <record-id-2>, and <record-id-3> in one batch from endpoint <endpoint> and data partition <data-partition> | none |
 | adme_storage_record_fetch | Fetch only attributes data.Name and data.Description for ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch ADME record <record-id> with frame-of-reference conversion and report its conversion status and errors from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get a OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get version <record-version> of OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record <record-id> at endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | List ADME records of kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | List the first 25 ADME record IDs for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | Continue listing ADME record IDs for kind <authority:source:entity-type:version> using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_version_list | List all versions of ADME record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter <lucene-query> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records matching <lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint <endpoint> in data partition <data-partition> | none |
 
 ## Azure Advisor
 
@@ -254,10 +262,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
+| azurebackup_container_get | Look up storage account <storage_account_name> in RSV vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_container_get | Is container <container_name> registered in vault <vault_name> under resource group <resource_group>? | investigation-required |
+| azurebackup_container_get | Get the RSV protection container details for storage account <storage_account_name> in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_container_refresh | Refresh backup containers on vault <vault_name> in resource group <resource_group> to discover new Azure File share storage accounts | investigation-required |
 | azurebackup_container_refresh | Trigger container discovery on Recovery Services vault <vault_name> under resource group <resource_group> so the vault picks up newly authorized storage accounts | investigation-required |
 | azurebackup_container_refresh | Kick off backup container refresh on vault <vault_name> in resource group <resource_group> before registering my storage account for Azure Files backup | investigation-required |
 | azurebackup_container_refresh | Refresh Azure VM backup containers on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_container_register | Register storage account <storage_account> with Recovery Services vault <vault_name> in resource group <resource_group> as an Azure File share backup container | investigation-required |
+| azurebackup_container_register | Onboard my storage account <storage_account> for Azure Files backup on vault <vault_name> under resource group <resource_group> without acquiring a storage account lock | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on GRS-enabled Recovery Services vault <vault_name> in resource group <resource_group> with vault-type rsv | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for GRS-enabled DPP backup vault <vault_name> under resource group <resource_group> with vault-type dpp | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |
@@ -285,6 +298,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protectableitem_inquire | Inquire the registered storage account <storage_account> on vault <vault_name> in resource group <resource_group> to discover Azure File shares available for backup | investigation-required |
+| azurebackup_protectableitem_inquire | Discover file shares in backup container <container_name> on Recovery Services vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_container_list-available | List storage accounts available for registration as Azure File share backup containers in vault <vault_name> and resource group <resource_group> | investigation-required |
@@ -782,6 +797,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
 
+## Azure IoT Operations
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iotoperations_instance_get | Get details for Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_get | Show the Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_list | List all Azure IoT Operations instances in my subscription |
+| iotoperations_instance_list | What Azure IoT Operations instances do I have in resource group <resource_group_name>? |
+
 ## Azure Key Vault
 
 | Tool Name | Test Prompt | Interaction |
@@ -1048,6 +1072,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | role_assignment_list | List all available role assignments in my subscription | none |
 | role_assignment_list | Show me the available role assignments in my subscription | none |
+| role_assignment_list | List the role assignments at scope /providers/Microsoft.Management/managementGroups/<management-group> | none |
+| role_assignment_list | List the role assignments at scope /subscriptions/<subscription>/resourceGroups/<resource-group> | none |
 
 ## Azure Redis
 
@@ -1419,6 +1445,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storagesync_cloudendpoint_delete | Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name> | clarification-required |
 | storagesync_cloudendpoint_get | Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name> | none |
 | storagesync_cloudendpoint_get | List all cloud endpoints in sync group <syncgroup-name> | none |
+| storagesync_cloudendpoint_update | Update cloud endpoint <endpoint-name> in sync group <syncgroup-name> to enumerate Azure file share changes every 7 days | none |
 | storagesync_serverendpoint_create | Create a new server endpoint on server <server-name> pointing to local path <local-path> in sync group <syncgroup-name> | none |
 | storagesync_serverendpoint_delete | Delete the server endpoint <endpoint-name> from sync group <syncgroup-name> | none |
 | storagesync_serverendpoint_get | Get the details of server endpoint <endpoint-name> in sync group <syncgroup-name> | none |

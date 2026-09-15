@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -16,7 +14,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     Id = "ef27bda9-8a1f-4288-b68b-12308ab8e607",
     Name = "create",
     Title = "Create Key Vault Key",
-    Description = "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM (RSA-HSM and EC-HSM require a premium SKU vault). Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.",
+    Description = "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM (RSA-HSM and EC-HSM require a premium SKU vault). Required: --vault <vault>, --key <key> --key-type <key-type>. Optional: --tenant <tenant>. Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
@@ -24,8 +22,8 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Key;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<KeyCreateOptions, KeyDetails>(subscriptionResolver)
+public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<KeyCreateOptions, KeyDetails>
 {
     private readonly ILogger<KeyCreateCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
@@ -38,7 +36,6 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger, IKeyVault
                 options.Vault,
                 options.Key,
                 options.KeyType,
-                options.Subscription!,
                 options.Tenant,
                 cancellationToken);
 

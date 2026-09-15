@@ -78,9 +78,13 @@ public abstract class AdmeRecordedTestsBase(
         string tool,
         Dictionary<string, object?> arguments)
     {
-        var result = await CallToolAsync(tool, arguments);
-        Assert.NotNull(result);
-        return result.Value;
+        var response = await CallToolAsync(tool, arguments);
+        Assert.NotNull(response);
+
+        var correlationId = response.Value.GetProperty("correlationId").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(correlationId));
+
+        return response.Value.GetProperty("result");
     }
 
     protected async Task<bool> CallToolReturnsErrorAsync(
