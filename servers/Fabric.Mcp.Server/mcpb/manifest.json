@@ -4,7 +4,7 @@
   "display_name": "Microsoft Fabric MCP Server",
   "version": "0.0.0-beta.7",
   "description": "Provides Model Context Protocol (MCP) integration and tooling for Microsoft Fabric.",
-  "long_description": "A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.",
+  "long_description": "A local-first Model Context Protocol (MCP) server that provides AI agents with Microsoft Fabric API documentation, item definitions, best practices, and tools for live Fabric operations. API documentation and best-practices tools work offline. OneLake, core Fabric, and Data Factory tools use configured credentials to access your Fabric environment.",
   "author": {
     "name": "Microsoft",
     "url": "https://www.microsoft.com"
