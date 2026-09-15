@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Name = "create",
     Title = "Create Incident",
     Description = "Create an incident investigation thread for an agent.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

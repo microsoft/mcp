@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added Azure Data Manager for Energy tools to list, fetch, and retrieve OSDU records and record versions."

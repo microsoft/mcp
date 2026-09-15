@@ -38,7 +38,7 @@ internal class Program
     private static readonly string ServerAreaName =
         Array.Find(Areas, static a => a is Microsoft.Mcp.Core.Areas.Server.ServerSetup)?.Name ?? "server";
 
-    private static async Task<int> Main(string[] args)
+    internal static async Task<int> Main(string[] args)
     {
         try
         {
@@ -169,7 +169,7 @@ internal class Program
         }
     }
 
-    private static IAreaSetup[] RegisterAreas()
+    internal static IAreaSetup[] RegisterAreas()
     {
 
         return [
@@ -213,6 +213,7 @@ internal class Program
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
             new Azure.Mcp.Tools.Insights.InsightsSetup(),
             new Azure.Mcp.Tools.IoTHub.IoTHubSetup(),
+            new Azure.Mcp.Tools.IoTOperations.IoTOperationsSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),
             new Azure.Mcp.Tools.LoadTesting.LoadTestingSetup(),

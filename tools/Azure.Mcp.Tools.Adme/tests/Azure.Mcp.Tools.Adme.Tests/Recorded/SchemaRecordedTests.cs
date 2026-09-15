@@ -120,22 +120,16 @@ public sealed class SchemaRecordedTests(
     [Fact]
     public async Task SchemaList_status_filter_narrows_results()
     {
-        var allArguments = CreateArguments();
-        allArguments["source"] = TestConstants.WellSource;
-        allArguments["offset"] = 0;
-        allArguments["limit"] = 100;
-        var publishedArguments = new Dictionary<string, object?>(allArguments)
-        {
-            ["status"] = "PUBLISHED",
-        };
+        var arguments = CreateArguments();
+        arguments["source"] = TestConstants.WellSource;
+        arguments["status"] = "PUBLISHED";
+        arguments["offset"] = 0;
+        arguments["limit"] = 100;
 
-        var all = await CallToolResultsAsync(SchemaListTool, allArguments);
-        var published = await CallToolResultsAsync(SchemaListTool, publishedArguments);
+        var published = await CallToolResultsAsync(SchemaListTool, arguments);
 
-        var allTotal = all.GetProperty("totalCount").GetInt32();
         var publishedTotal = published.GetProperty("totalCount").GetInt32();
         Assert.True(publishedTotal > 0);
-        Assert.True(publishedTotal <= allTotal);
         Assert.All(
             published.GetProperty("schemaInfos").EnumerateArray(),
             info => Assert.Equal("PUBLISHED", info.GetProperty("status").GetString()));

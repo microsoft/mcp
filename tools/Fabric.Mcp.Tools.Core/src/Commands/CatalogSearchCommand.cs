@@ -15,6 +15,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Name = "search-catalog",
     Title = "Search Catalog",
     Description = "Searches the Microsoft Fabric OneLake catalog for items matching the specified criteria. Supports cross-workspace search over catalog metadata and returns results filtered to entries the calling principal is authorized to access. Use this when the user wants to discover or find Fabric items (Lakehouse, Report, Notebook, and other item types) across workspaces by name, description, or workspace name. Optionally filter by item type.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

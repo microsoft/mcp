@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options;
 
 /// <summary>
-/// Configures the ADME health check target.
+/// Configures the health check target.
 /// </summary>
 public sealed class HealthCheckOptions
 {

@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
         Returns the created Load Testing resource. This creates the resource in Azure only. It does not create any test plan or test run. 
         Once the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

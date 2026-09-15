@@ -1,0 +1,4 @@
+pr: 3621
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed MySQL server parameter updates failing when changing a system-default value by setting the configuration source to user-override."

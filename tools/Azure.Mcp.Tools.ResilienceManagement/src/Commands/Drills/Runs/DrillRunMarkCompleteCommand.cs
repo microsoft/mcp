@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
         proceed. Provide the drill run stage to complete (for example FaultInjection). It starts the operation and returns
         the operation ID.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

@@ -694,6 +694,8 @@ public class StorageAccountListOptions : ISubscriptionOption
 
 ### 4. Command Class
 
+All `CommandMetadata` properties are required. Choose `OperationPlane` to match the APIs the tool acts against.
+
 **CRITICAL: Using Statements**
 Ensure all necessary using statements are included:
 
@@ -718,6 +720,7 @@ using Microsoft.Mcp.Core.Models.Command;
           Required options:
         - list required options
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,    // Set to true for tools that modify resources
     OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
     Idempotent = true,      // Set to false for tools that are not idempotent

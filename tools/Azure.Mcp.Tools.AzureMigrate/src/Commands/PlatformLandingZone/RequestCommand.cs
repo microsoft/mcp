@@ -64,6 +64,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         **IMPORTANT:** When using 'update', collect ALL parameters from the user in ONE call.
         Show them the defaults and ask which ones they want to change.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

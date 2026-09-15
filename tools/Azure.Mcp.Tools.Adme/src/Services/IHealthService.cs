@@ -13,7 +13,7 @@ public interface IHealthService
     /// <summary>
     /// Checks authentication and connectivity for an ADME instance.
     /// </summary>
-    Task<HealthCheckResult> CheckHealthAsync(
+    Task<AdmeResponse<HealthCheckResult>> CheckHealthAsync(
         string endpoint,
         string dataPartition,
         string? tenant,

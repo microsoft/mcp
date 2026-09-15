@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
     Name = "list",
     Title = "List Common Prompts",
     Description = "List all common prompts available on an SRE Agent. Returns a collection of all registered prompt names and descriptions.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

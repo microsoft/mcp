@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
         the full details of that assignment (id, name, goal assignment type, goal template id, and provisioning
         state). Omit the name to list all goal assignments in the service group, returning only their id and name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

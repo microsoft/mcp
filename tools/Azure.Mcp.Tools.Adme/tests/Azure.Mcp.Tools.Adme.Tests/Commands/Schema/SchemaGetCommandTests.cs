@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure;
 using Azure.Identity;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -26,7 +27,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
                 TestConstants.WellKind,
                 TestConstants.Tenant,
                 Arg.Any<CancellationToken>())
-            .Returns(schema);
+            .Returns(new AdmeResponse<JsonElement>(schema, "test-correlation-id"));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -34,8 +35,9 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
             "--kind", TestConstants.WellKind,
             "--tenant", TestConstants.Tenant);
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.JsonElement);
-        Assert.Equal("Well", result.GetProperty("title").GetString());
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseJsonElement);
+        Assert.Equal("Well", result.Result.GetProperty("title").GetString());
+        Assert.Equal("test-correlation-id", result.CorrelationId);
     }
 
     [Theory]

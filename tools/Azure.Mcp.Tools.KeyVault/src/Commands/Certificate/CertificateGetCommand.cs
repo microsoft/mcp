@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     Name = "get",
     Title = "Get Key Vault Certificate",
     Description = "List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

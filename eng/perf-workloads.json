@@ -1,0 +1,166 @@
+{
+  "catalog_version": "1.0.0",
+  "description": "Versioned, machine-readable definitions of Azure MCP Server performance workloads and the controlled-environment and statistical rules they run under (issue #3120). Bump catalog_version and record the reason whenever a workload definition changes, since a change can shift baselines.",
+  "environment_requirements": {
+    "runner": "Dedicated or sufficiently isolated runner. Baseline-quality runs must not share the host with other CI work; developer laptops are for exploration only.",
+    "runtime": "The .NET SDK pinned by global.json; record the exact runtime in each result's environment block.",
+    "build_configuration": "Release.",
+    "network": "Loopback only for server-overhead workloads. The measured path must exclude Azure and network time (deterministic no-op / tools/list).",
+    "configuration": "Server launched with the documented args per workload; no unrelated environment variables set."
+  },
+  "statistical_rules": {
+    "warmup": "Every scenario performs warm-up iterations that are discarded before measurement.",
+    "min_repetitions": 10,
+    "percentiles": ["p50", "p95", "p99"],
+    "reported_metrics": ["p50", "p95", "p99", "throughput", "cpu", "memory"],
+    "comparison": "Compare current vs approved baseline as ratios. Changes below 5% are ignored, changes above 5% warn, and budget breaches block. Prefer median/percentiles over the mean for latency.",
+    "notes": "Micro-benchmarks additionally report BenchmarkDotNet StdDev / confidence intervals; the host environment (OS, CPU, runtime) is captured in the BenchmarkDotNet report header."
+  },
+  "baseline_qualification": {
+    "min_successful_runs": 10,
+    "min_span_days": 14,
+    "controlled_runner_required": true,
+    "auto_update_after_regression": false,
+    "replacement_requires": ["linked issue", "measured impact", "owner approval"]
+  },
+  "workloads": [
+    {
+      "id": "startup-cli-cold",
+      "issue": 3118,
+      "harness": "eng/scripts/Test-StartupPerformance.ps1",
+      "transport": "cli",
+      "server_mode": null,
+      "description": "CLI cold start: 'azmcp tools list' (process spawn to exit).",
+      "warmup": "First run reported as cold; the remainder are warm.",
+      "repetitions": 10,
+      "metrics": ["p50", "p95", "p99", "cold_ms", "warm_median_ms"]
+    },
+    {
+      "id": "startup-stdio-default",
+      "issue": 3118,
+      "harness": "eng/scripts/Test-StartupPerformance.ps1",
+      "transport": "stdio",
+      "server_mode": "default",
+      "description": "MCP stdio startup to a usable tool list: 'server start' then initialize + tools/list (~71 tools).",
+      "warmup": "First run reported as cold; the remainder are warm.",
+      "repetitions": 10,
+      "metrics": ["p50", "p95", "p99", "full_schema_tokens_exact", "full_schema_serialize_ms"]
+    },
+    {
+      "id": "startup-stdio-namespace",
+      "issue": 3118,
+      "harness": "eng/scripts/Test-StartupPerformance.ps1",
+      "transport": "stdio",
+      "server_mode": "namespace",
+      "description": "MCP stdio startup with 'server start --mode namespace'.",
+      "warmup": "First run reported as cold; the remainder are warm.",
+      "repetitions": 10,
+      "metrics": ["p50", "p95", "p99"]
+    },
+    {
+      "id": "startup-stdio-all",
+      "issue": 3118,
+      "harness": "eng/scripts/Test-StartupPerformance.ps1",
+      "transport": "stdio",
+      "server_mode": "all",
+      "description": "MCP stdio startup with 'server start --mode all' (full tool surface, ~500+ tools).",
+      "warmup": "First run reported as cold; the remainder are warm.",
+      "repetitions": 10,
+      "metrics": ["p50", "p95", "p99", "full_schema_tokens_exact", "full_schema_serialize_ms"]
+    },
+    {
+      "id": "startup-http-default",
+      "issue": 3118,
+      "harness": "eng/scripts/Test-StartupPerformance.ps1",
+      "transport": "http",
+      "server_mode": "default",
+      "description": "MCP remote HTTP startup: initialize + tools/list over the HTTP transport, plus server readiness time.",
+      "warmup": "First run reported as cold; the remainder are warm.",
+      "repetitions": 10,
+      "metrics": ["p50", "p95", "p99", "readiness_ms"]
+    },
+    {
+      "id": "discovery-scaling",
+      "issue": 3118,
+      "harness": "ToolSurfaceScalingBenchmarks (BenchmarkDotNet)",
+      "transport": "in-process",
+      "server_mode": null,
+      "description": "tools/list serialization cost at current and projected tool counts.",
+      "tool_counts": [71, 250, 510, 1000],
+      "warmup": "BenchmarkDotNet warmup iterations.",
+      "repetitions": "BenchmarkDotNet default job (>=15 iterations).",
+      "metrics": ["mean", "allocated"]
+    },
+    {
+      "id": "dispatch-layers",
+      "issue": 3119,
+      "harness": "CommandDispatchBenchmarks (BenchmarkDotNet)",
+      "transport": "in-process",
+      "server_mode": null,
+      "description": "Per-layer command dispatch overhead (routing, parse, bind, validate, serialize, execute frame, full dispatch) on a deterministic no-op command; excludes Azure.",
+      "warmup": "BenchmarkDotNet warmup iterations.",
+      "repetitions": "BenchmarkDotNet default job (>=15 iterations).",
+      "metrics": ["mean", "allocated"]
+    },
+    {
+      "id": "dispatch-transport-stdio",
+      "issue": 3119,
+      "harness": "eng/scripts/Measure-DispatchOverhead.ps1",
+      "transport": "stdio",
+      "server_mode": "default",
+      "description": "tools/list request overhead over stdio.",
+      "warmup": "PERF_DISPATCH_WARMUP calls (default 20), not counted.",
+      "repetitions": 200,
+      "metrics": ["p50", "p95", "p99"]
+    },
+    {
+      "id": "dispatch-transport-http",
+      "issue": 3119,
+      "harness": "eng/scripts/Measure-DispatchOverhead.ps1",
+      "transport": "http",
+      "server_mode": "default",
+      "description": "tools/list request overhead over the HTTP transport; the http-minus-stdio p50 delta isolates transport cost.",
+      "warmup": "PERF_DISPATCH_WARMUP calls (default 20), not counted.",
+      "repetitions": 200,
+      "metrics": ["p50", "p95", "p99", "transport_overhead_tools_list_p50"]
+    },
+    {
+      "id": "resource-default",
+      "issue": 3121,
+      "harness": "eng/scripts/Measure-ResourceUsage.ps1",
+      "transport": "http",
+      "server_mode": "default",
+      "description": "CPU/memory/handle sampling across idle, startup, discovery, steady-state, and soak phases for the default tool surface.",
+      "phases": ["startup", "idle", "discovery", "steady_state", "soak"],
+      "concurrency": 4,
+      "warmup": "Soak analysis discards the first 25% of samples.",
+      "repetitions": "Continuous 100ms sampling per phase.",
+      "metrics": ["working_set_mb", "private_mb", "handles", "cpu_percent", "soak_slope"]
+    },
+    {
+      "id": "resource-all",
+      "issue": 3121,
+      "harness": "eng/scripts/Measure-ResourceUsage.ps1",
+      "transport": "http",
+      "server_mode": "all",
+      "description": "CPU/memory/handle sampling for the full tool surface.",
+      "phases": ["startup", "idle", "discovery", "steady_state", "soak"],
+      "concurrency": 4,
+      "warmup": "Soak analysis discards the first 25% of samples.",
+      "repetitions": "Continuous 100ms sampling per phase.",
+      "metrics": ["working_set_mb", "private_mb", "handles", "cpu_percent", "soak_slope"]
+    },
+    {
+      "id": "concurrency-sweep",
+      "issue": 3122,
+      "harness": "eng/scripts/Measure-ConcurrencyScaling.ps1",
+      "transport": "http",
+      "server_mode": "default",
+      "description": "Concurrency sweep over parallel MCP clients issuing tools/list; produces a saturation curve.",
+      "concurrency_levels": [1, 2, 4, 8, 16],
+      "warmup": "PERF_CONC_WARMUP_SECONDS per level (default 1s), not counted.",
+      "repetitions": "PERF_CONC_DURATION_SECONDS timed window per level (default 5s).",
+      "metrics": ["throughput_rps", "p50", "p95", "p99", "error_rate_pct", "scaling_efficiency", "tool_count_mismatches"]
+    }
+  ]
+}

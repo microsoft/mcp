@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
         information about a single policy including datasource types and protected items count.
         When omitted, lists all backup policies configured in the vault.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
