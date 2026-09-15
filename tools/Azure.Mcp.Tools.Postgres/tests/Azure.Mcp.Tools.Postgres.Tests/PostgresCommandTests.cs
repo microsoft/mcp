@@ -329,7 +329,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
-                { "user", AdminUsername },
             });
 
         // Should successfully retrieve server configurations
@@ -372,7 +371,6 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
-                { "user", AdminUsername },
                 { "param", "max_connections" }
             });
 
