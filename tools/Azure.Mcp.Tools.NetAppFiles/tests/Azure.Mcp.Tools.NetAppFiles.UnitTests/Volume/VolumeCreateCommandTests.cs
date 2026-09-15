@@ -1,0 +1,438 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.CommandLine;
+using System.Net;
+using System.Text.Json;
+using Microsoft.Mcp.Core.Options;
+using Azure.Mcp.Tools.NetAppFiles.Commands;
+using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
+using Azure.Mcp.Tools.NetAppFiles.Models;
+using Azure.Mcp.Tools.NetAppFiles.Services;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.NetAppFiles.Services.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests.Helpers;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using Xunit;
+
+namespace Azure.Mcp.Tools.NetAppFiles.UnitTests.Volume;
+
+public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeCreateCommand, INetAppFilesService>
+{
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        var command = Command.GetCommand();
+        Assert.Equal("create", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.NotEmpty(command.Description);
+    }
+
+    [Theory]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --vnet myvnet --subnet mysubnet --subscription sub123", true)]
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123 --service-level Premium", true)]
+    [InlineData("--pool mypool --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing account
+    [InlineData("--account myanfaccount --volume myvol --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing pool
+    [InlineData("--account myanfaccount --pool mypool --resource-group myrg --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing volume
+    [InlineData("--account myanfaccount --pool mypool --volume myvol --location eastus --creation-token myvol --usage-threshold 107374182400 --subnet-id /subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet --subscription sub123", false)] // Missing resource-group
+    [InlineData("", false)] // No parameters
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            var expectedVolume = new NetAppVolumeCreateResult(
+                Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvol",
+                Name: "myanfaccount/mypool/myvol",
+                Type: "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+                Location: "eastus",
+                ResourceGroup: "myrg",
+                ProvisioningState: "Succeeded",
+                ServiceLevel: "Premium",
+                UsageThreshold: 107374182400,
+                CreationToken: "myvol",
+                SubnetId: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+                ProtocolTypes: ["NFSv3"]);
+
+            Service.CreateVolume(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<NetAppVolumeCreateParameters>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+                .Returns(expectedVolume);
+        }
+
+        // Act
+        var response = await ExecuteCommandAsync(args);
+
+        // Assert
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (shouldSucceed)
+        {
+            Assert.NotNull(response.Results);
+            Assert.Equal("Success", response.Message);
+        }
+        else
+        {
+            Assert.Contains("required", response.Message.ToLower());
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CreatesVolume_Successfully()
+    {
+        // Arrange
+        var account = "myanfaccount";
+        var pool = "mypool";
+        var volume = "myvol";
+        var resourceGroup = "myrg";
+        var location = "eastus";
+        var subscription = "sub123";
+        var creationToken = "myvol";
+        long usageThreshold = 107374182400;
+        var subnetId = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet";
+
+        var expectedVolume = new NetAppVolumeCreateResult(
+            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}/volumes/{volume}",
+            Name: $"{account}/{pool}/{volume}",
+            Type: "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+            Location: location,
+            ResourceGroup: resourceGroup,
+            ProvisioningState: "Succeeded",
+            ServiceLevel: "Premium",
+            UsageThreshold: usageThreshold,
+            CreationToken: creationToken,
+            SubnetId: subnetId,
+            ProtocolTypes: ["NFSv3"]);
+
+        Service.CreateVolume(
+            Arg.Is(account), Arg.Is(pool), Arg.Is(volume),
+            Arg.Is(resourceGroup), Arg.Is(location), Arg.Is(subscription),
+            Arg.Is<NetAppVolumeCreateParameters>(p =>
+                p.CreationToken == creationToken &&
+                p.UsageThreshold == usageThreshold &&
+                p.SubnetId == subnetId),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedVolume));
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", account, "--pool", pool, "--volume", volume,
+            "--resource-group", resourceGroup, "--location", location,
+            "--creation-token", creationToken, "--usage-threshold", usageThreshold.ToString(),
+            "--subnet-id", subnetId, "--subscription", subscription
+        ]);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, NetAppFilesJsonContext.Default.VolumeCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Volume);
+        Assert.Equal($"{account}/{pool}/{volume}", result.Volume.Name);
+        Assert.Equal(location, result.Volume.Location);
+        Assert.Equal(resourceGroup, result.Volume.ResourceGroup);
+        Assert.Equal("Succeeded", result.Volume.ProvisioningState);
+        Assert.Equal("Premium", result.Volume.ServiceLevel);
+        Assert.Equal(usageThreshold, result.Volume.UsageThreshold);
+        Assert.Equal(creationToken, result.Volume.CreationToken);
+        Assert.Equal(subnetId, result.Volume.SubnetId);
+        Assert.NotNull(result.Volume.ProtocolTypes);
+        Assert.Contains("NFSv3", result.Volume.ProtocolTypes);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesException()
+    {
+        // Arrange
+        var expectedError = "Test error";
+
+        Service.CreateVolume(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123"
+        ]);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains(expectedError, response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesConflict()
+    {
+        // Arrange
+        Service.CreateVolume(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Volume already exists"));
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123"
+        ]);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("already exists", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesNotFound()
+    {
+        // Arrange
+        Service.CreateVolume(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found"));
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "nonexistentrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123"
+        ]);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not found", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    {
+        // Arrange
+        Service.CreateVolume(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123"
+        ]);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Authorization failed", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        // Arrange
+        Service.CreateVolume(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<NetAppVolumeCreateResult>(new Exception("Test error")));
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123"
+        ]);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Test error", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        // Arrange
+        var expectedVolume = new NetAppVolumeCreateResult(
+            Id: "/subscriptions/sub123/resourceGroups/myrg/providers/Microsoft.NetApp/netAppAccounts/myanfaccount/capacityPools/mypool/volumes/myvol",
+            Name: "myanfaccount/mypool/myvol",
+            Type: "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+            Location: "eastus",
+            ResourceGroup: "myrg",
+            ProvisioningState: "Succeeded",
+            ServiceLevel: "Ultra",
+            UsageThreshold: 214748364800,
+            CreationToken: "myvol",
+            SubnetId: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            ProtocolTypes: ["NFSv3", "NFSv4.1"]);
+
+        Service.CreateVolume(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<NetAppVolumeCreateParameters>(),
+            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedVolume));
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "214748364800",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123"
+        ]);
+
+        // Assert
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, NetAppFilesJsonContext.Default.VolumeCreateCommandResult);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Volume);
+        Assert.Equal("myanfaccount/mypool/myvol", result.Volume.Name);
+        Assert.Equal("eastus", result.Volume.Location);
+        Assert.Equal("myrg", result.Volume.ResourceGroup);
+        Assert.Equal("Succeeded", result.Volume.ProvisioningState);
+        Assert.Equal("Ultra", result.Volume.ServiceLevel);
+        Assert.Equal(214748364800, result.Volume.UsageThreshold);
+        Assert.Equal("myvol", result.Volume.CreationToken);
+        Assert.NotNull(result.Volume.ProtocolTypes);
+        Assert.Equal(2, result.Volume.ProtocolTypes.Count);
+        Assert.Contains("NFSv3", result.Volume.ProtocolTypes);
+        Assert.Contains("NFSv4.1", result.Volume.ProtocolTypes);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    {
+        // Arrange
+        var account = "myanfaccount";
+        var pool = "mypool";
+        var volume = "myvol";
+        var resourceGroup = "myrg";
+        var location = "eastus";
+        var subscription = "sub123";
+        var creationToken = "myvol";
+        long usageThreshold = 107374182400;
+        var subnetId = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet";
+
+        var expectedVolume = new NetAppVolumeCreateResult(
+            Id: $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.NetApp/netAppAccounts/{account}/capacityPools/{pool}/volumes/{volume}",
+            Name: $"{account}/{pool}/{volume}",
+            Type: "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+            Location: location,
+            ResourceGroup: resourceGroup,
+            ProvisioningState: "Succeeded",
+            ServiceLevel: "Premium",
+            UsageThreshold: usageThreshold,
+            CreationToken: creationToken,
+            SubnetId: subnetId,
+            ProtocolTypes: ["NFSv3"]);
+
+        Service.CreateVolume(
+            account, pool, volume, resourceGroup, location, subscription,
+            Arg.Is<NetAppVolumeCreateParameters>(p =>
+                p.CreationToken == creationToken &&
+                p.UsageThreshold == usageThreshold &&
+                p.SubnetId == subnetId &&
+                p.ServiceLevel == "Premium"),
+            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .Returns(expectedVolume);
+
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", account, "--pool", pool, "--volume", volume,
+            "--resource-group", resourceGroup, "--location", location,
+            "--creation-token", creationToken, "--usage-threshold", usageThreshold.ToString(),
+            "--subnet-id", subnetId, "--subscription", subscription,
+            "--service-level", "Premium"
+        ]);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateVolume(
+            account, pool, volume, resourceGroup, location, subscription,
+            Arg.Is<NetAppVolumeCreateParameters>(p =>
+                p.CreationToken == creationToken &&
+                p.UsageThreshold == usageThreshold &&
+                p.SubnetId == subnetId &&
+                p.ServiceLevel == "Premium"),
+            null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsNoWaitArgument()
+    {
+        // Arrange
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123", "--no-wait"
+        ]);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--no-wait", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsAcquirePolicyTokenArgument()
+    {
+        // Arrange
+        // Act
+        var response = await ExecuteCommandAsync([
+            "--account", "myanfaccount", "--pool", "mypool", "--volume", "myvol",
+            "--resource-group", "myrg", "--location", "eastus",
+            "--creation-token", "myvol", "--usage-threshold", "107374182400",
+            "--subnet-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/subnet",
+            "--subscription", "sub123", "--acquirePolicyToken"
+        ]);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--acquirePolicyToken", response.Message);
+    }
+}
