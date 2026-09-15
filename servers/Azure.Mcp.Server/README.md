@@ -1237,6 +1237,13 @@ Example prompts that generate Azure CLI commands:
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### 📊 Azure Quota
+
+* "Check resource usage and quota for 'Microsoft.App/containerApps' in region 'eastus'"
+* "Check current quota and usage for 'Microsoft.Compute/virtualMachines,Microsoft.Storage/storageAccounts' in 'westeurope'"
+* "List available regions for resource type 'Microsoft.Web/sites'"
+* "Find available regions for cognitive service model 'gpt-4o' of type 'Microsoft.CognitiveServices/accounts'"
+
 ### 🔧 Azure Resource Management
 
 * "List my resource groups"
