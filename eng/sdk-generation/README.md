@@ -14,9 +14,23 @@ The projection uses the version already pinned in `Directory.Packages.props`; th
 
 Complete provenance is recorded in `eng/generated/Azure.ResourceManager.CosmosDB/spec.lock.json`.
 
+## Onboard another service
+
+Initialize a projection without changing its centrally pinned package version:
+
+```pwsh
+./eng/sdk-generation/scripts/New-ServiceProjection.ps1 `
+  -Service example `
+  -PackageId Azure.ResourceManager.Example `
+  -SdkPath sdk/example/Azure.ResourceManager.Example `
+  -ConsumerProject tools/Azure.Mcp.Tools.Example/src/Azure.Mcp.Tools.Example.csproj
+```
+
+The command creates the service configuration, package-specific TypeSpec environment, generated project skeleton, shared source, and provenance lock. The agent then reviews `roots.json`, adds the shared project reference to each consumer, removes their released package references, and runs regeneration.
+
 ## Regeneration
 
-Install Node.js 24.15.0, then run:
+Each service has a tooling environment under `eng/sdk-generation/environments/<service>` so its compiler and emitter versions remain aligned with the pinned SDK release. For Cosmos, install Node.js 24.15.0, then run:
 
 ```pwsh
 ./eng/sdk-generation/scripts/Update-ServiceProjection.ps1 -Service cosmosdb
@@ -68,4 +82,4 @@ The shared project disables Release PDB output. The server dependency graph must
 
 ## Agent review boundary
 
-The deterministic scripts handle provenance, consumers, sparse checkout, full generation, hierarchy closure, scope generation, projected generation, and strict validation. Reviewed `roots.json` remains the input for semantic intent. A future Roslyn analyzer will propose root changes from SDK symbol usage and stop for ambiguous mappings rather than guessing.
+The deterministic scripts handle initialization, provenance, consumers, sparse checkout, full generation/cache reuse, minimum hierarchy closure, scope generation, projected generation, strict validation, consumer builds, and package-absence validation. Reviewed `roots.json` remains the input for semantic intent. A future Roslyn analyzer will propose root changes from SDK symbol usage and stop for ambiguous mappings rather than guessing.

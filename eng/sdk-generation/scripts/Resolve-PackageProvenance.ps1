@@ -92,6 +92,8 @@ $result = [ordered]@{
     tooling = [ordered]@{
         emitter = $emitterVersion
         compiler = $compilerVersion
+        dependencies = $emitterManifest.dependencies
+        devDependencies = $emitterManifest.devDependencies
     }
 }
 

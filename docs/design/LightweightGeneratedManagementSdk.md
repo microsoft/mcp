@@ -108,12 +108,16 @@ Missing relative imports fail with an actionable path instead of broadening the 
 
 ```text
 eng/sdk-generation/
-  .nvmrc
-  package.json
-  package-lock.json
   README.md
+  environments/
+    cosmosdb/
+      .nvmrc
+      package.json
+      package-lock.json
   services/cosmosdb.json
+  shared-source-files.json
   scripts/
+    New-ServiceProjection.ps1
     Resolve-PackageConsumers.ps1
     Resolve-PackageProvenance.ps1
     Resolve-MinimumHierarchyClosure.ps1

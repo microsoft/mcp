@@ -3,8 +3,9 @@
 
 [CmdletBinding()]
 param(
-    [ValidateSet('cosmosdb')]
-    [string] $Service = 'cosmosdb',
+    [Parameter(Mandatory)]
+    [ValidatePattern('^[a-z0-9][a-z0-9-]*$')]
+    [string] $Service,
     [string] $WorkDirectory,
     [switch] $SkipNpmInstall
 )
@@ -15,8 +16,9 @@ $configPath = Join-Path $repoRoot "eng/sdk-generation/services/$Service.json"
 $config = Get-Content $configPath -Raw | ConvertFrom-Json
 $output = Join-Path $repoRoot $config.outputDirectory
 $lock = Get-Content (Join-Path $output 'spec.lock.json') -Raw | ConvertFrom-Json
-$toolRoot = Join-Path $repoRoot 'eng/sdk-generation'
-if (-not $WorkDirectory) { $WorkDirectory = Join-Path $toolRoot ".work/$Service" }
+if (-not $config.toolDirectory) { throw "toolDirectory is required in $configPath" }
+$toolRoot = Join-Path $repoRoot $config.toolDirectory
+if (-not $WorkDirectory) { $WorkDirectory = Join-Path $repoRoot "eng/sdk-generation/.work/$Service" }
 $WorkDirectory = [IO.Path]::GetFullPath($WorkDirectory)
 
 function Invoke-CommandChecked {
@@ -48,7 +50,7 @@ function Initialize-SparseCheckout {
 }
 
 function Initialize-Project {
-    param([string] $Directory)
+    param([string] $Directory, [string] $ProjectFileName)
     New-Item (Join-Path $Directory 'src/Custom') -ItemType Directory -Force | Out-Null
     @'
 <Project>
@@ -73,7 +75,7 @@ function Initialize-Project {
     <PackageReference Include="Azure.ResourceManager" />
   </ItemGroup>
 </Project>
-'@ | Set-Content (Join-Path $Directory 'src/Azure.ResourceManager.CosmosDB.csproj')
+'@ | Set-Content (Join-Path $Directory "src/$ProjectFileName")
 }
 
 function Invoke-Generation {
@@ -122,7 +124,8 @@ function Get-ContentHash {
 
 New-Item $WorkDirectory -ItemType Directory -Force | Out-Null
 $consumerPath = Join-Path $WorkDirectory 'package-consumers.json'
-$generatedProject = Join-Path $output "$($config.packageId).csproj"
+$projectFileName = if ($config.projectFileName) { [string] $config.projectFileName } else { "$($config.packageId).csproj" }
+$generatedProject = Join-Path $output $projectFileName
 & (Join-Path $PSScriptRoot 'Resolve-PackageConsumers.ps1') `
     -PackageId $config.packageId `
     -GeneratedProject $generatedProject `
@@ -130,7 +133,7 @@ $generatedProject = Join-Path $output "$($config.packageId).csproj"
     -OutputPath $consumerPath `
     -ProductionOnly
 $actualConsumers = @(Get-Content $consumerPath -Raw | ConvertFrom-Json)
-$expectedConsumers = @($config.areaProjects | Sort-Object -CaseSensitive)
+$expectedConsumers = @($config.consumerProjects | Sort-Object -CaseSensitive)
 $actualConsumers = @($actualConsumers | Sort-Object -CaseSensitive)
 if (($actualConsumers -join "`n") -cne ($expectedConsumers -join "`n")) {
     throw "Package consumer set differs from service configuration. Expected [$($expectedConsumers -join ', ')]; actual [$($actualConsumers -join ', ')]."
@@ -162,6 +165,18 @@ $comparisons = @(
 foreach ($comparison in $comparisons) {
     if (-not [string]::Equals($comparison.Pinned, $comparison.Resolved, [StringComparison]::Ordinal)) {
         throw "Pinned $($comparison.Name) '$($comparison.Pinned)' differs from package provenance '$($comparison.Resolved)'."
+    }
+}
+$toolPackage = Get-Content (Join-Path $toolRoot 'package.json') -Raw | ConvertFrom-Json
+foreach ($section in @('dependencies', 'devDependencies')) {
+    $localProperties = @($toolPackage.$section.PSObject.Properties)
+    $resolvedProperties = @($resolved.tooling.$section.PSObject.Properties)
+    if ($localProperties.Count -ne $resolvedProperties.Count) { throw "$section differs from the package's emitter manifest." }
+    foreach ($property in $resolvedProperties) {
+        $local = $toolPackage.$section.PSObject.Properties[$property.Name]
+        if ($null -eq $local -or -not [string]::Equals([string] $local.Value, [string] $property.Value, [StringComparison]::Ordinal)) {
+            throw "$section dependency '$($property.Name)' differs from the package's emitter manifest."
+        }
     }
 }
 
@@ -216,7 +231,7 @@ if ($cacheHit) {
     Write-Host "Reused full-generation cache: $fullIdentity" -ForegroundColor Green
 }
 else {
-    Initialize-Project $full
+    Initialize-Project $full $projectFileName
     Copy-Item (Join-Path $output 'src/Shared') (Join-Path $full 'src/Shared') -Recurse
     Copy-Item (Join-Path $sdkRepo "$sdkServicePath/Custom/*") (Join-Path $full 'src/Custom') -Recurse
     if (Test-Path (Join-Path $sdkRepo "$sdkServicePath/Properties")) {
@@ -235,7 +250,7 @@ else {
     Move-Item $cacheTemp $fullCache
     Write-Host "Stored full-generation cache: $fullIdentity" -ForegroundColor Green
 }
-Invoke-CommandChecked dotnet @('build', (Join-Path $full 'src/Azure.ResourceManager.CosmosDB.csproj'), '/p:NuGetAudit=false')
+Invoke-CommandChecked dotnet @('build', (Join-Path $full "src/$projectFileName"), '/p:NuGetAudit=false')
 
 $fullCodeModel = Join-Path $full 'tspCodeModel.json'
 $expandedManifestPath = Join-Path $WorkDirectory 'expanded-operations.json'
@@ -258,10 +273,10 @@ $clientTsp = Join-Path $scopedSpec 'client.tsp'
 
 $projected = Join-Path $WorkDirectory 'projected'
 Remove-Item $projected -Recurse -Force -ErrorAction SilentlyContinue
-Initialize-Project $projected
+Initialize-Project $projected $projectFileName
 Copy-Item (Join-Path $output 'src/Shared') (Join-Path $projected 'src/Shared') -Recurse
 Invoke-Generation $clientTsp $projected
-Invoke-CommandChecked dotnet @('build', (Join-Path $projected 'src/Azure.ResourceManager.CosmosDB.csproj'), '/p:NuGetAudit=false')
+Invoke-CommandChecked dotnet @('build', (Join-Path $projected "src/$projectFileName"), '/p:NuGetAudit=false')
 
 $projectedSchema = Get-ProviderSchema (Join-Path $projected 'tspCodeModel.json')
 if (@($projectedSchema.resources).Count -ne $selectedResourceTypes.Count) { throw 'Projected resource set contains missing or additional resources.' }
