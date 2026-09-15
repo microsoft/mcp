@@ -149,7 +149,119 @@ public static class HttpClientFactoryConfigurator
         return proxy;
     }
 
-    private static string ConvertGlobToRegex(string globPattern)
+    internal static string ConvertGlobToRegex(string globPattern)
+    {
+        if (string.IsNullOrWhiteSpace(globPattern))
+        {
+            return string.Empty;
+        }
+
+        var pattern = globPattern.Trim();
+
+        if (pattern == "*" || pattern == "*.*")
+        {
+            return ".*";
+        }
+
+        // IPv4 CIDR notation (e.g. 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.1/32)
+        if (pattern.Contains('/'))
+        {
+            var parts = pattern.Split('/');
+            if (parts.Length == 2 && int.TryParse(parts[1], out var mask) && IPAddress.TryParse(parts[0], out var ip) && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                var bytes = ip.GetAddressBytes();
+                if (mask == 8)
+                {
+                    return $@"^[^:]+://{bytes[0]}\.\d{{1,3}}\.\d{{1,3}}\.\d{{1,3}}(:\d+)?(/.*)?$";
+                }
+                if (mask == 16)
+                {
+                    return $@"^[^:]+://{bytes[0]}\.{bytes[1]}\.\d{{1,3}}\.\d{{1,3}}(:\d+)?(/.*)?$";
+                }
+                if (mask == 24)
+                {
+                    return $@"^[^:]+://{bytes[0]}\.{bytes[1]}\.{bytes[2]}\.\d{{1,3}}(:\d+)?(/.*)?$";
+                }
+                if (mask == 32)
+                {
+                    return $@"^[^:]+://{bytes[0]}\.{bytes[1]}\.{bytes[2]}\.{bytes[3]}(:\d+)?(/.*)?$";
+                }
+                if (mask is >= 8 and <= 30)
+                {
+                    uint ipInt = ((uint)bytes[0] << 24) | ((uint)bytes[1] << 16) | ((uint)bytes[2] << 8) | bytes[3];
+                    uint netmask = (0xFFFFFFFF << (32 - mask));
+                    uint startIp = ipInt & netmask;
+                    uint endIp = startIp | ~netmask;
+
+                    uint s0 = (startIp >> 24) & 0xFF, e0 = (endIp >> 24) & 0xFF;
+                    uint s1 = (startIp >> 16) & 0xFF, e1 = (endIp >> 16) & 0xFF;
+                    uint s2 = (startIp >> 8) & 0xFF, e2 = (endIp >> 8) & 0xFF;
+                    uint s3 = startIp & 0xFF, e3 = endIp & 0xFF;
+
+                    if (s0 == e0 && s1 == e1 && s2 == e2)
+                    {
+                        return $@"^[^:]+://{s0}\.{s1}\.{s2}\.({RangeToRegex(s3, e3)})(:\d+)?(/.*)?$";
+                    }
+                    if (s0 == e0 && s1 == e1)
+                    {
+                        return $@"^[^:]+://{s0}\.{s1}\.({RangeToRegex(s2, e2)})\.\d{{1,3}}(:\d+)?(/.*)?$";
+                    }
+                    if (s0 == e0)
+                    {
+                        return $@"^[^:]+://{s0}\.({RangeToRegex(s1, e1)})\.\d{{1,3}}\.\d{{1,3}}(:\d+)?(/.*)?$";
+                    }
+                }
+            }
+        }
+
+        // If the pattern already contains a scheme (e.g. http://localhost)
+        if (pattern.Contains("://"))
+        {
+            var escapedScheme = EscapeGlob(pattern);
+            return $@"^{escapedScheme}(/.*)?$";
+        }
+
+        // Domain suffix: .example.com or *.example.com
+        if (pattern.StartsWith("*."))
+        {
+            var domain = pattern.Substring(2);
+            var escapedDomain = EscapeGlob(domain);
+            return $@"^[^:]+://([^/:]+\.)?{escapedDomain}(:\d+)?(/.*)?$";
+        }
+
+        if (pattern.StartsWith('.'))
+        {
+            var domain = pattern.Substring(1);
+            var escapedDomain = EscapeGlob(domain);
+            return $@"^[^:]+://([^/:]+\.)?{escapedDomain}(:\d+)?(/.*)?$";
+        }
+
+        // Host with explicit port (e.g. localhost:5000)
+        var colonIndex = pattern.LastIndexOf(':');
+        if (colonIndex > 0 && int.TryParse(pattern.Substring(colonIndex + 1), out _))
+        {
+            var host = pattern.Substring(0, colonIndex);
+            var port = pattern.Substring(colonIndex + 1);
+            var escapedHost = EscapeGlob(host);
+            return $@"^[^:]+://{escapedHost}:{port}(/.*)?$";
+        }
+
+        // Host or wildcard host
+        var escaped = EscapeGlob(pattern);
+        return $@"^[^:]+://{escaped}(:\d+)?(/.*)?$";
+    }
+
+    private static string RangeToRegex(uint start, uint end)
+    {
+        if (start == end)
+        {
+            return start.ToString();
+        }
+
+        return string.Join("|", Enumerable.Range((int)start, (int)(end - start + 1)));
+    }
+
+    private static string EscapeGlob(string globPattern)
     {
         if (string.IsNullOrEmpty(globPattern))
         {
@@ -170,11 +282,9 @@ public static class HttpClientFactoryConfigurator
             .Replace(")", "\\)")
             .Replace("|", "\\|");
 
-        var regex = escaped
+        return escaped
             .Replace("*", ".*")
             .Replace("?", ".");
-
-        return $"^{regex}$";
     }
 
     private static string BuildUserAgent(string transport)

@@ -42,10 +42,10 @@ public static class HttpClientServiceCollectionExtensions
         services.Configure<HttpClientOptions>(options =>
         {
             // Read proxy configuration from environment variables
-            options.AllProxy = Environment.GetEnvironmentVariable("ALL_PROXY");
-            options.HttpProxy = Environment.GetEnvironmentVariable("HTTP_PROXY");
-            options.HttpsProxy = Environment.GetEnvironmentVariable("HTTPS_PROXY");
-            options.NoProxy = Environment.GetEnvironmentVariable("NO_PROXY");
+            options.AllProxy = Environment.GetEnvironmentVariable("ALL_PROXY") ?? Environment.GetEnvironmentVariable("all_proxy");
+            options.HttpProxy = Environment.GetEnvironmentVariable("HTTP_PROXY") ?? Environment.GetEnvironmentVariable("http_proxy");
+            options.HttpsProxy = Environment.GetEnvironmentVariable("HTTPS_PROXY") ?? Environment.GetEnvironmentVariable("https_proxy");
+            options.NoProxy = Environment.GetEnvironmentVariable("NO_PROXY") ?? Environment.GetEnvironmentVariable("no_proxy");
 
             // Apply custom configuration
             configureOptions(options);
