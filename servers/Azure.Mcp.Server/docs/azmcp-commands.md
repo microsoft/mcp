@@ -9,7 +9,7 @@ The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
+| `--subscription` | No | Azure CLI profile default or `AZURE_SUBSCRIPTION_ID` env var | The Azure subscription GUID identifier or display name. If not specified, the Azure CLI profile default subscription or `AZURE_SUBSCRIPTION_ID` environment variable will be used. |
 | `--tenant` | No | - | The Microsoft Entra ID tenant GUID identifier or display name. |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
