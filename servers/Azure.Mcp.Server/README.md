@@ -1260,6 +1260,12 @@ Example prompts that generate Azure CLI commands:
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
 
+### 📶 Azure SignalR Service
+
+* "List all SignalR services in my subscription"
+* "List SignalR services in resource group 'my-resource-group'"
+* "Get details for SignalR service 'my-signalr' in resource group 'my-resource-group'"
+
 ### 🤖 Azure SRE Agent
 
 * "List my Azure SRE Agent resources"
@@ -1411,6 +1417,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
 - 🏥 **Azure Service Health** - Resource health status and availability
+- 📶 **Azure SignalR Service** - SignalR service runtime management, network ACLs, and configuration
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
