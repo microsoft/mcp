@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
     Name = "update",
     Title = "Update Cloud Endpoint",
     Description = "Update a Storage Sync cloud endpoint's change enumeration interval. The interval must be between 1 and 20 days. This is a potentially long-running operation.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
