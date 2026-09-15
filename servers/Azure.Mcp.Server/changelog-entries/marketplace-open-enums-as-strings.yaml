@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed `marketplace_product_list` and `marketplace_product_get` failing with a deserialization error when the Marketplace catalog returned a pricing type, CSP state, or other value that was not modeled locally. These fields are open enums in the service contract and are now surfaced as strings."

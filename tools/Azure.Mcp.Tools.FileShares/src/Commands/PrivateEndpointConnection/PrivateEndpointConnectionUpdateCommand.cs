@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.PrivateEndpointConnection;
@@ -17,6 +16,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     Name = "update",
     Title = "Update Private Endpoint Connection",
     Description = "Update the state of a private endpoint connection for a file share. Use this to approve or reject private endpoint connection requests.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.PrivateEndpointConnection;
     Secret = false,
     LocalRequired = false)]
 public sealed class PrivateEndpointConnectionUpdateCommand(ILogger<PrivateEndpointConnectionUpdateCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<PrivateEndpointConnectionUpdateOptions, PrivateEndpointConnectionUpdateCommand.PrivateEndpointConnectionUpdateCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<PrivateEndpointConnectionUpdateOptions, PrivateEndpointConnectionUpdateCommand.PrivateEndpointConnectionUpdateCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PrivateEndpointConnectionUpdateOptions options, CancellationToken cancellationToken)
     {

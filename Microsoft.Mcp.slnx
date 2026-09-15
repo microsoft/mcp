@@ -78,6 +78,9 @@
   </Folder>
   <Folder Name="/servers/" />
   <Folder Name="/servers/Azure.Mcp.Server/" />
+  <Folder Name="/servers/Azure.Mcp.Server/perf/">
+    <Project Path="servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/Azure.Mcp.Server.PerformanceBenchmarks.csproj" />
+  </Folder>
   <Folder Name="/servers/Azure.Mcp.Server/src/">
     <Project Path="servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj" />
   </Folder>
@@ -102,6 +105,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Acr/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Acr/tests/Azure.Mcp.Tools.Acr.Tests/Azure.Mcp.Tools.Acr.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/src/">
+    <Project Path="tools/Azure.Mcp.Tools.Adme/src/Azure.Mcp.Tools.Adme.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Adme/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Adme/tests/Azure.Mcp.Tools.Adme.Tests/Azure.Mcp.Tools.Adme.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/src/">
@@ -326,6 +336,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.IoTHub/tests/">
     <Project Path="tools/Azure.Mcp.Tools.IoTHub/tests/Azure.Mcp.Tools.IoTHub.Tests/Azure.Mcp.Tools.IoTHub.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTOperations/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTOperations/src/">
+    <Project Path="tools/Azure.Mcp.Tools.IoTOperations/src/Azure.Mcp.Tools.IoTOperations.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.IoTOperations/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.IoTOperations/tests/Azure.Mcp.Tools.IoTOperations.Tests/Azure.Mcp.Tools.IoTOperations.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/" />
   <Folder Name="/tools/Azure.Mcp.Tools.KeyVault/src/">

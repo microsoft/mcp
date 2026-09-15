@@ -17,6 +17,31 @@ public sealed class ResilienceManagementServiceTests
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
+    [Theory]
+    [InlineData("Recovery job retry")]
+    [InlineData("Recovery job resume")]
+    [InlineData("Recovery plan finalize")]
+    public void ThrowIfProviderError_RejectsSuccessfulResponseContainingError(string operationDescription)
+    {
+        ArmResponseErrorResponseResult result = ArmResilienceManagementModelFactory.ArmResponseErrorResponseResult(
+            new ResponseError("ProviderFailure", "The provider could not complete the operation."));
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.ThrowIfProviderError(result, operationDescription));
+
+        Assert.Contains(operationDescription, exception.Message, StringComparison.Ordinal);
+        Assert.Contains("ProviderFailure", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("The provider could not complete the operation.", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ThrowIfProviderError_AllowsSuccessfulResponseWithoutBody()
+    {
+        ArmResponseErrorResponseResult result = ArmResilienceManagementModelFactory.ArmResponseErrorResponseResult(null!);
+
+        ResilienceManagementService.ThrowIfProviderError(result, "Recovery job retry");
+    }
+
     [Fact]
     public void GetRecoveryJobResourceId_UsesAbsoluteJobIdExactly()
     {
@@ -470,13 +495,44 @@ public sealed class ResilienceManagementServiceTests
         JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
-            errorMessage = "The recovery plan is not ready."
+            errorMessage = "The recoveryplan is not ready."
         }))!;
 
         RecoveryPlanReadinessError? result = ResilienceManagementService.CreateReadinessError(providerError);
 
         Assert.NotNull(result);
         Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
+    public void CreateFailoverRequestContent_MapsSelectorsAndConsent()
+    {
+        const string resourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012";
+
+        ResilienceManagementFailoverContent result = ResilienceManagementService.CreateFailoverRequestContent(
+            ["eastus", "westus2-az3"],
+            [resourceId],
+            "Allowed");
+
+        Assert.Equal(FailoverDirectionTypes.FromSpecificLocations, result.FailoverDirection);
+        Assert.NotNull(result.FailoverRequestProperties);
+        Assert.Equal(["eastus", "westus2-az3"], result.FailoverRequestProperties.SourceLocations);
+        Assert.Equal(resourceId, Assert.Single(result.FailoverRequestProperties.SelectedResourceIds).ToString());
+        Assert.Equal("Allowed", result.FailoverRequestProperties.ExecutionConfigurationsUserConsent?.ToString());
+    }
+
+    [Fact]
+    public void CreateReprotectRequestContent_MapsSelectedResources()
+    {
+        const string firstResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/12345678-9012-3456-7890-123456789012";
+        const string secondResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/23456789-0123-4567-8901-234567890123";
+
+        ReprotectContent result = ResilienceManagementService.CreateReprotectRequestContent(
+            [firstResourceId, secondResourceId]);
+
+        Assert.Equal(
+            [firstResourceId, secondResourceId],
+            result.ReprotectRequestSelectedResourceIds.Select(resourceId => resourceId.ToString()));
     }
 
     [Fact]
@@ -604,7 +660,7 @@ public sealed class ResilienceManagementServiceTests
                 error = new
                 {
                     code = "RecoveryPlanStateDoesNotSupportOperation",
-                    message = "Operation Reprotect is not allowed for the current recovery plan state."
+                    message = "Operation Reprotect is not allowed for the current recoveryplan state."
                 }
             }
         });
@@ -616,7 +672,7 @@ public sealed class ResilienceManagementServiceTests
 
         Assert.False(result.IsValid);
         Assert.Equal("RecoveryPlanStateDoesNotSupportOperation", result.ErrorCode);
-        Assert.Equal("Operation Reprotect is not allowed for the current recovery plan state.", result.ErrorMessage);
+        Assert.Equal("Operation Reprotect is not allowed for the current recoveryplan state.", result.ErrorMessage);
     }
 
     [Theory]

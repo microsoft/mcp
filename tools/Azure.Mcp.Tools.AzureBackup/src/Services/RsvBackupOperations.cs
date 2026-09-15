@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -1486,6 +1487,16 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var immutabilityState = securitySettings?.ImmutabilityState?.ToString();
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
 
         string? crossRegionRestoreState = null;
         // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
@@ -1524,7 +1535,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             MuaResourceGuardId: muaResourceGuardId,
             CrossRegionRestoreState: crossRegionRestoreState,
             EncryptionState: encryptionState,
-            EncryptionKeyUri: encryptionKeyUri);
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)
@@ -1535,6 +1547,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string? policyName = null;
         DateTimeOffset? lastBackupTime = null;
         string? container = null;
+        ProtectedItemDetails? protectedItemDetails = null;
 
         if (data.Properties is BackupGenericProtectedItem genericItem)
         {
@@ -1545,14 +1558,141 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
             if (genericItem is IaasVmProtectedItem vmItem)
             {
-                protectionStatus = vmItem.ProtectionState?.ToString();
+                protectionStatus = vmItem.ProtectionStatus;
                 lastBackupTime = vmItem.LastBackupOn;
+
+                var extendedInfo = vmItem.ExtendedInfo;
+                var extendedProperties = vmItem.ExtendedProperties;
+                var diskExclusionProperties = extendedProperties?.DiskExclusionProperties;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: vmItem.BackupManagementType?.ToString(),
+                    WorkloadType: vmItem.WorkloadType?.ToString(),
+                    LastRecoverOn: vmItem.LastRecoverOn,
+                    BackupSetName: vmItem.BackupSetName,
+                    CreateMode: vmItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: vmItem.DeferredDeletedOn,
+                    IsScheduledForDeferredDelete: vmItem.IsScheduledForDeferredDelete,
+                    DeferredDeleteTimeRemaining: vmItem.DeferredDeleteTimeRemaining?.ToString(),
+                    IsDeferredDeleteScheduleUpcoming: vmItem.IsDeferredDeleteScheduleUpcoming,
+                    IsRehydrate: vmItem.IsRehydrate,
+                    ResourceGuardOperationRequests: vmItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: vmItem.IsArchiveEnabled,
+                    PolicyName: vmItem.PolicyName,
+                    SoftDeleteRetentionPeriodInDays: vmItem.SoftDeleteRetentionPeriodInDays,
+                    SoftDeleteRetentionPeriod: vmItem.SoftDeleteRetentionPeriod,
+                    VaultId: vmItem.VaultId?.ToString(),
+                    FriendlyName: vmItem.FriendlyName,
+                    VirtualMachineId: vmItem.VirtualMachineId?.ToString(),
+                    ProtectionStatus: vmItem.ProtectionStatus,
+                    ProtectionState: vmItem.ProtectionState?.ToString(),
+                    HealthStatus: vmItem.HealthStatus?.ToString(),
+                    HealthDetails: vmItem.HealthDetails?.Select(MapToProtectedItemHealthDetails).ToList(),
+                    KpisHealths: vmItem.KpisHealths?.ToDictionary(
+                        static kpi => kpi.Key,
+                        static kpi => new ProtectedItemKpiHealthDetails(
+                            kpi.Value?.ResourceHealthStatus?.ToString(),
+                            kpi.Value?.ResourceHealthDetails?.Select(MapToProtectedItemHealthDetails).ToList())),
+                    LastBackupStatus: vmItem.LastBackupStatus,
+                    ProtectedItemDataId: vmItem.ProtectedItemDataId,
+                    PolicyType: vmItem.PolicyType,
+                    LastBackupOn: vmItem.LastBackupOn,
+                    OldestRecoverOn: extendedInfo?.OldestRecoverOn,
+                    OldestRecoveryPointInVault: extendedInfo?.OldestRecoveryPointInVault,
+                    OldestRecoveryPointInArchive: extendedInfo?.OldestRecoveryPointInArchive,
+                    NewestRecoveryPointInArchive: extendedInfo?.NewestRecoveryPointInArchive,
+                    RecoveryPointCount: extendedInfo?.RecoveryPointCount,
+                    IsPolicyInconsistent: extendedInfo?.IsPolicyInconsistent,
+                    ExtendedProperties: extendedProperties is null
+                        ? null
+                        : new ProtectedItemExtendedProperties(
+                            diskExclusionProperties is null
+                                ? null
+                                : new ProtectedItemDiskExclusionProperties(
+                                    diskExclusionProperties.DiskLunList?.ToList(),
+                                    diskExclusionProperties.IsInclusionList),
+                            extendedProperties.LinuxVmApplicationName));
+
             }
             else if (genericItem is VmWorkloadProtectedItem workloadItem)
             {
                 protectionStatus = workloadItem.ProtectionState?.ToString();
                 lastBackupTime = workloadItem.LastBackupOn;
                 datasourceType = workloadItem.WorkloadType?.ToString();
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: null,
+                    BackupSetName: null,
+                    CreateMode: null,
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: null,
+                    IsArchiveEnabled: null,
+                    PolicyName: policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: null,
+                    FriendlyName: null,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: workloadItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: workloadItem.LastBackupStatus?.ToString(),
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
+            }
+            else if (genericItem is FileshareProtectedItem fileShareItem)
+            {
+                protectionStatus = fileShareItem.ProtectionState?.ToString();
+                lastBackupTime = fileShareItem.LastBackupOn;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: fileShareItem.LastRecoverOn,
+                    BackupSetName: fileShareItem.BackupSetName,
+                    CreateMode: fileShareItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: fileShareItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: fileShareItem.IsArchiveEnabled,
+                    PolicyName: fileShareItem.PolicyName ?? policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: fileShareItem.VaultId?.ToString(),
+                    FriendlyName: fileShareItem.FriendlyName,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: fileShareItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: fileShareItem.LastBackupStatus,
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
             }
         }
 
@@ -1565,8 +1705,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             datasourceId,
             policyName,
             lastBackupTime,
-            container);
+            container,
+            protectedItemDetails);
     }
+
+    private static ProtectedItemHealthDetails MapToProtectedItemHealthDetails(ResourceHealthDetails details) =>
+        new(details.Code, details.Title, details.Message, details.Recommendations?.ToList());
 
     private static BackupPolicyInfo MapToPolicyInfo(BackupProtectionPolicyData data)
     {
@@ -2029,16 +2173,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
-        string filter;
-        if (!string.IsNullOrEmpty(workloadType))
-        {
-            var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
-            filter = $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
-        }
-        else
-        {
-            filter = "backupManagementType eq 'AzureWorkload'";
-        }
+        var filter = BuildProtectableItemFilter(workloadType);
 
         var items = new List<ProtectableItemInfo>();
         await foreach (var item in rgResource.GetBackupProtectableItemsAsync(vaultName, filter: filter, cancellationToken: cancellationToken))
@@ -2047,6 +2182,26 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         }
 
         return items;
+    }
+
+    // Builds the OData $filter for GetBackupProtectableItems. Azure File shares are surfaced
+    // under the 'AzureStorage' backup management type (not 'AzureWorkload') and are not further
+    // discriminated by a workloadType clause, so an AzureFileShare request must route to
+    // AzureStorage; otherwise the register -> inquire -> list flow would return no file shares.
+    internal static string BuildProtectableItemFilter(string? workloadType)
+    {
+        if (string.IsNullOrEmpty(workloadType))
+        {
+            return "backupManagementType eq 'AzureWorkload'";
+        }
+
+        var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
+        if (string.Equals(normalizedType, "AzureFileShare", StringComparison.OrdinalIgnoreCase))
+        {
+            return "backupManagementType eq 'AzureStorage'";
+        }
+
+        return $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
     }
 
     public async Task<List<ProtectableItemInfo>> ListDiscoveredProtectableItemsAsync(
@@ -2086,6 +2241,275 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         return items;
     }
+
+    public async Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName, string resourceGroup, string subscription, string containerName,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(containerName), containerName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+
+        try
+        {
+            var response = await rgResource.GetBackupProtectionContainerAsync(vaultName, FabricName, containerName, cancellationToken);
+            return MapContainer(response.Value.Data);
+        }
+        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+        {
+            // Not registered - callers rely on null to signal the idempotency case.
+            return null;
+        }
+    }
+
+    private static BackupContainerInfo MapContainer(BackupProtectionContainerData data)
+    {
+        var props = data.Properties;
+        string? sourceResourceId = null;
+        int? protectedItemCount = null;
+
+        if (props is StorageContainer storage)
+        {
+            sourceResourceId = storage.SourceResourceId?.ToString();
+            protectedItemCount = (int?)storage.ProtectedItemCount;
+        }
+
+        return new BackupContainerInfo(
+            Name: data.Name,
+            FriendlyName: props?.FriendlyName,
+            ContainerType: props?.GetType().Name,
+            BackupManagementType: props?.BackupManagementType?.ToString(),
+            SourceResourceId: sourceResourceId,
+            RegistrationStatus: props?.RegistrationStatus,
+            HealthStatus: props?.HealthStatus,
+            ProtectedItemCount: protectedItemCount);
+    }
+
+    public async Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? storageAccount,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var containers = new List<ProtectableContainerInfo>();
+
+        await foreach (var container in rgResource.GetProtectableContainersAsync(
+            vaultName, FabricName, filter, cancellationToken))
+        {
+            var properties = container.Properties;
+            var info = new ProtectableContainerInfo(
+                container.Name,
+                properties?.FriendlyName,
+                GetProtectableContainerType(properties),
+                properties?.BackupManagementType?.ToString(),
+                properties?.ContainerId,
+                properties?.HealthStatus);
+
+            if (string.IsNullOrWhiteSpace(storageAccount)
+                || string.Equals(info.FriendlyName, storageAccount, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(info.SourceResourceId, storageAccount, StringComparison.OrdinalIgnoreCase))
+            {
+                containers.Add(info);
+            }
+        }
+
+        return containers;
+    }
+
+    private static string? GetProtectableContainerType(ProtectableContainer? container) => container switch
+    {
+        StorageProtectableContainer => "StorageContainer",
+        VmAppContainerProtectableContainer => "VMAppContainer",
+        null => null,
+        _ => container.GetType().Name
+    };
+
+    public async Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string backupManagementType,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var filter = backupManagementType switch
+        {
+            "AzureStorage" or "AzureIaasVM" or "AzureWorkload" => $"backupManagementType eq '{backupManagementType}'",
+            _ => throw new ArgumentException("backupManagementType must be 'AzureStorage', 'AzureIaasVM', or 'AzureWorkload'.", nameof(backupManagementType))
+        };
+
+        var response = await rgResource.RefreshProtectionContainerAsync(
+            vaultName,
+            FabricName,
+            filter: filter,
+            cancellationToken: cancellationToken);
+
+        if (response.Status != (int)HttpStatusCode.Accepted)
+        {
+            throw new RequestFailedException(response.Status, "The container discovery request was not accepted.");
+        }
+    }
+
+    public async Task<ContainerRegisterResult> RegisterContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string storageAccountId,
+        bool acquireLock,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(storageAccountId), storageAccountId));
+
+        ResourceIdentifier storageAccountResourceId;
+        try
+        {
+            storageAccountResourceId = new ResourceIdentifier(storageAccountId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid storage account ID '{storageAccountId}'. Expected a storage account name or a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{name}).", ex);
+        }
+
+        var storageAccountName = storageAccountResourceId.Name;
+        var storageAccountResourceGroup = storageAccountResourceId.ResourceGroupName ?? resourceGroup;
+        var containerName = $"StorageContainer;Storage;{storageAccountResourceGroup};{storageAccountName}";
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var collection = rgResource.GetBackupProtectionContainers();
+
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken: cancellationToken);
+        var vaultLocation = vault.Value.Data.Location;
+
+        // Idempotency pre-check: if the container is already registered, return early without
+        // issuing another registration request.
+        try
+        {
+            var existing = await collection.GetAsync(vaultName, FabricName, containerName, cancellationToken);
+            var existingProperties = existing.Value.Data.Properties;
+            if (string.Equals(existingProperties?.RegistrationStatus, "Registered", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ContainerRegisterResult(
+                    Status: "Succeeded",
+                    Container: MapRegisteredContainer(containerName, existingProperties),
+                    AlreadyRegistered: true,
+                    Message: $"Storage account '{storageAccountName}' is already registered with vault '{vaultName}'. Run 'azurebackup protectableitem inquire' to (re)discover file shares.");
+            }
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            // Container is not registered yet - continue with registration below.
+        }
+
+        var data = new BackupProtectionContainerData(vaultLocation)
+        {
+            Properties = new StorageContainer
+            {
+                BackupManagementType = BackupManagementType.AzureStorage,
+                FriendlyName = storageAccountName,
+                SourceResourceId = storageAccountResourceId,
+                AcquireStorageAccountLock = acquireLock ? AcquireStorageAccountLock.Acquire : AcquireStorageAccountLock.NotAcquire,
+            }
+        };
+
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, FabricName, containerName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        var registeredProperties = operation.Value.Data.Properties;
+        return new ContainerRegisterResult(
+            Status: registeredProperties?.RegistrationStatus ?? "Succeeded",
+            Container: MapRegisteredContainer(containerName, registeredProperties),
+            AlreadyRegistered: false,
+            Message: $"Storage account '{storageAccountName}' registered with vault '{vaultName}'. Run 'azurebackup protectableitem inquire' to discover file shares, then 'azurebackup protecteditem protect' to enable backup.");
+    }
+
+    public async Task<InquireResult> InquireContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(containerName), containerName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var containerId = BackupProtectionContainerResource.CreateResourceIdentifier(
+            subscription, resourceGroup, vaultName, FabricName, containerName);
+        var containerResource = armClient.GetBackupProtectionContainerResource(containerId);
+
+        try
+        {
+            await containerResource.InquireAsync(filter: null, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            throw new KeyNotFoundException(
+                $"Protection container '{containerName}' was not found in vault '{vaultName}'. " +
+                "Register the storage account first with 'azurebackup container register'.");
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
+        {
+            return new InquireResult(
+                Status: "Accepted",
+                Container: containerName,
+                Message: "An inquiry is already in progress for this container. Poll 'azurebackup protectableitem list' to see discovered file shares.");
+        }
+
+        return new InquireResult(
+            Status: "Accepted",
+            Container: containerName,
+            Message: "Container inquiry accepted. The vault will asynchronously enumerate backup-able file shares. Poll 'azurebackup protectableitem list' to see discovered items.");
+    }
+
+    private static RegisteredContainerInfo MapRegisteredContainer(string name, BackupGenericProtectionContainer? properties) =>
+        new(
+            Name: name,
+            FriendlyName: properties?.FriendlyName,
+            BackupManagementType: properties?.BackupManagementType?.ToString(),
+            RegistrationStatus: properties?.RegistrationStatus,
+            HealthStatus: properties?.HealthStatus,
+            SourceResourceId: (properties as StorageContainer)?.SourceResourceId?.ToString());
 
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.

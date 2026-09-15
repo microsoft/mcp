@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Functions.Commands.Language;
     Title = "List Supported Languages",
     Description = "Answer questions about what programming languages Azure Functions supports with up-to-date runtime versions and tooling details. Returns the current list of supported languages with runtime versions, prerequisites, development tools, and CLI commands for init/run/build. " +
         "Provides authoritative data that may differ from general knowledge. Call this tool first when users ask about Azure Functions languages or before generating code with functions_project_get or functions_template_get.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -23,7 +24,7 @@ namespace Azure.Mcp.Tools.Functions.Commands.Language;
     Secret = false,
     LocalRequired = false)]
 public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger, IFunctionsService functionsService)
-    : BaseCommand<EmptyOptions, List<LanguageListResult>>
+    : BaseCommand<EmptyOptions, LanguageListResult>
 {
     private readonly ILogger<LanguageListCommand> _logger = logger;
     private readonly IFunctionsService _functionsService = functionsService;
@@ -38,7 +39,7 @@ public sealed class LanguageListCommand(ILogger<LanguageListCommand> logger, IFu
             var result = await _functionsService.GetLanguageListAsync(cancellationToken);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([result], FunctionsJsonContext.Default.ListLanguageListResult);
+            context.Response.Results = ResponseResult.Create(result, FunctionsJsonContext.Default.LanguageListResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)

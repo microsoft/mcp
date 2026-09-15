@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
     Name = "create",
     Title = "Create or Update Common Prompt",
     Description = "Create or update a named common prompt on the SRE Agent.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

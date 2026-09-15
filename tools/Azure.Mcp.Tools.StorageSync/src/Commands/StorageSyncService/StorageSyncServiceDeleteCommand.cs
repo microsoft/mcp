@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     Name = "delete",
     Title = "Delete Storage Sync Service",
     Description = "Delete an Azure Storage Sync service and all its associated resources.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

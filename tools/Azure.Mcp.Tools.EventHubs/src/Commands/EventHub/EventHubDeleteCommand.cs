@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
         Warning: This operation cannot be undone. All messages and consumer groups in the Event Hub
         will be permanently deleted.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

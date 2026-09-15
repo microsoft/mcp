@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
         user session objects available on the specified session host. Results include user session details such as
         user principal name, session state, application type, and creation time.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

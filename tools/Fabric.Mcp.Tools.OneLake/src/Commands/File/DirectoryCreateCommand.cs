@@ -20,6 +20,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     Name = "create-directory",
     Title = "Create OneLake Directory",
     Description = "Creates a directory in OneLake storage. Use this when the user needs to organize files or prepare folder structures. Can create nested directory paths.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

@@ -11,7 +11,7 @@ public sealed class RecoveryPlanDeleteOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the recovery plan to delete.")]
+    [Option(Name = "recoveryplan", Description = "The name of the recoveryplan to delete.")]
     public required string RecoveryPlan { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

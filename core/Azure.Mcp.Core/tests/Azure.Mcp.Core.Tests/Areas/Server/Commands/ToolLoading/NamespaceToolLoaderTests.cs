@@ -81,6 +81,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             Assert.NotNull(tool.Name);
             Assert.NotNull(tool.Description);
             Assert.Contains("hierarchical", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("set \"command\" and wrap its args in \"parameters\"", tool.Description);
+            Assert.Contains("Set \"learn=true\"", tool.Description);
 
             // Verify hierarchical schema structure
             var schema = tool.InputSchema;

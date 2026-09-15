@@ -41,6 +41,9 @@ parameters:
   displayName: Run All Live Tests
   type: boolean
   default: false
+- name: RunPerfTests
+  type: boolean
+  default: false
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -119,6 +122,46 @@ extends:
           Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.linuxBuildMatrices.arm64']
           MaxParallel: 4
           HostArchitecture: arm64
+
+    - stage: VSIXPack
+      displayName: "VSIX pack"
+      dependsOn:
+      - Initialize
+      - Build
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+      pool:
+        name: $(LINUXPOOL)
+        image: $(LINUXVMIMAGE)
+        os: linux
+      variables:
+      - template: /eng/pipelines/templates/variables/image.yml
+      - template: /eng/pipelines/templates/variables/globals.yml
+      jobs:
+      - template: /eng/pipelines/templates/jobs/vsix/pack-vsix-pr.yml
+
+    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunPerfTests, 'true')) }}:
+      - stage: Perf
+        displayName: 'Performance test'
+        dependsOn:
+        - Build
+        pool:
+          name: $(WINDOWSPOOL)
+          image: $(WINDOWSVMIMAGE)
+          os: windows
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/perf-test.yml
+          parameters:
+            Runs: 10
+            # Uncomment to gate on regressions once a baseline is committed:
+            # BaselinePath: eng/perf-baseline.json
+            # ResourceBaselinePath: eng/resource-baseline.json
+            # DispatchBaselinePath: eng/dispatch-baseline.json
+            # ConcurrencyBaselinePath: eng/concurrency-baseline.json
+            # Uncomment to run the (~30 min) BenchmarkDotNet micro-benchmarks:
+            # RunMicroBenchmarks: true
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test

@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
         why a web app is slow, failing, restarting, or unhealthy. Requires a detector ID from 'azmcp appservice webapp diagnostic list'.
         Supports optional time range filtering for historical analysis.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

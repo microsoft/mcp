@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
+using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Shortcut;
@@ -52,5 +54,23 @@ public class ShortcutGetCommandTests : CommandUnitTestsBase<ShortcutGetCommand, 
         Assert.False(metadata.OpenWorld);
         Assert.True(metadata.ReadOnly);
         Assert.False(metadata.Secret);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsShortcutWrapper()
+    {
+        Service.GetShortcutAsync("ws1", "item1", "Files/landing", "shortcut1", Arg.Any<CancellationToken>())
+            .Returns(new OneLakeShortcut { Path = "Files/landing", Name = "shortcut1" });
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id", "ws1",
+            "--item-id", "item1",
+            "--shortcut-path", "Files/landing",
+            "--shortcut-name", "shortcut1");
+
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.ShortcutGetCommandResult);
+
+        Assert.Equal("shortcut1", result.Shortcut.Name);
+        Assert.Equal("Files/landing", result.Shortcut.Path);
     }
 }
