@@ -1237,6 +1237,13 @@ Example prompts that generate Azure CLI commands:
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### 💲 Azure Retail Pricing
+
+* "Get retail pricing for SKU 'Standard_D2s_v5' in region 'eastus'"
+* "Check pricing for Virtual Machines in region 'westeurope' with currency 'EUR'"
+* "Get reservation pricing for SKU 'Standard_B2s' including savings plans"
+* "Find retail prices for Azure App Service in region 'centralus'"
+
 ### 🔧 Azure Resource Management
 
 * "List my resource groups"
@@ -1400,6 +1407,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
+- 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, and recovery plan failover validation
