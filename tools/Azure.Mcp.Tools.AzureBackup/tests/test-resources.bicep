@@ -5,10 +5,10 @@ targetScope = 'resourceGroup'
 @description('The base resource name.')
 param baseName string = take(resourceGroup().name, 20)
 
-@description('The location of the resource. By default, this is the same as the resource group.')
-param location string = resourceGroup().location
+@description('The location of the resources. Defaults to westus2 because some test subscriptions have no VM SKUs enabled in westus.')
+param location string = 'westus2'
 
-@description('The location for the Cosmos DB account and the DPP backup vault. Azure Backup for Cosmos DB (DPP, preview) requires both to be in the same region (and in a preview-enabled region such as eastus2euap or centraluseuap). Defaults to the resource group location; override (along with the RG location) when targeting a preview region.')
+@description('The location for the Cosmos DB account and the DPP backup vault. Azure Backup for Cosmos DB (DPP, preview) requires both to be in the same region (and in a preview-enabled region such as eastus2euap or centraluseuap). Defaults to the location parameter; override both parameters when targeting a different preview region.')
 param cosmosLocation string = location
 
 @description('The client OID to grant access to test resources.')
@@ -17,6 +17,9 @@ param testApplicationOid string
 @description('Admin password for the SQL VM used in testing.')
 @secure()
 param sqlVmAdminPwd string = 'P${newGuid()}!'
+
+@description('The VM size for the SQL VM used in testing.')
+param sqlVmSize string = 'Standard_B2als_v2'
 
 // Recovery Services Vault (RSV) - GeoRedundant for CRR support
 resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
@@ -144,6 +147,7 @@ resource dppDiskBackupReaderRoleAssignment 'Microsoft.Authorization/roleAssignme
 // Output the resource IDs for the post-deployment script
 output diskId string = testDisk.id
 output diskName string = testDisk.name
+output diskLocation string = testDisk.location
 
 // ─── RSV Undelete Test Resources (Storage Account + File Share) ───
 
@@ -288,7 +292,7 @@ output cosmosDbAccountName string = cosmosDbAccount.name
 output cosmosDbAccountLocation string = cosmosLocation
 
 // ─── SQL VM for ARM-Level Discovery Testing ───
-// Lowest-cost config: Standard_B2als_v2 + SQL 2022 Developer (free license) + no public IP.
+// Low-cost config: 2 vCPUs, at most 8 GB RAM, SQL 2022 Developer (free license), and no public IP.
 // The find-unprotected command discovers this VM via ARM Resource Graph as an unprotected resource.
 // No RSV container registration is needed — ARM-level discovery finds VMs directly.
 
@@ -345,7 +349,7 @@ resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B2als_v2'
+      vmSize: sqlVmSize
     }
     storageProfile: {
       imageReference: {
