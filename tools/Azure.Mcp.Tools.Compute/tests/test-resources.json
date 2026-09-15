@@ -48,14 +48,14 @@
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_B2s",
+      "defaultValue": "Standard_B2as_v2",
       "metadata": {
         "description": "The VM size to use for testing."
       }
     }
   },
   "variables": {
-    "location": "eastus2"
+    "location": "[resourceGroup().location]"
   },
   "resources": {
     "vnet": {
