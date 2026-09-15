@@ -60,7 +60,8 @@ public sealed class RecordGetCommand(IStorageService storageService)
             var result = await _storageService.GetRecordAsync(
                 options.Endpoint, options.DataPartition, options.Id, options.Version,
                 options.Attributes, options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.StorageRecord);
+            context.Response.Results = ResponseResult.Create(
+                result, AdmeJsonContext.Default.AdmeResponseStorageRecord);
         }
         catch (Exception ex)
         {

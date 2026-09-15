@@ -21,7 +21,7 @@ public sealed class HealthService(
     /// <summary>
     /// Checks authentication and connectivity for an ADME instance.
     /// </summary>
-    public async Task<HealthCheckResult> CheckHealthAsync(
+    public async Task<AdmeResponse<HealthCheckResult>> CheckHealthAsync(
         string endpoint,
         string dataPartition,
         string? tenant,
@@ -44,12 +44,12 @@ public sealed class HealthService(
         }
         catch (Exception)
         {
-            return new HealthCheckResult(
+            return new(new HealthCheckResult(
                 false,
                 "Microsoft Entra authentication failed. Verify your credentials and sign-in configuration.",
                 false,
                 "Connectivity check skipped because authentication failed.",
-                null);
+                null), null);
         }
 
         try
@@ -62,12 +62,16 @@ public sealed class HealthService(
 
             using var response = await client.SendAsync(request, cancellationToken);
             var statusCode = (int)response.StatusCode;
-            return new HealthCheckResult(
+            var correlationId = response.Headers.TryGetValues(
+                AdmeServiceHelper.CorrelationIdHeader, out var correlationIds)
+                    ? correlationIds.FirstOrDefault()
+                    : null;
+            return new(new HealthCheckResult(
                 true,
                 null,
                 response.IsSuccessStatusCode,
                 response.IsSuccessStatusCode ? null : $"ADME returned HTTP status {statusCode}.",
-                statusCode);
+                statusCode), correlationId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -75,12 +79,12 @@ public sealed class HealthService(
         }
         catch (Exception)
         {
-            return new HealthCheckResult(
+            return new(new HealthCheckResult(
                 true,
                 null,
                 false,
                 "Could not connect to the ADME endpoint. Verify the endpoint and network access.",
-                null);
+                null), null);
         }
     }
 }

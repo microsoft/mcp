@@ -53,7 +53,8 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
                 options.Kind,
                 options.Tenant,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.JsonElement);
+            context.Response.Results = ResponseResult.Create(
+                result, AdmeJsonContext.Default.AdmeResponseJsonElement);
         }
         catch (Exception ex)
         {

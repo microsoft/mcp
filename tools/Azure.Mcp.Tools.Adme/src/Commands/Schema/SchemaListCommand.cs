@@ -84,7 +84,8 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
                 options.Offset,
                 options.Limit,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.SchemaListResponse);
+            context.Response.Results = ResponseResult.Create(
+                result, AdmeJsonContext.Default.AdmeResponseSchemaListResponse);
         }
         catch (Exception ex)
         {

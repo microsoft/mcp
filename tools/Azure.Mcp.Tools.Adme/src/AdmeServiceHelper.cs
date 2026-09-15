@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Core;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -22,6 +23,7 @@ internal static class AdmeServiceHelper
 {
     private const int MaxErrorResponseLength = 1024;
 
+    public const string CorrelationIdHeader = "correlation-id";
     public const string HttpClientName = "adme";
     public const string NonRetryingHttpClientName = "adme-no-retry";
     public const string AuthScope = "https://energy.azure.com/.default";
@@ -42,7 +44,7 @@ internal static class AdmeServiceHelper
             ? null
             : JsonSerializer.Deserialize(value, AdmeJsonContext.Default.JsonElement);
 
-    public static Task<T> SendAsync<T>(
+    public static Task<AdmeResponse<T>> SendAsync<T>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -65,7 +67,7 @@ internal static class AdmeServiceHelper
             typeInfo,
             cancellationToken);
 
-    public static Task<TResponse> PostAsync<TRequest, TResponse>(
+    public static Task<AdmeResponse<TResponse>> PostAsync<TRequest, TResponse>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -92,7 +94,7 @@ internal static class AdmeServiceHelper
             cancellationToken,
             disableRetries);
 
-    public static Task<TResponse> PutAsync<TRequest, TResponse>(
+    public static Task<AdmeResponse<TResponse>> PutAsync<TRequest, TResponse>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -139,7 +141,7 @@ internal static class AdmeServiceHelper
             cancellationToken);
     }
 
-    private static async Task<T> SendAsync<T>(
+    private static async Task<AdmeResponse<T>> SendAsync<T>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -176,6 +178,13 @@ internal static class AdmeServiceHelper
         }
 
         using var response = await client.SendAsync(request, cancellationToken);
+        var correlationId = response.Headers.TryGetValues(CorrelationIdHeader, out var correlationIds)
+            ? correlationIds.FirstOrDefault()
+            : null;
+        // Carried in failure messages so ADME support can trace the request that failed.
+        var correlationSuffix = string.IsNullOrWhiteSpace(correlationId)
+            ? string.Empty
+            : $" ({CorrelationIdHeader}: {correlationId})";
         if (!response.IsSuccessStatusCode)
         {
             // ADME APIs ensure client-facing error responses do not expose sensitive information.
@@ -186,18 +195,19 @@ internal static class AdmeServiceHelper
 
             throw new RequestFailedException(
                 (int)response.StatusCode,
-                message);
+                message + correlationSuffix);
         }
 
         if (typeInfo is null)
         {
-            return default!;
+            return new(default!, correlationId);
         }
 
-        return await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
+        var result = await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
             ?? throw new RequestFailedException(
                 (int)response.StatusCode,
-                "ADME request returned an empty response body.");
+                "ADME request returned an empty response body." + correlationSuffix);
+        return new(result, correlationId);
     }
 
     private static string GetRequestFailureMessage(HttpStatusCode statusCode, string? reasonPhrase) => statusCode switch

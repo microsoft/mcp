@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Adme.Commands.Search;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Tests.Client;
@@ -22,7 +23,9 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             .Returns(callInfo =>
             {
                 captured = callInfo.ArgAt<SearchQueryRequest>(2);
-                return new SearchQueryResponse { Results = [], TotalCount = 42 };
+                return new AdmeResponse<SearchQueryResponse>(
+                    new SearchQueryResponse { Results = [], TotalCount = 42 },
+                    "test-correlation-id");
             });
 
         var response = await ExecuteCommandAsync(
@@ -34,9 +37,10 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             "--limit", "100",
             "--returned-fields", "id");
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.SearchResponse);
-        Assert.Null(result.Cursor);
-        Assert.Equal(42, result.TotalCount);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
+        Assert.Null(result.Result.Cursor);
+        Assert.Equal(42, result.Result.TotalCount);
+        Assert.Equal("test-correlation-id", result.CorrelationId);
         Assert.NotNull(captured);
         Assert.Null(captured.Query);
         Assert.Equal(100, captured.Limit);
@@ -51,7 +55,8 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Service.QueryWithCursorAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
                 false, null, Arg.Any<CancellationToken>())
-            .Returns(new SearchCursorResponse { Results = [], Cursor = "NEXT", TotalCount = 42 });
+            .Returns(new AdmeResponse<SearchCursorResponse>(
+                new SearchCursorResponse { Results = [], Cursor = "NEXT", TotalCount = 42 }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -59,9 +64,9 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             "--kind", TestConstants.WellKind,
             "--cursor-pagination-mode");
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.SearchResponse);
-        Assert.Equal("NEXT", result.Cursor);
-        Assert.Equal(42, result.TotalCount);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
+        Assert.Equal("NEXT", result.Result.Cursor);
+        Assert.Equal(42, result.Result.TotalCount);
         await Service.DidNotReceiveWithAnyArgs().QueryAsync(
             default!, default!, default!, default, TestContext.Current.CancellationToken);
     }
@@ -72,7 +77,8 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Service.QueryWithCursorAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
                 false, null, Arg.Any<CancellationToken>())
-            .Returns(new SearchCursorResponse { Results = [], Cursor = "NEXT" });
+            .Returns(new AdmeResponse<SearchCursorResponse>(
+                new SearchCursorResponse { Results = [], Cursor = "NEXT" }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -81,7 +87,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             "--cursor", "PREV");
 
         Assert.True(response.Status == System.Net.HttpStatusCode.OK, response.Message);
-        ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.SearchResponse);
+        ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
         await Service.Received(1).QueryWithCursorAsync(
             TestConstants.Endpoint, TestConstants.DataPartition,
             Arg.Is<SearchCursorRequest>(request => request.Cursor == "PREV"),
@@ -94,7 +100,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Service.QueryAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchQueryRequest>(),
                 null, Arg.Any<CancellationToken>())
-            .Returns(new SearchQueryResponse { Results = [] });
+            .Returns(new AdmeResponse<SearchQueryResponse>(new SearchQueryResponse { Results = [] }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -102,7 +108,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             "--kind", TestConstants.WellKind,
             "--offset", "0");
 
-        ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.SearchResponse);
+        ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
         await Service.Received(1).QueryAsync(
             TestConstants.Endpoint, TestConstants.DataPartition,
             Arg.Is<SearchQueryRequest>(request => request.Offset == 0),
@@ -119,13 +125,13 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Service.QueryAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchQueryRequest>(),
                 null, Arg.Any<CancellationToken>())
-            .Returns(new SearchQueryResponse
+            .Returns(new AdmeResponse<SearchQueryResponse>(new SearchQueryResponse
             {
                 Results = [],
                 TotalCount = 7,
                 Aggregations = [new SearchAggregation { Key = "kind", Count = 7 }],
                 PhraseSuggestions = ["well"],
-            });
+            }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -134,10 +140,10 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             option, value);
 
         Assert.True(response.Status == System.Net.HttpStatusCode.OK, response.Message);
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.SearchResponse);
-        Assert.Equal(7, result.TotalCount);
-        Assert.NotNull(result.Aggregations);
-        Assert.Equal(["well"], result.PhraseSuggestions);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
+        Assert.Equal(7, result.Result.TotalCount);
+        Assert.NotNull(result.Result.Aggregations);
+        Assert.Equal(["well"], result.Result.PhraseSuggestions);
         await Service.DidNotReceiveWithAnyArgs().QueryWithCursorAsync(
             default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
@@ -230,7 +236,7 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Service.QueryAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchQueryRequest>(),
                 null, Arg.Any<CancellationToken>())
-            .Returns(new SearchQueryResponse { Results = [] });
+            .Returns(new AdmeResponse<SearchQueryResponse>(new SearchQueryResponse { Results = [] }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -253,7 +259,8 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         Service.QueryWithCursorAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
                 true, null, Arg.Any<CancellationToken>())
-            .Returns(new SearchCursorResponse { Results = [], Cursor = "NEXT", TotalCount = 42 });
+            .Returns(new AdmeResponse<SearchCursorResponse>(
+                new SearchCursorResponse { Results = [], Cursor = "NEXT", TotalCount = 42 }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,

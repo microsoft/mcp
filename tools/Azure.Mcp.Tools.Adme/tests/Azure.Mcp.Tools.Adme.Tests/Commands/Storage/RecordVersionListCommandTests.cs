@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Tools.Adme.Commands.Storage;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Tests.Client;
@@ -21,7 +22,9 @@ public sealed class RecordVersionListCommandTests : CommandUnitTestsBase<RecordV
         Service.ListRecordVersionsAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, RecordId, TestConstants.Tenant,
                 Arg.Any<CancellationToken>())
-            .Returns(new RecordVersionsResponse { RecordId = RecordId, Versions = [1L, 2L] });
+            .Returns(new AdmeResponse<RecordVersionsResponse>(
+                new RecordVersionsResponse { RecordId = RecordId, Versions = [1L, 2L] },
+                "test-correlation-id"));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -29,9 +32,10 @@ public sealed class RecordVersionListCommandTests : CommandUnitTestsBase<RecordV
             "--id", RecordId,
             "--tenant", TestConstants.Tenant);
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.RecordVersionsResponse);
-        Assert.Equal(RecordId, result.RecordId);
-        Assert.Equal([1L, 2L], result.Versions);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseRecordVersionsResponse);
+        Assert.Equal(RecordId, result.Result.RecordId);
+        Assert.Equal([1L, 2L], result.Result.Versions);
+        Assert.Equal("test-correlation-id", result.CorrelationId);
     }
 
     [Theory]

@@ -35,7 +35,13 @@ public sealed class AdmeSetup : IAreaSetup
                     args.Outcome.Result is not { StatusCode: HttpStatusCode.InternalServerError }
                     && HttpClientResiliencePredicates.IsTransient(args.Outcome));
             });
-        services.AddHttpClient(AdmeServiceHelper.NonRetryingHttpClientName);
+        // Retrying a cursor continuation can consume the cursor, so only the retry strategy is disabled here;
+        // the standard timeouts, rate limiter, and circuit breaker still apply.
+        services.AddHttpClient(AdmeServiceHelper.NonRetryingHttpClientName)
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.ShouldHandle = _ => ValueTask.FromResult(false);
+            });
         services.AddSingleton<IHealthService, HealthService>();
         services.AddSingleton<ISchemaService, SchemaService>();
         services.AddSingleton<ISearchService, SearchService>();

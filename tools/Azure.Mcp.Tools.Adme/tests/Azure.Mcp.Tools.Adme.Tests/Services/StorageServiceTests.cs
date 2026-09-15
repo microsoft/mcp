@@ -32,7 +32,7 @@ public sealed class StorageServiceTests
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null,
             TestConstants.Tenant, TestContext.Current.CancellationToken);
 
-        Assert.Equal(RecordId, result.Id);
+        Assert.Equal(RecordId, result.Result.Id);
         Assert.Equal($"/api/storage/v2/records/{EscapedRecordId}", handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal(HttpMethod.Get, handler.LastRequest.Method);
         Assert.Equal("token-abc", handler.LastRequest.Headers.Authorization!.Parameter);
@@ -66,7 +66,7 @@ public sealed class StorageServiceTests
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, version, null, null,
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(version, result.Version);
+        Assert.Equal(version, result.Result.Version);
         Assert.Equal($"/api/storage/v2/records/{EscapedRecordId}/{version}", handler.LastRequest!.RequestUri!.PathAndQuery);
     }
 
@@ -112,7 +112,7 @@ public sealed class StorageServiceTests
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null,
             TestContext.Current.CancellationToken);
 
-        Assert.Equal([1L, 2L, 3L], result.Versions);
+        Assert.Equal([1L, 2L, 3L], result.Result.Versions);
         Assert.Equal($"/api/storage/v2/records/versions/{EscapedRecordId}", handler.LastRequest!.RequestUri!.PathAndQuery);
     }
 
@@ -142,8 +142,8 @@ public sealed class StorageServiceTests
             TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 25,
             "prev-cursor", null, TestContext.Current.CancellationToken);
 
-        Assert.Equal("next", result.Cursor);
-        Assert.Equal(RecordId, Assert.Single(result.Results));
+        Assert.Equal("next", result.Result.Cursor);
+        Assert.Equal(RecordId, Assert.Single(result.Result.Results));
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
         Assert.Equal(TestConstants.WellKind, query["kind"]);
         Assert.Equal("25", query["limit"]);
@@ -255,8 +255,8 @@ public sealed class StorageServiceTests
         Assert.Equal(HttpMethod.Put, handler.LastRequest!.Method);
         Assert.Equal("/api/storage/v2/records", handler.LastRequest.RequestUri!.PathAndQuery);
         Assert.Contains(RecordId, handler.LastRequestBody);
-        Assert.Equal(RecordId, Assert.Single(result.RecordIds!));
-        Assert.Equal(1, result.RecordCount);
+        Assert.Equal(RecordId, Assert.Single(result.Result.RecordIds!));
+        Assert.Equal(1, result.Result.RecordCount);
     }
 
     [Fact]
@@ -314,6 +314,27 @@ public sealed class StorageServiceTests
 
         Assert.Equal((int)HttpStatusCode.NotFound, exception.Status);
         Assert.Equal("sensitive backend details", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetRecordAsync_IncludesCorrelationIdOnFailure()
+    {
+        var handler = new StubHttpMessageHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("record not found", Encoding.UTF8, "application/json"),
+            };
+            response.Headers.Add("correlation-id", "corr-42");
+            return response;
+        });
+        var service = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.GetRecordAsync(
+            TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null, null,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal("record not found (correlation-id: corr-42)", exception.Message);
     }
 
     [Theory]

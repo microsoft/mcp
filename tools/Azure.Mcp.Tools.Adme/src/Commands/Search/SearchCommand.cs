@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Azure.Mcp.Tools.Adme.Options.Search;
 using Azure.Mcp.Tools.Adme.Services;
@@ -58,7 +59,8 @@ public sealed class SearchCommand(ISearchService searchService)
             var result = UsesCursorPagination(options)
                 ? await QueryWithCursorAsync(options, cancellationToken)
                 : await QueryAsync(options, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, AdmeJsonContext.Default.SearchResponse);
+            context.Response.Results = ResponseResult.Create(
+                result, AdmeJsonContext.Default.AdmeResponseSearchResponse);
         }
         catch (Exception ex)
         {
@@ -68,7 +70,8 @@ public sealed class SearchCommand(ISearchService searchService)
         return context.Response;
     }
 
-    private async Task<SearchResponse> QueryAsync(SearchOptions options, CancellationToken cancellationToken)
+    private async Task<AdmeResponse<SearchResponse>> QueryAsync(
+        SearchOptions options, CancellationToken cancellationToken)
     {
         var response = await _searchService.QueryAsync(
             options.Endpoint,
@@ -92,16 +95,16 @@ public sealed class SearchCommand(ISearchService searchService)
             options.Tenant,
             cancellationToken);
 
-        return new SearchResponse
+        return new(new SearchResponse
         {
-            Results = response.Results,
-            TotalCount = response.TotalCount,
-            Aggregations = response.Aggregations,
-            PhraseSuggestions = response.PhraseSuggestions,
-        };
+            Results = response.Result.Results,
+            TotalCount = response.Result.TotalCount,
+            Aggregations = response.Result.Aggregations,
+            PhraseSuggestions = response.Result.PhraseSuggestions,
+        }, response.CorrelationId);
     }
 
-    private async Task<SearchResponse> QueryWithCursorAsync(
+    private async Task<AdmeResponse<SearchResponse>> QueryWithCursorAsync(
         SearchOptions options,
         CancellationToken cancellationToken)
     {
@@ -126,12 +129,12 @@ public sealed class SearchCommand(ISearchService searchService)
             options.Tenant,
             cancellationToken);
 
-        return new SearchResponse
+        return new(new SearchResponse
         {
-            Results = response.Results,
-            TotalCount = response.TotalCount,
-            Cursor = response.Cursor,
-        };
+            Results = response.Result.Results,
+            TotalCount = response.Result.TotalCount,
+            Cursor = response.Result.Cursor,
+        }, response.CorrelationId);
     }
 
     private static bool UsesCursorPagination(SearchOptions options) =>

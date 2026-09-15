@@ -18,7 +18,16 @@ public sealed class SchemaServiceTests
     [Fact]
     public async Task GetSchemaAsync_SendsEscapedKindAuthenticationAndPartition()
     {
-        var handler = JsonHandler(HttpStatusCode.OK, """{"title":"Well"}""");
+        const string correlationId = "test-correlation-id";
+        var handler = new StubHttpMessageHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"title":"Well"}""", System.Text.Encoding.UTF8, "application/json"),
+            };
+            response.Headers.Add(AdmeServiceHelper.CorrelationIdHeader, correlationId);
+            return response;
+        });
         var provider = CreateCredentialProvider(TestConstants.AccessToken);
         var service = new SchemaService(provider, new FakeHttpClientFactory(handler));
 
@@ -29,7 +38,8 @@ public sealed class SchemaServiceTests
             TestConstants.Tenant,
             TestContext.Current.CancellationToken);
 
-        Assert.Equal("Well", result.GetProperty("title").GetString());
+        Assert.Equal("Well", result.Result.GetProperty("title").GetString());
+        Assert.Equal(correlationId, result.CorrelationId);
         Assert.Equal(
             "/api/schema-service/v1/schema/osdu%3A" +
             "wks%3A" +
@@ -67,8 +77,8 @@ public sealed class SchemaServiceTests
             25,
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(3, result.TotalCount);
-        var schemaInfo = Assert.Single(result.SchemaInfos);
+        Assert.Equal(3, result.Result.TotalCount);
+        var schemaInfo = Assert.Single(result.Result.SchemaInfos);
         Assert.Equal("osdu:wks:master-data--Well:1.4.0", schemaInfo.SchemaIdentity?.Id);
         Assert.Equal("osdu:wks:master-data--Well:2.0.0", schemaInfo.SupersededBy?.Id);
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);

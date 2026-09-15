@@ -86,6 +86,26 @@ public sealed class AdmeSetupTests
     }
 
     [Fact]
+    public async Task Setup_NonRetryingClient_DoesNotRetryTransientResponse()
+    {
+        var requestCount = 0;
+        using var serviceProvider = CreateServiceProvider(new StubHttpMessageHandler(_ =>
+        {
+            requestCount++;
+            return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        }), AdmeServiceHelper.NonRetryingHttpClientName);
+        using var client = serviceProvider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(AdmeServiceHelper.NonRetryingHttpClientName);
+
+        using var response = await client.GetAsync(
+            $"{TestConstants.Endpoint}/api/search/v2/query_with_cursor",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal(1, requestCount);
+    }
+
+    [Fact]
     public void Setup_RegistersAndExposesCommands()
     {
         var setup = new AdmeSetup();
@@ -122,12 +142,14 @@ public sealed class AdmeSetupTests
         Assert.NotNull(serviceProvider.GetRequiredService<SearchCommand>());
     }
 
-    private static ServiceProvider CreateServiceProvider(HttpMessageHandler handler)
+    private static ServiceProvider CreateServiceProvider(
+        HttpMessageHandler handler,
+        string clientName = AdmeServiceHelper.HttpClientName)
     {
         var services = new ServiceCollection();
         services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
         new AdmeSetup().ConfigureServices(services);
-        services.AddHttpClient(AdmeServiceHelper.HttpClientName)
+        services.AddHttpClient(clientName)
             .ConfigurePrimaryHttpMessageHandler(() => handler);
         return services.BuildServiceProvider();
     }
