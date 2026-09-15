@@ -36,7 +36,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Fixed `--mode single` to no longer spawns child processes for tools managed in the repository. [[#3466](https://github.com/microsoft/mcp/pull/3466)]
+- Fixed an issue where `--mode single` spawned child processes for tools managed in the repository. [[#3466](https://github.com/microsoft/mcp/pull/3466)]
 - Fixed unclear error when using Azure File Shares tools in clouds where the Microsoft.FileShares resource provider is not yet available. [[#3605](https://github.com/microsoft/mcp/pull/3605)]
 - Fixed Azure Backup documentation and option descriptions: moved the AKS-specific options from `azurebackup policy create` to `azurebackup protecteditem protect` in `azmcp-commands.md`, and enumerated the valid `--workload-type` aliases accepted by `azurebackup protectableitem list` (`SQL`/`SQLDatabase`, `SQLInstance`, `SAPHana`/`SAPHanaDatabase`, `SAPHanaSystem`, `SAPHanaDBInstance`/`SAPHanaDBI`, `VM`/`IaaSVM`/`VirtualMachine`, `FileShare`/`AzureFileShare`/`AFS`, `SAPAse`/`SAPAseDatabase`/`ASE`/`Sybase`) in both `azmcp-commands.md` and the command's `--workload-type` option description. [[#3494](https://github.com/microsoft/mcp/pull/3494)]
 - Fixed invalid command metadata by classifying `monitor workspace log search` as a data-plane operation and replacing six malformed command IDs in Compute and Managed Lustre with valid GUIDs. [[#3614](https://github.com/microsoft/mcp/pull/3614)]

@@ -63,7 +63,7 @@
 - Fixed MySQL server parameter updates failing when changing a system-default value by setting the configuration source to user-override. [[#3621](https://github.com/microsoft/mcp/pull/3621)]
 - Bounded resilience usage plan and enrollment creation and updates to 10 minutes while waiting for provisioning to complete. [[#3610](https://github.com/microsoft/mcp/pull/3610)]
 - Added missing ADME, Insights, IoT Hub, IoT Operations, Optimization, and Resilience Management namespaces to the VS Code extension service selector. [[#3643](https://github.com/microsoft/mcp/pull/3643)]
-- Adding `correlation-id` to response for debugging + Relaxed Azure Data Manager for Energy record ID and kind validation to avoid rejecting values accepted by the service. [[#3657](https://github.com/microsoft/mcp/pull/3657)]
+- Added `correlation-id` to responses for debugging and relaxed Azure Data Manager for Energy record ID and kind validation to avoid rejecting values accepted by the service. [[#3657](https://github.com/microsoft/mcp/pull/3657)]
 
 ## 3.0.43 (2026-09-10) (pre-release)
 
