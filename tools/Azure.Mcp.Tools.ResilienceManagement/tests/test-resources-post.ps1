@@ -25,13 +25,14 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 # $DeploymentOutputs keys are all UPPERCASE
 
-# The tenant-scoped service group and the usage plan enrollment are created here via
+# The usage plan, tenant-scoped service group, and usage plan enrollment are created here via
 # direct ARM REST calls (Invoke-AzRestMethod) because:
+#  - The preview usage plan resource does not complete its ARM deployment operation reliably,
+#    even when the resource itself finishes provisioning.
 #  - Microsoft.Management/serviceGroups is a tenant-scoped resource that cannot be created
 #    in the resource-group-scoped test-resources.bicep deployment, and a direct PUT only
 #    requires serviceGroups write (not tenant-level deployment write).
-#  - The enrollment requires the service group to already exist; the usage plan it enrolls
-#    into is created by test-resources.bicep.
+#  - The enrollment requires the service group and usage plan to already exist.
 
 $tenantId = $testSettings.TenantId
 $subscriptionId = $testSettings.SubscriptionId
@@ -257,7 +258,17 @@ function Publish-TestRunbook {
 Publish-TestRunbook -Name $failoverRunbookName
 Publish-TestRunbook -Name $reprotectRunbookName
 
-# 1) Create the tenant-scoped service group.
+# 1a) Create the usage plan outside the Bicep deployment so its provisioning wait is bounded.
+$usagePlanPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $usagePlanPath -Body @{
+    location   = 'global'
+    properties = @{
+        planType = 'Standard'
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $usagePlanPath
+
+# 1b) Create the tenant-scoped service group.
 $serviceGroupPath = "$serviceGroupId`?api-version=$serviceGroupApiVersion"
 Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
     properties = @{
