@@ -17,10 +17,9 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_B2as_v2'
 
-// Compute ignores the default location from eng/common
-var location string = 'eastus2'
+var location = resourceGroup().location
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
