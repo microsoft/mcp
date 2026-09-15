@@ -19,7 +19,8 @@ param healthModelsLocation string = 'swedencentral'
 var logSearchBasicTableName = 'McpBasic_CL'
 var logSearchAuxiliaryTableName = 'McpAuxiliary_CL'
 var logSearchAnalyticsTableName = 'McpAnalytics_CL'
-var logSearchDcrName = '${baseName}-log-search-dcr'
+// Direct DCR names are limited to 30 characters, so reserve 15 characters for the descriptive suffix.
+var logSearchDcrName = '${take(baseName, 15)}-log-search-dcr'
 var logSearchDestinationName = 'log-search-workspace'
 var logSearchColumns = [
   {
