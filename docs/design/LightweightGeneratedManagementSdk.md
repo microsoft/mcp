@@ -2,361 +2,194 @@
 <!-- Licensed under the MIT License. -->
 <!-- cspell:ignore autorest typespec projectable -->
 
-# Lightweight generated management SDK proof of concept
+# Lightweight generated management SDK
 
 ## Status
 
-Proposed.
+Proposed. The first proof of concept (POC) targets `Azure.ResourceManager.CosmosDB` 1.5.0. Generated source must not replace the released package in production until provenance, behavior, hierarchy, AOT compatibility, and product-size reduction are validated for every package consumer.
 
-The first proof of concept (POC) targets `Azure.ResourceManager.CosmosDB`. No production package reference should be replaced until the POC validates source provenance, operation selection, resource hierarchy, generated API usability, and distribution-size improvement.
+## Motivation
 
-## Summary
+Azure MCP wraps a small subset of many Azure management SDKs, while the released packages contain resources, operations, and models that MCP never calls. The proposal generates a service-specific projection from the exact specification revision associated with the selected .NET SDK package and scopes unrelated operations out of C# generation.
 
-Azure MCP currently consumes released Azure SDK NuGet packages and wraps a small part of their APIs as MCP commands. Management packages can contain many resources, operations, and models that Azure MCP never uses.
+Goals:
 
-This proposal generates a service-specific, lightweight .NET management SDK from the same Azure REST API specification revision associated with the released .NET SDK package. The generation process excludes operations that Azure MCP does not need while preserving complete selected resources and their resource hierarchy.
+- reduce the published MCP size;
+- preserve complete selected ARM resources and their hierarchy;
+- make generation pinned, reproducible, reviewable, and independent of normal builds;
+- commit generated C# rather than fetching specifications during build; and
+- preserve the existing AI-assisted contribution workflow.
 
-The workflow must preserve the current AI-assisted contribution experience. A command developer should continue to describe the command and required Azure SDK package in a prompt. The coding agent, guided by the repository instructions, is responsible for:
+The POC does not replace `Azure.Core`, `Azure.Identity`, `Azure.ResourceManager`, or Cosmos data-plane packages. It does not require preserving public APIs that MCP does not use, publishing a general-purpose SDK, or supporting Swagger-based projection.
 
-- selecting and adding the package version;
-- using the repository's existing command, service, options, test, and registration patterns;
-- identifying the SDK members used by the implementation;
-- resolving those members to REST/TypeSpec operations;
-- updating the lightweight SDK input manifest;
-- regenerating and validating the projected SDK; and
-- adding any required SDK access helpers and Azure CLI validation commands.
+## Developer and agent experience
 
-Developers should not need to understand TypeSpec operation IDs, edit `client.tsp`, or maintain resource-hierarchy metadata manually.
-
-## Goals
-
-1. Reduce the Azure MCP published artifact size by replacing large service-specific management packages with generated projections.
-2. Generate from the specification commit corresponding to the selected .NET SDK package, rather than from a moving `azure-rest-api-specs/main` branch.
-3. Fetch specifications with Git sparse checkout.
-4. Retain all operations belonging to a selected ARM resource and all in-service ancestor resources required for its hierarchy.
-5. Make operation selection deterministic, reviewable, and reproducible.
-6. Preserve the public SDK shapes used by Azure MCP, or make required migration changes explicit.
-7. Integrate projection maintenance into the existing AI prompt-driven command-authoring pattern.
-8. Keep normal builds offline from the specification and generation repositories by committing generated C#.
-
-## Non-goals for the initial POC
-
-- Replacing `Azure.Core`, `Azure.Identity`, or the base `Azure.ResourceManager` package.
-- Replacing Cosmos DB data-plane packages such as `Microsoft.Azure.Cosmos`.
-- Supporting every Azure MCP management package in the first change.
-- Producing or publishing a general-purpose Azure SDK NuGet package.
-- Preserving the entire public API of the released service package. The compatibility requirement is the API used by Azure MCP.
-- Generating from an unpinned latest specification or emitter.
-- Adding a second Swagger-based projection system in the Cosmos DB POC.
-
-## Existing Azure MCP authoring pattern
-
-The contribution workflow asks a developer to use an agent prompt similar to:
+A developer should continue to request a command using the repository's normal prompt pattern, for example:
 
 ```text
-create [namespace] [resource] [operation] command using #new-command.md as a reference
+Create the Cosmos DB account key command using the repository command-authoring skill. Use Azure.ResourceManager.CosmosDB.
 ```
 
-The detailed pattern lives in `docs/new-command.md`, and repository-wide coding guidance lives in `.github/copilot-instructions.md`. Today the agent adds the package to `Directory.Packages.props` and the area project, then implements commands, service methods, options, tests, documentation, and registrations.
+The developer does not supply specification SHAs, TypeSpec paths, operation IDs, scope decorators, or hierarchy metadata. The agent must:
 
-The projection workflow must extend this pattern instead of introducing a manual prerequisite. `docs/new-command.md` and `.github/copilot-instructions.md` will eventually tell the agent that adding or using a service-specific management package also requires running the SDK projection update command. The developer-facing prompt remains focused on the desired command and package.
+1. identify all projects using the requested package;
+2. resolve package provenance and sparse-checkout the pinned specification;
+3. generate or reuse the matching full SDK for semantic discovery;
+4. map referenced SDK members to TypeSpec operation IDs;
+5. update reviewed root-operation evidence;
+6. expand roots to complete resource closures;
+7. generate and validate the projection; and
+8. update helpers, tests, and Azure CLI validation steps required by the command.
 
-The POC should prove the tooling before those instructions are changed globally.
+If the POC succeeds, this workflow should be added to the repository's Copilot instructions and command-authoring skill.
 
-## Source provenance
+## Reproducible source provenance
 
-### Required provenance chain
-
-Every generated service must have a machine-readable chain from the Azure MCP dependency to the specification:
+Every projection has a machine-readable chain:
 
 ```text
-Azure MCP package ID and version
+MCP package ID and version
   -> azure-sdk-for-net release tag and commit
   -> azure-rest-api-specs repository, commit, and paths
-  -> pinned TypeSpec emitter and compiler packages
-  -> generated lightweight SDK
+  -> pinned Node, TypeSpec libraries, and management emitter
+  -> generated source
 ```
 
-For a package such as `Azure.ResourceManager.CosmosDB` version `1.5.0`, the corresponding `azure-sdk-for-net` release tag is normally:
+Resolve provenance from the matching `azure-sdk-for-net` release tag:
 
-```text
-Azure.ResourceManager.CosmosDB_1.5.0
-```
+- `tsp-location.yaml` for TypeSpec-generated packages;
+- `src/autorest.md` for Swagger-generated packages.
 
-At that tag, provenance is resolved from:
+Generation must fail rather than fall back to `azure-rest-api-specs/main` when provenance is missing.
 
-- `tsp-location.yaml` for a TypeSpec-generated package; or
-- `src/autorest.md` for a Swagger-generated package.
+The complete input identity includes:
 
-For TypeSpec, `tsp-location.yaml` supplies:
+- Node version and `package-lock.json` hash;
+- exact compiler, TypeSpec library, and emitter versions;
+- emitter options and selected API version;
+- specification repository, commit, directory, and additional directories;
+- .NET SDK release tag and commit;
+- temporary emitter project template and consuming project settings;
+- Azure runtime package versions; and
+- required shared or custom source with provenance.
 
-- `repo`;
-- `commit`;
-- `directory`;
-- `additionalDirectories`; and
-- the emitter package manifest used by the .NET repository.
+A cache key must cover this complete identity. Two clean generations must have no unexplained differences. Reproducibility is separate from compatibility: compatibility means the full generated baseline supplies MCP's required API and request behavior, not that it recreates the released package's entire API.
 
-The generation command must fail if it cannot establish this chain. It must never silently fall back to `azure-rest-api-specs/main`.
+## Cosmos baseline
 
-### Complete generation contract
-
-Specification provenance is necessary but not sufficient for reproducible generation. The committed generation inputs must collectively determine the output and include:
-
-- the Node.js version, pinned by a committed version file and enforced by `package.json`;
-- `package-lock.json`, installed with `npm ci`;
-- exact TypeSpec compiler, library, and management emitter versions;
-- the emitter configuration and every command-line option;
-- the selected service API version;
-- the `new-project`, output-directory, and saved-input settings;
-- the source specification repository, commit, primary directory, and additional directories;
-- the corresponding `azure-sdk-for-net` release tag and commit;
-- the temporary emitter project properties, consuming MCP project properties, and Azure runtime package versions;
-- any shared source required by the emitter, with its repository and commit provenance; and
-- any service-specific custom source required by MCP, with its provenance, or a documented determination that MCP does not use it.
-
-The authoritative values may be distributed among `spec.lock.json`, the service configuration, the Node version file, `package-lock.json`, the temporary emitter project template, the consuming MCP project, and generation scripts. `spec.lock.json` must identify or hash those committed inputs. The resulting complete identity is the content-addressed cache key, so an artifact can be reused only for the exact inputs that produced it.
-
-Reproducibility and MCP compatibility are separate requirements:
-
-- **Reproducibility** means two clean generations from the complete input identity have no unexplained output differences.
-- **MCP compatibility** means the full generated baseline supplies the SDK APIs used by MCP and sends equivalent requests for the focused scenarios. It does not require reproducing the released package's entire public API.
-
-Before projection, compare the generated full SDK with the selected package and its `azure-sdk-for-net` source. Identify handwritten customizations and shared source. Include the parts required by MCP or document, with usage evidence, why omission is safe. The full baseline must pass focused compile and request-behavior checks before scoped output is evaluated.
-
-### Cosmos DB baseline
-
-The active `microsoft/mcp` repository references `Azure.ResourceManager.CosmosDB` 1.5.0. This version is TypeSpec-generated and its release snapshot contains:
+The active `microsoft/mcp` repository uses `Azure.ResourceManager.CosmosDB` 1.5.0. Its release metadata identifies:
 
 ```yaml
-directory: specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB
-commit: 60d0f02991387ea7ed7483d5e70f061f962216cf
+azure-sdk-for-net tag: Azure.ResourceManager.CosmosDB_1.5.0
+azure-sdk-for-net commit: 6f7e0bb7c1e2b849503aa6daf1ecc9d4f3adecc3
 repo: Azure/azure-rest-api-specs
-additionalDirectories:
+commit: 60d0f02991387ea7ed7483d5e70f061f962216cf
+directory: specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB
+api-version: 2026-03-15
+emitter: @azure-typespec/http-client-csharp-mgmt 1.0.0-alpha.20260722.2
 ```
 
-The POC generates the projection directly from this package's corresponding specification commit. No package-version migration is part of the product comparison.
+The projection is generated directly from this package's corresponding TypeSpec revision; no package-version migration is part of the product comparison.
 
-## Sparse specification checkout
+## Sparse checkout
 
-Generation must not clone a full working tree of `azure-rest-api-specs`. The fetch command should maintain a disposable or cached partial clone outside the generated source directory:
+Use a partial clone and sparse checkout of only:
 
-```bash
-git clone \
-  --filter=blob:none \
-  --no-checkout \
-  https://github.com/Azure/azure-rest-api-specs.git \
-  .generation-cache/azure-rest-api-specs
-
-git -C .generation-cache/azure-rest-api-specs sparse-checkout init --cone
-git -C .generation-cache/azure-rest-api-specs sparse-checkout set \
-  specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB
-git -C .generation-cache/azure-rest-api-specs checkout --detach \
-  60d0f02991387ea7ed7483d5e70f061f962216cf
-```
-
-The production script should set the sparse paths before or as part of checking out the detached commit. The paths must be taken from the resolved package provenance, not hard-coded to Cosmos DB.
-
-The sparse set includes:
-
-1. the `directory` from `tsp-location.yaml`;
+1. `tsp-location.yaml: directory`;
 2. every `additionalDirectories` entry;
-3. local directories required by relative imports; and
-4. repository files proven necessary for generation, if any.
+3. directories required by relative imports; and
+4. repository files proven necessary for generation.
 
-The resolver should validate relative imports and fail with the missing path when the sparse set is incomplete. It should update the sparse set only from explicit provenance or dependency information, not broaden it to the entire repository.
+For Cosmos, only the TypeSpec and configuration files under the DocumentDB directory are needed; example JSON files are excluded. The checkout is detached at the pinned commit and stored under ignored generation work directories. Normal `dotnet build` and `dotnet publish` never access the specification repository.
 
-Generated C# and lock manifests are committed. The sparse checkout and unmodified specification snapshot are build artifacts and are not committed. Normal `dotnet build` and `dotnet publish` do not fetch specifications.
+Missing relative imports fail with an actionable path instead of broadening the checkout to the entire repository.
 
-## Inputs and generated artifacts
-
-A proposed layout is:
+## Inputs and outputs
 
 ```text
 eng/sdk-generation/
+  .nvmrc
   package.json
   package-lock.json
   README.md
-  services/
-    cosmosdb.json
+  services/cosmosdb.json
   scripts/
-    Resolve-SdkProvenance.ps1
-    Checkout-Spec.ps1
-    Generate-FullSdk.ps1
-    Resolve-OperationClosure.ps1
-    Apply-OperationScopes.ps1
-    Generate-ProjectedSdk.ps1
-    Validate-ProjectedSdk.ps1
     Update-ServiceProjection.ps1
+    Test-ResourceHierarchy.ps1
+  tests/
+    Test-ResourceHierarchy.Tests.ps1
+    CosmosProjectionAotSmoke/
 
-tools/Azure.Mcp.Tools.Cosmos/src/
-  Azure.Mcp.Tools.Cosmos.csproj
-  GeneratedSdk/
-    spec.lock.json
-    roots.json
-    expanded-operations.json
-    expected-hierarchy.json
-    src/
-      Generated/
-      Shared/
+tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk/
+  spec.lock.json
+  roots.json
+  expanded-operations.json
+  expected-hierarchy.json
+  src/
+    Generated/
+    Shared/
 ```
 
-Names and location can change during implementation, but the separation between human intent, resolved inputs, and generated outputs must remain.
+Separation of ownership:
 
-### Service configuration
+- `roots.json` is reviewed intent and evidence;
+- `expanded-operations.json` and hierarchy metadata are derived;
+- `src/Generated` is emitter-owned;
+- `src/Shared` contains pinned shared Azure SDK source required outside `azure-sdk-for-net`; and
+- temporary specification copies, code models, projects, and caches are not committed.
 
-`eng/sdk-generation/services/cosmosdb.json` describes stable service identity and policy, for example:
+## Discovering required operations
 
-```json
-{
-  "packageId": "Azure.ResourceManager.CosmosDB",
-  "packageVersion": "1.5.0",
-  "areaProjects": [
-    "tools/Azure.Mcp.Tools.Cosmos/src/Azure.Mcp.Tools.Cosmos.csproj"
-  ],
-  "selectionPolicy": "allOperationsForSelectedResource"
-}
-```
+### Full-source discovery mode
 
-The package version should normally match `Directory.Packages.props` while migrating. After generated source replaces the package in normal builds, the service configuration remains the source of the baseline package identity.
+The existing projection may not contain an API needed by a new command. Therefore every update makes the full pinned SDK source available for semantic discovery, even when the package version is unchanged.
 
-### Specification lock
+The orchestrator generates it or reuses an integrity-checked content-addressed cache entry. It then substitutes the full `src` directory for projected source through an MSBuild property or isolated discovery project. It must never compile full and projected source together or reference the released service package simultaneously. Success and failure must leave committed project files unchanged.
 
-`spec.lock.json` is generated from package provenance:
+### Symbol inventory and mapping
 
-```json
-{
-  "package": {
-    "id": "Azure.ResourceManager.CosmosDB",
-    "version": "1.5.0"
-  },
-  "azureSdkForNet": {
-    "tag": "Azure.ResourceManager.CosmosDB_1.5.0",
-    "commit": "<resolved release commit>"
-  },
-  "azureRestApiSpecs": {
-    "repository": "Azure/azure-rest-api-specs",
-    "commit": "60d0f02991387ea7ed7483d5e70f061f962216cf",
-    "directory": "specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB",
-    "additionalDirectories": []
-  },
-  "tooling": {
-    "node": "<exact version>",
-    "packageLockSha256": "<hash>",
-    "emitter": "<exact package version>",
-    "compiler": "<exact package version>",
-    "apiVersion": "<selected API version>",
-    "emitterOptionsSha256": "<hash>"
-  },
-  "source": {
-    "sharedSource": [],
-    "serviceCustomizations": []
-  },
-  "destination": {
-    "projectSha256": "<hash>"
-  }
-}
-```
+A reusable Roslyn/MSBuild analyzer should record referenced service SDK:
 
-### Root operation manifest
+- methods and extension methods;
+- constructors, properties, and fields;
+- resources, data types, models, and enums; and
+- generic type arguments.
 
-`roots.json` records operations directly needed by Azure MCP and evidence for each mapping. For Cosmos DB the direct roots are:
+Map symbols using generated forwarding relationships, operation-ID/request-path documentation, and `tspCodeModel.json`. Ambiguous or missing mappings require agent review and fail automation.
+
+For the POC, reviewed static roots are acceptable. Current direct roots are:
 
 - `Microsoft.DocumentDB.DatabaseAccounts.get`;
 - `Microsoft.DocumentDB.DatabaseAccounts.list`;
-- `Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup`; and
-- `Microsoft.DocumentDB.DatabaseAccounts.listKeys`.
+- `Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup`;
+- `Microsoft.DocumentDB.DatabaseAccounts.listKeys`; and
+- `Microsoft.DocumentDB.LocationGetResults.list` for Quota region discovery.
 
-`roots.json` records the SDK members and source locations supporting each mapping.
+A model-only dependency must be reachable from a retained resource or operation. Otherwise generation fails; it must not silently retain unrelated operations. A future explicit `modelRoots` contract requires separate design and tests.
 
-This file expresses direct MCP requirements. It does not contain manually expanded resource operations.
+## Resource-aware closure
 
-### Expanded operation manifest
+The emitter's ARM provider schema is authoritative. For every root:
 
-`expanded-operations.json` is derived from the unscoped `tspCodeModel.json`. It records:
+1. locate it in `resources[].methods` or `nonResourceMethods`;
+2. select its owning resource;
+3. retain every operation on that resource;
+4. select in-service ancestors from `parentResourceId` or the resource ID hierarchy;
+5. retain every operation on those ancestors;
+6. require a `Read` for each selected resource;
+7. preserve resource type, ID pattern, scope, parent, singleton status, and C# name; and
+8. retain selected non-resource methods individually with their target scope.
 
-- direct roots;
-- owning resources;
-- resource ancestors;
-- all operations retained by policy;
-- why each operation was retained; and
-- non-resource methods, if selected.
+Predefined parents supplied by `Azure.ResourceManager`, such as subscription and resource group, are external hierarchy anchors rather than service operations.
 
-The generated diff must make newly added or removed service operations visible during a package/spec update.
+The Cosmos closure currently contains:
 
-## SDK member and operation discovery
+- `Microsoft.DocumentDB/databaseAccounts`: 32 operations;
+- `Microsoft.DocumentDB/locations`: 2 operations.
 
-### Full generation and discovery mode
+## Applying scopes
 
-Operation selection cannot be based only on names in the currently released assembly or existing projection. The full SDK from the pinned specification is the semantic discovery reference for every projection update, including an update that changes only MCP command usage.
-
-The orchestration command generates the full SDK or reuses a content-addressed cache entry only when its key and integrity metadata match the complete generation-input identity. An empty cache, or the presence of valid entries for older or different identities, is an ordinary cache miss: generate and store the current identity without requiring manual cache deletion. A cache may retain multiple valid identities.
-
-A corrupt or incomplete matching entry must never be compiled. The implementation may discard and regenerate it when the integrity policy can do so safely; otherwise it fails with an actionable integrity diagnostic. Any attempt to use an artifact under a mismatched identity is an error. Missing or incomplete authoritative generation inputs fail before cache lookup or generation.
-
-After obtaining the full SDK source, the command builds the configured MCP projects in a discovery mode that substitutes the full generated `src` directory for the committed projected source. The substitution must be controlled by an MSBuild property or isolated discovery project; it must not rewrite committed project files.
-
-Discovery mode must ensure that full and projected source are never compiled together and that the released service package is not simultaneously referenced. On success or failure, it leaves no temporary compile items, package references, or project changes. A normal build after discovery must compile only the committed projection. This supports adding a command for an operation or resource absent from the current projection without first weakening that projection.
-
-Generating the full SDK also separates API migration failures from projection failures. If the full baseline cannot compile the affected MCP projects, the workflow reports an SDK migration issue before operation scopes are applied.
-
-### Semantic SDK usage inventory
-
-The reusable implementation should use a Roslyn/MSBuild analyzer against discovery mode to record service SDK symbols referenced by configured Azure MCP projects, including:
-
-- methods and extension methods;
-- constructors;
-- properties and fields;
-- resource, data, model, and enum types; and
-- generic type arguments.
-
-For the initial scope feasibility experiment, a reviewed static inventory is sufficient. Before the workflow is generalized, prove the semantic path by starting from an existing projection, adding a fixture that uses an excluded resource without changing the package baseline, and regenerating a projection that contains it.
-
-### Mapping SDK members to operations
-
-Generated management methods include REST operation IDs and request paths in their documentation and forward through generated resource, collection, extension, and `Mockable*` types. The mapper should combine:
-
-- generated C# method metadata;
-- forwarding relationships;
-- generated operation ID and request path documentation; and
-- `tspCodeModel.json` method IDs.
-
-An unresolved or ambiguous mapping is an error requiring agent review. The agent writes the reviewed result to `roots.json`; a developer is not expected to determine a TypeSpec operation ID from the prompt.
-
-### Model-only dependencies
-
-For the Cosmos DB POC, a model, enum, constructor, or property referenced by MCP must be reachable from a retained resource or operation. If it is not reachable, generation fails with an actionable diagnostic identifying the symbol and source location. The tool must not retain an unrelated operation merely to make the model reachable.
-
-The agent must then either revise the MCP implementation to use a reachable contract or stop and request an explicit model-root capability. A future design may add a separate, reviewed `modelRoots` manifest and C# usage customizations, but only after an isolated fixture proves deterministic model retention. Model roots, if introduced, remain distinct from operation roots and must not silently expand the operation set.
-
-The Cosmos account-listing and key-retrieval scenarios remain the behavioral anchors while a separate fixture exercises this failure policy.
-
-## Resource-aware operation closure
-
-The management emitter's ARM provider schema is the source of truth. For each root operation:
-
-1. Find the operation in `resources[].methods` or `nonResourceMethods`.
-2. If it belongs to an ARM resource, select the owning resource.
-3. Retain every operation associated with that resource.
-4. Walk `parentResourceId` or the resource ID hierarchy and select every ancestor implemented by the same service SDK.
-5. Retain every operation associated with each selected in-service ancestor.
-6. Verify that every selected resource retains its `Read` operation.
-7. Preserve resource type, ID pattern, scope, parent, singleton status, and generated C# name.
-8. Treat predefined parents supplied by `Azure.ResourceManager`, such as subscription and resource group, as external hierarchy anchors rather than service operations.
-9. Retain selected non-resource methods individually and validate their target scope.
-
-The all-operations policy is intentionally conservative. A hierarchy technically needs fewer operations, but the POC follows the requirement that selecting a resource retains its complete operation set. The size report should show the cost of this policy.
-
-For the initial Cosmos roots, both operations belong to:
-
-```text
-Microsoft.DocumentDB/databaseAccounts
-```
-
-The current full TypeSpec model associates 32 operations with that resource. The exact number must be recalculated from the pinned `1.5.0` specification rather than copied from a newer specification checkout.
-
-## Applying C# scopes
-
-The fetched specification remains unchanged. The tool creates a temporary working copy and generates an MCP-owned block in `client.tsp` containing the complement of the expanded allowlist:
+The pinned specification remains unchanged. The tool copies it to a temporary directory and appends the complement of the retained operation set to `client.tsp`:
 
 ```typespec
 // BEGIN AZURE MCP GENERATED OPERATION SCOPES
@@ -364,319 +197,107 @@ The fetched specification remains unchanged. The tool creates a temporary workin
 // END AZURE MCP GENERATED OPERATION SCOPES
 ```
 
-The algorithm is:
+Existing upstream scopes are respected. A required root already excluded from C# is an error. Users and agents edit `roots.json`, never the generated scope block.
 
-```text
-all full-code-model operations
-  - expanded retained operations
-  = operations scoped out for C#
-```
+The first go/no-go gate confirms that scoping unselected resource reads removes those resources without blocking diagnostics. If operation-level scopes cannot do this for a service, stop and define the required emitter or TypeSpec support.
 
-Existing upstream `@@scope` decorators must be respected. If an MCP root is already excluded from C#, generation fails.
+## Strict hierarchy validation
 
-The generated scope block is an intermediate artifact. Human-reviewed intent remains in `roots.json`; users and agents should not hand-edit the block.
+The `azure-sdk-for-net` hierarchy scripts are useful inputs but are not strict enough alone: they may infer names heuristically, omit resource ID comparison, permit extra scopes/resources, and miss casing-only name changes.
 
-## Resource hierarchy validation
+The MCP-owned validator compares the selected full baseline with projected output and requires:
 
-The sibling `azure-sdk-for-net` repository provides:
+- complete generated-name mappings from both outputs;
+- exact bidirectional resource sets;
+- exact resource ID patterns;
+- exact parent and scope sets;
+- identical singleton status; and
+- ordinal, case-sensitive C# names.
 
-```text
-eng/packages/http-client-csharp-mgmt/eng/scripts/Get-ResourceHierarchy.ps1
-eng/packages/http-client-csharp-mgmt/eng/scripts/Get-ResourceHierarchyFromTspCodeModel.ps1
-eng/packages/http-client-csharp-mgmt/eng/scripts/Compare-ResourceHierarchy.ps1
-```
+It also verifies the exact operation set and operation path/kind. Independent negative fixtures cover resource ID drift, scope drift, casing-only rename, extra/missing resources, parent drift, singleton drift, and missing generated-name mappings.
 
-These upstream helpers are useful inputs but their exit codes do not implement this proposal's strict contract. At the Cosmos `1.5.0` release, the extractor can fall back to heuristic C# names, while the comparator does not compare resource ID patterns, permits additional resources and scopes, and uses case-insensitive PowerShell name comparison. Any reused helper source must be pinned as part of the tooling inputs.
+## Source integration and multiple consumers
 
-An MCP-owned strict wrapper or replacement validator must require generated-name extraction from both full and projected output and reject missing, duplicate, or incomplete mappings instead of accepting heuristic fallback. It compares resource sets bidirectionally, resource ID patterns exactly, scope and parent sets exactly, singleton status, and generated C# names with ordinal case-sensitive comparison.
+The emitter expects a project-shaped output and creates scaffolding if none exists, even with `new-project=false`. Generation therefore uses a temporary minimal project, but that project is not committed or shipped. After validation, only generated/shared source is copied into MCP.
 
-The full released package hierarchy cannot be compared directly with the projection because most resources are intentionally removed. Validation instead uses this sequence:
+When one tool is the sole package consumer, it can compile the source directly. Before integration, however, inventory every package reference. In `microsoft/mcp`, both Cosmos and Quota use `Azure.ResourceManager.CosmosDB`:
 
-1. Generate the full SDK from the pinned specification.
-2. Extract its resource hierarchy from `tspCodeModel.json`.
-3. Filter it to the selected resource and ancestor closure.
-4. Save that result as `expected-hierarchy.json`.
-5. Generate the scoped SDK.
-6. Extract the projected hierarchy.
-7. Compare expected and projected hierarchies.
+- Cosmos uses account get/list/key operations;
+- Quota uses location listing for region discovery.
 
-For every retained resource, compare:
+Changing Cosmos alone cannot remove the package from the server. The final integration must compile the combined projection once in a shared lightweight assembly referenced by both tools, or use another single-copy mechanism. Compiling identical public types into multiple tool assemblies is not the default because it duplicates code and creates conflicting type identities.
 
-- ARM resource type and the exact bidirectional resource set;
-- resource ID pattern using exact comparison;
-- exact parent resource type set;
-- exact scope set;
-- singleton status; and
-- generated C# resource name using ordinal case-sensitive comparison.
+The current POC compiles projected source into Cosmos to validate generation and behavior while this sharing decision remains open. The released package must remain until Quota is migrated.
 
-Also assert that:
+## Native AOT validation
 
-- generated-name mappings are available, unique, and complete for both inputs;
-- every root operation remains;
-- the projected operation set equals `expanded-operations.json`;
-- no unexpected resource remains;
-- no expected resource disappears; and
-- each retained method has the expected operation path and kind.
+The existing server's native build may exclude or trim a service, so it is not sufficient proof by itself. A dedicated smoke executable compiles the projected source through linked `Compile` items and references only management runtime dependencies. Mocked transport roots and executes:
 
-Keep independent strict-validator regression tests for resource ID drift, an additional scope, a casing-only C# rename, an additional resource, a missing resource, parent drift, singleton drift, and an unavailable generated-name mapping. Each negative fixture must fail for its intended reason, while an unchanged full-baseline subset and projection must pass.
+- account get/list and paging;
+- account and key deserialization;
+- `Data.Name` and `PrimaryMasterKey`; and
+- location listing before final multi-consumer integration.
 
-This comparison is first exercised as an early go/no-go gate immediately after the reproducible full baseline exists. Using a reviewed static allowlist, retain the complete database-account resource and scope out unrelated resource operations. Record the exact inputs, command, diagnostics, operation set, and hierarchy. Confirm unrelated resources disappear without blocking missing-`Read` diagnostics. If the experiment fails, operation-level `@@scope` is insufficient: record the diagnostic and required emitter or TypeSpec support, then stop before implementing reusable discovery or orchestration tooling.
+Record publish command, RID coverage, diagnostics, proof that projected code participated in native compilation, and successful execution.
 
-## Generated source integration
+## Cache behavior
 
-The projection does not need a production SDK project. The management emitter treats its output directory as a project root and creates project scaffolding when no project exists, even with `new-project=false`. Generation therefore uses a temporary project-shaped directory with a minimal pre-existing `.csproj` solely to preserve emitter behavior. The temporary project, solution, and metadata are not committed or shipped.
+- Empty cache or different valid identity: generate current identity.
+- Exact identity with valid integrity metadata: reuse.
+- Corrupt matching entry: discard and regenerate when safe, otherwise fail.
+- Attempted mismatched reuse: fail.
+- Incomplete authoritative inputs: fail before lookup or generation.
 
-After generation and validation, copy only emitter-owned and required shared source into the Cosmos area:
+Tests cover empty/hit/stale/corrupt states, package and tooling changes, duplicate implementation prevention, and cleanup after failure.
 
-```text
-tools/Azure.Mcp.Tools.Cosmos/src/GeneratedSdk/
-  src/
-    Generated/
-    Shared/
-```
+## Cosmos POC phases
 
-When one tool project is the only consumer, that project can compile the generated files directly. The generated types retain their `Azure.ResourceManager.CosmosDB` namespaces; their original assembly identity is not a compatibility requirement because they are internal implementation dependencies.
+1. **Baseline:** pin complete inputs, sparse-checkout the spec, inspect required shared/custom source, generate twice, and build/test the full baseline.
+2. **Scope gate:** use reviewed roots, generate the closure and scopes, verify diagnostics, exact operations, and hierarchy.
+3. **Discovery:** implement semantic full-source substitution; prove newly referenced excluded APIs expand the projection; prove unsupported model-only use fails.
+4. **Integration:** inventory Cosmos and Quota, share one account-and-location projection, remove the package from both, run unit/live/request tests, and execute Native AOT validation.
+5. **Measurement:** compare current `microsoft/mcp/main` with the final projection using identical production settings.
 
-Before integration, inventory every project that references the package. In the active `microsoft/mcp` repository, both Cosmos and Quota consume `Azure.ResourceManager.CosmosDB`: Cosmos uses the account resource, while Quota uses the location resource for region discovery. The package cannot be removed from the server by changing Cosmos alone. The final integration must compile the combined projection once in a shared lightweight assembly referenced by both tools, or adopt another single-copy sharing mechanism. Compiling identical generated public types into multiple tool assemblies is not the default because it duplicates code and creates conflicting type identities.
+## Product measurement and acceptance
 
-The consuming projects directly reference required runtime packages, initially `Azure.Core` and `Azure.ResourceManager`. Cosmos continues to reference its data-plane dependency. Normal builds must not retain the released `Azure.ResourceManager.CosmosDB` package after all consumers are migrated. A controlled comparison property may restore the released package, but package and generated implementation must never be active together.
+Only shipped states are size baselines:
 
-For Release builds, the Cosmos area disables PDB output so generated symbols are not added to the shipped distribution. A separate diagnostic-symbol artifact may be considered later without changing production measurements.
+1. current `microsoft/mcp/main` with `Azure.ResourceManager.CosmosDB` 1.5.0; and
+2. the final shared account-and-location projection with the released package absent.
 
-### Dedicated Native AOT validation
+The full generated SDK is a temporary validation input, not a measurement baseline.
 
-The existing native CLI build does not validate this projection. When `BuildNative=true`, `Azure.Mcp.Server.csproj` removes the Cosmos area and `Microsoft.Azure.Cosmos`, so the projected management assembly would not participate in that publish.
+Measure for each supported RID:
 
-The POC must add a dedicated Native AOT smoke-test executable that compiles the projected management source through linked `Compile` items and references only its required management runtime packages, not the Cosmos data-plane package. Through mocked transport, the executable must root and execute subscription account listing, paged response handling, account key retrieval, response deserialization, and access to `Data.Name` and `PrimaryMasterKey`. Merely including unused source is insufficient because trimming may remove it.
+- affected service footprint;
+- self-contained publish directory;
+- compressed distribution; and
+- native/AOT artifacts where Cosmos is included.
 
-Validation records the Native AOT publish command, RID coverage, diagnostics, proof that the projected SDK is part of the native compilation, and successful execution of the published application. The POC should validate the host RID first; production integration defines the supported CI RID matrix before rollout to other services.
+Acceptance requires:
 
-Native CLI artifact measurements must state that Cosmos is excluded. They cannot be presented as AOT validation or size measurement of the projection. AOT projection measurements come from the dedicated smoke-test application, while non-native production distribution measurements use the normal shipped configuration that includes Cosmos.
+- at least 50% reduction in both raw and individually compressed affected service footprint;
+- positive complete compressed distribution reduction with no RID regression;
+- preserved behavior, hierarchy, and AOT compatibility; and
+- acceptable generation and maintenance cost.
 
-## AI-assisted update workflow
+There is no fixed absolute per-service threshold. Percentage reduction measures projection effectiveness; aggregate absolute savings determine product value as additional SDKs are migrated. Release PDBs must not distort the comparison.
 
-### Developer experience
+## Failure conditions
 
-The intended prompt remains concise, for example:
+Generation fails for unresolved provenance, incomplete sparse dependencies or input identity, unpinned tooling, missing/ambiguous roots, unsupported model-only dependencies, selected resources without `Read`, operation/hierarchy drift, incomplete generated names, duplicate full/projected implementations, stale temporary project state, unexpected package retention after final integration, or non-reproducible output.
 
-```text
-Create the Cosmos DB account key command using #new-command.md. Use Azure.ResourceManager.CosmosDB.
-```
-
-The developer does not provide:
-
-- a specification SHA;
-- a TypeSpec path;
-- operation IDs;
-- scope decorators;
-- a resource hierarchy; or
-- generated-source project changes.
-
-### Agent responsibilities
-
-After implementing the command using the existing repository patterns, the agent must:
-
-1. determine whether the requested package is already projected;
-2. select or confirm the package version;
-3. resolve the `azure-sdk-for-net` release tag and specification provenance;
-4. sparse-checkout the pinned specification;
-5. generate or reuse a full SDK whose cache identity exactly matches all pinned inputs for every discovery run;
-6. build the affected projects in full-SDK discovery mode and inventory newly referenced SDK members;
-7. map those members to operations;
-8. update `roots.json` with source evidence;
-9. regenerate the resource closure and scoped SDK;
-10. add or update service access helpers required by the command;
-11. provide and, where appropriate, run Azure CLI commands used to provision or validate test resources;
-12. compile the affected areas and run relevant tests; and
-13. report operation, hierarchy, generated-size, and publish-size changes.
-
-A single orchestration command should cover steps 3 through 9:
-
-```pwsh
-./eng/sdk-generation/scripts/Update-ServiceProjection.ps1 -Service cosmosdb
-```
-
-The command enters full-SDK discovery mode on every run, reusing cached full source only when its complete input identity matches. It should be idempotent, suitable for an agent to run after modifying MCP service code, leave compile items and package references unchanged on failure, and finish by proving a normal build compiles only the projection.
-
-### Prompt instruction changes after the POC
-
-If the POC succeeds:
-
-- `.github/copilot-instructions.md` should require projection updates when service-specific management SDK usage changes;
-- `docs/new-command.md` should replace direct package-only instructions with the projection-aware workflow;
-- the generated SDK README should explain recovery for ambiguous operation mappings; and
-- pull request guidance should require reviewing root and expanded operation diffs.
-
-These changes should happen after the command and file contracts are stable, not as part of an incomplete POC.
-
-## Cosmos DB POC phases
-
-### Phase 1: Establish a reproducible full baseline
-
-1. Record the current `1.5.0` package and its TypeSpec provenance.
-2. Resolve the `1.5.0` .NET SDK release tag and commit, `tsp-location.yaml`, specification SHA, API version, and emitter package manifest.
-3. Pin Node, the dependency lock, emitter options, temporary project template, consuming project settings, runtime dependencies, and all other inputs in the complete generation contract.
-4. Sparse-checkout only the DocumentDB directory and declared or validated dependencies.
-5. Inspect the `1.5.0` SDK source for shared and handwritten source. Include what MCP requires or record evidence that it is not required.
-6. Generate the complete standalone SDK twice from clean directories and compare outputs.
-7. Compile the existing Cosmos area against the full generated SDK.
-8. Run focused request-behavior checks against the full baseline.
-9. Confirm that no package-version migration is mixed into projection behavior.
-
-Exit criterion: the complete input identity reproduces the full SDK without unexplained differences, and existing Cosmos management behavior compiles and passes focused checks against it.
-
-### Phase 2: Run the scope feasibility gate
-
-1. Implement the strict hierarchy validator contract and its independent negative fixtures before relying on hierarchy results.
-2. Use a reviewed static inventory for the existing Cosmos usage.
-3. Confirm the direct operations:
-   - `Microsoft.DocumentDB.DatabaseAccounts.get`;
-   - `Microsoft.DocumentDB.DatabaseAccounts.list`;
-   - `Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup`; and
-   - `Microsoft.DocumentDB.DatabaseAccounts.listKeys`.
-4. Resolve the database-account resource and all its operations from the pinned full code model.
-5. Produce a temporary specification working copy and scope out unrelated operations.
-6. Generate the projected SDK while capturing all diagnostics.
-7. Verify the database-account operation set and hierarchy against the full baseline subset with the strict validator.
-8. Verify unrelated resources disappear and no blocking missing-`Read` diagnostics occur.
-9. Gather preliminary size results comparing the current package-based implementation with the projected source implementation defined in Phase 5.
-
-Exit criterion: operation scopes cleanly remove unrelated resources while preserving the complete selected resource. On failure, record the exact command, inputs, diagnostic, and required support, then stop before reusable discovery or orchestration work.
-
-### Phase 3: Implement and prove reusable discovery
-
-1. Implement full-SDK source discovery mode without modifying committed compile items or package references.
-2. Inventory all Cosmos management SDK symbols referenced by Azure MCP.
-3. Capture `Data.Name` and `PrimaryMasterKey` model/property requirements.
-4. Map SDK members to operations and generate the complete resource and ancestor closure.
-5. Review `roots.json` and `expanded-operations.json`.
-6. Start from the account-only projection and add a fixture that references an excluded resource without changing the package/spec baseline.
-7. Run discovery, expand roots, and regenerate successfully without compiling full and projected source together or leaving temporary project state.
-8. Add a separate fixture that references an unreachable model and verify the documented actionable failure without retaining unrelated operations.
-9. Remove the fixtures after their behavior is captured in automated tooling tests; do not repurpose the account-listing or key-retrieval behavioral tests.
-
-Exit criterion: every Cosmos SDK symbol has a reviewed operation or reachable-model explanation, new usage expands an existing projection, and unsupported model-only usage fails deterministically.
-
-### Phase 4: Integrate and validate behavior
-
-1. Inventory all package consumers; for Cosmos DB this includes the Cosmos and Quota tools.
-2. Compile the combined account-and-location projection once and reference it from both consumers.
-3. Remove the service-package reference from both projects and ensure the released package is absent from the server dependency graph.
-4. Build the Cosmos and Quota projects and solution normally against only the projection.
-5. Run Cosmos and Quota unit tests.
-6. Add mocked transport tests for:
-   - subscription-level account listing, including paging; and
-   - account key retrieval, including request path and API version.
-7. Run the relevant Cosmos and Quota live scenarios when credentials and resources are available.
-8. Publish and execute the dedicated Native AOT smoke-test application against the projected management SDK for the declared RID coverage.
-9. Confirm the smoke test roots account listing, paging, key retrieval, location listing, and required serialization paths, and that the projected SDK participates in native compilation.
-10. Keep the existing native CLI build as a separate check, explicitly noting its Cosmos coverage.
-
-Exit criterion: existing MCP Cosmos commands preserve their observable management-plane behavior, and the dedicated executable proves the projected management SDK is AOT-safe for its declared coverage.
-
-### Phase 5: Measure current main against the projection
-
-Use identical production publish options, RIDs, trimming, AOT, and compression settings to compare:
-
-1. current `microsoft/mcp` `main`, which uses `Azure.ResourceManager.CosmosDB` 1.5.0; and
-2. the projected 1.5.0 account-and-location implementation shared by the Cosmos and Quota tools, with the released package absent.
-
-The full generated SDK and released 1.5.0 package are temporary migration and validation inputs. They are not shipped states and are not size baselines.
-
-For the two product configurations, report absolute bytes and percentage deltas for:
-
-- the affected service footprint: Cosmos and Quota tool assemblies plus the management package assembly on current main, versus those tool assemblies plus the single shared projection after migration;
-- self-contained publish directory bytes for supported RIDs;
-- compressed distribution package bytes; and
-- native/AOT artifact bytes where the product includes Cosmos.
-
-The POC acceptance criteria are:
-
-- at least a 50% reduction in both the uncompressed and individually compressed Cosmos service footprint; and
-- a positive complete compressed production-distribution reduction with no RID regression.
-
-The Cosmos area does not publish a Release PDB after generated source is integrated, matching the released package's production symbol footprint and preventing generated symbols from obscuring the comparison. Symbol files, if needed for a separate diagnostic artifact, must not be included in the shipped distribution measurement.
-
-There is no fixed absolute per-service threshold. Percentage reduction shows whether projection removes most of that service's unused SDK surface. Product-level value is evaluated by aggregating absolute distribution savings as additional management SDKs are projected.
-
-The report must also assess generation complexity and ongoing maintenance cost. NuGet global package-cache size is not an acceptance metric because it includes multiple target frameworks, documentation, and cached versions.
-
-Exit criterion: the report states whether the service-footprint thresholds are met, records the complete product-distribution reduction, and records the maintenance-cost decision.
-
-## Validation and failure behavior
-
-The projection update command must fail for:
-
-- an unresolved package release tag;
-- missing specification provenance;
-- a non-TypeSpec baseline when TypeSpec projection is requested;
-- incomplete sparse checkout dependencies;
-- an incomplete generation-input identity;
-- unpinned Node, TypeSpec, or emitter packages;
-- a corrupt matching cache entry that cannot be safely regenerated under the integrity policy;
-- any attempted reuse of a cached artifact under a mismatched identity;
-- full and projected service assemblies appearing in the same discovery or build graph;
-- a root operation missing from the full code model;
-- ambiguous SDK-member-to-operation mapping;
-- an unreachable model-only SDK dependency;
-- a selected resource without a retained `Read`;
-- operation-set drift;
-- resource hierarchy drift;
-- temporary discovery references remaining after success or failure;
-- an unexpected service package assembly in the normal output; or
-- generated output that is not reproducible.
-
-An empty cache, a valid older entry, or any other absence of an exact entry is not a failure; it causes generation for the current identity. Cache tests must cover an empty cache, an exact valid hit, changed package input, changed tooling or emitter-option input, a valid older entry, a corrupt matching entry, incomplete authoritative inputs, duplicate-assembly prevention, and cleanup of temporary references after failure.
-
-A package/spec update must not automatically accept renamed or removed roots. The tool should report them for agent and reviewer action.
+Package/spec updates never silently accept renamed or removed roots; they produce a reviewable manifest diff.
 
 ## POC deliverables
 
-The Cosmos DB POC should produce:
-
-1. a package-to-spec provenance resolver;
-2. a sparse specification checkout script;
-3. the complete pinned generation-input contract;
-4. a reproducible full standalone Cosmos SDK generation command;
-5. a recorded early scope feasibility result;
-6. a full-SDK semantic discovery mode;
-7. `roots.json` for direct MCP operations;
-8. generated resource-aware `expanded-operations.json`;
-9. generated C# scope decorators in a temporary spec working copy;
-10. projected Cosmos generated and shared source compiled directly by the service area;
-11. an MCP-owned strict hierarchy validator and its positive and negative regression fixtures;
-12. focused request-level, discovery-expansion, model-only-policy, and cache-state tests;
-13. a dedicated projected-SDK Native AOT smoke-test application and execution record; and
-14. a current-main-versus-projection size and feasibility report.
-
-## Acceptance criteria
-
-The POC is successful when all of the following are true:
-
-- the exact specification commit is derived from the chosen .NET SDK package release;
-- only required specification paths are sparsely checked out;
-- generation is reproducible from the complete committed input identity;
-- required shared and custom source is pinned, or its omission is justified against MCP usage;
-- the early scope gate removes unrelated resources without blocking diagnostics;
-- developers do not manually edit operation or hierarchy metadata;
-- the coding agent can discover new usage against the full SDK and update an existing projection without changing the package baseline;
-- unsupported model-only usage fails without silently retaining operations;
-- Cosmos account listing and key retrieval remain functional;
-- all operations of the selected Cosmos account resource are retained;
-- unrelated Cosmos resources and operations are absent;
-- the MCP-owned strict validator proves the selected resource hierarchy is unchanged from the full pinned generation and all negative fixtures fail as intended;
-- a dedicated Native AOT executable roots and executes the projected management paths successfully for the declared RID coverage;
-- native CLI results are not used as projection coverage while Cosmos remains excluded;
-- normal builds do not access `azure-rest-api-specs`; and
-- the current-main-versus-projection measurements meet the documented service-footprint and product-distribution criteria, or the POC is reported as unsuccessful.
-
-## Follow-up after the POC
-
-If successful, inventory every service-specific `Azure.ResourceManager.*` dependency in `Directory.Packages.props` and classify it as:
-
-- directly projectable from its current TypeSpec-generated package;
-- requiring a reviewed upgrade from a Swagger-generated package;
-- requiring custom SDK source not represented by the specification; or
-- currently unsuitable for this approach.
-
-Services should then be migrated independently, prioritized by distribution-size savings and operation count. The shared command-authoring prompt and agent instructions should be updated only after the Cosmos workflow is reliable and documented.
+- package-to-spec resolver and sparse checkout;
+- pinned generation environment and reproducible full generation;
+- reviewed roots and generated resource closure;
+- temporary generated C# scopes;
+- projected generated/shared source;
+- strict hierarchy validator and negative tests;
+- semantic discovery and cache-state tests;
+- mocked request and Native AOT tests;
+- single-copy Cosmos/Quota integration; and
+- current-main-versus-projection size report.
