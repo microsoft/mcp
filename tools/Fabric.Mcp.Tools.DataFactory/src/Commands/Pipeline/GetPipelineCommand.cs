@@ -19,7 +19,9 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class GetPipelineCommand(ILogger<GetPipelineCommand> logger, PipelineHandler handler)
     : AuthenticatedCommand<GetPipelineOptions, GetPipelineCommandResult>
 {

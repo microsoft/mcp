@@ -30,6 +30,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Container;
         up with 'azurebackup protectableitem list' or 'protectableitem inquire' to enumerate
         newly-discovered shares.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

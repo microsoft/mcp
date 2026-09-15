@@ -30,8 +30,8 @@ The following options are available for most commands:
 
 | Option | Required | Default | Description |
 |-----------|----------|---------|-------------|
-| `--subscription` | No | Environment variable `AZURE_SUBSCRIPTION_ID` | Azure subscription ID for target resources |
-| `--tenant-id` | No | - | Azure tenant ID for authentication |
+| `--subscription` | No | Azure CLI profile default or `AZURE_SUBSCRIPTION_ID` env var | The Azure subscription GUID identifier or display name. If not specified, the Azure CLI profile default subscription or `AZURE_SUBSCRIPTION_ID` environment variable will be used. |
+| `--tenant` | No | - | The Microsoft Entra ID tenant GUID identifier or display name. |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
 ### Discovery with `--learn`
@@ -204,6 +204,29 @@ azmcp server start \
     [--read-only]
 ```
 
+#### Structured Output Mode
+
+Enables MCP protocol structured output (`outputSchema` and `structuredContent`) for compatible clients. Two sub-modes are available:
+
+- `duplicated` — returns the complete result in both `content` and `structuredContent`
+- `compact` — returns concise text in `content` and the complete result in `structuredContent`
+
+Enable this only when the client has negotiated MCP protocol version `2025-06-18` or newer.
+
+```bash
+# Start MCP Server with structured output (duplicated mode - full content in both fields)
+azmcp server start \
+    --mode all \
+    --structured-output-mode duplicated
+
+# Start MCP Server with structured output (compact mode - concise content, full structuredContent)
+azmcp server start \
+    --mode all \
+    --structured-output-mode compact
+```
+
+> For tool authors who want to emit `outputSchema` and `structuredContent` from their commands, see the [Output Schema Migration Guide](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md).
+
 #### Consolidated Mode
 
 Exposes carefully curated tools that group related Azure operations together based on common user workflows and tasks. This mode provides the optimal balance between discoverability and usability by organizing consolidated tools that combine multiple related operations.
@@ -373,6 +396,32 @@ azmcp adme schema list --endpoint <endpoint> \
                         [--latest-version] \
                         [--offset <offset>] \
                         [--limit <limit>]
+
+# Search OSDU records by kind and Lucene criteria; query pagination is the default
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp adme search --endpoint <endpoint> \
+                  --data-partition <data-partition> \
+                  --kind <authority:source:entity-type:version> [<kind>...] \
+                  [--query <lucene-query>] \
+                  [--limit <limit>] \
+                  [--cursor-pagination-mode] \
+                  [--search-after] \
+                  [--cursor <cursor>] \
+                  [--offset <offset>] \
+                  [--returned-fields <path> [<path>...]] \
+                  [--aggregate-by <path>] \
+                  [--track-total-count] \
+                  [--sort <json-object>] \
+                  [--spatial-filter <json-object>] \
+                  [--query-as-owner] \
+                  [--excluded-fields <path> [<path>...]] \
+                  [--highlighted-fields <path> [<path>...]] \
+                  [--suggest-phrase <phrase>] \
+                  [--tenant <tenant>]
+
+Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
+Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
+Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
 
 # Fetch multiple records by fully-qualified OSDU record id
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1245,7 +1294,7 @@ azmcp azurebackup protecteditem undelete --subscription <subscription> \
 #### Protectable Item
 
 ```bash
-# Lists protectable items (SQL databases, SAP HANA databases) discovered in the Recovery Services vault.
+# Lists protectable items (SQL databases, SAP HANA databases, Azure File shares) discovered in the Recovery Services vault. For Azure File shares, first run 'container register' then 'protectableitem inquire' so the shares are discovered.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protectableitem list --subscription <subscription> \
                                        --resource-group <resource-group> \
@@ -1253,11 +1302,27 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        [--vault-type <vault-type>] \
                                        [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>] \
                                        [--container <container>]
+
+# Triggers the RSV Inquire (discovery) operation on a registered Azure File share protection container so the vault (re)discovers the file shares available for backup protection. Identify the container by --container (protection container name) or --storage-account (storage account name or ARM resource ID); exactly one is required. The Azure API is fire-and-forget and returns HTTP 202 Accepted with no body; the tool returns an acceptance record. RSV only; DPP vaults are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup protectableitem inquire --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --vault <vault> \
+                                          [--container <container>] \
+                                          [--storage-account <storage-account>]
 ```
 
 #### Container
 
 ```bash
+# Registers an Azure Storage account with a Recovery Services vault (RSV) as an Azure File share backup container. Accepts a bare storage account name (assumed to live in the vault resource group) or a fully qualified ARM resource ID. Idempotent: if the storage account is already registered, the tool returns the existing registration. By default a management lock is acquired on the storage account to prevent accidental deletion; pass --acquire-lock false to skip. RSV only; DPP vaults are not supported.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup container register --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --vault <vault> \
+                                     --storage-account <storage-account> \
+                                     [--acquire-lock <true|false>]
+
 # Triggers the RSV RefreshContainers (discovery) operation on a Recovery Services vault so it picks up new/changed containers (default backup management type: AzureStorage for Azure File share storage accounts). The Azure API is fire-and-forget and returns HTTP 202 Accepted with no body; the tool returns an acceptance record. RSV only; DPP vaults are not supported.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup container refresh --subscription <subscription> \
@@ -1289,6 +1354,22 @@ azmcp azurebackup job get --subscription <subscription> \
 ```
 
 #### Container
+
+```bash
+# Retrieves a single Recovery Services vault (RSV) protection container by name or by storage account.
+# Supply either --container (fully qualified RSV container name) or --storage-account (bare storage
+# account name or ARM resource ID); the container name is derived automatically for storage accounts.
+# When the container is not registered the response is HTTP 200 with 'registered: false' and
+# 'container: null' — this is the idempotency signal for register/refresh callers. --resource-group
+# identifies the vault; a storage account ARM ID may identify an account in a different resource group.
+# Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) return HTTP 400.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup container get --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --vault <vault> \
+                                [--container <container>] \
+                                [--storage-account <storage-account>]
+```
 
 ```bash
 # Lists storage accounts that a Recovery Services vault (RSV) can register as Azure File share backup containers. A storage-account filter can only be used with the default AzureStorage backup management type.
@@ -2611,8 +2692,8 @@ azmcp mysql list --subscription <subscription> \
                  [--server <server>] \
                  [--database <database>]
 
-# Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Executes a SQL statement on a MySQL database. Only a single statement is executed per call; SQL comments and stacked statements are rejected. The signed-in user's database permissions determine what the statement may do.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql database query --subscription <subscription> \
                            --resource-group <resource-group> \
                            --user <user> \
@@ -2668,8 +2749,8 @@ azmcp postgres list --subscription <subscription> \
                     [--database <database>] \
                     [--schema <schema>]
 
-# Execute a query on a PostgreSQL database
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Execute a query on a PostgreSQL database. Only a single statement is executed per call; SQL comments and stacked statements are rejected. The signed-in user's database permissions determine what the statement may do.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres database query --user <user> \
                               --server <server> \
                               --database <database> \
@@ -3117,6 +3198,15 @@ azmcp iothub device show --subscription <subscription> \
                          --hub-name <iot-hub-name> \
                          --device-id <device-id>
 
+# List devices in an IoT Hub
+# Returns one page of device identities. --max-count sets the page size (default 100, maximum 100); values less than 1 or greater than 100 are rejected.
+# When the hub has more devices than were returned, the response sets truncated=true with an explanatory message.
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub device list --subscription <subscription> \
+                         --resource-group <resource-group> \
+                         --hub-name <iot-hub-name> \
+                         [--max-count <max-count>]
+
 # Get device statistics for an IoT Hub identity registry
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp iothub device stats --subscription <subscription> \
@@ -3144,6 +3234,21 @@ azmcp iothub query run --subscription <subscription> \
                        [--from <source>] \
                        [--logical-operator <operator>] \
                        [--max-count <max-count>]
+```
+
+### Azure IoT Operations
+
+```bash
+# List Azure IoT Operations instances in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iotoperations instance list --subscription <subscription> \
+                                  [--resource-group <resource-group>]
+
+# Get details of a specific Azure IoT Operations instance
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iotoperations instance get --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --instance <instance-name>
 ```
 
 ### Azure Key Vault Operations
@@ -3332,20 +3437,6 @@ azmcp loadtesting testrun createorupdate --subscription <subscription> \
 azmcp grafana list --subscription <subscription> \
                   [--resource-group <resource-group>]
 ```
-### Azure IoT Hub Operations
-
-#### Device Registry Operations
-
-```bash
-# List devices in an IoT Hub
-# Returns one page of device identities. --max-count sets the page size (default 100, maximum 100); values less than 1 or greater than 100 are rejected.
-# When the hub has more devices than were returned, the response sets truncated=true with an explanatory message.
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp iothub device list --subscription <subscription> \
-                         --resource-group <resource-group> \
-                         --hub-name <iot-hub-name> \
-                         [--max-count <max-count>]
-```
 
 ### Azure Marketplace Operations
 
@@ -3506,6 +3597,7 @@ azmcp monitor workspace log query --subscription <subscription> \
                                   --query "| order by TimeGenerated desc"
 
 # Search a Basic or Auxiliary table in a Log Analytics workspace.
+# Operation plane: data. ARM workspace and table lookups are setup only.
 # Use workspace log query for Analytics tables.
 # --query must begin with '|' and omit the primary table name.
 # The server binds --table and caps output at --limit (default 20, maximum 100).
@@ -4100,10 +4192,12 @@ azmcp pricing get [--sku <sku>] \
 ### Azure RBAC Operations
 
 ```bash
-# List Azure RBAC role assignments
+# List Azure RBAC role assignments at a scope and any scope nested beneath it
+# Assignments inherited from a parent scope are not included.
+# --subscription must not be specified when --scope is a management group.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp role assignment list --subscription <subscription> \
-                           --scope <scope>
+azmcp role assignment list --scope <scope> \
+                           [--subscription <subscription>]
 ```
 
 ### Azure Redis Operations
@@ -5156,7 +5250,17 @@ azmcp storagesync cloudendpoint create --subscription <subscription> \
                                        --sync-group-name <syncgroup-name> \
                                        --cloud-endpoint-name <endpoint-name> \
                                        --storage-account-resource-id <storage-account-resource-id> \
-                                       --azure-file-share-name <share-name>
+                                       --azure-file-share-name <share-name> \
+                                       [--change-enumeration-interval-days <1-20>]
+
+# Update a Cloud Endpoint's Azure file share change enumeration interval
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storagesync cloudendpoint update --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --name <service-name> \
+                                       --sync-group-name <syncgroup-name> \
+                                       --cloud-endpoint-name <endpoint-name> \
+                                       --change-enumeration-interval-days <1-20>
 
 # Delete a Cloud Endpoint (idempotent – succeeds even if the endpoint does not exist)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

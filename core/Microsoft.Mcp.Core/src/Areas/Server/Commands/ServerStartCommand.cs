@@ -49,7 +49,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Description = "Starts Azure MCP Server.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
-    ReadOnly = true)]
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 {
     private static readonly string[] s_stdioHostBuilderArgs =

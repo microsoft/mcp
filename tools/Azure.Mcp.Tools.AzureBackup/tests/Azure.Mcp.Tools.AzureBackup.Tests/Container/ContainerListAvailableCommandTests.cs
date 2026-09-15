@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -21,6 +22,7 @@ public class ContainerListAvailableCommandTests : SubscriptionCommandUnitTestsBa
     public void CommandMetadataAndOptions_AreDefined()
     {
         Assert.Equal("list-available", CommandDefinition.Name);
+        Assert.Equal(ToolOperationPlane.Control, Command.Metadata.OperationPlane);
         Assert.Contains(CommandDefinition.Options, option => option.Name == "--filter");
         Assert.Contains(CommandDefinition.Options, option => option.Name == "--storage-account");
     }

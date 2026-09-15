@@ -6,12 +6,12 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Core;
-using Azure.ResourceManager;
-using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Helpers;
+using Azure.Mcp.Tools.Adme.Models;
+using Azure.Mcp.Tools.Adme.Models.Search;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme;
@@ -21,107 +21,30 @@ namespace Azure.Mcp.Tools.Adme;
 /// </summary>
 internal static class AdmeServiceHelper
 {
+    private const int MaxErrorResponseLength = 1024;
+
+    public const string CorrelationIdHeader = "correlation-id";
     public const string HttpClientName = "adme";
+    public const string NonRetryingHttpClientName = "adme-no-retry";
     public const string AuthScope = "https://energy.azure.com/.default";
 
-    public static void ValidateTarget(
-        string endpoint,
-        string dataPartition,
-        ValidationResult validationResult)
-    {
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri))
-        {
-            validationResult.Errors.Add(
-                "--endpoint must be an absolute HTTPS Azure Data Manager for Energy endpoint.");
-        }
-        else
-        {
-            try
-            {
-                ValidateEndpoint(endpointUri);
-            }
-            catch (Exception)
-            {
-                validationResult.Errors.Add(
-                    "--endpoint must be an HTTPS Azure Data Manager for Energy endpoint hosted on an allowed domain.");
-            }
-        }
+    public static string? Normalize(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 
-        if (string.IsNullOrWhiteSpace(dataPartition))
-        {
-            validationResult.Errors.Add("--data-partition must not be empty.");
-        }
-    }
+    public static IReadOnlyList<string>? Normalize(string[]? values) =>
+        values is { Length: > 0 } ? values : null;
 
-    public static void ValidateKind(string kind, ValidationResult validationResult)
-    {
-        var components = kind.Split(':');
-        var hasValidComponents = components.Length == 4
-            && components.All(component => !string.IsNullOrWhiteSpace(component))
-            && components.All(component => !component.Any(char.IsWhiteSpace))
-            && components.All(component => !component.Contains('*', StringComparison.Ordinal));
-        var versionComponents = components.Length == 4
-            ? components[^1].Split('.')
-            : [];
-        var hasValidVersion = versionComponents.Length == 3
-            && versionComponents.All(component => int.TryParse(
-                component,
-                NumberStyles.None,
-                CultureInfo.InvariantCulture,
-                out _));
+    public static SearchSort? ParseSort(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? null
+            : JsonSerializer.Deserialize(value, AdmeJsonContext.Default.SearchSort);
 
-        if (!hasValidComponents || !hasValidVersion)
-        {
-            validationResult.Errors.Add(
-                "--kind must be a fully-qualified kind in the format 'authority:source:type:major.minor.patch'.");
-        }
-    }
+    public static JsonElement? ParseJsonObject(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? null
+            : JsonSerializer.Deserialize(value, AdmeJsonContext.Default.JsonElement);
 
-    public static void ValidateRecordId(
-        string? id,
-        string optionName,
-        ValidationResult validationResult)
-    {
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            validationResult.Errors.Add($"{optionName} must not be empty.");
-            return;
-        }
-
-        // Storage record IDs require partition, group-type--EntityType, and unique-id sections.
-        var partitionSeparator = id.IndexOf(':');
-        var entitySeparator = partitionSeparator < 0
-            ? -1
-            : id.IndexOf(':', partitionSeparator + 1);
-        var entityComponent = entitySeparator > partitionSeparator
-            ? id.AsSpan(partitionSeparator + 1, entitySeparator - partitionSeparator - 1)
-            : [];
-        var typeSeparator = entityComponent.IndexOf("--", StringComparison.Ordinal);
-        var hasValidFormat = partitionSeparator > 0
-            && entitySeparator > partitionSeparator + 1
-            && entitySeparator < id.Length - 1
-            && typeSeparator > 0
-            && typeSeparator < entityComponent.Length - 2
-            && !id.Any(char.IsWhiteSpace);
-
-        if (!hasValidFormat)
-        {
-            validationResult.Errors.Add(
-                $"{optionName} must contain fully-qualified record ids in the format "
-                + "'{partition}:{group-type}--{EntityType}:{unique-id}'. ");
-        }
-    }
-
-    /// <summary>
-    /// Validates an ADME service endpoint URI.
-    /// </summary>
-    public static Uri ValidateEndpoint(Uri endpoint)
-    {
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, "adme", ArmEnvironment.AzurePublicCloud);
-        return endpoint;
-    }
-
-    public static Task<T> SendAsync<T>(
+    public static Task<AdmeResponse<T>> SendAsync<T>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -144,7 +67,7 @@ internal static class AdmeServiceHelper
             typeInfo,
             cancellationToken);
 
-    public static Task<TResponse> PostAsync<TRequest, TResponse>(
+    public static Task<AdmeResponse<TResponse>> PostAsync<TRequest, TResponse>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -155,7 +78,8 @@ internal static class AdmeServiceHelper
         JsonTypeInfo<TRequest> requestTypeInfo,
         JsonTypeInfo<TResponse> responseTypeInfo,
         IReadOnlyCollection<KeyValuePair<string, string>>? extraHeaders,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        bool disableRetries = false) =>
         SendAsync(
             credentialProvider,
             httpClientFactory,
@@ -167,9 +91,10 @@ internal static class AdmeServiceHelper
             JsonContent.Create(body, requestTypeInfo),
             extraHeaders,
             responseTypeInfo,
-            cancellationToken);
+            cancellationToken,
+            disableRetries);
 
-    public static Task<TResponse> PutAsync<TRequest, TResponse>(
+    public static Task<AdmeResponse<TResponse>> PutAsync<TRequest, TResponse>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -216,7 +141,7 @@ internal static class AdmeServiceHelper
             cancellationToken);
     }
 
-    private static async Task<T> SendAsync<T>(
+    private static async Task<AdmeResponse<T>> SendAsync<T>(
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -227,15 +152,17 @@ internal static class AdmeServiceHelper
         HttpContent? content,
         IReadOnlyCollection<KeyValuePair<string, string>>? extraHeaders,
         JsonTypeInfo<T>? typeInfo,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool disableRetries = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
-        var endpointUri = ValidateEndpoint(new Uri(endpoint));
+        var endpointUri = AdmeServiceValidator.ValidateEndpoint(new Uri(endpoint));
         var credential = await credentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
         var accessToken = await credential.GetTokenAsync(
             new TokenRequestContext([AuthScope]), cancellationToken);
 
-        using var client = httpClientFactory.CreateClient(HttpClientName);
+        using var client = httpClientFactory.CreateClient(
+            disableRetries ? NonRetryingHttpClientName : HttpClientName);
         client.BaseAddress = endpointUri;
 
         using var request = new HttpRequestMessage(method, path);
@@ -251,22 +178,36 @@ internal static class AdmeServiceHelper
         }
 
         using var response = await client.SendAsync(request, cancellationToken);
+        var correlationId = response.Headers.TryGetValues(CorrelationIdHeader, out var correlationIds)
+            ? correlationIds.FirstOrDefault()
+            : null;
+        // Carried in failure messages so ADME support can trace the request that failed.
+        var correlationSuffix = string.IsNullOrWhiteSpace(correlationId)
+            ? string.Empty
+            : $" ({CorrelationIdHeader}: {correlationId})";
         if (!response.IsSuccessStatusCode)
         {
+            // ADME APIs ensure client-facing error responses do not expose sensitive information.
+            var responseContent = (await response.Content.ReadAsStringAsync(cancellationToken)).Trim();
+            var message = string.IsNullOrWhiteSpace(responseContent)
+                ? GetRequestFailureMessage(response.StatusCode, response.ReasonPhrase)
+                : responseContent[..Math.Min(responseContent.Length, MaxErrorResponseLength)];
+
             throw new RequestFailedException(
                 (int)response.StatusCode,
-                GetRequestFailureMessage(response.StatusCode, response.ReasonPhrase));
+                message + correlationSuffix);
         }
 
         if (typeInfo is null)
         {
-            return default!;
+            return new(default!, correlationId);
         }
 
-        return await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
+        var result = await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken)
             ?? throw new RequestFailedException(
                 (int)response.StatusCode,
-                "ADME request returned an empty response body.");
+                "ADME request returned an empty response body." + correlationSuffix);
+        return new(result, correlationId);
     }
 
     private static string GetRequestFailureMessage(HttpStatusCode statusCode, string? reasonPhrase) => statusCode switch

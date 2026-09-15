@@ -17,16 +17,10 @@ namespace Microsoft.Mcp.Core.Commands;
 public enum ToolOperationPlane
 {
     /// <summary>
-    /// The tool has not been classified. This is an unset marker rather than a valid answer, and is
-    /// a validation failure.
-    /// </summary>
-    Unspecified,
-
-    /// <summary>
     /// The tool performs its action against a service data-plane API. Any ARM lookup the tool
     /// performs is only setup, such as reading a resource's endpoint before calling it.
     /// </summary>
-    Data,
+    Data = 1,
 
     /// <summary>
     /// The tool performs its action against Azure Resource Manager or another management-plane API,
@@ -48,7 +42,6 @@ public enum ToolOperationPlane
     /// <summary>
     /// No service plane applies, because the tool calls no service. Examples include tools that
     /// return embedded documentation, generate content locally, or control the MCP server itself.
-    /// Unlike <see cref="Unspecified"/>, this is a deliberate classification.
     /// </summary>
     NotApplicable
 }
