@@ -22,7 +22,7 @@ Initial feasibility, build, hierarchy, Linux Native AOT, shared-consumer integra
 | TypeSpec compiler | `1.13.0` |
 | Node.js | 24.15.0 |
 
-The package lock and complete provenance are committed under `eng/sdk-generation` and `eng/generated/Azure.ResourceManager.CosmosDB/spec.lock.json`.
+The package lock and complete provenance are committed under `eng/sdk-generation` and `eng/generated/Azure.Mcp.Generated.CosmosDB/spec.lock.json`.
 
 ## Sparse checkout
 
@@ -111,22 +111,22 @@ The current footprint is the Cosmos and Quota tool assemblies plus the released 
 | Configuration | Assembly bytes | Individually compressed bytes |
 | --- | ---: | ---: |
 | Current `microsoft/mcp` main | 3,618,656 | 850,330 |
-| Shared minimum projection | 649,216 | 224,906 |
-| Reduction | 2,969,440 (82.06%) | 625,424 (73.55%) |
+| Shared minimum projection | 649,216 | 224,960 |
+| Reduction | 2,969,440 (82.06%) | 625,370 (73.54%) |
 
 The generated project disables Release PDB output, matching the released package's production symbol footprint.
 
 ## `linux-x64` product comparison
 
-Both configurations used a Release, self-contained, untrimmed `linux-x64` server publish and identical gzip compression.
+Both configurations used a Release, self-contained, untrimmed `linux-x64` server publish and deterministic tar/gzip compression with sorted entries, fixed timestamps, and normalized ownership.
 
 | Product configuration | Publish bytes | Compressed bytes |
 | --- | ---: | ---: |
 | Current `microsoft/mcp` main | 308,284,413 | 121,247,863 |
-| Shared minimum projection | 305,324,643 | 120,610,199 |
-| Reduction | 2,959,770 bytes (0.960%) | 637,664 bytes (0.526%) |
+| Shared minimum projection | 305,324,653 | 120,378,574 |
+| Reduction | 2,959,760 bytes (0.960%) | 618,251 bytes (0.511%) |
 
-`dotnet list package --include-transitive` confirms that `Azure.ResourceManager.CosmosDB` is absent as a NuGet dependency; the remaining 402,944-byte assembly with that name is the MCP-owned generated projection.
+`dotnet list package --include-transitive` confirms that `Azure.ResourceManager.CosmosDB` is absent as a NuGet dependency. The MCP-owned projection is emitted as `Azure.Mcp.Generated.CosmosDB.dll` to distinguish it from the released SDK package.
 
 ## Remaining validation
 

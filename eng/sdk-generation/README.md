@@ -1,6 +1,6 @@
 # Azure MCP management SDK projection
 
-This directory contains the POC tooling for generating a lightweight Cosmos DB management SDK. The generated source is committed under `eng/generated/Azure.ResourceManager.CosmosDB` and compiled once into an MCP-owned shared assembly referenced by the Cosmos and Quota tools. Normal builds do not access the specification repository.
+This directory contains the POC tooling for generating a lightweight Cosmos DB management SDK. The generated source is committed under `eng/generated/Azure.Mcp.Generated.CosmosDB` and compiled once into an MCP-owned shared assembly referenced by the Cosmos and Quota tools. Normal builds do not access the specification repository.
 
 ## Pinned baseline
 
@@ -12,7 +12,7 @@ The projection uses the version already pinned in `Directory.Packages.props`; th
 - specification directory: `specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB`
 - API version: `2026-03-15`
 
-Complete provenance is recorded in `eng/generated/Azure.ResourceManager.CosmosDB/spec.lock.json`.
+Complete provenance is recorded in `eng/generated/Azure.Mcp.Generated.CosmosDB/spec.lock.json`.
 
 ## Onboard another service
 
@@ -70,8 +70,8 @@ The result is 2 resources and 6 operations.
 Both `Azure.Mcp.Tools.Cosmos` and `Azure.Mcp.Tools.Quota` previously referenced `Azure.ResourceManager.CosmosDB`. They now reference one shared generated project:
 
 ```text
-eng/generated/Azure.ResourceManager.CosmosDB/
-  Azure.ResourceManager.CosmosDB.csproj
+eng/generated/Azure.Mcp.Generated.CosmosDB/
+  Azure.Mcp.Generated.CosmosDB.csproj
   src/Generated/
   src/Shared/
 ```

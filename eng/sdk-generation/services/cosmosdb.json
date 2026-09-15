@@ -8,5 +8,6 @@
   "toolDirectory": "eng/sdk-generation/environments/cosmosdb",
   "productProject": "servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj",
   "sdkPath": "sdk/cosmosdb/Azure.ResourceManager.CosmosDB",
-  "outputDirectory": "eng/generated/Azure.ResourceManager.CosmosDB"
+  "projectFileName": "Azure.Mcp.Generated.CosmosDB.csproj",
+  "outputDirectory": "eng/generated/Azure.Mcp.Generated.CosmosDB"
 }

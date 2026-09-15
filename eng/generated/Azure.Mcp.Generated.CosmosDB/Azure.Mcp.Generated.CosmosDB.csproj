@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>Azure.ResourceManager.CosmosDB</AssemblyName>
-    <RootNamespace>Azure.ResourceManager.CosmosDB</RootNamespace>
+    <AssemblyName>Azure.Mcp.Generated.CosmosDB</AssemblyName>
+    <RootNamespace>Azure.Mcp.Generated.CosmosDB</RootNamespace>
     <IsAotCompatible>true</IsAotCompatible>
     <NoWarn>$(NoWarn);SCM0005</NoWarn>
   </PropertyGroup>

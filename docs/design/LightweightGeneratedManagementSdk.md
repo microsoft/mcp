@@ -131,8 +131,8 @@ eng/sdk-generation/
     Test-ResourceHierarchy.Tests.ps1
     CosmosProjectionAotSmoke/
 
-eng/generated/Azure.ResourceManager.CosmosDB/
-  Azure.ResourceManager.CosmosDB.csproj
+eng/generated/Azure.Mcp.Generated.CosmosDB/
+  Azure.Mcp.Generated.CosmosDB.csproj
   spec.lock.json
   roots.json
   expanded-operations.json

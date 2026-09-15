@@ -125,6 +125,7 @@ function Get-ContentHash {
 New-Item $WorkDirectory -ItemType Directory -Force | Out-Null
 $consumerPath = Join-Path $WorkDirectory 'package-consumers.json'
 $projectFileName = if ($config.projectFileName) { [string] $config.projectFileName } else { "$($config.packageId).csproj" }
+$emitterProjectFileName = "$($config.packageId).csproj"
 $generatedProject = Join-Path $output $projectFileName
 & (Join-Path $PSScriptRoot 'Resolve-PackageConsumers.ps1') `
     -PackageId $config.packageId `
@@ -231,7 +232,7 @@ if ($cacheHit) {
     Write-Host "Reused full-generation cache: $fullIdentity" -ForegroundColor Green
 }
 else {
-    Initialize-Project $full $projectFileName
+    Initialize-Project $full $emitterProjectFileName
     Copy-Item (Join-Path $output 'src/Shared') (Join-Path $full 'src/Shared') -Recurse
     Copy-Item (Join-Path $sdkRepo "$sdkServicePath/Custom/*") (Join-Path $full 'src/Custom') -Recurse
     if (Test-Path (Join-Path $sdkRepo "$sdkServicePath/Properties")) {
@@ -250,7 +251,7 @@ else {
     Move-Item $cacheTemp $fullCache
     Write-Host "Stored full-generation cache: $fullIdentity" -ForegroundColor Green
 }
-Invoke-CommandChecked dotnet @('build', (Join-Path $full "src/$projectFileName"), '/p:NuGetAudit=false')
+Invoke-CommandChecked dotnet @('build', (Join-Path $full "src/$emitterProjectFileName"), '/p:NuGetAudit=false')
 
 $fullCodeModel = Join-Path $full 'tspCodeModel.json'
 $expandedManifestPath = Join-Path $WorkDirectory 'expanded-operations.json'
@@ -273,10 +274,10 @@ $clientTsp = Join-Path $scopedSpec 'client.tsp'
 
 $projected = Join-Path $WorkDirectory 'projected'
 Remove-Item $projected -Recurse -Force -ErrorAction SilentlyContinue
-Initialize-Project $projected $projectFileName
+Initialize-Project $projected $emitterProjectFileName
 Copy-Item (Join-Path $output 'src/Shared') (Join-Path $projected 'src/Shared') -Recurse
 Invoke-Generation $clientTsp $projected
-Invoke-CommandChecked dotnet @('build', (Join-Path $projected "src/$projectFileName"), '/p:NuGetAudit=false')
+Invoke-CommandChecked dotnet @('build', (Join-Path $projected "src/$emitterProjectFileName"), '/p:NuGetAudit=false')
 
 $projectedSchema = Get-ProviderSchema (Join-Path $projected 'tspCodeModel.json')
 if (@($projectedSchema.resources).Count -ne $selectedResourceTypes.Count) { throw 'Projected resource set contains missing or additional resources.' }

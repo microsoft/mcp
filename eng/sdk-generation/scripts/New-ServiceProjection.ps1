@@ -8,6 +8,7 @@ param(
     [Parameter(Mandatory)] [string] $SdkPath,
     [Parameter(Mandatory)] [string[]] $ConsumerProject,
     [string] $ProductProject = 'servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj',
+    [string] $GeneratedProjectName,
     [string] $ToolDirectory,
     [string] $OutputDirectory,
     [string] $NodeVersion
@@ -16,8 +17,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
 $configPath = Join-Path $repoRoot "eng/sdk-generation/services/$Service.json"
+if (-not $GeneratedProjectName) {
+    $serviceName = $PackageId -replace '^Azure\.ResourceManager\.', ''
+    if ($serviceName -ceq $PackageId) { $serviceName = $Service }
+    $GeneratedProjectName = "Azure.Mcp.Generated.$serviceName"
+}
 if (-not $ToolDirectory) { $ToolDirectory = "eng/sdk-generation/environments/$Service" }
-if (-not $OutputDirectory) { $OutputDirectory = "eng/generated/$PackageId" }
+if (-not $OutputDirectory) { $OutputDirectory = "eng/generated/$GeneratedProjectName" }
 $toolRoot = Join-Path $repoRoot $ToolDirectory
 $outputRoot = Join-Path $repoRoot $OutputDirectory
 $workRoot = Join-Path $repoRoot "eng/sdk-generation/.work/$Service/initialize"
@@ -33,6 +39,7 @@ $config = [ordered]@{
     toolDirectory = $ToolDirectory
     productProject = $ProductProject
     sdkPath = $SdkPath
+    projectFileName = "$GeneratedProjectName.csproj"
     outputDirectory = $OutputDirectory
 }
 New-Item (Split-Path $configPath -Parent) -ItemType Directory -Force | Out-Null
@@ -60,8 +67,8 @@ New-Item (Join-Path $outputRoot 'src/Shared') -ItemType Directory -Force | Out-N
 @"
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>$PackageId</AssemblyName>
-    <RootNamespace>$PackageId</RootNamespace>
+    <AssemblyName>$GeneratedProjectName</AssemblyName>
+    <RootNamespace>$GeneratedProjectName</RootNamespace>
     <IsAotCompatible>true</IsAotCompatible>
     <NoWarn>`$(NoWarn);SCM0005</NoWarn>
   </PropertyGroup>
@@ -74,7 +81,7 @@ New-Item (Join-Path $outputRoot 'src/Shared') -ItemType Directory -Force | Out-N
     <PackageReference Include="Azure.ResourceManager" />
   </ItemGroup>
 </Project>
-"@ | Set-Content (Join-Path $outputRoot "$PackageId.csproj")
+"@ | Set-Content (Join-Path $outputRoot "$GeneratedProjectName.csproj")
 @{ operations = @() } | ConvertTo-Json | Set-Content (Join-Path $outputRoot 'roots.json')
 @{ selectionPolicy = 'minimumHierarchyClosure'; directRootCount = 0; resources = @(); nonResourceOperations = @() } |
     ConvertTo-Json -Depth 10 | Set-Content (Join-Path $outputRoot 'expanded-operations.json')
