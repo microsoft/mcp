@@ -43,10 +43,10 @@
 # ServiceOwners:                       @vcolin7 @microsoft/azure-mcp
 
 # ServiceLabel: %packages-npx
-# ServiceOwners:                       @KarishmaGhiya @hallipr @microsoft/azure-mcp
+# ServiceOwners:                       @KarishmaGhiya @microsoft/azure-mcp
 
 # ServiceLabel: %packages-NuGet
-# ServiceOwners:                       @chidozieononiwu @hallipr @microsoft/azure-mcp
+# ServiceOwners:                       @chidozieononiwu @microsoft/azure-mcp
 
 # ServiceLabel: %packages-PyPi
 # ServiceOwners:                       @microsoft/azure-mcp
@@ -169,10 +169,10 @@
 # ServiceOwners:                                @akshayrohilla @andynski @mentaltraffic @yeddlapurishivasai
 
 # PRLabel: %tools-BestPractices
-/tools/Azure.Mcp.Tools.AzureBestPractices/      @conniey @fanyang-mono @g2vinay @XiaofuHuang @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AzureBestPractices/      @conniey @g2vinay @XiaofuHuang @microsoft/azure-mcp
 
 # ServiceLabel: %tools-BestPractices
-# ServiceOwners:                                @conniey @fanyang-mono @g2vinay @XiaofuHuang
+# ServiceOwners:                                @conniey @g2vinay @XiaofuHuang
 
 # PRLabel: %tools-Terraform
 /tools/Azure.Mcp.Tools.AzureTerraform/          @yunliu1 @microsoft/azure-mcp
