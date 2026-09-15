@@ -103,6 +103,8 @@ the CLI and the container image entrypoint.
 
 Exposes Azure tools grouped by service namespace. Each Azure service appears as a single namespace-level tool that routes to individual operations internally. This is the default mode to reduce tool count and prevent VS Code from hitting the 128 tool limit.
 
+If a tool call specifies an unavailable `command`, the router can make one correction attempt using the supplied `intent` when the MCP client supports sampling. If it cannot resolve the command, it returns a tool error listing only the command names available to that tool under the current server configuration, without descriptions or parameter schemas. Set `learn=true` to request the full command catalog. This behavior also applies to consolidated mode and external-server routing in these modes; CLI help is unchanged.
+
 ```bash
 # Start MCP Server with namespace-level tools (default behavior)
 azmcp server start \

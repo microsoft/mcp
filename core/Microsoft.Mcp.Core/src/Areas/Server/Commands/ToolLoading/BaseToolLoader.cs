@@ -93,6 +93,30 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         return parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value);
     }
 
+    internal static CallToolResult CreateUnknownCommandResult(string toolName, string commandName, IEnumerable<string> availableCommandNames)
+    {
+        var names = availableCommandNames.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        var availableCommands = names.Length == 0
+            ? "No commands are available for this tool in the current server configuration."
+            : $"Available commands: {string.Join(", ", names)}";
+
+        return new CallToolResult
+        {
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = $"""
+                        The command '{commandName}' is not available for the '{toolName}' tool.
+                        {availableCommands}
+                        Use "learn=true" to get command descriptions and parameter schemas.
+                        """
+                }
+            ],
+            IsError = true
+        };
+    }
+
     /// <summary>
     /// The name of the option used to pass raw MCP tool input directly to a command.
     /// </summary>

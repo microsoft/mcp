@@ -244,40 +244,31 @@ public sealed class ServerToolLoader(
         {
             Activity.Current?.SetTag(TagName.ToolSource, "external." + client.ServerInfo.Name);
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
+            var resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
 
-            // When the specified command is not available, we try to learn about the tool's capabilities
-            // and infer the command and parameters from the users intent.
-            if (!availableTools.Any(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase)))
+            // Try one supported sampling correction without falling back to the full learn response.
+            if (resolvedTool == null)
             {
                 _logger.LogWarning("Tool {Tool} does not have a command {Command}.", tool, command);
-                if (string.IsNullOrWhiteSpace(intent))
+                if (availableTools.Count == 0 || !SupportsSampling(request.Server) || string.IsNullOrWhiteSpace(intent))
                 {
-                    return await InvokeToolLearn(request, intent, tool, cancellationToken);
+                    return CreateUnknownCommandResult(tool, command, availableTools.Select(t => t.Name));
                 }
 
                 var samplingResult = await GetCommandAndParametersFromIntentAsync(request, intent, tool, availableTools, cancellationToken);
-                if (string.IsNullOrWhiteSpace(samplingResult.commandName))
+                resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, samplingResult.commandName, StringComparison.OrdinalIgnoreCase));
+                if (resolvedTool == null)
                 {
-                    return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
+                    return CreateUnknownCommandResult(tool, command, availableTools.Select(t => t.Name));
                 }
 
-                command = samplingResult.commandName;
                 parameters = samplingResult.parameters;
             }
 
+            command = resolvedTool.Name;
+
             // Here the parameters are now those for the tool call, instead of being the server parameters.
             Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
-
-            // Verify the resolved command (which may have been updated by sampling)
-            // exists and is permitted under current mode restrictions.
-            var allTools = await GetAllChildToolsAsync(request, tool, cancellationToken);
-            var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
-
-            if (resolvedTool == null)
-            {
-                // Sampling resolved to a command that doesn't exist at all.
-                return await InvokeToolLearn(request, intent, tool, cancellationToken);
-            }
 
             var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
             Activity.Current?.SetTag(TagName.ToolId, toolId)
@@ -561,10 +552,15 @@ public sealed class ServerToolLoader(
                     parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value.Clone()) ?? [];
                 }
             }
-            if (commandName != null && commandName != "Unknown")
+            var resolvedTool = !string.IsNullOrWhiteSpace(commandName) && commandName != "Unknown"
+                ? availableTools.FirstOrDefault(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase))
+                : null;
+            if (resolvedTool != null)
             {
-                return (commandName, parameters);
+                return (resolvedTool.Name, parameters);
             }
+
+            _logger.LogWarning("Sampling did not resolve to an available command for tool: {Tool}.", tool);
         }
         catch
         {
