@@ -40,10 +40,18 @@ public static class McpTestUtilities
     /// </summary>
     /// <returns>The full path to the azmcp executable.</returns>
     public static string GetAzMcpExecutablePath()
+        => GetMcpExecutablePath("azmcp");
+
+    /// <summary>
+    /// Gets the path to an MCP server executable, handling OS-specific executable naming.
+    /// </summary>
+    /// <param name="executableName">The executable name without an extension.</param>
+    /// <returns>The full path to the MCP server executable.</returns>
+    public static string GetMcpExecutablePath(string executableName)
     {
         string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string executableName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        return Path.Combine(testAssemblyPath, executableName);
+        string platformExecutableName = OperatingSystem.IsWindows() ? $"{executableName}.exe" : executableName;
+        return Path.Combine(testAssemblyPath, platformExecutableName);
     }
 
     /// <summary>
