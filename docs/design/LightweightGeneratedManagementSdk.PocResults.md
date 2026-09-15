@@ -85,8 +85,8 @@ Temporary full generated 1.5.0 SDK build
 Temporary projected generated 1.5.0 SDK build
 Azure.Mcp.Tools.Cosmos build with full generated source
 Azure.Mcp.Tools.Cosmos build with projected generated source
-Complete Microsoft.Mcp.slnx build against the projection
-Cosmos unit tests: 3 passed
+Azure.Mcp.Tools.Quota build with its existing package dependency
+Cosmos tests: 201 passed
 ```
 
 The local machine does not have the .NET 9 ASP.NET Core runtime. Cosmos tests were therefore executed with `DOTNET_ROLL_FORWARD=Major` and ran on the installed newer runtime.
