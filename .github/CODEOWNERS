@@ -124,7 +124,7 @@
 # ServiceOwners:                       @msalaman
 
 # PRLabel: %tools-ApplicationInsights
-/tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ApplicationInsights/ @xiaomi7732 @cweining @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ApplicationInsights
 # ServiceOwners:                             @regexrowboat @xiaomi7732
