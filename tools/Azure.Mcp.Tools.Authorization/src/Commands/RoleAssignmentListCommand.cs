@@ -50,13 +50,9 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
             return;
         }
 
-        // Always post-process subscription via resolver (env var / CLI profile fallback)
+        // Always post-process subscription via resolver (env var / CLI profile fallback).
+        // ResolveSubscription already trims surrounding quotes, so no further cleanup is needed here.
         options.Subscription = _subscriptionResolver.ResolveSubscription(options.Subscription);
-        if (!string.IsNullOrEmpty(options.Subscription))
-        {
-            // Trim any surrounding quotes that may have been included in the input
-            options.Subscription = options.Subscription.Trim('"', '\'');
-        }
     }
 
     public override void ValidateOptions(RoleAssignmentListOptions options, ValidationResult validationResult)
