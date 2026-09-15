@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
+using System.Xml.Linq;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -30,19 +30,36 @@ public class OneLakeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
     [Fact]
     [LiveTestOnly]
-    public async Task Should_list_workspaces()
+    public async Task Should_list_lifecycle_created_item()
     {
         var expectedWorkspaceId = Environment.GetEnvironmentVariable("ONELAKE_TEST_WORKSPACE_ID");
-        var expectedWorkspaceName = Environment.GetEnvironmentVariable("ONELAKE_TEST_WORKSPACE_NAME");
+        var expectedItemName = Environment.GetEnvironmentVariable("ONELAKE_TEST_ITEM_NAME");
         Assert.False(string.IsNullOrWhiteSpace(expectedWorkspaceId));
-        Assert.False(string.IsNullOrWhiteSpace(expectedWorkspaceName));
+        Assert.False(string.IsNullOrWhiteSpace(expectedItemName));
 
-        var result = await CallToolAsync("onelake_list-workspaces", []);
+        var maxWaitTime = TimeSpan.FromMinutes(2);
+        var startTime = DateTime.UtcNow;
+        var itemFound = false;
 
-        var workspaces = result.AssertProperty("workspaces");
-        Assert.Equal(JsonValueKind.Array, workspaces.ValueKind);
-        Assert.Contains(workspaces.EnumerateArray(), workspace =>
-            workspace.GetProperty("id").GetString() == expectedWorkspaceId &&
-            workspace.GetProperty("displayName").GetString() == expectedWorkspaceName);
+        while (DateTime.UtcNow - startTime < maxWaitTime)
+        {
+            var result = await CallToolAsync(
+                "onelake_list-items",
+                new() { { "workspace-id", expectedWorkspaceId } });
+            var xmlResponse = result.AssertProperty("xmlResponse").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(xmlResponse));
+
+            var document = XDocument.Parse(xmlResponse);
+            itemFound = document.Descendants().Any(element =>
+                element.Name.LocalName == "Name" && element.Value == expectedItemName);
+            if (itemFound)
+            {
+                break;
+            }
+
+            await Task.Delay(PollInterval(10_000), TestContext.Current.CancellationToken);
+        }
+
+        Assert.True(itemFound, $"Item '{expectedItemName}' was not visible through OneLake within {maxWaitTime.TotalMinutes} minutes.");
     }
 }
