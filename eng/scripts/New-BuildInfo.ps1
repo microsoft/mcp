@@ -331,7 +331,20 @@ function Get-PathsToTest {
         $projectName = (Get-Item $path).Name
         $testResourcesPath = "$path/tests"
         $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
-        $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
+        $hasAzureTestResources = (Test-Path "$rootedTestResourcesPath/test-resources.bicep") -or (Test-Path "$rootedTestResourcesPath/test-resources.json")
+        $hasCustomProvisioner = Test-Path "$rootedTestResourcesPath/test-resources.ps1"
+        $hasCustomCleanup = Test-Path "$rootedTestResourcesPath/remove-test-resources.ps1"
+        if ($hasCustomProvisioner -xor $hasCustomCleanup) {
+            Write-Error "Test resource directory '$rootedTestResourcesPath' must contain both test-resources.ps1 and remove-test-resources.ps1 for a custom lifecycle."
+            return @{ _error = $true }
+        }
+        $hasCustomTestResources = $hasCustomProvisioner -and $hasCustomCleanup
+        if ($hasAzureTestResources -and $hasCustomTestResources) {
+            Write-Error "Test resource directory '$rootedTestResourcesPath' contains both an ARM/Bicep manifest and a custom provisioner. Use only one provisioning model per directory."
+            return @{ _error = $true }
+        }
+        $hasTestResources = $hasAzureTestResources -or $hasCustomTestResources
+        $testResourceProvider = $hasCustomTestResources ? 'custom' : ($hasAzureTestResources ? 'azure' : $null)
         $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
         $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
         $result = $false
@@ -364,6 +377,7 @@ function Get-PathsToTest {
             path                 = $path
             hasTestResources     = $hasTestResources
             testResourcesPath    = $hasTestResources ? $testResourcesPath : $null
+            testResourceProvider = $testResourceProvider
             hasLiveTests         = $hasLiveTests
             hasUnitTests         = $hasUnitTests
             hasRecordedTests     = $hasRecordedTests
@@ -402,6 +416,7 @@ function Get-TestMatrix {
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
+            $entry.testResourceProvider = $path.TestResourceProvider
 
             if ($ServerName) {
                 $entry.serverName = $ServerName
