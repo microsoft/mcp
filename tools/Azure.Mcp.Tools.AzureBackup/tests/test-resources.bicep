@@ -18,6 +18,9 @@ param testApplicationOid string
 @secure()
 param sqlVmAdminPwd string = 'P${newGuid()}!'
 
+@description('The VM size for the SQL VM used in testing.')
+param sqlVmSize string = 'Standard_B2als_v2'
+
 // Recovery Services Vault (RSV) - GeoRedundant for CRR support
 resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   name: '${baseName}-rsv'
@@ -288,7 +291,7 @@ output cosmosDbAccountName string = cosmosDbAccount.name
 output cosmosDbAccountLocation string = cosmosLocation
 
 // ─── SQL VM for ARM-Level Discovery Testing ───
-// Lowest-cost config: Standard_B2als_v2 + SQL 2022 Developer (free license) + no public IP.
+// Low-cost config: 2 vCPUs, at most 8 GB RAM, SQL 2022 Developer (free license), and no public IP.
 // The find-unprotected command discovers this VM via ARM Resource Graph as an unprotected resource.
 // No RSV container registration is needed — ARM-level discovery finds VMs directly.
 
@@ -345,7 +348,7 @@ resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B2als_v2'
+      vmSize: sqlVmSize
     }
     storageProfile: {
       imageReference: {
