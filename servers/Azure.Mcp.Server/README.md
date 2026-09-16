@@ -1340,6 +1340,11 @@ Example prompts that generate Azure CLI commands:
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Check whether recovery plan 'my-recovery-plan' and its protected resources are ready for recovery operations in service group 'my-service-group'"
 * "Validate which resources in recovery plan 'my-recovery-plan' in service group 'my-service-group' can fail over from 'eastus'"
+* "Fail over recovery plan 'my-recovery-plan' in service group 'my-service-group' from source location 'eastus'"
+* "Reprotect resources for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Finalize recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Resume paused recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Retry failed recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "List all runs of drill 'my-drill' in service group 'my-service-group'"
 * "Get drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "List all resources of drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
@@ -1432,7 +1437,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📊 **Azure Quota** - Resource quota and usage management
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
