@@ -1365,7 +1365,7 @@ Example prompts that generate Azure CLI commands:
 ### 📊 Azure Workbooks
 
 * "List all workbooks in resource group 'my-resource-group'"
-* "Show details and content of workbook 'my-workbook-id' in resource group 'my-resource-group'"
+* "Show details and content of workbook with resource ID '<workbook_resource_id>'"
 * "Create a new workbook named 'Cost Analysis' in resource group 'my-resource-group'"
 * "Update workbook 'my-workbook-id' with new dashboard visualization content"
 * "Delete workbook 'my-workbook-id' from resource group 'my-resource-group'"
