@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved ADME schema validation, request timeouts, and guidance for unauthorized responses caused by unknown or incorrectly cased data partitions."
