@@ -280,6 +280,7 @@ The `azmcp server start` command supports the following options:
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
+| `--dangerously-disable-ssrf-protections-by-namespace` | No | None | **⚠️ DANGEROUS**: Disable endpoint SSRF validation for a tool namespace. Repeat the option for multiple namespaces, or specify `ALL` to disable it for every namespace. |
 | `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
@@ -299,6 +300,22 @@ The `azmcp server start` command supports the following options:
 > ```bash
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --dangerously-disable-elicitation
+> ```
+
+> **⚠️ Security Warning for `--dangerously-disable-ssrf-protections-by-namespace`:**
+>
+> This option disables endpoint SSRF validation used by tools in the selected namespaces, including protocol, hostname allow-list, and private-network checks. When used:
+> - Untrusted tool input may cause requests to attacker-controlled or internal endpoints
+> - The values identify tool namespaces such as `acr` or `loadtesting`, not endpoint service types
+> - Repeat the option for multiple namespaces, or provide multiple space-delimited values (e.g. `--dangerously-disable-ssrf-protections-by-namespace acr loadtesting`)
+> - The special value `ALL` disables these protections for every namespace
+> - Only use this option temporarily in a fully trusted environment
+>
+> **Example usage (use with extreme caution):**
+> ```bash
+> azmcp server start \
+>     --dangerously-disable-ssrf-protections-by-namespace acr \
+>     --dangerously-disable-ssrf-protections-by-namespace loadtesting
 > ```
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
@@ -1238,8 +1255,6 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         [--container <container>] \
                                         [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>] \
                                         [--aks-snapshot-resource-group <resource-group>] \
-                                        [--aks-included-namespaces <ns[,ns...]>] \
-                                        [--aks-excluded-namespaces <ns[,ns...]>] \
                                         [--aks-label-selectors <selector[,selector...]>] \
                                         [--aks-include-cluster-scope-resources <true|false>] \
                                         [--disk-list-setting <include|exclude|resetexclusionsettings>] \
@@ -1278,8 +1293,7 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --vault <vault> \
                                        [--vault-type <vault-type>] \
-                                       [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>] \
-                                       [--container <container>]
+                                       [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>]
 
 # Triggers the RSV Inquire (discovery) operation on a registered Azure File share protection container so the vault (re)discovers the file shares available for backup protection. Identify the container by --container (protection container name) or --storage-account (storage account name or ARM resource ID); exactly one is required. The Azure API is fire-and-forget and returns HTTP 202 Accepted with no body; the tool returns an acceptance record. RSV only; DPP vaults are not supported.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1525,7 +1539,6 @@ azmcp communication email send --endpoint <endpoint> \
                                --subject <email-subject> \
                                --message <email-content> \
                                [--is-html] \
-                               [--sender-name <sender-display-name>] \
                                [--cc <cc-recipient-email>] \
                                [--bcc <bcc-recipient-email>] \
                                [--reply-to <reply-to-email>]
@@ -1539,11 +1552,10 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --subject "Important message" \
                                --message "Hello from Azure Communication Services!"
 
-# Send HTML-formatted email with CC and sender name
+# Send HTML-formatted email with CC
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
-                               --sender-name "Support Team" \
                                --to "recipient@example.com" \
                                --cc "manager@example.com" \
                                --subject "Monthly Report" \
@@ -1568,7 +1580,6 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 -   `--subject`: Email subject line (required)
 -   `--message`: Email content body (required)
 -   `--is-html`: Flag indicating the message content is HTML format (optional)
--   `--sender-name`: Display name of the sender (optional)
 -   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
 -   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
 -   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
@@ -2670,18 +2681,14 @@ azmcp mysql list --subscription <subscription> \
 
 # Executes a SQL statement on a MySQL database. Only a single statement is executed per call; SQL comments and stacked statements are rejected. The signed-in user's database permissions determine what the statement may do.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql database query --subscription <subscription> \
-                           --resource-group <resource-group> \
-                           --user <user> \
+azmcp mysql database query --user <user> \
                            --server <server> \
                            --database <database> \
                            --query <query>
 
 # Get the schema of a specific table in a MySQL database
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp mysql table schema get --subscription <subscription> \
-                             --resource-group <resource-group> \
-                             --user <user> \
+azmcp mysql table schema get --user <user> \
                              --server <server> \
                              --database <database> \
                              --table <table>
@@ -3228,8 +3235,7 @@ azmcp iotoperations instance get --subscription <subscription> \
 ```bash
 # Gets Key Vault Managed HSM account settings
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault admin settings get --subscription <subscription> \
-                                  --vault <vault-name>
+azmcp keyvault admin settings get --vault <vault-name>
 ```
 
 #### Certificates
@@ -3237,20 +3243,17 @@ azmcp keyvault admin settings get --subscription <subscription> \
 ```bash
 # Creates a certificate in a key vault with the default policy
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate create --subscription <subscription> \
-                                  --vault <vault-name> \
+azmcp keyvault certificate create --vault <vault-name> \
                                   --name <certificate-name>
 
 # Get a specific certificate or list all certificates. If --name is provided, returns a specific certificate; otherwise, lists all certificates in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault certificate get --subscription <subscription> \
-                               --vault <vault-name> \
+azmcp keyvault certificate get --vault <vault-name> \
                                [--name <certificate-name>]
 
 # Imports an existing certificate (PFX or PEM) into a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp keyvault certificate import --subscription <subscription> \
-                                  --vault <vault-name> \
+azmcp keyvault certificate import --vault <vault-name> \
                                   --certificate <certificate-name> \
                                   --certificate-data <path-or-base64-or-raw-pem> \
                                   [--password <pfx-password>]
@@ -3261,15 +3264,13 @@ azmcp keyvault certificate import --subscription <subscription> \
 ```bash
 # Creates a key in a key vault
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key create --subscription <subscription> \
-                          --vault <vault-name> \
+azmcp keyvault key create --vault <vault-name> \
                           --key <key-name> \
                           --key-type <key-type>
 
 # Get a specific key or list all keys. If --key is provided, returns a specific key; otherwise, lists all keys in the key vault.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp keyvault key get --subscription <subscription> \
-                       --vault <vault-name> \
+azmcp keyvault key get --vault <vault-name> \
                        [--key <key-name>] \
                        [--include-managed]
 ```
@@ -3291,15 +3292,13 @@ Tools that handle sensitive data such as secrets require user consent before exe
 ```bash
 # Creates a secret in a key vault (will prompt for user consent)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp keyvault secret create --subscription <subscription> \
-                             --vault <vault-name> \
+azmcp keyvault secret create --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
 
 # Get a specific secret or list all secrets. If --secret is provided, returns a specific secret with its value (requires user consent); otherwise, lists all secrets in the key vault (returns secret names and properties, not values).
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
-azmcp keyvault secret get --subscription <subscription> \
-                          --vault <vault-name> \
+azmcp keyvault secret get --vault <vault-name> \
                           [--secret <secret-name>]
 ```
 
@@ -5109,29 +5108,25 @@ azmcp storage account get --subscription <subscription> \
 ```bash
 # Create a blob container with optional public access
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob container create --subscription <subscription> \
-                                    --account <account> \
+azmcp storage blob container create --account <account> \
                                     --container <container>
 
 # Get detailed properties of Storage containers
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob container get --subscription <subscription> \
-                                 --account <account> \
+azmcp storage blob container get --account <account> \
                                  [--container <container>] \
                                  [--prefix <prefix>]
 
 # Get detailed properties of Storage blobs
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage blob get --subscription <subscription> \
-                           --account <account> \
+azmcp storage blob get --account <account> \
                            --container <container> \
                            [--blob <blob>] \
                            [--prefix <prefix>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp storage blob upload --subscription <subscription> \
-                          --account <account> \
+azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
@@ -5142,8 +5137,7 @@ azmcp storage blob upload --subscription <subscription> \
 ```bash
 # List tables in an Azure Storage account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
+azmcp storage table list --account <account>
 ```
 
 ### Azure Storage Sync Operations

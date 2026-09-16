@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
         Azure File shares discovered on registered storage accounts.
         Use this to find databases, file shares, and workloads available for backup protection.
         Only supported for RSV vaults; DPP datasources are protected by ARM resource ID directly.
-        Filter results by --workload-type (e.g., SQL, SAPHana, AzureFileShare) or --container.
+        Filter results by --workload-type (e.g., SQL, SAPHana, AzureFileShare).
         For Azure File shares, first register the storage account with 'azurebackup container register',
         then run 'azurebackup protectableitem inquire' so the file shares are discovered before they
         appear here.
@@ -68,7 +68,6 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
                 options.ResourceGroup,
                 options.Subscription!,
                 options.WorkloadType,
-                options.Container,
                 options.VaultType,
                 options.Tenant,
                 cancellationToken);
