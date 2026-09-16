@@ -1393,6 +1393,14 @@ Example prompts that generate Azure CLI commands:
 * "Get Well-Architected Framework guidance for App Service"
 * "What's the architectural guidance for Azure Cosmos DB?"
 
+### 📊 Azure Workbooks
+
+* "List all workbooks in resource group 'my-resource-group'"
+* "Show details and content of workbook with resource ID '<workbook_resource_id>'"
+* "Create a new workbook named 'Cost Analysis' in resource group 'my-resource-group'"
+* "Update workbook 'my-workbook-id' with new dashboard visualization content"
+* "Delete workbook 'my-workbook-id' from resource group 'my-resource-group'"
+
 ## Complete List of Supported Azure Services
 
 The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
