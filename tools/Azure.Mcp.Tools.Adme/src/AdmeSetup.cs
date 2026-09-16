@@ -19,6 +19,8 @@ namespace Azure.Mcp.Tools.Adme;
 /// </summary>
 public sealed class AdmeSetup : IAreaSetup
 {
+    internal static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(60);
+
     public string Name => "adme";
 
     public string Title => "Azure Data Manager for Energy";
@@ -31,6 +33,7 @@ public sealed class AdmeSetup : IAreaSetup
         services.AddHttpClient(AdmeServiceHelper.HttpClientName)
             .AddStandardResilienceHandler(options =>
             {
+                ConfigureTimeouts(options);
                 options.Retry.ShouldHandle = args => ValueTask.FromResult(
                     args.Outcome.Result is not { StatusCode: HttpStatusCode.InternalServerError }
                     && HttpClientResiliencePredicates.IsTransient(args.Outcome));
@@ -40,6 +43,7 @@ public sealed class AdmeSetup : IAreaSetup
         services.AddHttpClient(AdmeServiceHelper.NonRetryingHttpClientName)
             .AddStandardResilienceHandler(options =>
             {
+                ConfigureTimeouts(options);
                 options.Retry.ShouldHandle = _ => ValueTask.FromResult(false);
             });
         services.AddSingleton<IHealthService, HealthService>();
@@ -54,6 +58,13 @@ public sealed class AdmeSetup : IAreaSetup
         services.AddSingleton<SchemaGetCommand>();
         services.AddSingleton<SchemaListCommand>();
         services.AddSingleton<SearchCommand>();
+    }
+
+    internal static void ConfigureTimeouts(HttpStandardResilienceOptions options)
+    {
+        options.AttemptTimeout.Timeout = AttemptTimeout;
+        options.CircuitBreaker.SamplingDuration = AttemptTimeout * 2;
+        options.TotalRequestTimeout.Timeout = AttemptTimeout * 2;
     }
 
     /// <summary>

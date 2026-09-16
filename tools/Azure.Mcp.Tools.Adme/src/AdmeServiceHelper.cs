@@ -193,6 +193,11 @@ internal static class AdmeServiceHelper
                 ? GetRequestFailureMessage(response.StatusCode, response.ReasonPhrase)
                 : responseContent[..Math.Min(responseContent.Length, MaxErrorResponseLength)];
 
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                message += " Also verify the data partition name is correct and correctly cased; ADME may report an unknown partition as unauthorized.";
+            }
+
             throw new RequestFailedException(
                 (int)response.StatusCode,
                 message + correlationSuffix);
