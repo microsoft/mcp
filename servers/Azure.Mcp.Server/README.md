@@ -1146,6 +1146,14 @@ Example prompts that generate Azure CLI commands:
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
+### ⚡ Azure Event Hubs
+
+* "Get details for Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Update tags on Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Get details for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Get consumer group 'my-consumergroup' for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Delete consumer group 'my-consumergroup' from Event Hub 'my-eventhub' in namespace 'my-namespace' and resource group 'my-rg'"
+
 ### 📂 Azure File Shares
 
 * "Get details about a specific file share in my resource group"
@@ -1426,6 +1434,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
+- ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
