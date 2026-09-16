@@ -1211,6 +1211,11 @@ Example prompts that generate Azure CLI commands:
 * "List the node pools for my AKS cluster"
 * "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
+### 🚀 Azure Managed Grafana
+
+* "List all Managed Grafana workspaces in my subscription"
+* "Find Azure Managed Grafana workspaces available in subscription 'my-subscription'"
+
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
