@@ -12,6 +12,72 @@ namespace Microsoft.Mcp.Core.Tests.Helpers;
 
 public class EndpointValidatorTests
 {
+    // The tests below exercise validation with no namespace-scoped emergency bypass in effect.
+    // A null executing namespace can never match a configured bypass, so the full SSRF checks
+    // always run. This helper keeps that intent explicit and avoids repeating the argument.
+    private static void ValidatePublicTargetUrl(string url)
+        => EndpointValidator.ValidatePublicTargetUrl(url, logger: null, executingToolNamespaceName: null);
+
+    [Fact]
+    public void SetDangerouslyDisabledSsrfProtectionNamespaces_StoresOnceAndRejectsSubsequentCalls()
+    {
+        string[] namespaces = ["aCr"];
+
+        EndpointValidator.SetDangerouslyDisabledSsrfProtectionNamespaces(namespaces);
+        namespaces[0] = "changed";
+
+        Assert.Equal(["aCr"], EndpointValidator.DangerouslyDisabledSsrfProtectionNamespaces);
+
+        Assert.Null(Record.Exception(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "http://127.0.0.1",
+                serviceType: "unknown-service",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: "ACR")));
+        Assert.Null(Record.Exception(() =>
+            EndpointValidator.ValidatePublicTargetUrl(
+                url: "http://127.0.0.1",
+                logger: null,
+                executingToolNamespaceName: "Acr")));
+
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "http://127.0.0.1",
+                serviceType: "acr",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
+        Assert.Throws<SecurityException>(() =>
+            ValidatePublicTargetUrl("http://127.0.0.1"));
+
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "http://127.0.0.1",
+                serviceType: "unknown-service",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: "storage"));
+
+        var exception = Assert.Throws<SecurityException>(
+            () => EndpointValidator.SetDangerouslyDisabledSsrfProtectionNamespaces(["storage"]));
+        Assert.Contains("can only be configured once", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("acr", "ACR", true)]
+    [InlineData(EndpointValidator.AllNamespaces, "storage", true)]
+    [InlineData("acr", "storage", false)]
+    [InlineData(EndpointValidator.AllNamespaces, null, false)]
+    public void AreSsrfProtectionsDangerouslyDisabled_MatchesConfiguredNamespaces(
+        string configuredNamespace,
+        string? executingToolNamespaceName,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            EndpointValidator.AreSsrfProtectionsDangerouslyDisabled(
+                [configuredNamespace],
+                executingToolNamespaceName));
+    }
+
     #region ValidateAzureServiceEndpoint Tests
 
     [Theory]
@@ -29,7 +95,11 @@ public class EndpointValidatorTests
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: serviceType,
+            armEnvironment: ArmEnvironment.AzurePublicCloud,
+            executingToolNamespaceName: null));
         Assert.Null(exception);
     }
 
@@ -58,7 +128,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains(expectedMessagePart, exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -71,7 +145,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Fact]
@@ -79,7 +157,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication", ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: null!,
+                serviceType: "communication",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Fact]
@@ -90,7 +172,11 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication", ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: invalidEndpoint,
+                serviceType: "communication",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains("Invalid endpoint format", exception.Message);
     }
 
@@ -103,7 +189,11 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: unknownServiceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains("Unknown service type", exception.Message);
     }
 
@@ -124,7 +214,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Record.Exception(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureChina));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureChina,
+                executingToolNamespaceName: null));
         Assert.Null(exception);
     }
 
@@ -141,7 +235,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Record.Exception(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureGovernment));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureGovernment,
+                executingToolNamespaceName: null));
         Assert.Null(exception);
     }
 
@@ -153,7 +251,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureChina));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureChina,
+                executingToolNamespaceName: null));
         Assert.Contains("Azure China Cloud", exception.Message);
         Assert.Contains("not a valid", exception.Message);
     }
@@ -166,7 +268,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureGovernment));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureGovernment,
+                executingToolNamespaceName: null));
         Assert.Contains("Azure US Government Cloud", exception.Message);
         Assert.Contains("not a valid", exception.Message);
     }
@@ -179,7 +285,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains("Azure Public Cloud", exception.Message);
         Assert.Contains("not a valid", exception.Message);
     }
@@ -242,7 +352,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_PublicEndpoints_DoesNotThrow(string url)
     {
         // Act & Assert
-        var exception = Record.Exception(() => EndpointValidator.ValidatePublicTargetUrl(url));
+        var exception = Record.Exception(() => ValidatePublicTargetUrl(url));
         Assert.Null(exception);
     }
 
@@ -293,7 +403,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         // The error message varies: "private or reserved" for IPs, "reserved" for hostnames
         Assert.True(
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
@@ -307,14 +417,14 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_NullOrEmptyUrl_ThrowsArgumentException(string url)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.Throws<ArgumentException>(() => ValidatePublicTargetUrl(url));
     }
 
     [Fact]
     public void ValidatePublicTargetUrl_NullUrl_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => EndpointValidator.ValidatePublicTargetUrl(null!));
+        Assert.Throws<ArgumentException>(() => ValidatePublicTargetUrl(null!));
     }
 
     [Fact]
@@ -325,7 +435,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(invalidUrl));
+            ValidatePublicTargetUrl(invalidUrl));
         Assert.Contains("Invalid URL format", exception.Message);
     }
 
@@ -340,7 +450,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -358,7 +468,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
 
         // The error should mention either:
         // 1. "resolves to a private or reserved IP" (if DNS succeeded)
@@ -379,7 +489,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("Unable to resolve hostname", exception.Message);
     }
 
@@ -395,7 +505,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.True(
             exception.Message.Contains("reserved", StringComparison.OrdinalIgnoreCase) ||
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
@@ -415,7 +525,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Record.Exception(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Null(exception);
     }
 
@@ -429,7 +543,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Fact]
@@ -452,7 +570,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.True(
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
             exception.Message.Contains("reserved", StringComparison.OrdinalIgnoreCase),
@@ -610,7 +728,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_WildcardDnsServices_ThrowsSecurityException(string url)
     {
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -713,7 +831,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_TrailingDotReservedHost_ThrowsSecurityException(string url)
     {
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -765,7 +883,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_NonHttpScheme_ThrowsSecurityException(string url)
     {
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("HTTP or HTTPS", exception.Message);
     }
 
@@ -775,7 +893,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_HttpSchemes_Allowed(string url)
     {
         // Should not throw for HTTP/HTTPS with public IPs
-        EndpointValidator.ValidatePublicTargetUrl(url);
+        ValidatePublicTargetUrl(url);
     }
 
     #endregion
@@ -861,7 +979,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_TrailingDotReservedHosts_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Theory]
@@ -872,7 +990,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_IPv6TransitionInUrl_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Theory]
@@ -882,7 +1000,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_SubdomainOfReservedHost_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Fact]
@@ -890,7 +1008,7 @@ public class EndpointValidatorTests
     {
         // Verify that error messages for literal private IPs don't leak the address value
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl("http://127.0.0.1/test"));
+            ValidatePublicTargetUrl("http://127.0.0.1/test"));
         Assert.DoesNotContain("127.0.0.1", ex.Message);
     }
 
@@ -899,7 +1017,7 @@ public class EndpointValidatorTests
     {
         // Verify DNS error messages don't leak internal resolver details
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl("http://this-host-does-not-exist-12345.invalid/test"));
+            ValidatePublicTargetUrl("http://this-host-does-not-exist-12345.invalid/test"));
         Assert.DoesNotContain("Details:", ex.Message);
     }
 
@@ -964,7 +1082,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_LoopbackAlternateRepresentations_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion
@@ -981,7 +1099,7 @@ public class EndpointValidatorTests
         // .NET's Uri parser handles %25 as literal % in zone IDs.
         // The underlying IP (::1 or fe80::1) is still private/reserved.
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion
@@ -999,7 +1117,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_IPv4MappedPrivateInUrl_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Theory]
@@ -1008,7 +1126,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_IPv6UniqueLocalAddresses_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion
@@ -1025,7 +1143,7 @@ public class EndpointValidatorTests
         {
             // If .NET parses it, the host should be ::1 (loopback) → blocked
             Assert.Throws<SecurityException>(() =>
-                EndpointValidator.ValidatePublicTargetUrl(url));
+                ValidatePublicTargetUrl(url));
         }
         // If .NET rejects the URI entirely, that's also safe (no request possible)
     }
@@ -1039,7 +1157,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_LoopbackNonStandardPorts_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Fact]
@@ -1052,13 +1170,13 @@ public class EndpointValidatorTests
         {
             // If somehow parsed, it must still be blocked
             Assert.Throws<SecurityException>(() =>
-                EndpointValidator.ValidatePublicTargetUrl(url));
+                ValidatePublicTargetUrl(url));
         }
         else
         {
             // Invalid URI → safe (ValidatePublicTargetUrl would throw SecurityException)
             Assert.Throws<SecurityException>(() =>
-                EndpointValidator.ValidatePublicTargetUrl(url));
+                ValidatePublicTargetUrl(url));
         }
     }
 
@@ -1104,7 +1222,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_CloudMetadataIPv6InUrl_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion

@@ -1,0 +1,4 @@
+pr: 3603
+changes:
+  - section: "Features Added"
+    description: "Added namespace-scoped emergency overrides for endpoint SSRF validation and began migrating service endpoint checks to Microsoft.Security.AntiSSRF."
