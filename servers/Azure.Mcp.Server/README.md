@@ -1271,6 +1271,13 @@ Example prompts that generate Azure CLI commands:
 * "List planned maintenance events affecting my Azure resources"
 * "Find service health event details for tracking ID 'ABC1-XYZ'"
 
+### 💲 Azure Retail Pricing
+
+* "Get retail pricing for SKU 'Standard_D2s_v5' in region 'eastus'"
+* "Check pricing for Virtual Machines SKU 'Standard_E4s_v5' in region 'westeurope' with currency 'EUR'"
+* "Get one-year and three-year reservation pricing for SKU 'Standard_B2s'"
+* "Find retail prices for Azure App Service in region 'centralus'"
+
 ### 🗄️ Azure SQL Database
 
 * "List all SQL servers in my subscription"
@@ -1452,6 +1459,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
+- 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
