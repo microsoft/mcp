@@ -6,7 +6,6 @@ using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Adme.Commands;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -15,61 +14,40 @@ namespace Azure.Mcp.Tools.Adme.Tests;
 
 public sealed class AdmeServiceHelperTests
 {
-    [Theory]
-    [InlineData("opendes:master-data--Well:W-99")]
-    [InlineData("opendes:work-product-component--SeismicBinGrid:grid-1")]
-    [InlineData("opendes:master-data--Well:W-99:")]
-    [InlineData("opendes:master-data--Well:record:123:")]
-    public void ValidateRecordId_WithValidId_DoesNotAddError(string id)
+    [Fact]
+    public async Task SendAsync_PreservesAdmeFailureResponse()
     {
-        var validationResult = new ValidationResult();
+        const string responseContent = "{\"code\":400,\"message\":\"Invalid cursor\"}";
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(responseContent),
+        });
 
-        AdmeServiceHelper.ValidateRecordId(id, "--id", validationResult);
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+            CreateCredentialProvider(),
+            new FakeHttpClientFactory(handler),
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
+            "/api/test",
+            AdmeJsonContext.Default.JsonElement,
+            TestContext.Current.CancellationToken));
 
-        Assert.Empty(validationResult.Errors);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    [InlineData(":master-data--Well:W-99")]
-    [InlineData("opendes::W-99")]
-    [InlineData("opendes:master-data-Well:W-99")]
-    [InlineData("opendes:master-data--:W-99")]
-    [InlineData("opendes:master-data--Well:")]
-    [InlineData("opendes:master data--Well:W-99")]
-    public void ValidateRecordId_WithInvalidId_AddsError(string? id)
-    {
-        var validationResult = new ValidationResult();
-
-        AdmeServiceHelper.ValidateRecordId(id, "--id", validationResult);
-
-        var error = Assert.Single(validationResult.Errors);
-        Assert.StartsWith("--id", error);
-    }
-
-    [Theory]
-    [InlineData(TestConstants.Endpoint)]
-    [InlineData("https://sample.oep.ppe.azure-int.net")]
-    public void ValidateEndpoint_AcceptsTrustedEndpoint(string endpoint)
-    {
-        var result = AdmeServiceHelper.ValidateEndpoint(new Uri(endpoint));
-
-        Assert.Equal(endpoint, result.AbsoluteUri.TrimEnd('/'));
+        Assert.Equal((int)HttpStatusCode.BadRequest, exception.Status);
+        Assert.Equal(responseContent, exception.Message);
     }
 
     [Theory]
     [InlineData(HttpStatusCode.BadRequest, "ADME rejected the client request")]
     [InlineData(HttpStatusCode.Unauthorized, "ADME authentication failed")]
     [InlineData(HttpStatusCode.Forbidden, "ADME authorization failed")]
-    public async Task SendAsync_MapsAdmeFailureStatusAndMessage(
+    public async Task SendAsync_UsesFallbackMessageForEmptyFailureResponse(
         HttpStatusCode statusCode,
         string expectedMessage)
     {
         var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(statusCode)
         {
-            Content = new StringContent("sensitive backend details"),
+            Content = new StringContent("  "),
         });
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
@@ -84,7 +62,27 @@ public sealed class AdmeServiceHelperTests
 
         Assert.Equal((int)statusCode, exception.Status);
         Assert.StartsWith(expectedMessage, exception.Message);
-        Assert.DoesNotContain("sensitive backend details", exception.Message);
+    }
+
+    [Fact]
+    public async Task SendAsync_TruncatesLongAdmeFailureResponse()
+    {
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent(new string('a', 2000)),
+        });
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+            CreateCredentialProvider(),
+            new FakeHttpClientFactory(handler),
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
+            "/api/test",
+            AdmeJsonContext.Default.JsonElement,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal(new string('a', 1024), exception.Message);
     }
 
     [Fact]

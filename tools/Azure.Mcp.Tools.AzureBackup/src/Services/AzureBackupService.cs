@@ -203,7 +203,6 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? vaultType,
         string? containerName, string? datasourceType,
-        string? aksIncludedNamespaces, string? aksExcludedNamespaces,
         string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,
         DiskExclusionSpec? diskExclusion,
@@ -225,7 +224,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                 "See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for details.");
         }
 
-        return await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksIncludedNamespaces, aksExcludedNamespaces, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, cancellationToken);
+        return await dppOps.ProtectItemAsync(vaultName, resourceGroup, subscription, datasourceId, policyName, datasourceType, aksLabelSelectors, aksIncludeClusterScopeResources, aksSnapshotResourceGroup, tenant, cancellationToken);
     }
 
     public async Task<ProtectResult> UpdateProtectionAsync(
@@ -314,6 +313,22 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             : await dppOps.ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
     }
 
+    public async Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string containerName, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+
+        if (VaultTypeResolver.IsDpp(resolvedType))
+        {
+            throw new NotSupportedException(
+                "Backup vaults (DPP) do not use protection containers. This command is only supported for Recovery Services vaults (RSV).");
+        }
+
+        return await rsvOps.GetContainerAsync(vaultName, resourceGroup, subscription, containerName, tenant, cancellationToken);
+    }
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
         string jobId, string? vaultType, string? tenant,
@@ -413,7 +428,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? workloadType, string? containerName, string? vaultType, string? tenant,
+        string? workloadType, string? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
@@ -434,7 +449,23 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
             }
         }
 
-        return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, containerName, tenant, cancellationToken);
+        return await rsvOps.ListProtectableItemsAsync(vaultName, resourceGroup, subscription, workloadType, tenant, cancellationToken);
+    }
+
+    public async Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? filter, string? storageAccount, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(resolved))
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' is a Data Protection (DPP) vault. Available container discovery is only supported for Recovery Services (RSV) vaults.");
+        }
+
+        return await rsvOps.ListAvailableContainersAsync(vaultName, resourceGroup, subscription, filter, storageAccount, tenant, cancellationToken);
     }
 
     public async Task RefreshContainersAsync(
@@ -451,6 +482,71 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         }
 
         await rsvOps.RefreshContainersAsync(vaultName, resourceGroup, subscription, backupManagementType ?? "AzureStorage", tenant, cancellationToken);
+    }
+
+    public async Task<ContainerRegisterResult> RegisterContainerAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string storageAccount, bool acquireLock, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(resolved))
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' is a Data Protection (DPP) vault. Container registration is only supported for Recovery Services (RSV) vaults.");
+        }
+
+        var storageAccountId = ResolveStorageAccountId(storageAccount, subscription, resourceGroup);
+        return await rsvOps.RegisterContainerAsync(vaultName, resourceGroup, subscription, storageAccountId, acquireLock, tenant, cancellationToken);
+    }
+
+    public async Task<InquireResult> InquireContainerAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? container, string? storageAccount, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        var resolved = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, null, tenant, cancellationToken);
+        if (VaultTypeResolver.IsDpp(resolved))
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' is a Data Protection (DPP) vault. Container inquiry is only supported for Recovery Services (RSV) vaults.");
+        }
+
+        string containerName;
+        if (!string.IsNullOrWhiteSpace(container))
+        {
+            containerName = container;
+        }
+        else if (!string.IsNullOrWhiteSpace(storageAccount))
+        {
+            var storageAccountId = ResolveStorageAccountId(storageAccount, subscription, resourceGroup);
+            containerName = DeriveStorageContainerName(storageAccountId, resourceGroup);
+        }
+        else
+        {
+            throw new ArgumentException("Specify either --container or --storage-account to identify the container to inquire.");
+        }
+
+        return await rsvOps.InquireContainerAsync(vaultName, resourceGroup, subscription, containerName, tenant, cancellationToken);
+    }
+
+    private static string ResolveStorageAccountId(string storageAccount, string subscription, string resourceGroup)
+    {
+        if (storageAccount.StartsWith("/subscriptions/", StringComparison.OrdinalIgnoreCase))
+        {
+            return storageAccount;
+        }
+
+        return $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}";
+    }
+
+    private static string DeriveStorageContainerName(string storageAccountId, string fallbackResourceGroup)
+    {
+        var id = new ResourceIdentifier(storageAccountId);
+        var storageAccountResourceGroup = id.ResourceGroupName ?? fallbackResourceGroup;
+        return $"StorageContainer;Storage;{storageAccountResourceGroup};{id.Name}";
     }
 
     public async Task<Models.BackupStatusResult> GetBackupStatusAsync(

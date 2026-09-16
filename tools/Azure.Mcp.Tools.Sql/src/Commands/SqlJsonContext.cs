@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(FirewallRuleListCommand.FirewallRuleListResult))]
 [JsonSerializable(typeof(FirewallRuleCreateCommand.FirewallRuleCreateResult))]
 [JsonSerializable(typeof(FirewallRuleDeleteCommand.FirewallRuleDeleteResult))]
-[JsonSerializable(typeof(List<SqlServer>))]
+[JsonSerializable(typeof(ServerGetCommand.ServerGetCommandResult))]
 [JsonSerializable(typeof(ServerCreateCommand.ServerCreateResult))]
 [JsonSerializable(typeof(ServerDeleteCommand.ServerDeleteResult))]
 [JsonSerializable(typeof(ElasticPoolListCommand.ElasticPoolListResult))]

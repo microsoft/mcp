@@ -61,11 +61,11 @@ public class RecommendationApplyCommandTests : CommandUnitTestsBase<Recommendati
     {
         var response = await ExecuteCommandAsync("--resource", resource);
 
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationApplyCommandResult);
 
         Assert.NotNull(result);
-        Assert.NotEmpty(result);
-        Assert.Contains("rules", result[0]);
+        Assert.NotEmpty(result.Rules);
+        Assert.Contains("rules", result.Rules[0]);
     }
 
     [Fact]
@@ -128,12 +128,12 @@ public class RecommendationApplyCommandTests : CommandUnitTestsBase<Recommendati
         var response1 = await ExecuteCommandAsync("--resource", "keyvault_vaults");
         var response2 = await ExecuteCommandAsync("--resource", "keyvault_vaults");
 
-        var result1 = ValidateAndDeserializeResponse(response1, AdvisorJsonContext.Default.ListString);
-        var result2 = ValidateAndDeserializeResponse(response2, AdvisorJsonContext.Default.ListString);
+        var result1 = ValidateAndDeserializeResponse(response1, AdvisorJsonContext.Default.RecommendationApplyCommandResult);
+        var result2 = ValidateAndDeserializeResponse(response2, AdvisorJsonContext.Default.RecommendationApplyCommandResult);
 
-        Assert.Single(result1);
-        Assert.Single(result2);
-        Assert.Equal(result1[0], result2[0]);
+        Assert.Single(result1.Rules);
+        Assert.Single(result2.Rules);
+        Assert.Equal(result1.Rules[0], result2.Rules[0]);
     }
 
     [Theory]
@@ -156,8 +156,8 @@ public class RecommendationApplyCommandTests : CommandUnitTestsBase<Recommendati
     {
         var response = await ExecuteCommandAsync("--resource", resource);
 
-        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.ListString);
-        Assert.NotEmpty(result);
-        Assert.Contains("rules", result[0]);
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationApplyCommandResult);
+        Assert.NotEmpty(result.Rules);
+        Assert.Contains("rules", result.Rules[0]);
     }
 }

@@ -120,7 +120,6 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? workloadType,
-        string? containerName,
         string? tenant,
         CancellationToken cancellationToken);
 
@@ -130,6 +129,32 @@ public interface IRsvBackupOperations
         string subscription,
         string datasourceId,
         string? containerName,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? storageAccount,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<ContainerRegisterResult> RegisterContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string storageAccountId,
+        bool acquireLock,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<InquireResult> InquireContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
         string? tenant,
         CancellationToken cancellationToken);
 
@@ -271,6 +296,14 @@ public interface IRsvBackupOperations
         string? tenant,
         CancellationToken cancellationToken);
 
+
+    Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
+        string? tenant,
+        CancellationToken cancellationToken);
     Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
         string vaultName,
         string resourceGroup,

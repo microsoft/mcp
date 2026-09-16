@@ -31,7 +31,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
     ReadOnly = true,
     Secret = false)]
 public sealed class DataAccessRoleGetCommand(ILogger<DataAccessRoleGetCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<DataAccessRoleGetOptions, DataAccessRole>()
+    : AuthenticatedCommand<DataAccessRoleGetOptions, DataAccessRoleGetCommand.DataAccessRoleGetCommandResult>()
 {
     private readonly ILogger<DataAccessRoleGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -58,7 +58,9 @@ public sealed class DataAccessRoleGetCommand(ILogger<DataAccessRoleGetCommand> l
         try
         {
             var result = await _oneLakeService.GetDataAccessRoleAsync(workspaceId!, options.ItemId, options.RoleName, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRole);
+            context.Response.Results = ResponseResult.Create(
+                new DataAccessRoleGetCommandResult(result),
+                OneLakeJsonContext.Default.DataAccessRoleGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -69,5 +71,6 @@ public sealed class DataAccessRoleGetCommand(ILogger<DataAccessRoleGetCommand> l
 
         return context.Response;
     }
-}
 
+    public sealed record DataAccessRoleGetCommandResult(DataAccessRole Role);
+}

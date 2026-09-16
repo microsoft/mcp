@@ -23,13 +23,21 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | adme_storage_record_fetch | Fetch ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_fetch | Fetch the full content of ADME records <record-id-1>, <record-id-2>, and <record-id-3> in one batch from endpoint <endpoint> and data partition <data-partition> | none |
 | adme_storage_record_fetch | Fetch only attributes data.Name and data.Description for ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_fetch | Fetch ADME record <record-id> with frame-of-reference conversion and report its conversion status and errors from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get a OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get version <record-version> of OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record <record-id> at endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | List ADME records of kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | List the first 25 ADME record IDs for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition> | none |
-| adme_storage_record_list | Continue listing ADME record IDs for kind <authority:source:entity-type:version> using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor <cursor> from endpoint <endpoint> in data partition <data-partition> | none |
 | adme_storage_record_version_list | List all versions of ADME record <record-id> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter <lucene-query> from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records matching <lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint <endpoint> in data partition <data-partition> | none |
+| adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint <endpoint> in data partition <data-partition> | none |
 
 ## Azure Advisor
 
@@ -221,24 +229,24 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> | none |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> | none |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> | none |
-| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app <webapp> in <resource_group> with detector <detector_name> | none |
-| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app <webapp> in <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> | investigation-required |
-| appservice_webapp_diagnostic_list | List the Azure App Service diagnostic detectors for web app <webapp> in <resource_group> | investigation-required |
-| appservice_webapp_change-state | Start the web app <app> in <resource_group> | none |
-| appservice_webapp_change-state | Stop the web app <app> in <resource_group> | none |
-| appservice_webapp_change-state | Restart the web app <app> in <resource_group> | none |
-| appservice_webapp_change-state | Soft restart the web app <app> in <resource_group> waiting for restart to complete | none |
+| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app <webapp> in resource group <resource_group> with detector <detector_name> | none |
+| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app <webapp> in resource group <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval> | investigation-required |
+| appservice_webapp_diagnostic_list | List the Azure App Service diagnostic detectors for web app <webapp> in resource group <resource_group> | investigation-required |
+| appservice_webapp_change-state | Start the web app <app> in resource group <resource_group> | none |
+| appservice_webapp_change-state | Stop the web app <app> in resource group <resource_group> | none |
+| appservice_webapp_change-state | Restart the web app <app> in resource group <resource_group> | none |
+| appservice_webapp_change-state | Soft restart the web app <app> in resource group <resource_group> waiting for restart to complete | none |
 | appservice_webapp_get | List the web apps in my subscription | none |
-| appservice_webapp_get | Show me the web apps in my <resource_group> resource group | investigation-required |
-| appservice_webapp_get | Get the details for web app <webapp> in <resource_group> | none |
+| appservice_webapp_get | Show me the web apps in my resource group <resource_group> | investigation-required |
+| appservice_webapp_get | Get the details for web app <webapp> in resource group <resource_group> | none |
 | appservice_webapp_get | Get app service details for <app-service-resource-id> | none |
-| appservice_webapp_deployment_get | List the deployments for web app <webapp> in <resource_group> | none |
-| appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in <resource_group> | none |
-| appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in <resource_group> | none |
-| appservice_webapp_settings_get-appsettings | Get the application settings for web app <webapp> in <resource_group> | none |
-| appservice_webapp_settings_update-appsettings | Add application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> | none |
-| appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in <resource_group> | none |
-| appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in <resource_group> | none |
+| appservice_webapp_deployment_get | List the deployments for web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_settings_get-appsettings | Get the application settings for web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_settings_update-appsettings | Add application setting <setting-name> with <setting-value> to web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_settings_update-appsettings | Set application setting <setting-name> with <setting-value> to web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_settings_update-appsettings | Delete application setting <setting-name> from web app <webapp> in resource group <resource_group> | none |
 
 ## Azure Application Insights
 
@@ -255,10 +263,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | azurebackup_backup_status | Check backup status for resource <resource_id> in location <location> | investigation-required |
 | azurebackup_backup_status | What is the backup status of <resource_id> in location <location> in my subscription? | investigation-required |
+| azurebackup_container_get | Look up storage account <storage_account_name> in RSV vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_container_get | Is container <container_name> registered in vault <vault_name> under resource group <resource_group>? | investigation-required |
+| azurebackup_container_get | Get the RSV protection container details for storage account <storage_account_name> in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_container_refresh | Refresh backup containers on vault <vault_name> in resource group <resource_group> to discover new Azure File share storage accounts | investigation-required |
 | azurebackup_container_refresh | Trigger container discovery on Recovery Services vault <vault_name> under resource group <resource_group> so the vault picks up newly authorized storage accounts | investigation-required |
 | azurebackup_container_refresh | Kick off backup container refresh on vault <vault_name> in resource group <resource_group> before registering my storage account for Azure Files backup | investigation-required |
 | azurebackup_container_refresh | Refresh Azure VM backup containers on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_container_register | Register storage account <storage_account> with Recovery Services vault <vault_name> in resource group <resource_group> as an Azure File share backup container | investigation-required |
+| azurebackup_container_register | Onboard my storage account <storage_account> for Azure Files backup on vault <vault_name> under resource group <resource_group> without acquiring a storage account lock | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Enable cross-region restore on GRS-enabled Recovery Services vault <vault_name> in resource group <resource_group> with vault-type rsv | investigation-required |
 | azurebackup_disasterrecovery_enable-crr | Turn on cross-region restore for GRS-enabled DPP backup vault <vault_name> under resource group <resource_group> with vault-type dpp | investigation-required |
 | azurebackup_governance_find-unprotected | Find unprotected resources of type <resource_type> in my subscription | investigation-required |
@@ -286,14 +299,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_protectableitem_inquire | Inquire the registered storage account <storage_account> on vault <vault_name> in resource group <resource_group> to discover Azure File shares available for backup | investigation-required |
+| azurebackup_protectableitem_inquire | Discover file shares in backup container <container_name> on Recovery Services vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | Show me all items that can be backed up in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_container_list-available | List storage accounts available for registration as Azure File share backup containers in vault <vault_name> and resource group <resource_group> | investigation-required |
+| azurebackup_container_list-available | Show available Azure File share backup containers for Recovery Services vault <vault_name> | investigation-required |
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show the current workload-specific inclusion or exclusion settings and all protected-item properties for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
-| azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including only namespace <namespace> and cluster-scoped resources | investigation-required |
+| azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including cluster-scoped resources | investigation-required |
 | azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
 | azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected | investigation-required |
 | azurebackup_protecteditem_update-protection | Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name> | investigation-required |
@@ -307,20 +324,20 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_resourceguard_create | Set up a new MUA Resource Guard called <resource_guard> in <location> under resource group <resource_group> excluding operations deleteProtection,updatePolicy | investigation-required |
 | azurebackup_resourceguard_create | Create Resource Guard <resource_guard> in <location> under resource group <resource_group> with tags env=prod,team=backup | investigation-required |
 | azurebackup_resourceguard_delete | Delete Resource Guard <resource_guard> from resource group <resource_group> | investigation-required |
-| azurebackup_resourceguard_delete | Remove the Resource Guard <resource_guard> in <resource_group> | investigation-required |
+| azurebackup_resourceguard_delete | Remove the Resource Guard <resource_guard> in resource group <resource_group> | investigation-required |
 | azurebackup_resourceguard_delete | Delete the MUA Resource Guard <resource_guard> from resource group <resource_group> | investigation-required |
 | azurebackup_resourceguard_get | Get Resource Guard <resource_guard> in resource group <resource_group> | investigation-required |
 | azurebackup_resourceguard_get | List all Resource Guards in resource group <resource_group> | investigation-required |
 | azurebackup_resourceguard_get | Show me every MUA Resource Guard in my subscription | investigation-required |
 | azurebackup_security_configure-encryption | Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity | investigation-required |
 | azurebackup_security_configure-encryption | Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri> | investigation-required |
-| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_security_configure-encryption | Set up customer-managed encryption for backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_security_enable-mua | Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id> | investigation-required |
-| azurebackup_security_enable-mua | Link Resource Guard <resource_guard_id> to backup vault <vault_name> in <resource_group> to enable MUA | investigation-required |
-| azurebackup_security_enable-mua | Turn on MUA for DPP backup vault <vault_name> in <resource_group> using Resource Guard <resource_guard_id> | investigation-required |
+| azurebackup_security_enable-mua | Link Resource Guard <resource_guard_id> to backup vault <vault_name> in resource group <resource_group> to enable MUA | investigation-required |
+| azurebackup_security_enable-mua | Turn on MUA for DPP backup vault <vault_name> in resource group <resource_group> using Resource Guard <resource_guard_id> | investigation-required |
 | azurebackup_security_disable-mua | Disable multi-user authorization on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in <resource_group> | investigation-required |
-| azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in <resource_group> and disable MUA | investigation-required |
+| azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in resource group <resource_group> and disable MUA | investigation-required |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -332,17 +349,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
 | azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | investigation-required |
-| azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | investigation-required |
-| azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | investigation-required |
+| azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | investigation-required |
+| azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in resource group <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | investigation-required |
 | azurebackup_vault_privateendpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_delete | Delete Private Endpoint Connection <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
-| azurebackup_vault_privateendpoint_delete | Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in <resource_group> | investigation-required |
-| azurebackup_vault_privateendpoint_delete | Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_delete | Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_privateendpoint_delete | Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_approve-reject | Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action approve | investigation-required |
 | azurebackup_vault_privateendpoint_approve-reject | Reject Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action reject and description "Not authorized" | investigation-required |
-| azurebackup_vault_privateendpoint_approve-reject | Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in <resource_group> by approving it | investigation-required |
+| azurebackup_vault_privateendpoint_approve-reject | Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> by approving it | investigation-required |
 
 ## Azure CLI
 
@@ -387,7 +404,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | communication_email_send | Send email with CC to <email-address-1> and <email-address-2> | clarification-required |
 | communication_email_send | Send email to multiple recipients: <email-address-1>, <email-address-2> | clarification-required |
 | communication_email_send | Send email with reply-to address set to <email-address> | clarification-required |
-| communication_email_send | Send email with custom sender name <sender-name> | clarification-required |
 | communication_email_send | Send an email with BCC recipients | clarification-required |
 | communication_sms_send | Send an SMS message to <phone-number> saying "Hello" | clarification-required |
 | communication_sms_send | Send SMS to <phone-number-2> from <phone-number-1> with message "Test message" | clarification-required |
@@ -740,11 +756,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | functions_project_get | Set up a new Azure Functions project in Python | none |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app | none |
 | functions_project_get | Use an Azure Functions project template to create boilerplate for a Java app using JDK 21 | none |
+| functions_project_get | Set up a new Azure Functions project in Go | none |
 | functions_template_get | Get the available triggers and bindings for C# Azure Functions. | none |
 | functions_template_get | Show me all the Python Azure Function templates | none |
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes | none |
 | functions_template_get | Show me a Cosmos DB trigger with an output binding in Java | none |
 | functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 | none |
+| functions_template_get | Show me all the Go Azure Function templates | none |
 
 ## Azure Insights
 
@@ -779,6 +797,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_query_run | Query all devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
+
+## Azure IoT Operations
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| iotoperations_instance_get | Get details for Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_get | Show the Azure IoT Operations instance <instance_name> in resource group <resource_group_name> |
+| iotoperations_instance_list | List all Azure IoT Operations instances in my subscription |
+| iotoperations_instance_list | What Azure IoT Operations instances do I have in resource group <resource_group_name>? |
 
 ## Azure Key Vault
 
@@ -1006,8 +1033,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> | none |
-| monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> | none |
-| monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> | none |
+| monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
+| monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
+| monitor_webtests_get | Get details for the web test named <webtest_resource_name> in resource group <resource_group> | none |
+| monitor_webtests_get | List all web tests in my subscription | none |
 | monitor_workspace_list | List all Log Analytics workspaces in my subscription | none |
 | monitor_workspace_list | Show me my Log Analytics workspaces | none |
 | monitor_workspace_list | Show me the Log Analytics workspaces in my subscription | none |
@@ -1044,6 +1073,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | role_assignment_list | List all available role assignments in my subscription | none |
 | role_assignment_list | Show me the available role assignments in my subscription | none |
+| role_assignment_list | List the role assignments at scope /providers/Microsoft.Management/managementGroups/<management-group> | none |
+| role_assignment_list | List the role assignments at scope /subscriptions/<subscription>/resourceGroups/<resource-group> | none |
 
 ## Azure Redis
 
@@ -1415,6 +1446,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storagesync_cloudendpoint_delete | Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name> | clarification-required |
 | storagesync_cloudendpoint_get | Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name> | none |
 | storagesync_cloudendpoint_get | List all cloud endpoints in sync group <syncgroup-name> | none |
+| storagesync_cloudendpoint_update | Update cloud endpoint <endpoint-name> in sync group <syncgroup-name> to enumerate Azure file share changes every 7 days | none |
 | storagesync_serverendpoint_create | Create a new server endpoint on server <server-name> pointing to local path <local-path> in sync group <syncgroup-name> | none |
 | storagesync_serverendpoint_delete | Delete the server endpoint <endpoint-name> from sync group <syncgroup-name> | none |
 | storagesync_serverendpoint_get | Get the details of server endpoint <endpoint-name> in sync group <syncgroup-name> | none |

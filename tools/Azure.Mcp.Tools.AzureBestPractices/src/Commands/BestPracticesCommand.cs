@@ -33,7 +33,8 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions, List<string>>
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger)
+    : BaseCommand<BestPracticesOptions, BestPracticesCommand.BestPracticesCommandResult>
 {
     private readonly ILogger<BestPracticesCommand> _logger = logger;
     private static readonly ConcurrentDictionary<string, string> s_bestPracticesCache = [];
@@ -78,7 +79,9 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(
+                new([bestPractices]),
+                AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);
@@ -160,4 +163,6 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
         }
     }
+
+    public sealed record BestPracticesCommandResult(List<string> BestPractices);
 }

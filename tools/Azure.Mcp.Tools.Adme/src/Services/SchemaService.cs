@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -22,7 +23,7 @@ public sealed class SchemaService(
     /// <summary>
     /// Gets the JSON definition for a schema kind.
     /// </summary>
-    public Task<JsonElement> GetSchemaAsync(
+    public Task<AdmeResponse<JsonElement>> GetSchemaAsync(
         string endpoint,
         string dataPartition,
         string kind,
@@ -44,7 +45,7 @@ public sealed class SchemaService(
     /// <summary>
     /// Lists schema descriptors matching the requested filters.
     /// </summary>
-    public Task<SchemaListResponse> ListSchemasAsync(
+    public Task<AdmeResponse<SchemaListResponse>> ListSchemasAsync(
         string endpoint,
         string dataPartition,
         string? tenant,

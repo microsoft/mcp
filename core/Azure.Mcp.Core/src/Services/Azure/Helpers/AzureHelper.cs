@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
@@ -44,6 +45,20 @@ public static class AzureHelper
         // Initialize the default user agent policy without transport type
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
         s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
+    }
+
+    /// <summary>
+    /// Validates that the provided parameter is not null or empty.
+    /// </summary>
+    /// <param name="name">The parameter name.</param>
+    /// <param name="value">The parameter value.</param>
+    /// <exception cref="ArgumentException">Thrown when the parameter is null or empty.</exception>
+    internal static void ValidateRequiredParameter(string name, [NotNull] string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ArgumentException($"Required parameter is null or empty: {name}");
+        }
     }
 
     /// <summary>
