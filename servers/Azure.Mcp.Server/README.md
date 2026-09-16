@@ -1151,8 +1151,8 @@ Example prompts that generate Azure CLI commands:
 * "Get details for Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
 * "Update tags on Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
 * "Get details for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
-* "Get consumer group 'my-consumergroup' for Event Hub 'my-eventhub' in namespace 'my-namespace'"
-* "Delete consumer group 'my-consumergroup' from Event Hub 'my-eventhub' in namespace 'my-namespace'"
+* "Get consumer group 'my-consumergroup' for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Delete consumer group 'my-consumergroup' from Event Hub 'my-eventhub' in namespace 'my-namespace' and resource group 'my-rg'"
 
 ### 📂 Azure File Shares
 
