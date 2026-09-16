@@ -1211,6 +1211,11 @@ Example prompts that generate Azure CLI commands:
 * "List the node pools for my AKS cluster"
 * "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
+### 🚀 Azure Managed Grafana
+
+* "List all Managed Grafana workspaces in my subscription"
+* "Find Azure Managed Grafana workspaces available in subscription 'my-subscription'"
+
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
@@ -1237,11 +1242,26 @@ Example prompts that generate Azure CLI commands:
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### 📊 Azure Quota
+
+* "Check resource usage and quota for 'Microsoft.App/containerApps' in region 'eastus'"
+* "Check current quota and usage for 'Microsoft.Compute/virtualMachines,Microsoft.Storage/storageAccounts' in 'westeurope'"
+* "List available regions for resource type 'Microsoft.Web/sites'"
+* "Find available regions for cognitive service model 'gpt-4o' of type 'Microsoft.CognitiveServices/accounts'"
+
 ### 🔧 Azure Resource Management
 
 * "List my resource groups"
 * "List my Azure CDN endpoints"
 * "Help me build an Azure application using Node.js"
+
+### 🩺 Azure Resource Health
+
+* "Get availability status for resource '/subscriptions/my-sub/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm'"
+* "Check current health and availability of my Azure resource 'my-vm'"
+* "List active service health issues in my subscription"
+* "List planned maintenance events affecting my Azure resources"
+* "Find service health event details for tracking ID 'ABC1-XYZ'"
 
 ### 🗄️ Azure SQL Database
 
@@ -1259,6 +1279,12 @@ Example prompts that generate Azure CLI commands:
 * "Create a new Azure SQL server in my resource group 'my-resource-group'"
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
+
+### 📶 Azure SignalR Service
+
+* "List all SignalR services in my subscription"
+* "List SignalR services in resource group 'my-resource-group'"
+* "Get details for SignalR service 'my-signalr' in resource group 'my-resource-group'"
 
 ### 🤖 Azure SRE Agent
 
@@ -1411,6 +1437,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
 - 🏥 **Azure Service Health** - Resource health status and availability
+- 📶 **Azure SignalR Service** - SignalR service runtime management, network ACLs, and configuration
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
