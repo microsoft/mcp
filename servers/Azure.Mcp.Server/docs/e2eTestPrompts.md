@@ -518,6 +518,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_disk_update | Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys | investigation-required |
 | compute_disk_update | Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate | none |
 | compute_disk_update | Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev | none |
+| compute_gallery_create | Create an Azure Compute Gallery named <gallery-name> in resource group <resource-group> | none |
+| compute_gallery_create | Create a compute gallery <gallery-name> in resource group <resource-group> in eastus | none |
+| compute_gallery_create | Create a gallery named <gallery-name> in resource group <resource-group> with description "Shared images for the platform team" | none |
+| compute_gallery_create | I want to publish a VM application, create a gallery <gallery-name> in resource group <resource-group> first | none |
+| compute_gallery_create | Create a compute gallery <gallery-name> in resource group <resource-group> with tags env=prod,team=compute | none |
 
 ## Azure Confidential Ledger
 

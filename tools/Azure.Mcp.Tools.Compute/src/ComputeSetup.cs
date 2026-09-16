@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Compute.Commands.Disk;
+using Azure.Mcp.Tools.Compute.Commands.Gallery;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
@@ -42,6 +43,9 @@ public class ComputeSetup : IAreaSetup
         services.AddSingleton<DiskDeleteCommand>();
         services.AddSingleton<DiskGetCommand>();
         services.AddSingleton<DiskUpdateCommand>();
+
+        // Gallery commands
+        services.AddSingleton<GalleryCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -91,6 +95,15 @@ public class ComputeSetup : IAreaSetup
         disk.AddCommand<DiskDeleteCommand>(serviceProvider);
         disk.AddCommand<DiskGetCommand>(serviceProvider);
         disk.AddCommand<DiskUpdateCommand>(serviceProvider);
+
+        // Create Gallery subgroup
+        var gallery = new CommandGroup(
+            "gallery",
+            "Azure Compute Gallery operations - Commands for managing Azure Compute Galleries, the containers used to store and share VM images and VM applications.");
+        compute.AddSubGroup(gallery);
+
+        // Register Gallery commands
+        gallery.AddCommand<GalleryCreateCommand>(serviceProvider);
 
         return compute;
     }

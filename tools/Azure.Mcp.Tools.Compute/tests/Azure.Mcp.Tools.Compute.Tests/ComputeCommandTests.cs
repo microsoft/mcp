@@ -1505,4 +1505,41 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     #endregion
+
+    #region Gallery
+
+    [Fact]
+    public async Task GalleryCreate_CreatesGallery_Successfully()
+    {
+        // Gallery names disallow hyphens, so ResourceBaseName cannot be reused here.
+        var galleryName = RegisterOrRetrieveVariable("createdGalleryName", $"testgallery{Random.Shared.NextInt64()}");
+        var location = RegisterOrRetrieveDeploymentOutputVariable("galleryLocation", "LOCATION");
+
+        JsonElement? result = await CallToolAsync(
+            "compute_gallery_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "gallery", galleryName },
+                { "location", location },
+                { "description", "Gallery created by Azure MCP live tests" },
+                { "tags", "env=test,owner=azmcp" }
+            });
+
+        Assert.NotNull(result);
+        JsonElement gallery = result.Value.AssertProperty("Gallery");
+        Assert.Equal(JsonValueKind.Object, gallery.ValueKind);
+
+        Assert.Equal("Succeeded", gallery.AssertProperty("ProvisioningState").GetString());
+        Assert.Equal(location, gallery.AssertProperty("Location").GetString());
+        Assert.Equal("Gallery created by Azure MCP live tests", gallery.AssertProperty("Description").GetString());
+        Assert.NotNull(gallery.AssertProperty("Name").GetString());
+
+        JsonElement tags = gallery.AssertProperty("Tags");
+        Assert.Equal("test", tags.AssertProperty("env").GetString());
+        Assert.Equal("azmcp", tags.AssertProperty("owner").GetString());
+    }
+
+    #endregion
 }

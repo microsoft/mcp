@@ -3,6 +3,7 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
+using Azure.Mcp.Tools.Compute.Commands.Gallery;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
 using Azure.Mcp.Tools.Compute.Models;
@@ -18,6 +19,8 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(DiskUpdateCommand.DiskUpdateCommandResult))]
 [JsonSerializable(typeof(DiskInfo))]
 [JsonSerializable(typeof(List<DiskInfo>))]
+[JsonSerializable(typeof(GalleryCreateCommand.GalleryCreateCommandResult))]
+[JsonSerializable(typeof(GalleryInfo))]
 [JsonSerializable(typeof(VmCreateCommand.VmCreateCommandResult))]
 [JsonSerializable(typeof(VmCreateResult))]
 [JsonSerializable(typeof(VmUpdateCommand.VmUpdateCommandResult))]

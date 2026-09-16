@@ -2434,6 +2434,52 @@ azmcp compute disk update --subscription <subscription> \
 | `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
 | `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
 
+#### Azure Compute Gallery
+
+```bash
+# Create an Azure Compute Gallery
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute gallery create --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --gallery <gallery-name>
+
+# Create an Azure Compute Gallery in a specific region with a description
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute gallery create --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --gallery <gallery-name> \
+                             --location <location> \
+                             --description <description>
+
+# Create an Azure Compute Gallery with tags
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute gallery create --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --gallery <gallery-name> \
+                             --tags <comma-separated-tags>
+```
+
+**Command Behavior:**
+- Creates an Azure Compute Gallery (formerly Shared Image Gallery), the top-level container used to store and share VM image definitions and VM application definitions.
+- Uses create-or-update (PUT) semantics. If a gallery with the same name already exists in the resource group, parameters that are not supplied are left unchanged.
+- Supplying `--tags` replaces the gallery's entire tag set rather than merging, so any existing tag that is omitted is removed. Include every tag that should be kept.
+- If `--location` is not specified, the gallery is created in the resource group's location.
+- Gallery names must be 1-80 characters, contain only letters, digits, periods, and underscores, and start and end with a letter or digit. Unlike most Compute resources, hyphens are not allowed in gallery names.
+- Create the gallery before publishing VM images or VM applications into it.
+
+**Returns:**
+- Created gallery information including name, resource ID, resource group, location, description, globally unique name, sharing permissions, tags, and provisioning state.
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group name |
+| `--gallery`, `--name` | Yes | Name of the Azure Compute Gallery to create |
+| `--location` | No | Azure region for the gallery (defaults to the resource group's location) |
+| `--description` | No | Description of the gallery |
+| `--tags` | No | Comma-separated tags in key=value format (e.g., env=prod,team=compute) |
+
 ### Azure Confidential Ledger Operations
 
 ```bash

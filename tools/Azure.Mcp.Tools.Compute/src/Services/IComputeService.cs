@@ -230,4 +230,15 @@ public interface IComputeService
         string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default);
+
+    // Compute Gallery operations
+    Task<GalleryInfo> CreateGalleryAsync(
+        string gallery,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        string? description = null,
+        IReadOnlyDictionary<string, string>? tags = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
 }
