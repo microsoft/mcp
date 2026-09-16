@@ -837,6 +837,8 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
                 "--rm",
                 "--env-file",
                 "/full/path/to/.env",
+                "-e",
+                "MCP_HTTP_BASE_PATH=/mcp",
                 "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
             ]
         }

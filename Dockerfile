@@ -39,4 +39,8 @@ RUN adduser -D -s /sbin/nologin mcp && \
     chown -R mcp:mcp /mcp-server
 USER mcp
 
+# Optional HTTP base path (for example, /mcp) for the MCP endpoint.
+ARG MCP_HTTP_BASE_PATH
+ENV MCP_HTTP_BASE_PATH=${MCP_HTTP_BASE_PATH}
+
 ENTRYPOINT ["./server-binary", "server", "start"]

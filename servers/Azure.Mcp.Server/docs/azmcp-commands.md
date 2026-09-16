@@ -67,31 +67,22 @@ are valid.
 
 When you run the **Azure MCP Server container image** `mcr.microsoft.com/azure-sdk/azure-mcp` (for example in Azure Container Apps),
 the image already contains an entrypoint that starts the MCP server process.
-The image does **not** support overriding the container command with `azmcp ...` directly, as the entrypoint is already configured to start the server.
-- Do **not** override the container command / entrypoint with `azmcp ...` when
-  deploying the image. Doing so will cause the container to fail to start.
-- Leave the command / entrypoint blank in Azure Container Apps so the default
-  image entrypoint is used.
-- If you need to customize the startup command or add extra arguments, build
-  your own image based on the Azure MCP Server and set the ENTRYPOINT and/or
-  CMD values in your Dockerfile there. That way you control exactly how the
-  server starts without replacing the upstream image entrypoint at runtime.
+To host the MCP endpoint below a path such as `/mcp`, set
+`MCP_HTTP_BASE_PATH=/mcp`. You can pass it at runtime with `docker run -e`, or
+bake it into a derived image with
+`docker build --build-arg MCP_HTTP_BASE_PATH=/mcp`. The MCP endpoint, OAuth
+protected-resource metadata endpoint, and `resource_metadata` challenge URI
+will all include the configured path.
 
 > [!NOTE]
-> ENTRYPOINT defines the executable that always runs; CMD provides
-> default arguments to that executable. Overriding the container command in
-> many PaaS providers replaces the image's ENTRYPOINT/CMD behavior, which can
-> break startup. The Azure MCP Server image ENTRYPOINT in the repository is:
+> The Azure MCP Server image ENTRYPOINT in the repository is:
 
 ```text
 ENTRYPOINT ["./server-binary", "server", "start"]
 ```
 
-Because the image sets a fixed entrypoint, passing a container command such
-as `azmcp ...` will replace or conflict with that entrypoint. If you must
-change startup behavior, create a small derived Dockerfile that modifies the
-ENTRYPOINT/CMD as needed and deploy your custom image instead of overriding
-the command in the PaaS UI.
+The base path is normalized without a trailing slash, so `/mcp` and `/mcp/`
+produce the same external URLs.
 
 For the exact Dockerfile used to build the image see:
 https://github.com/microsoft/mcp/blob/main/Dockerfile

@@ -18,6 +18,27 @@ namespace Azure.Mcp.Core.Tests.Areas.Server;
 /// </summary>
 public sealed class ServerStartCommandValidationTests
 {
+    [Theory]
+    [InlineData(null, "")]
+    [InlineData("", "")]
+    [InlineData("/mcp", "/mcp")]
+    [InlineData("/mcp/", "/mcp")]
+    public void GetHttpBasePath_NormalizesConfiguredPath(string? configuredPath, string expectedPath)
+    {
+        Assert.Equal(expectedPath, ServerStartCommand.NormalizeHttpBasePath(configuredPath));
+    }
+
+    [Theory]
+    [InlineData("mcp")]
+    [InlineData("/mcp?query")]
+    [InlineData("/mcp#fragment")]
+    [InlineData("/mcp\\nested")]
+    public void GetHttpBasePath_RejectsInvalidPath(string configuredPath)
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() => ServerStartCommand.NormalizeHttpBasePath(configuredPath));
+        Assert.Contains(ServerStartCommand.HttpBasePathEnvironmentVariable, exception.Message);
+    }
+
     private static ValidationResult Validate(ServerStartOptions options)
     {
         var command = new ServerStartCommand();
