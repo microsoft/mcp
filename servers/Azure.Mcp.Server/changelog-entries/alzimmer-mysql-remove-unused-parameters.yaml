@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Removed the unused `subscription` and `resource-group` parameters from the `mysql database query` and `mysql table schema get` tools."

@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Adding correlation-id to response for debugging + Relaxed Azure Data Manager for Energy record ID and kind validation to avoid rejecting values accepted by the service."
