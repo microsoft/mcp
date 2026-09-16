@@ -1240,8 +1240,8 @@ Example prompts that generate Azure CLI commands:
 ### 💲 Azure Retail Pricing
 
 * "Get retail pricing for SKU 'Standard_D2s_v5' in region 'eastus'"
-* "Check pricing for Virtual Machines in region 'westeurope' with currency 'EUR'"
-* "Get reservation pricing for SKU 'Standard_B2s' including savings plans"
+* "Check pricing for Virtual Machines SKU 'Standard_E4s_v5' in region 'westeurope' with currency 'EUR'"
+* "Get one-year and three-year reservation pricing for SKU 'Standard_B2s'"
 * "Find retail prices for Azure App Service in region 'centralus'"
 
 ### 🔧 Azure Resource Management
