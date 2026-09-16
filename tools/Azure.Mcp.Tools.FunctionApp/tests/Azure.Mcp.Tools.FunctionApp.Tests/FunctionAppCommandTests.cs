@@ -82,7 +82,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
                 { "subscription", "" }
             });
 
+        // Empty subscription falls back to default, nonexistent resources return error
         Assert.True(result.HasValue);
+        Assert.Equal(400, result.Value.GetInt32());
     }
 
     [Fact]
@@ -106,9 +108,11 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [LiveTestOnly]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var result = await CallToolAsync("functionapp_get", []);
+        var result = await CallToolAsync("functionapp_get", [],
+            resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
 
         Assert.True(result.HasValue);
+        Assert.Equal(400, result.Value.GetInt32());
     }
 
     [Fact]
@@ -200,10 +204,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
             {
                 { "resource-group", "rg-test" },
                 { "function-app", "name-test" }
-            });
+            },
+        resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
         Assert.True(missingSub.HasValue);
-        missingSub.Value.AssertProperty("message");
-        var missingSubType = missingSub.Value.AssertProperty("type");
-        Assert.Equal("RequestFailedException", missingSubType.GetString());
+        Assert.Equal(400, missingSub.Value.GetInt32());
     }
 }
