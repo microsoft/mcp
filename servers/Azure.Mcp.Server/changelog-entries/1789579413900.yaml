@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed resilience drill create failing with generic RHUBCloudInternalError when no recovery plan was specified. The tool now always sends SystemAssigned identity for both RecoveryPlanProperties and MonitoringProperties, so the backend workflow no longer NREs on the missing identity fields."
