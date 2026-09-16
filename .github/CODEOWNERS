@@ -84,6 +84,19 @@
 # ServiceOwners:                       @microsoft/azure-mcp
 
 ##################
+# Changelog management (must be after Servers section as last rule wins)
+##################
+# Don't specify an owner for the changelog-entries folder.
+# PRLabel: %server-Azure.Mcp
+/servers/Azure.Mcp.Server/changelog-entries/
+
+# PRLabel: %server-Fabric.Mcp
+/servers/Fabric.Mcp.Server/changelog-entries/
+
+# PRLabel: %server-Template.Mcp
+/servers/Template.Mcp.Server/changelog-entries/
+
+##################
 # Tools
 ##################
 
