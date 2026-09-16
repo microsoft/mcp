@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using Azure;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Options.Table;
 using Azure.Mcp.Tools.Storage.Services;
@@ -47,6 +49,16 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied listing tables. Verify the caller has a data-plane role (e.g., 'Storage Table Data Reader' or 'Storage Table Data Contributor') on this storage account; management-plane roles like Contributor/Owner do not grant table data access. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "Storage account not found, or this account's SKU/kind does not support the Table service. Verify the account name.",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 
     public record TableListCommandResult(List<string> Tables);
 }

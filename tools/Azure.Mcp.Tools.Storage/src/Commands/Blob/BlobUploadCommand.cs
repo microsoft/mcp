@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using Azure;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -58,4 +60,16 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
             return context.Response;
         }
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied uploading blob. Verify the caller has a data-plane role (e.g., 'Storage Blob Data Contributor' or 'Storage Blob Data Owner') on this storage account; management-plane roles like Contributor/Owner do not grant blob data access. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
+            "Blob already exists. This tool only uploads when the blob does not already exist; delete or rename the existing blob first if you intend to replace it.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "Container not found. Verify the account and container names.",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 }

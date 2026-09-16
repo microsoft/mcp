@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using Azure;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -57,6 +59,18 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied creating container. Verify the caller has a data-plane role (e.g., 'Storage Blob Data Contributor' or 'Storage Blob Data Owner') on this storage account; management-plane roles like Contributor/Owner do not grant blob data access. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
+            "Container already exists. This tool only creates a container when one does not already exist with that name.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "Storage account not found. Verify the account name.",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 
     public record ContainerCreateCommandResult(ContainerInfo Container);
 }

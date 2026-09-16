@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using Azure;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -67,6 +69,16 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
             return context.Response;
         }
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied reading container details. Verify the caller has a data-plane role (e.g., 'Storage Blob Data Reader' or 'Storage Blob Data Contributor') on this storage account; management-plane roles like Contributor/Owner do not grant blob data access. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            "Storage account or container not found. Verify the account and container names.",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 
     public record ContainerGetCommandResult(List<ContainerInfo> Containers);
 }
