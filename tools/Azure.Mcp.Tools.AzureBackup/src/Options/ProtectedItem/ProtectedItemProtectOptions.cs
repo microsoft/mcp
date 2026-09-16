@@ -19,12 +19,6 @@ public sealed class ProtectedItemProtectOptions : BaseProtectedItemOptions
     [Option(Description = "Resource group used to store AKS volume snapshots created by Backup. DPP AKS only.")]
     public string? AksSnapshotResourceGroup { get; set; }
 
-    [Option(Description = "Comma-separated list of namespaces to include in the AKS backup policy default scope. DPP AKS only.")]
-    public string? AksIncludedNamespaces { get; set; }
-
-    [Option(Description = "Comma-separated list of namespaces to exclude from the AKS backup policy default scope. DPP AKS only.")]
-    public string? AksExcludedNamespaces { get; set; }
-
     [Option(Description = "Comma-separated label selectors (e.g. 'app=frontend,tier=web') applied to the AKS backup policy default scope. DPP AKS only.")]
     public string? AksLabelSelectors { get; set; }
 

@@ -120,7 +120,6 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? workloadType,
-        string? containerName,
         string? tenant,
         CancellationToken cancellationToken);
 
