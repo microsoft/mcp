@@ -141,11 +141,11 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
     public async Task Should_validate_required_subscription_parameter()
     {
         // When subscription is omitted, falls back to default subscription from CLI profile
-        var result = await CallToolAsync("aks_cluster_get", []);
+        var result = await CallToolAsync("aks_cluster_get", [],
+            resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
 
         Assert.True(result.HasValue);
-        var clusters = result.Value.AssertProperty("clusters");
-        Assert.Equal(JsonValueKind.Array, clusters.ValueKind);
+        Assert.Equal(400, result.Value.GetInt32());
     }
 
     [Fact]
@@ -270,8 +270,10 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
             {
                 { "subscription", Settings.SubscriptionId },
                 { "cluster", "test-cluster" }
-            });
-        Assert.False(result1.HasValue);
+            },
+            resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
+        Assert.True(result1.HasValue);
+        Assert.Equal(400, result1.Value.GetInt32());
 
         // Test missing subscription - falls back to default, nonexistent rg returns error
         var result2 = await CallToolAsync(
@@ -280,11 +282,10 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
             {
                 { "resource-group", "test-rg" },
                 { "cluster", "test-cluster" }
-            });
+            },
+            resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
         Assert.True(result2.HasValue);
-        result2.Value.AssertProperty("message");
-        var typeProperty = result2.Value.AssertProperty("type");
-        Assert.Equal("RequestFailedException", typeProperty.GetString());
+        Assert.Equal(400, result2.Value.GetInt32());
     }
 
     [Fact]
@@ -455,11 +456,10 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
                 { "resource-group", "rg" },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            });
+            },
+            resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
         Assert.True(r3.HasValue);
-        r3.Value.AssertProperty("message");
-        var r3Type = r3.Value.AssertProperty("type");
-        Assert.Equal("RequestFailedException", r3Type.GetString());
+        Assert.Equal(400, r3.Value.GetInt32());
     }
 
     [Fact]
@@ -494,13 +494,11 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
                 { "resource-group", "rg" },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            });
+            }, resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
 
         // Empty subscription falls back to default, nonexistent resources return error
         Assert.True(result.HasValue);
-        result.Value.AssertProperty("message");
-        var typeProperty = result.Value.AssertProperty("type");
-        Assert.Equal("RequestFailedException", typeProperty.GetString());
+        Assert.Equal(400, result.Value.GetInt32());
     }
 
     [Fact]
