@@ -5,6 +5,10 @@
       "azure-kusto-irql",
       "azure-kusto-irql-graph"
     ],
+    "azure-local-skills": [
+      "azure-local",
+      "azure-local-multi-rack"
+    ],
     "azure-skills": [
       "airunway-aks-setup",
       "appinsights-instrumentation",
