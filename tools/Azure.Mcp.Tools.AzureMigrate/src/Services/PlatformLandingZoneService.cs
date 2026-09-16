@@ -109,8 +109,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
             OrganizationName = parameters.OrganizationName
         };
 
-        logger.LogInformation("Generating landing zone: {Payload}",
-            JsonSerializer.Serialize(payload, AzureMigrateJsonContext.Default.PlatformLandingZoneGenerationPayload));
+        logger.LogInformation("Generating landing zone.");
 
         var response = await httpHelper.PostAsync(url, payload, AzureMigrateJsonContext.Default, cancellationToken);
         ThrowIfFailed(response);

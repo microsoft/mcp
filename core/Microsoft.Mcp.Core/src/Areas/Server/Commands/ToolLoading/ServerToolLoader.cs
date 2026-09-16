@@ -568,7 +568,7 @@ public sealed class ServerToolLoader(
         }
         catch
         {
-            _logger.LogError("Failed to get command and parameters from intent: {Intent} for tool: {Tool}", intent, tool);
+            _logger.LogError("Failed to get command and parameters from intent for tool: {Tool}", tool);
         }
 
         return (null, new Dictionary<string, object?>());
