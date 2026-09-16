@@ -1250,6 +1250,14 @@ Example prompts that generate Azure CLI commands:
 * "List my Azure CDN endpoints"
 * "Help me build an Azure application using Node.js"
 
+### 🩺 Azure Resource Health
+
+* "Get availability status for resource '/subscriptions/my-sub/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm'"
+* "Check current health and availability of my Azure resource 'my-vm'"
+* "List active service health issues in my subscription"
+* "List planned maintenance events affecting my Azure resources"
+* "Find service health event details for tracking ID 'ABC1-XYZ'"
+
 ### 🗄️ Azure SQL Database
 
 * "List all SQL servers in my subscription"
