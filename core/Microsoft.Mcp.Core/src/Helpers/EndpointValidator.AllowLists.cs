@@ -124,12 +124,48 @@ public static partial class EndpointValidator
             UsGov: [".communication.azure.us"],
             Germany: [".communication.azure.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["eventgrid"] = new AllowedSuffixManager(
+            Public: [".eventgrid.azure.net"],
+            China: [".eventgrid.azure.cn"],
+            UsGov: [".eventgrid.azure.us"],
+            Germany: [".eventgrid.azure.de"],
+            UseLegacyCheck: false),
+        ["eventhubs"] = new AllowedSuffixManager(
+            Public: [".servicebus.windows.net"],
+            China: [".servicebus.chinacloudapi.cn"],
+            UsGov: [".servicebus.usgovcloudapi.net"],
+            Germany: [".servicebus.cloudapi.de"],
+            UseLegacyCheck: false),
         ["foundry"] = new AllowedSuffixManager(
             Public: [".services.ai.azure.com"],
             China: [".services.ai.azure.cn"],
             UsGov: [".services.ai.azure.us"],
             Germany: [".services.ai.azure.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["iothub"] = new AllowedSuffixManager(
+            Public: [".azure-devices.net"],
+            China: [".azure-devices.cn"],
+            UsGov: [".azure-devices.us"],
+            Germany: [".azure-devices.de"],
+            UseLegacyCheck: false),
+        ["keyvault"] = new AllowedSuffixManager(
+            Public: [".vault.azure.net"],
+            China: [".vault.azure.cn"],
+            UsGov: [".vault.usgovcloudapi.net"],
+            Germany: [".vault.microsoftazure.de"],
+            UseLegacyCheck: false),
+        ["managedhsm"] = new AllowedSuffixManager(
+            Public: [".managedhsm.azure.net"],
+            China: [".managedhsm.azure.cn"],
+            UsGov: [".managedhsm.usgovcloudapi.net"],
+            Germany: [".managedhsm.microsoftazure.de"],
+            UseLegacyCheck: false),
+        ["mysql"] = new AllowedSuffixManager(
+            Public: [".mysql.database.azure.com"],
+            China: [".mysql.database.chinacloudapi.cn"],
+            UsGov: [".mysql.database.usgovcloudapi.net"],
+            Germany: [".mysql.database.cloudapi.de"],
+            UseLegacyCheck: false),
         ["servicebus"] = new AllowedSuffixManager(
             Public: [".servicebus.windows.net"],
             China: [".servicebus.chinacloudapi.cn"],
