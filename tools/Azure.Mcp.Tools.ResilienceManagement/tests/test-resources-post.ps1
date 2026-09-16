@@ -352,7 +352,7 @@ Invoke-ResilienceRestPut -Path $workflowMembershipPath -Body @{
     }
 } | Out-Null
 
-# 3) Enroll the service group into the usage plan (the usage plan is created by the bicep template).
+# 3) Enroll the service groups into the usage plan created above.
 $enrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$enrollmentName`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPut -Path $enrollmentPath -Body @{
     properties = @{
