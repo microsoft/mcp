@@ -5,7 +5,6 @@ jobs:
   variables:
     # Matches the registryUrl default in
     # eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml.
-    # Public feed, so packaging reads it anonymously.
     VsixNpmRegistry: "https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/"
   steps:
   - checkout: self
@@ -37,18 +36,12 @@ jobs:
       version: "24.x"
 
   # Resolve npm packages from the azure-sdk feed rather than the public registry.
-  #
-  # Deliberately unauthenticated. This job installs and builds PR-controlled
-  # content: `npm ci` runs dependency lifecycle scripts, and `vsce package` runs
-  # the vscode:prepublish script (webpack) from the PR's own package.json. Writing
-  # a feed credential into $HOME/.npmrc would hand that token to untrusted code,
-  # so create-authenticated-npmrc.yml is intentionally not used here. The feed
-  # serves anonymous reads, which is all packaging needs.
+  # The feed serves anonymous reads, which is all VSIX packaging requires.
   - pwsh: |
       $npmrcPath = Join-Path $HOME '.npmrc'
-      Write-Host "Creating unauthenticated .npmrc at $npmrcPath"
+      Write-Host "Configuring npm registry at $npmrcPath"
       'registry=$(VsixNpmRegistry)' | Out-File -FilePath $npmrcPath -Encoding ascii
-    displayName: "Configure npm registry (no credentials)"
+    displayName: "Configure npm registry"
     condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
 
   - task: Powershell@2
