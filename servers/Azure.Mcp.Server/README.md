@@ -1146,6 +1146,14 @@ Example prompts that generate Azure CLI commands:
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
+### ⚡ Azure Event Hubs
+
+* "Get details for Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Update tags on Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Get details for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Get consumer group 'my-consumergroup' for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Delete consumer group 'my-consumergroup' from Event Hub 'my-eventhub' in namespace 'my-namespace' and resource group 'my-rg'"
+
 ### 📂 Azure File Shares
 
 * "Get details about a specific file share in my resource group"
@@ -1263,6 +1271,13 @@ Example prompts that generate Azure CLI commands:
 * "List planned maintenance events affecting my Azure resources"
 * "Find service health event details for tracking ID 'ABC1-XYZ'"
 
+### 💲 Azure Retail Pricing
+
+* "Get retail pricing for SKU 'Standard_D2s_v5' in region 'eastus'"
+* "Check pricing for Virtual Machines SKU 'Standard_E4s_v5' in region 'westeurope' with currency 'EUR'"
+* "Get one-year and three-year reservation pricing for SKU 'Standard_B2s'"
+* "Find retail prices for Azure App Service in region 'centralus'"
+
 ### 🗄️ Azure SQL Database
 
 * "List all SQL servers in my subscription"
@@ -1340,6 +1355,11 @@ Example prompts that generate Azure CLI commands:
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Check whether recovery plan 'my-recovery-plan' and its protected resources are ready for recovery operations in service group 'my-service-group'"
 * "Validate which resources in recovery plan 'my-recovery-plan' in service group 'my-service-group' can fail over from 'eastus'"
+* "Fail over recovery plan 'my-recovery-plan' in service group 'my-service-group' from source location 'eastus'"
+* "Reprotect resources for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Finalize recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Resume paused recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Retry failed recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "List all runs of drill 'my-drill' in service group 'my-service-group'"
 * "Get drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "List all resources of drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
@@ -1388,6 +1408,14 @@ Example prompts that generate Azure CLI commands:
 * "Get Well-Architected Framework guidance for App Service"
 * "What's the architectural guidance for Azure Cosmos DB?"
 
+### 📊 Azure Workbooks
+
+* "List all workbooks in resource group 'my-resource-group'"
+* "Show details and content of workbook with resource ID '<workbook_resource_id>'"
+* "Create a new workbook named 'Cost Analysis' in resource group 'my-resource-group'"
+* "Update workbook 'my-workbook-id' with new dashboard visualization content"
+* "Delete workbook 'my-workbook-id' from resource group 'my-resource-group'"
+
 ## Complete List of Supported Azure Services
 
 The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
@@ -1413,6 +1441,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
+- ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
@@ -1430,9 +1459,10 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
+- 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

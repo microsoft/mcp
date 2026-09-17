@@ -29,7 +29,9 @@
     "**/bin/**",
     "**/eng/common/**",
     "**/obj/**",
-    "**/tools/**/tests/test-resources-post.ps1"
+    "**/tools/**/tests/test-resources-post.ps1",
+    "**/allowed-plugin-file-references.json",
+    "**/allowed-skill-names.json"
   ],
   "overrides": [
     {
