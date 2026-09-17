@@ -2463,7 +2463,8 @@ azmcp compute gallery create --subscription <subscription> \
 - Creates an Azure Compute Gallery (formerly Shared Image Gallery), the top-level container used to store and share VM image definitions and VM application definitions.
 - Uses create-or-update (PUT) semantics. If a gallery with the same name already exists in the resource group, parameters that are not supplied are left unchanged.
 - Supplying `--tags` replaces the gallery's entire tag set rather than merging, so any existing tag that is omitted is removed. Include every tag that should be kept.
-- If `--location` is not specified, the gallery is created in the resource group's location.
+- If `--location` is not specified, a new gallery is created in the resource group's location, and an existing gallery keeps the location it already has. A gallery's location cannot be changed after creation, so supplying a `--location` that differs from an existing gallery's region fails.
+- Gallery names must be unique within the subscription, not just within the resource group.
 - Gallery names must be 1-80 characters, contain only letters, digits, periods, and underscores, and start and end with a letter or digit. Unlike most Compute resources, hyphens are not allowed in gallery names.
 - Create the gallery before publishing VM images or VM applications into it.
 
@@ -2476,7 +2477,7 @@ azmcp compute gallery create --subscription <subscription> \
 | `--subscription` | Yes | Azure subscription ID or name |
 | `--resource-group`, `-g` | Yes | Resource group name |
 | `--gallery`, `--name` | Yes | Name of the Azure Compute Gallery to create |
-| `--location` | No | Azure region for the gallery (defaults to the resource group's location) |
+| `--location` | No | Azure region for the gallery (defaults to the resource group's location for a new gallery, or the existing gallery's location when updating) |
 | `--description` | No | Description of the gallery |
 | `--tags` | No | Comma-separated tags in key=value format (e.g., env=prod,team=compute) |
 

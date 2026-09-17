@@ -24,10 +24,11 @@ namespace Azure.Mcp.Tools.Compute.Commands.Gallery;
         Creates an Azure Compute Gallery (formerly Shared Image Gallery) in the specified resource group.
         A gallery is the top-level container used to store and share VM image definitions and VM application
         definitions across subscriptions, regions, and tenants. Create a gallery before publishing VM images
-        or VM applications. If --location is not specified, the gallery is created in the resource group's
-        location. This uses create-or-update semantics: if a gallery with the same name already exists, values
-        that are not supplied are left unchanged, but supplying --tags replaces the gallery's entire tag set
-        rather than merging, so include every tag that should be kept. Returns the
+        or VM applications. If --location is not specified, a new gallery is created in the resource group's
+        location and an existing gallery keeps its current location. This uses create-or-update semantics: if a
+        gallery with the same name already exists, values that are not supplied are left unchanged, but
+        supplying --tags replaces the gallery's entire tag set rather than merging, so include every tag that
+        should be kept. Gallery names must be unique within the subscription. Returns the
         created gallery including its name, resource ID, location, description, globally unique name,
         sharing permissions, tags, and provisioning state.
         """,
@@ -91,7 +92,9 @@ public sealed class GalleryCreateCommand(ILogger<GalleryCreateCommand> logger, I
         }
 
         var parsed = new Dictionary<string, string>();
-        foreach (var pair in tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        // Empty segments are kept so that leading, trailing, or consecutive commas fail validation
+        // below rather than being silently discarded.
+        foreach (var pair in tags.Split(',', StringSplitOptions.TrimEntries))
         {
             var parts = pair.Split('=', 2);
             if (parts.Length != 2)
@@ -164,6 +167,8 @@ public sealed class GalleryCreateCommand(ILogger<GalleryCreateCommand> logger, I
             "Resource group not found. Verify the resource group exists and you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed creating the gallery. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "InvalidResourceLocation" =>
+            $"A gallery with this name already exists in a different region. A gallery's location cannot be changed, so omit --location to update the existing gallery in place, or choose a different gallery name to create one in the requested region. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             $"Conflict creating the gallery. Another operation may be in progress on this gallery. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,

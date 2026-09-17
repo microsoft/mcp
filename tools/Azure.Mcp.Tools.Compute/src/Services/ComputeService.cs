@@ -1863,9 +1863,19 @@ public class ComputeService(
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
         var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+        var galleries = rgResource.Value.GetGalleries();
 
-        // Default to the resource group's location if not specified
-        var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
+        var resolvedLocation = location;
+        if (resolvedLocation is null)
+        {
+            // A gallery's location is immutable, so an update has to resend the existing location.
+            // Defaulting to the resource group's location would fail with InvalidResourceLocation
+            // whenever the gallery lives in a different region from its resource group.
+            var existing = await galleries.GetIfExistsAsync(gallery, cancellationToken: cancellationToken);
+            resolvedLocation = existing.HasValue && existing.Value is not null
+                ? existing.Value.Data.Location.Name
+                : rgResource.Value.Data.Location.Name;
+        }
 
         var galleryData = new GalleryData(new AzureLocation(resolvedLocation))
         {
@@ -1882,7 +1892,7 @@ public class ComputeService(
 
         _logger.LogInformation("Creating gallery {Gallery} in resource group {ResourceGroup}", gallery, resourceGroup);
 
-        var createOperation = await rgResource.Value.GetGalleries()
+        var createOperation = await galleries
             .CreateOrUpdateAsync(WaitUntil.Started, gallery, galleryData, cancellationToken);
         await WaitForLroCompletionAsync(createOperation, cancellationToken);
 

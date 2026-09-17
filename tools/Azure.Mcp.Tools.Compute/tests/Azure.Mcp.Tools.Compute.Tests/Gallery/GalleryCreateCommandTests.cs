@@ -384,6 +384,11 @@ public class GalleryCreateCommandTests : SubscriptionCommandUnitTestsBase<Galler
     [InlineData("env=prod,teamcompute")]
     [InlineData("=prod")]
     [InlineData("env=")]
+    [InlineData(",")]
+    [InlineData("env=prod,")]
+    [InlineData(",env=prod")]
+    [InlineData("env=prod,,team=compute")]
+    [InlineData("env=prod, ,team=compute")]
     public async Task ExecuteAsync_MalformedTags_ReturnsBadRequestAndSkipsService(string tags)
     {
         // Act
@@ -482,6 +487,38 @@ public class GalleryCreateCommandTests : SubscriptionCommandUnitTestsBase<Galler
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("Conflict creating the gallery", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LocationMismatch_ExplainsThatLocationIsImmutable()
+    {
+        // Arrange - ARM rejects a PUT that would move an existing gallery to another region.
+        Service.CreateGalleryAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(
+                409,
+                "The resource already exists in location 'eastus2'.",
+                "InvalidResourceLocation",
+                null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--gallery", GalleryName,
+            "--location", "westus");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("location cannot be changed", response.Message);
+        Assert.DoesNotContain("Another operation may be in progress", response.Message);
     }
 
     [Fact]
