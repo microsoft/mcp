@@ -72,10 +72,14 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
+            $"Access denied reading container details. This commonly happens when the caller has a management-plane role (e.g., Contributor/Owner) but lacks a data-plane role such as 'Storage Blob Data Reader' or 'Storage Blob Data Contributor' on this storage account. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Access denied reading container details. Verify the caller has a data-plane role (e.g., 'Storage Blob Data Reader' or 'Storage Blob Data Contributor') on this storage account; management-plane roles like Contributor/Owner do not grant blob data access. Details: {reqEx.Message}",
+            $"Access denied reading container details. This can result from a missing data-plane RBAC role, storage account network/firewall restrictions, or an invalid/expired credential. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "ContainerNotFound" =>
+            $"Container not found. Verify the container exists in the specified storage account. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Storage account or container not found. Verify the account and container names.",
+            $"Storage account or container not found. Verify the account and container names. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

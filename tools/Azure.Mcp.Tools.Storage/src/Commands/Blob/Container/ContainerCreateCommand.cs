@@ -62,12 +62,14 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
+            $"Access denied creating container. This commonly happens when the caller has a management-plane role (e.g., Contributor/Owner) but lacks a data-plane role such as 'Storage Blob Data Contributor' or 'Storage Blob Data Owner' on this storage account. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Access denied creating container. Verify the caller has a data-plane role (e.g., 'Storage Blob Data Contributor' or 'Storage Blob Data Owner') on this storage account; management-plane roles like Contributor/Owner do not grant blob data access. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "Container already exists. This tool only creates a container when one does not already exist with that name.",
+            $"Access denied creating container. This can result from a missing data-plane RBAC role, storage account network/firewall restrictions, or an invalid/expired credential. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "ContainerAlreadyExists" =>
+            $"Container already exists. This tool only creates a container when one does not already exist with that name; use 'storage blob container get' first if you only need to ensure the container exists. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Storage account not found. Verify the account name.",
+            $"Storage account not found. Verify the account name. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

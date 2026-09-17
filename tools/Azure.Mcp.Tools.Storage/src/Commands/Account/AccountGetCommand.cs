@@ -66,7 +66,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger, IStorag
     {
         KeyNotFoundException => "Storage account not found. Verify the account name, subscription, and that you have access. Note: recently created accounts may take a few minutes to appear due to Azure Resource Graph indexing delay.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Access denied listing storage account details. Verify the caller has at least 'Reader' access on the subscription or resource group. Details: {reqEx.Message}",
+            $"Access denied listing storage account details. This is commonly caused by missing 'Reader' (or higher) access on the subscription or resource group, but can also result from an Azure Policy restriction or a conditional access requirement. See https://learn.microsoft.com/azure/role-based-access-control/troubleshooting for troubleshooting steps. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };

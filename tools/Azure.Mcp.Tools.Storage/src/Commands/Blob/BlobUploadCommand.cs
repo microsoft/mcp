@@ -63,12 +63,14 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
+            $"Access denied uploading blob. This commonly happens when the caller has a management-plane role (e.g., Contributor/Owner) but lacks a data-plane role such as 'Storage Blob Data Contributor' or 'Storage Blob Data Owner' on this storage account. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Access denied uploading blob. Verify the caller has a data-plane role (e.g., 'Storage Blob Data Contributor' or 'Storage Blob Data Owner') on this storage account; management-plane roles like Contributor/Owner do not grant blob data access. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "Blob already exists. This tool only uploads when the blob does not already exist; delete or rename the existing blob first if you intend to replace it.",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "Container not found. Verify the account and container names.",
+            $"Access denied uploading blob. This can result from a missing data-plane RBAC role, storage account network/firewall restrictions, or an invalid/expired credential. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "BlobAlreadyExists" =>
+            $"Blob already exists. This tool only uploads when the blob does not already exist; delete or rename the existing blob first if you intend to replace it, or use 'storage blob get' to check for an existing blob before uploading. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "ContainerNotFound" =>
+            $"Container not found. Verify the account and container names. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
