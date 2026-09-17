@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     Id = "da7f163e-471c-4d7d-ae00-d41f5f4b939e",
     Name = "update",
     Title = "Update Backup Vault",
-    Description = "Updates vault-level settings including storage redundancy, soft delete, immutability, and managed identity.",
+    Description = "Updates vault-level settings including storage redundancy, soft delete, immutability, managed identity (system- and user-assigned), and public network access.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,

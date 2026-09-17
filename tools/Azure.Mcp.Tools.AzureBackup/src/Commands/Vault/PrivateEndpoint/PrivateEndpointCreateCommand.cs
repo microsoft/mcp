@@ -23,6 +23,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
         vaults (DPP) are not supported and return a NotSupportedException with guidance. The vault must
         have no protected items; RSV supports at most 12 Private Endpoints per vault. --group-id must be
         'AzureBackup' (primary region) or 'AzureBackup_secondary' (paired region / Cross-Region Restore).
+        Optionally integrates private DNS zones for name resolution via --private-dns-zone-ids and
+        --private-dns-zone-group-name.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
