@@ -31,6 +31,13 @@ jobs:
     inputs:
       version: "24.x"
 
+  # Point npm at the internal azure-sdk feed. Pack-Vsix.ps1 runs `npm ci`, which
+  # otherwise resolves against the public registry and is blocked on the hosted
+  # agents. Mirrors pack-and-sign-vsix.yml.
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+    parameters:
+      CustomCondition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
+
   - task: Powershell@2
     displayName: "Prepare binaries for VSIX"
     condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
