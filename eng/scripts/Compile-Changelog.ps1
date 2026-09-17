@@ -150,11 +150,12 @@ function Normalize-Indentation {
     return $line
 }
 
-# Helper function to format a changelog entry with description and PR link
+# Helper function to format a changelog entry with description, PR link, and optional contributor
 function Format-ChangelogEntry {
     param(
         [string]$Description,
-        [int]$PR
+        [int]$PR,
+        [string]$Contributor = ""
     )
     
     # Trim leading and trailing whitespace from the entire description
@@ -165,6 +166,11 @@ function Format-ChangelogEntry {
     
     # Normalize tabs to spaces throughout the description
     $Description = $Description -replace "`t", "  "
+
+    $cleanContributor = if ($Contributor) { $Contributor.Trim().TrimStart('@') } else { "" }
+    $contributorSuffix = if ($cleanContributor) { " (contributed by [@$cleanContributor](https://github.com/$cleanContributor))" } else { "" }
+    $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
+    $suffix = "$contributorSuffix$prLink"
     
     # Check if description contains multiple lines
     if ($Description.Contains("`n")) {
@@ -175,7 +181,6 @@ function Format-ChangelogEntry {
         
         # Check if this is a list (first line followed by bullet items)
         $isList = $lines.Length -gt 1 -and $lines[1].TrimStart() -match '^-\s+'
-        $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
         
         for ($i = 0; $i -lt $lines.Length; $i++) {
             $line = $lines[$i].TrimEnd()  # Trim trailing spaces from each line
@@ -189,8 +194,8 @@ function Format-ChangelogEntry {
                     if (-not $line.EndsWith(":")) {
                         $line += ":"
                     }
-                    # For lists, add PR link to first line
-                    $formattedLines += "- $line$prLink"
+                    # For lists, add suffix to first line
+                    $formattedLines += "- $line$suffix"
                 }
                 else {
                     # Regular multi-line text, ensure valid sentence ending
@@ -201,22 +206,22 @@ function Format-ChangelogEntry {
                 }
             }
             elseif ($i -eq $lines.Length - 1) {
-                # Last line: normalize indentation and add PR link for non-list entries
+                # Last line: normalize indentation and add suffix for non-list entries
                 $normalizedLine = Normalize-Indentation $line.TrimEnd()
                 
                 if ($isList) {
-                    # For lists, PR link was added to first line, just add the last bullet
+                    # For lists, suffix was added to first line, just add the last bullet
                     $formattedLines += "  $normalizedLine"
                 }
                 else {
-                    # For regular multi-line text, add PR link to last line
+                    # For regular multi-line text, add suffix to last line
                     # Ensure valid sentence ending for non-bullet text
                     $content = $normalizedLine.TrimStart()
                     $needsPeriod = -not ($content -match '^-\s+') -and ($content -notmatch '[.!?\)\]]$')
                     if ($needsPeriod) {
                         $normalizedLine += "."
                     }
-                    $formattedLines += "  $normalizedLine$prLink"
+                    $formattedLines += "  $normalizedLine$suffix"
                 }
             }
             else {
@@ -236,9 +241,8 @@ function Format-ChangelogEntry {
             $formattedDescription += "."
         }
         
-        # Add PR link if available
-        $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
-        return "- $formattedDescription$prLink"
+        # Add contributor and PR link if available
+        return "- $formattedDescription$suffix"
     }
 }
 
@@ -396,6 +400,12 @@ foreach ($file in $yamlFiles) {
             continue
         }
         
+        # Handle Contributor field - optional, at root level or change level
+        $rootContributor = $null
+        if ($entry.ContainsKey('contributor') -and $entry['contributor']) {
+            $rootContributor = ([string]$entry['contributor']).Trim().TrimStart('@')
+        }
+
         # Process each change in the array
         $changeCount = 0
         foreach ($change in $entry.changes) {
@@ -437,12 +447,18 @@ foreach ($file in $yamlFiles) {
                 $subsection = $matchedSubsection
             }
             
+            $contributor = $rootContributor
+            if ($change.ContainsKey('contributor') -and $change['contributor']) {
+                $contributor = ([string]$change['contributor']).Trim().TrimStart('@')
+            }
+
             # Add to entries collection with normalized section name
             $entries += [PSCustomObject]@{
                 Section     = $normalizedSection
                 Subsection  = $subsection
                 Description = $change['description']
                 PR          = $entry['pr']
+                Contributor = $contributor
                 Filename    = $file.Name
             }
             $changeCount++
@@ -593,7 +609,7 @@ foreach ($section in $RecommendedSectionHeaders) {
         # Process entries without subsection first
         if ($subsections.ContainsKey("")) {
             foreach ($entry in $subsections[""]) {
-                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $entry.Contributor
             }
         }
         
@@ -603,7 +619,7 @@ foreach ($section in $RecommendedSectionHeaders) {
             $newEntriesMarkdown += "#### $subsectionName"
             $newEntriesMarkdown += ""
             foreach ($entry in $subsections[$subsectionName]) {
-                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $entry.Contributor
             }
         }
     }
@@ -698,7 +714,7 @@ else {
         
         if ($hasNew -and $groupedEntries[$section].ContainsKey("")) {
             foreach ($entry in $groupedEntries[$section][""]) {
-                $newMainEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                $newMainEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $entry.Contributor
             }
         }
         
@@ -730,7 +746,7 @@ else {
             # New subsection entries
             if ($mapping.New -and $hasNew -and $groupedEntries[$section].ContainsKey($mapping.New)) {
                 foreach ($entry in $groupedEntries[$section][$mapping.New]) {
-                    $subsectionEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                    $subsectionEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR -Contributor $entry.Contributor
                 }
             }
             

@@ -20,6 +20,10 @@
     Pull request number (integer). Optional - if not provided, it will be auto-detected from the git commit
     message during compilation. Must be a positive integer if provided.
 
+.PARAMETER Contributor
+    GitHub username of the contributor (e.g. "octocat" or "@octocat").
+    Optional - if provided, the contributor will be credited in the compiled changelog.
+
 .PARAMETER Filename
     Optional custom filename for the changelog entry (without path).
     If not provided, a timestamp-based filename will be generated.
@@ -62,6 +66,11 @@
     Creates a changelog entry with a custom filename (vcolin7-fix-serialization.yaml).
 
 .EXAMPLE
+    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description "Added support for external identity" -Section "Features Added" -Contributor "octocat"
+
+    Creates a changelog entry crediting the community contributor.
+
+.EXAMPLE
     $description = @"
 Added new AI Foundry tools:
 - foundry_agents_create: Create a new AI Foundry agent
@@ -89,6 +98,9 @@ param(
 
     [Parameter(Mandatory = $false)]
     [int]$PR,
+
+    [Parameter(Mandatory = $false)]
+    [string]$Contributor,
 
     [Parameter(Mandatory = $false)]
     [string]$Filename
@@ -167,6 +179,15 @@ if ($Subsection) {
     }
     # Use the properly cased version
     $Subsection = $matchedSubsection
+}
+
+# Validate and normalize Contributor parameter if provided
+if ($Contributor) {
+    $Contributor = $Contributor.Trim().TrimStart('@')
+    if ($Contributor -notmatch '^[a-zA-Z0-9-]+$') {
+        LogError "Invalid contributor username '$Contributor'. GitHub usernames may only contain alphanumeric characters and hyphens."
+        exit 1
+    }
 }
 
 # Interactive prompt for ChangelogPath if not provided
@@ -267,6 +288,17 @@ if (-not $PR -and $isInteractive) {
     }
 }
 
+if (-not $Contributor -and $isInteractive) {
+    $contributorInput = Read-Host "`nContributor GitHub username (optional, press Enter to skip)"
+    if ($contributorInput) {
+        $Contributor = $contributorInput.Trim().TrimStart('@')
+        if ($Contributor -notmatch '^[a-zA-Z0-9-]+$') {
+            LogError "Invalid contributor username '$Contributor'. GitHub usernames may only contain alphanumeric characters and hyphens."
+            exit 1
+        }
+    }
+}
+
 # Trim whitespace from description if provided via parameter
 $Description = $Description.Trim()
 
@@ -283,12 +315,14 @@ if ($Filename) {
 }
 $filepath = Join-Path $changelogEntriesDir $filename
 
-# Create YAML content in new format: pr at top level (optional), changes as an array
+# Create YAML content in new format: pr and contributor at top level (optional), changes as an array
 # If PR is not provided, it will be auto-detected from git commit during compilation
+$yamlContent = ""
 if ($PR) {
-    $yamlContent = "pr: $PR`n"
-} else {
-    $yamlContent = ""
+    $yamlContent += "pr: $PR`n"
+}
+if ($Contributor) {
+    $yamlContent += "contributor: `"$Contributor`"`n"
 }
 
 $yamlContent += "changes:`n"
@@ -329,6 +363,9 @@ if ($Subsection) {
     LogInfo "  Subsection: $Subsection"
 }
 LogInfo "  Description: $Description"
+if ($Contributor) {
+    LogInfo "  Contributor: @$Contributor"
+}
 if ($PR) {
     LogInfo "  PR: #$PR"
 } else {
@@ -352,6 +389,16 @@ if (Test-Path $schemaPath) {
             if ($yamlData.ContainsKey('pr') -and $yamlData.pr -and $yamlData.pr -lt 1) {
                 LogError "PR must be a positive integer"
                 exit 1
+            }
+            
+            # Validate contributor if provided
+            if ($yamlData.ContainsKey('contributor') -and $yamlData.contributor) {
+                $contribVal = [string]$yamlData.contributor
+                $cleanContribVal = $contribVal.Trim().TrimStart('@')
+                if ($cleanContribVal -notmatch '^[a-zA-Z0-9-]+$') {
+                    LogError "Contributor username must only contain alphanumeric characters and hyphens"
+                    exit 1
+                }
             }
             
             if (-not $yamlData.changes -or $yamlData.changes.Count -eq 0) {

@@ -49,7 +49,8 @@ servers/Azure.Mcp.Server/
 ### YAML Schema
 
 ```yaml
-pr: <number>          # Required: PR number (use 0 if not known yet)
+pr: <number>          # Optional: PR number (use 0 if not known yet, or auto-detect from git)
+contributor: <string> # Optional: GitHub username for contributor attribution (e.g. "octocat")
 changes:              # Required: Array of changes (minimum 1)
   - section: <string>     # Required
     description: <string> # Required
@@ -58,7 +59,6 @@ changes:              # Required: Array of changes (minimum 1)
 
 #### Required Fields
 
-- **pr**: Pull request number at the top level (integer, use 0 if not known yet)
 - **changes**: Array of `change` objects (must have at least one). Each `change` requires:
   - **section**: One of the following:
     - `Features Added` - New features, tools, or capabilities
@@ -69,6 +69,8 @@ changes:              # Required: Array of changes (minimum 1)
 
 #### Optional Fields
 
+- **pr**: Pull request number at the top level (integer, use 0 or omit if not known yet; auto-detected from git commit on squash merge)
+- **contributor**: GitHub username of the community contributor (e.g., `octocat`). When provided, the contributor will be credited in the compiled changelog (` (contributed by [@username](https://github.com/username))`). Can be set at the root level or on individual change items.
 - **subsection**: Optional subsection to group changes under. Currently, the only valid subsection is `Dependency Updates` under the `Other Changes` section.
 
 **Note:** Not every PR needs a changelog entry! Only include entries for changes that are worth mentioning to users or maintainers (new features, breaking changes, important bug fixes, etc.). Minor internal refactoring, documentation updates, or test changes typically don't need entries.
@@ -100,12 +102,17 @@ Validates YAML structure and ensures required fields are present.
   "title": "Changelog Entry",
   "description": "Schema for individual changelog entry YAML files. One file per PR, supporting multiple changes.",
   "type": "object",
-  "required": ["pr", "changes"],
+  "required": ["changes"],
   "properties": {
     "pr": {
       "type": "integer",
       "description": "Pull request number (use 0 if not known yet)",
       "minimum": 0
+    },
+    "contributor": {
+      "type": "string",
+      "description": "GitHub username of the contributor (optional)",
+      "pattern": "^@?[a-zA-Z0-9-]+$"
     },
     "changes": {
       "type": "array",
@@ -136,6 +143,11 @@ Validates YAML structure and ensures required fields are present.
             "type": "string",
             "description": "Description of the change",
             "minLength": 10
+          },
+          "contributor": {
+            "type": "string",
+            "description": "GitHub username of the contributor for this specific change (optional)",
+            "pattern": "^@?[a-zA-Z0-9-]+$"
           }
         },
         "additionalProperties": false
@@ -164,6 +176,13 @@ Helper script to create properly formatted changelog entries. It supports both i
   -Description "Added support for User-Assigned Managed Identity" `
   -Section "Features Added" `
   -PR 1234
+
+# With contributor attribution
+./eng/scripts/New-ChangelogEntry.ps1 `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
+  -Description "Added support for User-Assigned Managed Identity" `
+  -Section "Features Added" `
+  -Contributor "octocat"
 
 # With subsection
 ./eng/scripts/New-ChangelogEntry.ps1 `
@@ -318,6 +337,7 @@ changes:
 **File:** `jdoe-speech-recognition.yaml`
 ```yaml
 pr: 1054
+contributor: jdoe
 changes:
   - section: "Features Added"
     description: "Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`."
@@ -352,7 +372,7 @@ When compiled, entries are grouped by section and subsection. Empty sections wil
 ### Features Added
 
 - Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable. [[#1033](https://github.com/microsoft/mcp/pull/1033)]
-- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
+- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. (contributed by [@jdoe](https://github.com/jdoe)) [[#1054](https://github.com/microsoft/mcp/pull/1054)]
 - Added support for multiple changes per PR in changelog entries [[#1234](https://github.com/microsoft/mcp/pull/1234)]
 
 ### Bugs Fixed
