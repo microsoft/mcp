@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Resource Graph queries failing with `No accessible tenant found` when an explicit tenant is supplied."

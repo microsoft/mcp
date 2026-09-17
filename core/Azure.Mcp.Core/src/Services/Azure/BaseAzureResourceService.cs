@@ -4,9 +4,10 @@
 using System.ClientModel.Primitives;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Azure;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.ResourceManager;
-using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
 
@@ -19,30 +20,7 @@ namespace Azure.Mcp.Core.Services.Azure;
 public abstract class BaseAzureResourceService(IAzureService azureService)
     : BaseAzureService(azureService)
 {
-    /// <summary>
-    /// Gets the tenant resource for the specified subscription.
-    /// </summary>
-    /// <param name="tenantId">The tenant ID from the subscription</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The tenant resource associated with the subscription</returns>
-    private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken = default)
-    {
-        if (tenantId == null)
-        {
-            throw new ArgumentException("Tenant ID cannot be null.", nameof(tenantId));
-        }
-
-        // Get all tenants and find the matching one (GetTenants already has caching)
-        var allTenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == tenantId.Value);
-
-        if (tenantResource == null)
-        {
-            throw new InvalidOperationException($"No accessible tenant found for tenant ID '{tenantId}'");
-        }
-
-        return tenantResource;
-    }
+    private const string ResourceGraphApiVersion = "2024-04-01";
 
     /// <summary>
     /// Validates that the specified resource group exists within the given subscription.
@@ -91,7 +69,10 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         ValidateAdditionalFilter(additionalFilter);
 
         var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
-        var tenantResource = await GetTenantResourceAsync(subscriptionResource!.Data.TenantId, cancellationToken);
+        var tenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
+            ?? subscriptionResource!.Data.TenantId?.ToString()
+            ?? throw new InvalidOperationException(
+                $"Subscription '{subscriptionResource.Data.SubscriptionId}' does not have a tenant ID.");
 
         var queryFilter = BuildResourceQuery(tableName, resourceType, resourceGroup, additionalFilter, limit);
 
@@ -100,10 +81,9 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             Subscriptions = { subscriptionResource.Data.SubscriptionId }
         };
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        var results = MaterializeResults(result, converter);
+        var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
 
-        if ((result == null || result.Count == 0) && !string.IsNullOrEmpty(resourceGroup))
+        if (result.Results.Count == 0 && !string.IsNullOrEmpty(resourceGroup))
         {
             // If the query returned no results and a resource group filter was applied, validate that the resource group exists to provide better error handling
             if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
@@ -112,7 +92,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             }
         }
 
-        return new ResourceQueryResults<T>(results, result?.ResultTruncated == ResultTruncated.True);
+        return result;
     }
 
     /// <summary>
@@ -147,7 +127,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         ArgumentNullException.ThrowIfNull(converter);
         ValidateAdditionalFilter(additionalFilter);
 
-        var tenantResource = await ResolveTenantResourceAsync(tenant, cancellationToken);
+        var tenantId = await ResolveTenantIdAsync(tenant, cancellationToken);
 
         var queryFilter = BuildResourceQuery(tableName, resourceType, resourceGroup: null, additionalFilter, limit);
 
@@ -156,10 +136,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             ManagementGroups = { managementGroup }
         };
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        var results = MaterializeResults(result, converter);
-
-        return new ResourceQueryResults<T>(results, result?.ResultTruncated == ResultTruncated.True);
+        return await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
     }
 
     private static void ValidateAdditionalFilter(string? additionalFilter)
@@ -192,42 +169,75 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         return queryFilter + $" | limit {limit}";
     }
 
-    private static List<T> MaterializeResults<T>(ResourceQueryResult? result, Func<JsonElement, T> converter)
+    private async Task<ResourceQueryResults<T>> ExecuteResourceGraphQueryAsync<T>(
+        ResourceQueryContent queryContent,
+        string tenant,
+        Func<JsonElement, T> converter,
+        CancellationToken cancellationToken)
     {
-        var results = new List<T>();
-        if (result == null || result.Count == 0)
+        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
+        using var client = AzureService.GetClient();
+        var clientOptions = AddDefaultPolicies(new ArmClientOptions
         {
-            return results;
+            Transport = new HttpClientTransport(client)
+        });
+        var pipeline = HttpPipelineBuilder.Build(clientOptions);
+
+        var requestUri = new Uri(
+            AzureService.CloudConfiguration.ArmEnvironment.Endpoint,
+            $"/providers/Microsoft.ResourceGraph/resources?api-version={ResourceGraphApiVersion}");
+        using var request = pipeline.CreateRequest();
+        request.Method = RequestMethod.Post;
+        request.Uri.Reset(requestUri);
+        request.Headers.Add("Authorization", $"Bearer {token.Token}");
+        request.Headers.Add("Accept", "application/json");
+        request.Headers.Add("Content-Type", "application/json");
+        request.Headers.Add("x-ms-client-request-id", Guid.NewGuid().ToString());
+        request.Headers.Add("x-ms-return-client-request-id", "true");
+        request.Content = CreateResourceGraphRequestContent(queryContent);
+
+        using var response = await pipeline.SendRequestAsync(request, cancellationToken);
+        if (response.IsError)
+        {
+            throw new RequestFailedException(response);
         }
 
-        using var jsonDocument = JsonDocument.Parse(result.Data);
-        var dataArray = jsonDocument.RootElement;
-        if (dataArray.ValueKind == JsonValueKind.Array)
+        await using var responseStream = response.Content.ToStream();
+        using var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+        var root = document.RootElement;
+        var results = new List<T>();
+        if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
         {
-            foreach (var item in dataArray.EnumerateArray())
+            foreach (var item in data.EnumerateArray())
             {
                 results.Add(converter(item));
             }
         }
 
-        return results;
+        var isTruncated = root.TryGetProperty("resultTruncated", out var resultTruncated)
+            && (resultTruncated.ValueKind == JsonValueKind.True
+                || resultTruncated.ValueKind == JsonValueKind.String
+                && string.Equals(resultTruncated.GetString(), "true", StringComparison.OrdinalIgnoreCase));
+
+        return new ResourceQueryResults<T>(results, isTruncated);
     }
 
     /// <summary>
-    /// Resolves the tenant to run a query against when no subscription is available to derive it from.
+    /// Resolves the tenant ID to run a query against when no subscription is available to derive it from.
     /// </summary>
-    private async Task<TenantResource> ResolveTenantResourceAsync(string? tenant, CancellationToken cancellationToken)
+    private async Task<string> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
         var tenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken);
         if (!string.IsNullOrEmpty(tenantId))
         {
-            return await GetTenantResourceAsync(Guid.Parse(tenantId), cancellationToken);
+            return tenantId;
         }
 
         var tenants = await AzureService.GetTenants(cancellationToken);
         if (tenants.Count == 1)
         {
-            return tenants[0];
+            return tenants[0].Data.TenantId?.ToString()
+                ?? throw new InvalidOperationException("The accessible Azure tenant does not have a tenant ID.");
         }
 
         if (tenants.Count == 0)
@@ -238,6 +248,39 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         throw new ArgumentException(
             "Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify the tenant explicitly.",
             nameof(tenant));
+    }
+
+    private static RequestContent CreateResourceGraphRequestContent(ResourceQueryContent queryContent)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("query", queryContent.Query);
+            WriteStringArray(writer, "subscriptions", queryContent.Subscriptions);
+            WriteStringArray(writer, "managementGroups", queryContent.ManagementGroups);
+            writer.WriteEndObject();
+        }
+
+        return RequestContent.Create(stream.ToArray());
+    }
+
+    private static void WriteStringArray(
+        Utf8JsonWriter writer,
+        string propertyName,
+        IEnumerable<string> values)
+    {
+        if (!values.Any())
+        {
+            return;
+        }
+
+        writer.WriteStartArray(propertyName);
+        foreach (var value in values)
+        {
+            writer.WriteStringValue(value);
+        }
+        writer.WriteEndArray();
     }
 
     /// <summary>
