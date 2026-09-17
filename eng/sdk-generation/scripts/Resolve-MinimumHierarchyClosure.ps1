@@ -29,17 +29,18 @@ $rootIds = @($rootManifest.operations.methodId)
 if ($rootIds.Count -eq 0) { throw "No operation roots were provided in $Roots" }
 if (@($rootIds | Sort-Object -Unique).Count -ne $rootIds.Count) { throw "Duplicate operation roots found in $Roots" }
 
-$resourcesByType = @{}
 $resourcesById = @{}
 $resourceMethodOwners = @{}
+function Get-ResourceKey([object] $Resource) {
+    return @($Resource.methods.methodId | Sort-Object -CaseSensitive) -join "`n"
+}
 foreach ($resource in @($schema.resources)) {
-    $resourceType = [string] $resource.resourceType
     $resourceId = [string] $resource.resourceIdPattern
-    if ($resourcesByType.ContainsKey($resourceType)) { throw "Duplicate ARM resource type: $resourceType" }
-    $resourcesByType[$resourceType] = $resource
     if ($resourceId) {
-        if ($resourcesById.ContainsKey($resourceId)) { throw "Duplicate ARM resource ID pattern: $resourceId" }
-        $resourcesById[$resourceId] = $resource
+        if (-not $resourcesById.ContainsKey($resourceId)) {
+            $resourcesById[$resourceId] = [System.Collections.Generic.List[object]]::new()
+        }
+        [void] $resourcesById[$resourceId].Add($resource)
     }
     foreach ($method in @($resource.methods)) {
         $methodId = [string] $method.methodId
@@ -89,11 +90,12 @@ foreach ($rootId in $rootIds) {
 while ($queue.Count -gt 0) {
     $resource = $queue.Dequeue()
     $resourceType = [string] $resource.resourceType
-    if ($selectedResources.ContainsKey($resourceType)) { continue }
+    $resourceKey = Get-ResourceKey $resource
+    if ($selectedResources.ContainsKey($resourceKey)) { continue }
 
-    $selectedResources[$resourceType] = $resource
+    $selectedResources[$resourceKey] = $resource
     $hasDirectRoot = @($resource.methods | Where-Object { $rootIds -ccontains $_.methodId }).Count -gt 0
-    $resourceReasons[$resourceType] = if ($hasDirectRoot) { 'Owns a direct MCP root operation' } else { 'Required in-service ancestor' }
+    $resourceReasons[$resourceKey] = if ($hasDirectRoot) { 'Owns a direct MCP root operation' } else { 'Required in-service ancestor' }
 
     $readMethods = @($resource.methods | Where-Object { $_.kind -ceq 'Read' })
     if ($readMethods.Count -ne 1) {
@@ -111,14 +113,19 @@ while ($queue.Count -gt 0) {
         if (-not $resourcesById.ContainsKey($parentId)) {
             throw "In-service parent resource not found for '$resourceType': $parentId"
         }
-        $queue.Enqueue($resourcesById[$parentId])
+        $parents = @($resourcesById[$parentId])
+        if ($parents.Count -ne 1) {
+            throw "In-service parent resource is ambiguous for '$resourceType': $parentId"
+        }
+        $queue.Enqueue($parents[0])
     }
 }
 
 $expandedResources = [System.Collections.Generic.List[object]]::new()
 foreach ($resource in @($schema.resources)) {
     $resourceType = [string] $resource.resourceType
-    if (-not $selectedResources.ContainsKey($resourceType)) { continue }
+    $resourceKey = Get-ResourceKey $resource
+    if (-not $selectedResources.ContainsKey($resourceKey)) { continue }
 
     $operations = [System.Collections.Generic.List[object]]::new()
     foreach ($method in @($resource.methods)) {
@@ -133,7 +140,7 @@ foreach ($resource in @($schema.resources)) {
     }
     [void] $expandedResources.Add([ordered]@{
         resourceType = $resourceType
-        reason = [string] $resourceReasons[$resourceType]
+        reason = [string] $resourceReasons[$resourceKey]
         operations = $operations.ToArray()
     })
 }

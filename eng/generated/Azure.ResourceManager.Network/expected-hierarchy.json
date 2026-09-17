@@ -1,0 +1,76 @@
+[
+  {
+    "Name": "NetworkInterfaceResource",
+    "ResourceType": "Microsoft.Network/networkInterfaces",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{networkInterfaceName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  },
+  {
+    "Name": "PublicIPAddressResource",
+    "ResourceType": "Microsoft.Network/publicIPAddresses",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  },
+  {
+    "Name": "NetworkInterfaceIPConfigurationResource",
+    "ResourceType": "Microsoft.Network/networkInterfaces/ipConfigurations",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{networkInterfaceName}/ipConfigurations/{ipConfigurationName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [
+      "Microsoft.Network/networkInterfaces"
+    ],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  },
+  {
+    "Name": "NetworkSecurityGroupResource",
+    "ResourceType": "Microsoft.Network/networkSecurityGroups",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkSecurityGroups/{networkSecurityGroupName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  },
+  {
+    "Name": "PrivateEndpointResource",
+    "ResourceType": "Microsoft.Network/privateEndpoints",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/privateEndpoints/{privateEndpointName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  },
+  {
+    "Name": "VirtualNetworkResource",
+    "ResourceType": "Microsoft.Network/virtualNetworks",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  },
+  {
+    "Name": "SubnetResource",
+    "ResourceType": "Microsoft.Network/virtualNetworks/subnets",
+    "ResourceId": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}",
+    "IsSingleton": false,
+    "ParentResourceTypes": [
+      "Microsoft.Network/virtualNetworks"
+    ],
+    "Scopes": [
+      "ResourceGroup"
+    ]
+  }
+]

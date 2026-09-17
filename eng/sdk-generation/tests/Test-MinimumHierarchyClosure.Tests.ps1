@@ -35,6 +35,18 @@ $resources = @(
             (New-Method 'Microsoft.Test.Children.action' 'Action' "$childId/action"),
             (New-Method 'Microsoft.Test.Children.delete' 'Delete' $childId)
         )
+    },
+    @{
+        resourceType = 'Microsoft.Test/unselected'
+        resourceIdPattern = '/subscriptions/{subscriptionId}/providers/Microsoft.Test/unselected/{name}'
+        scope = @{ kind = 'Subscription' }
+        methods = @((New-Method 'Microsoft.Test.UnselectedOne.get' 'Read' '/subscriptions/{subscriptionId}/providers/Microsoft.Test/unselected/{name}'))
+    },
+    @{
+        resourceType = 'Microsoft.Test/unselected'
+        resourceIdPattern = '/subscriptions/{subscriptionId}/providers/Microsoft.Test/unselected/{name}'
+        scope = @{ kind = 'Subscription' }
+        methods = @((New-Method 'Microsoft.Test.UnselectedTwo.get' 'Read' '/subscriptions/{subscriptionId}/providers/Microsoft.Test/unselected/{name}'))
     }
 )
 $codeModel = @{

@@ -1,0 +1,42 @@
+{
+  "package": {
+    "id": "Azure.ResourceManager.Network",
+    "version": "1.16.1"
+  },
+  "azureSdkForNet": {
+    "repository": "Azure/azure-sdk-for-net",
+    "tag": "Azure.ResourceManager.Network_1.16.1",
+    "commit": "ce5d3f390a7024c430510af1ef942650bf7548d0",
+    "sdkPath": "sdk/network/Azure.ResourceManager.Network",
+    "emitterPackageJsonPath": "eng/azure-typespec-http-client-csharp-mgmt-emitter-package.json"
+  },
+  "azureRestApiSpecs": {
+    "repository": "Azure/azure-rest-api-specs",
+    "commit": "280622e57e9bd85a10d355dd5295144dd25af1d9",
+    "directory": "specification/network/resource-manager/Microsoft.Network/Network",
+    "additionalDirectories": []
+  },
+  "tooling": {
+    "node": "26.3.1",
+    "packageLockSha256": "ee187c75b640d985792d3a28bd6b9b0f8a782150852e66704d7349e0050d5c65",
+    "emitter": "1.0.0-alpha.20260629.4",
+    "compiler": "1.13.0",
+    "apiVersions": [
+      "2018-10-01",
+      "2025-07-01"
+    ]
+  },
+  "runtimePackages": {
+    "Azure.Core": "1.61.0",
+    "Azure.Identity": "1.21.0",
+    "Azure.ResourceManager": "1.14.0"
+  },
+  "source": {
+    "sharedSource": {
+      "repository": "Azure/azure-sdk-for-net",
+      "commit": "ce5d3f390a7024c430510af1ef942650bf7548d0",
+      "manifest": "eng/sdk-generation/shared-source-files.json"
+    },
+    "serviceCustomizations": []
+  }
+}

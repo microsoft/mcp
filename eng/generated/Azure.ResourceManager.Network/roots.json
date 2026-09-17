@@ -1,0 +1,121 @@
+{
+  "operations": [
+    {
+      "methodId": "Microsoft.Network.NetworkSecurityGroups.get",
+      "sdkMembers": [
+        "NetworkSecurityGroupCollection.GetAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.NetworkSecurityGroups.createOrUpdate",
+      "sdkMembers": [
+        "NetworkSecurityGroupCollection.CreateOrUpdateAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.VirtualNetworks.get",
+      "sdkMembers": [
+        "VirtualNetworkCollection.GetAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.VirtualNetworks.createOrUpdate",
+      "sdkMembers": [
+        "VirtualNetworkCollection.CreateOrUpdateAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.Subnets.get",
+      "sdkMembers": [
+        "SubnetCollection.GetAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.Subnets.createOrUpdate",
+      "sdkMembers": [
+        "SubnetCollection.CreateOrUpdateAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.PublicIPAddressOperationGroup.get",
+      "sdkMembers": [
+        "PublicIPAddressCollection.GetAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.PublicIPAddressOperationGroup.createOrUpdate",
+      "sdkMembers": [
+        "PublicIPAddressCollection.CreateOrUpdateAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.NetworkInterfaceOperationGroup.get",
+      "sdkMembers": [
+        "NetworkInterfaceCollection.GetAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.NetworkInterfaceOperationGroup.createOrUpdate",
+      "sdkMembers": [
+        "NetworkInterfaceCollection.CreateOrUpdateAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.NetworkInterfaceIPConfigurations.get",
+      "sdkMembers": [
+        "NetworkInterfaceIPConfigurationData"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.PrivateEndpoints.createOrUpdate",
+      "sdkMembers": [
+        "PrivateEndpointCollection.CreateOrUpdateAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.AzureBackup/src/Services/RsvBackupOperations.PrivateEndpoint.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.Network.UsagesOperationGroup.list",
+      "sdkMembers": [
+        "SubscriptionResource.GetUsagesAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Quota/src/Services/Util/Usage/NetworkUsageChecker.cs"
+      ]
+    }
+  ]
+}

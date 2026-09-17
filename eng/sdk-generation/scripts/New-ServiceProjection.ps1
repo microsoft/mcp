@@ -107,13 +107,23 @@ $tspConfigPath = "$($provenance.azureRestApiSpecs.directory)/tspconfig.yaml"
 $tspConfig = & git -C $specRepo show "FETCH_HEAD:$tspConfigPath"
 if ($LASTEXITCODE -ne 0) { throw "Unable to read $tspConfigPath" }
 $inCSharp = $false
-$apiVersion = $null
+$apiVersions = @()
 foreach ($line in $tspConfig) {
     if ($line -match '^\s{2}"?@azure-typespec/http-client-csharp-mgmt"?:\s*$') { $inCSharp = $true; continue }
     if ($inCSharp -and $line -match '^\s{2}\S') { break }
-    if ($inCSharp -and $line -match '^\s+api-version:\s*"?([^"\s]+)"?') { $apiVersion = $Matches[1]; break }
+    if ($inCSharp -and $line -match '^\s+api-version:\s*"?([^"\s]+)"?') { $apiVersions = @($Matches[1]); break }
 }
-if (-not $apiVersion) { throw "Unable to resolve the C# api-version from $tspConfigPath" }
+if ($apiVersions.Count -eq 0) {
+    $generatedSourcePath = "$SdkPath/src/Generated"
+    $apiVersions = @(
+        & git -C $sdkRepo grep -h 'Endpoint, "20' $provenance.azureSdkForNet.tag -- $generatedSourcePath |
+            ForEach-Object {
+                if ($_ -match 'Endpoint, "([^"]+)"') { $Matches[1] }
+            } |
+            Sort-Object -Unique
+    )
+}
+if ($apiVersions.Count -eq 0) { throw "Unable to resolve the C# api-version from $tspConfigPath or $SdkPath" }
 
 $packageLockHash = (Get-FileHash (Join-Path $toolRoot 'package-lock.json') -Algorithm SHA256).Hash.ToLowerInvariant()
 $lock = [ordered]@{
@@ -125,7 +135,7 @@ $lock = [ordered]@{
         packageLockSha256 = $packageLockHash
         emitter = [string] $provenance.tooling.emitter
         compiler = [string] $provenance.tooling.compiler
-        apiVersion = $apiVersion
+        apiVersions = $apiVersions
     }
     runtimePackages = [ordered]@{
         'Azure.Core' = Get-PackageVersion 'Azure.Core'

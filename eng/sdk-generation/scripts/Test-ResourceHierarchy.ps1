@@ -26,7 +26,7 @@ function Get-SchemaResources {
 }
 
 function Get-GeneratedNameMap {
-    param([string] $Directory)
+    param([string] $Directory, [string[]] $Filter)
     if (-not (Test-Path $Directory)) { throw "Generated directory not found: $Directory" }
     $map = @{}
     foreach ($file in Get-ChildItem $Directory -Filter '*Resource.cs' -File) {
@@ -34,6 +34,7 @@ function Get-GeneratedNameMap {
         $match = [regex]::Match($text, 'public\s+static\s+readonly\s+ResourceType\s+ResourceType\s*=\s*"([^"]+)"\s*;')
         if (-not $match.Success) { continue }
         $resourceType = $match.Groups[1].Value
+        if ($Filter.Count -gt 0 -and $Filter -cnotcontains $resourceType) { continue }
         if ($map.ContainsKey($resourceType)) { throw "Duplicate generated name mapping for $resourceType" }
         $map[$resourceType] = $file.BaseName
     }
@@ -71,8 +72,8 @@ function Assert-OrdinalEqual {
 
 $fullResources = Get-SchemaResources $FullCodeModel
 $projectedResources = Get-SchemaResources $ProjectedCodeModel
-$fullNames = Get-GeneratedNameMap $FullGeneratedDirectory
-$projectedNames = Get-GeneratedNameMap $ProjectedGeneratedDirectory
+$fullNames = Get-GeneratedNameMap $FullGeneratedDirectory $SelectedResourceType
+$projectedNames = Get-GeneratedNameMap $ProjectedGeneratedDirectory @()
 $expected = ConvertTo-StrictEntryMap $fullResources $fullNames $SelectedResourceType
 $actual = ConvertTo-StrictEntryMap $projectedResources $projectedNames @()
 

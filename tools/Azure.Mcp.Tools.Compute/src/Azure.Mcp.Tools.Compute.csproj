@@ -8,11 +8,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)eng\generated\Azure.ResourceManager.Network\Azure.ResourceManager.Network.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.Compute" />
-    <PackageReference Include="Azure.ResourceManager.Network" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
   </ItemGroup>

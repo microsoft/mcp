@@ -1,0 +1,134 @@
+{
+  "selectionPolicy": "minimumHierarchyClosure",
+  "directRootCount": 13,
+  "resources": [
+    {
+      "resourceType": "Microsoft.Network/networkInterfaces",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.Network.NetworkInterfaceOperationGroup.createOrUpdate",
+          "kind": "Create",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{networkInterfaceName}",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.Network.NetworkInterfaceOperationGroup.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{networkInterfaceName}",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    },
+    {
+      "resourceType": "Microsoft.Network/publicIPAddresses",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.Network.PublicIPAddressOperationGroup.createOrUpdate",
+          "kind": "Create",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.Network.PublicIPAddressOperationGroup.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    },
+    {
+      "resourceType": "Microsoft.Network/networkInterfaces/ipConfigurations",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.Network.NetworkInterfaceIPConfigurations.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{networkInterfaceName}/ipConfigurations/{ipConfigurationName}",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    },
+    {
+      "resourceType": "Microsoft.Network/networkSecurityGroups",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.Network.NetworkSecurityGroups.createOrUpdate",
+          "kind": "Create",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkSecurityGroups/{networkSecurityGroupName}",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.Network.NetworkSecurityGroups.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkSecurityGroups/{networkSecurityGroupName}",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    },
+    {
+      "resourceType": "Microsoft.Network/privateEndpoints",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.Network.PrivateEndpoints.createOrUpdate",
+          "kind": "Create",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/privateEndpoints/{privateEndpointName}",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.Network.PrivateEndpoints.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/privateEndpoints/{privateEndpointName}",
+          "reason": "Required Read for selected resource hierarchy"
+        }
+      ]
+    },
+    {
+      "resourceType": "Microsoft.Network/virtualNetworks",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.Network.VirtualNetworks.createOrUpdate",
+          "kind": "Create",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.Network.VirtualNetworks.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    },
+    {
+      "resourceType": "Microsoft.Network/virtualNetworks/subnets",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.Network.Subnets.createOrUpdate",
+          "kind": "Create",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.Network.Subnets.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    }
+  ],
+  "nonResourceOperations": [
+    {
+      "methodId": "Microsoft.Network.UsagesOperationGroup.list",
+      "kind": "",
+      "operationPath": "/subscriptions/{subscriptionId}/providers/Microsoft.Network/locations/{location}/usages",
+      "reason": "Direct MCP usage"
+    }
+  ]
+}

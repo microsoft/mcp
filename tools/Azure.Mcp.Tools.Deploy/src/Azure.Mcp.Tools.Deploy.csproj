@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)eng\generated\Azure.ResourceManager.Network\Azure.ResourceManager.Network.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
@@ -20,7 +21,6 @@
     <PackageReference Include="Azure.ResourceManager.Resources" />
     <PackageReference Include="Azure.ResourceManager.Compute" />
     <PackageReference Include="Azure.ResourceManager.MachineLearning" />
-    <PackageReference Include="Azure.ResourceManager.Network" />
     <PackageReference Include="Azure.ResourceManager.ContainerInstance" />
     <PackageReference Include="Azure.ResourceManager.HDInsight" />
     <PackageReference Include="YamlDotNet" />

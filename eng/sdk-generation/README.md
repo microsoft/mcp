@@ -1,6 +1,6 @@
 # Azure MCP management SDK projection
 
-This directory contains the POC tooling for generating a lightweight Cosmos DB management SDK. The generated source is committed under `eng/generated/Azure.ResourceManager.CosmosDB` and compiled once into an MCP-owned shared assembly referenced by the Cosmos and Quota tools. Normal builds do not access the specification repository.
+This directory contains tooling for generating lightweight Azure management SDK projections. Generated source is committed under `eng/generated/<package>` and compiled once into an MCP-owned shared assembly referenced by each package consumer. Normal builds do not access the specification repository.
 
 ## Pinned baseline
 
@@ -12,7 +12,7 @@ The projection uses the version already pinned in `Directory.Packages.props`; th
 - specification directory: `specification/cosmos-db/resource-manager/Microsoft.DocumentDB/DocumentDB`
 - API version: `2026-03-15`
 
-Complete provenance is recorded in `eng/generated/Azure.ResourceManager.CosmosDB/spec.lock.json`.
+Complete provenance is recorded in each projection's `spec.lock.json`.
 
 ## Onboard another service
 
@@ -30,10 +30,11 @@ The command creates the service configuration, package-specific TypeSpec environ
 
 ## Regeneration
 
-Each service has a tooling environment under `eng/sdk-generation/environments/<service>` so its compiler and emitter versions remain aligned with the pinned SDK release. For Cosmos, install Node.js 24.15.0, then run:
+Each service has a tooling environment under `eng/sdk-generation/environments/<service>` so its compiler and emitter versions remain aligned with the pinned SDK release. Use the Node.js version in that environment's `.nvmrc`, then run:
 
 ```pwsh
 ./eng/sdk-generation/scripts/Update-ServiceProjection.ps1 -Service cosmosdb
+./eng/sdk-generation/scripts/Update-ServiceProjection.ps1 -Service network
 ```
 
 The orchestrator:
@@ -41,7 +42,7 @@ The orchestrator:
 1. resolves direct package/generated-project consumers;
 2. verifies the package version and its TypeSpec provenance;
 3. sparsely fetches exact specification and SDK source commits;
-4. generates and builds the complete temporary SDK baseline;
+4. generates the complete temporary SDK baseline and builds it when the service does not require unrelated release customizations;
 5. resolves `minimumHierarchyClosure` from reviewed roots;
 6. creates a temporary spec with `@@scope(..., "!csharp")` exclusions;
 7. generates and builds the projection;
@@ -65,6 +66,8 @@ It retains no unrelated CRUD, list, or action operations. The Cosmos projection 
 
 The result is 2 resources and 6 operations.
 
+The Network projection contains seven resources and 14 operations used for network security groups, virtual networks, subnets, public IP addresses, network interfaces and their IP configurations, private endpoints, and regional usage. The released SDK's full merged Network/Compute generation requires broad compatibility customizations for unrelated resources, so Network disables the full baseline build while retaining full code-model generation and all projected-source, hierarchy, consumer, and dependency-graph validation.
+
 ## Shared integration
 
 Both `Azure.Mcp.Tools.Cosmos` and `Azure.Mcp.Tools.Quota` previously referenced `Azure.ResourceManager.CosmosDB`. They now reference one shared generated project:
@@ -78,7 +81,7 @@ eng/generated/Azure.ResourceManager.CosmosDB/
 
 This is MCP-owned integration scaffolding, not emitter-generated project scaffolding. The emitter writes to a temporary project-shaped directory; only validated generated source is copied to the shared project.
 
-The shared project disables Release PDB output. The server dependency graph must not contain the released `Azure.ResourceManager.CosmosDB` NuGet package after migration.
+The shared projects disable Release PDB output. The server dependency graph must not contain a released package replaced by a projection.
 
 ## Agent review boundary
 

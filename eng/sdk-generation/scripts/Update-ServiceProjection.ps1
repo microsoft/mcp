@@ -80,13 +80,24 @@ function Initialize-Project {
 
 function Invoke-Generation {
     param([string] $Spec, [string] $Destination)
-    Invoke-CommandChecked npm @(
-        'exec', '--prefix', $toolRoot, '--no', '--', 'tsp', 'compile', $Spec,
-        '--emit=@azure-typespec/http-client-csharp-mgmt',
-        "--option=@azure-typespec/http-client-csharp-mgmt.emitter-output-dir=$Destination",
-        '--option=@azure-typespec/http-client-csharp-mgmt.new-project=false',
-        '--option=@azure-typespec/http-client-csharp-mgmt.save-inputs=true'
-    )
+    $specDirectory = Split-Path $Spec -Parent
+    $modulesLink = Join-Path $specDirectory 'node_modules'
+    if (Test-Path $modulesLink) { throw "Specification directory already contains node_modules: $specDirectory" }
+
+    try {
+        $linkType = if ($IsWindows) { 'Junction' } else { 'SymbolicLink' }
+        New-Item -ItemType $linkType -Path $modulesLink -Target (Join-Path $toolRoot 'node_modules') | Out-Null
+        Invoke-CommandChecked npm @(
+            'exec', '--prefix', $toolRoot, '--no', '--', 'tsp', 'compile', $Spec,
+            '--emit=@azure-typespec/http-client-csharp-mgmt',
+            "--option=@azure-typespec/http-client-csharp-mgmt.emitter-output-dir=$Destination",
+            '--option=@azure-typespec/http-client-csharp-mgmt.new-project=false',
+            '--option=@azure-typespec/http-client-csharp-mgmt.save-inputs=true'
+        )
+    }
+    finally {
+        Remove-Item $modulesLink -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function Get-ProviderSchema {
@@ -184,6 +195,7 @@ $specRepo = Join-Path $WorkDirectory 'azure-rest-api-specs'
 $specPath = $lock.azureRestApiSpecs.directory
 $specPatterns = [System.Collections.Generic.List[string]]::new()
 [void] $specPatterns.Add("/$specPath/*.tsp")
+[void] $specPatterns.Add("/$specPath/**/*.tsp")
 [void] $specPatterns.Add("/$specPath/tspconfig.yaml")
 foreach ($additionalDirectory in @($lock.azureRestApiSpecs.additionalDirectories)) {
     [void] $specPatterns.Add("/$additionalDirectory/**")
@@ -194,11 +206,21 @@ if (-not (Test-Path (Join-Path $sourceSpec 'client.tsp'))) { throw "client.tsp i
 
 $sdkRepo = Join-Path $WorkDirectory 'azure-sdk-for-net'
 $sdkServicePath = "$($config.sdkPath)/src"
-Initialize-SparseCheckout $sdkRepo $lock.azureSdkForNet.repository $lock.azureSdkForNet.commit @(
-    "/$sdkServicePath/Custom/**/*.cs",
-    "/$sdkServicePath/Properties/*.cs"
-)
+$sdkPatterns = [System.Collections.Generic.List[string]]::new()
+[void] $sdkPatterns.Add("/$sdkServicePath/Custom/**/*.cs")
+[void] $sdkPatterns.Add("/$sdkServicePath/Properties/*.cs")
+foreach ($customization in @($lock.source.serviceCustomizations)) {
+    [void] $sdkPatterns.Add("/$sdkServicePath/$customization")
+}
+Initialize-SparseCheckout $sdkRepo $lock.azureSdkForNet.repository $lock.azureSdkForNet.commit $sdkPatterns.ToArray()
 
+$generationCustomizationFiles = @(
+    @($config.generationCustomizations) | ForEach-Object {
+        $path = Join-Path $repoRoot $_
+        if (-not (Test-Path $path -PathType Leaf)) { throw "Generation customization is missing: $_" }
+        $path
+    }
+)
 $full = Join-Path $WorkDirectory 'full'
 $fullIdentity = Get-ContentHash -Files @(
     (Join-Path $output 'spec.lock.json'),
@@ -206,6 +228,7 @@ $fullIdentity = Get-ContentHash -Files @(
     $configPath,
     (Join-Path $repoRoot 'Directory.Packages.props'),
     $PSCommandPath
+    $generationCustomizationFiles
 ) -Directories @((Join-Path $output 'src/Shared'))
 $fullCache = Join-Path $WorkDirectory "cache/full/$fullIdentity"
 $cacheManifestPath = Join-Path $fullCache 'cache-manifest.json'
@@ -233,7 +256,20 @@ if ($cacheHit) {
 else {
     Initialize-Project $full $projectFileName
     Copy-Item (Join-Path $output 'src/Shared') (Join-Path $full 'src/Shared') -Recurse
-    Copy-Item (Join-Path $sdkRepo "$sdkServicePath/Custom/*") (Join-Path $full 'src/Custom') -Recurse
+    $customSource = Join-Path $sdkRepo "$sdkServicePath/Custom"
+    if (Test-Path $customSource) {
+        Copy-Item (Join-Path $customSource '*') (Join-Path $full 'src/Custom') -Recurse
+    }
+    foreach ($customization in @($lock.source.serviceCustomizations)) {
+        $customizationSource = Join-Path $sdkRepo "$sdkServicePath/$customization"
+        if (-not (Test-Path $customizationSource -PathType Leaf)) {
+            throw "Configured service customization is missing: $customization"
+        }
+        Copy-Item $customizationSource (Join-Path $full "src/Custom/$([IO.Path]::GetFileName($customization))")
+    }
+    foreach ($customization in $generationCustomizationFiles) {
+        Copy-Item $customization (Join-Path $full "src/Custom/$([IO.Path]::GetFileName($customization))")
+    }
     if (Test-Path (Join-Path $sdkRepo "$sdkServicePath/Properties")) {
         Copy-Item (Join-Path $sdkRepo "$sdkServicePath/Properties") (Join-Path $full 'src/Properties') -Recurse
     }
@@ -250,7 +286,9 @@ else {
     Move-Item $cacheTemp $fullCache
     Write-Host "Stored full-generation cache: $fullIdentity" -ForegroundColor Green
 }
-Invoke-CommandChecked dotnet @('build', (Join-Path $full "src/$projectFileName"), '/p:NuGetAudit=false')
+if ($null -eq $config.buildFullGeneration -or $config.buildFullGeneration) {
+    Invoke-CommandChecked dotnet @('build', (Join-Path $full "src/$projectFileName"), '/p:NuGetAudit=false')
+}
 
 $fullCodeModel = Join-Path $full 'tspCodeModel.json'
 $expandedManifestPath = Join-Path $WorkDirectory 'expanded-operations.json'
@@ -298,7 +336,7 @@ $expectedHierarchyPath = Join-Path $WorkDirectory 'expected-hierarchy.json'
     -Closure $expandedManifestPath `
     -OutputPath $expectedHierarchyPath
 
-Remove-Item (Join-Path $output 'src/Generated') -Recurse -Force
+Remove-Item (Join-Path $output 'src/Generated') -Recurse -Force -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $projected 'src/Generated') (Join-Path $output 'src/Generated') -Recurse
 Copy-Item $expandedManifestPath (Join-Path $output 'expanded-operations.json') -Force
 Copy-Item $expectedHierarchyPath (Join-Path $output 'expected-hierarchy.json') -Force

@@ -55,6 +55,8 @@ function Invoke-Fixture {
     $expected = @(New-Resource)
     $actual = @(New-Resource)
     Write-GeneratedResource $fullGenerated 'CosmosDBAccountResource' 'Microsoft.DocumentDB/databaseAccounts'
+    Write-GeneratedResource $fullGenerated 'UnselectedOneResource' 'Microsoft.Test/unselected'
+    Write-GeneratedResource $fullGenerated 'UnselectedTwoResource' 'Microsoft.Test/unselected'
     Write-GeneratedResource $actualGenerated 'CosmosDBAccountResource' 'Microsoft.DocumentDB/databaseAccounts'
     & $Mutate ([ref] $actual) $actualGenerated
     Write-CodeModel (Join-Path $case 'full.json') $expected

@@ -1,0 +1,19 @@
+{
+  "packageId": "Azure.ResourceManager.Network",
+  "consumerProjects": [
+    "tools/Azure.Mcp.Tools.AzureBackup/src/Azure.Mcp.Tools.AzureBackup.csproj",
+    "tools/Azure.Mcp.Tools.Compute/src/Azure.Mcp.Tools.Compute.csproj",
+    "tools/Azure.Mcp.Tools.Deploy/src/Azure.Mcp.Tools.Deploy.csproj",
+    "tools/Azure.Mcp.Tools.Quota/src/Azure.Mcp.Tools.Quota.csproj"
+  ],
+  "selectionPolicy": "minimumHierarchyClosure",
+  "toolDirectory": "eng/sdk-generation/environments/network",
+  "productProject": "servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj",
+  "sdkPath": "sdk/network/Azure.ResourceManager.Network",
+  "outputDirectory": "eng/generated/Azure.ResourceManager.Network",
+  "buildFullGeneration": false,
+  "generationCustomizations": [
+    "eng/sdk-generation/customizations/network/MockableNetworkArmClient.cs",
+    "eng/sdk-generation/customizations/network/NetworkExtensions.cs"
+  ]
+}

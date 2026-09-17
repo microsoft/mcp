@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Replace the Azure.ResourceManager.Network runtime package with an MCP-owned lightweight projection containing only Network SDK operations used by Azure MCP tools."

@@ -31,6 +31,7 @@ foreach ($file in Get-ChildItem $GeneratedDirectory -Filter '*Resource.cs' -File
     $match = [regex]::Match($text, 'public\s+static\s+readonly\s+ResourceType\s+ResourceType\s*=\s*"([^"]+)"\s*;')
     if (-not $match.Success) { continue }
     $resourceType = $match.Groups[1].Value
+    if ($selectedTypes -cnotcontains $resourceType) { continue }
     if ($nameByType.ContainsKey($resourceType)) { throw "Duplicate generated resource name mapping: $resourceType" }
     $nameByType[$resourceType] = $file.BaseName
 }
