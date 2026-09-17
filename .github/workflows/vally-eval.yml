@@ -12,16 +12,6 @@ on:
       - 'tools/Azure.Mcp.*/**/eval.yaml'
   workflow_dispatch:
     inputs:
-      baseCommit:
-        description: 'Base commit; defaults to HEAD^ on main branch'
-        required: false
-        default: 'HEAD^'
-        type: string
-      headCommit:
-        description: 'Head commit; defaults to HEAD on main branch'
-        required: false
-        default: 'HEAD'
-        type: string
       runAllTests:
         description: 'Run all evaluation tests'
         required: false
@@ -76,21 +66,19 @@ jobs:
         shell: pwsh
         env:
           EVENT_NAME: ${{ github.event_name }}
-          MANUAL_BASE: ${{ inputs.baseCommit }}
-          MANUAL_HEAD: ${{ inputs.headCommit }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
           RUN_ALL_TESTS: ${{ inputs.runAllTests }}
         run: |
           if ($env:EVENT_NAME -eq 'pull_request') {
             $baseCommit = $env:PR_BASE_SHA
-            $headCommit = $env:PR_HEAD_SHA
+            $headCommit = $env:PR_MERGE_SHA
 
-            Write-Host "Pull request merged into main. Base: ${env:PR_BASE_SHA}, Head: ${env:PR_HEAD_SHA}"
+            Write-Host "Pull request merged into main. Base: ${env:PR_BASE_SHA}, Merge: ${env:PR_MERGE_SHA}"
           }
           else {
-            $headCommit = if ($env:MANUAL_HEAD) { $env:MANUAL_HEAD } else { 'HEAD' }
-            $baseCommit = if ($env:MANUAL_BASE) { $env:MANUAL_BASE } else { 'HEAD^' }
+            $headCommit = 'HEAD'
+            $baseCommit = 'HEAD^'
 
             Write-Host "Manual run. Base: ${baseCommit}, Head: ${headCommit}"
           }
@@ -171,7 +159,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: results
+          name: results-${{ github.run_id }}
           path: |
             ${{ github.workspace }}/.work/vally/vally-results
             ${{ env.BUILD_INFO_PATH }}
