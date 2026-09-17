@@ -699,9 +699,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> | none |
 | fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? | none |
 | fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in <location> | none |
-| fileshares_rec | Get Azure Files provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> | investigation-required |
-| fileshares_rec | Show me provisioning recommendations for file share <file_share_name> | none |
-| fileshares_rec | Get the Azure Files recommended provisioning settings for file share <file_share_name> | investigation-required |
+| fileshares_rec | Get Azure Files provisioning recommendations for <provisioned_storage_in_gib> GiB in location <location> in subscription <subscription> | none |
+| fileshares_rec | Show me provisioning recommendations for <provisioned_storage_in_gib> GiB of Azure File Shares storage in location <location> | none |
+| fileshares_rec | Get the recommended Azure File Shares provisioning settings for <provisioned_storage_in_gib> GiB in location <location> | none |
 | fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> | none |
@@ -725,9 +725,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_update | Enable NFS encryption in transit for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Disable NFS encryption in transit on file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
-| fileshares_usage | Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
-| fileshares_usage | Show me the usage statistics for file share <file_share_name> | none |
-| fileshares_usage | Get the current Azure Files usage for file share <file_share_name> | none |
+| fileshares_usage | Get Azure Files usage data for subscription <subscription> in location <location> | none |
+| fileshares_usage | Show me Azure File Shares usage statistics in location <location> | none |
+| fileshares_usage | Get the current Azure File Shares usage in location <location> for subscription <subscription> | none |
 
 ## Azure Function App
 
