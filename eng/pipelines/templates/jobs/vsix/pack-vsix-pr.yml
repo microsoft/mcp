@@ -2,6 +2,11 @@ jobs:
 # cspell:ignore SOURCECOMMITID TARGETBRANCH
 - job: PackVSIXForPR
   displayName: "Pack VSIX"
+  variables:
+    # Matches the registryUrl default in
+    # eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml.
+    # Public feed, so packaging reads it anonymously.
+    VsixNpmRegistry: "https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/"
   steps:
   - checkout: self
     fetchDepth: 0
@@ -31,12 +36,20 @@ jobs:
     inputs:
       version: "24.x"
 
-  # Point npm at the internal azure-sdk feed. Pack-Vsix.ps1 runs `npm ci`, which
-  # otherwise resolves against the public registry and is blocked on the hosted
-  # agents. Mirrors pack-and-sign-vsix.yml.
-  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
-    parameters:
-      CustomCondition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
+  # Resolve npm packages from the azure-sdk feed rather than the public registry.
+  #
+  # Deliberately unauthenticated. This job installs and builds PR-controlled
+  # content: `npm ci` runs dependency lifecycle scripts, and `vsce package` runs
+  # the vscode:prepublish script (webpack) from the PR's own package.json. Writing
+  # a feed credential into $HOME/.npmrc would hand that token to untrusted code,
+  # so create-authenticated-npmrc.yml is intentionally not used here. The feed
+  # serves anonymous reads, which is all packaging needs.
+  - pwsh: |
+      $npmrcPath = Join-Path $HOME '.npmrc'
+      Write-Host "Creating unauthenticated .npmrc at $npmrcPath"
+      'registry=$(VsixNpmRegistry)' | Out-File -FilePath $npmrcPath -Encoding ascii
+    displayName: "Configure npm registry (no credentials)"
+    condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
 
   - task: Powershell@2
     displayName: "Prepare binaries for VSIX"
