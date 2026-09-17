@@ -163,55 +163,40 @@ public static class HttpClientFactoryConfigurator
             return ".*";
         }
 
-        // IPv4 CIDR notation (e.g. 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.1/32)
+        // IPv4 CIDR notation (e.g. 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 10.0.0.0/7, 192.168.1.0/31, 127.0.0.1/32)
+        // Note: IPv6 CIDR subnet matching is not supported here and will be natively supported in .NET 11 (issue #3338).
         if (pattern.Contains('/'))
         {
             var parts = pattern.Split('/');
-            if (parts.Length == 2 && int.TryParse(parts[1], out var mask) && IPAddress.TryParse(parts[0], out var ip) && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            if (parts.Length == 2 && int.TryParse(parts[1], out var mask) && mask is >= 0 and <= 32 &&
+                IPAddress.TryParse(parts[0], out var ip) && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
             {
                 var bytes = ip.GetAddressBytes();
-                if (mask == 8)
-                {
-                    return $@"^[^:]+://{bytes[0]}\.\d{{1,3}}\.\d{{1,3}}\.\d{{1,3}}(:\d+)?(/.*)?$";
-                }
-                if (mask == 16)
-                {
-                    return $@"^[^:]+://{bytes[0]}\.{bytes[1]}\.\d{{1,3}}\.\d{{1,3}}(:\d+)?(/.*)?$";
-                }
-                if (mask == 24)
-                {
-                    return $@"^[^:]+://{bytes[0]}\.{bytes[1]}\.{bytes[2]}\.\d{{1,3}}(:\d+)?(/.*)?$";
-                }
-                if (mask == 32)
-                {
-                    return $@"^[^:]+://{bytes[0]}\.{bytes[1]}\.{bytes[2]}\.{bytes[3]}(:\d+)?(/.*)?$";
-                }
-                if (mask is >= 8 and <= 30)
-                {
-                    uint ipInt = ((uint)bytes[0] << 24) | ((uint)bytes[1] << 16) | ((uint)bytes[2] << 8) | bytes[3];
-                    uint netmask = (0xFFFFFFFF << (32 - mask));
-                    uint startIp = ipInt & netmask;
-                    uint endIp = startIp | ~netmask;
+                uint ipInt = ((uint)bytes[0] << 24) | ((uint)bytes[1] << 16) | ((uint)bytes[2] << 8) | bytes[3];
+                uint netmask = mask == 0 ? 0 : (0xFFFFFFFF << (32 - mask));
+                uint startIp = ipInt & netmask;
+                uint endIp = mask == 0 ? 0xFFFFFFFF : (startIp | ~netmask);
 
-                    uint s0 = (startIp >> 24) & 0xFF, e0 = (endIp >> 24) & 0xFF;
-                    uint s1 = (startIp >> 16) & 0xFF, e1 = (endIp >> 16) & 0xFF;
-                    uint s2 = (startIp >> 8) & 0xFF, e2 = (endIp >> 8) & 0xFF;
-                    uint s3 = startIp & 0xFF, e3 = endIp & 0xFF;
+                uint s0 = (startIp >> 24) & 0xFF, e0 = (endIp >> 24) & 0xFF;
+                uint s1 = (startIp >> 16) & 0xFF, e1 = (endIp >> 16) & 0xFF;
+                uint s2 = (startIp >> 8) & 0xFF, e2 = (endIp >> 8) & 0xFF;
+                uint s3 = startIp & 0xFF, e3 = endIp & 0xFF;
 
-                    if (s0 == e0 && s1 == e1 && s2 == e2)
-                    {
-                        return $@"^[^:]+://{s0}\.{s1}\.{s2}\.({RangeToRegex(s3, e3)})(:\d+)?(/.*)?$";
-                    }
-                    if (s0 == e0 && s1 == e1)
-                    {
-                        return $@"^[^:]+://{s0}\.{s1}\.({RangeToRegex(s2, e2)})\.\d{{1,3}}(:\d+)?(/.*)?$";
-                    }
-                    if (s0 == e0)
-                    {
-                        return $@"^[^:]+://{s0}\.({RangeToRegex(s1, e1)})\.\d{{1,3}}\.\d{{1,3}}(:\d+)?(/.*)?$";
-                    }
-                }
+                string p0 = s0 == e0 ? s0.ToString() : (s0 == 0 && e0 == 255 ? @"\d{1,3}" : RangeToRegex(s0, e0));
+                string p1 = s1 == e1 ? s1.ToString() : (s1 == 0 && e1 == 255 ? @"\d{1,3}" : RangeToRegex(s1, e1));
+                string p2 = s2 == e2 ? s2.ToString() : (s2 == 0 && e2 == 255 ? @"\d{1,3}" : RangeToRegex(s2, e2));
+                string p3 = s3 == e3 ? s3.ToString() : (s3 == 0 && e3 == 255 ? @"\d{1,3}" : RangeToRegex(s3, e3));
+
+                return $@"^[^:]+://{p0}\.{p1}\.{p2}\.{p3}(:\d+)?(/.*)?$";
             }
+        }
+
+        // IPv6 host literal (e.g. ::1, fe80::1, or bracketed [::1])
+        var unbracketed = pattern.StartsWith('[') && pattern.EndsWith(']') ? pattern[1..^1] : pattern;
+        if (IPAddress.TryParse(unbracketed, out var ipv6) && ipv6.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+        {
+            var escapedIp = EscapeGlob(ipv6.ToString());
+            return $@"^[^:]+://\[({escapedIp}|{EscapeGlob(unbracketed)})\](:\d+)?(/.*)?$";
         }
 
         // If the pattern already contains a scheme (e.g. http://localhost)
