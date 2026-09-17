@@ -23,4 +23,9 @@ public class AppConfigurationAccount
 
     // Full encryption properties
     public EncryptionProperties? Encryption { get; set; }
+
+    /// <summary>
+    /// Gets the identity of the key.
+    /// </summary>
+    public string? IdentityType { get; set; }
 }
