@@ -328,7 +328,7 @@ function Get-PathsToTest {
         $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
         $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
-        $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
+        $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj" -Properties 'HasLiveTests,HasUnitTests') : $null
         $result = $false
         # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
         $hasUnitTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result
@@ -343,7 +343,7 @@ function Get-PathsToTest {
             return @{ _error = $true }
         }
 
-        $sourceProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $sourceProject.FullName
+        $sourceProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $sourceProject.FullName -Properties 'AzureSupportedClouds'
 
         $resolvedClouds = $sourceProjectDetails.AzureSupportedClouds `
             ? @($sourceProjectDetails.AzureSupportedClouds -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
