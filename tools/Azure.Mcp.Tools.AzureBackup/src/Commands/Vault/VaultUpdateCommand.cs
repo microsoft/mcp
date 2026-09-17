@@ -40,12 +40,14 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
             !string.IsNullOrEmpty(options.SoftDeleteRetentionDays) ||
             !string.IsNullOrEmpty(options.ImmutabilityState) ||
             !string.IsNullOrEmpty(options.IdentityType) ||
+            !string.IsNullOrEmpty(options.UserAssignedIdentity) ||
+            !string.IsNullOrEmpty(options.PublicNetworkAccess) ||
             !string.IsNullOrEmpty(options.Tags);
 
         if (!hasUpdate)
         {
             validationResult.Errors.Add(
-                "At least one update option must be provided: --redundancy, --soft-delete, --soft-delete-retention-days, --immutability-state, --identity-type, or --tags.");
+                "At least one update option must be provided: --redundancy, --soft-delete, --soft-delete-retention-days, --immutability-state, --identity-type, --user-assigned-identity, --public-network-access, or --tags.");
         }
 
         if (!string.IsNullOrEmpty(options.SoftDeleteRetentionDays))
@@ -63,6 +65,21 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
             !options.IdentityType.Equals("SystemAssigned,UserAssigned", StringComparison.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add("--identity-type must be 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.");
+        }
+
+        if (!string.IsNullOrEmpty(options.PublicNetworkAccess) &&
+            !options.PublicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
+            !options.PublicNetworkAccess.Equals("Disabled", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--public-network-access must be 'Enabled' or 'Disabled'.");
+        }
+
+        if (!string.IsNullOrEmpty(options.UserAssignedIdentity) &&
+            (string.IsNullOrEmpty(options.IdentityType) ||
+             (!options.IdentityType.Equals("UserAssigned", StringComparison.OrdinalIgnoreCase) &&
+              !options.IdentityType.Equals("SystemAssigned,UserAssigned", StringComparison.OrdinalIgnoreCase))))
+        {
+            validationResult.Errors.Add("--user-assigned-identity requires --identity-type to be 'UserAssigned' or 'SystemAssigned,UserAssigned'.");
         }
     }
 
@@ -83,6 +100,8 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
                 options.SoftDeleteRetentionDays,
                 options.ImmutabilityState,
                 options.IdentityType,
+                options.UserAssignedIdentity,
+                options.PublicNetworkAccess,
                 options.Tags,
                 options.Tenant,
                 cancellationToken);

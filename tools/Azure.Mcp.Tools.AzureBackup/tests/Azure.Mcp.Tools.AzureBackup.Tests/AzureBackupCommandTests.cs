@@ -266,6 +266,68 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
+    public async Task VaultUpdate_RsvVault_TogglesPublicNetworkAccess_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv-pe";
+
+        var disableResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "public-network-access", "Disabled" }
+            });
+
+        Assert.Equal("Succeeded", disableResult.AssertProperty("result").AssertProperty("status").GetString());
+
+        var enableResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "public-network-access", "Enabled" }
+            });
+
+        Assert.Equal("Succeeded", enableResult.AssertProperty("result").AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task VaultUpdate_RsvVault_AttachesUserAssignedIdentity_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv-pe";
+        var userAssignedIdentityId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{Settings.ResourceBaseName}-uami";
+
+        var attachResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "identity-type", "SystemAssigned,UserAssigned" },
+                { "user-assigned-identity", userAssignedIdentityId }
+            });
+
+        Assert.Equal("Succeeded", attachResult.AssertProperty("result").AssertProperty("status").GetString());
+
+        var restoreResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "identity-type", "SystemAssigned" }
+            });
+
+        Assert.Equal("Succeeded", restoreResult.AssertProperty("result").AssertProperty("status").GetString());
+    }
+
+    [Fact]
     public async Task VaultGet_FiltersByVaultType_Successfully()
     {
         var result = await CallToolAsync(

@@ -783,7 +783,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
-        string? immutabilityState, string? identityType, string? tags,
+        string? immutabilityState, string? identityType, string? userAssignedIdentity,
+        string? publicNetworkAccess, string? tags,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -798,6 +799,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                 "Set --storage-type during vault creation instead.");
         }
 
+        if (!string.IsNullOrEmpty(publicNetworkAccess))
+        {
+            throw new ArgumentException(
+                "--public-network-access is only supported for Recovery Services vaults (RSV) via this tool. Configure public network access on a Backup vault (DPP) through the Azure portal or ARM.");
+        }
+
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
@@ -807,8 +814,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         if (!string.IsNullOrEmpty(identityType))
         {
-            patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                ParseIdentityType(identityType));
+            patchData.Identity = VaultIdentityHelper.BuildManagedServiceIdentity(identityType, userAssignedIdentity);
+        }
+        else if (!string.IsNullOrEmpty(userAssignedIdentity))
+        {
+            throw new ArgumentException(
+                "--user-assigned-identity was provided but --identity-type is not set. Set --identity-type to 'UserAssigned' or 'SystemAssigned,UserAssigned' to associate user-assigned identities.");
         }
 
         var securitySettings = new BackupVaultSecuritySettings();
@@ -951,18 +962,6 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
-
-    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
-        identityType.ToUpperInvariant() switch
-        {
-            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
-            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
-            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
-                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
-            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
-            _ => throw new ArgumentException(
-                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
-        };
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,

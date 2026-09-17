@@ -57,6 +57,8 @@ public sealed class PrivateEndpointCreateCommand(
                 options.GroupId ?? "AzureBackup",
                 options.Location,
                 options.AutoApprove ?? false,
+                options.PrivateDnsZoneIds,
+                options.PrivateDnsZoneGroupName,
                 options.VaultType,
                 options.Tenant,
                 cancellationToken);

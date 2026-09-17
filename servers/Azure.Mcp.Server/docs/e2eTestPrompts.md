@@ -347,9 +347,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
+| azurebackup_vault_update | Attach user-assigned managed identity <identity_id> to Recovery Services vault <vault_name> in resource group <resource_group> by setting identity type to UserAssigned | investigation-required |
+| azurebackup_vault_update | Disable public network access on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | investigation-required |
 | azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | investigation-required |
 | azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in resource group <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | investigation-required |
+| azurebackup_vault_privateendpoint_create | Create Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> in subnet <subnet_id> and link it to private DNS zone <dns_zone_id> | investigation-required |
 | azurebackup_vault_privateendpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
