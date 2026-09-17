@@ -32,15 +32,11 @@ on:
         required: false
         default: false
         type: boolean
-      numberOfRuns:
-        description: '# of runs per stimulus'
-        required: false
-        default: 1
-        type: number
 
 permissions:
   copilot-requests: write
   contents: read
+  issues: write
   pull-requests: read
 
 concurrency:
@@ -113,7 +109,7 @@ jobs:
           if ($env:RUN_ALL_TESTS -eq 'true') {
             Write-Host "Running all evals."
 
-            ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
+            ./eng/scripts/New-BuildInfo.ps1
           }
           else {
             Write-Host "Running evals based on changed files."
@@ -125,7 +121,7 @@ jobs:
               Write-Host "Run type: manual run."
             }
 
-            ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server `
+            ./eng/scripts/New-BuildInfo.ps1 `
               -CommonCodeBuildsAll $false `
               -SourceCommittish $env:DIFF_HEAD_COMMIT `
               -TargetCommittish $env:DIFF_BASE_COMMIT
@@ -155,9 +151,9 @@ jobs:
         run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ env.BUILD_INFO_PATH }}' --serverName Azure.Mcp.Server
 
       - name: Run vally
+        id: vally
         run: |
           $isDebug = '${{ github.event.inputs.logLevel }}' -eq 'true'
-          $numberOfRuns = [int]'${{ inputs.numberOfRuns || 1 }}'
           $buildInfo = "$env:BUILD_INFO_PATH"
 
           $baseVallyDirectory = '${{ github.workspace }}/.work/vally'
@@ -166,7 +162,7 @@ jobs:
 
           $workingDirectory = "${{ github.workspace }}"
 
-          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -NumberOfRuns $numberOfRuns -IsDebug:$isDebug
+          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
