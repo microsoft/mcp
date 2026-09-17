@@ -38,6 +38,9 @@
       "entra-app-registration",
       "microsoft-foundry",
       "python-appservice-deploy"
+    ],
+    "foundry-iq-skills": [
+      "foundry-iq"
     ]
   }
 }
