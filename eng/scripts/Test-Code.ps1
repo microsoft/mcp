@@ -43,20 +43,13 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 # Finds all test projects, then filters them based on the specified path filters.
 function FilterTestProjects {
     $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File
-    | Where-Object {
-        $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName -Properties 'HasLiveTests,HasUnitTests'
-        # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
-        $result = $false
-        return ([bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result -and $TestType -in @('Live', 'Recorded', 'All')) -or
-                ([bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result -and $TestType -in @('Unit', 'All'))
-    }
     | ForEach-Object { @{
-        FullName = $_.FullName
-        Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
-    }}
+            FullName = $_.FullName
+            Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
+        } }
 
     # if provided a buildinfo, further scope the tests to only those impacted by changes
-    if ($BuildInfo){
+    if ($BuildInfo) {
         $changedPaths = $BuildInfo.pathsToTest | ForEach-Object { $_.path }
 
         $testProjects = $testProjects | Where-Object {
@@ -76,9 +69,9 @@ function FilterTestProjects {
 
     $normalizedPathFilters = $Paths ? ($Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }) : @()
 
-    if($normalizedPathFilters) {
+    if ($normalizedPathFilters) {
         $testProjects = $testProjects | Where-Object {
-            foreach($filter in $normalizedPathFilters) {
+            foreach ($filter in $normalizedPathFilters) {
                 if ($_.Relative -like $filter) {
                     return $true
                 }
@@ -87,7 +80,18 @@ function FilterTestProjects {
         }
     }
 
-    if($testProjects.Count -eq 0) {
+    $testProjects = $testProjects | ForEach-Object -ThrottleLimit 5 -Parallel {
+        $testProject = $_
+        $testProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $testProject.FullName -Properties @('HasLiveTests', 'HasUnitTests')
+        # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
+        $result = $false
+        if (([bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result -and $using:TestType -in @('Live', 'Recorded', 'All')) -or
+            ([bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result -and $using:TestType -in @('Unit', 'All'))) {
+            return $testProject
+        }
+    }
+
+    if ($testProjects.Count -eq 0) {
         Write-Error "No test projects found for test type '$testType' with the specified filters"
         return $null
     }
@@ -97,9 +101,9 @@ function FilterTestProjects {
 
 function CreateTestSolution {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$workPath,
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string[]]$testProjects
     )
 
@@ -128,7 +132,7 @@ function CreateTestSolution {
 function Create-CoverageReport {
     # Find the coverage files
     $coverageFiles = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.*.xml"
-        | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
+    | Where-Object { $_.FullName.Replace('\', '/') -notlike "*/in/*" }
 
     if (-not $coverageFiles -or $coverageFiles.Count -eq 0) {
         Write-Error "No coverage file found!"
@@ -144,12 +148,14 @@ function Create-CoverageReport {
     Write-Host "Merging coverage files into $mergedFile..."
     Invoke-LoggedCommand ("dotnet-coverage merge $TestResultsPath/coverage.cobertura.*.xml" +
         " --output '$mergedFile'" +
-        " --output-format cobertura")
+        " --output-format cobertura" +
+        " --remove-input-files")
 
     if ($env:TF_BUILD) {
         # Write the path to the cover file to a pipeline variable
         Write-Host "##vso[task.setvariable variable=CoverageFile]$($mergedFile)"
-    } else {
+    }
+    else {
         # Ensure reportgenerator tool is installed
         if (-not (Get-Command reportgenerator -ErrorAction SilentlyContinue)) {
             Write-Host "Installing reportgenerator tool..."
@@ -161,12 +167,12 @@ function Create-CoverageReport {
 
         $reportDirectory = "$TestResultsPath/coverageReport"
         Invoke-LoggedCommand ("reportgenerator" +
-        " -reports:'$mergedFile'" +
-        " -targetdir:'$reportDirectory'" +
-        " -reporttypes:'Html;HtmlSummary;Cobertura'" +
-        " -assemblyfilters:'+azmcp'" +
-        " -classfilters:'-*Tests*;-*Program'" +
-        " -filefilters:'-*JsonSourceGenerator*;-*LibraryImportGenerator*'")
+            " -reports:'$mergedFile'" +
+            " -targetdir:'$reportDirectory'" +
+            " -reporttypes:'Html;HtmlSummary;Cobertura'" +
+            " -assemblyfilters:'+azmcp'" +
+            " -classfilters:'-*Tests*;-*Program'" +
+            " -filefilters:'-*JsonSourceGenerator*;-*LibraryImportGenerator*'")
 
         Write-Host "Coverage report generated at $reportDirectory/index.html"
 
@@ -183,10 +189,12 @@ function Create-CoverageReport {
             if ($IsMacOS) {
                 # On macOS, use 'open' command
                 Start-Process "open" -ArgumentList $reportPath
-            } elseif ($IsLinux) {
+            }
+            elseif ($IsLinux) {
                 # On Linux, use 'xdg-open'
                 Start-Process "xdg-open" -ArgumentList $reportPath
-            } else {
+            }
+            else {
                 # On Windows, use 'Start-Process'
                 Start-Process $reportPath
             }
@@ -194,26 +202,27 @@ function Create-CoverageReport {
     }
 
     # Command Coverage Summary
-    try{
+    try {
         $CommandCoverageSummaryFile = "$TestResultsPath/Coverage.md"
 
         $xml = [xml](Get-Content $mergedFile)
 
         $classes = $xml.coverage.packages.package.classes.class |
-            Where-Object { $_.name -match 'AzureMcp\.(.*\.)?Commands\.' -and $_.filename -notlike '*System.Text.Json.SourceGeneration*' }
+        Where-Object { $_.name -match 'AzureMcp\.(.*\.)?Commands\.' -and $_.filename -notlike '*System.Text.Json.SourceGeneration*' }
 
         $fileGroups = $classes |
-            Group-Object { $_.filename } |
-            Sort-Object Name
+        Group-Object { $_.filename } |
+        Sort-Object Name
 
         $summary = $fileGroups | ForEach-Object {
             # for live tests, we only want to look at the ExecuteAsync methods
-            $methods = if($Live) {
+            $methods = if ($Live) {
                 $_.Group | ForEach-Object {
-                    if($_.name -like '*<ExecuteAsync>*'){
+                    if ($_.name -like '*<ExecuteAsync>*') {
                         # Generated code for async ExecuteAsync methods
                         return $_.methods.method
-                    } else {
+                    }
+                    else {
                         # Non async methods named ExecuteAsync
                         return $_.methods.method | Where-Object { $_.name -eq 'ExecuteAsync' }
                     }
@@ -227,12 +236,12 @@ function Create-CoverageReport {
             $covered = ($lines | Where-Object { $_.hits -gt 0 }).Count
             $total = $lines.Count
 
-            if($total) {
+            if ($total) {
                 return [pscustomobject]@{
-                    file = $_.name
-                    pct = if ($total -gt 0) { $covered * 100 / $total } else { 0 }
+                    file    = $_.name
+                    pct     = if ($total -gt 0) { $covered * 100 / $total } else { 0 }
                     covered = $covered
-                    lines = $total
+                    lines   = $total
                 }
             }
         }
@@ -244,8 +253,8 @@ function Create-CoverageReport {
         $header = $live ? "Live test code coverage for command ExecuteAsync methods" : "Unit test code coverage for command classes"
 
         $output = ($env:TF_BUILD ? "" : "$header`n`n") +
-                "File $(' ' * ($maxFileWidth - 5)) | % Covered | Lines | Covered`n" +
-                "$('-' * $maxFileWidth) | --------: | ----: | ------:`n"
+        "File $(' ' * ($maxFileWidth - 5)) | % Covered | Lines | Covered`n" +
+        "$('-' * $maxFileWidth) | --------: | ----: | ------:`n"
 
         $summary | ForEach-Object {
             # Format each line with the appropriate width
@@ -277,7 +286,7 @@ if (!$solutionPath) {
 
 Push-Location $workPath
 try {
-    if($debugLogs) {
+    if ($debugLogs) {
         Write-Host "`n`n"
         # dump all environment variables
         Write-Host "Current environment variables:" -ForegroundColor Yellow
@@ -287,7 +296,8 @@ try {
         Write-Host "`nCurrent Azure PowerShell context (Get-AzContext):" -ForegroundColor Yellow
         try {
             Get-AzContext | ConvertTo-Json | Out-Host
-        } catch {
+        }
+        catch {
             Write-Host "Error retrieving Azure PowerShell context: $($_.Exception.Message)" -ForegroundColor Red
         }
 
@@ -295,13 +305,14 @@ try {
         Write-Host "`nCurrent Azure CLI context (az account show):" -ForegroundColor Yellow
         try {
             az account show | ConvertTo-Json | Out-Host
-        } catch {
+        }
+        catch {
             Write-Host "Error retrieving Azure CLI context: $($_.Exception.Message)" -ForegroundColor Red
         }
         Write-Host "`n`n"
     }
 
-    if($OnlyBuild) {
+    if ($OnlyBuild) {
         Write-Host "Just building the test projects, not running tests." -ForegroundColor Yellow
         Invoke-LoggedCommand "dotnet build '$solutionPath' --configuration 'Debug'" -AllowedExitCodes @(0)
         exit $LastExitCode
