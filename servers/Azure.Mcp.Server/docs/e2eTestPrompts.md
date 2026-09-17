@@ -610,6 +610,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
 | netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
 | netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+| netappfiles_volume_create | Create a 100 GiB Standard Azure NetApp Files volume named \<volume> in capacity pool \<pool> under account \<account>, using delegated subnet \<subnet_id> in \<location> | none |
+| netappfiles_volume_create | Create an NFSv3 NetApp Files volume called \<volume> with a 100 GiB quota in pool \<pool> under account \<account> | none |
 
 ## Azure Database for PostgreSQL
 

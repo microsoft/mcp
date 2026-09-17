@@ -101,4 +101,33 @@ public class NetAppFilesCommandTests(
         Assert.Equal("eastus", account.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
     }
+
+    [Fact]
+    public async Task VolumeCreate_ReturnsCreatedVolume()
+    {
+        var result = await CallToolAsync(
+            "netappfiles_volume_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", $"{Settings.ResourceBaseName}-volume" },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "subnet-id", Settings.DeploymentOutputs["NETAPP_SUBNET_ID"] },
+                { "quota-gib", 100 },
+                { "service-level", "Standard" },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var volume = result.AssertProperty("volume");
+        Assert.Equal(JsonValueKind.Object, volume.ValueKind);
+        Assert.Equal($"{Settings.ResourceBaseName}-volume", volume.AssertProperty("name").GetString());
+        volume.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], volume.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
+        Assert.Equal(100, volume.AssertProperty("quotaGib").GetInt64());
+        Assert.Equal("Standard", volume.AssertProperty("serviceLevel").GetString());
+    }
 }

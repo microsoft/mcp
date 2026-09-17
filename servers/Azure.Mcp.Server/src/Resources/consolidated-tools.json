@@ -2701,8 +2701,8 @@
       ]
     },
     {
-      "name": "create_or_update_azure_netapp_files_accounts",
-      "description": "Create Azure NetApp Files accounts, or update their tags or NFSv4 user ID mapping domain.",
+      "name": "create_or_update_azure_netapp_files_resources",
+      "description": "Create Azure NetApp Files accounts and volumes, or update account tags or NFSv4 user ID mapping domains.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2731,7 +2731,8 @@
       },
       "mappedToolList": [
         "netappfiles_account_create",
-        "netappfiles_account_update"
+        "netappfiles_account_update",
+        "netappfiles_volume_create"
       ]
     },
     {

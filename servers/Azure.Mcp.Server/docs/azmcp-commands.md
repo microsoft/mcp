@@ -2694,6 +2694,20 @@ azmcp netappfiles account update --account <account> \
                                  [--tags <json-key-value-object>] \
                                  [--nfs-v4-id-domain <nfs-v4-id-domain>] \
                                  [--tenant <tenant>]
+
+# Creates an NFSv3 Azure NetApp Files volume in a capacity pool.
+# Returns the volume name, resource ID, location, provisioning state, quota, and service level.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume create --account <account> \
+                                --pool <pool> \
+                                --volume <volume> \
+                                --location <location> \
+                                --subnet-id <subnet-resource-id> \
+                                --quota-gib <quota-gib> \
+                                --service-level <Standard|Premium|Ultra> \
+                                --resource-group <resource-group> \
+                                --subscription <subscription> \
+                                [--tenant <tenant>]
 ```
 
 ### Azure Database for MySQL Operations

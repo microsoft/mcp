@@ -1439,7 +1439,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
-- **Azure NetApp Files** - Enterprise file storage account management
+- **Azure NetApp Files** - Enterprise file storage account and volume management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
