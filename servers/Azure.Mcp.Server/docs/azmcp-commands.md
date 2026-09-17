@@ -2929,7 +2929,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
 ### Azure File Shares Operations
 
 ```bash
-# Get a specific File Share or list all File Shares
+# Get a specific Azure File Share or list Azure File Shares in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares fileshare get --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -3030,7 +3030,7 @@ azmcp fileshares fileshare peconnection update --subscription <subscription> \
 ```
 
 ```bash
-# Get File Shares limits and quotas for a region
+# Get Azure File Shares service limits and provisioning constants for a region
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp fileshares limits --subscription <subscription> \
                         --location <azure-region>
