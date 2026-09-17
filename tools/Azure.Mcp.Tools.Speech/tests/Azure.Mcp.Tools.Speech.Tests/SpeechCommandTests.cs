@@ -7,18 +7,26 @@ using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.Tests;
 
-public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
+public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    private const string HttpTransportSkipReason = "Speech file-based tools require local filesystem access and are not exposed over HTTP transport.";
+
     #region SpeechToText Tests
 
     [LiveTestOnly]
     [Fact]
     public async Task SpeechToText_ShouldHandleMissingAudioFileGracefully()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
@@ -46,6 +54,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [InlineData("de-DE", "de-DE.wav", "Treffen heute um 17 Uhr")]
     public async Task SpeechToText_WithFastSupportedLanguage_ShouldRecognizeSpeechWithFastTranscription(string? language, string fileName, string expectedText)
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Arrange
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", fileName);
 
@@ -88,6 +100,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [InlineData("ar-DZ", "ar-DZ.wav", "أنا ذاهب إلى السوق لأشتري بعض الفواكه والخضروات الطازجة.")]
     public async Task SpeechToText_WithFastUnsupportedLanguage_ShouldFallBackToRealtimeTranscription(string language, string fileName, string expectedText)
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Arrange
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", fileName);
 
@@ -134,6 +150,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [InlineData("detailed")]
     public async Task SpeechToText_WithFormat_ShouldRecognizeSpeechWithRealtimeTranscription(string format)
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Arrange
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
@@ -195,6 +215,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [InlineData("raw", "simple", "You don't deserve it, you bastard. Fuck you.")]
     public async Task SpeechToText_WithDifferentProfanityOptions_ShouldApplyCorrectly(string profanityOption, string format, string expectedText)
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "en-US-with-profanity.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
@@ -233,6 +257,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task SpeechToText_WithPhrases_ShouldIncreaseRecognitionAccuracy()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Arrange
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "en-US-phraselist.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
@@ -269,6 +297,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task SpeechToText_WithInvalidEndpoint_ShouldHandleGracefully()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Arrange
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
@@ -297,6 +329,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task SpeechToText_WithEmptyAudioFileAndFastTranscription_ShouldHandleGracefully()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Create a valid empty WAV file
         var emptyWavFile = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
         CreateWavFile(emptyWavFile);
@@ -341,6 +377,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task SpeechToText_WithEmptyAudioFileAndRealtimeTranscription_ShouldHandleGracefully()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Create a valid empty WAV file
         var emptyWavFile = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
         CreateWavFile(emptyWavFile);
@@ -391,6 +431,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task SpeechToText_WithBrokenFile_ShouldHandleGracefully()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // Arrange
         var brokenWavFile = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
         File.WriteAllText(brokenWavFile, "123"); // Broken audio content
@@ -443,6 +487,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task SpeechToText_RecognizeCompressedAudioWithRealtimeTranscription_ShouldFailWithoutGStreamer()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_stt_recognize"),
+            HttpTransportSkipReason);
+
         // This test validates speech recognition with different audio file formats
         var fileName = "whatstheweatherlike.mp3";
         var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", fileName);
@@ -496,6 +544,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task Should_synthesize_speech_to_file_with_text()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_tts_synthesize"),
+            HttpTransportSkipReason);
+
         // Test basic TTS synthesis with text input
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{Guid.NewGuid()}.wav");
@@ -551,6 +603,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [InlineData("ja-JP", "ja-JP-NanamiNeural")]
     public async Task Should_synthesize_speech_with_different_voices(string language, string voice)
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_tts_synthesize"),
+            HttpTransportSkipReason);
+
         // Test TTS synthesis with different language/voice combinations
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{language}-{Guid.NewGuid()}.wav");
@@ -603,6 +659,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [InlineData("Audio16Khz32KBitRateMonoMp3")]
     public async Task Should_synthesize_speech_with_different_formats(string format)
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_tts_synthesize"),
+            HttpTransportSkipReason);
+
         // Test TTS synthesis with different audio formats
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
         var extension = format.Contains("Mp3") ? ".mp3" : ".wav";
@@ -651,6 +711,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task Should_handle_invalid_text_input()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_tts_synthesize"),
+            HttpTransportSkipReason);
+
         // Test error handling for empty text
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-invalid-{Guid.NewGuid()}.wav");
@@ -683,6 +747,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task Should_handle_invalid_language_format()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_tts_synthesize"),
+            HttpTransportSkipReason);
+
         // Test error handling for invalid language format
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-invalid-lang-{Guid.NewGuid()}.wav");
@@ -715,6 +783,10 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
     [Fact]
     public async Task Should_handle_large_text_input()
     {
+        Assert.SkipWhen(
+            await AssertLocalToolIsUnavailableInHttpMode("speech_tts_synthesize"),
+            HttpTransportSkipReason);
+
         // Test TTS with larger text to verify streaming works correctly
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-large-{Guid.NewGuid()}.wav");
