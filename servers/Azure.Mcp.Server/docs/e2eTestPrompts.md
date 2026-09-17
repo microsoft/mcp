@@ -239,6 +239,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | appservice_webapp_get | List the web apps in my subscription | none |
 | appservice_webapp_get | Show me the web apps in my resource group <resource_group> | investigation-required |
 | appservice_webapp_get | Get the details for web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_get | Get app service details for <app-service-resource-id> | none |
 | appservice_webapp_deployment_get | List the deployments for web app <webapp> in resource group <resource_group> | none |
 | appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in resource group <resource_group> | none |
 | appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in resource group <resource_group> | none |
