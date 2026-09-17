@@ -16,6 +16,7 @@ param (
     [switch] $ReleaseBuild,
     [switch] $SmokeTest,
     [switch] $CleanBuild,
+    [switch] $ChangedServersOnly,
 
     # build_info.json based parameters
     [Parameter(ParameterSetName = 'BuildInfoPlatform')]
@@ -46,6 +47,7 @@ $exitCode = 0
 if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build"
 }
+New-Item -Path $OutputPath -ItemType Directory -Force | Out-Null
 
 function BuildServer($server) {
     $serverName = $server.name
@@ -291,6 +293,17 @@ function GetServersFromBuildInfo {
             LogError "No build configuration found for server named '$ServerName' in build info file."
             exit 1
         }
+    }
+
+    if ($ChangedServersOnly) {
+        if ($buildInfo.Keys -notcontains 'serversToBuild') {
+            LogError "Build info does not contain the required 'serversToBuild' property."
+            exit 1
+        }
+
+        $serversToBuild = @($buildInfo.serversToBuild)
+        $servers = @($servers | Where-Object { $serversToBuild -contains $_.name })
+        Write-Host "Building changed servers only: $($servers.name -join ', ')"
     }
 
     return $servers
