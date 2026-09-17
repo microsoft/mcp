@@ -20,6 +20,12 @@ $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
 $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
+$govTest = $env:GOVTEST -eq 'true'
+$runAllLiveTests = $env:RUNALLLIVETESTS -eq 'true'
+
+Write-Host "GovTest: $govTest" -ForegroundColor Cyan
+Write-Host "RunAllLiveTests: $runAllLiveTests" -ForegroundColor Cyan
+
 $architectures = @('x64', 'arm64')
 
 # Supported Azure clouds for where the MCP tools may operate. This is used to determine which clouds to run tests against.
@@ -241,7 +247,7 @@ function Get-PathsToTest {
     | ForEach-Object { $Matches[0] }
     | Sort-Object -Unique
 
-    if ($isPullRequestBuild) {
+    if ($isPullRequestBuild -and -not $runAllLiveTests) {
         # Set of files that don't require build or test when changed
         $skipFiles = @(
             'CHANGELOG.md',
@@ -382,6 +388,10 @@ function Get-TestMatrix {
         [string] $TestType
     )
 
+    # Live tests deploy real Azure resources, so they can only run in clouds the tool supports.
+    # The target cloud for the current run is AzureUSGovernment when running gov tests, otherwise AzureCloud.
+    $targetCloud = $govTest ? 'AzureUSGovernment' : 'AzureCloud'
+
     Write-Host "Forming $($TestType.ToLower()) test matrix"
     $testMatrix = [ordered]@{}
     foreach ($path in $pathsToTest) {
@@ -392,6 +402,11 @@ function Get-TestMatrix {
 
         if ($TestType -eq 'Live') {
             if (!$path.HasLiveTests -or !$path.HasTestResources) {
+                continue
+            }
+
+            if ($path.azureSupportedClouds -and ($path.azureSupportedClouds -notcontains $targetCloud)) {
+                Write-Host "Skipping live tests for '$($path.Path)' in '$targetCloud'; supported clouds: $($path.azureSupportedClouds -join ', ')"
                 continue
             }
 
@@ -609,7 +624,7 @@ function Get-ServerDetails {
             platforms           = $platforms
             mcpRepositoryName   = $props.McpRepositoryName
             mcpbPlatforms       = Split-PropertyGroup $props.McpbPlatforms
-            serverJsonPath      = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators 
+            serverJsonPath      = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
         }
     }
 
