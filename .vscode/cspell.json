@@ -130,6 +130,7 @@
         "mydb",
         "myop",
         "mystorageaccount",
+        "netappfiles",
         "noninteractive",
         "nugets",
         "pipefail",

@@ -358,6 +358,12 @@
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @mattkohnms @ramnov
 
+# PRLabel: %tools-NetAppFiles
+/tools/Azure.Mcp.Tools.NetAppFiles/    @stumpc @microsoft/azure-mcp
+
+# ServiceLabel: %tools-NetAppFiles
+# ServiceOwners:                       @microsoft/azure-mcp
+
 # PRLabel: %tools-Optimization
 /tools/Azure.Mcp.Tools.Optimization/   @sanjaytholanim @liangchenmicrosoft
 
