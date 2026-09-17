@@ -119,11 +119,13 @@ $fixtureStartTime = $fixtureTimestamp.ToString('o')
 $fixtureEndTime = $fixtureTimestamp.AddMinutes(30).ToString('o')
 $basicFixtureId = 'mcp-log-search-basic-1'
 $auxiliaryFixtureId = 'mcp-log-search-auxiliary-1'
-$basicTableName = $DeploymentOutputs['logSearchBasicTableName']
-$auxiliaryTableName = $DeploymentOutputs['logSearchAuxiliaryTableName']
-$ingestionEndpoint = $DeploymentOutputs['logSearchIngestionEndpoint']
-$dcrImmutableId = $DeploymentOutputs['logSearchDcrImmutableId']
-$workspaceCustomerId = $DeploymentOutputs['logSearchWorkspaceCustomerId']
+# Deployment output keys are normalized to uppercase and the self-contained
+# post-script deserializes them into a case-sensitive OrderedHashtable.
+$basicTableName = $DeploymentOutputs['LOGSEARCHBASICTABLENAME']
+$auxiliaryTableName = $DeploymentOutputs['LOGSEARCHAUXILIARYTABLENAME']
+$ingestionEndpoint = $DeploymentOutputs['LOGSEARCHINGESTIONENDPOINT']
+$dcrImmutableId = $DeploymentOutputs['LOGSEARCHDCRIMMUTABLEID']
+$workspaceCustomerId = $DeploymentOutputs['LOGSEARCHWORKSPACECUSTOMERID']
 
 $ingestionToken = Get-PlainTextAccessToken -ResourceUrl 'https://monitor.azure.com'
 $basicRecords = @(
