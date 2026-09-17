@@ -1,14 +1,21 @@
 parameters:
+- name: JobName
+  type: string
+- name: JobDisplayName
+  type: string
 - name: Matrix
   type: object
 - name: MaxParallel
   type: number
 - name: TimeoutInMinutes
   type: number
+- name: RedeployTestResources
+  type: boolean
+  default: true
 
 jobs:
-- job: LiveTest
-  displayName: "Live tests -"
+- job: ${{ parameters.JobName }}
+  displayName: ${{ parameters.JobDisplayName }}
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
   # The variable reference in the matrix parameter will resolve to a json map. If there are no live test legs, it will be an empty map.
   condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
@@ -17,6 +24,8 @@ jobs:
     matrix: $[ ${{ parameters.Matrix }} ]
   steps:
   - checkout: self
+    fetchDepth: 0
+    fetchTags: false
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
@@ -79,16 +88,17 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
-  - template: /eng/common/TestResources/remove-test-resources.yml
-    parameters:
-      ServiceConnection: azure-sdk-tests-public
+  - ${{ if parameters.RedeployTestResources }}:
+    - template: /eng/common/TestResources/remove-test-resources.yml
+      parameters:
+        ServiceConnection: azure-sdk-tests-public
 
-  - template: /eng/common/TestResources/deploy-test-resources.yml
-    parameters:
-      ServiceConnection: azure-sdk-tests-public
-      PersistOidcToken: true
-      TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
-      SkipEnvironmentSetup: true # environment setup was performed in the first deployment
+    - template: /eng/common/TestResources/deploy-test-resources.yml
+      parameters:
+        ServiceConnection: azure-sdk-tests-public
+        PersistOidcToken: true
+        TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+        SkipEnvironmentSetup: true # environment setup was performed in the first deployment
 
   - task: AzurePowershell@5
     displayName: "Run tests (http) - az pwsh"

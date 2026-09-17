@@ -590,6 +590,16 @@ You can scope tests to specific paths:
 ./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage, KeyVault
 ```
 
+In CI, live tests run against both stdio and HTTP transports. Test projects that leave their deployed resources reusable after the stdio run can opt out of a second resource deployment by setting:
+
+```xml
+<PropertyGroup>
+  <LiveTestResourcesCanBeReused>true</LiveTestResourcesCanBeReused>
+</PropertyGroup>
+```
+
+The property defaults to `false` when omitted. Only enable it when the full live-test suite preserves or restores all shared resources needed by the HTTP run.
+
 ### NPX Live Tests
 
 You can set the `TestPackage` parameter in `.testsettings.json` to have live tests run `npx` targeting an arbitrary Azure MCP package:
