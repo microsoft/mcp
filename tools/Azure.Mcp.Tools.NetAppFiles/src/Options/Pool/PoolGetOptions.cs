@@ -4,12 +4,15 @@
 using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.NetAppFiles.Options.Account;
+namespace Azure.Mcp.Tools.NetAppFiles.Options.Pool;
 
-public class AccountGetOptions : ISubscriptionOption
+public sealed class PoolGetOptions : ISubscriptionOption
 {
-    [Option(Description = "The name of the Azure NetApp Files account to retrieve. Must be 1-128 characters, start with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.")]
+    [Option(Description = "The name of the Azure NetApp Files account that contains the capacity pool.")]
     public required string Account { get; set; }
+
+    [Option(Description = "The name of the capacity pool to retrieve.")]
+    public required string Pool { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }

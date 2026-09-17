@@ -2415,7 +2415,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, Azure NetApp Files accounts, blob containers, blob data, and tables. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, Azure NetApp Files accounts and capacity pools, blob containers, blob data, and tables. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2450,6 +2450,7 @@
         "managedlustre_fs_blob_import_get",
         "managedlustre_fs_expansion_get",
         "netappfiles_account_get",
+        "netappfiles_pool_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -2663,7 +2664,7 @@
     },
     {
       "name": "create_azure_storage",
-      "description": "Create Azure Storage accounts, blob containers, Azure Managed Lustre filesystems, and Azure NetApp Files accounts.",
+      "description": "Create Azure Storage accounts, blob containers, Azure Managed Lustre filesystems, and Azure NetApp Files accounts and capacity pools.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2694,6 +2695,7 @@
         "storage_account_create",
         "storage_blob_container_create",
         "netappfiles_account_create",
+        "netappfiles_pool_create",
         "managedlustre_fs_create",
         "managedlustre_fs_blob_autoexport_create",
         "managedlustre_fs_blob_autoimport_create",
@@ -2732,6 +2734,39 @@
       },
       "mappedToolList": [
         "netappfiles_account_update"
+      ]
+    },
+    {
+      "name": "update_azure_netapp_files_capacity_pools",
+      "description": "Update the size, QoS type, cool-access setting, custom throughput, or tags of Azure NetApp Files capacity pools.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by updating data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "netappfiles_pool_update"
       ]
     },
     {

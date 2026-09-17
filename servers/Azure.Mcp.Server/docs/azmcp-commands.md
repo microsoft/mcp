@@ -2694,6 +2694,48 @@ azmcp netappfiles account update --account <account> \
                                  [--tags <json-key-value-object>] \
                                  [--nfs-v4-id-domain <nfs-v4-id-domain>] \
                                  [--tenant <tenant>]
+
+# Creates a capacity pool in an Azure NetApp Files account.
+# Size is specified in TiB and must be a positive multiple of 4.
+# Returns the pool configuration and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool create --account <account> \
+                              --pool <pool> \
+                              --size <size-in-tib> \
+                              --service-level <Flexible|Premium|Standard|StandardZRS|Ultra> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--location <location>] \
+                              [--qos-type <Auto|Manual>] \
+                              [--cool-access <true|false>] \
+                              [--encryption-type <Single|Double>] \
+                              [--custom-throughput-mibps <throughput>] \
+                              [--tags <json-key-value-object>] \
+                              [--tenant <tenant>]
+
+# Gets a capacity pool by name from an Azure NetApp Files account.
+# Returns the pool configuration, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool get --account <account> \
+                                    --pool <pool> \
+                                    --resource-group <resource-group> \
+                                    --subscription <subscription> \
+                                    [--tenant <tenant>]
+
+# Updates mutable properties of an Azure NetApp Files capacity pool.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated pool configuration and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool update --account <account> \
+                              --pool <pool> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--size <size-in-tib>] \
+                              [--qos-type <Auto|Manual>] \
+                              [--cool-access <true|false>] \
+                              [--custom-throughput-mibps <throughput>] \
+                              [--tags <json-key-value-object>] \
+                              [--tenant <tenant>]
 ```
 
 ### Azure Database for MySQL Operations

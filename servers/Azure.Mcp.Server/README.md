@@ -1250,6 +1250,12 @@ Example prompts that generate Azure CLI commands:
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### Azure NetApp Files
+
+* "Create a 4 TiB Premium capacity pool named 'my-pool' in Azure NetApp Files account 'my-account' in resource group 'my-resource-group'"
+* "Show the configuration and provisioning state of capacity pool 'my-pool' in Azure NetApp Files account 'my-account'"
+* "Resize capacity pool 'my-pool' in Azure NetApp Files account 'my-account' to 8 TiB"
+
 ### 📊 Azure Quota
 
 * "Check resource usage and quota for 'Microsoft.App/containerApps' in region 'eastus'"
@@ -1439,7 +1445,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
-- **Azure NetApp Files** - Enterprise file storage account management
+- **Azure NetApp Files** - Enterprise file storage account and capacity pool management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
