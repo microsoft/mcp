@@ -223,6 +223,8 @@ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. He
 
 ### Development Workflows
 
+* "Get the metadata for Fabric item '<item-id>' in workspace '<workspace-id>' without reading its data or definition"
+* "Show the display name, description, and type of Fabric item '<item-id>' in workspace '<workspace-id>'"
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
 * "Show me how to handle long-running operations in Fabric APIs"
@@ -303,6 +305,27 @@ The Fabric MCP Server exposes tools organized into three categories:
 |-----------|-------------|
 | `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
+| `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
+
+`core_get-item` calls the [Get Item API](https://learn.microsoft.com/rest/api/fabric/core/items/get-item).
+Both `workspace-id` and `item-id` are required nonempty UUIDs. The result contains an `item` object with
+`id`, `displayName`, `type`, `workspaceId`, and `description` when available. The caller needs read
+permission for the item and an appropriate Fabric API identity. The tool uses the existing Fabric
+Core authentication configuration and does not grant permissions.
+
+```bash
+fabmcp core get-item --workspace-id <workspace-id> --item-id <item-id>
+```
+
+This read-only tool does not resolve names, retrieve definitions, return workload-specific properties,
+or request default-identity information. Use `core_search-catalog` to discover an unknown item ID.
+
+For MCP clients, start the server with `--structured-output-mode compact` to expose the typed
+output schema and `structuredContent`. The default mode keeps content-only responses.
+
+If Fabric throttles the request, the error includes a valid `Retry-After` delay in seconds or
+retry time in UTC when supplied by the service. Missing or malformed headers produce generic
+retry guidance. The tool does not retry automatically or return raw backend error bodies.
 
 ### Data Factory Operations
 
@@ -335,7 +358,9 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 ## Security
 
-The Fabric MCP Server is a **local-first** tool that runs entirely on your machine. It provides API specifications, schemas, and best practices without connecting to live Microsoft Fabric environments.
+The Fabric MCP Server runs locally by default. Documentation tools provide API specifications,
+schemas, and best practices. Operational tools, including `core_get-item`, make authenticated
+requests to Microsoft Fabric within the caller's permissions. They do not grant permissions.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 
