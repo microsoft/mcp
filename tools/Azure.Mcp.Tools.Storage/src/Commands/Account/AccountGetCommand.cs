@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Account;
     Id = "eb2363f1-f21f-45fc-ad63-bacfbae8c45c",
     Name = "get",
     Title = "Get Storage Account Details",
-    Description = "Retrieves detailed information about Azure Storage accounts, including account name, location, SKU, kind, hierarchical namespace status, HTTPS-only settings, and blob public access configuration. If a specific account name is not provided, the command will return details for all accounts in a subscription.",
+    Description = "Retrieves detailed information about Azure Storage accounts, including account name, location, SKU, kind, hierarchical namespace status, HTTPS-only settings, and blob public access configuration. If a specific account name is not provided, the command will return details for all accounts in a subscription. Note: this queries Azure Resource Graph, which can lag a few minutes behind the actual resource state - a storage account created immediately beforehand may not appear yet.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
