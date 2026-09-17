@@ -2663,7 +2663,7 @@
     },
     {
       "name": "create_azure_storage",
-      "description": "Create Azure Storage accounts, blob containers, Azure Managed Lustre filesystems, and Azure NetApp Files accounts.",
+      "description": "Create Azure Storage accounts, blob containers, and Azure Managed Lustre filesystems.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2693,7 +2693,6 @@
       "mappedToolList": [
         "storage_account_create",
         "storage_blob_container_create",
-        "netappfiles_account_create",
         "managedlustre_fs_create",
         "managedlustre_fs_blob_autoexport_create",
         "managedlustre_fs_blob_autoimport_create",
@@ -2702,8 +2701,8 @@
       ]
     },
     {
-      "name": "update_azure_netapp_files_accounts",
-      "description": "Update tags or the NFSv4 user ID mapping domain for Azure NetApp Files accounts.",
+      "name": "create_or_update_azure_netapp_files_accounts",
+      "description": "Create Azure NetApp Files accounts, or update their tags or NFSv4 user ID mapping domain.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2731,6 +2730,7 @@
         }
       },
       "mappedToolList": [
+        "netappfiles_account_create",
         "netappfiles_account_update"
       ]
     },
