@@ -173,6 +173,12 @@ Second line of descriptive text explaining the fix
         $lines[0] | Should -Be "- First line of descriptive text."
         $lines[1] | Should -Be "  Second line of descriptive text explaining the fix. (contributed by [@bob](https://github.com/bob)) [[#888](https://github.com/microsoft/mcp/pull/888)]"
     }
+
+    It "Rejects invalid contributor username with Markdown or special characters" {
+        { Format-ChangelogEntry -Description "Some change" -Contributor "user](https://evil.com)" } | Should -Throw "*Invalid contributor username*"
+        { Format-ChangelogEntry -Description "Some change" -Contributor "user`nmalicious" } | Should -Throw "*Invalid contributor username*"
+        { Format-ChangelogEntry -Description "Some change" -Contributor "user name" } | Should -Throw "*Invalid contributor username*"
+    }
 }
 
 Describe "End-to-End Changelog Compilation" {
@@ -262,5 +268,45 @@ changes:
 
         $output | Should -Match "\(contributed by \[@alice\]\(https://github\.com/alice\)\) \[\[#158\]"
         $output | Should -Match "\(contributed by \[@bob\]\(https://github\.com/bob\)\) \[\[#158\]"
+    }
+
+    It "Rejects entry files with invalid root-level contributor username" {
+        $testEntriesDir = Join-Path $repoRoot "$testRootRelative/E2EServer/changelog-entries"
+        
+        $invalidEntryContent = @"
+pr: 159
+contributor: "invalid user!@#"
+changes:
+  - section: "Features Added"
+    description: "Feature with invalid contributor"
+"@
+        Set-Content -Path (Join-Path $testEntriesDir "invalid-contributor.yaml") -Value $invalidEntryContent
+
+        $relChangelog = "$testRootRelative/E2EServer/CHANGELOG.md"
+        $output = pwsh -File $compileScript -ChangelogPath $relChangelog -DryRun *>&1 | Out-String
+
+        $output | Should -Match "Invalid contributor"
+        $output | Should -Match "invalid user!@#"
+        $output | Should -Not -Match "Feature with invalid contributor"
+    }
+
+    It "Rejects entry files with invalid change-level contributor username" {
+        $testEntriesDir = Join-Path $repoRoot "$testRootRelative/E2EServer/changelog-entries"
+        
+        $invalidChangeContent = @"
+pr: 160
+changes:
+  - section: "Features Added"
+    description: "Invalid change item with injected markdown"
+    contributor: "bad] [injection"
+"@
+        Set-Content -Path (Join-Path $testEntriesDir "invalid-change-contributor.yaml") -Value $invalidChangeContent
+
+        $relChangelog = "$testRootRelative/E2EServer/CHANGELOG.md"
+        $output = pwsh -File $compileScript -ChangelogPath $relChangelog -DryRun *>&1 | Out-String
+
+        $output | Should -Match "Invalid contributor"
+        $output | Should -Match "bad\] \[injection"
+        $output | Should -Not -Match "Invalid change item with injected markdown"
     }
 }

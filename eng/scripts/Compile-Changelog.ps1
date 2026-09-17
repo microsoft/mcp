@@ -168,6 +168,9 @@ function Format-ChangelogEntry {
     $Description = $Description -replace "`t", "  "
 
     $cleanContributor = if ($Contributor) { $Contributor.Trim().TrimStart('@') } else { "" }
+    if ($cleanContributor -and $cleanContributor -notmatch '^[a-zA-Z0-9-]+$') {
+        throw "Invalid contributor username '$Contributor'. GitHub usernames may only contain alphanumeric characters and hyphens."
+    }
     $contributorSuffix = if ($cleanContributor) { " (contributed by [@$cleanContributor](https://github.com/$cleanContributor))" } else { "" }
     $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
     $suffix = "$contributorSuffix$prLink"
@@ -403,7 +406,13 @@ foreach ($file in $yamlFiles) {
         # Handle Contributor field - optional, at root level or change level
         $rootContributor = $null
         if ($entry.ContainsKey('contributor') -and $entry['contributor']) {
-            $rootContributor = ([string]$entry['contributor']).Trim().TrimStart('@')
+            $rawRootContributor = [string]$entry['contributor']
+            $cleanRootContributor = $rawRootContributor.Trim().TrimStart('@')
+            if ($cleanRootContributor -notmatch '^[a-zA-Z0-9-]+$') {
+                Write-Error "  Invalid contributor username '$rawRootContributor' in $($file.Name) (must contain only alphanumeric characters and hyphens)"
+                continue
+            }
+            $rootContributor = $cleanRootContributor
         }
 
         # Process each change in the array
@@ -449,7 +458,13 @@ foreach ($file in $yamlFiles) {
             
             $contributor = $rootContributor
             if ($change.ContainsKey('contributor') -and $change['contributor']) {
-                $contributor = ([string]$change['contributor']).Trim().TrimStart('@')
+                $rawChangeContributor = [string]$change['contributor']
+                $cleanChangeContributor = $rawChangeContributor.Trim().TrimStart('@')
+                if ($cleanChangeContributor -notmatch '^[a-zA-Z0-9-]+$') {
+                    Write-Error "  Invalid contributor username '$rawChangeContributor' in change #$($changeCount + 1) of $($file.Name) (must contain only alphanumeric characters and hyphens)"
+                    continue
+                }
+                $contributor = $cleanChangeContributor
             }
 
             # Add to entries collection with normalized section name

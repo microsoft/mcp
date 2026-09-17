@@ -291,11 +291,15 @@ if (-not $PR -and $isInteractive) {
 if (-not $Contributor -and $isInteractive) {
     $contributorInput = Read-Host "`nContributor GitHub username (optional, press Enter to skip)"
     if ($contributorInput) {
-        $Contributor = $contributorInput.Trim().TrimStart('@')
-        if ($Contributor -notmatch '^[a-zA-Z0-9-]+$') {
-            LogError "Invalid contributor username '$Contributor'. GitHub usernames may only contain alphanumeric characters and hyphens."
-            exit 1
-        }
+        $Contributor = $contributorInput
+    }
+}
+
+if ($Contributor) {
+    $Contributor = $Contributor.Trim().TrimStart('@')
+    if ($Contributor -notmatch '^[a-zA-Z0-9-]+$') {
+        LogError "Invalid contributor username '$Contributor'. GitHub usernames may only contain alphanumeric characters and hyphens."
+        exit 1
     }
 }
 

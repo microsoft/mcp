@@ -49,7 +49,7 @@ servers/Azure.Mcp.Server/
 ### YAML Schema
 
 ```yaml
-pr: <number>          # Optional: PR number (use 0 if not known yet, or auto-detect from git)
+pr: <number>          # Optional: PR number (omit if not known yet, or auto-detect from git)
 contributor: <string> # Optional: GitHub username for contributor attribution (e.g. "octocat")
 changes:              # Required: Array of changes (minimum 1)
   - section: <string>     # Required
@@ -69,7 +69,7 @@ changes:              # Required: Array of changes (minimum 1)
 
 #### Optional Fields
 
-- **pr**: Pull request number at the top level (integer, use 0 or omit if not known yet; auto-detected from git commit on squash merge)
+- **pr**: Pull request number at the top level (positive integer, omit if not known yet; auto-detected from git commit on squash merge)
 - **contributor**: GitHub username of the community contributor (e.g., `octocat`). When provided, the contributor will be credited in the compiled changelog (` (contributed by [@username](https://github.com/username))`). Can be set at the root level or on individual change items.
 - **subsection**: Optional subsection to group changes under. Currently, the only valid subsection is `Dependency Updates` under the `Other Changes` section.
 
