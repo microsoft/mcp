@@ -26,6 +26,10 @@ jobs:
     env:
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
+  - pwsh: node --test eng/npm/test/wrapper.test.js
+    displayName: "Run npm wrapper tests"
+    workingDirectory: $(Build.SourcesDirectory)
+
   # Run AOT analysis only on Linux x64
   - template: /eng/pipelines/templates/steps/analyze-aot-compact.yml
     parameters:
