@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Recovery.Plans;
 
 public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBase<RecoveryPlanCheckReadinessCommand, IResilienceManagementService>
 {
-    private const string ValidArgs = "--service-group sg1 --recovery-plan plan1";
+    private const string ValidArgs = "--service-group sg1 --recoveryplan plan1";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -28,7 +28,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
     [Theory]
     [InlineData(ValidArgs, true)]
     [InlineData("--service-group sg1", false)]
-    [InlineData("--recovery-plan plan1", false)]
+    [InlineData("--recoveryplan plan1", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesRequiredInput(string args, bool shouldSucceed)
     {
@@ -52,7 +52,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "invalid_plan");
+            "--recoveryplan", "invalid_plan");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("5 to 24 characters", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -68,7 +68,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "../sg1",
-            "--recovery-plan", "plan1");
+            "--recoveryplan", "plan1");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("service group name", response.Message, StringComparison.OrdinalIgnoreCase);

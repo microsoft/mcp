@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
     Name = "list",
     Title = "List Event Grid Subscriptions",
     Description = "Show all available Event Grid subscriptions with optional topic filtering. This tool displays active event subscriptions including webhook endpoints, event filters, and delivery retry policies. Use this when you need to show, list, or get Event Grid subscriptions for topics. Requires either topic name OR subscription. If only topic is provided, searches all accessible subscriptions for a topic with that name. Resource group and location filters can be applied, but only when used with a subscription or topic.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

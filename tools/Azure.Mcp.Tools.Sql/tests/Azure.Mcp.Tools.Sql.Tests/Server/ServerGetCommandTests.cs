@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Sql.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -47,6 +48,9 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
+        var result = ValidateAndDeserializeResponse(response, SqlJsonContext.Default.ServerGetCommandResult);
+        Assert.Single(result.Servers);
+        Assert.Equal("server1", result.Servers[0].Name);
         await Service.Received(1).GetServerAsync("server1", "rg", "sub", Arg.Any<CancellationToken>());
         await Service.DidNotReceive().ListServersAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
@@ -71,6 +75,8 @@ public class ServerGetCommandTests : SubscriptionCommandUnitTestsBase<ServerGetC
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
+        var result = ValidateAndDeserializeResponse(response, SqlJsonContext.Default.ServerGetCommandResult);
+        Assert.Equal(2, result.Servers.Count);
         await Service.Received(1).ListServersAsync("rg", "sub", Arg.Any<CancellationToken>());
         await Service.DidNotReceive().GetServerAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }

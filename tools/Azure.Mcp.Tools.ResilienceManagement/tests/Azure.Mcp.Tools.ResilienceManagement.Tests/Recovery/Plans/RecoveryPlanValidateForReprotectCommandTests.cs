@@ -44,7 +44,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1");
+            "--recoveryplan", "plan1");
 
         RecoveryPlanValidateForReprotectResult result = ValidateAndDeserializeResponse(
             response,
@@ -80,7 +80,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--selected-resource-ids", RecoveryResourceId);
 
         RecoveryPlanValidateForReprotectResult result = ValidateAndDeserializeResponse(
@@ -98,11 +98,11 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1",
+            "--recoveryplan", "plan1",
             "--selected-resource-ids", otherPlanResourceId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("under the requested service group and recovery plan", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("under the requested service group and recoveryplan", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -122,7 +122,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1");
+            "--recoveryplan", "plan1");
 
         Assert.Equal(status, response.Status);
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -143,7 +143,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
-            "--recovery-plan", "plan1");
+            "--recoveryplan", "plan1");
 
         Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
         Assert.Contains("timed out", response.Message, StringComparison.OrdinalIgnoreCase);

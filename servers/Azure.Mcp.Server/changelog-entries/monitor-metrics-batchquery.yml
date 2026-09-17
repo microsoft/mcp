@@ -1,3 +1,0 @@
-changes:
-  - section: Features Added
-    description: Added the `azmcp monitor metrics batchquery` command for querying Azure Monitor metrics across multiple resources in a single request.

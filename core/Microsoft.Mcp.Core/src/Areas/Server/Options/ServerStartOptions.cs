@@ -68,6 +68,15 @@ public sealed class ServerStartOptions
     public bool DangerouslyDisableElicitation { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the tool namespaces for which SSRF protections will be disabled.
+    /// The special value <c>ALL</c> represents every tool namespace.
+    /// </summary>
+    [Option(
+        Name = "dangerously-disable-ssrf-protections-by-namespace",
+        Description = "Dangerously disables SSRF protections for specified tool namespaces. Repeat this option to include multiple namespaces, or specify ALL to cover every namespace.")]
+    public string[]? DangerouslyDisableSsrfProtectionsByNamespace { get; set; } = null;
+
+    /// <summary>
     /// Gets or sets the outgoing authentication strategy for requests.
     /// Determines whether to use hosting environment identity or on-behalf-of flow.
     /// </summary>
@@ -108,6 +117,13 @@ public sealed class ServerStartOptions
     /// </summary>
     [Option(Description = "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.", DefaultValue = false)]
     public bool DisableCaching { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets how tools advertise and return structured output.
+    /// A <see langword="null"/> value preserves content-only responses.
+    /// </summary>
+    [Option(Description = "Enable structured output using 'duplicated' to retain complete content or 'compact' to return concise content. Both modes return complete structuredContent.")]
+    public StructuredOutputMode? StructuredOutputMode { get; set; } = null;
 
     /// <summary>
     /// Gets or sets whether proxy tools that are proxied from external sources configured by the server's /Resources/registry.json are disabled.

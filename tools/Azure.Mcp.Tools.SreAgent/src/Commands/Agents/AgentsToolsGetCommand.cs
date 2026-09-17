@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Name = "get",
     Title = "Get SRE Agent Tool",
     Description = "Gets a custom tool definition from a targeted SRE Agent resource. Required: --subscription, --agent, --name.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

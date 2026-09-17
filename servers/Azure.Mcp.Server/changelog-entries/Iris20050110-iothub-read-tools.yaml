@@ -1,8 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: |
-      Added Azure IoT Hub device and query read tools:
-      - `iothub_device_show`: Show a device identity from an IoT Hub device registry
-      - `iothub_device_stats`: Get device statistics for an IoT Hub identity registry
-      - `iothub_device_twin_get`: Get a device twin from an IoT Hub device registry
-      - `iothub_query_run`: Run an IoT Hub query (raw SQL or structured predicates) and return a single page of results; a bare `SELECT *` also returns a discoveredFields catalog of queryable field paths

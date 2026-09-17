@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Name = "setup_servicenow",
     Title = "Setup ServiceNow Connector",
     Description = "Connect an SRE Agent to ServiceNow. Creates a ServiceNow MCP connector to enable incident management integration using credentials from environment variables.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

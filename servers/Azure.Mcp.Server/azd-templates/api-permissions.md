@@ -5,6 +5,7 @@ A table of known API permissions of downstream APIs that can be called by Azure 
 | Namespace | Name | Scope | API Id | API Permission Id |
 |-----------|------|-------|--------|-------------------|
 | * | Azure Resource Manager | `https://management.azure.com/user_impersonation` | 797f4846-ba00-4fd7-ba43-dac1f8f63013 | 41094075-9dad-400e-a0bd-54e686782033 |
+| adme | Azure Data Manager for Energy | `https://energy.azure.com/access_as_user` | bd0c9d90-89ad-4bb3-97bc-d787b9f69cdc | 66e904da-2872-4e72-bff6-a88a6c4375ea |
 | kusto | Azure Data Explorer (Kusto) | `https://<cluster>.kusto.windows.net/user_impersonation` | 2746ea77-4702-4b45-80ca-3c97e680e8b7 | 00d678f0-da44-4b12-a6d6-c98bcfd1c5fe |
 | storage | Azure Storage | `https://storage.azure.com/user_impersonation` | e406a681-f3d4-42a8-90b6-c2b029497af1 | 03e0da56-190b-40ad-a80c-ea378c433f7f |
 | postgres, mysql | Azure OSS RDBMS AAD (PostgreSQL/MySQL) | `https://ossrdbms-aad.database.windows.net/user_impersonation` | 123cd850-d9df-40bd-94d5-c9f07b7fa203 | cef99a3a-4cd3-4408-8143-4375d1e38a17 |

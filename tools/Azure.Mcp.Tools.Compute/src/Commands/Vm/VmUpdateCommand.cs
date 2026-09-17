@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
         Do not use this to change VM power state (start, stop, deallocate, restart); use VM power-state instead.
         Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

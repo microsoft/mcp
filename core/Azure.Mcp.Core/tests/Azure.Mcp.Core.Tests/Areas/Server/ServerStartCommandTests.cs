@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests;
@@ -129,6 +130,51 @@ public class ServerStartCommandTests
         Assert.True(hasToolOption, "Tool option should be registered");
     }
 
+    [Fact]
+    public void DangerouslyDisableSsrfProtectionsByNamespaceOption_ParsesMultipleNamespaces()
+    {
+        // Arrange & Act
+        var options = BindOptions(
+            "--dangerously-disable-ssrf-protections-by-namespace", "acr",
+            "--dangerously-disable-ssrf-protections-by-namespace", EndpointValidator.AllNamespaces);
+
+        // Assert
+        Assert.NotNull(options.DangerouslyDisableSsrfProtectionsByNamespace);
+        Assert.Equal(["acr", EndpointValidator.AllNamespaces], options.DangerouslyDisableSsrfProtectionsByNamespace);
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesDangerouslyDisableSsrfProtectionsByNamespace()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasOption = command.Options.Any(
+            o => o.Name == "--dangerously-disable-ssrf-protections-by-namespace");
+        Assert.True(hasOption, "DangerouslyDisableSsrfProtectionsByNamespace option should be registered");
+    }
+
+    [Theory]
+    [InlineData("DuPlIcAtEd", StructuredOutputMode.Duplicated)]
+    [InlineData("COMPACT", StructuredOutputMode.Compact)]
+    public void StructuredOutputModeOption_ParsesCaseInsensitiveValues(
+        string value,
+        StructuredOutputMode expected)
+    {
+        var options = BindOptions(new[] { "--structured-output-mode", value });
+
+        Assert.Equal(expected, options.StructuredOutputMode);
+    }
+
+    [Fact]
+    public void StructuredOutputModeOption_DefaultsToDisabled()
+    {
+        var options = BindOptions();
+
+        Assert.Null(options.StructuredOutputMode);
+    }
+
     [Theory]
     [InlineData("azmcp_storage_account_get")]
     [InlineData("azmcp_keyvault_secret_get")]
@@ -211,6 +257,7 @@ public class ServerStartCommandTests
             "--namespace", "storage",
             "--namespace", "keyvault",
             "--mode", "all",
+            "--structured-output-mode", "compact",
             "--read-only",
             "--debug",
             "--dangerously-disable-elicitation",
@@ -221,6 +268,7 @@ public class ServerStartCommandTests
         Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
+        Assert.Equal(StructuredOutputMode.Compact, options.StructuredOutputMode);
         Assert.True(options.ReadOnly);
         Assert.True(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
@@ -272,6 +320,7 @@ public class ServerStartCommandTests
         Assert.False(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.DangerouslyDisableElicitation);
+        Assert.Null(options.DangerouslyDisableSsrfProtectionsByNamespace);
         Assert.Null(options.DangerouslyWriteSupportLogsToDir);
         Assert.False(options.DisableCaching);
     }

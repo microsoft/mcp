@@ -2,7 +2,14 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
+using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
+using Azure.Mcp.Tools.Compute.Commands.Vm;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Xunit;
 
@@ -183,4 +190,201 @@ public class OptionSchemaGeneratorTests
 
     private static Option<T> CreateOption<T>(string name, string description = "desc", bool required = false) =>
         new(name) { Description = description, Required = required };
+
+    [Fact]
+    public void CreateOutputSchema_ObjectResult_ReturnsObjectRootUnwrapped()
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(OutputSchemaTestJsonContext.Default.OutputSchemaSampleResult);
+
+        // An object-root result already satisfies MCP's "root must be an object" rule, so it is returned
+        // as-is: its own properties are exposed directly rather than nested under a wrapper.
+        Assert.Equal("object", (string?)schema["type"]);
+
+        var properties = Assert.IsType<JsonObject>(schema["properties"]);
+        Assert.True(properties.ContainsKey("name"), "Object-root result should expose its own 'name' property directly.");
+        Assert.False(properties.ContainsKey("value"), "Object-root result must not be wrapped under a 'value' property.");
+    }
+
+    [Fact]
+    public void CreateOutputSchema_WithNullTypeInfo_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => OptionSchemaGenerator.CreateOutputSchema(null!));
+    }
+
+    [Fact]
+    public void CreateOutputSchema_ArrayResult_IsWrappedUnderValue()
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(OutputSchemaTestJsonContext.Default.StringArray);
+
+        AssertWrappedValue(schema, expectedInnerType: "array");
+    }
+
+    [Fact]
+    public void CreateOutputSchema_ScalarResult_IsWrappedUnderValue()
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(OutputSchemaTestJsonContext.Default.Int32);
+
+        AssertWrappedValue(schema, expectedInnerType: "integer");
+    }
+
+    [Fact]
+    public void CreateOutputSchema_KeyValueSetWithoutLabel_MatchesSerializedPayload()
+    {
+        AssertOmittedLabelConforms(
+            new KeyValueSetCommand.KeyValueSetCommandResult("mykey", "value", null),
+            OutputSchemaTestJsonContext.Default.KeyValueSetCommandResult);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_KeyValueDeleteWithoutLabel_MatchesSerializedPayload()
+    {
+        AssertOmittedLabelConforms(
+            new KeyValueDeleteCommand.KeyValueDeleteCommandResult("mykey", null, true, "Deleted."),
+            OutputSchemaTestJsonContext.Default.KeyValueDeleteCommandResult);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_KeyValueLockSetWithoutLabel_MatchesSerializedPayload()
+    {
+        AssertOmittedLabelConforms(
+            new KeyValueLockSetCommand.KeyValueLockSetCommandResult("mykey", null, true),
+            OutputSchemaTestJsonContext.Default.KeyValueLockSetCommandResult);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_PerPropertyWhenWritingNull_MatchesSerializedPayload()
+    {
+        var result = new VmGetCommand.VmGetResult(null, null, []);
+        var typeInfo = PerPropertyIgnoreJsonContext.Default.VmGetResult;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.TryGetProperty("vm", out _));
+        Assert.False(payload.TryGetProperty("instanceView", out _));
+        Assert.True(payload.TryGetProperty("vms", out _));
+        Assert.False(schema.ContainsKey("required"));
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_PerPropertyNever_OverridesDefaultIgnoreCondition()
+    {
+        var result = new RecoveryPlanDeleteCommand.RecoveryPlanDeleteCommandResult(false, "plan");
+        var typeInfo = DefaultIgnoreJsonContext.Default.RecoveryPlanDeleteCommandResult;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.GetProperty("deleted").GetBoolean());
+        var required = Assert.IsType<JsonArray>(schema["required"]);
+        Assert.Contains(required, property => (string?)property == "deleted");
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_PropertyIgnoreConditions_MatchSerializedPayload()
+    {
+        var result = CreateIgnoreConditionSample();
+        var typeInfo = PerPropertyIgnoreJsonContext.Default.IgnoreConditionSample;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.TryGetProperty("alwaysIgnored", out _));
+        Assert.False(payload.TryGetProperty("ignoredWhenWriting", out _));
+        Assert.True(payload.TryGetProperty("ignoredWhenReading", out _));
+        Assert.False(payload.TryGetProperty("defaultValue", out _));
+        Assert.False(payload.TryGetProperty("nullValue", out _));
+        Assert.True(payload.TryGetProperty("neverIgnored", out _));
+
+        var required = Assert.IsType<JsonArray>(schema["required"])
+            .Select(property => (string?)property)
+            .ToArray();
+        Assert.Contains("ignoredWhenReading", required);
+        Assert.Contains("neverIgnored", required);
+        Assert.DoesNotContain("alwaysIgnored", required);
+        Assert.DoesNotContain("ignoredWhenWriting", required);
+        Assert.DoesNotContain("defaultValue", required);
+        Assert.DoesNotContain("nullValue", required);
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_NestedPropertyIgnoreConditions_MatchSerializedPayload()
+    {
+        var result = new NestedIgnoreConditionSample(CreateIgnoreConditionSample());
+        var typeInfo = PerPropertyIgnoreJsonContext.Default.NestedIgnoreConditionSample;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+        var detailsSchema = Assert.IsType<JsonObject>(
+            Assert.IsType<JsonObject>(schema["properties"])["details"]);
+        var detailsPayload = payload.GetProperty("details");
+
+        AssertRequiredPropertiesArePresent(detailsSchema, detailsPayload);
+    }
+
+    private static IgnoreConditionSample CreateIgnoreConditionSample() =>
+        new(
+            AlwaysIgnored: "always",
+            IgnoredWhenWriting: "write",
+            IgnoredWhenReading: "read",
+            DefaultValue: 0,
+            NullValue: null,
+            NeverIgnored: false);
+
+    private static void AssertOmittedLabelConforms<T>(T result, JsonTypeInfo<T> typeInfo)
+    {
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        var payload = JsonSerializer.SerializeToElement(result, typeInfo);
+
+        Assert.False(payload.TryGetProperty("label", out _));
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    private static void AssertRequiredPropertiesArePresent(JsonObject schema, JsonElement payload)
+    {
+        if (schema["required"] is not JsonArray required)
+        {
+            return;
+        }
+
+        foreach (var requiredProperty in required)
+        {
+            var propertyName = Assert.IsAssignableFrom<JsonValue>(requiredProperty).GetValue<string>();
+            Assert.True(
+                payload.TryGetProperty(propertyName, out _),
+                $"Serialized payload omitted required output property '{propertyName}'.");
+        }
+    }
+
+    // MCP requires the outputSchema root to be an object, so a non-object export (array or scalar) must be
+    // wrapped as { "type": "object", "properties": { "value": <inner> }, "required": ["value"] }.
+    private static void AssertWrappedValue(JsonObject schema, string expectedInnerType)
+    {
+        Assert.Equal("object", (string?)schema["type"]);
+
+        var properties = Assert.IsType<JsonObject>(schema["properties"]);
+        Assert.True(properties.ContainsKey("value"), "Non-object result must be wrapped under a single 'value' property.");
+
+        var inner = Assert.IsType<JsonObject>(properties["value"]);
+        Assert.Equal(expectedInnerType, (string?)inner["type"]);
+
+        var required = Assert.IsType<JsonArray>(schema["required"]);
+        Assert.Contains(required, node => (string?)node == "value");
+    }
 }
+
+// Shared sample result type + source-generated context used by the outputSchema tests. Declaring them in
+// the parent test namespace keeps the schema-shaping contract decoupled from any shipping tool while
+// remaining visible to the nested ToolLoading tests.
+internal sealed record OutputSchemaSampleResult(string Name, int Count);
+
+[JsonSerializable(typeof(OutputSchemaSampleResult))]
+[JsonSerializable(typeof(KeyValueSetCommand.KeyValueSetCommandResult))]
+[JsonSerializable(typeof(KeyValueDeleteCommand.KeyValueDeleteCommandResult))]
+[JsonSerializable(typeof(KeyValueLockSetCommand.KeyValueLockSetCommandResult))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(string[]))]
+[JsonSerializable(typeof(int))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+internal sealed partial class OutputSchemaTestJsonContext : JsonSerializerContext;

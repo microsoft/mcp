@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
+using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
@@ -43,10 +44,18 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<ProtectedItemGetCommand>();
         services.AddSingleton<ProtectedItemProtectCommand>();
         services.AddSingleton<ProtectedItemUndeleteCommand>();
+        services.AddSingleton<ProtectedItemUpdateProtectionCommand>();
 
         services.AddSingleton<ProtectableItemListCommand>();
+        services.AddSingleton<ProtectableItemInquireCommand>();
+        services.AddSingleton<ContainerListAvailableCommand>();
+
+        services.AddSingleton<ContainerRefreshCommand>();
+        services.AddSingleton<ContainerRegisterCommand>();
 
         services.AddSingleton<BackupStatusCommand>();
+
+        services.AddSingleton<ContainerGetCommand>();
 
         services.AddSingleton<JobGetCommand>();
 
@@ -103,15 +112,25 @@ public sealed class AzureBackupSetup : IAreaSetup
         policy.AddCommand<PolicyCreateCommand>(serviceProvider);
         policy.AddCommand<PolicyUpdateCommand>(serviceProvider);
 
-        var protectedItem = new CommandGroup("protecteditem", "Protected item operations - Get protected item details or list all, enable backup protection, and undelete soft-deleted items.");
+        var protectedItem = new CommandGroup("protecteditem", "Protected item operations - Get protected item details or list all, enable backup protection, update protection configuration (policy/selective disk backup), and undelete soft-deleted items.");
         azureBackup.AddSubGroup(protectedItem);
         protectedItem.AddCommand<ProtectedItemGetCommand>(serviceProvider);
         protectedItem.AddCommand<ProtectedItemProtectCommand>(serviceProvider);
         protectedItem.AddCommand<ProtectedItemUndeleteCommand>(serviceProvider);
+        protectedItem.AddCommand<ProtectedItemUpdateProtectionCommand>(serviceProvider);
 
-        var protectableItem = new CommandGroup("protectableitem", "Protectable item operations - List discovered databases available for protection.");
+        var protectableItem = new CommandGroup("protectableitem", "Protectable item operations - List discovered databases and file shares available for protection, and inquire registered containers to trigger discovery.");
         azureBackup.AddSubGroup(protectableItem);
         protectableItem.AddCommand<ProtectableItemListCommand>(serviceProvider);
+        protectableItem.AddCommand<ProtectableItemInquireCommand>(serviceProvider);
+
+        var container = new CommandGroup("container",
+            "Container operations - Manage RSV protection containers: look up an existing container to check whether a storage account, VM, or workload server has been registered (get); trigger discovery (refresh); list storage accounts available for Azure File share backup registration; and register a storage account as a backup container. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
+        azureBackup.AddSubGroup(container);
+        container.AddCommand<ContainerGetCommand>(serviceProvider);
+        container.AddCommand<ContainerListAvailableCommand>(serviceProvider);
+        container.AddCommand<ContainerRefreshCommand>(serviceProvider);
+        container.AddCommand<ContainerRegisterCommand>(serviceProvider);
 
         var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");
         azureBackup.AddSubGroup(backup);

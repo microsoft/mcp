@@ -1,3 +1,0 @@
-changes:
-  - section: Breaking Changes
-    description: Removed the confirmation-only `--force` parameter from SQL server delete and `--confirm` parameters from SRE Agent delete tools.

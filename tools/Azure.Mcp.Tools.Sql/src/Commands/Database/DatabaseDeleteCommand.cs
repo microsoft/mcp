@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
     Name = "delete",
     Title = "Delete SQL Database",
     Description = "Deletes a database from an Azure SQL Server. This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

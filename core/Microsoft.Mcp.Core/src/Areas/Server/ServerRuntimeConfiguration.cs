@@ -51,4 +51,9 @@ public sealed class ServerRuntimeConfiguration
     /// Indicates whether the server is running in HTTP transport mode.
     /// </summary>
     public bool IsHttpMode => Transport == TransportTypes.Http;
+
+    /// <summary>
+    /// How eligible tools advertise and return structured output, or <see langword="null"/> to disable structured output.
+    /// </summary>
+    public StructuredOutputMode? StructuredOutputMode { get; set; }
 }

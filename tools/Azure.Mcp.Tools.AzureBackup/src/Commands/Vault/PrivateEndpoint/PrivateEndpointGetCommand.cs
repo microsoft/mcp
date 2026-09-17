@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
         --private-endpoint-name is provided, returns that single connection. When omitted, lists every
         PEC on the vault. Backup vaults (DPP) are not supported.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

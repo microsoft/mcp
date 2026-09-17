@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -20,14 +18,15 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
         Uploads a local file to an Azure Storage blob, only if the blob does not exist, returning the last modified time,
         ETag, and content hash of the uploaded blob.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<BlobUploadOptions, BlobUploadResult>(subscriptionResolver)
+public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<BlobUploadOptions, BlobUploadResult>
 {
     private readonly ILogger<BlobUploadCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
@@ -41,7 +40,6 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
                 options.Container,
                 options.Blob,
                 options.LocalFilePath,
-                options.Subscription!,
                 options.Tenant,
                 cancellationToken);
 

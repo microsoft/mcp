@@ -14,6 +14,7 @@ words:
   - applicationgatewaywebapplicationfirewallpolicies
   - appsettings
   - azclis
+  - azurebestpractices
   - azurefiles
   - azureicon
   - azuremanagedlustre
@@ -29,7 +30,6 @@ words:
   - connectedclusters
   - consumergroup
   - containerregistry
-  - containerservice
   - contentsafety
   - createorupdate
   - databaseaccounts
@@ -63,13 +63,13 @@ words:
   - irql
   - kubernetesconfiguration
   - managedcluster
-  - managedclusters
   - managedinstances
   - mypass
   - mysvc
   - myuser
   - nettrace
   - newname
+  - nistp
   - noauth
   - nodetype
   - notanarea
@@ -102,7 +102,6 @@ words:
   - testcontainer
   - toolsets
   - toplist
-  - usageplan
   - virtualmachinescalesets
   - webjobs
   - wellarchitectedframework

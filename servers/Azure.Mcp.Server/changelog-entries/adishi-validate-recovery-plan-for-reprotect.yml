@@ -1,5 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added the resilience recovery plan validate-for-reprotect tool to report per-resource reprotect qualification and blocking reasons."
-  - section: "Features Added"
-    description: "Added the resilience recovery plan validate-for-operation tool to check whether a plan is eligible to start a specified recovery operation."

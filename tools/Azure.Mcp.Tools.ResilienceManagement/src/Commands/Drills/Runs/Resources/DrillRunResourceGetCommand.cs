@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs.Resources;
         Lists all drill run resources (targets) for a named drill run of a drill in an Azure service
         group. Gets a drill run resource by resource name from that named drill run.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

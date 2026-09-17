@@ -17,16 +17,25 @@ public interface IAzureBackupService
     Task<BackupPolicyInfo> GetPolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<List<BackupPolicyInfo>> ListPoliciesAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<OperationResult> CreatePolicyAsync(Policy.PolicyCreateRequest request, string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<OperationResult> UpdatePolicyAsync(string vaultName, string resourceGroup, string subscription, string policyName, string? vaultType = null, string? scheduleTime = null, string? dailyRetentionDays = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> UpdatePolicyAsync(Policy.PolicyUpdateRequest request, string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // Protection operations
-    Task<ProtectResult> ProtectItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string policyName, string? vaultType = null, string? containerName = null, string? datasourceType = null, string? aksIncludedNamespaces = null, string? aksExcludedNamespaces = null, string? aksLabelSelectors = null, string? aksIncludeClusterScopeResources = null, string? aksSnapshotResourceGroup = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<ProtectResult> ProtectItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string policyName, string? vaultType = null, string? containerName = null, string? datasourceType = null, string? aksLabelSelectors = null, string? aksIncludeClusterScopeResources = null, string? aksSnapshotResourceGroup = null, DiskExclusionSpec? diskExclusion = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<ProtectResult> UpdateProtectionAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string? policyName = null, DiskExclusionSpec? diskExclusion = null, string? vaultType = null, string? containerName = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<ProtectedItemInfo> GetProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string protectedItemName, string? vaultType = null, string? containerName = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(string vaultName, string resourceGroup, string subscription, string? workloadType = null, string? containerName = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(string vaultName, string resourceGroup, string subscription, string? workloadType = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<OperationResult> UndeleteProtectedItemAsync(string vaultName, string resourceGroup, string subscription, string datasourceId, string? vaultType = null, string? containerName = null, string? tenant = null, CancellationToken cancellationToken = default);
 
+    // Container operations (RSV only)
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(string vaultName, string resourceGroup, string subscription, string? filter = null, string? storageAccount = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task RefreshContainersAsync(string vaultName, string resourceGroup, string subscription, string? backupManagementType = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<ContainerRegisterResult> RegisterContainerAsync(string vaultName, string resourceGroup, string subscription, string storageAccount, bool acquireLock = true, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<InquireResult> InquireContainerAsync(string vaultName, string resourceGroup, string subscription, string? container = null, string? storageAccount = null, string? tenant = null, CancellationToken cancellationToken = default);
+
     // Job operations
+    Task<BackupContainerInfo?> GetContainerAsync(string vaultName, string resourceGroup, string subscription, string containerName, string? tenant = null, CancellationToken cancellationToken = default);
+
     Task<BackupJobInfo> GetJobAsync(string vaultName, string resourceGroup, string subscription, string jobId, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
     Task<List<BackupJobInfo>> ListJobsAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
@@ -39,8 +48,8 @@ public interface IAzureBackupService
 
     // Governance
     Task<List<UnprotectedResourceInfo>> FindUnprotectedResourcesAsync(string subscription, string? resourceTypeFilter = null, string? resourceGroup = null, string? tagFilter = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<OperationResult> ConfigureImmutabilityAsync(string vaultName, string resourceGroup, string subscription, string immutabilityState, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
-    Task<OperationResult> ConfigureSoftDeleteAsync(string vaultName, string resourceGroup, string subscription, string softDeleteState, string? vaultType = null, string? softDeleteRetentionDays = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> ConfigureImmutabilityAsync(string vaultName, string resourceGroup, string subscription, AzureBackupImmutabilityState immutabilityState, AzureBackupImmutabilityType immutabilityType, int? immutabilityDurationDays = null, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<OperationResult> ConfigureSoftDeleteAsync(string vaultName, string resourceGroup, string subscription, AzureBackupSoftDeleteState softDeleteState, int softDeleteRetentionDays, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     // DR
     Task<OperationResult> ConfigureCrossRegionRestoreAsync(string vaultName, string resourceGroup, string subscription, string? vaultType = null, string? tenant = null, CancellationToken cancellationToken = default);

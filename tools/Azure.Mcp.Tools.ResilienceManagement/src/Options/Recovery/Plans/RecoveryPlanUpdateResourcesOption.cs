@@ -11,7 +11,7 @@ public sealed class RecoveryPlanUpdateResourcesOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = "The name of the recovery plan whose resources will be updated.")]
+    [Option(Name = "recoveryplan", Description = "The name of the recoveryplan whose resources will be updated.")]
     public required string RecoveryPlan { get; set; }
 
     [Option(Description =
@@ -25,7 +25,7 @@ public sealed class RecoveryPlanUpdateResourcesOptions
         "recoveryGroupId and associatedIdentity are optional.")]
     public string? ResourcesToUpdate { get; set; }
 
-    [Option(Description = "A JSON array of full recovery-resource IDs to remove from the recovery plan.")]
+    [Option(Description = "A JSON array of full recovery-resource IDs to remove from the recoveryplan.")]
     public string? ResourcesToRemove { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

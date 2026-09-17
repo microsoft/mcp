@@ -17,12 +17,6 @@ public sealed class EmailSendOptions : BaseCommunicationOptions
     public required string From { get; set; }
 
     /// <summary>
-    /// The display name of the sender.
-    /// </summary>
-    [Option(Description = "The display name of the sender")]
-    public string? SenderName { get; set; }
-
-    /// <summary>
     /// The recipient email addresses.
     /// </summary>
     [Option(Description = "The recipient email address(es) to send the email to.")]

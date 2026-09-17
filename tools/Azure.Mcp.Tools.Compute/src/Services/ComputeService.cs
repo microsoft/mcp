@@ -1796,7 +1796,11 @@ public class ComputeService(
         if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
             source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", armEnvironment);
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: armEnvironment,
+                executingToolNamespaceName: "compute");
             return new(DiskCreateOption.Import)
             {
                 SourceUri = new(source)

@@ -8,7 +8,7 @@ public sealed record RecommendationMetadataFilters(
     string? Impact = null,
     string? Category = null,
     string? SubCategory = null,
-    string? TrackingId = null,
+    IReadOnlyList<string>? TrackingIds = null,
     string? RetirementDateOperator = null,
     DateOnly? RetirementDate = null)
 {
