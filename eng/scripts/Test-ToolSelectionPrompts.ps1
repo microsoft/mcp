@@ -254,7 +254,7 @@ foreach ($serverInfo in $serversToTest) {
     #     ]
     #   }
     # }
-    $toolsJson = & $executablePath tools list --name-only 2>&1 | Out-String
+    $toolsJson = & $executablePath tools list --name-only | Out-String
 
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"
