@@ -32,9 +32,8 @@ public sealed class AzureHttpHelper(IAzureService azureService)
     public async Task<string> GetAsync(string url, CancellationToken cancellationToken = default)
     {
         using var client = await GetAuthenticatedClientAsync(cancellationToken);
-        var response = await client.GetAsync(url, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        using var response = await client.GetAsync(url, cancellationToken);
+        return await ReadResponseAsync(response, cancellationToken);
     }
 
     /// <summary>
@@ -45,9 +44,8 @@ public sealed class AzureHttpHelper(IAzureService azureService)
         using var client = await GetAuthenticatedClientAsync(cancellationToken);
         var json = JsonSerializer.Serialize(payload, typeof(T), context);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await client.PostAsync(url, content, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        using var response = await client.PostAsync(url, content, cancellationToken);
+        return await ReadResponseAsync(response, cancellationToken);
     }
 
     /// <summary>
@@ -56,9 +54,8 @@ public sealed class AzureHttpHelper(IAzureService azureService)
     public async Task<string> PostAsync(string url, CancellationToken cancellationToken = default)
     {
         using var client = await GetAuthenticatedClientAsync(cancellationToken);
-        var response = await client.PostAsync(url, null, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        using var response = await client.PostAsync(url, null, cancellationToken);
+        return await ReadResponseAsync(response, cancellationToken);
     }
 
     /// <summary>
@@ -67,8 +64,22 @@ public sealed class AzureHttpHelper(IAzureService azureService)
     public async Task<byte[]> DownloadBytesAsync(string url, CancellationToken cancellationToken = default)
     {
         using var client = azureService.GetClient();
-        var response = await client.GetAsync(url, cancellationToken);
+        using var response = await client.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
+    private static async Task<string> ReadResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Azure Migrate request failed with status {(int)response.StatusCode} ({response.ReasonPhrase}). Details: {content}",
+                inner: null,
+                statusCode: response.StatusCode);
+        }
+
+        return content;
     }
 }

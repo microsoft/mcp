@@ -4043,6 +4043,8 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
    ```
 
 3. **Generate Landing Zone** (`--action generate`)
+   Starts asynchronous generation. An accepted request without a download URL is reported as in progress, not as a completed landing zone. Wait a few minutes before using `--action download`.
+
    ```bash
    # Generate the platform landing zone
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \
@@ -4052,6 +4054,8 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
    ```
 
 4. **Download Landing Zone** (`--action download`)
+   Downloads files only when a download URL is available. If generation is still in progress, retry later. Backend generation failures are returned as errors with the available diagnostic details, rather than reported as successful generation or a pending download.
+
    ```bash
    # Download generated landing zone files to local workspace
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \

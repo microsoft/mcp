@@ -115,7 +115,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
         var response = await httpHelper.PostAsync(url, payload, AzureMigrateJsonContext.Default, cancellationToken);
         ThrowIfFailed(response);
 
-        return "Generation initiated. Use 'download' action in 1-2 minutes to retrieve files.";
+        return TryParseDownloadUrl(response);
     }
 
     /// <inheritdoc/>
@@ -171,26 +171,86 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
     private static void ThrowIfFailed(string response)
     {
         if (response.Contains("creation failed", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Platform landing zone creation failed.");
+            throw new InvalidOperationException($"Platform landing zone creation failed. Details: {response}");
     }
 
     private static string? TryParseDownloadUrl(string response)
     {
+        if (string.IsNullOrWhiteSpace(response))
+            return null;
+
+        if (Uri.TryCreate(response.Trim(), UriKind.Absolute, out var uri) &&
+            (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp))
+            return uri.AbsoluteUri;
+
+        JsonDocument doc;
         try
         {
-            using var doc = JsonDocument.Parse(response);
-            if (doc.RootElement.TryGetProperty("downloadUrl", out var url))
-                return url.GetString();
-            if (doc.RootElement.TryGetProperty("properties", out var props) &&
-                props.TryGetProperty("downloadUrl", out var propsUrl))
-                return propsUrl.GetString();
+            doc = JsonDocument.Parse(response);
         }
-        catch (JsonException)
+        catch (JsonException) when (response.TrimStart()[0] is not ('{' or '[' or '"'))
         {
-            var trimmed = response.Trim().Trim('"');
-            if (trimmed.StartsWith("http://") || trimmed.StartsWith("https://"))
-                return trimmed;
+            // The API also returns plain-text generation acknowledgements.
+            return null;
+        }
+
+        using (doc)
+        {
+            var root = doc.RootElement;
+            if (root.ValueKind == JsonValueKind.String)
+            {
+                var text = root.GetString();
+                return Uri.TryCreate(text, UriKind.Absolute, out var downloadUri) &&
+                    (downloadUri.Scheme == Uri.UriSchemeHttps || downloadUri.Scheme == Uri.UriSchemeHttp)
+                    ? downloadUri.AbsoluteUri
+                    : null;
+            }
+
+            if (root.ValueKind != JsonValueKind.Object)
+                throw new InvalidOperationException("Unexpected platform landing zone response. Expected an object or a download URL.");
+
+            ThrowIfFailed(root);
+            if (root.TryGetProperty("properties", out var properties) && properties.ValueKind == JsonValueKind.Object)
+                ThrowIfFailed(properties);
+
+            if (root.TryGetProperty("downloadUrl", out var url))
+                return ValidateDownloadUrl(url);
+            if (properties.ValueKind == JsonValueKind.Object && properties.TryGetProperty("downloadUrl", out var propertiesUrl))
+                return ValidateDownloadUrl(propertiesUrl);
         }
         return null;
+    }
+
+    private static void ThrowIfFailed(JsonElement response)
+    {
+        if (response.TryGetProperty("error", out var error) && error.ValueKind is not JsonValueKind.Null)
+            throw new InvalidOperationException($"Platform landing zone creation failed. Details: {error}");
+
+        foreach (var property in new[] { "status", "provisioningState" })
+        {
+            if (response.TryGetProperty(property, out var status) && status.ValueKind == JsonValueKind.String &&
+                (string.Equals(status.GetString(), "Failed", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(status.GetString(), "Canceled", StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException($"Platform landing zone generation {status.GetString()}. Details: {response}");
+        }
+    }
+
+    private static string? ValidateDownloadUrl(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.Null)
+            return null;
+
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            var url = value.GetString();
+            if (string.IsNullOrWhiteSpace(url))
+                return null;
+
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+                (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp))
+                return uri.AbsoluteUri;
+        }
+
+        throw new InvalidOperationException("The platform landing zone response contains an invalid download URL.");
     }
 }
