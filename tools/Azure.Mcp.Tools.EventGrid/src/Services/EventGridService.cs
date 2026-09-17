@@ -368,16 +368,13 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             return null;
         }
 
-        // Search in all resource groups
-        await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
-        {
-            if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
-            {
-                return topic;
-            }
-        }
-
-        return null;
+        return await FindUniqueTopic(
+            subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken),
+            topicName,
+            "Event Grid topics",
+            static topic => topic.Data.Name,
+            static topic => topic.Id.ResourceGroupName,
+            cancellationToken);
     }
 
     private async Task<SystemTopicResource?> FindSystemTopic(
@@ -411,16 +408,45 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             return null;
         }
 
-        // Search in all resource groups
-        await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
+        return await FindUniqueTopic(
+            subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken),
+            topicName,
+            "Event Grid system topics",
+            static topic => topic.Data.Name,
+            static topic => topic.Id.ResourceGroupName,
+            cancellationToken);
+    }
+
+    internal static async Task<T?> FindUniqueTopic<T>(
+        IAsyncEnumerable<T> topics,
+        string topicName,
+        string topicType,
+        Func<T, string> getName,
+        Func<T, string?> getResourceGroup,
+        CancellationToken cancellationToken) where T : class
+    {
+        T? match = null;
+        var matchingResourceGroups = new List<string>();
+
+        await foreach (var topic in topics.WithCancellation(cancellationToken))
         {
-            if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
+            if (!getName(topic).Equals(topicName, StringComparisons.ResourceName))
             {
-                return systemTopic;
+                continue;
             }
+
+            match ??= topic;
+            matchingResourceGroups.Add(getResourceGroup(topic) ?? "<unknown>");
         }
 
-        return null;
+        if (matchingResourceGroups.Count > 1)
+        {
+            throw new ArgumentException(
+                $"Multiple {topicType} named '{topicName}' found in resource groups: {string.Join(", ", matchingResourceGroups)}. "
+                + "Specify --resource-group to disambiguate.");
+        }
+
+        return match;
     }
 
     /// <summary>
