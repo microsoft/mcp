@@ -69,4 +69,7 @@ internal sealed class RecommendationProperties
     public JsonElement? ResourceWorkload { get; set; }
     public string? SourceSystem { get; set; }
     public string? Notes { get; set; }
+
+    /// <summary> The Azure service group that contains the recommendation. </summary>
+    public string? ServiceGroupId { get; set; }
 }
