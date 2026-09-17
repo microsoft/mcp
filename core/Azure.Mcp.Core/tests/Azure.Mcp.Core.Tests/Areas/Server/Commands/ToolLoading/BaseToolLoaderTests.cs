@@ -19,6 +19,36 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class BaseToolLoaderTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" \t ")]
+    [InlineData("Unknown")]
+    [InlineData("storage_missing")]
+    [InlineData(" storage_alpha ")]
+    public void ResolveSampledCommandName_RejectsInvalidOrUnavailableNames(string? commandName)
+    {
+        Tool[] availableTools = [new() { Name = "storage_alpha" }, new() { Name = "Unknown" }];
+
+        Assert.Null(BaseToolLoader.ResolveSampledCommandName(commandName, availableTools));
+    }
+
+    [Theory]
+    [InlineData("storage_alpha")]
+    [InlineData("STORAGE_ALPHA")]
+    public void ResolveSampledCommandName_ReturnsCanonicalName(string commandName)
+    {
+        Tool[] availableTools = [new() { Name = "storage_beta" }, new() { Name = "storage_alpha" }];
+
+        Assert.Equal("storage_alpha", BaseToolLoader.ResolveSampledCommandName(commandName, availableTools));
+    }
+
+    [Fact]
+    public void ResolveSampledCommandName_WithEmptyCatalog_ReturnsNull()
+    {
+        Assert.Null(BaseToolLoader.ResolveSampledCommandName("storage_alpha", []));
+    }
+
     [Fact]
     public void CreateUnknownCommandResult_ReturnsSortedDistinctNamesOnly()
     {
@@ -57,16 +87,19 @@ public class BaseToolLoaderTests
         Assert.Contains($"'{commandName}'", text, StringComparison.Ordinal);
         Assert.Contains($"'{toolName}'", text, StringComparison.Ordinal);
         Assert.Contains("not available", text, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("learn=true", text, StringComparison.Ordinal);
+        Assert.Contains("""Use "learn=true" with an empty "intent" to get command descriptions and parameter schemas without executing a command.""",
+            text, StringComparison.Ordinal);
         if (availableNames.Length == 0)
         {
             Assert.Contains("No commands are available for this tool in the current server configuration.", text);
             Assert.DoesNotContain("Available commands:", text);
+            Assert.DoesNotContain("Select the command", text);
         }
         else
         {
             var namesLine = Assert.Single(text.Split('\n'), line => line.StartsWith("Available commands:", StringComparison.Ordinal));
             Assert.Equal($"Available commands: {string.Join(", ", availableNames)}", namesLine.TrimEnd('\r'));
+            Assert.Contains("Select the command that best matches the current intent.", text, StringComparison.Ordinal);
         }
 
         Assert.DoesNotContain("\"description\"", text, StringComparison.Ordinal);

@@ -779,12 +779,14 @@ public class ServerToolLoaderTests
     }
 
     [Theory]
-    [InlineData(true, false)]
-    [InlineData(false, false)]
-    [InlineData(true, true)]
-    [InlineData(false, true)]
+    [InlineData(true, false, "list resources")]
+    [InlineData(false, false, "list resources")]
+    [InlineData(true, true, "list resources")]
+    [InlineData(false, true, "list resources")]
+    [InlineData(true, true, "")]
+    [InlineData(true, true, " \t ")]
     public async Task CallToolHandler_LearnOrIntentOnly_PreservesCatalogWithoutCorrectionLoop(
-        bool explicitLearn, bool supportsSampling)
+        bool explicitLearn, bool supportsSampling, string intent)
     {
         var executions = 0;
         var clientBuilder = new MockMcpClientBuilder()
@@ -795,11 +797,13 @@ public class ServerToolLoaderTests
             });
         await using var loader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "storage");
         var server = BaseToolLoaderTests.CreateSamplingServer(supportsSampling,
-            """{"command":"nonexistent","parameters":{}}""");
+            string.IsNullOrWhiteSpace(intent)
+                ? """{"command":"storage_alpha","parameters":{}}"""
+                : """{"command":"nonexistent","parameters":{}}""");
 
         var result = await loader.CallToolHandler(
             BaseToolLoaderTests.CreateCommandRequest(server,
-                command: explicitLearn ? "invalid_command" : null, learn: explicitLearn),
+                command: explicitLearn ? "invalid_command" : null, intent: intent, learn: explicitLearn),
             TestContext.Current.CancellationToken);
 
         Assert.NotEqual(true, result.IsError);
@@ -808,7 +812,7 @@ public class ServerToolLoaderTests
         Assert.Contains("Catalog detail.", text);
         Assert.Contains("\"inputSchema\"", text);
         Assert.Equal(0, executions);
-        await server.Received(supportsSampling ? 1 : 0).SendRequestAsync(
+        await server.Received(supportsSampling && !string.IsNullOrWhiteSpace(intent) ? 1 : 0).SendRequestAsync(
             Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());
     }
 

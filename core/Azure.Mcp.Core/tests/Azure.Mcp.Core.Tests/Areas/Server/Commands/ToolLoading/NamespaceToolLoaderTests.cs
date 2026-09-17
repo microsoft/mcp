@@ -913,18 +913,22 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task CallToolHandler_LearnOrIntentOnlyWithoutSampling_PreservesFullCatalog(bool explicitLearn)
+    [InlineData(true, false, "list resources")]
+    [InlineData(false, false, "list resources")]
+    [InlineData(true, true, "")]
+    [InlineData(true, true, " \t ")]
+    public async Task CallToolHandler_LearnOrIntentOnlyWithoutSampling_PreservesFullCatalog(
+        bool explicitLearn, bool supportsSampling, string intent)
     {
         var command = CreateRoutingCommand("storage_alpha");
         await using var loader = CreateRoutingLoader(new Dictionary<string, IBaseCommand>
         {
             ["storage_alpha"] = command
         });
-        var server = BaseToolLoaderTests.CreateSamplingServer(false);
+        var server = BaseToolLoaderTests.CreateSamplingServer(supportsSampling,
+            """{"command":"storage_alpha","parameters":{}}""");
         var request = BaseToolLoaderTests.CreateCommandRequest(server,
-            command: explicitLearn ? "invalid_command" : null, learn: explicitLearn);
+            command: explicitLearn ? "invalid_command" : null, intent: intent, learn: explicitLearn);
 
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 

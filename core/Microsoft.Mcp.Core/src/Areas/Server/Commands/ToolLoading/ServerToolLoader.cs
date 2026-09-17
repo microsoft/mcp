@@ -552,12 +552,10 @@ public sealed class ServerToolLoader(
                     parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value.Clone()) ?? [];
                 }
             }
-            var resolvedTool = !string.IsNullOrWhiteSpace(commandName) && commandName != "Unknown"
-                ? availableTools.FirstOrDefault(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase))
-                : null;
-            if (resolvedTool != null)
+            var resolvedCommandName = ResolveSampledCommandName(commandName, availableTools);
+            if (resolvedCommandName != null)
             {
-                return (resolvedTool.Name, parameters);
+                return (resolvedCommandName, parameters);
             }
 
             _logger.LogWarning("Sampling did not resolve to an available command for tool: {Tool}.", tool);
