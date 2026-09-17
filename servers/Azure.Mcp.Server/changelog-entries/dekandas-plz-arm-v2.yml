@@ -1,0 +1,11 @@
+changes:
+  - section: "Features Added"
+    description: "Added --bastion, --ddos, --private-dns, and --express-route toggles to `azmcp azuremigrate platformlandingzone request --action create`, so a Platform Landing Zone can be created without Azure Bastion, DDoS network protection, Private DNS zones, or an ExpressRoute gateway. Disabling DDoS protection or Private DNS also sends the Azure Landing Zones policy assignment overrides the service requires, so the landing zone does not end up with a policy enforcing a resource it no longer deploys."
+  - section: "Features Added"
+    description: "Added the list, get and wait actions to `azmcp azuremigrate platformlandingzone request`, along with the --scale-tier, --service-name, --security-subscription-id, --parent-management-group-id, --timeout-minutes and --include-design-document options. The get action returns the full effective configuration, including every value the service defaulted."
+  - section: "Breaking Changes"
+    description: "Replaced the check, update, generate and status actions on `azmcp azuremigrate platformlandingzone request` with list, get, create and wait, which operate directly on the Platform Landing Zone ARM resource. Configuration is no longer cached in the server between calls: create sends the supplied parameters in one call and layers them over the existing configuration, so an individual setting can be changed without restating the rest."
+  - section: "Breaking Changes"
+    description: "Removed --region-type from `azmcp azuremigrate platformlandingzone request`. Whether a landing zone is single- or multi-region is derived from the number of values in --regions."
+  - section: "Breaking Changes"
+    description: "Renamed --environment-name to --organization-name on `azmcp azuremigrate platformlandingzone request`, matching the Platform Landing Zone API. The separate --service-name option now carries the service name."
