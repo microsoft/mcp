@@ -1,0 +1,6 @@
+pr: 1327
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp functionapp create` to create an Azure Function App on an App Service plan (Consumption, Flex Consumption, Premium, or App Service), auto-provisioning the resource group, storage account, and App Service plan when missing. Storage authentication defaults to managed identity; pass `--storage-auth-mode connection-string` to use an access key instead."
+  - section: "Features Added"
+    description: "Added `azmcp functionapp containerapp create` to host an Azure Function App in Azure Container Apps, auto-provisioning the managed environment and storage account when not supplied."

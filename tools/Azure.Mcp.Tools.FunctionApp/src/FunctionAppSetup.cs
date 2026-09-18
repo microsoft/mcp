@@ -19,14 +19,22 @@ public class FunctionAppSetup : IAreaSetup
     {
         services.AddSingleton<IFunctionAppService, FunctionAppService>();
 
+        services.AddSingleton<FunctionAppCreateCommand>();
+        services.AddSingleton<FunctionAppCreateContainerAppCommand>();
         services.AddSingleton<FunctionAppGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.", Title);
+        var functionApp = new CommandGroup(Name, "Function App operations - Commands for creating, managing, and accessing Azure Function App resources.", Title);
 
+        functionApp.AddCommand<FunctionAppCreateCommand>(serviceProvider);
         functionApp.AddCommand<FunctionAppGetCommand>(serviceProvider);
+
+        var containerApp = new CommandGroup("containerapp", "Container Apps-hosted Function App operations - Commands for creating Azure Function Apps hosted in Azure Container Apps.", "Azure Functions on Container Apps");
+        functionApp.AddSubGroup(containerApp);
+
+        containerApp.AddCommand<FunctionAppCreateContainerAppCommand>(serviceProvider);
 
         return functionApp;
     }
