@@ -601,6 +601,23 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> | none |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> | none |
 
+## Azure NetApp Files
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| netappfiles_account_create | Create an Azure NetApp Files account named \<account> in \<location> in resource group \<resource_group> | none |
+| netappfiles_account_create | Create a NetApp Files account called \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
+| netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+| netappfiles_pool_create | Create a 4 TiB Premium capacity pool named \<pool> in Azure NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_pool_create | Create an Azure NetApp Files capacity pool called \<pool> with Flexible service level, Manual QoS, and 128 MiB/s custom throughput in account \<account> | none |
+| netappfiles_pool_get | Get capacity pool \<pool> from Azure NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_pool_get | Show me the configuration and provisioning state of NetApp Files capacity pool \<pool> in account \<account> | none |
+| netappfiles_pool_update | Resize Azure NetApp Files capacity pool \<pool> in account \<account> to 8 TiB | none |
+| netappfiles_pool_update | Set the tags on NetApp Files capacity pool \<pool> in account \<account> to {"environment":"production"} | none |
+
 ## Azure Database for PostgreSQL
 
 | Tool Name | Test Prompt | Interaction |
