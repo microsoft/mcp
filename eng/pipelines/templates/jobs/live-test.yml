@@ -53,15 +53,31 @@ jobs:
     parameters:
       EnvVars:
         Pool: $(Pool)
+      Condition: and(succeeded(), eq(variables['TestResourceProvider'], 'azure'))
 
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
+      Condition: and(succeeded(), eq(variables['TestResourceProvider'], 'azure'))
+
+  - task: AzureCLI@2
+    displayName: "Deploy test resources - custom"
+    condition: and(succeeded(), eq(variables['TestResourceProvider'], 'custom'))
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./eng/common/TestResources/New-TestResources.ps1 `
+          -TestResourcesDirectory '$(Build.SourcesDirectory)/$(TestResourcesPath)' `
+          -CI `
+          -Force | Out-Null
 
   - task: AzurePowershell@5
     displayName: "Run tests (stdio) - az pwsh"
+    condition: and(succeeded(), eq(variables['TestResourceProvider'], 'azure'))
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_TOKEN_CREDENTIALS: AzurePipelinesCredential
@@ -80,9 +96,43 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
+  - task: AzureCLI@2
+    displayName: "Run tests (stdio) - custom"
+    condition: and(succeeded(), eq(variables['TestResourceProvider'], 'custom'))
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./eng/scripts/Test-Code.ps1 `
+          -TestType 'Live' `
+          -Path $(PathToTest) `
+          -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
+
+        exit $LastExitCode
+      workingDirectory: $(Build.SourcesDirectory)
+
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
+      Condition: and(succeededOrFailed(), eq(variables['TestResourceProvider'], 'azure'))
+
+  - task: AzureCLI@2
+    displayName: "Remove test resources - custom"
+    condition: and(succeededOrFailed(), eq(variables['TestResourceProvider'], 'custom'), eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
+    continueOnError: true
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./eng/common/TestResources/Remove-TestResources.ps1 `
+          -TestResourcesDirectory '$(Build.SourcesDirectory)/$(TestResourcesPath)' `
+          -CI `
+          -Force
 
   - template: /eng/common/TestResources/deploy-test-resources.yml
     parameters:
@@ -90,9 +140,24 @@ jobs:
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
       SkipEnvironmentSetup: true # environment setup was performed in the first deployment
+      Condition: and(succeeded(), eq(variables['TestResourceProvider'], 'azure'))
+
+  - task: AzureCLI@2
+    displayName: "Deploy test resources (http) - custom"
+    condition: and(succeeded(), eq(variables['TestResourceProvider'], 'custom'))
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./eng/common/TestResources/New-TestResources.ps1 `
+          -TestResourcesDirectory '$(Build.SourcesDirectory)/$(TestResourcesPath)' `
+          -CI `
+          -Force | Out-Null
 
   - task: AzurePowershell@5
     displayName: "Run tests (http) - az pwsh"
+    condition: and(succeeded(), eq(variables['TestResourceProvider'], 'azure'))
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       AZURE_TOKEN_CREDENTIALS: AzurePipelinesCredential
@@ -112,6 +177,26 @@ jobs:
       pwsh: true
       workingDirectory: $(Build.SourcesDirectory)
 
+  - task: AzureCLI@2
+    displayName: "Run tests (http) - custom"
+    condition: and(succeeded(), eq(variables['TestResourceProvider'], 'custom'))
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
+      MCP_TEST_TRANSPORT: 'http'
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./eng/scripts/Test-Code.ps1 `
+          -TestType 'Live' `
+          -Path $(PathToTest) `
+          -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
+
+        exit $LastExitCode
+      workingDirectory: $(Build.SourcesDirectory)
+
   - task: PublishTestResults@2
     condition: succeededOrFailed()
     displayName: "Publish Results"
@@ -124,3 +209,18 @@ jobs:
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
+      Condition: and(succeededOrFailed(), eq(variables['TestResourceProvider'], 'azure'))
+
+  - task: AzureCLI@2
+    displayName: "Remove test resources (http) - custom"
+    condition: and(succeededOrFailed(), eq(variables['TestResourceProvider'], 'custom'), eq(variables['CI_HAS_DEPLOYED_RESOURCES'], 'true'), ne(variables['Skip.RemoveTestResources'], 'true'))
+    continueOnError: true
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      scriptLocation: inlineScript
+      scriptType: pscore
+      inlineScript: |
+        ./eng/common/TestResources/Remove-TestResources.ps1 `
+          -TestResourcesDirectory '$(Build.SourcesDirectory)/$(TestResourcesPath)' `
+          -CI `
+          -Force

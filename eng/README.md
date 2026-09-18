@@ -127,7 +127,8 @@ To simplify the work of collection server and platform metadata in build scripts
       "tools/Azure.Mcp.Tools.Workbooks": {
         "pathToTest": "tools/Azure.Mcp.Tools.Workbooks",
         "testResourcesPath": "tools/Azure.Mcp.Tools.Workbooks/tests",
-        "hasTestResources": true
+        "hasTestResources": true,
+        "testResourceProvider": "azure"
       },
       ...
     }
