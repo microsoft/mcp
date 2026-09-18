@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Pricing.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Pricing.Commands;
 
@@ -30,9 +31,15 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService)
+public sealed class PricingGetCommand(
+    ILogger<PricingGetCommand> logger,
+    IPricingService pricingService,
+    IAzureCloudConfiguration? cloudConfiguration = null)
     : AuthenticatedCommand<PricingGetOptions, PricingGetCommand.PricingGetCommandResult>
 {
+    private const string AzureChinaCloudWarning =
+        "Azure China uses a separate retail pricing channel. Pricing data may be unavailable for Azure China regions, including China North regions.";
+
     private readonly ILogger<PricingGetCommand> _logger = logger;
     private readonly IPricingService _pricingService = pricingService;
 
@@ -90,7 +97,11 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricin
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(prices),
+                new(
+                    prices,
+                    cloudConfiguration?.CloudType == AzureCloudConfiguration.AzureCloud.AzureChinaCloud
+                        ? AzureChinaCloudWarning
+                        : null),
                 PricingJsonContext.Default.PricingGetCommandResult);
         }
         catch (Exception ex)
@@ -102,5 +113,5 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricin
         return context.Response;
     }
 
-    public sealed record PricingGetCommandResult(List<PriceItem> Prices);
+    public sealed record PricingGetCommandResult(List<PriceItem> Prices, string? Warning = null);
 }

@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: Added a warning to pricing results when Azure China Cloud's separate retail pricing channel may not return data for China regions.

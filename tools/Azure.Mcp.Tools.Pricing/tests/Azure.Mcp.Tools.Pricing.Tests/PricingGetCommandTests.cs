@@ -5,6 +5,8 @@ using System.Net;
 using Azure.Mcp.Tools.Pricing.Commands;
 using Azure.Mcp.Tools.Pricing.Models;
 using Azure.Mcp.Tools.Pricing.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -113,6 +115,34 @@ public sealed class PricingGetCommandTests : CommandUnitTestsBase<PricingGetComm
         // Assert
         var result = ValidateAndDeserializeResponse(response, PricingJsonContext.Default.PricingGetCommandResult);
         Assert.Empty(result.Prices);
+        Assert.Null(result.Warning);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InAzureChinaCloud_ReturnsPricingChannelWarning()
+    {
+        var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzureChinaCloud);
+        Services.AddSingleton(cloudConfiguration);
+        Service.GetPricesAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync("--region", "chinanorth3");
+
+        var result = ValidateAndDeserializeResponse(response, PricingJsonContext.Default.PricingGetCommandResult);
+        Assert.Empty(result.Prices);
+        Assert.Equal(
+            "Azure China uses a separate retail pricing channel. Pricing data may be unavailable for Azure China regions, including China North regions.",
+            result.Warning);
     }
 
     [Fact]
