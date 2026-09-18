@@ -103,6 +103,126 @@ public class NetAppFilesCommandTests(
     }
 
     [Fact]
+    public async Task BackupPolicyCreate_ReturnsCreatedBackupPolicy()
+    {
+        var backupPolicyName = $"{Settings.ResourceBaseName}-backup-policy";
+        var result = await CallToolAsync(
+            "netappfiles_backuppolicy_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-policy", backupPolicyName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "daily-backups-to-keep", 2 },
+                { "weekly-backups-to-keep", 1 },
+                { "monthly-backups-to-keep", 1 },
+                { "enabled", true },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var backupPolicy = result.AssertProperty("backupPolicy");
+        Assert.Equal(JsonValueKind.Object, backupPolicy.ValueKind);
+        Assert.Equal(backupPolicyName, backupPolicy.AssertProperty("name").GetString());
+        backupPolicy.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], backupPolicy.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", backupPolicy.AssertProperty("provisioningState").GetString());
+        Assert.Equal(2, backupPolicy.AssertProperty("dailyBackupsToKeep").GetInt32());
+        Assert.Equal(1, backupPolicy.AssertProperty("weeklyBackupsToKeep").GetInt32());
+        Assert.Equal(1, backupPolicy.AssertProperty("monthlyBackupsToKeep").GetInt32());
+        Assert.True(backupPolicy.AssertProperty("isEnabled").GetBoolean());
+    }
+
+    [Fact]
+    public async Task BackupPolicyGet_ReturnsBackupPolicy()
+    {
+        var backupPolicyName = $"{Settings.ResourceBaseName}-get-backup-policy";
+        await CallToolAsync(
+            "netappfiles_backuppolicy_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-policy", backupPolicyName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "daily-backups-to-keep", 2 },
+                { "weekly-backups-to-keep", 1 },
+                { "monthly-backups-to-keep", 1 },
+                { "enabled", true },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_backuppolicy_get",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-policy", backupPolicyName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var backupPolicy = result.AssertProperty("backupPolicy");
+        Assert.Equal(JsonValueKind.Object, backupPolicy.ValueKind);
+        Assert.Equal(backupPolicyName, backupPolicy.AssertProperty("name").GetString());
+        backupPolicy.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], backupPolicy.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", backupPolicy.AssertProperty("provisioningState").GetString());
+        Assert.Equal(2, backupPolicy.AssertProperty("dailyBackupsToKeep").GetInt32());
+        Assert.Equal(1, backupPolicy.AssertProperty("weeklyBackupsToKeep").GetInt32());
+        Assert.Equal(1, backupPolicy.AssertProperty("monthlyBackupsToKeep").GetInt32());
+        Assert.True(backupPolicy.AssertProperty("isEnabled").GetBoolean());
+    }
+
+    [Fact]
+    public async Task BackupPolicyUpdate_ReturnsUpdatedBackupPolicy()
+    {
+        var backupPolicyName = $"{Settings.ResourceBaseName}-update-backup-policy";
+        await CallToolAsync(
+            "netappfiles_backuppolicy_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-policy", backupPolicyName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "daily-backups-to-keep", 2 },
+                { "weekly-backups-to-keep", 1 },
+                { "monthly-backups-to-keep", 1 },
+                { "enabled", true },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_backuppolicy_update",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-policy", backupPolicyName },
+                { "daily-backups-to-keep", 3 },
+                { "enabled", false },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var backupPolicy = result.AssertProperty("backupPolicy");
+        Assert.Equal(JsonValueKind.Object, backupPolicy.ValueKind);
+        Assert.Equal(backupPolicyName, backupPolicy.AssertProperty("name").GetString());
+        backupPolicy.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], backupPolicy.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", backupPolicy.AssertProperty("provisioningState").GetString());
+        Assert.Equal(3, backupPolicy.AssertProperty("dailyBackupsToKeep").GetInt32());
+        Assert.Equal(1, backupPolicy.AssertProperty("weeklyBackupsToKeep").GetInt32());
+        Assert.Equal(1, backupPolicy.AssertProperty("monthlyBackupsToKeep").GetInt32());
+        Assert.False(backupPolicy.AssertProperty("isEnabled").GetBoolean());
+    }
+
+    [Fact]
     public async Task BackupVaultCreate_ReturnsCreatedBackupVault()
     {
         var backupVaultName = $"{Settings.ResourceBaseName}-backup-vault";

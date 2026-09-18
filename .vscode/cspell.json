@@ -78,6 +78,7 @@
         "azurepolicy",
         "azuresdkimages",
         "azureuser",
+        "backuppolicy",
         "backupvault",
         "bestpractices",
         "blazor",

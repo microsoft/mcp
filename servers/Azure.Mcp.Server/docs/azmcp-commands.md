@@ -2695,6 +2695,42 @@ azmcp netappfiles account update --account <account> \
                                  [--nfs-v4-id-domain <nfs-v4-id-domain>] \
                                  [--tenant <tenant>]
 
+# Creates a backup policy in an Azure NetApp Files account.
+# Returns the backup policy name, resource ID, location, provisioning state, retention counts, and enabled state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy create --account <account> \
+                                      --backup-policy <backup-policy> \
+                                      --location <location> \
+                                      --daily-backups-to-keep <daily-backups-to-keep> \
+                                      --weekly-backups-to-keep <weekly-backups-to-keep> \
+                                      --monthly-backups-to-keep <monthly-backups-to-keep> \
+                                      --enabled <true|false> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--tenant <tenant>]
+
+# Gets an Azure NetApp Files backup policy by name from an account.
+# Returns the backup policy name, resource ID, location, provisioning state, retention counts, and enabled state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy get --account <account> \
+                                              --backup-policy <backup-policy> \
+                                              --resource-group <resource-group> \
+                                              --subscription <subscription> \
+                                              [--tenant <tenant>]
+
+# Updates one or more retention counts or the enabled state of an Azure NetApp Files backup policy.
+# Returns the updated backup policy name, resource ID, location, provisioning state, retention counts, and enabled state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy update --account <account> \
+                                      --backup-policy <backup-policy> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--daily-backups-to-keep <daily-backups-to-keep>] \
+                                      [--weekly-backups-to-keep <weekly-backups-to-keep>] \
+                                      [--monthly-backups-to-keep <monthly-backups-to-keep>] \
+                                      [--enabled <true|false>] \
+                                      [--tenant <tenant>]
+
 # Creates a backup vault in an Azure NetApp Files account.
 # Returns the backup vault name, resource ID, location, and provisioning state.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

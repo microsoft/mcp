@@ -610,6 +610,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
 | netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
 | netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+| netappfiles_backuppolicy_create | Create an enabled Azure NetApp Files backup policy named \<backup_policy> under account \<account> in \<location> that retains 2 daily, 1 weekly, and 1 monthly backup | none |
+| netappfiles_backuppolicy_create | Create backup policy \<backup_policy> in NetApp Files account \<account> with daily retention 2, weekly retention 1, and monthly retention 1 | none |
+| netappfiles_backuppolicy_get | Get Azure NetApp Files backup policy \<backup_policy> under account \<account> in resource group \<resource_group> | none |
+| netappfiles_backuppolicy_get | Show details for backup policy \<backup_policy> in NetApp Files account \<account> | none |
+| netappfiles_backuppolicy_update | Update Azure NetApp Files backup policy \<backup_policy> under account \<account> to retain 3 daily backups | none |
+| netappfiles_backuppolicy_update | Disable backup policy \<backup_policy> in NetApp Files account \<account> | none |
 | netappfiles_backupvault_create | Create an Azure NetApp Files backup vault named \<backup_vault> under account \<account> in \<location> | none |
 | netappfiles_backupvault_create | Create backup vault \<backup_vault> in NetApp Files account \<account> in resource group \<resource_group> | none |
 | netappfiles_backupvault_get | Get Azure NetApp Files backup vault \<backup_vault> under account \<account> in resource group \<resource_group> | none |
