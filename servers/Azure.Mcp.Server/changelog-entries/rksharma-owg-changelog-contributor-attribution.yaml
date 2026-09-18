@@ -1,0 +1,5 @@
+pr: 3713
+contributor: "rksharma-owg"
+changes:
+  - section: "Features Added"
+    description: "Added support for community contributor attribution in changelog entry files and compiled release notes."
