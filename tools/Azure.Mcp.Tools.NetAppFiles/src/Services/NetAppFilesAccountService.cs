@@ -26,7 +26,7 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
             cancellationToken: cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
 
-        var accountResource = resourceGroupResource.GetNetAppAccount(account, cancellationToken);
+        var accountResource = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
 
         return Map(accountResource.Value);
     }
@@ -72,7 +72,7 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
             cancellationToken: cancellationToken)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
 
-        var accountResource = resourceGroupResource.GetNetAppAccount(account, cancellationToken).Value;
+        var accountResource = (await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken)).Value;
         var patch = new NetAppAccountPatch(accountResource.Data.Location)
         {
             NfsV4IdDomain = nfsV4IdDomain
