@@ -2694,6 +2694,45 @@ azmcp netappfiles account update --account <account> \
                                  [--tags <json-key-value-object>] \
                                  [--nfs-v4-id-domain <nfs-v4-id-domain>] \
                                  [--tenant <tenant>]
+
+# Creates an SAP HANA or Oracle application volume group and its member volumes.
+# Each JSON volume requires name, creationToken, quotaGib, subnetId,
+# capacityPoolId, and volumeSpecName. Optional fields include serviceLevel (Premium by default),
+# protocols, throughputMibps, zones, and proximityPlacementGroupId. NFS volumes
+# also require allowedClients.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volumegroup create --account <account> \
+                                     --volume-group <volume-group> \
+                                     --location <location> \
+                                     --application-type <SapHana-or-Oracle> \
+                                     --application-identifier <application-identifier> \
+                                     --volumes <json-array> \
+                                     --resource-group <resource-group> \
+                                     --subscription <subscription> \
+                                     [--tenant <tenant>]
+
+# Gets an application volume group by name from an Azure NetApp Files account.
+# Returns the volume group details and member volume names.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volumegroup get --account <account> \
+                                             --volume-group <volume-group> \
+                                             --resource-group <resource-group> \
+                                             --subscription <subscription> \
+                                             [--tenant <tenant>]
+
+# Updates application metadata or replaces the complete member-volume specification list
+# for an Azure NetApp Files application volume group. At least one optional update property
+# is required. Providing --volumes replaces the complete list rather than appending volumes.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volumegroup update --account <account> \
+                                     --volume-group <volume-group> \
+                                     --resource-group <resource-group> \
+                                     --subscription <subscription> \
+                                     [--application-type <SapHana-or-Oracle>] \
+                                     [--application-identifier <application-identifier>] \
+                                     [--group-description <group-description>] \
+                                     [--volumes <json-array>] \
+                                     [--tenant <tenant>]
 ```
 
 ### Azure Database for MySQL Operations

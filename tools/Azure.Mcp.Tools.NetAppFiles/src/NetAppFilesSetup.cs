@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
+using Azure.Mcp.Tools.NetAppFiles.Commands.VolumeGroup;
 using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -18,9 +19,13 @@ public class NetAppFilesSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<INetAppFilesAccountService, NetAppFilesAccountService>();
+        services.AddSingleton<INetAppFilesVolumeGroupService, NetAppFilesVolumeGroupService>();
         services.AddSingleton<AccountCreateCommand>();
         services.AddSingleton<AccountGetCommand>();
         services.AddSingleton<AccountUpdateCommand>();
+        services.AddSingleton<VolumeGroupCreateCommand>();
+        services.AddSingleton<VolumeGroupGetCommand>();
+        services.AddSingleton<VolumeGroupUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -35,6 +40,12 @@ public class NetAppFilesSetup : IAreaSetup
         account.AddCommand<AccountCreateCommand>(serviceProvider);
         account.AddCommand<AccountGetCommand>(serviceProvider);
         account.AddCommand<AccountUpdateCommand>(serviceProvider);
+
+        var volumeGroup = new CommandGroup("volumegroup", "Azure NetApp Files application volume group operations.");
+        root.AddSubGroup(volumeGroup);
+        volumeGroup.AddCommand<VolumeGroupCreateCommand>(serviceProvider);
+        volumeGroup.AddCommand<VolumeGroupGetCommand>(serviceProvider);
+        volumeGroup.AddCommand<VolumeGroupUpdateCommand>(serviceProvider);
 
         return root;
     }

@@ -610,6 +610,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
 | netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
 | netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+| netappfiles_volumegroup_create | Create an SAP HANA volume group named \<volume_group> in NetApp Files account \<account> using the supplied JSON volume specifications | none |
+| netappfiles_volumegroup_create | Create an Oracle application volume group named \<volume_group> in NetApp Files account \<account> and resource group \<resource_group> | none |
+| netappfiles_volumegroup_get | Get the application volume group named \<volume_group> in NetApp Files account \<account> and resource group \<resource_group> | none |
+| netappfiles_volumegroup_get | Show me details and member volumes for NetApp Files volume group \<volume_group> in account \<account> | none |
+| netappfiles_volumegroup_update | Update the application identifier for NetApp Files volume group \<volume_group> in account \<account> to OR2 | none |
+| netappfiles_volumegroup_update | Replace the member volumes for NetApp Files volume group \<volume_group> in account \<account> using the supplied JSON volume specifications | none |
 
 ## Azure Database for PostgreSQL
 
