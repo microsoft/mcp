@@ -239,6 +239,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | appservice_webapp_get | List the web apps in my subscription | none |
 | appservice_webapp_get | Show me the web apps in my resource group <resource_group> | investigation-required |
 | appservice_webapp_get | Get the details for web app <webapp> in resource group <resource_group> | none |
+| appservice_webapp_get | Get app service details for <app-service-resource-id> | none |
 | appservice_webapp_deployment_get | List the deployments for web app <webapp> in resource group <resource_group> | none |
 | appservice_webapp_deployment_get | Get the deployment <deployment-id> for web app <webapp> in resource group <resource_group> | none |
 | appservice_webapp_settings_get-appsettings | List the application settings for web app <webapp> in resource group <resource_group> | none |
@@ -309,7 +310,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_protecteditem_get | Show the current workload-specific inclusion or exclusion settings and all protected-item properties for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
-| azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including only namespace <namespace> and cluster-scoped resources | investigation-required |
+| azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including cluster-scoped resources | investigation-required |
 | azurebackup_protecteditem_protect | Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1 | investigation-required |
 | azurebackup_protecteditem_protect | Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected | investigation-required |
 | azurebackup_protecteditem_update-protection | Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name> | investigation-required |

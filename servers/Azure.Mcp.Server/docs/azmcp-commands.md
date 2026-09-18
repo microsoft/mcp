@@ -103,6 +103,8 @@ the CLI and the container image entrypoint.
 
 Exposes Azure tools grouped by service namespace. Each Azure service appears as a single namespace-level tool that routes to individual operations internally. This is the default mode to reduce tool count and prevent VS Code from hitting the 128 tool limit.
 
+If a tool call specifies an unavailable `command`, the router can make one correction attempt using the supplied `intent` when the MCP client supports sampling. If it cannot resolve the command, it returns a tool error listing only the command names available to that tool under the current server configuration, without descriptions or parameter schemas. Select the command that best matches the current intent. To request the full command catalog without executing a command, set `learn=true` with an empty `intent`. An `intent` that is not blank can trigger sampling and execution even when `learn=true`. This behavior also applies to consolidated mode and external-server routing in these modes; CLI help is unchanged.
+
 ```bash
 # Start MCP Server with namespace-level tools (default behavior)
 azmcp server start \
@@ -280,6 +282,7 @@ The `azmcp server start` command supports the following options:
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--dangerously-disable-elicitation` | No | `false` | **⚠️ DANGEROUS**: Disable user consent prompts for sensitive operations |
+| `--dangerously-disable-ssrf-protections-by-namespace` | No | None | **⚠️ DANGEROUS**: Disable endpoint SSRF validation for a tool namespace. Repeat the option for multiple namespaces, or specify `ALL` to disable it for every namespace. |
 | `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
 | `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
@@ -299,6 +302,22 @@ The `azmcp server start` command supports the following options:
 > ```bash
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --dangerously-disable-elicitation
+> ```
+
+> **⚠️ Security Warning for `--dangerously-disable-ssrf-protections-by-namespace`:**
+>
+> This option disables endpoint SSRF validation used by tools in the selected namespaces, including protocol, hostname allow-list, and private-network checks. When used:
+> - Untrusted tool input may cause requests to attacker-controlled or internal endpoints
+> - The values identify tool namespaces such as `acr` or `loadtesting`, not endpoint service types
+> - Repeat the option for multiple namespaces, or provide multiple space-delimited values (e.g. `--dangerously-disable-ssrf-protections-by-namespace acr loadtesting`)
+> - The special value `ALL` disables these protections for every namespace
+> - Only use this option temporarily in a fully trusted environment
+>
+> **Example usage (use with extreme caution):**
+> ```bash
+> azmcp server start \
+>     --dangerously-disable-ssrf-protections-by-namespace acr \
+>     --dangerously-disable-ssrf-protections-by-namespace loadtesting
 > ```
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
@@ -1238,8 +1257,6 @@ azmcp azurebackup protecteditem protect --subscription <subscription> \
                                         [--container <container>] \
                                         [--datasource-type <RSV: VM|SQL|SAPHANA|SAPASE|AzureFileShare; DPP: AzureDisk|AzureBlob|AKS|ElasticSAN|PostgreSQLFlexible|ADLS|CosmosDB>] \
                                         [--aks-snapshot-resource-group <resource-group>] \
-                                        [--aks-included-namespaces <ns[,ns...]>] \
-                                        [--aks-excluded-namespaces <ns[,ns...]>] \
                                         [--aks-label-selectors <selector[,selector...]>] \
                                         [--aks-include-cluster-scope-resources <true|false>] \
                                         [--disk-list-setting <include|exclude|resetexclusionsettings>] \
@@ -1278,8 +1295,7 @@ azmcp azurebackup protectableitem list --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --vault <vault> \
                                        [--vault-type <vault-type>] \
-                                       [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>] \
-                                       [--container <container>]
+                                       [--workload-type <SQL|SQLDatabase|SQLInstance|SAPHana|SAPHanaDatabase|SAPHanaSystem|SAPHanaDBInstance|SAPHanaDBI|VM|IaaSVM|VirtualMachine|FileShare|AzureFileShare|AFS|SAPAse|SAPAseDatabase|ASE|Sybase>]
 
 # Triggers the RSV Inquire (discovery) operation on a registered Azure File share protection container so the vault (re)discovers the file shares available for backup protection. Identify the container by --container (protection container name) or --storage-account (storage account name or ARM resource ID); exactly one is required. The Azure API is fire-and-forget and returns HTTP 202 Accepted with no body; the tool returns an acceptance record. RSV only; DPP vaults are not supported.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2736,14 +2752,12 @@ azmcp postgres table schema get --user <user> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server config get --subscription <subscription> \
                                  --resource-group <resource-group> \
-                                 --user <user> \
                                  --server <server>
 
 # Retrieve a specific parameter of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param get --subscription <subscription> \
                                 --resource-group <resource-group> \
-                                --user <user> \
                                 --server <server> \
                                 --param <parameter>
 
@@ -2751,7 +2765,6 @@ azmcp postgres server param get --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param set --subscription <subscription> \
                                 --resource-group <resource-group> \
-                                --user <user> \
                                 --server <server> \
                                 --param <parameter> \
                                 --value <value>
@@ -3083,8 +3096,7 @@ azmcp foundryextensions openai embeddings-create \
 azmcp foundryextensions openai models-list \
     --subscription <subscription> \
     --resource-group <resource-group> \
-    --resource-name <resource-name> \
-    [--auth-method <auth-method>]
+    --resource-name <resource-name>
 
 # List or get Microsoft Foundry resource details (endpoint, SKU, location). --resource-group is required when --resource-name is specified.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
