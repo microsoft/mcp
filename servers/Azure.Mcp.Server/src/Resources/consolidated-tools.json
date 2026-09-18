@@ -2702,8 +2702,41 @@
       ]
     },
     {
+      "name": "get_azure_netapp_files_backup",
+      "description": "Get details for an Azure NetApp Files backup by account, backup vault, and backup name.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not modify Azure resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only reads Azure NetApp Files backup details."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "netappfiles_backup_get"
+      ]
+    },
+    {
       "name": "create_or_update_azure_netapp_files_resources",
-      "description": "Create Azure NetApp Files accounts and volumes, update account tags or NFSv4 user ID mapping domains, or update volume storage quotas.",
+      "description": "Create Azure NetApp Files accounts, volumes, and backups; update account tags or NFSv4 user ID mapping domains, backup labels, or volume storage quotas.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2733,6 +2766,8 @@
       "mappedToolList": [
         "netappfiles_account_create",
         "netappfiles_account_update",
+        "netappfiles_backup_create",
+        "netappfiles_backup_update",
         "netappfiles_volume_create",
         "netappfiles_volume_update"
       ]

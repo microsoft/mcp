@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
+
+namespace Azure.Mcp.Tools.NetAppFiles.Options.Backup;
+
+public class BackupCreateOptions : ISubscriptionOption
+{
+    [Option(Description = "The name of the Azure NetApp Files account that contains the backup vault.")]
+    public required string Account { get; set; }
+
+    [Option(Description = "The name of the Azure NetApp Files backup vault where the backup will be created.")]
+    public required string BackupVault { get; set; }
+
+    [Option(Description = "The name of the Azure NetApp Files backup to create.")]
+    public required string Backup { get; set; }
+
+    [Option(Description = "The full Azure resource ID of the Azure NetApp Files volume to back up.")]
+    public required string VolumeResourceId { get; set; }
+
+    [Option(Description = "An optional label for the backup.")]
+    public string? Label { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+}

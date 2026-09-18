@@ -2695,6 +2695,39 @@ azmcp netappfiles account update --account <account> \
                                  [--nfs-v4-id-domain <nfs-v4-id-domain>] \
                                  [--tenant <tenant>]
 
+# Creates an on-demand backup of an Azure NetApp Files volume in a backup vault.
+# Returns the backup name, resource ID, provisioning state, type, label, size, and source volume resource ID.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backup create --account <account> \
+                                --backup-vault <backup-vault> \
+                                --backup <backup> \
+                                --volume-resource-id <volume-resource-id> \
+                                --resource-group <resource-group> \
+                                --subscription <subscription> \
+                                [--label <label>] \
+                                [--tenant <tenant>]
+
+# Gets an Azure NetApp Files backup by name from a backup vault.
+# Returns the backup name, resource ID, provisioning state, type, label, size, and source volume resource ID.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backup get --account <account> \
+                                      --backup-vault <backup-vault> \
+                                      --backup <backup> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--tenant <tenant>]
+
+# Updates the label of an Azure NetApp Files backup.
+# Returns the updated backup name, resource ID, provisioning state, type, label, size, and source volume resource ID.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backup update --account <account> \
+                                  --backup-vault <backup-vault> \
+                                  --backup <backup> \
+                                  --label <label> \
+                                  --resource-group <resource-group> \
+                                  --subscription <subscription> \
+                                  [--tenant <tenant>]
+
 # Creates an NFSv3 Azure NetApp Files volume in a capacity pool.
 # Returns the volume name, resource ID, location, provisioning state, quota, and service level.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

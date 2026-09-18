@@ -3,6 +3,7 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
+using Azure.Mcp.Tools.NetAppFiles.Commands.Backup;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 
@@ -11,8 +12,12 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands;
 [JsonSerializable(typeof(AccountCreateCommand.AccountCreateResult))]
 [JsonSerializable(typeof(AccountGetCommand.AccountGetResult))]
 [JsonSerializable(typeof(AccountUpdateCommand.AccountUpdateResult))]
+[JsonSerializable(typeof(BackupCreateCommand.BackupCreateResult))]
+[JsonSerializable(typeof(BackupGetCommand.BackupGetResult))]
+[JsonSerializable(typeof(BackupUpdateCommand.BackupUpdateResult))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(NetAppFilesAccount))]
+[JsonSerializable(typeof(NetAppFilesBackup))]
 [JsonSerializable(typeof(NetAppFilesVolume))]
 [JsonSerializable(typeof(VolumeCreateCommand.VolumeCreateResult))]
 [JsonSerializable(typeof(VolumeGetCommand.VolumeGetResult))]
