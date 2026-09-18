@@ -97,6 +97,13 @@ public static class AzureBackupOptionDefinitions
     internal const string PrivateEndpointAutoApprove = "When true, auto-approve the Private Endpoint Connection after creation (requires Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action).";
     internal const string PrivateEndpointDescription = "Optional description passed to the vault owner when approving or rejecting the connection.";
     internal const string PrivateEndpointAction = "Decision to apply to the pending Private Endpoint Connection: 'approve' or 'reject'.";
+    internal const string PrivateEndpointDnsZoneIds = "Optional comma-separated ARM resource IDs of the private DNS zones to integrate with the Private Endpoint for name resolution (e.g., '/subscriptions/.../providers/Microsoft.Network/privateDnsZones/privatelink.<geo>.backup.windowsazure.com'). For full Backup private connectivity you typically link three zones: the backup zone plus 'privatelink.blob.core.windows.net' and 'privatelink.queue.core.windows.net'. When omitted, no private DNS zone group is created and DNS must be configured separately.";
+    internal const string PrivateEndpointDnsZoneGroupName = "Name of the private DNS zone group created on the Private Endpoint when --private-dns-zone-ids is supplied. Defaults to 'default'.";
+
+    // vault update  -  identity + networking options
+    internal const string VaultUpdateIdentityType = "Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'. When the type includes 'UserAssigned', supply one or more identities with --user-assigned-identity.";
+    internal const string VaultUpdateUserAssignedIdentity = "Comma-separated ARM resource IDs of the user-assigned managed identities to associate with the vault (e.g., '/subscriptions/.../providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}'). Required when --identity-type includes 'UserAssigned'; ignored when the type is 'SystemAssigned' or 'None'.";
+    internal const string VaultUpdatePublicNetworkAccess = "Controls inbound access from public networks: 'Enabled' allows access over public endpoints; 'Disabled' denies public access and requires Private Endpoints. Only supported for Recovery Services vaults (RSV).";
 
     // Selective Disk Backup (IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
     internal const string DiskListSetting = "Disk exclusion mode for IaaS VM backup: 'include' (back up only the LUNs in --disks-list), 'exclude' (back up all disks except the LUNs in --disks-list), or 'resetexclusionsettings' (remove any selective disk configuration and back up all disks). Only supported for RSV IaaS VM protected items.";
