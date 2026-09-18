@@ -6,7 +6,9 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
+using Azure.ResourceManager;
 using Azure.Security.ConfidentialLedger;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
@@ -37,7 +39,9 @@ public class ConfidentialLedgerService(IAzureService azureService)
             (nameof(ledgerName), ledgerName),
             (nameof(entryData), entryData));
 
-        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
+        var ledgerUri = ValidateLedgerEndpoint(
+            new Uri(GetLedgerUri(ledgerName)),
+            AzureService.CloudConfiguration.ArmEnvironment);
         var credential = await GetCredential(null, cancellationToken);
 
         // Configure client (retry etc. could be extended later)
@@ -68,7 +72,9 @@ public class ConfidentialLedgerService(IAzureService azureService)
             throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
-        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
+        var ledgerUri = ValidateLedgerEndpoint(
+            new Uri(GetLedgerUri(ledgerName)),
+            AzureService.CloudConfiguration.ArmEnvironment);
         var credential = await GetCredential(null, cancellationToken);
         ConfidentialLedgerClient client = new(ledgerUri, credential);
 
@@ -124,6 +130,21 @@ public class ConfidentialLedgerService(IAzureService azureService)
             _ =>
                 $"https://{ledgerName}.confidential-ledger.azure.com"
         };
+    }
+
+    /// <summary>
+    /// Validates a Confidential Ledger data-plane endpoint against the endpoint allow-list for the target
+    /// cloud, guarding against endpoint injection before the endpoint is used to create a client.
+    /// </summary>
+    internal static Uri ValidateLedgerEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "confidential-ledger",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "confidentialledger");
+        return endpoint;
     }
 
     /// <summary>

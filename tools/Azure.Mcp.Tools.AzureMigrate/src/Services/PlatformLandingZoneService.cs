@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AzureMigrate.Constants;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
@@ -129,7 +130,8 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
         if (string.IsNullOrEmpty(downloadUrl))
             throw new InvalidOperationException("Download URL not yet available. The landing zone may still be generating. Please try again in 1-2 minutes.");
 
-        var bytes = await httpHelper.DownloadBytesAsync(downloadUrl, cancellationToken);
+        var validatedDownloadUrl = ValidateDownloadUrl(downloadUrl, logger);
+        var bytes = await httpHelper.DownloadBytesAsync(validatedDownloadUrl, cancellationToken);
         var fileName = Path.Combine(outputPath, $"landing-zone-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
         await File.WriteAllBytesAsync(fileName, bytes, cancellationToken);
 
@@ -164,6 +166,16 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
 
     private string BuildUrl(PlatformLandingZoneContext ctx, string action) =>
         $"{AzureService.CloudConfiguration.ArmEnvironment.Endpoint}subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{ctx.MigrateProjectName}/{action}?api-version={PlatformLandingZoneConstants.ApiVersion}";
+
+    /// <summary>
+    /// Validates a download URL parsed from a service response before it is fetched without authentication,
+    /// restricting the target to public, non-reserved endpoints.
+    /// </summary>
+    internal static string ValidateDownloadUrl(string downloadUrl, ILogger? logger)
+    {
+        EndpointValidator.ValidatePublicTargetUrl(downloadUrl, logger, "azuremigrate");
+        return downloadUrl;
+    }
 
     private static string GetCacheKey(PlatformLandingZoneContext ctx) =>
         $"{ctx.SubscriptionId}:{ctx.ResourceGroupName}:{ctx.MigrateProjectName}";
