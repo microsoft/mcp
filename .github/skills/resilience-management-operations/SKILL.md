@@ -10,7 +10,7 @@ disable-model-invocation: false
 
 # Azure Resilience Management Operations
 
-For operational Azure Resilience Management requests, use the Azure Resilience Management MCP tools when a registered tool supports the operation. If no registered tool supports the requested resilience operation, ask the user for explicit permission before using Azure CLI (`az`), `az rest`, direct HTTP/REST calls, PowerShell Azure commands, or SDK code as a fallback. This fallback restriction does not apply to non-resilience Azure operations or to development tasks such as implementing, testing, recording, or debugging tools; follow the applicable workflow and required tooling. This skill covers all tools registered under the `resilience` namespace.
+For operational Azure Resilience Management requests, use the Azure Resilience Management MCP tools when a registered tool supports the operation. If no registered tool supports the requested resilience operation, ask the user for explicit permission before using Azure CLI (`az`), `az rest`, direct HTTP/REST calls, PowerShell Azure commands, or SDK code as a fallback. This fallback restriction does not apply to non-resilience Azure operations or to development tasks such as implementing, testing, recording, or debugging tools; follow the applicable workflow and required tooling. This skill covers all tools registered under the `resiliency` namespace.
 
 - See [tool reference](./references/tools.md) for exact tool names, parameters, and enum values.
 - See [workflow recipes](./references/workflows.md) for end-to-end operation sequences and state gates.
@@ -35,12 +35,12 @@ For operational Azure Resilience Management requests, use the Azure Resilience M
 
 ## Route the Request
 
-- Usage plan or enrollment → `mcp_azure_mcp_ser_resilience_usageplan_*`
-- Goal template, assignment, or member → `mcp_azure_mcp_ser_resilience_goal_*`
-- Drill definition, execution, run, or target → `mcp_azure_mcp_ser_resilience_drill_*`
-- Recovery plan lifecycle or recovery operation → `mcp_azure_mcp_ser_resilience_recoveryplan_*`
-- Recovery plan membership/protection → `mcp_azure_mcp_ser_resilience_recoveryplan_resource_*`
-- Recovery job, paused action, retry, or job target → `mcp_azure_mcp_ser_resilience_recoveryjob_*`
+- Usage plan or enrollment → `mcp_azure_mcp_ser_resiliency_usageplan_*`
+- Goal template, assignment, or member → `mcp_azure_mcp_ser_resiliency_goal_*`
+- Drill definition, execution, run, or target → `mcp_azure_mcp_ser_resiliency_drill_*`
+- Recovery plan lifecycle or recovery operation → `mcp_azure_mcp_ser_resiliency_recoveryplan_*`
+- Recovery plan membership/protection → `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_*`
+- Recovery job, paused action, retry, or job target → `mcp_azure_mcp_ser_resiliency_recoveryjob_*`
 
 ## Standard Procedure
 

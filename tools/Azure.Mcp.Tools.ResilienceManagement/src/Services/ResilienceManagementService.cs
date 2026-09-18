@@ -1616,7 +1616,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new RecoveryJobRetryResult(
             operationId,
             "Accepted",
-            $"Recovery job retry was accepted. Use 'resilience recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
+            $"Recovery job retry was accepted. Use 'resiliency recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
     }
 
     public Task<RecoveryJobResumeResult> ResumeRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? description = null, string? tenant = null, CancellationToken cancellationToken = default)
@@ -1648,14 +1648,14 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new RecoveryJobResumeResult(
             operationId,
             "Accepted",
-            $"Recovery job resume was accepted. Use 'resilience recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
+            $"Recovery job resume was accepted. Use 'resiliency recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
     }
 
     private static string CreateRecoveryPlanActionTrackingMessage(string action, string? jobId)
     {
         return jobId is null
-            ? $"{action} was accepted. Use 'resilience recoveryjob get' to list recovery jobs, then provide --recoveryjob to monitor the new job."
-            : $"{action} was accepted. Use 'resilience recoveryjob get --recoveryjob {jobId}' to monitor progress.";
+            ? $"{action} was accepted. Use 'resiliency recoveryjob get' to list recovery jobs, then provide --recoveryjob to monitor the new job."
+            : $"{action} was accepted. Use 'resiliency recoveryjob get --recoveryjob {jobId}' to monitor progress.";
     }
 
     internal static void ThrowIfProviderError(ArmResponseErrorResponseResult result, string operationDescription)

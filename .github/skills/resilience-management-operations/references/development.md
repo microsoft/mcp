@@ -12,7 +12,7 @@ For every new or behaviorally changed Resilience Management tool, update this sk
 2. Add or revise its operation sequence, state gates, and destructive-action safeguards in [workflows.md](./workflows.md).
 3. Update [payloads.md](./payloads.md) when the tool accepts structured payloads or introduces conditional fields.
 4. Update the parent [SKILL.md](../SKILL.md) description and routing when the tool introduces a new resource or operation category.
-5. Compare the documented tool names with the registered `resilience` tools and update the total in `tools.md`. The sets must match before review.
+5. Compare the documented tool names with the registered `resiliency` tools and update the total in `tools.md`. The sets must match before review.
 
 A Resilience Management tool is not documentation-complete when this skill omits it or describes a stale contract.
 
