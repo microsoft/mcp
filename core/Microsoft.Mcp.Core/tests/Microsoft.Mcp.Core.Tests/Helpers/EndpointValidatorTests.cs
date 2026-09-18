@@ -90,6 +90,11 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]
     [InlineData("https://my-resource.openai.azure.com", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.com", "azure-openai")]
+    [InlineData("https://topic.westus2-1.eventgrid.azure.net/api/events", "eventgrid")]
+    [InlineData("https://hub.azure-devices.net/devices", "iothub")]
+    [InlineData("https://vault.vault.azure.net/secrets", "keyvault")]
+    [InlineData("https://hsm.managedhsm.azure.net/settings", "managedhsm")]
+    [InlineData("https://server.mysql.database.azure.com", "mysql")]
     [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
@@ -101,6 +106,42 @@ public class EndpointValidatorTests
             armEnvironment: ArmEnvironment.AzurePublicCloud,
             executingToolNamespaceName: null));
         Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("eventgrid")]
+    [InlineData("foundry")]
+    [InlineData("iothub")]
+    [InlineData("keyvault")]
+    [InlineData("managedhsm")]
+    [InlineData("mysql")]
+    public void ValidateAzureServiceEndpoint_ReviewedToolServices_AreRegistered(string serviceType)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "https://invalid.example",
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
+    }
+
+    [Theory]
+    [InlineData("https://topic.eventgrid.azure.net.evil.example", "eventgrid")]
+    [InlineData("https://my-foundry.services.ai.azure.com.evil.example", "foundry")]
+    [InlineData("https://hub.azure-devices.net.evil.example", "iothub")]
+    [InlineData("https://vault.vault.azure.net.evil.example", "keyvault")]
+    [InlineData("https://hsm.managedhsm.azure.net.evil.example", "managedhsm")]
+    [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
+    public void ValidateAzureServiceEndpoint_ReviewedServiceSuffixes_RejectSpoofedHosts(
+        string endpoint,
+        string serviceType)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Theory]
@@ -206,9 +247,13 @@ public class EndpointValidatorTests
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
     [InlineData("https://mycomm.communication.azure.cn", "communication")]
-    [InlineData("https://my-foundry.services.ai.azure.cn", "foundry")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
+    [InlineData("https://topic.chinanorth3-1.eventgrid.azure.cn", "eventgrid")]
+    [InlineData("https://hub.azure-devices.cn", "iothub")]
+    [InlineData("https://vault.vault.azure.cn", "keyvault")]
+    [InlineData("https://hsm.managedhsm.azure.cn", "managedhsm")]
+    [InlineData("https://server.mysql.database.chinacloudapi.cn", "mysql")]
     [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
@@ -230,6 +275,11 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.us", "foundry")]
     [InlineData("https://my-resource.openai.azure.us", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.us", "azure-openai")]
+    [InlineData("https://topic.usgovvirginia-1.eventgrid.azure.us", "eventgrid")]
+    [InlineData("https://hub.azure-devices.us", "iothub")]
+    [InlineData("https://vault.vault.usgovcloudapi.net", "keyvault")]
+    [InlineData("https://hsm.managedhsm.usgovcloudapi.net", "managedhsm")]
+    [InlineData("https://server.mysql.database.usgovcloudapi.net", "mysql")]
     [InlineData("https://mynamespace.servicebus.usgovcloudapi.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {

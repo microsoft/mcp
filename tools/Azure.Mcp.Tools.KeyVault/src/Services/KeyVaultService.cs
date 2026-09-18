@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.ResourceManager;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
@@ -275,7 +277,9 @@ public sealed class KeyVaultService(IAzureService azureService)
     // Create clients with injected HttpClient, this will enable record/playback during testing.
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential)
     {
-        var vaultUri = new Uri(BuildVaultUri(vaultName));
+        var vaultUri = ValidateVaultEndpoint(
+            new Uri(BuildVaultUri(vaultName)),
+            AzureService.CloudConfiguration.ArmEnvironment);
         var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new KeyClientOptions();
@@ -286,7 +290,9 @@ public sealed class KeyVaultService(IAzureService azureService)
 
     private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential)
     {
-        var vaultUri = new Uri(BuildVaultUri(vaultName));
+        var vaultUri = ValidateVaultEndpoint(
+            new Uri(BuildVaultUri(vaultName)),
+            AzureService.CloudConfiguration.ArmEnvironment);
         var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new SecretClientOptions();
@@ -297,7 +303,9 @@ public sealed class KeyVaultService(IAzureService azureService)
 
     private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential)
     {
-        var vaultUri = new Uri(BuildVaultUri(vaultName));
+        var vaultUri = ValidateVaultEndpoint(
+            new Uri(BuildVaultUri(vaultName)),
+            AzureService.CloudConfiguration.ArmEnvironment);
         var httpClient = AzureService.GetClient();
         httpClient.BaseAddress = vaultUri;
         var options = new CertificateClientOptions();
@@ -313,11 +321,35 @@ public sealed class KeyVaultService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName));
         var credential = await GetCredential(tenantId, cancellationToken);
-        var hsmUri = new Uri(GetHsmUri(vaultName));
+        var hsmUri = ValidateManagedHsmEndpoint(
+            new Uri(GetHsmUri(vaultName)),
+            AzureService.CloudConfiguration.ArmEnvironment);
 
         var hsmClient = CreateSettingsClient(hsmUri, credential);
         var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
         return hsmResponse.Value;
+    }
+
+    internal static Uri ValidateVaultEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "keyvault",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "keyvault");
+        return endpoint;
+    }
+
+    internal static Uri ValidateManagedHsmEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "managedhsm",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "keyvault");
+        return endpoint;
     }
 
     private KeyVaultSettingsClient CreateSettingsClient(Uri hsmUri, Azure.Core.TokenCredential credential)

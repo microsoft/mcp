@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.MySql.Commands;
+using Azure.ResourceManager;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Azure.ResourceManager.MySql.FlexibleServers.Models;
 using Microsoft.Mcp.Core.Helpers;
@@ -47,18 +49,11 @@ public sealed class MySqlService(IAzureService azureService)
         };
     }
 
-    private static readonly string[] AllowedMySqlSuffixes =
-    [
-        ".mysql.database.azure.com",
-        ".mysql.database.usgovcloudapi.net",
-        ".mysql.database.chinacloudapi.cn",
-    ];
-
     private string NormalizeServerName(string server)
     {
-        if (!server.Contains('.'))
-        {
-            return AzureService.CloudConfiguration.CloudType switch
+        ArgumentException.ThrowIfNullOrWhiteSpace(server);
+        var hostname = !server.Contains('.')
+            ? AzureService.CloudConfiguration.CloudType switch
             {
                 AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                     server + ".mysql.database.azure.com",
@@ -68,18 +63,45 @@ public sealed class MySqlService(IAzureService azureService)
                     server + ".mysql.database.chinacloudapi.cn",
                 _ =>
                     server + ".mysql.database.azure.com"
-            };
-        }
+            }
+            : server;
 
-        if (!Array.Exists(AllowedMySqlSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new ArgumentException(
-                $"The server name '{server}' is not a valid Azure Database for MySQL hostname. " +
-                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedMySqlSuffixes)}.");
-        }
-
-        return server;
+        return ValidateServerHostname(
+            hostname,
+            AzureService.CloudConfiguration.ArmEnvironment);
     }
+
+    internal static string ValidateServerHostname(string hostname, ArmEnvironment armEnvironment)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(hostname);
+
+        if (Uri.CheckHostName(hostname) != UriHostNameType.Dns)
+        {
+            throw CreateInvalidServerException(hostname);
+        }
+
+        var endpoint = new Uri($"https://{hostname}", UriKind.Absolute);
+        try
+        {
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint.AbsoluteUri,
+                serviceType: "mysql",
+                armEnvironment: armEnvironment,
+                executingToolNamespaceName: "mysql");
+        }
+        catch (SecurityException ex)
+        {
+            throw CreateInvalidServerException(hostname, ex);
+        }
+
+        return endpoint.IdnHost;
+    }
+
+    private static ArgumentException CreateInvalidServerException(string hostname, Exception? innerException = null) =>
+        new(
+            $"The server name '{hostname}' is not a valid Azure Database for MySQL hostname for the configured cloud.",
+            nameof(hostname),
+            innerException);
 
     private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
     {

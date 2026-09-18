@@ -4,10 +4,12 @@
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ManagedLustre.Models;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
@@ -430,7 +432,10 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             {
                 throw new Exception("Both key-url and source-vault must be provided when custom-encryption is enabled.");
             }
-            data.KeyEncryptionKey = new(new(keyUrl), new() { Id = new(sourceVaultId!) });
+            var keyUri = CreateValidatedKeyUri(
+                keyUrl,
+                AzureService.CloudConfiguration.ArmEnvironment);
+            data.KeyEncryptionKey = new(keyUri, new() { Id = new(sourceVaultId!) });
 
             // Assign user-assigned managed identity for Key Vault access
             if (!string.IsNullOrWhiteSpace(userAssignedIdentityId))
@@ -451,6 +456,18 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         await WaitForLroCompletionAsync(createOperationResult, cancellationToken);
         var fileSystemResource = createOperationResult.Value;
         return Map(fileSystemResource);
+    }
+
+    internal static Uri CreateValidatedKeyUri(string keyUrl, ArmEnvironment armEnvironment)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(keyUrl);
+        var keyUri = new Uri(keyUrl, UriKind.Absolute);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: keyUri.AbsoluteUri,
+            serviceType: "keyvault",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "managedlustre");
+        return keyUri;
     }
 
     public async Task<LustreFileSystem> UpdateFileSystemAsync(

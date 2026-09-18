@@ -122,7 +122,10 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         {
             Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
         };
-        var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
+        var topicEndpoint = ValidateTopicEndpoint(
+            topic.Data.Endpoint,
+            AzureService.CloudConfiguration.ArmEnvironment);
+        var publisherClient = new EventGridPublisherClient(topicEndpoint, credential, clientOptions);
 
         // Serialize each event individually to JSON using source-generated context
         var eventsData = eventGridEventSchemas
@@ -144,6 +147,17 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             PublishedEventCount: eventCount,
             OperationId: operationId,
             PublishedAt: DateTime.UtcNow);
+    }
+
+    internal static Uri ValidateTopicEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "eventgrid",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "eventgrid");
+        return endpoint;
     }
 
     private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added namespace-aware endpoint validation for Event Grid, IoT Hub, Key Vault, Managed HSM, Managed Lustre, Monitor web test, and MySQL endpoints."
