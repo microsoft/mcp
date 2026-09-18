@@ -1389,15 +1389,17 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)
     {
-        var datasourceTypes = data.Properties is DataProtectionBackupPolicyPropertiesBase props
+        var properties = data.Properties;
+        var datasourceTypes = properties is DataProtectionBackupPolicyPropertiesBase props
             ? props.DataSourceTypes?.ToList() as IReadOnlyList<string>
             : null;
 
         string? scheduleFrequency = null;
         string? scheduleTime = null;
         int? dailyRetentionDays = null;
+        BackupPolicyDppDetails? dppDetails = null;
 
-        if (data.Properties is RuleBasedBackupPolicy ruleBasedPolicy)
+        if (properties is RuleBasedBackupPolicy ruleBasedPolicy)
         {
             foreach (var rule in ruleBasedPolicy.PolicyRules)
             {
@@ -1429,6 +1431,18 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                     }
                 }
             }
+
+            dppDetails = new BackupPolicyDppDetails(
+                DataSourceTypes: datasourceTypes,
+                ObjectType: ruleBasedPolicy.GetType().Name,
+                Rules: MapDppPolicyRules(ruleBasedPolicy.PolicyRules));
+        }
+        else if (properties is not null)
+        {
+            dppDetails = new BackupPolicyDppDetails(
+                DataSourceTypes: datasourceTypes,
+                ObjectType: properties.GetType().Name,
+                Rules: null);
         }
 
         return new BackupPolicyInfo(
@@ -1439,7 +1453,99 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             null,
             scheduleFrequency,
             scheduleTime,
-            dailyRetentionDays);
+            dailyRetentionDays,
+            Details: null,
+            DppDetails: dppDetails);
+    }
+
+    private static IReadOnlyList<BackupPolicyDppRule>? MapDppPolicyRules(IEnumerable<DataProtectionBasePolicyRule>? rules)
+    {
+        if (rules is null)
+        {
+            return null;
+        }
+
+        var mapped = new List<BackupPolicyDppRule>();
+        foreach (var rule in rules)
+        {
+            switch (rule)
+            {
+                case DataProtectionBackupRule backupRule:
+                    var scheduleTrigger = backupRule.Trigger as ScheduleBasedBackupTriggerContext;
+                    mapped.Add(new BackupPolicyDppRule(
+                        Name: backupRule.Name,
+                        ObjectType: backupRule.GetType().Name,
+                        IsDefault: null,
+                        BackupType: (backupRule.BackupParameters as DataProtectionBackupSettings)?.BackupType,
+                        DataStoreType: backupRule.DataStore?.DataStoreType.ToString(),
+                        ScheduleTimeZone: scheduleTrigger?.Schedule?.TimeZone,
+                        RepeatingTimeIntervals: scheduleTrigger?.Schedule?.RepeatingTimeIntervals?.ToList(),
+                        TaggingCriteria: MapDppTaggingCriteria(scheduleTrigger?.TaggingCriteriaList),
+                        Lifecycles: null));
+                    break;
+                case DataProtectionRetentionRule retentionRule:
+                    mapped.Add(new BackupPolicyDppRule(
+                        Name: retentionRule.Name,
+                        ObjectType: retentionRule.GetType().Name,
+                        IsDefault: retentionRule.IsDefault,
+                        BackupType: null,
+                        DataStoreType: null,
+                        ScheduleTimeZone: null,
+                        RepeatingTimeIntervals: null,
+                        TaggingCriteria: null,
+                        Lifecycles: MapDppLifecycles(retentionRule.Lifecycles)));
+                    break;
+            }
+        }
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppTaggingCriteria>? MapDppTaggingCriteria(
+        IEnumerable<DataProtectionBackupTaggingCriteria>? taggingCriteria)
+    {
+        if (taggingCriteria is null)
+        {
+            return null;
+        }
+
+        var mapped = taggingCriteria.Select(static criteria => new BackupPolicyDppTaggingCriteria(
+            criteria.TagInfo?.TagName,
+            criteria.IsDefault,
+            criteria.TaggingPriority,
+            criteria.Criteria?.Select(static c => c.GetType().Name).ToList())).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppLifecycle>? MapDppLifecycles(IEnumerable<SourceLifeCycle>? lifecycles)
+    {
+        if (lifecycles is null)
+        {
+            return null;
+        }
+
+        var mapped = lifecycles.Select(static lifecycle => new BackupPolicyDppLifecycle(
+            SourceDataStoreType: lifecycle.SourceDataStore?.DataStoreType.ToString(),
+            DeleteAfterDuration: lifecycle.DeleteAfter?.Duration.ToString(),
+            DeleteAfterType: lifecycle.DeleteAfter?.GetType().Name,
+            TargetCopySettings: MapDppCopySettings(lifecycle.TargetDataStoreCopySettings))).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppCopySetting>? MapDppCopySettings(IEnumerable<TargetCopySetting>? copySettings)
+    {
+        if (copySettings is null)
+        {
+            return null;
+        }
+
+        var mapped = copySettings.Select(static copySetting => new BackupPolicyDppCopySetting(
+            copySetting.DataStore?.DataStoreType.ToString(),
+            copySetting.CopyAfter?.GetType().Name)).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
     }
 
     private static BackupJobInfo MapToJobInfo(DataProtectionBackupJobData data)

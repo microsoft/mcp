@@ -299,6 +299,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_get | Show the full schedule, retention, and tiering details for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_inquire | Inquire the registered storage account <storage_account> on vault <vault_name> in resource group <resource_group> to discover Azure File shares available for backup | investigation-required |
 | azurebackup_protectableitem_inquire | Discover file shares in backup container <container_name> on Recovery Services vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |

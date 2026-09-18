@@ -1235,7 +1235,7 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--yearly-retention-days-of-week <day[,day...]>] \
                                 [--yearly-retention-days-of-month <int[,int...]>]
 
-# Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
+# Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types, protected items count, schedule and retention details, tiering policies, sub-protection policies, and workload-specific properties (time zone, instant restore settings, compression). RSV policy details are returned under 'details' and Backup vault (DPP) policy details under 'dppDetails', each mirroring the current Azure Backup SDK surface. When --policy is omitted, lists all backup policies configured in the vault. The returned contract reflects the currently supported SDK properties and may be revisited when the underlying Azure.ResourceManager SDK packages are upgraded.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy get --subscription <subscription> \
                              --resource-group <resource-group> \
