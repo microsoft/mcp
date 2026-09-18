@@ -130,18 +130,12 @@ public static partial class EndpointValidator
             UsGov: [".eventgrid.azure.us"],
             Germany: [".eventgrid.azure.de"],
             UseLegacyCheck: false),
-        ["eventhubs"] = new AllowedSuffixManager(
-            Public: [".servicebus.windows.net"],
-            China: [".servicebus.chinacloudapi.cn"],
-            UsGov: [".servicebus.usgovcloudapi.net"],
-            Germany: [".servicebus.cloudapi.de"],
-            UseLegacyCheck: false),
         ["foundry"] = new AllowedSuffixManager(
             Public: [".services.ai.azure.com"],
             China: [".services.ai.azure.cn"],
             UsGov: [".services.ai.azure.us"],
             Germany: [".services.ai.azure.de"],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            UseLegacyCheck: false),
         ["iothub"] = new AllowedSuffixManager(
             Public: [".azure-devices.net"],
             China: [".azure-devices.cn"],
