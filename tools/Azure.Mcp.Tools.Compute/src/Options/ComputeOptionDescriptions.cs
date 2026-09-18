@@ -23,6 +23,8 @@ internal static class ComputeOptionDescriptions
     internal const string Tier = "Performance tier of the disk (e.g., P10, P15, P20, P30, P40, P50, P60, P70, P80). Applicable to Premium SSD disks only.";
     internal const string VmName = "The name of the virtual machine.";
     internal const string VmssName = "The name of the virtual machine scale set.";
+    internal const string GalleryName = "The name of the Azure Compute Gallery. Valid characters are letters, digits, periods, and underscores, up to 80 characters. Must start and end with a letter or digit. Hyphens are not allowed.";
+    internal const string GalleryDescription = "A description of the gallery to help users understand what it contains.";
     internal const string Location = "The Azure region/location. Defaults to the resource group's location if not specified.";
     internal const string VmSize = "The VM size (e.g., Standard_D2s_v3, Standard_B2s). Defaults to Standard_D2s_v5 if not specified.";
     internal const string Image = "The OS image to use. Can be a URN (publisher:offer:sku:version), a shared gallery image ID (starting with '/sharedGalleries/'), or an alias such as 'Ubuntu2404' or 'Win2022Datacenter'.";
