@@ -1235,6 +1235,12 @@ Example prompts that generate Azure CLI commands:
 * "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 * "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
+### Azure NetApp Files
+
+* "Create backup vault 'my-backup-vault' in NetApp Files account 'my-account' in resource group 'my-resource-group'"
+* "Get backup vault 'my-backup-vault' from NetApp Files account 'my-account' in resource group 'my-resource-group'"
+* "Set the environment tag to production on backup vault 'my-backup-vault' in NetApp Files account 'my-account'"
+
 ### 📊 Azure Monitor
 
 * "Query an Analytics table in my Log Analytics workspace"
@@ -1439,6 +1445,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
+- **Azure NetApp Files** - Enterprise file storage account, backup vault, and volume management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management

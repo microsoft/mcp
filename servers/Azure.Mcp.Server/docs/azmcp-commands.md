@@ -2666,6 +2666,138 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```
 
+### Azure NetApp Files Operations
+
+```bash
+# Gets an Azure NetApp Files account by name from a specified resource group.
+# Returns the account name, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account get --account <account> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--tenant <tenant>]
+
+# Creates an Azure NetApp Files account in a specified resource group and region.
+# Returns the account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account create --account <account> \
+                                 --location <location> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tenant <tenant>]
+
+# Updates the tags or NFSv4 user ID mapping domain of an Azure NetApp Files account.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account update --account <account> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tags <json-key-value-object>] \
+                                 [--nfs-v4-id-domain <nfs-v4-id-domain>] \
+                                 [--tenant <tenant>]
+
+# Creates a backup policy in an Azure NetApp Files account.
+# Returns the backup policy name, resource ID, location, provisioning state, retention counts, and enabled state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy create --account <account> \
+                                      --backup-policy <backup-policy> \
+                                      --location <location> \
+                                      --daily-backups-to-keep <daily-backups-to-keep> \
+                                      --weekly-backups-to-keep <weekly-backups-to-keep> \
+                                      --monthly-backups-to-keep <monthly-backups-to-keep> \
+                                      --enabled <true|false> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--tenant <tenant>]
+
+# Gets an Azure NetApp Files backup policy by name from an account.
+# Returns the backup policy name, resource ID, location, provisioning state, retention counts, and enabled state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy get --account <account> \
+                                              --backup-policy <backup-policy> \
+                                              --resource-group <resource-group> \
+                                              --subscription <subscription> \
+                                              [--tenant <tenant>]
+
+# Updates one or more retention counts or the enabled state of an Azure NetApp Files backup policy.
+# Returns the updated backup policy name, resource ID, location, provisioning state, retention counts, and enabled state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backuppolicy update --account <account> \
+                                      --backup-policy <backup-policy> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--daily-backups-to-keep <daily-backups-to-keep>] \
+                                      [--weekly-backups-to-keep <weekly-backups-to-keep>] \
+                                      [--monthly-backups-to-keep <monthly-backups-to-keep>] \
+                                      [--enabled <true|false>] \
+                                      [--tenant <tenant>]
+
+# Creates a backup vault in an Azure NetApp Files account.
+# Returns the backup vault name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault create --account <account> \
+                                     --backup-vault <backup-vault> \
+                                     --location <location> \
+                                     --resource-group <resource-group> \
+                                     --subscription <subscription> \
+                                     [--tenant <tenant>]
+
+# Gets an Azure NetApp Files backup vault by name from an account.
+# Returns the backup vault name, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault get --account <account> \
+                                  --backup-vault <backup-vault> \
+                                  --resource-group <resource-group> \
+                                  --subscription <subscription> \
+                                  [--tenant <tenant>]
+
+# Updates the tags of an Azure NetApp Files backup vault.
+# Returns the updated backup vault name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault update --account <account> \
+                                     --backup-vault <backup-vault> \
+                                     --tags <json-key-value-object> \
+                                     --resource-group <resource-group> \
+                                     --subscription <subscription> \
+                                     [--tenant <tenant>]
+
+# Creates an NFSv3 Azure NetApp Files volume in a capacity pool.
+# Returns the volume name, resource ID, location, provisioning state, quota, and service level.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume create --account <account> \
+                                --pool <pool> \
+                                --volume <volume> \
+                                --location <location> \
+                                --subnet-id <subnet-resource-id> \
+                                --quota-gib <quota-gib> \
+                                --service-level <Standard|Premium|Ultra> \
+                                --resource-group <resource-group> \
+                                --subscription <subscription> \
+                                [--tenant <tenant>]
+
+# Gets an Azure NetApp Files volume by name from a capacity pool.
+# Returns the volume name, resource ID, location, provisioning state, quota, and service level.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume get --account <account> \
+                                      --pool <pool> \
+                                      --volume <volume> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--tenant <tenant>]
+
+# Updates the storage quota of an Azure NetApp Files volume.
+# Returns the updated volume name, resource ID, location, provisioning state, quota, and service level.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume update --account <account> \
+                                --pool <pool> \
+                                --volume <volume> \
+                                --quota-gib <quota-gib> \
+                                --resource-group <resource-group> \
+                                --subscription <subscription> \
+                                [--tenant <tenant>]
+```
+
 ### Azure Database for MySQL Operations
 
 ```bash

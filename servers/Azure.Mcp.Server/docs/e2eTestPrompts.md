@@ -601,6 +601,35 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> | none |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> | none |
 
+## Azure NetApp Files
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| netappfiles_account_create | Create an Azure NetApp Files account named \<account> in \<location> in resource group \<resource_group> | none |
+| netappfiles_account_create | Create a NetApp Files account called \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
+| netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+| netappfiles_backuppolicy_create | Create an enabled Azure NetApp Files backup policy named \<backup_policy> under account \<account> in \<location> that retains 2 daily, 1 weekly, and 1 monthly backup | none |
+| netappfiles_backuppolicy_create | Create backup policy \<backup_policy> in NetApp Files account \<account> with daily retention 2, weekly retention 1, and monthly retention 1 | none |
+| netappfiles_backuppolicy_get | Get Azure NetApp Files backup policy \<backup_policy> under account \<account> in resource group \<resource_group> | none |
+| netappfiles_backuppolicy_get | Show details for backup policy \<backup_policy> in NetApp Files account \<account> | none |
+| netappfiles_backuppolicy_update | Update Azure NetApp Files backup policy \<backup_policy> under account \<account> to retain 3 daily backups | none |
+| netappfiles_backuppolicy_update | Disable backup policy \<backup_policy> in NetApp Files account \<account> | none |
+| netappfiles_backupvault_create | Create an Azure NetApp Files backup vault named \<backup_vault> under account \<account> in \<location> | none |
+| netappfiles_backupvault_create | Create backup vault \<backup_vault> in NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_backupvault_get | Get Azure NetApp Files backup vault \<backup_vault> under account \<account> in resource group \<resource_group> | none |
+| netappfiles_backupvault_get | Show details for backup vault \<backup_vault> in NetApp Files account \<account> | none |
+| netappfiles_backupvault_update | Set the tags on Azure NetApp Files backup vault \<backup_vault> under account \<account> to {"environment":"production"} | none |
+| netappfiles_backupvault_update | Remove all tags from backup vault \<backup_vault> in NetApp Files account \<account> | none |
+| netappfiles_volume_create | Create a 100 GiB Standard Azure NetApp Files volume named \<volume> in capacity pool \<pool> under account \<account>, using delegated subnet \<subnet_id> in \<location> | none |
+| netappfiles_volume_create | Create an NFSv3 NetApp Files volume called \<volume> with a 100 GiB quota in pool \<pool> under account \<account> | none |
+| netappfiles_volume_get | Get the Azure NetApp Files volume named \<volume> in capacity pool \<pool> under account \<account> | none |
+| netappfiles_volume_get | Show me details for NetApp Files volume \<volume> in pool \<pool> under account \<account> | none |
+| netappfiles_volume_update | Update Azure NetApp Files volume \<volume> in capacity pool \<pool> under account \<account> to a 200 GiB quota | none |
+| netappfiles_volume_update | Resize NetApp Files volume \<volume> in pool \<pool> under account \<account> to 200 GiB | none |
+
 ## Azure Database for PostgreSQL
 
 | Tool Name | Test Prompt | Interaction |

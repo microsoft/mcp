@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added the `netappfiles backuppolicy create`, `netappfiles backuppolicy get`, and `netappfiles backuppolicy update` commands for creating, retrieving, and updating Azure NetApp Files backup policies.
