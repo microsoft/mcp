@@ -13,6 +13,9 @@ To simplify the work of collection server and platform metadata in build scripts
   "repositoryUrl": "https://github.com/microsoft/mcp",
   "branch": "main",
   "commitSha": "8ae9e6f971b0eb97c1e64534773cc9e6045952a8",
+  "serversToBuild": [
+    "Template.Mcp.Server"
+  ],
   "servers": [
     {
       "name": "Template.Mcp.Server",
@@ -134,6 +137,8 @@ To simplify the work of collection server and platform metadata in build scripts
   }
 }
 ```
+
+For pull requests, `serversToBuild` contains only servers whose transitive project dependencies include a changed project. Changes outside a project root conservatively include every server.
 
 ### [eng/scripts/Build-Code.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Build-Code.ps1)
 `Build-Code.ps1` is a common build script that compiles server projects in the repository, using the metadata collected in `build_info.json`. It supports building for multiple platforms, including native builds, and can be used in both local and CI environments.

@@ -3,10 +3,13 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true, ParameterSetName='ByProjectName')]
+    [Parameter(Mandatory = $true, ParameterSetName = 'ByProjectName')]
     [string] $ProjectName,
-    [Parameter(Mandatory=$true, ParameterSetName='ByPath')]
-    [string] $Path
+    [Parameter(Mandatory = $true, ParameterSetName = 'ByPath')]
+    [string] $Path,
+    [Parameter(Mandatory = $false)]
+    [ValidateNotNullOrEmpty()]
+    [string[]] $Properties
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -24,7 +27,8 @@ if ($ProjectName) {
         Write-Error "Multiple project files found matching '$ProjectName'."
         exit 1
     }
-} elseif ($Path) {
+}
+elseif ($Path) {
     $projectFiles = @(Get-Item $Path -ErrorAction SilentlyContinue)
     if (-not $projectFiles) {
         Write-Error "No project file found at path '$Path'."
@@ -70,7 +74,20 @@ $propertyList = @(
     'HasUnitTests'
 )
 
+if ($Properties) {
+    $propertyList = @($Properties)
+}
+
 $projectFile = $projectFiles | Select-Object -First 1
-$output = dotnet build $projectFile -getProperty:($propertyList -join ',') | ConvertFrom-Json
+$propertyArgument = "-getProperty:$($propertyList -join ',')"
+
+if ($propertyList.Count -eq 1) {
+    $propertyValue = dotnet build $projectFile $propertyArgument
+    $result = [ordered]@{}
+    $result[$propertyList[0]] = @($propertyValue) -join [Environment]::NewLine
+    return [pscustomobject] $result
+}
+
+$output = dotnet build $projectFile $propertyArgument | ConvertFrom-Json
 
 return $output.Properties
