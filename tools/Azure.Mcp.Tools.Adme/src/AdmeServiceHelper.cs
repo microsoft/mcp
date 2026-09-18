@@ -65,6 +65,30 @@ internal static class AdmeServiceHelper
             sendJsonContentTypeHint ? new StringContent(string.Empty, Encoding.UTF8, "application/json") : null,
             extraHeaders: null,
             typeInfo,
+            statusCodeResultFactory: null,
+            cancellationToken);
+
+    public static Task<AdmeResponse<T>> SendAsync<T>(
+        IAzureTokenCredentialProvider credentialProvider,
+        IHttpClientFactory httpClientFactory,
+        string endpoint,
+        string dataPartition,
+        string? tenant,
+        string path,
+        Func<HttpStatusCode, T> statusCodeResultFactory,
+        CancellationToken cancellationToken) =>
+        SendAsync(
+            credentialProvider,
+            httpClientFactory,
+            endpoint,
+            dataPartition,
+            tenant,
+            HttpMethod.Get,
+            path,
+            content: null,
+            extraHeaders: null,
+            typeInfo: null,
+            statusCodeResultFactory,
             cancellationToken);
 
     public static Task<AdmeResponse<TResponse>> PostAsync<TRequest, TResponse>(
@@ -91,6 +115,7 @@ internal static class AdmeServiceHelper
             JsonContent.Create(body, requestTypeInfo),
             extraHeaders,
             responseTypeInfo,
+            statusCodeResultFactory: null,
             cancellationToken,
             disableRetries);
 
@@ -116,6 +141,7 @@ internal static class AdmeServiceHelper
             JsonContent.Create(body, requestTypeInfo),
             extraHeaders: null,
             responseTypeInfo,
+            statusCodeResultFactory: null,
             cancellationToken);
 
     public static async Task DeleteAsync(
@@ -138,6 +164,7 @@ internal static class AdmeServiceHelper
             content: null,
             extraHeaders: null,
             typeInfo: null,
+            statusCodeResultFactory: null,
             cancellationToken);
     }
 
@@ -152,6 +179,7 @@ internal static class AdmeServiceHelper
         HttpContent? content,
         IReadOnlyCollection<KeyValuePair<string, string>>? extraHeaders,
         JsonTypeInfo<T>? typeInfo,
+        Func<HttpStatusCode, T>? statusCodeResultFactory,
         CancellationToken cancellationToken,
         bool disableRetries = false)
     {
@@ -201,6 +229,11 @@ internal static class AdmeServiceHelper
             throw new RequestFailedException(
                 (int)response.StatusCode,
                 message + correlationSuffix);
+        }
+
+        if (statusCodeResultFactory is not null)
+        {
+            return new(statusCodeResultFactory(response.StatusCode), correlationId);
         }
 
         if (typeInfo is null)
