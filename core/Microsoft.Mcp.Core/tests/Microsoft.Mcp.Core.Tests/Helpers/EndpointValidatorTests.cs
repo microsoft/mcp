@@ -247,7 +247,6 @@ public class EndpointValidatorTests
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
     [InlineData("https://mycomm.communication.azure.cn", "communication")]
-    [InlineData("https://my-foundry.services.ai.azure.cn", "foundry")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
     [InlineData("https://topic.chinanorth3-1.eventgrid.azure.cn", "eventgrid")]

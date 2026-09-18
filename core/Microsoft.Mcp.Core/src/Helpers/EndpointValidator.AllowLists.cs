@@ -132,9 +132,9 @@ public static partial class EndpointValidator
             UseLegacyCheck: false),
         ["foundry"] = new AllowedSuffixManager(
             Public: [".services.ai.azure.com"],
-            China: [".services.ai.azure.cn"],
+            China: [],
             UsGov: [".services.ai.azure.us"],
-            Germany: [".services.ai.azure.de"],
+            Germany: [],
             UseLegacyCheck: false),
         ["iothub"] = new AllowedSuffixManager(
             Public: [".azure-devices.net"],
