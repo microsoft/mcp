@@ -7,6 +7,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)eng\generated\Azure.Mcp.Generated.CosmosDB\Azure.Mcp.Generated.CosmosDB.csproj" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -28,7 +29,6 @@
     <PackageReference Include="Azure.ResourceManager.MySql" />
     <PackageReference Include="Azure.ResourceManager.PostgreSql" />
     <PackageReference Include="Azure.ResourceManager.Sql" />
-    <PackageReference Include="Azure.ResourceManager.CosmosDB" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 </Project>
