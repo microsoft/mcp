@@ -161,7 +161,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
     {
         var topicName = "my-topic";
         var ambiguityMessage =
-            $"Multiple Event Grid topics named '{topicName}' found in resource groups: rg-prod, rg-dev. Specify --resource-group to disambiguate.";
+            $"Multiple Event Grid topics named '{topicName}' found in resource groups: rg-prod, rg-dev. Specify a specific --resource-group to disambiguate.";
         var subscriptionId = "sub123";
         var subscriptionGuid = Guid.NewGuid();
         var subscription = ResourceManagerModelFactory.SubscriptionData(

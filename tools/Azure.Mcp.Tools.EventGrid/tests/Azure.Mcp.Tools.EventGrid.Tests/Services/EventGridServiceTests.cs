@@ -40,7 +40,7 @@ public class EventGridServiceTests()
                 CreateTopic("rg-dev", "MY-TOPIC")));
 
         Assert.Equal(
-            "Multiple Event Grid topics named 'my-topic' found in resource groups: rg-prod, rg-dev. Specify --resource-group to disambiguate.",
+            "Multiple Event Grid topics named 'my-topic' found in resource groups: rg-prod, rg-dev. Specify a specific --resource-group to disambiguate.",
             exception.Message);
     }
 
