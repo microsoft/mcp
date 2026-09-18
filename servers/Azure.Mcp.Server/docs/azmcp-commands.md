@@ -2695,6 +2695,40 @@ azmcp netappfiles account update --account <account> \
                                  [--nfs-v4-id-domain <nfs-v4-id-domain>] \
                                  [--tenant <tenant>]
 
+# Creates a snapshot of an Azure NetApp Files volume.
+# Returns the snapshot name, resource ID, location, provisioning state, snapshot ID, and creation time.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot create --account <account> \
+                                  --pool <pool> \
+                                  --volume <volume> \
+                                  --snapshot <snapshot> \
+                                  --resource-group <resource-group> \
+                                  --subscription <subscription> \
+                                  [--tenant <tenant>]
+
+# Gets an Azure NetApp Files snapshot by name from a volume.
+# Returns the snapshot name, resource ID, location, provisioning state, snapshot ID, and creation time.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot get --account <account> \
+                               --pool <pool> \
+                               --volume <volume> \
+                               --snapshot <snapshot> \
+                               --resource-group <resource-group> \
+                               --subscription <subscription> \
+                               [--tenant <tenant>]
+
+# Updates an Azure NetApp Files snapshot using the service-supported snapshot patch operation.
+# Azure NetApp Files currently exposes no mutable snapshot-specific properties.
+# Returns the updated snapshot name, resource ID, location, provisioning state, snapshot ID, and creation time.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot update --account <account> \
+                                  --pool <pool> \
+                                  --volume <volume> \
+                                  --snapshot <snapshot> \
+                                  --resource-group <resource-group> \
+                                  --subscription <subscription> \
+                                  [--tenant <tenant>]
+
 # Creates an NFSv3 Azure NetApp Files volume in a capacity pool.
 # Returns the volume name, resource ID, location, provisioning state, quota, and service level.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

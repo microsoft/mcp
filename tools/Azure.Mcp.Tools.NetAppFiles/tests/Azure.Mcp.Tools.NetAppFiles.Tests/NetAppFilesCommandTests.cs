@@ -103,6 +103,164 @@ public class NetAppFilesCommandTests(
     }
 
     [Fact]
+    public async Task SnapshotCreate_ReturnsCreatedSnapshot()
+    {
+        var volumeName = $"{Settings.ResourceBaseName}-snapshot-volume";
+        var snapshotName = $"{Settings.ResourceBaseName}-snapshot";
+        await CallToolAsync(
+            "netappfiles_volume_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "subnet-id", Settings.DeploymentOutputs["NETAPP_SUBNET_ID"] },
+                { "quota-gib", 100 },
+                { "service-level", "Standard" },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_snapshot_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "snapshot", snapshotName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var snapshot = result.AssertProperty("snapshot");
+        Assert.Equal(JsonValueKind.Object, snapshot.ValueKind);
+        Assert.Equal(snapshotName, snapshot.AssertProperty("name").GetString());
+        snapshot.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], snapshot.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", snapshot.AssertProperty("provisioningState").GetString());
+        snapshot.AssertProperty("snapshotId");
+        snapshot.AssertProperty("created");
+    }
+
+    [Fact]
+    public async Task SnapshotGet_ReturnsSnapshot()
+    {
+        var volumeName = $"{Settings.ResourceBaseName}-get-snapshot-volume";
+        var snapshotName = $"{Settings.ResourceBaseName}-get-snapshot";
+        await CallToolAsync(
+            "netappfiles_volume_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "subnet-id", Settings.DeploymentOutputs["NETAPP_SUBNET_ID"] },
+                { "quota-gib", 100 },
+                { "service-level", "Standard" },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        await CallToolAsync(
+            "netappfiles_snapshot_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "snapshot", snapshotName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_snapshot_get",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "snapshot", snapshotName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var snapshot = result.AssertProperty("snapshot");
+        Assert.Equal(JsonValueKind.Object, snapshot.ValueKind);
+        Assert.Equal(snapshotName, snapshot.AssertProperty("name").GetString());
+        snapshot.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], snapshot.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", snapshot.AssertProperty("provisioningState").GetString());
+        snapshot.AssertProperty("snapshotId");
+        snapshot.AssertProperty("created");
+    }
+
+    [Fact]
+    public async Task SnapshotUpdate_ReturnsUpdatedSnapshot()
+    {
+        var volumeName = $"{Settings.ResourceBaseName}-update-snapshot-volume";
+        var snapshotName = $"{Settings.ResourceBaseName}-update-snapshot";
+        await CallToolAsync(
+            "netappfiles_volume_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "subnet-id", Settings.DeploymentOutputs["NETAPP_SUBNET_ID"] },
+                { "quota-gib", 100 },
+                { "service-level", "Standard" },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        await CallToolAsync(
+            "netappfiles_snapshot_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "snapshot", snapshotName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_snapshot_update",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "pool", Settings.DeploymentOutputs["NETAPP_POOL_NAME"] },
+                { "volume", volumeName },
+                { "snapshot", snapshotName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var snapshot = result.AssertProperty("snapshot");
+        Assert.Equal(JsonValueKind.Object, snapshot.ValueKind);
+        Assert.Equal(snapshotName, snapshot.AssertProperty("name").GetString());
+        snapshot.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], snapshot.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", snapshot.AssertProperty("provisioningState").GetString());
+        snapshot.AssertProperty("snapshotId");
+        snapshot.AssertProperty("created");
+    }
+
+    [Fact]
     public async Task VolumeCreate_ReturnsCreatedVolume()
     {
         var result = await CallToolAsync(

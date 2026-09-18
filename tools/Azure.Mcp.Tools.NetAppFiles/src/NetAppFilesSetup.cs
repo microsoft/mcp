@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
+using Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +20,14 @@ public class NetAppFilesSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<INetAppFilesAccountService, NetAppFilesAccountService>();
+        services.AddSingleton<INetAppFilesSnapshotService, NetAppFilesSnapshotService>();
         services.AddSingleton<INetAppFilesVolumeService, NetAppFilesVolumeService>();
         services.AddSingleton<AccountCreateCommand>();
         services.AddSingleton<AccountGetCommand>();
         services.AddSingleton<AccountUpdateCommand>();
+        services.AddSingleton<SnapshotCreateCommand>();
+        services.AddSingleton<SnapshotGetCommand>();
+        services.AddSingleton<SnapshotUpdateCommand>();
         services.AddSingleton<VolumeCreateCommand>();
         services.AddSingleton<VolumeGetCommand>();
         services.AddSingleton<VolumeUpdateCommand>();
@@ -40,6 +45,12 @@ public class NetAppFilesSetup : IAreaSetup
         account.AddCommand<AccountCreateCommand>(serviceProvider);
         account.AddCommand<AccountGetCommand>(serviceProvider);
         account.AddCommand<AccountUpdateCommand>(serviceProvider);
+
+        var snapshot = new CommandGroup("snapshot", "Azure NetApp Files snapshot operations.");
+        root.AddSubGroup(snapshot);
+        snapshot.AddCommand<SnapshotCreateCommand>(serviceProvider);
+        snapshot.AddCommand<SnapshotGetCommand>(serviceProvider);
+        snapshot.AddCommand<SnapshotUpdateCommand>(serviceProvider);
 
         var volume = new CommandGroup("volume", "Azure NetApp Files volume operations.");
         root.AddSubGroup(volume);
