@@ -26,6 +26,8 @@ engine:
   model: gpt-5.4
 
 tools:
+  bash: false
+  cli-proxy: false
   github:
     toolsets: [issues, labels]
     min-integrity: none
