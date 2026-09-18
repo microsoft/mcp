@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Models;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
@@ -13,6 +14,15 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
     private const string PatternModulesUrl =
         "https://raw.githubusercontent.com/Azure/Azure-Verified-Modules/main/docs/static/module-indexes/TerraformPatternModules.csv";
+
+    // GitHub hosts this service is permitted to reach. Restricts outbound requests to the expected hosts
+    // when a URL is derived from externally-sourced data (for example the RepoURL column in the fetched
+    // module-index CSV). This is a host allow-list check on the initial request URL, not redirect-aware.
+    private static readonly string[] s_allowedHosts =
+    [
+        "raw.githubusercontent.com",
+        "api.github.com"
+    ];
 
     public const string ModuleTypeResource = "resource";
     public const string ModuleTypePattern = "pattern";
@@ -40,8 +50,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         var module = modules.Find(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
             ?? throw new ArgumentException($"Module '{moduleName}' not found in available modules.", nameof(moduleName));
 
-        var apiUrl = module.RepoUrl
-            .Replace("github.com", "api.github.com/repos", StringComparison.OrdinalIgnoreCase) + "/releases";
+        var apiUrl = BuildValidatedReleasesUrl(module.RepoUrl);
 
         using var client = httpClientFactory.CreateClient();
         ConfigureGitHubHeaders(client);
@@ -78,11 +87,13 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         using var client = httpClientFactory.CreateClient();
         ConfigureGitHubHeaders(client);
 
+        EndpointValidator.ValidateExternalUrl(readmeUrl, s_allowedHosts);
         var response = await client.GetAsync(new Uri(readmeUrl), cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
             readmeUrl = $"https://raw.githubusercontent.com/{repoPath}/{cleanVersion}/README.md";
+            EndpointValidator.ValidateExternalUrl(readmeUrl, s_allowedHosts);
             response = await client.GetAsync(new Uri(readmeUrl), cancellationToken).ConfigureAwait(false);
         }
 
@@ -129,11 +140,33 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     private static async Task<List<AvmModule>> FetchModulesAsync(
         HttpClient client, string url, string moduleType, CancellationToken cancellationToken)
     {
+        EndpointValidator.ValidateExternalUrl(url, s_allowedHosts);
         using var response = await client.GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var csvContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         return ParseModuleCsv(csvContent, moduleType);
+    }
+
+    /// <summary>
+    /// Builds the GitHub releases API URL for a module repository and validates that the resulting host is
+    /// an allowed GitHub host. The repository URL originates from externally-sourced CSV data, so the derived
+    /// endpoint's host is checked against the allow-list before the request is made.
+    /// </summary>
+    internal static string BuildValidatedReleasesUrl(string repoUrl)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repoUrl);
+
+        // Rewrite only the host (github.com -> api.github.com) and prefix the path with "/repos", so a
+        // "github.com" appearing inside the repository path (e.g. a repo named "github.com-foo") is not
+        // rewritten. Non-GitHub hosts are left intact and rejected by the allow-list check below.
+        var apiUrl = Uri.TryCreate(repoUrl, UriKind.Absolute, out var repoUri)
+            && repoUri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+            ? $"{repoUri.Scheme}://api.github.com/repos{repoUri.AbsolutePath.TrimEnd('/')}/releases"
+            : repoUrl + "/releases";
+
+        EndpointValidator.ValidateExternalUrl(apiUrl, s_allowedHosts);
+        return apiUrl;
     }
 
     internal static List<AvmModule> ParseModuleCsv(string csvContent, string moduleType)
