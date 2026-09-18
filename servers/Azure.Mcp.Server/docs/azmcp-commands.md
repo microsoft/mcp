@@ -2729,6 +2729,67 @@ azmcp netappfiles snapshot update --account <account> \
                                   --subscription <subscription> \
                                   [--tenant <tenant>]
 
+# Creates an Azure NetApp Files snapshot policy with one or more retention schedules.
+# Schedule hours are UTC. Tags must be supplied as a JSON key-value object.
+# Returns the policy identity, state, configured schedules, and tags.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshotpolicy create --account <account> \
+                                        --snapshot-policy <snapshot-policy> \
+                                        --location <location> \
+                                        --resource-group <resource-group> \
+                                        --subscription <subscription> \
+                                        [--enabled <true|false>] \
+                                        [--hourly-minute <0-59>] \
+                                        [--hourly-snapshots-to-keep <1-255>] \
+                                        [--daily-hour <0-23>] \
+                                        [--daily-minute <0-59>] \
+                                        [--daily-snapshots-to-keep <1-255>] \
+                                        [--weekly-day <comma-separated-weekdays>] \
+                                        [--weekly-hour <0-23>] \
+                                        [--weekly-minute <0-59>] \
+                                        [--weekly-snapshots-to-keep <1-255>] \
+                                        [--monthly-days-of-month <comma-separated-days>] \
+                                        [--monthly-hour <0-23>] \
+                                        [--monthly-minute <0-59>] \
+                                        [--monthly-snapshots-to-keep <1-255>] \
+                                        [--tags <json-key-value-object>] \
+                                        [--tenant <tenant>]
+
+# Gets an Azure NetApp Files snapshot policy by name from an account.
+# Returns the policy identity, state, configured schedules, and tags.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshotpolicy get --account <account> \
+                                                 --snapshot-policy <snapshot-policy> \
+                                                 --resource-group <resource-group> \
+                                                 --subscription <subscription> \
+                                                 [--tenant <tenant>]
+
+# Updates one or more properties of an Azure NetApp Files snapshot policy.
+# Schedule hours are UTC. Tags must be supplied as a JSON key-value object; an empty object removes all tags.
+# Returns the updated policy identity, state, configured schedules, and tags.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshotpolicy update --account <account> \
+                                        --snapshot-policy <snapshot-policy> \
+                                        --resource-group <resource-group> \
+                                        --subscription <subscription> \
+                                        [--location <location>] \
+                                        [--enabled <true|false>] \
+                                        [--hourly-minute <0-59>] \
+                                        [--hourly-snapshots-to-keep <1-255>] \
+                                        [--daily-hour <0-23>] \
+                                        [--daily-minute <0-59>] \
+                                        [--daily-snapshots-to-keep <1-255>] \
+                                        [--weekly-day <comma-separated-weekdays>] \
+                                        [--weekly-hour <0-23>] \
+                                        [--weekly-minute <0-59>] \
+                                        [--weekly-snapshots-to-keep <1-255>] \
+                                        [--monthly-days-of-month <comma-separated-days>] \
+                                        [--monthly-hour <0-23>] \
+                                        [--monthly-minute <0-59>] \
+                                        [--monthly-snapshots-to-keep <1-255>] \
+                                        [--tags <json-key-value-object>] \
+                                        [--tenant <tenant>]
+
 # Creates an NFSv3 Azure NetApp Files volume in a capacity pool.
 # Returns the volume name, resource ID, location, provisioning state, quota, and service level.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

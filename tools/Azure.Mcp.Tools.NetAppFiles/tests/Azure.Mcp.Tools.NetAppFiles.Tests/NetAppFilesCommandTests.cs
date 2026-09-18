@@ -103,6 +103,116 @@ public class NetAppFilesCommandTests(
     }
 
     [Fact]
+    public async Task SnapshotPolicyCreate_ReturnsCreatedSnapshotPolicy()
+    {
+        var policyName = $"{Settings.ResourceBaseName}-snapshot-policy";
+        var result = await CallToolAsync(
+            "netappfiles_snapshotpolicy_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "snapshot-policy", policyName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "hourly-minute", 5 },
+                { "hourly-snapshots-to-keep", 2 },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var policy = result.AssertProperty("snapshotPolicy");
+        Assert.Equal(JsonValueKind.Object, policy.ValueKind);
+        Assert.Equal(policyName, policy.AssertProperty("name").GetString());
+        policy.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], policy.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", policy.AssertProperty("provisioningState").GetString());
+        Assert.True(policy.AssertProperty("enabled").GetBoolean());
+        Assert.Equal(5, policy.AssertProperty("hourlyMinute").GetInt32());
+        Assert.Equal(2, policy.AssertProperty("hourlySnapshotsToKeep").GetInt32());
+    }
+
+    [Fact]
+    public async Task SnapshotPolicyGet_ReturnsSnapshotPolicy()
+    {
+        var policyName = $"{Settings.ResourceBaseName}-get-snapshot-policy";
+        await CallToolAsync(
+            "netappfiles_snapshotpolicy_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "snapshot-policy", policyName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "hourly-minute", 5 },
+                { "hourly-snapshots-to-keep", 2 },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_snapshotpolicy_get",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "snapshot-policy", policyName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var policy = result.AssertProperty("snapshotPolicy");
+        Assert.Equal(JsonValueKind.Object, policy.ValueKind);
+        Assert.Equal(policyName, policy.AssertProperty("name").GetString());
+        policy.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], policy.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", policy.AssertProperty("provisioningState").GetString());
+        Assert.True(policy.AssertProperty("enabled").GetBoolean());
+        Assert.Equal(5, policy.AssertProperty("hourlyMinute").GetInt32());
+        Assert.Equal(2, policy.AssertProperty("hourlySnapshotsToKeep").GetInt32());
+    }
+
+    [Fact]
+    public async Task SnapshotPolicyUpdate_ReturnsUpdatedSnapshotPolicy()
+    {
+        var policyName = $"{Settings.ResourceBaseName}-update-snapshot-policy";
+        await CallToolAsync(
+            "netappfiles_snapshotpolicy_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "snapshot-policy", policyName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "hourly-minute", 5 },
+                { "hourly-snapshots-to-keep", 2 },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_snapshotpolicy_update",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "snapshot-policy", policyName },
+                { "enabled", false },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var policy = result.AssertProperty("snapshotPolicy");
+        Assert.Equal(JsonValueKind.Object, policy.ValueKind);
+        Assert.Equal(policyName, policy.AssertProperty("name").GetString());
+        policy.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], policy.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", policy.AssertProperty("provisioningState").GetString());
+        Assert.False(policy.AssertProperty("enabled").GetBoolean());
+        Assert.Equal(5, policy.AssertProperty("hourlyMinute").GetInt32());
+        Assert.Equal(2, policy.AssertProperty("hourlySnapshotsToKeep").GetInt32());
+    }
+
+    [Fact]
     public async Task SnapshotCreate_ReturnsCreatedSnapshot()
     {
         var volumeName = $"{Settings.ResourceBaseName}-snapshot-volume";

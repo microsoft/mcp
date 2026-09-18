@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added the `netappfiles snapshotpolicy create`, `netappfiles snapshotpolicy get`, and `netappfiles snapshotpolicy update` commands for creating, retrieving, and updating Azure NetApp Files snapshot policies.

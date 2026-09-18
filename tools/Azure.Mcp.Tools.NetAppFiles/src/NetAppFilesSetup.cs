@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Snapshot;
+using Azure.Mcp.Tools.NetAppFiles.Commands.SnapshotPolicy;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,7 @@ public class NetAppFilesSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<INetAppFilesAccountService, NetAppFilesAccountService>();
+        services.AddSingleton<INetAppFilesSnapshotPolicyService, NetAppFilesSnapshotPolicyService>();
         services.AddSingleton<INetAppFilesSnapshotService, NetAppFilesSnapshotService>();
         services.AddSingleton<INetAppFilesVolumeService, NetAppFilesVolumeService>();
         services.AddSingleton<AccountCreateCommand>();
@@ -28,6 +30,9 @@ public class NetAppFilesSetup : IAreaSetup
         services.AddSingleton<SnapshotCreateCommand>();
         services.AddSingleton<SnapshotGetCommand>();
         services.AddSingleton<SnapshotUpdateCommand>();
+        services.AddSingleton<SnapshotPolicyCreateCommand>();
+        services.AddSingleton<SnapshotPolicyGetCommand>();
+        services.AddSingleton<SnapshotPolicyUpdateCommand>();
         services.AddSingleton<VolumeCreateCommand>();
         services.AddSingleton<VolumeGetCommand>();
         services.AddSingleton<VolumeUpdateCommand>();
@@ -51,6 +56,12 @@ public class NetAppFilesSetup : IAreaSetup
         snapshot.AddCommand<SnapshotCreateCommand>(serviceProvider);
         snapshot.AddCommand<SnapshotGetCommand>(serviceProvider);
         snapshot.AddCommand<SnapshotUpdateCommand>(serviceProvider);
+
+        var snapshotPolicy = new CommandGroup("snapshotpolicy", "Azure NetApp Files snapshot policy operations.");
+        root.AddSubGroup(snapshotPolicy);
+        snapshotPolicy.AddCommand<SnapshotPolicyCreateCommand>(serviceProvider);
+        snapshotPolicy.AddCommand<SnapshotPolicyGetCommand>(serviceProvider);
+        snapshotPolicy.AddCommand<SnapshotPolicyUpdateCommand>(serviceProvider);
 
         var volume = new CommandGroup("volume", "Azure NetApp Files volume operations.");
         root.AddSubGroup(volume);
