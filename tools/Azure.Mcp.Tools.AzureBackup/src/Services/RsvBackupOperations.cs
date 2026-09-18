@@ -782,7 +782,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
     /// Semantics: TimeZone is overlaid when supplied. Schedule (SimpleSchedulePolicy) is replaced when
     /// any of frequency / times / days-of-week is supplied. Retention tiers (Weekly / Monthly / Yearly)
-    /// are individually replaced whenever the corresponding count is greater than zero — other tiers
+    /// are individually replaced whenever the corresponding count is greater than zero â€” other tiers
     /// on the existing policy are preserved untouched. Daily retention continues to be driven by the
     /// legacy <see cref="Policy.PolicyUpdateRequest.DailyRetentionDays"/> path.
     /// </summary>
@@ -1232,7 +1232,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         };
 
         // Mirror EnhancedSecurityState from SoftDeleteState. api-version 2026-02-01+ rejects
-        // updates missing this field. AlwaysON is IRREVERSIBLE — mirror it exactly.
+        // updates missing this field. AlwaysON is IRREVERSIBLE â€” mirror it exactly.
         var enhancedSecurityState = softDeleteState switch
         {
             AzureBackupSoftDeleteState.On => RecoveryServicesEnhancedSecurityState.Enabled,
@@ -1266,7 +1266,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        // Check if CRR is already enabled — re-enabling can cause CloudInternalError on some backends.
+        // Check if CRR is already enabled â€” re-enabling can cause CloudInternalError on some backends.
         if (vault.Value.Data.Properties?.RedundancySettings?.CrossRegionRestore == CrossRegionRestore.Enabled)
         {
             return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
@@ -1298,7 +1298,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         }
         catch (RequestFailedException ex) when (ex.ErrorCode == "BMSUserErrorRedundancySettingsUseVaultApi")
         {
-            // Legacy API rejected — vault requires Vault PATCH API for redundancy settings.
+            // Legacy API rejected â€” vault requires Vault PATCH API for redundancy settings.
             // Preserve any sibling RedundancySettings fields (e.g. StandardTierStorageRedundancy)
             // that the newer Recovery Services api-version requires to be present on the PATCH
             // payload. Sending a bare RedundancySettings PATCH with only CrossRegionRestore
@@ -1500,7 +1500,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         string? crossRegionRestoreState = null;
         // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
-        // (VaultPropertiesEncryption) does not return a first-class encryption state field —
+        // (VaultPropertiesEncryption) does not return a first-class encryption state field â€”
         // only the CMK URI (when configured) and infrastructure encryption flag. We surface
         // encryptionKeyUri as returned by the service and skip the state field rather than
         // inferring a synthetic value. DPP vaults populate encryptionState authoritatively
@@ -1719,57 +1719,104 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string? scheduleFrequency = null;
         string? scheduleTime = null;
         int? dailyRetentionDays = null;
+        BackupPolicyDetails? details = null;
 
         if (data.Properties is BackupGenericProtectionPolicy genericPolicy)
         {
             protectedItemsCount = genericPolicy.ProtectedItemsCount;
+            string? backupManagementType = null;
+            var resourceGuardOperationRequests = genericPolicy.ResourceGuardOperationRequests?.ToList();
 
             if (genericPolicy is IaasVmProtectionPolicy vmPolicy)
             {
                 workloadType = "AzureIaasVM";
-                if (vmPolicy.SchedulePolicy is SimpleSchedulePolicy simpleSchedule)
-                {
-                    scheduleFrequency = simpleSchedule.ScheduleRunFrequency?.ToString();
-                    var firstRunTime = simpleSchedule.ScheduleRunTimes?.Count > 0 ? simpleSchedule.ScheduleRunTimes[0] : (DateTimeOffset?)null;
-                    scheduleTime = firstRunTime?.ToString("HH:mm");
-                }
+                backupManagementType = "AzureIaasVM";
+                var schedulePolicy = MapSchedulePolicy(vmPolicy.SchedulePolicy);
+                var retentionPolicy = MapRetentionPolicy(vmPolicy.RetentionPolicy);
+                scheduleFrequency = schedulePolicy?.ScheduleRunFrequency;
+                scheduleTime = schedulePolicy?.ScheduleRunTimes?.FirstOrDefault();
+                dailyRetentionDays = GetDailyRetentionDays(vmPolicy.RetentionPolicy);
 
-                if (vmPolicy.RetentionPolicy is LongTermRetentionPolicy longTermRetention)
-                {
-                    dailyRetentionDays = longTermRetention.DailySchedule?.RetentionDuration?.Count;
-                }
+                details = new BackupPolicyDetails(
+                    BackupManagementType: backupManagementType,
+                    WorkloadType: workloadType,
+                    ProtectedItemsCount: protectedItemsCount,
+                    ResourceGuardOperationRequests: resourceGuardOperationRequests,
+                    TimeZone: vmPolicy.TimeZone,
+                    PolicyType: vmPolicy.PolicyType?.ToString(),
+                    SnapshotConsistencyType: vmPolicy.SnapshotConsistencyType?.ToString(),
+                    InstantRPRetentionRangeInDays: vmPolicy.InstantRPRetentionRangeInDays,
+                    InstantRPResourceGroupNamePrefix: vmPolicy.InstantRPDetails?.AzureBackupRGNamePrefix,
+                    InstantRPResourceGroupNameSuffix: vmPolicy.InstantRPDetails?.AzureBackupRGNameSuffix,
+                    MakePolicyConsistent: null,
+                    Settings: null,
+                    SchedulePolicy: schedulePolicy,
+                    RetentionPolicy: retentionPolicy,
+                    TieringPolicies: MapTieringPolicies(vmPolicy.TieringPolicy),
+                    SubProtectionPolicies: null);
             }
             else if (genericPolicy is FileShareProtectionPolicy fsPolicy)
             {
                 workloadType = "AzureFileShare";
-                if (fsPolicy.SchedulePolicy is SimpleSchedulePolicy fsSchedule)
-                {
-                    scheduleFrequency = fsSchedule.ScheduleRunFrequency?.ToString();
-                    var firstRunTime = fsSchedule.ScheduleRunTimes?.Count > 0 ? fsSchedule.ScheduleRunTimes[0] : (DateTimeOffset?)null;
-                    scheduleTime = firstRunTime?.ToString("HH:mm");
-                }
+                backupManagementType = "AzureStorage";
+                var schedulePolicy = MapSchedulePolicy(fsPolicy.SchedulePolicy);
+                var retentionPolicy = MapRetentionPolicy(fsPolicy.RetentionPolicy);
+                scheduleFrequency = schedulePolicy?.ScheduleRunFrequency;
+                scheduleTime = schedulePolicy?.ScheduleRunTimes?.FirstOrDefault();
+                dailyRetentionDays = GetDailyRetentionDays(fsPolicy.RetentionPolicy);
 
-                if (fsPolicy.RetentionPolicy is LongTermRetentionPolicy fsRetention)
-                {
-                    dailyRetentionDays = fsRetention.DailySchedule?.RetentionDuration?.Count;
-                }
+                details = new BackupPolicyDetails(
+                    BackupManagementType: backupManagementType,
+                    WorkloadType: fsPolicy.WorkLoadType?.ToString() ?? workloadType,
+                    ProtectedItemsCount: protectedItemsCount,
+                    ResourceGuardOperationRequests: resourceGuardOperationRequests,
+                    TimeZone: fsPolicy.TimeZone,
+                    PolicyType: null,
+                    SnapshotConsistencyType: null,
+                    InstantRPRetentionRangeInDays: null,
+                    InstantRPResourceGroupNamePrefix: null,
+                    InstantRPResourceGroupNameSuffix: null,
+                    MakePolicyConsistent: null,
+                    Settings: null,
+                    SchedulePolicy: schedulePolicy,
+                    RetentionPolicy: retentionPolicy,
+                    TieringPolicies: null,
+                    SubProtectionPolicies: null);
             }
             else if (genericPolicy is VmWorkloadProtectionPolicy wlPolicy)
             {
                 workloadType = wlPolicy.WorkLoadType?.ToString();
+                backupManagementType = "AzureWorkload";
+                var subProtectionPolicies = MapSubProtectionPolicies(wlPolicy.SubProtectionPolicy);
                 var fullSubPolicy = wlPolicy.SubProtectionPolicy?.FirstOrDefault(
                     s => string.Equals(s.PolicyType?.ToString(), "Full", StringComparison.OrdinalIgnoreCase));
-                if (fullSubPolicy?.SchedulePolicy is SimpleSchedulePolicy wlSchedule)
-                {
-                    scheduleFrequency = wlSchedule.ScheduleRunFrequency?.ToString();
-                    var firstRunTime = wlSchedule.ScheduleRunTimes?.Count > 0 ? wlSchedule.ScheduleRunTimes[0] : (DateTimeOffset?)null;
-                    scheduleTime = firstRunTime?.ToString("HH:mm");
-                }
+                var fullSchedulePolicy = MapSchedulePolicy(fullSubPolicy?.SchedulePolicy);
+                scheduleFrequency = fullSchedulePolicy?.ScheduleRunFrequency;
+                scheduleTime = fullSchedulePolicy?.ScheduleRunTimes?.FirstOrDefault();
+                dailyRetentionDays = GetDailyRetentionDays(fullSubPolicy?.RetentionPolicy);
 
-                if (fullSubPolicy?.RetentionPolicy is LongTermRetentionPolicy wlRetention)
-                {
-                    dailyRetentionDays = wlRetention.DailySchedule?.RetentionDuration?.Count;
-                }
+                details = new BackupPolicyDetails(
+                    BackupManagementType: backupManagementType,
+                    WorkloadType: workloadType,
+                    ProtectedItemsCount: protectedItemsCount,
+                    ResourceGuardOperationRequests: resourceGuardOperationRequests,
+                    TimeZone: wlPolicy.Settings?.TimeZone,
+                    PolicyType: null,
+                    SnapshotConsistencyType: null,
+                    InstantRPRetentionRangeInDays: null,
+                    InstantRPResourceGroupNamePrefix: null,
+                    InstantRPResourceGroupNameSuffix: null,
+                    MakePolicyConsistent: wlPolicy.DoesMakePolicyConsistent,
+                    Settings: wlPolicy.Settings is null
+                        ? null
+                        : new BackupPolicyWorkloadSettings(
+                            wlPolicy.Settings.TimeZone,
+                            wlPolicy.Settings.IsCompression,
+                            wlPolicy.Settings.IsSqlCompression),
+                    SchedulePolicy: null,
+                    RetentionPolicy: null,
+                    TieringPolicies: null,
+                    SubProtectionPolicies: subProtectionPolicies);
             }
         }
 
@@ -1781,7 +1828,154 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             protectedItemsCount,
             scheduleFrequency,
             scheduleTime,
-            dailyRetentionDays);
+            dailyRetentionDays,
+            details);
+    }
+
+    private static string FormatRunTime(DateTimeOffset time) => time.ToString("HH:mm");
+
+    private static BackupPolicyHourlySchedule? MapHourlySchedule(BackupHourlySchedule? hourly) =>
+        hourly is null
+            ? null
+            : new BackupPolicyHourlySchedule(
+                hourly.Interval,
+                hourly.ScheduleWindowStartOn?.ToString("HH:mm"),
+                hourly.ScheduleWindowDuration);
+
+    private static BackupPolicySchedule? MapSchedulePolicy(BackupSchedulePolicy? schedule)
+    {
+        switch (schedule)
+        {
+            case SimpleSchedulePolicy simple:
+                return new BackupPolicySchedule(
+                    SchedulePolicyType: "SimpleSchedulePolicy",
+                    ScheduleRunFrequency: simple.ScheduleRunFrequency?.ToString(),
+                    ScheduleRunDays: simple.ScheduleRunDays?.Select(static d => d.ToString()).ToList(),
+                    ScheduleRunTimes: simple.ScheduleRunTimes?.Select(FormatRunTime).ToList(),
+                    ScheduleWeeklyFrequency: simple.ScheduleWeeklyFrequency,
+                    HourlySchedule: MapHourlySchedule(simple.HourlySchedule));
+            case SimpleSchedulePolicyV2 v2:
+                return new BackupPolicySchedule(
+                    SchedulePolicyType: "SimpleSchedulePolicyV2",
+                    ScheduleRunFrequency: v2.ScheduleRunFrequency?.ToString(),
+                    ScheduleRunDays: v2.WeeklySchedule?.ScheduleRunDays?.Select(static d => d.ToString()).ToList(),
+                    ScheduleRunTimes: v2.ScheduleRunTimes?.Select(FormatRunTime).ToList(),
+                    ScheduleWeeklyFrequency: null,
+                    HourlySchedule: MapHourlySchedule(v2.HourlySchedule));
+            default:
+                return null;
+        }
+    }
+
+
+    private static BackupPolicyRetention? MapRetentionPolicy(BackupRetentionPolicy? retention)
+    {
+        switch (retention)
+        {
+            case SimpleRetentionPolicy simple:
+                return new BackupPolicyRetention(
+                    RetentionPolicyType: "SimpleRetentionPolicy",
+                    SimpleRetentionDurationCount: simple.RetentionDuration?.Count,
+                    SimpleRetentionDurationType: simple.RetentionDuration?.DurationType?.ToString(),
+                    Schedules: null);
+            case LongTermRetentionPolicy longTerm:
+                var schedules = new List<BackupPolicyRetentionSchedule>();
+                if (longTerm.DailySchedule is { } daily)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Daily",
+                        RetentionScheduleFormatType: null,
+                        RetentionTimes: daily.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: daily.RetentionDuration?.Count,
+                        DurationType: daily.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: null,
+                        WeeksOfMonth: null,
+                        MonthsOfYear: null,
+                        DaysOfMonth: null));
+                }
+
+                if (longTerm.WeeklySchedule is { } weekly)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Weekly",
+                        RetentionScheduleFormatType: null,
+                        RetentionTimes: weekly.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: weekly.RetentionDuration?.Count,
+                        DurationType: weekly.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: weekly.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
+                        WeeksOfMonth: null,
+                        MonthsOfYear: null,
+                        DaysOfMonth: null));
+                }
+
+                if (longTerm.MonthlySchedule is { } monthly)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Monthly",
+                        RetentionScheduleFormatType: monthly.RetentionScheduleFormatType?.ToString(),
+                        RetentionTimes: monthly.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: monthly.RetentionDuration?.Count,
+                        DurationType: monthly.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: monthly.RetentionScheduleWeekly?.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
+                        WeeksOfMonth: monthly.RetentionScheduleWeekly?.WeeksOfTheMonth?.Select(static w => w.ToString()).ToList(),
+                        MonthsOfYear: null,
+                        DaysOfMonth: null));
+                }
+
+                if (longTerm.YearlySchedule is { } yearly)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Yearly",
+                        RetentionScheduleFormatType: yearly.RetentionScheduleFormatType?.ToString(),
+                        RetentionTimes: yearly.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: yearly.RetentionDuration?.Count,
+                        DurationType: yearly.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: yearly.RetentionScheduleWeekly?.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
+                        WeeksOfMonth: yearly.RetentionScheduleWeekly?.WeeksOfTheMonth?.Select(static w => w.ToString()).ToList(),
+                        MonthsOfYear: yearly.MonthsOfYear?.Select(static m => m.ToString()).ToList(),
+                        DaysOfMonth: null));
+                }
+
+                return new BackupPolicyRetention(
+                    RetentionPolicyType: "LongTermRetentionPolicy",
+                    SimpleRetentionDurationCount: null,
+                    SimpleRetentionDurationType: null,
+                    Schedules: schedules.Count > 0 ? schedules : null);
+            default:
+                return null;
+        }
+    }
+
+    private static int? GetDailyRetentionDays(BackupRetentionPolicy? retention) =>
+        retention is LongTermRetentionPolicy longTerm ? longTerm.DailySchedule?.RetentionDuration?.Count : null;
+
+    private static IReadOnlyList<BackupPolicyTiering>? MapTieringPolicies(IDictionary<string, BackupTieringPolicy>? tiering)
+    {
+        if (tiering is null || tiering.Count == 0)
+        {
+            return null;
+        }
+
+        return tiering.Select(static kvp => new BackupPolicyTiering(
+            kvp.Key,
+            kvp.Value?.TieringMode?.ToString(),
+            kvp.Value?.DurationValue,
+            kvp.Value?.DurationType?.ToString())).ToList();
+    }
+
+    private static IReadOnlyList<BackupPolicySubProtection>? MapSubProtectionPolicies(IList<SubProtectionPolicy>? subPolicies)
+    {
+        if (subPolicies is null || subPolicies.Count == 0)
+        {
+            return null;
+        }
+
+        return subPolicies.Select(static sub => new BackupPolicySubProtection(
+            sub.PolicyType?.ToString(),
+            MapSchedulePolicy(sub.SchedulePolicy),
+            MapRetentionPolicy(sub.RetentionPolicy),
+            MapTieringPolicies(sub.TieringPolicy),
+            sub.SnapshotBackupAdditionalDetails?.InstantRpRetentionRangeInDays)).ToList();
     }
 
     private static BackupJobInfo MapToJobInfo(BackupJobData data)
@@ -2235,7 +2429,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             }
             catch (RequestFailedException ex) when (ex.Status is 404)
             {
-                // Vault may not have registered containers for this backup management type — skip
+                // Vault may not have registered containers for this backup management type â€” skip
             }
         }
 

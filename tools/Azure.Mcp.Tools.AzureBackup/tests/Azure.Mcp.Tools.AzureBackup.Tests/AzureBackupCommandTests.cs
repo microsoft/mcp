@@ -597,6 +597,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         policy.AssertProperty("name");
         Assert.Equal("rsv", policy.AssertProperty("vaultType").GetString());
         policy.AssertProperty("datasourceTypes");
+
+        // Full RSV policy representation (details) should be populated for the built-in VM policy
+        var details = policy.AssertProperty("details");
+        Assert.Equal("AzureIaasVM", details.AssertProperty("workloadType").GetString());
+        Assert.Equal("AzureIaasVM", details.AssertProperty("backupManagementType").GetString());
+        details.AssertProperty("schedulePolicy");
+        details.AssertProperty("retentionPolicy");
     }
 
     [Fact]
@@ -1321,6 +1328,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var policy = policies.EnumerateArray().First();
         Assert.Equal("dpp", policy.AssertProperty("vaultType").GetString());
+
+        // Full DPP policy representation (dppDetails) should be populated with rules
+        var dppDetails = policy.AssertProperty("dppDetails");
+        dppDetails.AssertProperty("dataSourceTypes");
+        Assert.Equal("RuleBasedBackupPolicy", dppDetails.AssertProperty("objectType").GetString());
+        var rules = dppDetails.AssertProperty("rules");
+        Assert.Equal(JsonValueKind.Array, rules.ValueKind);
+        Assert.True(rules.GetArrayLength() > 0);
     }
 
     #endregion
