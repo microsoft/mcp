@@ -51,11 +51,12 @@ public interface IPlatformLandingZoneService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Generates a platform landing zone.
+    /// Starts platform landing zone generation.
     /// </summary>
     /// <param name="context">The landing zone context.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The download URL if successful, null otherwise.</returns>
+    /// <returns>The download URL when available, or null while generation is in progress.</returns>
+    /// <exception cref="InvalidOperationException">The backend reports that generation failed.</exception>
     Task<string?> GenerateAsync(
         PlatformLandingZoneContext context,
         CancellationToken cancellationToken = default);
