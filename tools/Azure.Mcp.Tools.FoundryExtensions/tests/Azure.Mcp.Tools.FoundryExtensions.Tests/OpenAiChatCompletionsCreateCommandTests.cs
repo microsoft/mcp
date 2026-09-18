@@ -38,5 +38,6 @@ public class OpenAiChatCompletionsCreateCommandTests : SubscriptionCommandUnitTe
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.LocalRequired);
         Assert.False(Command.Metadata.Secret);
+        Assert.DoesNotContain("--stream", CommandDefinition.Options.Select(option => option.Name));
     }
 }

@@ -64,6 +64,7 @@ jobs:
     displayName: "Run tests (stdio) - az pwsh"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_TOKEN_CREDENTIALS: AzurePipelinesCredential
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:
       azureSubscription: azure-sdk-tests-public
@@ -94,6 +95,7 @@ jobs:
     displayName: "Run tests (http) - az pwsh"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_TOKEN_CREDENTIALS: AzurePipelinesCredential
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
       MCP_TEST_TRANSPORT: 'http'
     inputs:

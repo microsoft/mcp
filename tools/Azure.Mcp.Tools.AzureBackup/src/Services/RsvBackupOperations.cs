@@ -2160,7 +2160,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? workloadType, string? containerName, string? tenant,
+        string? workloadType, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
