@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Core;
@@ -640,7 +640,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             // (e.g., non-standard ISO 8601 durations from the service). Fall back to listing
             // all jobs and matching by ID to work around this SDK limitation.
             // Note: ListJobsAsync may return a partial list if it also hits FormatException
-            // during enumeration â€” so a null result does NOT mean the job is missing; it may
+            // during enumeration — so a null result does NOT mean the job is missing; it may
             // exist beyond the point where the enumerator broke. Re-throw FormatException
             // (not KeyNotFoundException) to preserve SDK-parse-failure semantics.
             // Tracked in azure-sdk-for-net#59306.
@@ -1054,7 +1054,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     /// <summary>
     /// Builds the DPP vault security-settings payload for a soft-delete update.
-    /// Extracted for regression testing. Retention is always sent â€” RP rejects
+    /// Extracted for regression testing. Retention is always sent — RP rejects
     /// state-only patches on newer api-versions.
     /// </summary>
     internal static BackupVaultSecuritySettings BuildSoftDeleteSettings(

@@ -782,7 +782,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
     /// Semantics: TimeZone is overlaid when supplied. Schedule (SimpleSchedulePolicy) is replaced when
     /// any of frequency / times / days-of-week is supplied. Retention tiers (Weekly / Monthly / Yearly)
-    /// are individually replaced whenever the corresponding count is greater than zero â€” other tiers
+    /// are individually replaced whenever the corresponding count is greater than zero — other tiers
     /// on the existing policy are preserved untouched. Daily retention continues to be driven by the
     /// legacy <see cref="Policy.PolicyUpdateRequest.DailyRetentionDays"/> path.
     /// </summary>
@@ -1232,7 +1232,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         };
 
         // Mirror EnhancedSecurityState from SoftDeleteState. api-version 2026-02-01+ rejects
-        // updates missing this field. AlwaysON is IRREVERSIBLE â€” mirror it exactly.
+        // updates missing this field. AlwaysON is IRREVERSIBLE — mirror it exactly.
         var enhancedSecurityState = softDeleteState switch
         {
             AzureBackupSoftDeleteState.On => RecoveryServicesEnhancedSecurityState.Enabled,
@@ -1266,7 +1266,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        // Check if CRR is already enabled â€” re-enabling can cause CloudInternalError on some backends.
+        // Check if CRR is already enabled — re-enabling can cause CloudInternalError on some backends.
         if (vault.Value.Data.Properties?.RedundancySettings?.CrossRegionRestore == CrossRegionRestore.Enabled)
         {
             return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
@@ -1298,7 +1298,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         }
         catch (RequestFailedException ex) when (ex.ErrorCode == "BMSUserErrorRedundancySettingsUseVaultApi")
         {
-            // Legacy API rejected â€” vault requires Vault PATCH API for redundancy settings.
+            // Legacy API rejected — vault requires Vault PATCH API for redundancy settings.
             // Preserve any sibling RedundancySettings fields (e.g. StandardTierStorageRedundancy)
             // that the newer Recovery Services api-version requires to be present on the PATCH
             // payload. Sending a bare RedundancySettings PATCH with only CrossRegionRestore
@@ -1500,7 +1500,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         string? crossRegionRestoreState = null;
         // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
-        // (VaultPropertiesEncryption) does not return a first-class encryption state field â€”
+        // (VaultPropertiesEncryption) does not return a first-class encryption state field —
         // only the CMK URI (when configured) and infrastructure encryption flag. We surface
         // encryptionKeyUri as returned by the service and skip the state field rather than
         // inferring a synthetic value. DPP vaults populate encryptionState authoritatively
@@ -1868,6 +1868,20 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     }
 
 
+    private static IReadOnlyList<string>? MapDaysOfMonth(RetentionScheduleFormat? formatType, IEnumerable<BackupDay>? days)
+    {
+        if (formatType != RetentionScheduleFormat.Daily || days is null)
+        {
+            return null;
+        }
+
+        var mapped = days
+            .Select(static d => d.IsLast == true ? "Last" : d.Date?.ToString() ?? string.Empty)
+            .Where(static value => !string.IsNullOrEmpty(value))
+            .ToList();
+        return mapped.Count > 0 ? mapped : null;
+    }
+
     private static BackupPolicyRetention? MapRetentionPolicy(BackupRetentionPolicy? retention)
     {
         switch (retention)
@@ -1919,7 +1933,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                         DaysOfWeek: monthly.RetentionScheduleWeekly?.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
                         WeeksOfMonth: monthly.RetentionScheduleWeekly?.WeeksOfTheMonth?.Select(static w => w.ToString()).ToList(),
                         MonthsOfYear: null,
-                        DaysOfMonth: null));
+                        DaysOfMonth: MapDaysOfMonth(monthly.RetentionScheduleFormatType, monthly.RetentionScheduleDailyDaysOfTheMonth)));
                 }
 
                 if (longTerm.YearlySchedule is { } yearly)
@@ -1933,7 +1947,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                         DaysOfWeek: yearly.RetentionScheduleWeekly?.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
                         WeeksOfMonth: yearly.RetentionScheduleWeekly?.WeeksOfTheMonth?.Select(static w => w.ToString()).ToList(),
                         MonthsOfYear: yearly.MonthsOfYear?.Select(static m => m.ToString()).ToList(),
-                        DaysOfMonth: null));
+                        DaysOfMonth: MapDaysOfMonth(yearly.RetentionScheduleFormatType, yearly.RetentionScheduleDailyDaysOfTheMonth)));
                 }
 
                 return new BackupPolicyRetention(
@@ -2429,7 +2443,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             }
             catch (RequestFailedException ex) when (ex.Status is 404)
             {
-                // Vault may not have registered containers for this backup management type â€” skip
+                // Vault may not have registered containers for this backup management type — skip
             }
         }
 

@@ -1310,7 +1310,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AzureDisk" }
+                { "workload-type", "AzureDisk" },
+                { "daily-retention-days", "30" }
             });
 
         var result = await CallToolAsync(
