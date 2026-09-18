@@ -69,6 +69,9 @@ public sealed class AuthorizationServiceManagementGroupTransportTests
             armHandler.RequestUris,
             uri => uri.AbsolutePath.Contains("/tenants", StringComparison.OrdinalIgnoreCase));
         await azureService.DidNotReceive().GetTenants(Arg.Any<CancellationToken>());
+        await azureService.Received(1).ResolveTenantIdAsync(
+            tenantId.ToString(),
+            Arg.Any<CancellationToken>());
 
         using var requestBody = JsonDocument.Parse(Assert.IsType<string>(armHandler.LastRequestBody));
         Assert.Equal(subscriptionId, requestBody.RootElement.GetProperty("subscriptions")[0].GetString());

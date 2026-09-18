@@ -69,8 +69,8 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         ValidateAdditionalFilter(additionalFilter);
 
         var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
-        var tenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
-            ?? subscriptionResource!.Data.TenantId?.ToString()
+        var tenantId = subscriptionResource!.Data.TenantId?.ToString()
+            ?? await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
             ?? throw new InvalidOperationException(
                 $"Subscription '{subscriptionResource.Data.SubscriptionId}' does not have a tenant ID.");
 
@@ -171,11 +171,11 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
 
     private async Task<ResourceQueryResults<T>> ExecuteResourceGraphQueryAsync<T>(
         ResourceQueryContent queryContent,
-        string tenant,
+        string tenantId,
         Func<JsonElement, T> converter,
         CancellationToken cancellationToken)
     {
-        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
+        var token = await GetArmAccessTokenAsync(tenantId, cancellationToken);
         using var client = AzureService.GetClient();
         var clientOptions = AddDefaultPolicies(new ArmClientOptions
         {
