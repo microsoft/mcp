@@ -61,6 +61,29 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
     private const string ValidRoleJson = "{\"name\":\"TestRole\",\"decisionRules\":[{\"effect\":\"Permit\",\"permission\":[{\"attributeName\":\"Action\",\"attributeValueIncludedIn\":[\"Read\"]},{\"attributeName\":\"Path\",\"attributeValueIncludedIn\":[\"*\"]}]}],\"members\":{\"fabricItemMembers\":[],\"microsoftEntraMembers\":[]}}";
 
     [Theory]
+    [InlineData("", false)]
+    [InlineData("--permitted-paths Files/images/*", true)]
+    [InlineData("--allow-full-item-access true", true)]
+    public async Task ExecuteAsync_RequiresExplicitScope(string scopeOptions, bool succeeds)
+    {
+        Service.CreateOrUpdateDataAccessRoleAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new DataAccessRole { Name = "Readers" });
+        var response = await ExecuteCommandAsync($"--workspace-id 32c6efb2-ca3a-4598-83b0-8abe799830cd --item-id item1 --role-name Readers --entra-members 514402e2-4238-4672-b021-ff9000307b66 {scopeOptions}");
+        Assert.Equal(succeeds ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public void ValidateRoleScope_RawJsonRequiresFullItemOptIn()
+    {
+        const string definition = """
+            {"name":"Readers","decisionRules":[{"effect":"Permit","permission":[{"attributeName":"Action","attributeValueIncludedIn":["Read"]}]}]}
+            """;
+        Assert.Throws<ArgumentException>(() => DataAccessRoleCreateOrUpdateCommand.ValidateRoleScope(definition, false));
+        DataAccessRoleCreateOrUpdateCommand.ValidateRoleScope(definition, true);
+        DataAccessRoleCreateOrUpdateCommand.ValidateRoleScope(ValidRoleJson, false);
+    }
+
+    [Theory]
     [InlineData("--workspace-id 32c6efb2-ca3a-4598-83b0-8abe799830cd --item-id item1", true)]
     [InlineData("--item-id item1", false)]  // missing workspace
     [InlineData("--workspace-id 32c6efb2-ca3a-4598-83b0-8abe799830cd", false)]  // missing item
@@ -74,11 +97,7 @@ public class DataAccessRoleCreateOrUpdateCommandTests : CommandUnitTestsBase<Dat
                 .Returns(new DataAccessRole { Name = "TestRole" });
         }
 
-        var fullArgs = string.IsNullOrWhiteSpace(args)
-            ? $"--role-definition {roleJson}"
-            : $"{args} --role-definition {roleJson}";
-
-        var response = await ExecuteCommandAsync(fullArgs);
+        var response = await ExecuteCommandAsync([.. args.Split(' ', StringSplitOptions.RemoveEmptyEntries), "--role-definition", roleJson]);
 
         Assert.NotNull(response);
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);

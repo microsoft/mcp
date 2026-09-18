@@ -29,7 +29,7 @@ public sealed class DataAccessRoleCreateOrUpdateOptions
             Graph yourself to convert emails to GUIDs first; pass the email or UPN
             directly. tenantId may be omitted — it is filled in during resolution.
             To scope access to a specific folder, include a Path attribute in
-            decisionRules. Omitting Path grants access to the entire item.
+            decisionRules. Omitting Path requires --allow-full-item-access true and grants access to the entire item.
             Example with emails (preferred when you know the address, not the GUID):
             {"name":"ImagesReadOnly",
              "members":{"microsoftEntraMembers":[
@@ -43,7 +43,8 @@ public sealed class DataAccessRoleCreateOrUpdateOptions
              "members":{"microsoftEntraMembers":[
                {"objectId":"514402e2-4238-4672-b021-ff9000307b66"}]},
              "decisionRules":[{"effect":"Permit","permission":[
-               {"attributeName":"Action","attributeValueIncludedIn":["Read"]}]}]}
+               {"attributeName":"Action","attributeValueIncludedIn":["Read"]},
+               {"attributeName":"Path","attributeValueIncludedIn":["Files/images/*"]}]}]}
             """)]
     public string? RoleDefinition { get; set; }
 
@@ -53,8 +54,11 @@ public sealed class DataAccessRoleCreateOrUpdateOptions
     [Option(Description = "Comma-separated Fabric item member references in format 'itemId:permission' (e.g. 'dfbe1234-...:Read').")]
     public string? FabricItemMembers { get; set; }
 
-    [Option(Description = "Comma-separated paths to grant access to (e.g. 'Files/images/*,Tables/sales'). Omit to grant access to the entire item.")]
+    [Option(Description = "Comma-separated paths to grant access to (e.g. 'Files/images/*,Tables/sales'). Required unless --allow-full-item-access is explicitly enabled.")]
     public string? PermittedPaths { get; set; }
+
+    [Option(Description = "Allow a role without a path restriction to read the entire item (broad access). Defaults to false.")]
+    public bool AllowFullItemAccess { get; set; }
 
     [Option(Description = "Comma-separated actions to permit. Currently only 'Read' is supported. Defaults to 'Read' if omitted.")]
     public string? PermittedActions { get; set; }

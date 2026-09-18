@@ -44,7 +44,7 @@ public sealed class FileSystemCreateOptions : ISubscriptionOption
     [Option(Description = ManagedLustreOptionDescriptions.MaintenanceTime)]
     public required string MaintenanceTime { get; set; }
 
-    [Option(Description = ManagedLustreOptionDescriptions.RootSquashMode)]
+    [Option(Description = ManagedLustreOptionDescriptions.RootSquashMode + " Defaults to RootOnly with UID/GID 65534 and no exempt clients. Explicitly choose None to retain client root privileges (insecure).")]
     public string? RootSquashMode { get; set; }
 
     [Option(Description = ManagedLustreOptionDescriptions.NoSquashNidLists)]

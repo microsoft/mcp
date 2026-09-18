@@ -16,21 +16,22 @@ public interface IRsvBackupOperations
         string? sku,
         string? storageType,
         string? tenant,
-        CancellationToken cancellationToken);
+        bool enablePublicNetworkAccess = false,
+        CancellationToken cancellationToken = default);
 
     Task<BackupVaultInfo> GetVaultAsync(
         string vaultName,
         string resourceGroup,
         string subscription,
         string? tenant,
-        CancellationToken cancellationToken,
-        VaultExpand expand = VaultExpand.None);
+        VaultExpand expand = VaultExpand.None,
+        CancellationToken cancellationToken = default);
 
     Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription,
         string? tenant,
-        CancellationToken cancellationToken,
-        VaultExpand expand = VaultExpand.None);
+        VaultExpand expand = VaultExpand.None,
+        CancellationToken cancellationToken = default);
 
     Task<OperationResult> UpdateVaultAsync(
         string vaultName,
