@@ -601,6 +601,35 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> | none |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> | none |
 
+## Azure NetApp Files
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| netappfiles_account_create | Create an Azure NetApp Files account named \<account> in \<location> in resource group \<resource_group> | none |
+| netappfiles_account_create | Create a NetApp Files account called \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
+| netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+| netappfiles_snapshot_create | Create a snapshot named \<snapshot> of Azure NetApp Files volume \<volume> in capacity pool \<pool> under account \<account> | none |
+| netappfiles_snapshot_create | Take a snapshot called \<snapshot> of NetApp Files volume \<volume> in pool \<pool> | none |
+| netappfiles_snapshot_get | Get snapshot \<snapshot> from Azure NetApp Files volume \<volume> in capacity pool \<pool> under account \<account> | none |
+| netappfiles_snapshot_get | Show details for snapshot \<snapshot> of NetApp Files volume \<volume> in pool \<pool> | none |
+| netappfiles_snapshot_update | Update snapshot \<snapshot> of Azure NetApp Files volume \<volume> in capacity pool \<pool> under account \<account> | none |
+| netappfiles_snapshot_update | Run the supported update operation for NetApp Files snapshot \<snapshot> of volume \<volume> in pool \<pool> | none |
+| netappfiles_snapshotpolicy_create | Create an enabled Azure NetApp Files snapshot policy named \<snapshot_policy> under account \<account> in \<location> that keeps 2 hourly snapshots at minute 5 | none |
+| netappfiles_snapshotpolicy_create | Create a NetApp Files snapshot policy called \<snapshot_policy> under account \<account> in \<location> that keeps 7 daily snapshots at 02:10 UTC | none |
+| netappfiles_snapshotpolicy_get | Get the Azure NetApp Files snapshot policy named \<snapshot_policy> under account \<account> | none |
+| netappfiles_snapshotpolicy_get | Show me the schedules and state of NetApp Files snapshot policy \<snapshot_policy> in account \<account> | none |
+| netappfiles_snapshotpolicy_update | Disable the Azure NetApp Files snapshot policy named \<snapshot_policy> under account \<account> | none |
+| netappfiles_snapshotpolicy_update | Update NetApp Files snapshot policy \<snapshot_policy> in account \<account> to keep 4 hourly snapshots at minute 10 | none |
+| netappfiles_volume_create | Create a 100 GiB Standard Azure NetApp Files volume named \<volume> in capacity pool \<pool> under account \<account>, using delegated subnet \<subnet_id> in \<location> | none |
+| netappfiles_volume_create | Create an NFSv3 NetApp Files volume called \<volume> with a 100 GiB quota in pool \<pool> under account \<account> | none |
+| netappfiles_volume_get | Get the Azure NetApp Files volume named \<volume> in capacity pool \<pool> under account \<account> | none |
+| netappfiles_volume_get | Show me details for NetApp Files volume \<volume> in pool \<pool> under account \<account> | none |
+| netappfiles_volume_update | Update Azure NetApp Files volume \<volume> in capacity pool \<pool> under account \<account> to a 200 GiB quota | none |
+| netappfiles_volume_update | Resize NetApp Files volume \<volume> in pool \<pool> under account \<account> to 200 GiB | none |
+
 ## Azure Database for PostgreSQL
 
 | Tool Name | Test Prompt | Interaction |
