@@ -243,7 +243,7 @@ public static class HttpClientFactoryConfigurator
             return start.ToString();
         }
 
-        return string.Join("|", Enumerable.Range((int)start, (int)(end - start + 1)));
+        return $"(?:{string.Join("|", Enumerable.Range((int)start, (int)(end - start + 1)))})";
     }
 
     private static string EscapeGlob(string globPattern)
