@@ -44,3 +44,43 @@ jobs:
       }
     displayName: 'Validate Package README.md files'
     condition: succeededOrFailed()
+
+- job: NpmWrapperTests_Windows
+  displayName: "Test npm wrapper on Windows"
+  condition: and(succeededOrFailed(), ne(variables['Skip.Analyze'], 'true'))
+  dependsOn: []
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  steps:
+  - checkout: self
+
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
+    inputs:
+      version: '24.x'
+
+  - pwsh: node --test eng/npm/test/wrapper.test.js
+    displayName: "Run npm wrapper tests"
+    workingDirectory: $(Build.SourcesDirectory)
+
+- job: NpmWrapperTests_macOS
+  displayName: "Test npm wrapper on macOS"
+  condition: and(succeededOrFailed(), ne(variables['Skip.Analyze'], 'true'))
+  dependsOn: []
+  pool:
+    name: $(MACPOOL)
+    vmImage: $(MACVMIMAGE)
+    os: macos
+  steps:
+  - checkout: self
+
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
+    inputs:
+      version: '24.x'
+
+  - pwsh: node --test eng/npm/test/wrapper.test.js
+    displayName: "Run npm wrapper tests"
+    workingDirectory: $(Build.SourcesDirectory)

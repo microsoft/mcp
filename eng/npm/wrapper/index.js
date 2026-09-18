@@ -64,7 +64,10 @@ function getInstallDirs() {
 
 function userCacheDir() {
   if (platform === 'win32') {
-    return process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local')
+    const localAppData = process.env.LOCALAPPDATA
+    return localAppData && path.isAbsolute(localAppData)
+      ? localAppData
+      : path.join(os.homedir(), 'AppData', 'Local')
   }
   if (platform === 'darwin') {
     return path.join(os.homedir(), 'Library', 'Caches')

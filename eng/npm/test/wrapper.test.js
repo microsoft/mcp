@@ -206,6 +206,7 @@ function noHomeDirEnv(fixture) {
 const permissionsSkip = process.platform === 'win32'
   ? 'directory permissions are not enforced this way on Windows'
   : process.getuid() === 0 && 'root ignores directory permissions'
+const windowsOnlySkip = process.platform === 'win32' ? false : 'Windows-only behavior'
 
 const expectedStdout = 'ran ["server","start"]'
 
@@ -323,6 +324,42 @@ test('takes over an install lock left by a process that died', (t) => {
   assert.strictEqual(result.stdout, expectedStdout)
   assert.strictEqual(npmCalls(fixture).length, 1)
   assert.ok(!fs.existsSync(path.join(fixture.privateDir, '.install.lock')), 'should release the install lock')
+})
+
+test('falls back to a per-user cache when the private install path cannot be created', (t) => {
+  const fixture = createFixture(t)
+  fs.writeFileSync(fixture.privateDir, 'not a directory')
+
+  const result = runWrapper(fixture)
+
+  assert.strictEqual(result.status, 0, result.stderr)
+  assert.strictEqual(result.stdout, expectedStdout)
+  const calls = npmCalls(fixture)
+  assert.strictEqual(calls.length, 1)
+  assert.strictEqual(installPrefix(calls[0]), fixture.cacheDir)
+})
+
+test('ignores a relative LOCALAPPDATA path', { skip: windowsOnlySkip }, (t) => {
+  const fixture = createFixture(t)
+  fs.writeFileSync(fixture.privateDir, 'not a directory')
+  fixture.env.LOCALAPPDATA = 'relative-cache'
+  const expectedCacheDir = path.join(
+    fixture.home,
+    'AppData',
+    'Local',
+    'microsoft-mcp',
+    platformPackageName,
+    packageVersion
+  )
+
+  const result = runWrapper(fixture)
+
+  assert.strictEqual(result.status, 0, result.stderr)
+  assert.strictEqual(result.stdout, expectedStdout)
+  const calls = npmCalls(fixture)
+  assert.strictEqual(calls.length, 1)
+  assert.strictEqual(installPrefix(calls[0]), expectedCacheDir)
+  assert.ok(!fs.existsSync(path.join(fixture.project, 'relative-cache')))
 })
 
 test('falls back to a per-user cache when the wrapper directory is not writable', { skip: permissionsSkip }, (t) => {
