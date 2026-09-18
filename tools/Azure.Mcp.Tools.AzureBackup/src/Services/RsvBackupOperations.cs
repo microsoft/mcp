@@ -540,7 +540,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
-        string? immutabilityState, string? identityType, string? tags,
+        string? immutabilityState, string? identityType, string? userAssignedIdentity,
+        string? publicNetworkAccess, string? tags,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -557,8 +558,18 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         if (!string.IsNullOrEmpty(identityType))
         {
-            patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                ParseIdentityType(identityType));
+            patchData.Identity = VaultIdentityHelper.BuildManagedServiceIdentity(identityType, userAssignedIdentity);
+        }
+        else if (!string.IsNullOrEmpty(userAssignedIdentity))
+        {
+            throw new ArgumentException(
+                "--user-assigned-identity was provided but --identity-type is not set. Set --identity-type to 'UserAssigned' or 'SystemAssigned,UserAssigned' to associate user-assigned identities.");
+        }
+
+        if (!string.IsNullOrEmpty(publicNetworkAccess))
+        {
+            patchData.Properties ??= new RecoveryServicesVaultProperties();
+            patchData.Properties.PublicNetworkAccess = ParsePublicNetworkAccess(publicNetworkAccess);
         }
 
         if (!string.IsNullOrEmpty(tags))
@@ -1460,16 +1471,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");
     }
 
-    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
-        identityType.ToUpperInvariant() switch
+    private static VaultPublicNetworkAccess ParsePublicNetworkAccess(string publicNetworkAccess) =>
+        publicNetworkAccess.ToUpperInvariant() switch
         {
-            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
-            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
-            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
-                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
-            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
+            "ENABLED" => VaultPublicNetworkAccess.Enabled,
+            "DISABLED" => VaultPublicNetworkAccess.Disabled,
             _ => throw new ArgumentException(
-                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
+                $"Invalid --public-network-access value '{publicNetworkAccess}'. Supported values: 'Enabled', 'Disabled'.")
         };
 
     private static BackupVaultInfo MapToVaultInfo(RecoveryServicesVaultData data, string? resourceGroup)
