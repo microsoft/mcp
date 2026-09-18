@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
+using Azure.Mcp.Tools.NetAppFiles.Commands.BackupVault;
 using Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +20,14 @@ public class NetAppFilesSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<INetAppFilesAccountService, NetAppFilesAccountService>();
+        services.AddSingleton<INetAppFilesBackupVaultService, NetAppFilesBackupVaultService>();
         services.AddSingleton<INetAppFilesVolumeService, NetAppFilesVolumeService>();
         services.AddSingleton<AccountCreateCommand>();
         services.AddSingleton<AccountGetCommand>();
         services.AddSingleton<AccountUpdateCommand>();
+        services.AddSingleton<BackupVaultCreateCommand>();
+        services.AddSingleton<BackupVaultGetCommand>();
+        services.AddSingleton<BackupVaultUpdateCommand>();
         services.AddSingleton<VolumeCreateCommand>();
         services.AddSingleton<VolumeGetCommand>();
         services.AddSingleton<VolumeUpdateCommand>();
@@ -40,6 +45,12 @@ public class NetAppFilesSetup : IAreaSetup
         account.AddCommand<AccountCreateCommand>(serviceProvider);
         account.AddCommand<AccountGetCommand>(serviceProvider);
         account.AddCommand<AccountUpdateCommand>(serviceProvider);
+
+        var backupVault = new CommandGroup("backupvault", "Azure NetApp Files backup vault operations.");
+        root.AddSubGroup(backupVault);
+        backupVault.AddCommand<BackupVaultCreateCommand>(serviceProvider);
+        backupVault.AddCommand<BackupVaultGetCommand>(serviceProvider);
+        backupVault.AddCommand<BackupVaultUpdateCommand>(serviceProvider);
 
         var volume = new CommandGroup("volume", "Azure NetApp Files volume operations.");
         root.AddSubGroup(volume);

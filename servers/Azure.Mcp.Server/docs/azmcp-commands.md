@@ -2695,6 +2695,35 @@ azmcp netappfiles account update --account <account> \
                                  [--nfs-v4-id-domain <nfs-v4-id-domain>] \
                                  [--tenant <tenant>]
 
+# Creates a backup vault in an Azure NetApp Files account.
+# Returns the backup vault name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault create --account <account> \
+                                     --backup-vault <backup-vault> \
+                                     --location <location> \
+                                     --resource-group <resource-group> \
+                                     --subscription <subscription> \
+                                     [--tenant <tenant>]
+
+# Gets an Azure NetApp Files backup vault by name from an account.
+# Returns the backup vault name, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault get --account <account> \
+                                  --backup-vault <backup-vault> \
+                                  --resource-group <resource-group> \
+                                  --subscription <subscription> \
+                                  [--tenant <tenant>]
+
+# Updates the tags of an Azure NetApp Files backup vault.
+# Returns the updated backup vault name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles backupvault update --account <account> \
+                                     --backup-vault <backup-vault> \
+                                     --tags <json-key-value-object> \
+                                     --resource-group <resource-group> \
+                                     --subscription <subscription> \
+                                     [--tenant <tenant>]
+
 # Creates an NFSv3 Azure NetApp Files volume in a capacity pool.
 # Returns the volume name, resource ID, location, provisioning state, quota, and service level.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

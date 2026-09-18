@@ -103,6 +103,101 @@ public class NetAppFilesCommandTests(
     }
 
     [Fact]
+    public async Task BackupVaultCreate_ReturnsCreatedBackupVault()
+    {
+        var backupVaultName = $"{Settings.ResourceBaseName}-backup-vault";
+        var result = await CallToolAsync(
+            "netappfiles_backupvault_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-vault", backupVaultName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var backupVault = result.AssertProperty("backupVault");
+        Assert.Equal(JsonValueKind.Object, backupVault.ValueKind);
+        Assert.Equal(backupVaultName, backupVault.AssertProperty("name").GetString());
+        backupVault.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], backupVault.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", backupVault.AssertProperty("provisioningState").GetString());
+    }
+
+    [Fact]
+    public async Task BackupVaultGet_ReturnsBackupVault()
+    {
+        var backupVaultName = $"{Settings.ResourceBaseName}-get-backup-vault";
+        await CallToolAsync(
+            "netappfiles_backupvault_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-vault", backupVaultName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_backupvault_get",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-vault", backupVaultName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var backupVault = result.AssertProperty("backupVault");
+        Assert.Equal(JsonValueKind.Object, backupVault.ValueKind);
+        Assert.Equal(backupVaultName, backupVault.AssertProperty("name").GetString());
+        backupVault.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], backupVault.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", backupVault.AssertProperty("provisioningState").GetString());
+    }
+
+    [Fact]
+    public async Task BackupVaultUpdate_ReturnsUpdatedBackupVault()
+    {
+        var backupVaultName = $"{Settings.ResourceBaseName}-update-backup-vault";
+        await CallToolAsync(
+            "netappfiles_backupvault_create",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-vault", backupVaultName },
+                { "location", Settings.DeploymentOutputs["LOCATION"] },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var result = await CallToolAsync(
+            "netappfiles_backupvault_update",
+            new()
+            {
+                { "account", Settings.DeploymentOutputs["NETAPP_ACCOUNT_NAME"] },
+                { "backup-vault", backupVaultName },
+                { "tags", "{\"recorded-test\":\"backup-vault-update\"}" },
+                { "resource-group", Settings.ResourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var backupVault = result.AssertProperty("backupVault");
+        Assert.Equal(JsonValueKind.Object, backupVault.ValueKind);
+        Assert.Equal(backupVaultName, backupVault.AssertProperty("name").GetString());
+        backupVault.AssertProperty("id");
+        Assert.Equal(Settings.DeploymentOutputs["LOCATION"], backupVault.AssertProperty("location").GetString());
+        Assert.Equal("Succeeded", backupVault.AssertProperty("provisioningState").GetString());
+    }
+
+    [Fact]
     public async Task VolumeCreate_ReturnsCreatedVolume()
     {
         var result = await CallToolAsync(
