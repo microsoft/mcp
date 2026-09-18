@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.Adme;
 /// </summary>
 public sealed class AdmeSetup : IAreaSetup
 {
-    internal static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(60);
 
     public string Name => "adme";
 
