@@ -38,6 +38,24 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
 - **Azure Service Commands**: ACR Registry List, SQL Database List, Storage Account Get
 - **Non-Azure Commands**: Azure CLI wrapper, Best Practices guidance, Documentation tools
 
+## Secure Resource Provisioning Defaults
+
+Tools that create or create-or-update Azure resources must produce a secure configuration when the caller omits security-related options. Do not rely on an Azure service's current defaults. Explicitly set every supported security property in the typed SDK request model so a service-side default change cannot make the tool less secure.
+
+- Disable public network access, public endpoints or IPs, and anonymous access by default where the service supports it. Do not add public connectivity merely to make a newly created resource immediately reachable.
+- Require encrypted transport by default: enable HTTPS-only access, disable non-TLS endpoints or ports, and set the minimum TLS version to the service's current secure recommendation (at least TLS 1.2). A weaker transport setting requires an explicit opt-in.
+- Prefer Managed Identity and RBAC for authentication. Enable a system-assigned identity or accept a user-assigned identity where supported, and disable local or key-based authentication when possible. For service-to-service access, do not make connection strings, account keys, or API keys the default path.
+- For create-or-update operations, omitted security options must never weaken an existing resource. Apply secure defaults when creating a resource; when updating one, preserve its current security settings unless the caller explicitly requests a supported downgrade.
+
+A tool may expose a less secure behavior for a legitimate compatibility or development scenario, but only as a deliberate caller choice:
+
+- Use a narrowly scoped option whose name states the behavior, such as `--allow-public-network-access`, `--allow-http`, `--minimum-tls-version`, or `--enable-local-auth`. Avoid ambiguous options such as `--secure false`.
+- Keep the secure behavior as the effective default when the option is omitted. Never infer consent to a downgrade from another option, selected SKU, or pre-existing dependency.
+- State the secure default and the security consequence in the `[Option]` description and command documentation. Validate allowed values and incompatible combinations before sending the request.
+- Do not accept, log, persist, or return connection strings or keys merely because local authentication was enabled. Follow the existing secret-handling requirements for any command that must handle them.
+
+Add tests proving that an invocation without security options sends or creates the secure configuration. Add focused tests for each downgrade option and for create-or-update omission behavior; use a recorded live test to verify the resulting Azure resource state when practical.
+
 ## Command Architecture
 
 ### Command Design Principles
@@ -2810,6 +2828,12 @@ Before submitting:
 - [ ] Use cancellation token when using async methods (e.g., `GetAsync(serverName, cancellationToken: cancellationToken)`)
 - [ ] Subscription resolution uses `IAzureService.GetSubscription()`
 - [ ] Service constructor includes `IAzureService` injection for Azure resources
+
+### Secure Resource Creation (Required for Create and Create-or-Update Commands)
+- [ ] Requests explicitly set supported secure defaults: public access disabled, HTTPS and strong TLS required, and Managed Identity/RBAC preferred over local keys
+- [ ] Any less secure behavior requires a narrowly named, documented opt-in option; the secure behavior remains effective when the option is omitted
+- [ ] Omitting security options during create-or-update preserves or strengthens an existing resource instead of weakening it
+- [ ] Tests verify the no-option secure configuration, each supported downgrade option, and create-or-update omission behavior
 
 ### Documentation Requirements
 
