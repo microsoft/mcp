@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Messaging.EventGrid;
+using Azure.ResourceManager;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
@@ -372,8 +373,6 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken),
             topicName,
             "Event Grid topics",
-            static topic => topic.Data.Name,
-            static topic => topic.Id.ResourceGroupName,
             cancellationToken);
     }
 
@@ -412,8 +411,6 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken),
             topicName,
             "Event Grid system topics",
-            static topic => topic.Data.Name,
-            static topic => topic.Id.ResourceGroupName,
             cancellationToken);
     }
 
@@ -421,29 +418,27 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         IAsyncEnumerable<T> topics,
         string topicName,
         string topicType,
-        Func<T, string> getName,
-        Func<T, string?> getResourceGroup,
-        CancellationToken cancellationToken) where T : class
+        CancellationToken cancellationToken) where T : ArmResource
     {
         T? match = null;
         var matchingResourceGroups = new List<string>();
 
         await foreach (var topic in topics.WithCancellation(cancellationToken))
         {
-            if (!getName(topic).Equals(topicName, StringComparisons.ResourceName))
+            if (!topic.Id.Name.Equals(topicName, StringComparisons.ResourceName))
             {
                 continue;
             }
 
             match ??= topic;
-            matchingResourceGroups.Add(getResourceGroup(topic) ?? "<unknown>");
+            matchingResourceGroups.Add(topic.Id.ResourceGroupName ?? "<unknown>");
         }
 
         if (matchingResourceGroups.Count > 1)
         {
             throw new ArgumentException(
                 $"Multiple {topicType} named '{topicName}' found in resource groups: {string.Join(", ", matchingResourceGroups)}. "
-                + "Specify --resource-group to disambiguate.");
+                + "Specify a specific --resource-group to disambiguate.");
         }
 
         return match;
