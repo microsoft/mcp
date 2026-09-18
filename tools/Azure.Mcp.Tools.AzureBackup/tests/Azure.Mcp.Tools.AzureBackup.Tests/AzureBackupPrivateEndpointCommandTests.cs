@@ -193,4 +193,58 @@ public class AzureBackupPrivateEndpointCommandTests(
         Assert.Equal("Succeeded", deleteStatus, ignoreCase: true);
         Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: PrivateEndpoint lifecycle");
     }
+
+    [LiveTestOnly] // Creating the PE + Private DNS zone group spans Microsoft.Network long-running operations that are not deterministic under record/playback (same rationale as the lifecycle test above).
+    [Fact]
+    public async Task PrivateEndpointCreate_WithPrivateDnsZone_LinksDnsZoneGroup()
+    {
+        // Exercises --private-dns-zone-ids / --private-dns-zone-group-name: after the PE is
+        // created and auto-approved, a Private DNS zone group is created on the endpoint that
+        // links the Bicep-provisioned backup private DNS zone. The zone resource ID is derived
+        // from ResourceBaseName-scoped values so it resolves in the live subscription.
+        var vaultName = $"{Settings.ResourceBaseName}-rsv-pe";
+        var peName = RegisterOrRetrieveVariable("createdPrivateEndpointDnsName", $"pe-dns-{Random.Shared.NextInt64()}");
+        var subnetId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Network/virtualNetworks/{Settings.ResourceBaseName}-pe-vnet/subnets/pe-subnet";
+        var privateDnsZoneId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Network/privateDnsZones/privatelink.{Settings.ResourceBaseName}.backup.windowsazure.com";
+
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] START: PrivateEndpoint + DNS zone group (vault={vaultName}, pe={peName})");
+
+        var createResult = await CallToolAsync(
+            "azurebackup_vault_privateendpoint_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "private-endpoint-name", peName },
+                { "vnet-subnet-id", subnetId },
+                { "group-id", "AzureBackup" },
+                { "auto-approve", "true" },
+                { "private-dns-zone-ids", privateDnsZoneId },
+                { "private-dns-zone-group-name", "backup-dns" }
+            });
+
+        Assert.True(createResult.HasValue, "Expected a response from privateendpoint create with DNS zone.");
+        var created = createResult.Value.AssertProperty("connection");
+        var pecName = created.AssertProperty("name").GetString();
+        Assert.False(string.IsNullOrEmpty(pecName), "Expected created PEC name to be non-empty.");
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] Created PEC '{pecName}' with DNS zone group on vault '{vaultName}'");
+
+        // Clean up the vault-side PEC so the vault stays eligible for re-runs.
+        var deleteResult = await CallToolAsync(
+            "azurebackup_vault_privateendpoint_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "private-endpoint-name", pecName! }
+            });
+
+        Assert.True(deleteResult.HasValue, "Expected a response from privateendpoint delete.");
+        Assert.Equal("Succeeded", deleteResult.Value.AssertProperty("result").AssertProperty("status").GetString(), ignoreCase: true);
+        Output.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] DONE: PrivateEndpoint + DNS zone group");
+    }
 }

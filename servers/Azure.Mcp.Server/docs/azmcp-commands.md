@@ -103,6 +103,8 @@ the CLI and the container image entrypoint.
 
 Exposes Azure tools grouped by service namespace. Each Azure service appears as a single namespace-level tool that routes to individual operations internally. This is the default mode to reduce tool count and prevent VS Code from hitting the 128 tool limit.
 
+If a tool call specifies an unavailable `command`, the router can make one correction attempt using the supplied `intent` when the MCP client supports sampling. If it cannot resolve the command, it returns a tool error listing only the command names available to that tool under the current server configuration, without descriptions or parameter schemas. Select the command that best matches the current intent. To request the full command catalog without executing a command, set `learn=true` with an empty `intent`. An `intent` that is not blank can trigger sampling and execution even when `learn=true`. This behavior also applies to consolidated mode and external-server routing in these modes; CLI help is unchanged.
+
 ```bash
 # Start MCP Server with namespace-level tools (default behavior)
 azmcp server start \
@@ -1069,7 +1071,10 @@ azmcp azurebackup vault get --subscription <subscription> \
                             [--vault-type <vault-type>] \
                             [--expand <expand>]
 
-# Updates vault-level settings including soft delete, immutability, and managed identity.
+# Updates vault-level settings including soft delete, immutability, managed identity, and public network
+# access. Use --identity-type with --user-assigned-identity (comma-separated user-assigned identity
+# resource IDs) to attach user-assigned managed identities. Use --public-network-access ('Enabled' or
+# 'Disabled') to control the Recovery Services vault networking access toggle (RSV only).
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault update --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -1079,6 +1084,8 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--soft-delete-retention-days <soft-delete-retention-days>] \
                                [--immutability-state <immutability-state>] \
                                [--identity-type <identity-type>] \
+                               [--user-assigned-identity <user-assigned-identity>] \
+                               [--public-network-access <Enabled|Disabled>] \
                                [--tags <tags>] \
                                [--redundancy <redundancy>]
 ```
@@ -1088,7 +1095,10 @@ azmcp azurebackup vault update --subscription <subscription> \
 ```bash
 # Creates a Private Endpoint (v2 experience) for a Recovery Services vault in a customer VNet subnet.
 # Provisions the Microsoft.Network/privateEndpoints resource and, when --auto-approve is true, approves
-# the resulting Private Endpoint Connection on the vault. Backup vaults (DPP) are not supported. The
+# the resulting Private Endpoint Connection on the vault. Optionally links the Private Endpoint to one or
+# more Private DNS zones by passing --private-dns-zone-ids (comma-separated Microsoft.Network/privateDnsZones
+# resource IDs); a Private DNS zone group is created on the endpoint (name controlled by
+# --private-dns-zone-group-name, default 'default'). Backup vaults (DPP) are not supported. The
 # vault must have no protected items. --group-id must be 'AzureBackup' (primary region) or
 # 'AzureBackup_secondary' (paired region / CRR).
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1100,7 +1110,9 @@ azmcp azurebackup vault privateendpoint create --subscription <subscription> \
                                                [--vault-type <vault-type>] \
                                                [--group-id <AzureBackup|AzureBackup_secondary>] \
                                                [--location <location>] \
-                                               [--auto-approve <true|false>]
+                                               [--auto-approve <true|false>] \
+                                               [--private-dns-zone-ids <private-dns-zone-ids>] \
+                                               [--private-dns-zone-group-name <private-dns-zone-group-name>]
 
 # Retrieves Private Endpoint Connections on a Recovery Services vault. When --private-endpoint-name is
 # specified, returns that single connection; when omitted, lists every PEC on the vault. Backup vaults
@@ -1223,7 +1235,7 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--yearly-retention-days-of-week <day[,day...]>] \
                                 [--yearly-retention-days-of-month <int[,int...]>]
 
-# Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types and protected items count. When omitted, lists all backup policies configured in the vault.
+# Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types, protected items count, schedule and retention details, tiering policies, sub-protection policies, and workload-specific properties (time zone, instant restore settings, compression). RSV policy details are returned under 'details' and Backup vault (DPP) policy details under 'dppDetails', each mirroring the current Azure Backup SDK surface. When --policy is omitted, lists all backup policies configured in the vault. The returned contract reflects the currently supported SDK properties and may be revisited when the underlying Azure.ResourceManager SDK packages are upgraded.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy get --subscription <subscription> \
                              --resource-group <resource-group> \
@@ -2750,14 +2762,12 @@ azmcp postgres table schema get --user <user> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server config get --subscription <subscription> \
                                  --resource-group <resource-group> \
-                                 --user <user> \
                                  --server <server>
 
 # Retrieve a specific parameter of a PostgreSQL server
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param get --subscription <subscription> \
                                 --resource-group <resource-group> \
-                                --user <user> \
                                 --server <server> \
                                 --param <parameter>
 
@@ -2765,7 +2775,6 @@ azmcp postgres server param get --subscription <subscription> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param set --subscription <subscription> \
                                 --resource-group <resource-group> \
-                                --user <user> \
                                 --server <server> \
                                 --param <parameter> \
                                 --value <value>
@@ -3097,8 +3106,7 @@ azmcp foundryextensions openai embeddings-create \
 azmcp foundryextensions openai models-list \
     --subscription <subscription> \
     --resource-group <resource-group> \
-    --resource-name <resource-name> \
-    [--auth-method <auth-method>]
+    --resource-name <resource-name>
 
 # List or get Microsoft Foundry resource details (endpoint, SKU, location). --resource-group is required when --resource-name is specified.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

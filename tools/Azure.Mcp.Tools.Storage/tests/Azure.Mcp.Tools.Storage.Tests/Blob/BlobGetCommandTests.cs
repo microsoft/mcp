@@ -240,7 +240,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("Blob not found", response.Message);
+        Assert.Contains("Container or blob not found", response.Message);
     }
 
     [Fact]

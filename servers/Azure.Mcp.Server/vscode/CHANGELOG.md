@@ -1,18 +1,19 @@
 # Release History
 
+## 3.0.45 (2026-09-17) (pre-release)
 
+### Added
 
+- Added namespace-scoped emergency overrides for endpoint SSRF validation and began migrating service endpoint checks to `Microsoft.Security.AntiSSRF`. [[#3603](https://github.com/microsoft/mcp/pull/3603)]
 
+### Changed
 
-
-
-
-
-
-
-
-
-
+- **Breaking:** Removed `protected-item` from the `azurebackup protecteditem protect` and `update-protection` tools, removed the non-functional `aks-included-namespaces` and `aks-excluded-namespaces` parameters from `protecteditem protect`, and removed the non-functional `container` filter from `azurebackup protectableitem list`. [[#3641](https://github.com/microsoft/mcp/pull/3641)]
+- **Breaking:** Removed the unused `sender-name` parameter from the `communication email send` tool. [[#3638](https://github.com/microsoft/mcp/pull/3638)]
+- **Breaking:** Removed the unused `user`, `encoding-format`, and `dimensions` parameters from `foundryextensions openai embeddings-create`, `stream` from `foundryextensions openai chat-completions-create`, and `auth-method` from `foundryextensions openai models-list`. [[#3640](https://github.com/microsoft/mcp/pull/3640)]
+- **Breaking:** Removed the unused `subscription` parameter from all Key Vault tools. [[#3644](https://github.com/microsoft/mcp/pull/3644)]
+- **Breaking:** Removed the unused `subscription` and `resource-group` parameters from the `mysql database query` and `mysql table schema get` tools. [[#3646](https://github.com/microsoft/mcp/pull/3646)]
+- **Breaking:** Removed the unused `subscription` parameter from the `storage blob get`, `storage blob upload`, `storage blob container create`, `storage blob container get`, and `storage table list` tools. [[#3649](https://github.com/microsoft/mcp/pull/3649)]
 
 ## 3.0.44 (2026-09-15) (pre-release)
 

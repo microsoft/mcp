@@ -81,6 +81,10 @@ public sealed class StorageService(IAzureService azureService)
             (nameof(location), location),
             (nameof(subscription), subscription));
 
+        // Fail fast on invalid account names (3-24 lowercase letters/numbers) instead of relying on the
+        // ARM service to reject the request, which surfaces a less specific error.
+        ValidateStorageAccountName(account);
+
         // Create ArmClient for deployments
         ArmClient armClient = await CreateArmClientWithApiVersionAsync(
             "Microsoft.Storage/storageAccounts",

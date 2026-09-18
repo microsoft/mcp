@@ -46,7 +46,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestPeName), Arg.Is(TestSubnetId),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
@@ -64,12 +64,45 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
     }
 
     [Fact]
+    public async Task ExecuteAsync_PassesPrivateDnsZoneOptions()
+    {
+        // Arrange
+        const string zoneId = "/subscriptions/sub/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.eus.backup.windowsazure.com";
+        var expected = SampleConnection();
+
+        Service.CreatePrivateEndpointAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestPeName), Arg.Is(TestSubnetId),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Is(zoneId), Arg.Is("dns-group"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--private-endpoint-name", TestPeName,
+            "--vnet-subnet-id", TestSubnetId,
+            "--private-dns-zone-ids", zoneId,
+            "--private-dns-zone-group-name", "dns-group");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.PrivateEndpointCreateCommandResult);
+        Assert.Equal("pec-1", result.Connection.Name);
+
+        await Service.Received(1).CreatePrivateEndpointAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(TestPeName), Arg.Is(TestSubnetId),
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
+            Arg.Is(zoneId), Arg.Is("dns-group"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_ForNotSupportedOnDpp()
     {
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new NotSupportedException("Private Endpoints are not supported for Backup vaults (DPP). Only Recovery Services vaults (RSV) expose Private Endpoint Connections."));
 
         var response = await ExecuteCommandAsync(
@@ -90,7 +123,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var response = await ExecuteCommandAsync(
@@ -109,7 +142,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "forbidden"));
 
         var response = await ExecuteCommandAsync(
@@ -129,7 +162,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
         var response = await ExecuteCommandAsync(
@@ -148,7 +181,7 @@ public class PrivateEndpointCreateCommandTests : SubscriptionCommandUnitTestsBas
         Service.CreatePrivateEndpointAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("--group-id must be one of: AzureBackup, AzureBackup_secondary"));
 
         var response = await ExecuteCommandAsync(
