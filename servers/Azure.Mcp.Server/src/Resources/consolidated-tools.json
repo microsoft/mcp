@@ -2415,7 +2415,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, Azure NetApp Files accounts, blob containers, blob data, and tables. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, Azure NetApp Files accounts and volumes, blob containers, blob data, and tables. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2450,6 +2450,7 @@
         "managedlustre_fs_blob_import_get",
         "managedlustre_fs_expansion_get",
         "netappfiles_account_get",
+        "netappfiles_volume_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -2702,7 +2703,7 @@
     },
     {
       "name": "create_or_update_azure_netapp_files_resources",
-      "description": "Create Azure NetApp Files accounts and volumes, or update account tags or NFSv4 user ID mapping domains.",
+      "description": "Create Azure NetApp Files accounts and volumes, update account tags or NFSv4 user ID mapping domains, or update volume storage quotas.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2732,7 +2733,8 @@
       "mappedToolList": [
         "netappfiles_account_create",
         "netappfiles_account_update",
-        "netappfiles_volume_create"
+        "netappfiles_volume_create",
+        "netappfiles_volume_update"
       ]
     },
     {

@@ -15,6 +15,8 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands;
 [JsonSerializable(typeof(NetAppFilesAccount))]
 [JsonSerializable(typeof(NetAppFilesVolume))]
 [JsonSerializable(typeof(VolumeCreateCommand.VolumeCreateResult))]
+[JsonSerializable(typeof(VolumeGetCommand.VolumeGetResult))]
+[JsonSerializable(typeof(VolumeUpdateCommand.VolumeUpdateResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]

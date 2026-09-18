@@ -24,6 +24,8 @@ public class NetAppFilesSetup : IAreaSetup
         services.AddSingleton<AccountGetCommand>();
         services.AddSingleton<AccountUpdateCommand>();
         services.AddSingleton<VolumeCreateCommand>();
+        services.AddSingleton<VolumeGetCommand>();
+        services.AddSingleton<VolumeUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -42,6 +44,8 @@ public class NetAppFilesSetup : IAreaSetup
         var volume = new CommandGroup("volume", "Azure NetApp Files volume operations.");
         root.AddSubGroup(volume);
         volume.AddCommand<VolumeCreateCommand>(serviceProvider);
+        volume.AddCommand<VolumeGetCommand>(serviceProvider);
+        volume.AddCommand<VolumeUpdateCommand>(serviceProvider);
 
         return root;
     }

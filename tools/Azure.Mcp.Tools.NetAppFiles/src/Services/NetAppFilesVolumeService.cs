@@ -14,6 +14,29 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
 {
     private const long BytesPerGib = 1024L * 1024L * 1024L;
 
+    public async Task<NetAppFilesVolume> GetVolumeAsync(
+        string account,
+        string pool,
+        string volume,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(
+            subscription,
+            resourceGroup,
+            tenant,
+            cancellationToken: cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+
+        var accountResource = resourceGroupResource.GetNetAppAccount(account, cancellationToken).Value;
+        var poolResource = accountResource.GetCapacityPool(pool, cancellationToken).Value;
+        var volumeResource = poolResource.GetNetAppVolume(volume, cancellationToken).Value;
+
+        return Map(volumeResource);
+    }
+
     public async Task<NetAppFilesVolume> CreateVolumeAsync(
         string account,
         string pool,
@@ -49,6 +72,37 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
             .GetNetAppVolumes()
             .CreateOrUpdateAsync(WaitUntil.Started, volume, volumeData, cancellationToken);
 
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return Map(operation.Value);
+    }
+
+    public async Task<NetAppFilesVolume> UpdateVolumeAsync(
+        string account,
+        string pool,
+        string volume,
+        long quotaGib,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(
+            subscription,
+            resourceGroup,
+            tenant,
+            cancellationToken: cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+
+        var accountResource = resourceGroupResource.GetNetAppAccount(account, cancellationToken).Value;
+        var poolResource = accountResource.GetCapacityPool(pool, cancellationToken).Value;
+        var volumeResource = poolResource.GetNetAppVolume(volume, cancellationToken).Value;
+        var patch = new NetAppVolumePatch(volumeResource.Data.Location)
+        {
+            UsageThreshold = checked(quotaGib * BytesPerGib)
+        };
+
+        var operation = await volumeResource.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return Map(operation.Value);

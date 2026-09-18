@@ -2708,6 +2708,27 @@ azmcp netappfiles volume create --account <account> \
                                 --resource-group <resource-group> \
                                 --subscription <subscription> \
                                 [--tenant <tenant>]
+
+# Gets an Azure NetApp Files volume by name from a capacity pool.
+# Returns the volume name, resource ID, location, provisioning state, quota, and service level.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume get --account <account> \
+                                      --pool <pool> \
+                                      --volume <volume> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--tenant <tenant>]
+
+# Updates the storage quota of an Azure NetApp Files volume.
+# Returns the updated volume name, resource ID, location, provisioning state, quota, and service level.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume update --account <account> \
+                                --pool <pool> \
+                                --volume <volume> \
+                                --quota-gib <quota-gib> \
+                                --resource-group <resource-group> \
+                                --subscription <subscription> \
+                                [--tenant <tenant>]
 ```
 
 ### Azure Database for MySQL Operations

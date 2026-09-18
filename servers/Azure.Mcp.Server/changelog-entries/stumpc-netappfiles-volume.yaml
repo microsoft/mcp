@@ -1,3 +1,3 @@
 changes:
   - section: Features Added
-    description: Added command for creating NFSv3 volumes.
+    description: Added `netappfiles volume create`, `netappfiles volume get`, and `netappfiles volume update` commands for creating, retrieving, and updating Azure NetApp Files volumes.

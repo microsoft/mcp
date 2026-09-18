@@ -68,7 +68,7 @@ resource netAppFilesContributorRoleAssignment 'Microsoft.Authorization/roleAssig
   }
 }
 
-output NETAPP_ACCOUNT_NAME string = baseName
+output NETAPP_ACCOUNT_NAME string = netAppAccount.name
 output NETAPP_POOL_NAME string = capacityPool.name
 output NETAPP_SUBNET_ID string = virtualNetwork.properties.subnets[0].id
 output LOCATION string = location
