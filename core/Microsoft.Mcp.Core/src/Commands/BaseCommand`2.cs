@@ -139,7 +139,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     }
 
     /// <summary>
-    /// Adds a command-provided, sanitized message to telemetry for failed responses.
+    /// Adds a command-provided, sanitized message to telemetry for failed responses or interim failure detection.
     /// </summary>
     /// <param name="context">The command execution context containing the telemetry activity.</param>
     /// <param name="response">The command response containing the optional telemetry message.</param>
@@ -147,12 +147,6 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     {
         if (!string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
         {
-            // If failure telemetry is present, ensure activity captures it and detect inconsistent success status (#3504)
-            var isSuccess = response.Status >= HttpStatusCode.OK && response.Status < HttpStatusCode.Ambiguous;
-            if (isSuccess)
-            {
-                response.Status = HttpStatusCode.InternalServerError;
-            }
             context.Activity?.SetTag(TagName.ToolFailureMessage, response.TelemetryFailureMessage);
         }
     }

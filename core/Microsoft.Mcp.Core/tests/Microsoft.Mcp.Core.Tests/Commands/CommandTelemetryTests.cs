@@ -46,13 +46,30 @@ public sealed class CommandTelemetryTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_SuccessfulResponse_DoesNotCaptureTelemetryFailureMessage()
+    public async Task ExecuteAsync_SuccessfulResponse_WithTelemetryFailureMessage_CapturesTelemetryFailureMessage()
     {
         using var activity = CreateActivity();
-        await ExecuteAsync(
+        var response = await ExecuteAsync(
             new TelemetryTestCommand(HttpStatusCode.OK, "Successful operation details."),
             activity);
 
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Successful operation details.", activity.GetTagItem(TagName.ToolFailureMessage));
+        Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task ExecuteAsync_SuccessfulResponse_WithoutTelemetryFailureMessage_DoesNotCaptureTelemetryFailureMessage(string? telemetryFailureMessage)
+    {
+        using var activity = CreateActivity();
+        var response = await ExecuteAsync(
+            new TelemetryTestCommand(HttpStatusCode.OK, telemetryFailureMessage),
+            activity);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Null(activity.GetTagItem(TagName.ToolFailureMessage));
         Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
     }
