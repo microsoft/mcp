@@ -1495,8 +1495,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azureterraform_avm_get | Get the documentation for the avm-ptn-aiml-ai-foundry pattern module | none |
 | azureterraform_aztfexport_resource | Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform | none |
 | azureterraform_aztfexport_resource | Generate an aztfexport command to export a single Azure resource to Terraform | clarification-required |
+| azureterraform_aztfexport_resource | Generate an aztfexport command for /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> using the azapi provider without running the export | none |
 | azureterraform_aztfexport_resourcegroup | Export all resources in resource group my-rg to Terraform | none |
 | azureterraform_aztfexport_resourcegroup | Export resource group my-rg to Terraform using the azapi provider | none |
+| azureterraform_aztfexport_resourcegroup | Generate an aztfexport command to export all resources in my-rg with the azapi provider without running the export | none |
 | azureterraform_aztfexport_query | Generate an aztfexport command that uses a resource graph query to export all storage accounts in my subscription | none |
 | azureterraform_aztfexport_query | Generate an aztfexport query command to export resources matching "type == 'Microsoft.Storage/storageAccounts'" | none |
 | azureterraform_conftest_workspace | Validate Terraform files in ./my-terraform-folder against Azure security policies | context-required |
