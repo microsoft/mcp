@@ -178,6 +178,13 @@ public static partial class EndpointValidator
             UsGov: [".mysql.database.usgovcloudapi.net"],
             Germany: [],
             UseLegacyCheck: false),
+        ["postgres"] = new AllowedSuffixManager(
+            // PostgresService.cs also has a copy of these. Keep them in sync.
+            Public: [".postgres.database.azure.com"],
+            China: [".postgres.database.chinacloudapi.cn"],
+            UsGov: [".postgres.database.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["servicebus"] = new AllowedSuffixManager(
             Public: [".servicebus.windows.net"],
             China: [".servicebus.chinacloudapi.cn"],

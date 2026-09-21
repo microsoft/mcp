@@ -5,15 +5,15 @@ using System.Data;
 using System.Data.Common;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Security;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
+using Azure.ResourceManager;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Npgsql;
 
 namespace Azure.Mcp.Tools.Postgres.Services;
@@ -34,39 +34,101 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         return accessToken.Token;
     }
 
-    private static readonly string[] AllowedPostgresSuffixes =
-    [
-        ".postgres.database.azure.com",
-        ".postgres.database.usgovcloudapi.net",
-        ".postgres.database.chinacloudapi.cn",
-    ];
-
-    private string NormalizeServerName(string server)
+    /// <summary>
+    /// Returns the full hostname to a Postgres server to be used for
+    /// connection string construction.
+    /// </summary>
+    /// <param name="serverNameOrFullHostname">
+    /// A <see cref="string"/> that is either (1) a server name, e.g., mydb or (2) a full DNS
+    /// hostname to a server, e.g., mydb.postgres.database.azure.com in the public cloud.
+    /// </param>
+    /// <returns>
+    /// A server hostname to be used for connection string construction based on the current
+    /// cloud configuration of the application's runtime.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="serverNameOrFullHostname"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="serverNameOrFullHostname"/> is empty or whitespace; is not a bare
+    /// DNS server name or hostname; identifies only the PostgreSQL domain suffix without a server
+    /// label; the configured Azure cloud is not supported for PostgreSQL connections; or the
+    /// PostgreSQL endpoint allow-list is not configured.
+    /// </exception>
+    /// <exception cref="SecurityException">
+    /// Thrown when SSRF protections are enabled and the completed endpoint is not a valid absolute
+    /// HTTPS URI or its host is not an allowed PostgreSQL domain for the configured Azure cloud.
+    /// </exception>
+    private string CreateAndValidateServerHostname(string serverNameOrFullHostname)
     {
-        if (!server.Contains('.'))
-        {
-            return AzureService.CloudConfiguration.CloudType switch
-            {
-                AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
-                    server + ".postgres.database.azure.com",
-                AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
-                    server + ".postgres.database.usgovcloudapi.net",
-                AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
-                    server + ".postgres.database.chinacloudapi.cn",
-                _ =>
-                    server + ".postgres.database.azure.com"
-            };
-        }
+        // GENERAL REMARKS:
+        // This method is building the hostname used in a connection string, NOT an HTTPS URI
+        // to be used by an HttpClient or the like. As such, there are different tests within
+        // this method that EndpointValidator.ValidateAzureServiceEndpoint isn't presently
+        // prepared to handle as it's focused on HTTPS URI validation. To authors: you must
+        // document each step that is unique in this method for knowledge sharing, historical
+        // archiving, and evaluation of correctness.
+        ArgumentException.ThrowIfNullOrWhiteSpace(serverNameOrFullHostname);
 
-        if (!Array.Exists(AllowedPostgresSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
+        string postgresDnsSuffix = GetPostgresDnsSuffix(armEnvironment);
+
+        // Short Azure PostgreSQL server names have no domain component, so a dot signals that the
+        // caller supplied a URI-ready, fully qualified host candidate. Preserve that candidate so
+        // validation evaluates the supplied authority; complete only short names with the cloud suffix.
+        string host = serverNameOrFullHostname.Contains('.')
+            ? serverNameOrFullHostname
+            : serverNameOrFullHostname + postgresDnsSuffix;
+
+        // EndpointValidator authorizes the parsed URI host, while Npgsql receives this raw host string.
+        // Require DNS-only syntax so user-info, ports, paths, or multi-host values cannot make those differ.
+        if (Uri.CheckHostName(host) != UriHostNameType.Dns)
         {
             throw new ArgumentException(
-                $"The server name '{server}' is not a valid Azure Database for PostgreSQL hostname. " +
-                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedPostgresSuffixes)}.");
+                "The server value must be either a short Azure Database for PostgreSQL server name or a fully " +
+                    "qualified Azure Database for PostgreSQL hostname. Do not include a URL scheme, port, path, " +
+                    "query, fragment, user information, or multiple hosts.",
+                nameof(serverNameOrFullHostname));
         }
 
-        return server;
+        // We prefix with `https://` even though it's not used for a connection string.
+        // The method has some helpful error messages and other logic that we won't re-implement here.
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: $"https://{host}",
+            serviceType: "postgres",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "postgres");
+
+        // EndpointValidator permits the allow-listed suffix root, but PostgreSQL connection endpoints
+        // require a resource-specific serverNameOrFullHostname label before that suffix.
+        if (host.Equals(postgresDnsSuffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "The server name is not a valid Azure Database for PostgreSQL hostname because it does not include a server label.",
+                nameof(serverNameOrFullHostname));
+        }
+
+        // We do NOT return a value with `https://` prefixed because that's not valid for
+        // a connection string.
+        return host;
     }
+
+    /// <summary>
+    /// Gets the appropriate DNS suffix for a Postgres endpoint in the given Azure cloud.
+    /// </summary>
+    /// <param name="armEnvironment">The Azure cloud of interest.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">
+    /// Given cloud is not valid or supported.
+    /// </exception>
+    private static string GetPostgresDnsSuffix(ArmEnvironment armEnvironment) =>
+        //EndpointValidator.AllowLists.cs also has a copy of this list. Keep them in sync.
+        ArmEnvironment.AzurePublicCloud.Equals(armEnvironment) ? ".postgres.database.azure.com" :
+        ArmEnvironment.AzureChina.Equals(armEnvironment) ? ".postgres.database.chinacloudapi.cn" :
+        ArmEnvironment.AzureGovernment.Equals(armEnvironment) ? ".postgres.database.usgovcloudapi.net" :
+        throw new ArgumentException(
+            $"The configured Azure cloud is not supported for PostgreSQL connections. Value given: '{armEnvironment}'.",
+            nameof(armEnvironment));
 
     public async Task<DatabaseListResult> ListDatabasesAsync(
         string authType,
@@ -75,8 +137,8 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string server,
         CancellationToken cancellationToken)
     {
+        string host = CreateAndValidateServerHostname(server);
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
-        var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, "postgres", user, passwordToUse);
 
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname LIMIT @maxResults;";
@@ -109,8 +171,8 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string query,
         CancellationToken cancellationToken)
     {
+        string host = CreateAndValidateServerHostname(server);
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
-        var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
         var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
@@ -165,8 +227,8 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string schema,
         CancellationToken cancellationToken)
     {
+        string host = CreateAndValidateServerHostname(server);
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
-        var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = @schema ORDER BY table_name LIMIT @maxResults;";
@@ -200,8 +262,8 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         string table,
         CancellationToken cancellationToken)
     {
+        string host = CreateAndValidateServerHostname(server);
         string? passwordToUse = await GetPassword(authType, password, cancellationToken);
-        var host = NormalizeServerName(server);
         var connectionString = BuildConnectionString(host, database, user, passwordToUse);
 
         var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = @tableName;";
