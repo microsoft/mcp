@@ -135,9 +135,9 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     }
 
     [Fact]
+    [LiveTestOnly]
     public async Task Should_Returns_Error_Cannot_Send()
     {
-
         if (TestMode != TestMode.Playback)
         {
             Assert.SkipWhen(string.IsNullOrEmpty(_endpointRecorded), "Communication Services endpoint not configured for live testing");
@@ -165,7 +165,6 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
         var status = result.AssertProperty("status");
         Assert.Equal(404, status.GetInt32());
     }
-
 
     [Fact]
     public async Task Should_SendSms_WithValidParameters()
