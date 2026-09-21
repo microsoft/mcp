@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Validated PostgreSQL server inputs against the configured Azure cloud before acquiring credentials or opening database connections."
