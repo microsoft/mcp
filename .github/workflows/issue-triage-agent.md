@@ -20,6 +20,7 @@ if: github.event_name != 'issues' || !startsWith(github.event.issue.title, '[inc
 permissions:
   contents: read
   issues: read
+  copilot-requests: write
 
 engine:
   id: copilot
