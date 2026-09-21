@@ -28,6 +28,40 @@ internal static class AdmeServiceHelper
     public const string NonRetryingHttpClientName = "adme-no-retry";
     public const string AuthScope = "https://energy.azure.com/.default";
 
+    public static string GetAuthScope(string? authAppId)
+    {
+        if (string.IsNullOrWhiteSpace(authAppId))
+        {
+            return AuthScope;
+        }
+
+        var value = authAppId.Trim();
+        var resource = value.EndsWith("/.default", StringComparison.OrdinalIgnoreCase)
+            ? value[..^"/.default".Length]
+            : value;
+        if (Guid.TryParse(resource, out _))
+        {
+            return $"{resource}/.default";
+        }
+
+        var isValidAppIdUri = Uri.TryCreate(resource, UriKind.Absolute, out var uri) &&
+            (uri.Scheme.Equals("api", StringComparison.OrdinalIgnoreCase) ||
+             uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)) &&
+            !string.IsNullOrWhiteSpace(uri.Host) &&
+            string.IsNullOrEmpty(uri.Query) &&
+            string.IsNullOrEmpty(uri.Fragment) &&
+            string.IsNullOrEmpty(uri.UserInfo);
+
+        if (!isValidAppIdUri)
+        {
+            throw new ArgumentException(
+                "The ADME authentication application ID must be a GUID or an absolute api:// or https:// App ID URI.",
+                nameof(authAppId));
+        }
+
+        return $"{resource.TrimEnd('/')}/.default";
+    }
+
     public static string? Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value;
 
@@ -53,6 +87,7 @@ internal static class AdmeServiceHelper
         string path,
         JsonTypeInfo<T> typeInfo,
         CancellationToken cancellationToken,
+        string? authAppId = null,
         bool sendJsonContentTypeHint = false) =>
         SendAsync(
             credentialProvider,
@@ -60,6 +95,7 @@ internal static class AdmeServiceHelper
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Get,
             path,
             sendJsonContentTypeHint ? new StringContent(string.Empty, Encoding.UTF8, "application/json") : null,
@@ -79,6 +115,7 @@ internal static class AdmeServiceHelper
         JsonTypeInfo<TResponse> responseTypeInfo,
         IReadOnlyCollection<KeyValuePair<string, string>>? extraHeaders,
         CancellationToken cancellationToken,
+        string? authAppId = null,
         bool disableRetries = false) =>
         SendAsync(
             credentialProvider,
@@ -86,6 +123,7 @@ internal static class AdmeServiceHelper
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Post,
             path,
             JsonContent.Create(body, requestTypeInfo),
@@ -104,13 +142,15 @@ internal static class AdmeServiceHelper
         TRequest body,
         JsonTypeInfo<TRequest> requestTypeInfo,
         JsonTypeInfo<TResponse> responseTypeInfo,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        string? authAppId = null) =>
         SendAsync(
             credentialProvider,
             httpClientFactory,
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Put,
             path,
             JsonContent.Create(body, requestTypeInfo),
@@ -125,7 +165,8 @@ internal static class AdmeServiceHelper
         string dataPartition,
         string? tenant,
         string path,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? authAppId = null)
     {
         await SendAsync<object?>(
             credentialProvider,
@@ -133,6 +174,7 @@ internal static class AdmeServiceHelper
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Delete,
             path,
             content: null,
@@ -147,6 +189,7 @@ internal static class AdmeServiceHelper
         string endpoint,
         string dataPartition,
         string? tenant,
+        string? authAppId,
         HttpMethod method,
         string path,
         HttpContent? content,
@@ -159,7 +202,7 @@ internal static class AdmeServiceHelper
         var endpointUri = AdmeServiceValidator.ValidateEndpoint(new Uri(endpoint));
         var credential = await credentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
         var accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([AuthScope]), cancellationToken);
+            new TokenRequestContext([GetAuthScope(authAppId)]), cancellationToken);
 
         using var client = httpClientFactory.CreateClient(
             disableRetries ? NonRetryingHttpClientName : HttpClientName);

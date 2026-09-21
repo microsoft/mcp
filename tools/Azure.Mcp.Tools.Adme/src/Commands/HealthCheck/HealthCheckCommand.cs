@@ -35,7 +35,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
     public override void ValidateOptions(HealthCheckOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
     }
 
     /// <summary>
@@ -50,7 +50,8 @@ public sealed class HealthCheckCommand(IHealthService healthService)
                 options.Endpoint,
                 options.DataPartition,
                 options.Tenant,
-                cancellationToken);
+                cancellationToken,
+                options.AuthAppId);
 
             context.Response.Results = ResponseResult.Create(
                 result,

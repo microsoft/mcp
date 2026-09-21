@@ -14,6 +14,27 @@ namespace Azure.Mcp.Tools.Adme.Tests;
 
 public sealed class AdmeServiceHelperTests
 {
+    [Theory]
+    [InlineData(null, AdmeServiceHelper.AuthScope)]
+    [InlineData(" ", AdmeServiceHelper.AuthScope)]
+    [InlineData("e91be4a4-1111-2222-3333-444444444444", "e91be4a4-1111-2222-3333-444444444444/.default")]
+    [InlineData("api://e91be4a4-1111-2222-3333-444444444444", "api://e91be4a4-1111-2222-3333-444444444444/.default")]
+    [InlineData("api://e91be4a4-1111-2222-3333-444444444444/.default", "api://e91be4a4-1111-2222-3333-444444444444/.default")]
+    [InlineData("https://energy.contoso.com/", "https://energy.contoso.com/.default")]
+    public void GetAuthScope_ReturnsExpectedScope(string? authAppId, string expected)
+    {
+        Assert.Equal(expected, AdmeServiceHelper.GetAuthScope(authAppId));
+    }
+
+    [Theory]
+    [InlineData("not-an-app-id")]
+    [InlineData("http://energy.contoso.com")]
+    [InlineData("api://app?query=value")]
+    public void GetAuthScope_RejectsInvalidApplicationId(string authAppId)
+    {
+        Assert.Throws<ArgumentException>(() => AdmeServiceHelper.GetAuthScope(authAppId));
+    }
+
     [Fact]
     public async Task SendAsync_PreservesAdmeFailureResponse()
     {

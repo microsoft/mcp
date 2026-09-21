@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Net.Http.Headers;
 using Azure.Core;
 using Azure.Mcp.Tools.Adme.Models;
@@ -25,7 +26,8 @@ public sealed class HealthService(
         string endpoint,
         string dataPartition,
         string? tenant,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? authAppId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
         var endpointUri = AdmeServiceValidator.ValidateEndpoint(new Uri(endpoint));
@@ -35,7 +37,7 @@ public sealed class HealthService(
         {
             var credential = await _credentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
             var accessToken = await credential.GetTokenAsync(
-                new TokenRequestContext([AdmeServiceHelper.AuthScope]), cancellationToken);
+                new TokenRequestContext([AdmeServiceHelper.GetAuthScope(authAppId)]), cancellationToken);
             token = accessToken.Token;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -66,9 +68,22 @@ public sealed class HealthService(
                 AdmeServiceHelper.CorrelationIdHeader, out var correlationIds)
                     ? correlationIds.FirstOrDefault()
                     : null;
+            var responseContent = response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
+                ? await response.Content.ReadAsStringAsync(cancellationToken)
+                : null;
+            var authError = response.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => string.IsNullOrEmpty(responseContent)
+                    ? "ADME authentication failed with HTTP status 401."
+                    : responseContent,
+                HttpStatusCode.Forbidden => string.IsNullOrEmpty(responseContent)
+                    ? "ADME authorization failed with HTTP status 403."
+                    : responseContent,
+                _ => null
+            };
             return new(new HealthCheckResult(
-                true,
-                null,
+                authError is null,
+                authError,
                 response.IsSuccessStatusCode,
                 response.IsSuccessStatusCode ? null : $"ADME returned HTTP status {statusCode}.",
                 statusCode), correlationId);

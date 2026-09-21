@@ -14,6 +14,8 @@ namespace Azure.Mcp.Tools.Adme.Tests.Commands.HealthCheck;
 
 public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCommand, IHealthService>
 {
+    private const string AuthAppId = "e91be4a4-1111-2222-3333-444444444444";
+
     [Fact]
     public async Task Execute_ForwardsRequestAndReturnsHealth()
     {
@@ -21,7 +23,8 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             TestConstants.Tenant,
-                Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            AuthAppId)
             .Returns(new AdmeResponse<HealthCheckResult>(
                 new HealthCheckResult(true, null, true, null, 200),
                 "test-correlation-id"));
@@ -29,7 +32,8 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
             "--data-partition", TestConstants.DataPartition,
-            "--tenant", TestConstants.Tenant);
+            "--tenant", TestConstants.Tenant,
+            "--auth-app-id", AuthAppId);
 
         var result = ValidateAndDeserializeResponse(
             response,
@@ -110,6 +114,19 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         var response = await ExecuteCommandAsync(
             "--endpoint", endpoint,
             "--data-partition", dataPartition);
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
+            default!, default!, default, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Execute_WithInvalidAuthAppId_DoesNotCallService()
+    {
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--auth-app-id", "not-an-app-id");
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(

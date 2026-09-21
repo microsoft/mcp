@@ -37,7 +37,7 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
 
         if (options.LatestVersion && options.SchemaVersionMinor.HasValue && !options.SchemaVersionMajor.HasValue)
         {
@@ -83,7 +83,8 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
                 options.LatestVersion,
                 options.Offset,
                 options.Limit,
-                cancellationToken);
+                cancellationToken,
+                options.AuthAppId);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseSchemaListResponse);
         }

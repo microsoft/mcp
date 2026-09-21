@@ -40,7 +40,7 @@ public sealed class RecordListCommand(IStorageService storageService)
     public override void ValidateOptions(RecordListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
 
         if (options.Limit is < 1 or > MaxLimit)
@@ -56,7 +56,7 @@ public sealed class RecordListCommand(IStorageService storageService)
         {
             var result = await _storageService.QueryRecordsByKindAsync(
                 options.Endpoint, options.DataPartition, options.Kind, options.Limit ?? DefaultLimit,
-                options.Cursor, options.Tenant, cancellationToken);
+                options.Cursor, options.Tenant, cancellationToken, options.AuthAppId);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseQueryRecordsResponse);
         }

@@ -13,6 +13,8 @@ namespace Azure.Mcp.Tools.Adme.Tests.Services;
 
 public sealed class HealthServiceTests
 {
+    private const string AuthAppId = "e91be4a4-1111-2222-3333-444444444444";
+
     [Fact]
     public async Task CheckHealthAsync_SucceedsAndSendsAuthenticationHeaders()
     {
@@ -34,6 +36,34 @@ public sealed class HealthServiceTests
         Assert.Equal(TestConstants.AccessToken, handler.LastRequest.Headers.Authorization.Parameter);
         Assert.Equal(TestConstants.DataPartition, handler.LastRequest.Headers.GetValues("data-partition-id").Single());
         await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WithAuthAppId_RequestsInstanceScope()
+    {
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(
+                Arg.Is<TokenRequestContext>(context =>
+                context.Scopes.SequenceEqual(new[] { $"{AuthAppId}/.default" })),
+                Arg.Any<CancellationToken>())
+            .Returns(new AccessToken(TestConstants.AccessToken, DateTimeOffset.UtcNow.AddHours(1)));
+        var provider = Substitute.For<IAzureTokenCredentialProvider>();
+        provider.GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>()).Returns(credential);
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new HealthService(provider, new FakeHttpClientFactory(handler));
+
+        var result = await service.CheckHealthAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.Tenant,
+            TestContext.Current.CancellationToken,
+            AuthAppId);
+
+        Assert.True(result.Result.AuthOk);
+        await credential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context =>
+                context.Scopes.SequenceEqual(new[] { $"{AuthAppId}/.default" })),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -79,6 +109,38 @@ public sealed class HealthServiceTests
         Assert.False(result.Result.ConnectivityOk);
         Assert.Equal(503, result.Result.ConnectivityStatusCode);
         Assert.Contains("503", result.Result.ConnectivityError);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized, "ADME authentication failed: invalid token.")]
+    [InlineData(HttpStatusCode.Forbidden, "ADME authorization failed: access denied.")]
+    public async Task CheckHealthAsync_WhenAdmeRejectsAuthentication_ReportsAuthFailure(
+        HttpStatusCode statusCode,
+        string expectedError)
+    {
+        const string correlationId = "health-correlation-id";
+        var handler = new StubHttpMessageHandler(_ =>
+        {
+            var response = new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(expectedError)
+            };
+            response.Headers.Add(AdmeServiceHelper.CorrelationIdHeader, correlationId);
+            return response;
+        });
+        var service = new HealthService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+
+        var result = await service.CheckHealthAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.Result.AuthOk);
+        Assert.Equal(expectedError, result.Result.AuthError);
+        Assert.False(result.Result.ConnectivityOk);
+        Assert.Equal((int)statusCode, result.Result.ConnectivityStatusCode);
+        Assert.Equal(correlationId, result.CorrelationId);
     }
 
     [Theory]

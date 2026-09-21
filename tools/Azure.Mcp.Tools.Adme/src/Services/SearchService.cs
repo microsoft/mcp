@@ -21,14 +21,15 @@ public sealed class SearchService(
         string dataPartition,
         SearchQueryRequest request,
         string? tenant,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? authAppId = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
         return AdmeServiceHelper.PostAsync(
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/query", request, AdmeJsonContext.Default.SearchQueryRequest,
-            AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, cancellationToken);
+            AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, cancellationToken, authAppId);
     }
 
     public Task<AdmeResponse<SearchCursorResponse>> QueryWithCursorAsync(
@@ -37,7 +38,8 @@ public sealed class SearchService(
         SearchCursorRequest request,
         bool searchAfter,
         string? tenant,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? authAppId = null)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
@@ -46,6 +48,7 @@ public sealed class SearchService(
             $"{BasePath}/query_with_cursor{(searchAfter ? "?search_after=true" : string.Empty)}",
             request, AdmeJsonContext.Default.SearchCursorRequest,
             AdmeJsonContext.Default.SearchCursorResponse, extraHeaders: null, cancellationToken,
+            authAppId,
             disableRetries: !string.IsNullOrWhiteSpace(request.Cursor));
     }
 
