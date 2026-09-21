@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
     Name = "resume",
     Title = "Resume Resilience Recovery Job",
     Description = "Resumes or continues a paused resilience recovery job for a recoveryplan in an Azure service group. Use when asked to resume a paused recovery job, optionally with a description containing user input for the paused action. This destructive operation returns after the resume is accepted with an operation ID. Use recoveryjob get to monitor the existing job. The recovery job must currently be Paused.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

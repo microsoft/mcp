@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
         of a single drill resource or drill target by name, including its ARM properties. Requires the parent
         drill name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -50,8 +50,7 @@ public class MySqlServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _mysqlService.ExecuteQueryAsync(
-                "test-sub", "test-rg", "test-user",
-                maliciousServer, "testdb", "SELECT 1",
+                "test-user", maliciousServer, "testdb", "SELECT 1",
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for MySQL hostname", ex.Message);
@@ -78,8 +77,7 @@ public class MySqlServiceServerNameValidationTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _mysqlService.GetTableSchemaAsync(
-                "test-sub", "test-rg", "test-user",
-                maliciousServer, "testdb", "test_table",
+                "test-user", maliciousServer, "testdb", "test_table",
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for MySQL hostname", ex.Message);

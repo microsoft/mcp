@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -90,6 +91,43 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     {
         JsonElement parametersElem = GetParametersJsonElement(request);
         return parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value);
+    }
+
+    internal static string? ResolveSampledCommandName(string? commandName, IEnumerable<Tool> availableTools)
+    {
+        if (string.IsNullOrWhiteSpace(commandName) || commandName == "Unknown")
+        {
+            return null;
+        }
+
+        return availableTools.FirstOrDefault(tool => string.Equals(tool.Name, commandName, StringComparison.OrdinalIgnoreCase))?.Name;
+    }
+
+    internal static CallToolResult CreateUnknownCommandResult(string toolName, string commandName, IEnumerable<string> availableCommandNames)
+    {
+        var names = availableCommandNames.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        var availableCommands = names.Length == 0
+            ? "No commands are available for this tool in the current server configuration."
+            : $"Available commands: {string.Join(", ", names)}";
+        var selectionGuidance = names.Length == 0
+            ? string.Empty
+            : "Select the command that best matches the current intent. ";
+
+        return new CallToolResult
+        {
+            Content =
+            [
+                new TextContentBlock
+                {
+                    Text = $"""
+                        The command '{commandName}' is not available for the '{toolName}' tool.
+                        {availableCommands}
+                        {selectionGuidance}Use "learn=true" with an empty "intent" to get command descriptions and parameter schemas without executing a command.
+                        """
+                }
+            ],
+            IsError = true
+        };
     }
 
     /// <summary>
@@ -351,5 +389,80 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
 
         decision = null;
         return false;
+    }
+
+    /// <summary>
+    /// Creates a tool definition from a command (same logic as CommandFactoryToolLoader).
+    /// </summary>
+    public static Tool CreateToolFromCommand(string fullName, IBaseCommand command)
+    {
+        var underlyingCommand = command.GetCommand();
+        var tool = new Tool
+        {
+            Name = fullName,
+            Description = underlyingCommand.Description,
+        };
+
+        var metadata = command.Metadata;
+        tool.Annotations = new ToolAnnotations()
+        {
+            DestructiveHint = metadata.Destructive,
+            IdempotentHint = metadata.Idempotent,
+            OpenWorldHint = metadata.OpenWorld,
+            ReadOnlyHint = metadata.ReadOnly,
+            Title = command.Title,
+        };
+
+        JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
+        // Add Secret metadata to tool.Meta if the property exists
+        if (metadata.Secret)
+        {
+            meta[McpHelper.SecretHintMetaKey] = metadata.Secret;
+        }
+        // Add LocalRequired metadata to tool.Meta if the property exists
+        if (metadata.LocalRequired)
+        {
+            meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
+        }
+        tool.Meta = meta;
+
+        var options = command.GetCommand().Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
+
+        if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
+        {
+            var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
+            tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
+            return tool;
+        }
+
+        var schema = OptionSchemaGenerator.CreateInputSchema(options);
+        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.JsonObject);
+        return tool;
+    }
+
+    /// <summary>
+    /// Checks if the command should be kept based its metadata and the server runtime configuration.
+    /// </summary>
+    /// <param name="command">The command to check.</param>
+    /// <param name="configuration">The server runtime configuration.</param>
+    /// <returns>True if the command should be kept, false if it should be filtered.</returns>
+    public static bool ShouldKeepBaseCommand(IBaseCommand command, ServerRuntimeConfiguration configuration)
+    {
+        // Keep the command if and only if:
+        // - The server isn't running in read-only mode or the command is read-only.
+        // - The server isn't running in HTTP (remote) mode or the command doesn't require local resources. 
+        return (!configuration.ReadOnly || command.Metadata.ReadOnly) &&
+            (!configuration.IsHttpMode || !command.Metadata.LocalRequired);
+    }
+
+    public static bool ShouldKeepTool(Tool tool, ServerRuntimeConfiguration configuration)
+    {
+        // Keep the tool if and only if:
+        // - The server isn't running in read-only mode or the tool is read-only.
+        // - The server isn't running in HTTP (remote) mode or the tool doesn't require local resources. 
+        return (!configuration.ReadOnly || (tool.Annotations?.ReadOnlyHint == true)) &&
+            (!configuration.IsHttpMode || !McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey));
     }
 }

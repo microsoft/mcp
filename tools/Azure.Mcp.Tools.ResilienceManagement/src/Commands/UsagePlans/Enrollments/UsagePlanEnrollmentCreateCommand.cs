@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.UsagePlans.Enrollments;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -20,9 +21,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
     Title = "Create or Update Resilience Usage Plan Enrollment",
     Description = """
         Creates or updates an enrollment under a resilience usage plan, associating it with the specified
-        service group, and returns the enrollment information including id, name, the associated service group
-        id, provisioning state, and error details.
+        service group, waits up to 10 minutes for provisioning to complete, and returns the completed enrollment
+        information including id, name, the associated service group id, provisioning state, and error details.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -39,8 +41,8 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
     {
         base.ValidateOptions(options, validationResult);
 
-        ValidateUsagePlanResourceName(options.UsagePlan, "usage plan", validationResult);
-        ValidateUsagePlanResourceName(options.Enrollment, "enrollment", validationResult);
+        UsagePlanResourceNameValidator.Validate(options.UsagePlan, "usage plan", validationResult);
+        UsagePlanResourceNameValidator.Validate(options.Enrollment, "enrollment", validationResult);
 
         if (options.ServiceGroup.Length is < 1 or > 90 || !options.ServiceGroup.All(IsValidServiceGroupNameCharacter))
         {
@@ -76,14 +78,6 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
         return context.Response;
     }
 
-    private static void ValidateUsagePlanResourceName(string name, string resourceType, ValidationResult validationResult)
-    {
-        if (name.Length is < 3 or > 24 || !name.All(IsAsciiLetterNumberOrHyphen))
-        {
-            validationResult.Errors.Add($"The {resourceType} name must be 3 to 24 characters and contain only ASCII letters, numbers, or hyphens.");
-        }
-    }
-
     private static bool IsAsciiLetterNumberOrHyphen(char character) =>
         character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '-';
 
@@ -92,6 +86,7 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        TimeoutException => "The usage plan enrollment create or update request timed out. Check the enrollment state before trying again.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed creating or updating the usage plan enrollment. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
@@ -100,6 +95,10 @@ public sealed class UsagePlanEnrollmentCreateCommand(ILogger<UsagePlanEnrollment
             "The usage plan enrollment request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)
     };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex is TimeoutException
+        ? HttpStatusCode.GatewayTimeout
+        : base.GetStatusCode(ex);
 
     public record UsagePlanEnrollmentCreateCommandResult(UsagePlanEnrollmentInfo Enrollment);
 }

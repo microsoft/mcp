@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
         resource to a drill, change the fault settings on a drill resource, or remove a resource from the drill. It starts
         the operation and returns the operation ID.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

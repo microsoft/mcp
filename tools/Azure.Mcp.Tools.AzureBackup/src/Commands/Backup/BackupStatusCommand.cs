@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
         or other datasource is currently backed up. Requires the datasource ARM resource ID
         and the Azure region (location) where the resource exists.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

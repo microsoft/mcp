@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
         soft delete, remove immutability, stop protection). The caller needs the Backup MUA Operator
         role on the linked Resource Guard because the unlink itself is a MUA-protected operation.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

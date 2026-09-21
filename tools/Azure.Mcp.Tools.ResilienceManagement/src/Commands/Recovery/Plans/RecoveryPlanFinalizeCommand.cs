@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Name = "finalize",
     Title = "Finalize Resilience Recoveryplan",
     Description = "Completes or finalizes the current recoveryplan operation by validating resource permissions and updating the recoveryplan state. Returns an operation ID for tracking. This does not commit a completed failover.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

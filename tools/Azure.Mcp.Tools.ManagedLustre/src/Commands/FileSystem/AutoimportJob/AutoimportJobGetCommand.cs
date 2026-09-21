@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
         Optional options:
         - job-name: The name of a specific autoimport job (if omitted, all jobs are returned)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

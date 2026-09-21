@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
         Get IoT Hub details by name in a resource group of a subscription.
         Returns the IoT Hub with id, name, location, resourceGroup, subscriptionId, sku, capacity, state, and hostName.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

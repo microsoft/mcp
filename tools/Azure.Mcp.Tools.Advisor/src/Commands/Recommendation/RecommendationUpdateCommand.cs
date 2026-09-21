@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         Use --tenant when the target subscription or service group is in a non-default tenant. State changes are rejected for Security category and platform-resolved recommendations.
         Returns the updated ARM recommendation resource. Use this state-changing tool instead of list or summary when the user wants to modify or snooze one recommendation.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
         Requires a backup policy name via --policy. The operation is asynchronous;
         use 'azurebackup job get' to monitor the protection job progress.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -115,8 +116,6 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 options.VaultType,
                 options.Container,
                 options.DatasourceType,
-                options.AksIncludedNamespaces,
-                options.AksExcludedNamespaces,
                 options.AksLabelSelectors,
                 options.AksIncludeClusterScopeResources ? "true" : null,
                 options.AksSnapshotResourceGroup,

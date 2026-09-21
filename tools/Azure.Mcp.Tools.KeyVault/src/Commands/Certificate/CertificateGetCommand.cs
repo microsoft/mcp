@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -17,14 +15,15 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     Name = "get",
     Title = "Get Key Vault Certificate",
     Description = "List all certificates in your Key Vault or get a specific certificate by name. Shows all certificate names in the vault, or retrieves full certificate details including key ID, secret ID, thumbprint, and policy information.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<CertificateGetOptions, CertificateGetCommand.CertificateGetCommandResult>(subscriptionResolver)
+public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<CertificateGetOptions, CertificateGetCommand.CertificateGetCommandResult>
 {
     private readonly ILogger<CertificateGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
@@ -38,7 +37,6 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                 // List all certificates
                 var certificates = await _keyVaultService.ListCertificates(
                     options.Vault,
-                    options.Subscription!,
                     options.Tenant,
                     cancellationToken);
 
@@ -50,7 +48,6 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger,
                 var certificate = await _keyVaultService.GetCertificate(
                     options.Vault,
                     options.Certificate,
-                    options.Subscription!,
                     options.Tenant,
                     cancellationToken);
 

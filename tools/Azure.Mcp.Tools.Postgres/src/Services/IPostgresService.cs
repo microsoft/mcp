@@ -49,7 +49,6 @@ public interface IPostgresService
     Task<string> GetServerConfigAsync(
         string subscriptionId,
         string resourceGroup,
-        string user,
         string server,
         string? tenant = null,
         CancellationToken cancellationToken = default);
@@ -57,7 +56,6 @@ public interface IPostgresService
     Task<string> GetServerParameterAsync(
         string subscriptionId,
         string resourceGroup,
-        string user,
         string server,
         string param,
         string? tenant = null,
@@ -66,7 +64,6 @@ public interface IPostgresService
     Task<string> SetServerParameterAsync(
         string subscription,
         string resourceGroup,
-        string user,
         string server,
         string param,
         string value,

@@ -78,12 +78,146 @@
         "resilience_drill_update",
         "resilience_drill_create",
         "resilience_usageplan_create",
+        "resilience_usageplan_delete",
         "resilience_usageplan_enrollment_create",
+        "resilience_usageplan_enrollment_delete",
         "resilience_recoveryplan_create",
         "resilience_recoveryplan_delete",
         "resilience_recoveryplan_resource_update",
         "resilience_drill_resource_add-or-update",
         "resilience_drill_run_mark-complete"
+      ]
+    },
+    {
+      "name": "add_notes_to_azure_resilience_drill_run",
+      "description": "Add notes to a run of an Azure Resilience Management drill in an Azure service group.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool appends notes without deleting the drill run or its resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation appends a new note to the drill run."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies the drill run by appending notes."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_add-notes"
+      ]
+    },
+    {
+      "name": "failover_azure_resilience_drill_run",
+      "description": "Start failover for an Azure Resilience Management drill run from one or more physical Azure zones, optionally limiting the operation to selected resources.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool initiates failover operations that can change the availability and location of selected resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new asynchronous failover operation for the drill run."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run and resources."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts a failover operation and can modify resource state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_failover"
+      ]
+    },
+    {
+      "name": "resume_azure_resilience_drill_run",
+      "description": "Resume an Azure Resilience Management failover drill run paused after fault injection so it can proceed to the failover stage.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool advances a paused drill workflow into failover, which can change resource availability and location."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "The operation is valid only while the drill run is paused and starts a new asynchronous resume operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool changes the drill run workflow state and starts the failover stage."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_resume"
+      ]
+    },
+    {
+      "name": "reprotect_azure_resilience_drill_run",
+      "description": "Initiate reprotection for failed-over resources in an Azure Resilience Management drill run.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool changes protection and replication state for resources participating in the drill run."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each valid invocation starts a new asynchronous reprotection operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts reprotection and modifies resource protection state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resilience_drill_run_reprotect"
       ]
     },
     {
@@ -590,7 +724,7 @@
     },
     {
       "name": "get_azure_databases_details",
-      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List databases, retrieve server configurations and parameters, explore table schemas, query and manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -619,12 +753,10 @@
       },
       "mappedToolList": [
         "mysql_list",
-        "mysql_database_query",
         "mysql_server_config_get",
         "mysql_server_param_get",
         "mysql_table_schema_get",
         "postgres_list",
-        "postgres_database_query",
         "postgres_server_config_get",
         "postgres_server_param_get",
         "postgres_table_schema_get",
@@ -637,6 +769,40 @@
         "cosmos_database_container_item_get",
         "cosmos_database_container_item_text-search",
         "cosmos_database_container_item_vector-search"
+      ]
+    },
+    {
+      "name": "execute_azure_database_query",
+      "description": "Execute an arbitrary SQL statement against an Azure Database for MySQL or Azure Database for PostgreSQL flexible server database. Supports reads such as SELECT as well as statements that modify data or schema, including INSERT, UPDATE, DELETE, and DDL. The statement runs with the permissions of the signed-in user, so what it is allowed to do is determined by that user's database privileges.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "mysql_database_query",
+        "postgres_database_query"
       ]
     },
     {
@@ -777,7 +943,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, manage web tests for application monitoring, and get health status of entities in Azure Monitor health models.",
+      "description": "Query Analytics logs or search Basic and Auxiliary tables in a Log Analytics workspace. Find matching records in a named table over a time range, with a result limit. Get Azure resource and application health, metrics, availability, and service health events. List Log Analytics workspaces, tables, activity logs, Grafana instances, and Datadog monitored resources. Diagnose applications with App Lens, get Application Insights recommendations, manage web tests, and inspect Azure Monitor health models.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -821,6 +987,7 @@
         "monitor_table_type_list",
         "monitor_webtests_get",
         "monitor_workspace_log_query",
+        "monitor_workspace_log_search",
         "resourcehealth_availability-status_get",
         "resourcehealth_health-events_list"
       ]
@@ -1196,6 +1363,75 @@
       ]
     },
     {
+      "name": "get_azure_data_manager_for_energy_records",
+      "description": "Get, fetch, or list OSDU records and list record versions in an Azure Data Manager for Energy data partition.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "adme_storage_record_fetch",
+        "adme_storage_record_get",
+        "adme_storage_record_list",
+        "adme_storage_record_version_list"
+      ]
+    },
+    {
+      "name": "search_azure_data_manager_for_energy_records",
+      "description": "Search OSDU records in Azure Data Manager for Energy by indexed fields and wildcard or multiple kinds, with cursor pagination, aggregation, projection, sorting, and spatial filtering.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not modify resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "A continuation cursor can advance when consumed and must not be replayed after a failed request."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "adme_search"
+      ]
+    },
+    {
       "name": "get_azure_data_manager_for_energy_schemas",
       "description": "Get a specific OSDU schema definition or list schema descriptors in an Azure Data Manager for Energy data partition, with optional identity, lifecycle, scope, version, and paging filters.",
       "toolMetadata": {
@@ -1331,7 +1567,7 @@
     },
     {
       "name": "get_azure_advisor_recommendation_metadata",
-      "description": "Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.",
+      "description": "Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and a learn-more documentation link for the recommendation.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1360,6 +1596,39 @@
       },
       "mappedToolList": [
         "advisor_metadata_get"
+      ]
+    },
+    {
+      "name": "get_azure_advisor_remediation",
+      "description": "Fix, resolve, or remediate a specific Azure Advisor recommendation type id. Use this whenever you are asked how to fix or how to resolve an Advisor recommendation. Returns its remediation package: step-by-step remediation steps plus ready-to-run artifacts, scripts, and deployment templates in ARM template, Bicep, Azure CLI, PowerShell, and terraform formats to remediate the issue. Also indicates remediation characteristics such as whether it is destructive, reversible, or grounded, along with its confidence, effort, and output type. Use whenever you need to fix, resolve, remediate, or verify a recommendation, or want the ARM, Bicep, CLI, PowerShell, or terraform artifacts and scripts to remediate it.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_remediation_get"
       ]
     },
     {
@@ -2743,6 +3012,40 @@
       ]
     },
     {
+      "name": "get_azure_iot_operations",
+      "description": "List and get Azure IoT Operations instances (Microsoft.IoTOperations/instances) in a subscription or resource group.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about Azure IoT Operations instances without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iotoperations_instance_list",
+        "iotoperations_instance_get"
+      ]
+    },
+    {
       "name": "list_azure_iot_hub_devices",
       "description": "List devices registered in an Azure IoT Hub's device registry, returning device identity metadata without authentication keys.",
       "toolMetadata": {
@@ -4091,6 +4394,39 @@
       ]
     },
     {
+      "name": "update_azure_storage_sync_cloud_endpoints",
+      "description": "Update Azure File Sync Cloud Endpoint change enumeration settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_cloudendpoint_update"
+      ]
+    },
+    {
       "name": "update_azure_storage_sync_server_endpoints",
       "description": "Update Azure File Sync Server Endpoint configurations and settings.",
       "toolMetadata": {
@@ -4658,7 +4994,9 @@
         "azurebackup_policy_get",
         "azurebackup_protecteditem_get",
         "azurebackup_protectableitem_list",
+        "azurebackup_container_list-available",
         "azurebackup_backup_status",
+        "azurebackup_container_get",
         "azurebackup_job_get",
         "azurebackup_recoverypoint_get",
         "azurebackup_governance_find-unprotected",
@@ -4746,6 +5084,41 @@
         "azurebackup_resourceguard_delete",
         "azurebackup_vault_privateendpoint_delete",
         "azurebackup_vault_privateendpoint_approve-reject"
+      ]
+    },
+    {
+      "name": "refresh_azure_backup_containers",
+      "description": "Trigger Recovery Services vault container discovery refresh so newly eligible resources can be discovered for backup workflows.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool triggers a discovery refresh operation without deleting or mutating existing protected resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces equivalent refresh behavior without cumulative side effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool initiates a service operation and is not a pure read-only query."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_container_refresh",
+        "azurebackup_container_register",
+        "azurebackup_protectableitem_inquire"
       ]
     },
     {

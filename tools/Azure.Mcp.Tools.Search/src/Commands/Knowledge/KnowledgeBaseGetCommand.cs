@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
         Required arguments:
         - service
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

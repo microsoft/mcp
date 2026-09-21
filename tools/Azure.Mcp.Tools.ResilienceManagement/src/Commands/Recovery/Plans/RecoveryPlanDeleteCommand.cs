@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Name = "delete",
     Title = "Delete Resilience Recoveryplan",
     Description = "Deletes a resilience recoveryplan from an Azure service group. Use this tool to delete a recoveryplan and report whether the entire plan existed.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

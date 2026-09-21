@@ -26,6 +26,7 @@ public sealed partial class RsvBackupOperations
         string vaultName, string resourceGroup, string subscription,
         string privateEndpointName, string vnetSubnetId, string groupId,
         string? location, bool autoApprove,
+        string? privateDnsZoneIds, string? privateDnsZoneGroupName,
         string? tenant,
         CancellationToken cancellationToken)
     {
@@ -39,6 +40,7 @@ public sealed partial class RsvBackupOperations
 
         ValidateGroupId(groupId);
         var subnetResourceId = ParseSubnetId(vnetSubnetId);
+        var dnsZoneIds = ParsePrivateDnsZoneIds(privateDnsZoneIds);
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
@@ -73,6 +75,14 @@ public sealed partial class RsvBackupOperations
 
         var peOp = await peCollection.CreateOrUpdateAsync(WaitUntil.Started, privateEndpointName, peData, cancellationToken);
         await WaitForLroCompletionAsync(peOp, cancellationToken);
+
+        // Optionally integrate the Private Endpoint with private DNS zones so that the vault's
+        // FQDNs resolve to the Private Endpoint's private IPs from inside the VNet.
+        if (dnsZoneIds.Count > 0)
+        {
+            await CreatePrivateDnsZoneGroupAsync(
+                peCollection, privateEndpointName, dnsZoneIds, privateDnsZoneGroupName, cancellationToken);
+        }
 
         // Refetch the vault to find the auto-created PEC that now points at our PE.
         vault = await vaultResource.GetAsync(cancellationToken);
@@ -244,6 +254,90 @@ public sealed partial class RsvBackupOperations
         }
 
         return parsed;
+    }
+
+    private static List<string> ParsePrivateDnsZoneIds(string? privateDnsZoneIds)
+    {
+        if (string.IsNullOrWhiteSpace(privateDnsZoneIds))
+        {
+            return [];
+        }
+
+        var ids = new List<string>();
+        foreach (var raw in privateDnsZoneIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            ResourceIdentifier parsed;
+            try
+            {
+                parsed = new ResourceIdentifier(raw);
+            }
+            catch (Exception ex) when (ex is FormatException or ArgumentException)
+            {
+                throw new ArgumentException(
+                    $"Invalid --private-dns-zone-ids value '{raw}'. Expected an ARM resource ID of the form '/subscriptions/{{sub}}/resourceGroups/{{rg}}/providers/Microsoft.Network/privateDnsZones/{{zone}}'.", ex);
+            }
+
+            if (parsed.ResourceType != "Microsoft.Network/privateDnsZones")
+            {
+                throw new ArgumentException(
+                    $"Invalid --private-dns-zone-ids value '{raw}': resource type '{parsed.ResourceType}' is not 'Microsoft.Network/privateDnsZones'.");
+            }
+
+            ids.Add(parsed.ToString());
+        }
+
+        return ids;
+    }
+
+    private async Task CreatePrivateDnsZoneGroupAsync(
+        PrivateEndpointCollection peCollection, string privateEndpointName,
+        List<string> dnsZoneIds, string? privateDnsZoneGroupName,
+        CancellationToken cancellationToken)
+    {
+        var peResource = (await peCollection.GetAsync(privateEndpointName, cancellationToken: cancellationToken)).Value;
+        var groupName = string.IsNullOrWhiteSpace(privateDnsZoneGroupName) ? "default" : privateDnsZoneGroupName!;
+
+        var data = new PrivateDnsZoneGroupData();
+        var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var zoneId in dnsZoneIds)
+        {
+            var zoneResourceId = new ResourceIdentifier(zoneId);
+            var configName = MakeDnsZoneConfigName(zoneResourceId.Name, usedNames);
+            data.PrivateDnsZoneConfigs.Add(new PrivateDnsZoneConfig
+            {
+                Name = configName,
+                PrivateDnsZoneId = zoneResourceId,
+            });
+        }
+
+        var op = await peResource.GetPrivateDnsZoneGroups().CreateOrUpdateAsync(
+            WaitUntil.Started, groupName, data, cancellationToken);
+        await WaitForLroCompletionAsync(op, cancellationToken);
+    }
+
+    private static string MakeDnsZoneConfigName(string zoneName, HashSet<string> usedNames)
+    {
+        // Private DNS zone config names must be 1-80 chars and may contain alphanumerics,
+        // hyphens, underscores and periods. Zone names like 'privatelink.wus2.backup.windowsazure.com'
+        // are valid, but replace any disallowed character defensively and de-duplicate.
+        var sanitized = new string(zoneName.Select(c =>
+            char.IsLetterOrDigit(c) || c is '-' or '_' or '.' ? c : '-').ToArray());
+        if (sanitized.Length > 80)
+        {
+            sanitized = sanitized[..80];
+        }
+
+        var candidate = sanitized;
+        var suffix = 1;
+        while (!usedNames.Add(candidate))
+        {
+            var tail = "-" + suffix++;
+            candidate = sanitized.Length + tail.Length > 80
+                ? sanitized[..(80 - tail.Length)] + tail
+                : sanitized + tail;
+        }
+
+        return candidate;
     }
 
     private static async Task ValidatePrivateEndpointPreconditionsAsync(

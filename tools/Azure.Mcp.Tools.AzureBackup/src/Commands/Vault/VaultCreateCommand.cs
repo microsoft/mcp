@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
         'azurebackup vault update --identity-type ...' if needed. Returns the created
         vault details.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

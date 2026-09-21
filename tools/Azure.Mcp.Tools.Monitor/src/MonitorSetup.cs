@@ -29,6 +29,7 @@ public class MonitorSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IMonitorService, MonitorService>();
+        services.AddSingleton<IMonitorLogSearchService, MonitorLogSearchService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
         services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
@@ -71,6 +72,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<SendBrownfieldAnalysisTool>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();
+        services.AddSingleton<WorkspaceLogSearchCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
 
         services.AddSingleton<WorkspaceListCommand>();
@@ -132,6 +134,7 @@ public class MonitorSetup : IAreaSetup
 
         // Register Monitor commands
         workspaceLogs.AddCommand<WorkspaceLogQueryCommand>(serviceProvider);
+        workspaceLogs.AddCommand<WorkspaceLogSearchCommand>(serviceProvider);
 
         resourceLogs.AddCommand<ResourceLogQueryCommand>(serviceProvider);
 

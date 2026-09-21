@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Name = "end",
     Title = "End Resilience Drill",
     Description = "Ends or stops a running resilience drill in a service group. Attests the drill as Success or Failed and records attestation notes.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

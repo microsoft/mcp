@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
     Description = """
         Deletes an expansion job for an Azure Managed Lustre filesystem. This permanently removes the expansion job record from the filesystem. Use this to clean up completed, failed, or cancelled expansion jobs.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

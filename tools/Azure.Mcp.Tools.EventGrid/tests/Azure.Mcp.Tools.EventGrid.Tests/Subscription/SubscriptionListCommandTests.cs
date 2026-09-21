@@ -2,12 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Resources.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -31,6 +35,12 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         Assert.Equal("list", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+    }
+
+    [Fact]
+    public void Command_OperationPlane_IsControl()
+    {
+        Assert.Equal(ToolOperationPlane.Control, Command.Metadata.OperationPlane);
     }
 
     [Fact]
@@ -144,6 +154,42 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AmbiguousTopicAcrossResourceGroups_ReturnsBadRequest()
+    {
+        var topicName = "my-topic";
+        var ambiguityMessage =
+            $"Multiple Event Grid topics named '{topicName}' found in resource groups: rg-prod, rg-dev. Specify a specific --resource-group to disambiguate.";
+        var subscriptionId = "sub123";
+        var subscriptionGuid = Guid.NewGuid();
+        var subscription = ResourceManagerModelFactory.SubscriptionData(
+            new ResourceIdentifier($"/subscriptions/{subscriptionGuid}"),
+            subscriptionId,
+            "Subscription 123",
+            subscriptionGuid,
+            SubscriptionState.Enabled,
+            ResourceManagerModelFactory.SubscriptionPolicies("Public_2014-09-01", "PayAsYouGo_2014-09-01", SpendingLimit.Off),
+            authorizationSource: "RoleBased",
+            managedByTenants: [],
+            tags: new Dictionary<string, string>());
+
+        _azureService.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns([subscription]);
+        Service.GetSubscriptionsAsync(
+                subscriptionId,
+                Arg.Any<string?>(),
+                topicName,
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException(ambiguityMessage));
+
+        var response = await ExecuteCommandAsync("--topic", topicName);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(ambiguityMessage, response.Message);
     }
 
     [Theory]
