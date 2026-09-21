@@ -128,7 +128,7 @@ public static partial class EndpointValidator
             Public: [".eventgrid.azure.net"],
             China: [".eventgrid.azure.cn"],
             UsGov: [".eventgrid.azure.us"],
-            Germany: [".eventgrid.azure.de"],
+            Germany: [],
             UseLegacyCheck: false),
         ["foundry"] = new AllowedSuffixManager(
             Public: [".services.ai.azure.com"],
