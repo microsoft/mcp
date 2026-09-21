@@ -18,7 +18,8 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public class AdvisorService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IAdvisorService
 {
-    private const string RecommendationUpdateApiVersion = "2026-08-01-preview";
+    private const string SubscriptionRecommendationUpdateApiVersion = "2026-03-01-preview";
+    private const string ServiceGroupRecommendationUpdateApiVersion = "2026-08-01-preview";
     private const string RetirementDateProperty =
         "properties.sourceProperties.serviceRetirement.retirementDate";
     private const string TrackingIdsProperty =
@@ -129,6 +130,7 @@ public class AdvisorService(IAzureService azureService)
 
         return await UpdateRecommendationCoreAsync(
             relativePath,
+            SubscriptionRecommendationUpdateApiVersion,
             recommendationStatus,
             postponedUntilDateTime,
             recommendationDismissReason,
@@ -159,6 +161,7 @@ public class AdvisorService(IAzureService azureService)
 
         return await UpdateRecommendationCoreAsync(
             relativePath,
+            ServiceGroupRecommendationUpdateApiVersion,
             recommendationStatus,
             postponedUntilDateTime,
             recommendationDismissReason,
@@ -168,6 +171,7 @@ public class AdvisorService(IAzureService azureService)
 
     private async Task<Recommendation> UpdateRecommendationCoreAsync(
         string relativePath,
+        string apiVersion,
         RecommendationStatus recommendationStatus,
         DateTimeOffset? postponedUntilDateTime,
         RecommendationDismissReason? recommendationDismissReason,
@@ -178,7 +182,7 @@ public class AdvisorService(IAzureService azureService)
         var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
         var requestUri = new Uri(
             managementEndpoint,
-            $"{relativePath}?api-version={RecommendationUpdateApiVersion}");
+            $"{relativePath}?api-version={apiVersion}");
         var properties = new Models.RecommendationStatePatchProperties(
             recommendationStatus,
             recommendationStatus == RecommendationStatus.Postponed ? postponedUntilDateTime : null,

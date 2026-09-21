@@ -65,7 +65,7 @@ public class AdvisorRecommendationUpdateServiceTests
 
         Assert.Equal(HttpMethod.Patch, handler.Method);
         Assert.Equal(
-            $"{ArmEnvironment.AzureChina.Endpoint}subscriptions/{SubscriptionId}/providers/Microsoft.Advisor/recommendations/rec%2F1?api-version=2026-08-01-preview",
+            $"{ArmEnvironment.AzureChina.Endpoint}subscriptions/{SubscriptionId}/providers/Microsoft.Advisor/recommendations/rec%2F1?api-version=2026-03-01-preview",
             handler.RequestUri?.AbsoluteUri);
         Assert.Equal("Bearer", handler.AuthorizationScheme);
         Assert.Equal("test-token", handler.AuthorizationParameter);
