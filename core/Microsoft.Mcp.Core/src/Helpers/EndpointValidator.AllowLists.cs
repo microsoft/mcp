@@ -137,6 +137,14 @@ public static partial class EndpointValidator
             UsGov: [".postgres.database.usgovcloudapi.net"],
             Germany: [],
             UseLegacyCheck: false),
+        ["pricing"] = new AllowedSuffixManager(
+            // PricingService.GetPricingEndpoint constructs these exact hosts, while the endpoint policy uses
+            // this copy to authorize initial and paginated requests. Keep both copies and their tests in sync.
+            Public: ["prices.azure.com"],
+            China: ["prices.azure.cn"],
+            UsGov: ["prices.azure.us"],
+            Germany: [],
+            UseLegacyCheck: true),
         ["servicebus"] = new AllowedSuffixManager(
             Public: [".servicebus.windows.net"],
             China: [".servicebus.chinacloudapi.cn"],
