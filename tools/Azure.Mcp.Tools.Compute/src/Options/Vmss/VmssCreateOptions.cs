@@ -38,6 +38,12 @@ public sealed class VmssCreateOptions : ISubscriptionOption
     [Option(Description = ComputeOptionDescriptions.Subnet)]
     public string? Subnet { get; set; }
 
+    [Option(Description = "Existing network security group in the resource group to attach to scale set NICs. By default, a group denying all inbound traffic is created.", Aliases = ["nsg"])]
+    public string? NetworkSecurityGroup { get; set; }
+
+    [Option(Description = "Do not attach a network security group to scale set NICs (insecure). Defaults to false.")]
+    public bool DisableNetworkSecurityGroup { get; set; }
+
     [Option(Description = "Number of VM instances in the scale set. Default is 2", DefaultValue = 2)]
     public int? InstanceCount { get; set; }
 

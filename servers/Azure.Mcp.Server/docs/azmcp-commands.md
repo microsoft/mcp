@@ -1707,12 +1707,12 @@ azmcp compute vm create --subscription <subscription> \
                         [--public-ip-address <public-ip-address>] \
                         [--network-security-group <network-security-group>] \
                         [--source-address-prefix <source-address-prefix>] \
-                        [--no-public-ip] \
+                        [--no-public-ip <true|false>] \
                         [--zone <zone>] \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
-Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
+Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). No public IP is assigned and new NSGs deny all inbound access by default. Set `--no-public-ip false` to enable a public IP and `--source-address-prefix` to explicitly allow SSH/RDP from a source range; `"*"` allows any source. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted; file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -1833,8 +1833,8 @@ azmcp compute vm create --subscription "my-sub" \
 | `--subnet` | No | Subnet name |
 | `--public-ip-address` | No | Public IP address name |
 | `--network-security-group` | No | Network security group name |
-| `--source-address-prefix` | No | Source IP/CIDR for created NSG inbound rules (default: `*`) |
-| `--no-public-ip` | No | Do not create a public IP address |
+| `--source-address-prefix` | No | Source IP/CIDR for created SSH/RDP rules. No inbound access is allowed by default; `*` explicitly allows any source. |
+| `--no-public-ip` | No | Do not create a public IP address (default: `true`). Set `false` to enable a public IP, including when specifying `--public-ip-address`. |
 | `--zone` | No | Availability zone |
 | `--os-disk-size-gb` | No | OS disk size in GB |
 | `--os-disk-type` | No | OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS' |
@@ -2070,6 +2070,8 @@ azmcp compute vmss create --subscription <subscription> \
                           [--os-type <os-type>] \
                           [--virtual-network <virtual-network>] \
                           [--subnet <subnet>] \
+                          [--network-security-group <name>] \
+                          [--disable-network-security-group <true|false>] \
                           [--instance-count <instance-count>] \
                           [--upgrade-policy <upgrade-policy>] \
                           [--zone <zone>] \

@@ -47,6 +47,11 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
     {
         base.ValidateOptions(options, validationResult);
 
+        if (options.DisableNetworkSecurityGroup && !string.IsNullOrWhiteSpace(options.NetworkSecurityGroup))
+        {
+            validationResult.Errors.Add("--network-security-group cannot be combined with --disable-network-security-group.");
+        }
+
         // Determine OS type from image
         var effectiveOsType = ComputeUtilities.DetermineOsType(options.OsType, options.Image);
 
@@ -101,6 +106,8 @@ public sealed class VmssCreateCommand(ILogger<VmssCreateCommand> logger, IComput
                 options.OsDiskSizeGb,
                 options.OsDiskType,
                 options.Tenant,
+                options.NetworkSecurityGroup,
+                options.DisableNetworkSecurityGroup,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmssCreateCommandResult);
