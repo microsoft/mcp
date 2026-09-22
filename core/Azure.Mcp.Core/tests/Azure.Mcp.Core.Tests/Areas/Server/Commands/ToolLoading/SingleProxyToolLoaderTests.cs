@@ -216,23 +216,29 @@ public class SingleProxyToolLoaderTests
             text);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithToolLearnMode_ThrowsExceptionForUnknownTool()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task CallToolHandler_WithUnknownTool_DoesNotCaptureToolIdentity(bool learn)
     {
         // Arrange
         var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var arguments = new Dictionary<string, object?>
         {
-            ["learn"] = true,
-            ["tool"] = "nonexistent", // Use a tool that doesn't exist
+            ["learn"] = learn,
+            ["tool"] = "user@example.com",
+            ["command"] = "user@example.com",
             ["intent"] = "Learn about nonexistent tool"
         };
         var request = McpTestUtilities.CreateToolCallRequest("azure", arguments);
+        using var activity = new Activity("test-activity").Start();
 
         // Act & Assert
         // The current implementation throws KeyNotFoundException for unknown tools
         await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
             await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken));
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolArea);
     }
 
     [Fact]
@@ -336,6 +342,7 @@ public class SingleProxyToolLoaderTests
             ["tool"] = "storage",
             ["learn"] = true
         });
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -343,6 +350,8 @@ public class SingleProxyToolLoaderTests
         // Assert
         var textContent = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
         Assert.Contains("account_list", textContent.Text);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         commandFactory.Received(1).GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"));
         await discoveryStrategy.DidNotReceive().GetOrCreateClientAsync(
             Arg.Any<string>(), Arg.Any<McpClientOptions?>(), Arg.Any<CancellationToken>());
@@ -378,6 +387,7 @@ public class SingleProxyToolLoaderTests
             CreateServerConfigurationOptions(),
             discoveryStrategy);
         var request = CreateCallToolRequestWithToolAndCommand("storage", "account_list");
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -386,6 +396,8 @@ public class SingleProxyToolLoaderTests
         Assert.False(result.IsError ?? false);
         var textContent = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
         Assert.Contains("Managed command executed", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "account_list");
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         await command.Received(1).ExecuteAsync(
             Arg.Is<CommandContext>(context => context.McpServer == request.Server),
             Arg.Any<ParseResult>(),
@@ -688,8 +700,10 @@ public class SingleProxyToolLoaderTests
         return McpTestUtilities.CreateToolCallRequest("azure", arguments);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyCommand()
+    [Theory]
+    [InlineData("account_create")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyCommand(string commandName)
     {
         // Arrange
         var readOnlyTool = new Tool
@@ -719,7 +733,8 @@ public class SingleProxyToolLoaderTests
 
         var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_create");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", commandName);
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -729,6 +744,8 @@ public class SingleProxyToolLoaderTests
         Assert.Null(result.IsError); // No error should happen. Instead learning should be called.
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Contains("Here are the available commands and their input schema", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
     }
 
     [Fact]
@@ -749,6 +766,7 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
         var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_list");
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -757,6 +775,8 @@ public class SingleProxyToolLoaderTests
         Assert.False(result.IsError ?? false);
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Equal("Listed accounts", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "account_list");
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
     }
 
     [Fact]
@@ -795,6 +815,7 @@ public class SingleProxyToolLoaderTests
             "registry-server");
 
         var request = CreateCallToolRequestWithToolAndCommand("registry-server", "local_command");
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -804,6 +825,8 @@ public class SingleProxyToolLoaderTests
         Assert.Null(result.IsError); // No error should happen. Instead learning should be called.
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Contains("Here are the available commands and their input schema", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
     }
 
     [Fact]

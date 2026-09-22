@@ -149,9 +149,6 @@ public sealed class ServerToolLoader(
             learn = true;
         }
 
-        // The ToolArea for the Servers loaded is the name of the server.
-        Activity.Current?.SetTag(TagName.ToolArea, tool);
-
         try
         {
             if (learn)
@@ -164,8 +161,6 @@ public sealed class ServerToolLoader(
                 // It is possible that the LLM provides a value for "command" that does not exist in
                 // CommandFactory. This incorrect value will be replaced if we are able to find
                 // a matching tool via sampling.
-                Activity.Current?.SetTag(TagName.ToolName, command);
-
                 var toolParams = GetParametersDictionary(request);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
             }
@@ -244,11 +239,17 @@ public sealed class ServerToolLoader(
         {
             Activity.Current?.SetTag(TagName.ToolSource, "external." + client.ServerInfo.Name);
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
+            if (availableTools.Count > 0)
+            {
+                Activity.Current?.SetTag(TagName.ToolArea, tool);
+            }
+
             var resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
 
             // Try one supported sampling correction without falling back to the full learn response.
             if (resolvedTool == null)
             {
+                Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
                 _logger.LogWarning("Tool {Tool} does not have a command {Command}.", tool, command);
                 if (availableTools.Count == 0 || !SupportsSampling(request.Server) || string.IsNullOrWhiteSpace(intent))
                 {
@@ -267,11 +268,12 @@ public sealed class ServerToolLoader(
 
             command = resolvedTool.Name;
 
-            // Here the parameters are now those for the tool call, instead of being the server parameters.
-            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
-
             var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
-            Activity.Current?.SetTag(TagName.ToolId, toolId)
+
+            // Here the parameters are now those for the tool call, instead of being the server parameters.
+            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys))
+                .SetTag(TagName.ToolName, command)
+                .SetTag(TagName.ToolId, toolId)
                 .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
 
             if (configuration.Value.ReadOnly && resolvedTool.Annotations?.ReadOnlyHint != true)
@@ -305,8 +307,7 @@ public sealed class ServerToolLoader(
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
-            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
-                .SetTag(TagName.ToolName, command);
+            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
 
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
@@ -389,6 +390,15 @@ public sealed class ServerToolLoader(
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
         var tools = await GetChildToolListAsync(request, tool, cancellationToken);
+        if (tools.Count > 0)
+        {
+            Activity.Current?.SetTag(TagName.ToolArea, tool);
+        }
+        else
+        {
+            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown);
+        }
+
         var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
 
         var learnResponse = new CallToolResult

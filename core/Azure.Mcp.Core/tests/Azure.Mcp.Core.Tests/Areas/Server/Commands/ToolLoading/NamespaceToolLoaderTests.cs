@@ -237,6 +237,38 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         Assert.All(result.Tools, tool => Assert.Equal("keyvault", tool.Name));
     }
 
+    [Theory]
+    [InlineData("user@example.com", null)]
+    [InlineData("keyvault", null)]
+    [InlineData("storage", "storage")]
+    public async Task CallToolHandler_OnlyCapturesAllowedToolIdentity(string namespaceName, string? expectedArea)
+    {
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Namespace = ["storage"]
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest(namespaceName, new Dictionary<string, object?>
+        {
+            ["command"] = "user@example.com"
+        });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        if (expectedArea is null)
+        {
+            activity.AssertTagDoesNotExist(TagName.ToolName);
+            activity.AssertTagDoesNotExist(TagName.ToolArea);
+        }
+        else
+        {
+            activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+            activity.AssertTagEquals(TagName.ToolArea, expectedArea);
+        }
+    }
+
     [Fact]
     public async Task CallToolHandler_WithLearnTrue_ReturnsAvailableCommands()
     {
@@ -248,6 +280,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             ["learn"] = true,
             ["intent"] = "list resources"
         });
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -261,6 +294,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
         Assert.Contains("available command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagEquals(TagName.ToolArea, toolName);
     }
 
     [Theory]
@@ -834,10 +869,15 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             $$$"""{"command":"{{{sampledName}}}","parameters":{"subscription":"sampled-subscription","limit":3}}""");
         var request = BaseToolLoaderTests.CreateCommandRequest(server,
             parametersJson: """{"subscription":"original-subscription","limit":1}""");
+        using var activity = new Activity("test-activity").Start();
+        server.When(samplingServer => samplingServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>()))
+            .Do(_ => activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown));
 
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.False(result.IsError);
+        activity.AssertTagEquals(TagName.ToolName, "storage_alpha");
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         await command.Received(1).ExecuteAsync(
             Arg.Any<CommandContext>(),
             Arg.Is<ParseResult>(parsed => parsed.GetValue<string>("--subscription") == "sampled-subscription"
@@ -872,11 +912,14 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             ["storage_alpha"] = command
         });
         var server = BaseToolLoaderTests.CreateSamplingServer(true, samplingText, failSampling);
+        using var activity = new Activity("test-activity").Start();
 
         var result = await loader.CallToolHandler(
             BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
 
         BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "invalid_command", "storage_alpha");
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
         await server.Received(1).SendRequestAsync(
             Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());

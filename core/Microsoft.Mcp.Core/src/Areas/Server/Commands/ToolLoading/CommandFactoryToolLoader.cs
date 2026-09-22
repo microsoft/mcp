@@ -90,7 +90,7 @@ public sealed class CommandFactoryToolLoader(
             };
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         var toolName = request.Params.Name;
@@ -113,11 +113,11 @@ public sealed class CommandFactoryToolLoader(
             }
         }
 
-        var activity = Activity.Current?.SetTag(TagName.ToolName, toolName);
-
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
         {
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"Could not find command: {toolName}",
@@ -129,7 +129,13 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
-        activity?.SetTag(TagName.ToolId, command.Id)
+
+        var serviceArea = _commandFactory.GetServiceArea(toolName);
+
+        // serviceArea shouldn't be null here, but safe guard just in case.
+        activity?.SetTag(TagName.ToolArea, serviceArea ?? TagConstants.Unknown)
+            .SetTag(TagName.ToolName, toolName)
+            .SetTag(TagName.ToolId, command.Id)
             .SetTag(TagName.ToolSource, "internal")
             .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(command));
 
@@ -216,12 +222,6 @@ public sealed class CommandFactoryToolLoader(
         }
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);
-
-        if (commandContext.Activity != null)
-        {
-            var serviceArea = _commandFactory.GetServiceArea(toolName);
-            commandContext.Activity.SetTag(TagName.ToolArea, serviceArea);
-        }
 
         try
         {

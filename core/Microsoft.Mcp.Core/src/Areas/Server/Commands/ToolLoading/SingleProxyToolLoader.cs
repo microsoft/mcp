@@ -343,14 +343,16 @@ public sealed class SingleProxyToolLoader(
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.IsLearn, true)
-            .SetTag(TagName.ToolArea, tool);
+            .SetTag(TagName.IsLearn, true);
 
         var result = await GetToolCommandsAsync(request, tool, cancellationToken);
         if (result.Commands == null || result.Commands.Count == 0)
         {
+            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown);
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
+
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
 
         var contentText = $"""
             Here are the available commands and their input schema for '{tool}' tool.
@@ -390,10 +392,15 @@ public sealed class SingleProxyToolLoader(
         var tools = await GetToolsInGroupAsync(request, tool, cancellationToken);
         if (tools == null || tools.Count == 0)
         {
+            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown);
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
-        else if (!tools.Any(t => t.Name.Equals(command, StringComparison.OrdinalIgnoreCase)))
+
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
+
+        if (!tools.Any(t => t.Name.Equals(command, StringComparison.OrdinalIgnoreCase)))
         {
+            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
             return await ToolLearnModeAsync(request, intent, tool, cancellationToken);
         }
 
@@ -407,6 +414,7 @@ public sealed class SingleProxyToolLoader(
         }
         else
         {
+            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
             var isKnownGroup = _commandFactory.RootGroup.SubGroup
                 .Any(g => string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
             return isKnownGroup
@@ -425,7 +433,10 @@ public sealed class SingleProxyToolLoader(
     {
         try
         {
-            Activity.Current?.SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(baseCommand));
+            Activity.Current?.SetTag(TagName.ToolName, command)
+                .SetTag(TagName.ToolId, baseCommand.Id)
+                .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(baseCommand))
+                .SetTag(TagName.ToolSource, "internal");
 
             // Enforce read-only mode at execution time
             if (_configuration.Value.ReadOnly && !baseCommand.Metadata.ReadOnly)
@@ -517,10 +528,7 @@ public sealed class SingleProxyToolLoader(
             // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
             // The logic above performs sampling to try and get a correct command name.  "blob_get" in
             // this case, which will be executed.
-            currentActivity?.SetTag(TagName.ToolName, command)
-                .SetTag(TagName.ToolId, baseCommand.Id)
-                .SetTag(TagName.ToolSource, "internal")
-                .SetTag(TagName.IsServerCommandInvoked, true);
+            currentActivity?.SetTag(TagName.IsServerCommandInvoked, true);
 
             var commandResponse = await baseCommand.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
@@ -608,63 +616,70 @@ public sealed class SingleProxyToolLoader(
             client = await _discoveryStrategy!.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
             if (client == null)
             {
+                Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
                 _logger.LogError("Failed to get provider client for tool: {Tool}", tool);
                 return await RootLearnModeAsync(request, intent, cancellationToken);
             }
         }
         catch (Exception ex)
         {
+            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
             _logger.LogError(ex, "Exception thrown while getting provider client for tool: {Tool}", tool);
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
-            .SetTag(TagName.ToolArea, tool)
+        var allTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
+        var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+
+        if (resolvedTool == null)
+        {
+            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
+            _logger.LogError("Failed to resolve tool: {Tool}, command: {Command}", tool, command);
+            return await ToolLearnModeAsync(request, intent, tool, cancellationToken);
+        }
+
+        Activity.Current?.SetTag(TagName.ToolArea, tool)
             .SetTag(TagName.ToolName, command);
 
         // Enforce mode restrictions at execution time: look up the actual tool and check its properties.
         if (_configuration.Value.ReadOnly || _configuration.Value.IsHttpMode)
         {
-            var allTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
-            var resolvedTool = allTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+            var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
+            Activity.Current?.SetTag(TagName.ToolId, toolId)
+                .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
 
-            if (resolvedTool != null)
+            if (_configuration.Value.ReadOnly && resolvedTool.Annotations?.ReadOnlyHint != true)
             {
-                var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
-                Activity.Current?.SetTag(TagName.ToolId, toolId)
-                    .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
-
-                if (_configuration.Value.ReadOnly && resolvedTool.Annotations?.ReadOnlyHint != true)
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
-                    return McpHelper.InjectToolIdMetadata(new CallToolResult
-                    {
-                        Content =
-                        [
-                            new TextContentBlock
-                            {
-                                Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
-                            }
-                        ],
-                        IsError = true,
-                    }, toolId);
-                }
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
+                        }
+                    ],
+                    IsError = true,
+                }, toolId);
+            }
 
-                if (_configuration.Value.IsHttpMode && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
+            if (_configuration.Value.IsHttpMode && McpHelper.HasHint(resolvedTool, McpHelper.LocalRequiredHintMetaKey))
+            {
+                return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
-                    return McpHelper.InjectToolIdMetadata(new CallToolResult
-                    {
-                        Content =
-                        [
-                            new TextContentBlock
-                            {
-                                Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
-                            }
-                        ],
-                        IsError = true,
-                    }, toolId);
-                }
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. This server is running in HTTP mode and this tool requires local execution.",
+                        }
+                    ],
+                    IsError = true,
+                }, toolId);
             }
         }
+
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
 
         try
         {

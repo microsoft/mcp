@@ -408,10 +408,11 @@ public class CommandFactoryToolLoaderTests
         activity.AssertTagDoesNotExist(TagName.ToolParameters);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithUnknownTool_ReturnsError()
+    [Theory]
+    [InlineData("non-existent-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithUnknownTool_ReturnsError(string toolName)
     {
-        var toolName = "non-existent-tool";
         var (toolLoader, _) = CreateToolLoader();
 
         var request = McpTestUtilities.CreateToolCallRequest(toolName);
@@ -430,13 +431,13 @@ public class CommandFactoryToolLoaderTests
 
         var textContent = result.Content.First() as TextContentBlock;
         Assert.NotNull(textContent);
-        Assert.Contains("Could not find command: non-existent-tool", textContent.Text);
+        Assert.Contains($"Could not find command: {toolName}", textContent.Text);
 
         // Validate telemetry
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
-        activity.AssertTagEquals(TagName.ToolName, toolName);
-        activity.AssertTagDoesNotExist(TagName.ToolArea);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagDoesNotExist(TagName.ToolId);
     }
 
@@ -1221,7 +1222,7 @@ public class CommandFactoryToolLoaderTests
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
         activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
-        activity.AssertTagDoesNotExist(TagName.ToolArea);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
     }
 
     [Fact]
@@ -1260,7 +1261,7 @@ public class CommandFactoryToolLoaderTests
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, true);
         activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
-        activity.AssertTagDoesNotExist(TagName.ToolArea);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(fakeCommand));
         activity.AssertTagDoesNotExist(TagName.ToolParameters);
         activity.AssertTagEquals(TagName.ToolSource, "internal");
@@ -1309,7 +1310,7 @@ public class CommandFactoryToolLoaderTests
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, true);
         activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
-        activity.AssertTagDoesNotExist(TagName.ToolArea);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(fakeCommand));
         activity.AssertTagDoesNotExist(TagName.ToolParameters);
         activity.AssertTagEquals(TagName.ToolSource, "internal");
@@ -1355,7 +1356,7 @@ public class CommandFactoryToolLoaderTests
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
         activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
-        activity.AssertTagDoesNotExist(TagName.ToolArea);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(fakeCommand));
         activity.AssertTagDoesNotExist(TagName.ToolParameters);
         activity.AssertTagEquals(TagName.ToolSource, "internal");
@@ -1449,7 +1450,7 @@ public class CommandFactoryToolLoaderTests
         // Validate telemetry
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
-        activity.AssertTagEquals(TagName.ToolName, otherToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
         activity.AssertTagDoesNotExist(TagName.ToolArea);
         activity.AssertTagDoesNotExist(TagName.ToolId);
     }
@@ -1568,6 +1569,7 @@ public class CommandFactoryToolLoaderTests
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
         activity.AssertTagEquals(TagName.ToolName, toolName);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
         activity.AssertTagEquals(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(fakeCommand));
         activity.AssertTagDoesNotExist(TagName.ToolParameters);
@@ -1648,6 +1650,7 @@ public class CommandFactoryToolLoaderTests
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
         activity.AssertTagEquals(TagName.ToolName, toolName);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
         activity.AssertTagEquals(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(fakeCommand));
         activity.AssertTagDoesNotExist(TagName.ToolParameters);
@@ -1726,7 +1729,7 @@ public class CommandFactoryToolLoaderTests
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
         activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
-        activity.AssertTagDoesNotExist(TagName.ToolArea);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
         {
             var parameterList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
