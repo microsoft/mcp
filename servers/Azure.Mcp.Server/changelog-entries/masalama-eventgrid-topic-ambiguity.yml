@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Event Grid topic lookup now requires a resource group when multiple topics in a subscription have the same name."

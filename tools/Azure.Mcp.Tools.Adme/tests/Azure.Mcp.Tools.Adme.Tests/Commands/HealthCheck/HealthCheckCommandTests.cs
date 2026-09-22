@@ -23,7 +23,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
             TestConstants.Tenant,
                 Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<HealthCheckResult>(
-                new HealthCheckResult(true, null, true, null, 200),
+                new HealthCheckResult(200),
                 "test-correlation-id"));
 
         var response = await ExecuteCommandAsync(
@@ -34,9 +34,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         var result = ValidateAndDeserializeResponse(
             response,
             AdmeJsonContext.Default.AdmeResponseHealthCheckResult);
-        Assert.True(result.Result.AuthOk);
-        Assert.True(result.Result.ConnectivityOk);
-        Assert.Equal(200, result.Result.ConnectivityStatusCode);
+        Assert.Equal(200, result.Result.StatusCode);
         Assert.Equal("test-correlation-id", result.CorrelationId);
     }
 
