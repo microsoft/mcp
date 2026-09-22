@@ -1450,8 +1450,8 @@ public class CommandFactoryToolLoaderTests
         // Validate telemetry
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
-        activity.AssertTagDoesNotExist(TagName.ToolName);
-        activity.AssertTagDoesNotExist(TagName.ToolArea);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagDoesNotExist(TagName.ToolId);
     }
 

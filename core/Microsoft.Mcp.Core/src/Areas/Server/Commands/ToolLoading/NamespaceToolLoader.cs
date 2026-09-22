@@ -601,6 +601,8 @@ public sealed class NamespaceToolLoader(
         var namespaces = _availableNamespaces.Value;
         if (!namespaces.Any(ns => string.Equals(ns, namespaceName, StringComparison.OrdinalIgnoreCase)))
         {
+            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var availableList = string.Join(", ", namespaces);
             throw new KeyNotFoundException($"The namespace '{namespaceName}' was not found. Available namespaces: {availableList}");
         }

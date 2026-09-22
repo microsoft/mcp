@@ -238,10 +238,12 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     [Theory]
-    [InlineData("user@example.com", null)]
-    [InlineData("keyvault", null)]
-    [InlineData("storage", "storage")]
-    public async Task CallToolHandler_OnlyCapturesAllowedToolIdentity(string namespaceName, string? expectedArea)
+    [InlineData("user@example.com", TagConstants.Unknown, false)]
+    [InlineData("user@example.com", TagConstants.Unknown, true)]
+    [InlineData("keyvault", TagConstants.Unknown, false)]
+    [InlineData("keyvault", TagConstants.Unknown, true)]
+    [InlineData("storage", "storage", false)]
+    public async Task CallToolHandler_OnlyCapturesAllowedToolIdentity(string namespaceName, string expectedArea, bool learn)
     {
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
@@ -250,23 +252,16 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
         var request = McpTestUtilities.CreateToolCallRequest(namespaceName, new Dictionary<string, object?>
         {
-            ["command"] = "user@example.com"
+            ["command"] = "user@example.com",
+            ["learn"] = learn
         });
         using var activity = new Activity("test-activity").Start();
 
         var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.True(result.IsError);
-        if (expectedArea is null)
-        {
-            activity.AssertTagDoesNotExist(TagName.ToolName);
-            activity.AssertTagDoesNotExist(TagName.ToolArea);
-        }
-        else
-        {
-            activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
-            activity.AssertTagEquals(TagName.ToolArea, expectedArea);
-        }
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, expectedArea);
     }
 
     [Fact]

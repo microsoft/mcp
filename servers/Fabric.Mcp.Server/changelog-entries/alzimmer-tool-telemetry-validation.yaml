@@ -1,3 +1,3 @@
 changes:
   - section: "Bugs Fixed"
-    description: "Tool name and area telemetry now waits until values are validated before setting telemetry. When the value is invalid `<Unknown>` is used."
+    description: "Tool name and area telemetry now validates identities before recording them, uses `<Unknown>` for rejected identities, and normalizes command names. Single-proxy mode enforces namespace filters for learning and execution."

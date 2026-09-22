@@ -167,6 +167,8 @@ public sealed class ServerToolLoader(
         }
         catch (KeyNotFoundException ex)
         {
+            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             _logger.LogError(ex, "Key not found while calling tool: {Tool}", tool);
 
             return new CallToolResult
@@ -242,6 +244,10 @@ public sealed class ServerToolLoader(
             if (availableTools.Count > 0)
             {
                 Activity.Current?.SetTag(TagName.ToolArea, tool);
+            }
+            else
+            {
+                Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown);
             }
 
             var resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));

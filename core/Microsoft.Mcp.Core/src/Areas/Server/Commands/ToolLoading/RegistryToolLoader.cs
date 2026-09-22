@@ -26,9 +26,9 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
-    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
-    private List<McpClient> _discoveredClients = [];
-    private Dictionary<McpClient, string?> _clientPrefixMap = [];
+    private readonly Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
+    private readonly List<McpClient> _discoveredClients = [];
+    private readonly Dictionary<McpClient, string?> _clientPrefixMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -113,6 +113,8 @@ public sealed class RegistryToolLoader(
         {
             if (!_configuration.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
             {
+                Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                    .SetTag(TagName.ToolName, TagConstants.Unknown);
                 var content = new TextContentBlock
                 {
                     Text = $"Tool '{request.Params.Name}' is not available. This server is configured to only expose the tools: {string.Join(", ", _configuration.Value.Tool.Select(t => $"'{t}'"))}",
@@ -128,6 +130,8 @@ public sealed class RegistryToolLoader(
 
         if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp.Client is null)
         {
+            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"The tool {request.Params.Name} was not found in the tool registry.",

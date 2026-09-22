@@ -100,6 +100,8 @@ public sealed class CommandFactoryToolLoader(
         {
             if (!_configuration.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
             {
+                activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                    .SetTag(TagName.ToolName, TagConstants.Unknown);
                 var content = new TextContentBlock
                 {
                     Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _configuration.Value.Tool.Select(t => $"'{t}'"))}",

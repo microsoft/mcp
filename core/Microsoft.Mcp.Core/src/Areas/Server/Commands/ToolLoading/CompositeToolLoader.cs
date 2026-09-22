@@ -126,6 +126,8 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
 
         if (!_toolLoaderMap.TryGetValue(request.Params.Name, out var toolLoader))
         {
+            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"The tool {request.Params.Name} was not found",
