@@ -8,10 +8,10 @@ This reference lists all 38 tools registered under the `resilience` namespace. P
 
 | Tool | Purpose | Parameters |
 |---|---|---|
-| `mcp_azure_mcp_ser_resilience_usageplan_get` | List usage plans or get one | `subscription?`, `resource-group?`, `name?`, `tenant?`. A specific `name` requires `resource-group`. Omit both to list across the subscription. |
+| `mcp_azure_mcp_ser_resilience_usageplan_get` | List or get Azure Resilience Management usage plans; not quota, API Management, or load-testing plans | `subscription?`, `resource-group?`, `name?`, `tenant?`. A specific `name` requires `resource-group`. Omit both to list across the subscription. |
 | `mcp_azure_mcp_ser_resilience_usageplan_create` | Create or update a usage plan | **`resource-group`**, **`usage-plan`**, **`plan-type`** (`Basic` or `Standard`), `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_usageplan_delete` | Delete the entire usage plan after all child enrollments are removed; returns whether the plan existed | **`resource-group`**, **`usage-plan`**, `subscription?`, `tenant?` |
-| `mcp_azure_mcp_ser_resilience_usageplan_enrollment_get` | List enrollments or get one | **`resource-group`**, **`usage-plan`**, `name?`, `subscription?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_usageplan_enrollment_get` | List or get resilience usage-plan enrollments that associate service groups; not API Management subscriptions | **`resource-group`**, **`usage-plan`**, `name?`, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_usageplan_enrollment_create` | Create/update enrollment associating a service group | **`resource-group`**, **`usage-plan`**, **`enrollment`**, **`service-group`**, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_usageplan_enrollment_delete` | Delete only an enrollment/service-group association while retaining the usage plan; returns whether the enrollment existed | **`resource-group`**, **`usage-plan`**, **`enrollment`**, `subscription?`, `tenant?` |
 
@@ -33,7 +33,7 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 |---|---|---|
 | `mcp_azure_mcp_ser_resilience_drill_get` | List drills or get one definition | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_create` | Create/configure a drill | **`service-group`**, **`drill`**, **`subscription`**, **`region`**, **`drill-type`** (`Zonal` or `Regional`), **`rbac-setup-mode`** (`AutomatedCustomRole`, `AutomatedBuiltinRoles`, or `Manual`), `resource-group?`, `recoveryplan?`, `tenant?` |
-| `mcp_azure_mcp_ser_resilience_drill_update` | Update drill RBAC, recovery plan association, or supporting-resource location | **`service-group`**, **`drill`**, `subscription?` + `region?` together, `rbac-setup-mode?`, `recoveryplan?`, `tenant?`. Supply at least one change. |
+| `mcp_azure_mcp_ser_resilience_drill_update` | Update drill RBAC, recovery plan association, or relocate supporting resources by changing subscription and region | **`service-group`**, **`drill`**, `subscription?` + `region?` together, `rbac-setup-mode?`, `recoveryplan?`, `tenant?`. Supply at least one change. |
 | `mcp_azure_mcp_ser_resilience_drill_delete` | Permanently delete a drill definition | **`service-group`**, **`drill`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_start` | Start a drill execution | **`service-group`**, **`drill`**, **`mode`** (`Failover` or `TestFailover`), `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_end` | End a running drill and attest outcome | **`service-group`**, **`drill`**, **`attestation`** (`Success` or `Failed`), **`attestation-notes`**, `tenant?` |
@@ -53,9 +53,9 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | `mcp_azure_mcp_ser_resilience_recoveryplan_create` | Create/update plan identity, groups, and actions | **`service-group`**, **`recoveryplan`**, **`plan-type`** (`Zonal`), **`identity-type`**, `plan-description?`, `user-assigned-identity?`, `default-group-description?`, `default-group-pre-actions?`, `default-group-post-actions?`, `additional-groups?`, `tenant?`. Creation requires a 5–50 character `plan-description`; update preserves it when omitted. |
 | `mcp_azure_mcp_ser_resilience_recoveryplan_delete` | Permanently delete a plan | **`service-group`**, **`recoveryplan`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_recoveryplan_checkreadiness` | Check plan/resource readiness | **`service-group`**, **`recoveryplan`**, `tenant?` |
-| `mcp_azure_mcp_ser_resilience_recoveryplan_validateforoperation` | Validate plan state/readiness/permissions for one operation | **`service-group`**, **`recoveryplan`**, **`operation-name`**, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_recoveryplan_validateforoperation` | Run operation-level plan state/readiness/permission validation; distinct from per-resource failover qualification | **`service-group`**, **`recoveryplan`**, **`operation-name`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_recoveryplan_validateforfailover` | Validate failover qualification | **`service-group`**, **`recoveryplan`**, `source-locations?`, `selected-resource-ids?`, `user-consent?`, `tenant?`. Require at least one selector. |
-| `mcp_azure_mcp_ser_resilience_recoveryplan_validateforreprotect` | Validate reprotect qualification | **`service-group`**, **`recoveryplan`**, `selected-resource-ids?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_recoveryplan_validateforreprotect` | Validate Azure Resilience Management recoveryplan reprotect qualification, not Azure Backup | **`service-group`**, **`recoveryplan`**, `selected-resource-ids?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_recoveryplan_failover` | Start failover | **`service-group`**, **`recoveryplan`**, `source-locations?`, `selected-resource-ids?`, `user-consent?`, `tenant?`. Require at least one selector. |
 | `mcp_azure_mcp_ser_resilience_recoveryplan_reprotect` | Start reprotection after failover | **`service-group`**, **`recoveryplan`**, `selected-resource-ids?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_recoveryplan_finalize` | Validate permissions and finalize current plan operation state | **`service-group`**, **`recoveryplan`**, `tenant?`. This does not commit a completed failover. |

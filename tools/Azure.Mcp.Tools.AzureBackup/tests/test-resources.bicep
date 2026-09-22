@@ -473,3 +473,68 @@ resource appNetworkContributorRoleAssignmentPeVnet 'Microsoft.Authorization/role
 
 output rsvPeVaultName string = rsvPeVault.name
 output peSubnetId string = peVnet.properties.subnets[0].id
+
+// ─── Vault Identity + Networking Test Resources ───
+// User-assigned managed identity attached to the PE vault by the
+// `azurebackup vault update --identity-type ... --user-assigned-identity` test.
+resource testUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${baseName}-uami'
+  location: location
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+// Managed Identity Operator on the UAMI for the test app so it can assign the
+// user-assigned identity to the vault (requires the .../assign/action permission).
+resource managedIdentityOperatorRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: 'f1a07417-d97a-45cb-824c-7a7467783830' // Managed Identity Operator
+}
+
+resource appManagedIdentityOperatorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(managedIdentityOperatorRoleDef.id, testApplicationOid, testUserAssignedIdentity.id)
+  scope: testUserAssignedIdentity
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: managedIdentityOperatorRoleDef.id
+    description: 'Managed Identity Operator for ${testApplicationOid} on test UAMI'
+  }
+}
+
+output userAssignedIdentityId string = testUserAssignedIdentity.id
+output userAssignedIdentityName string = testUserAssignedIdentity.name
+
+// Backup private DNS zone linked by the `azurebackup vault privateendpoint create
+// --private-dns-zone-ids` test. Private DNS zones are global resources.
+resource backupPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.${baseName}.backup.windowsazure.com'
+  location: 'global'
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+// Private DNS Zone Contributor on the zone for the test app so it can create the
+// Private DNS zone group that links the zone to the new Private Endpoint.
+resource privateDnsZoneContributorRoleDef 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: 'b12aa53e-6015-4669-85d0-8515ebb3ae7f' // Private DNS Zone Contributor
+}
+
+resource appPrivateDnsZoneContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(privateDnsZoneContributorRoleDef.id, testApplicationOid, backupPrivateDnsZone.id)
+  scope: backupPrivateDnsZone
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: privateDnsZoneContributorRoleDef.id
+    description: 'Private DNS Zone Contributor for ${testApplicationOid} on backup private DNS zone'
+  }
+}
+
+output backupPrivateDnsZoneId string = backupPrivateDnsZone.id
+output backupPrivateDnsZoneName string = backupPrivateDnsZone.name

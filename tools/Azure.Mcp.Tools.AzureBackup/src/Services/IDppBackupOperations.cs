@@ -40,6 +40,8 @@ public interface IDppBackupOperations
         string? softDeleteRetentionDays,
         string? immutabilityState,
         string? identityType,
+        string? userAssignedIdentity,
+        string? publicNetworkAccess,
         string? tags,
         string? tenant,
         CancellationToken cancellationToken);

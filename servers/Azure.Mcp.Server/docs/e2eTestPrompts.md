@@ -299,6 +299,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_get | Show the full schedule, retention, and tiering details for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_inquire | Inquire the registered storage account <storage_account> on vault <vault_name> in resource group <resource_group> to discover Azure File shares available for backup | investigation-required |
 | azurebackup_protectableitem_inquire | Discover file shares in backup container <container_name> on Recovery Services vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protectableitem_list | List protectable items in vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -348,9 +349,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
+| azurebackup_vault_update | Attach user-assigned managed identity <identity_id> to Recovery Services vault <vault_name> in resource group <resource_group> by setting identity type to UserAssigned | investigation-required |
+| azurebackup_vault_update | Disable public network access on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | investigation-required |
 | azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | investigation-required |
 | azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in resource group <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | investigation-required |
+| azurebackup_vault_privateendpoint_create | Create Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> in subnet <subnet_id> and link it to private DNS zone <dns_zone_id> | investigation-required |
 | azurebackup_vault_privateendpoint_get | List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_get | Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_privateendpoint_get | Show me the Private Endpoints attached to Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -699,9 +703,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in <location> in subscription <subscription> | none |
 | fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in <location>? | none |
 | fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in <location> | none |
-| fileshares_rec | Get Azure Files provisioning recommendations for file share <file_share_name> in resource group <resource_group_name> | investigation-required |
-| fileshares_rec | Show me provisioning recommendations for file share <file_share_name> | none |
-| fileshares_rec | Get the Azure Files recommended provisioning settings for file share <file_share_name> | investigation-required |
+| fileshares_rec | Get Azure Files provisioning recommendations for <provisioned_storage_in_gib> GiB in location <location> in subscription <subscription> | none |
+| fileshares_rec | Show me provisioning recommendations for <provisioned_storage_in_gib> GiB of Azure File Shares storage in location <location> | none |
+| fileshares_rec | Get the recommended Azure File Shares provisioning settings for <provisioned_storage_in_gib> GiB in location <location> | none |
 | fileshares_fileshare_snapshot_create | Create a snapshot of file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_snapshot_create | Create a snapshot for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_snapshot_create | Take a snapshot of file share <file_share_name> | none |
@@ -725,9 +729,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_update | Enable NFS encryption in transit for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Disable NFS encryption in transit on file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
-| fileshares_usage | Get Azure Files usage data for file share <file_share_name> in resource group <resource_group_name> | none |
-| fileshares_usage | Show me the usage statistics for file share <file_share_name> | none |
-| fileshares_usage | Get the current Azure Files usage for file share <file_share_name> | none |
+| fileshares_usage | Get Azure Files usage data for subscription <subscription> in location <location> | none |
+| fileshares_usage | Show me Azure File Shares usage statistics in location <location> | none |
+| fileshares_usage | Get the current Azure File Shares usage in location <location> for subscription <subscription> | none |
 
 ## Azure Function App
 
@@ -1149,9 +1153,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_create | Set up a Zonal recoveryplan named <recoveryplan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
 | resilience_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
 | resilience_recoveryplan_create | Change recoveryplan <recoveryplan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups | none |
-| resilience_recoveryplan_create | Split recoveryplan <recoveryplan_name> in service group <service_group> into its default recovery group and one additional group described as <additional_group_description>. Preserve its existing plan type and managed identity | none |
-| resilience_recoveryplan_create | Update recoveryplan <recoveryplan_name> in service group <service_group>. Add a manual pre-action named <manual_action_name> with timeout <timeout_minutes> to the default group, and add a post-action script using Automation runbook <runbook_resource_id> to additional recovery group <recovery_group_id>. Preserve its existing plan type and managed identity | none |
-| resilience_recoveryplan_create | Add a pre-action to the default group of recoveryplan <recoveryplan_name> in service group <service_group>. I have not chosen the action values yet. Explain the accepted values and ask me for the action type, name, optional description, timeout, and any runbook-specific values one at a time before updating the plan. Preserve its existing plan type and managed identity | none |
+| resilience_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, default recovery group description <default_group_description>, and one additional recovery group described as <additional_group_description> | none |
+| resilience_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity and plan description <plan_description>. Add manual pre-action <manual_action_name> with timeout <timeout_minutes> to the default group, and add CustomRunbook post-action <runbook_action_name> with timeout <runbook_timeout_minutes> using Automation runbook <runbook_resource_id> to an additional group described as <additional_group_description> | none |
+| resilience_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, and default group description <default_group_description>. Add a ManualAction pre-action named <manual_action_name>, description <manual_action_description>, and timeout <timeout_minutes> to the default group | none |
 | resilience_recoveryplan_create | Change a system-assigned recoveryplan <recoveryplan_name> in service group <service_group> to use a user-assigned managed identity | clarification-required |
 | resilience_recoveryplan_create | Update recoveryplan <recoveryplan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings | none |
 | resilience_recoveryplan_checkreadiness | Check whether recoveryplan <recoveryplan_name> and its protected resources are ready for recovery operations in service group <service_group> | none |
@@ -1171,9 +1175,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> is qualified for failover without requiring a source location or executing failover | none |
 | resilience_recoveryplan_validateforfailover | Validate recoveryplan <recoveryplan_name> for failover from <source_location>, supply required user consent, and return per-resource qualification results without updating resources | none |
 | resilience_recoveryplan_validateforreprotect | Validate all qualified resources in recoveryplan <recoveryplan_name> in service group <service_group> for reprotect after failover and report blocking reasons | none |
-| resilience_recoveryplan_validateforreprotect | Check whether recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> is qualified for reprotect without executing reprotect or updating resources | none |
-| resilience_recoveryplan_validateforoperation | Validate the Failover operation for recoveryplan <recoveryplan_name> in service group <service_group> before execution, including whether the plan's current state allows it | none |
-| resilience_recoveryplan_validateforoperation | Run operation-specific pre-validation for TestFailoverCleanup on recoveryplan <recoveryplan_name>; check plan support, current state, readiness status, and permissions without executing it | none |
+| resilience_recoveryplan_validateforreprotect | Check whether recovery resource <recovery_resource_id> in Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group> is qualified for reprotect without executing reprotect or updating resources | none |
+| resilience_recoveryplan_validateforoperation | Run operation-level pre-validation for Failover on Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group>; check whether the plan's current state, readiness, and permissions support the operation, not per-resource failover qualification | none |
+| resilience_recoveryplan_validateforoperation | Run operation-level pre-validation for TestFailoverCleanup on Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group>; check plan support, current state, readiness, and permissions without executing it | none |
 | resilience_recoveryplan_validateforoperation | Run operation-specific pre-validation for recoveryplan <recoveryplan_name> in service group <service_group>, but ask me which supported operation to validate before proceeding | clarification-required |
 | resilience_recoveryplan_validateforoperation | Validate an operation on recoveryplan <recoveryplan_name> in service group <service_group> | clarification-required |
 | resilience_recoveryplan_validateforoperation | We were discussing failover earlier. Now validate an operation on recoveryplan <recoveryplan_name> in service group <service_group>, but do not assume which operation I mean | clarification-required |
@@ -1202,11 +1206,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_usageplan_enrollment_delete | Remove the service group association named <enrollment_name> from resilience usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_enrollment_delete | Unenroll service group <service_group> from usage plan <usage_plan_name>, but keep the usage plan itself | clarification-required |
 | resilience_usageplan_enrollment_delete | Remove only enrollment <enrollment_name> from usage plan <usage_plan_name>; do not delete the parent plan | none |
-| resilience_usageplan_enrollment_get | List all enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> | none |
-| resilience_usageplan_enrollment_get | Get the details of usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_get | List all Azure Resilience Management enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_enrollment_get | Get the details of Azure Resilience Management enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resilience_usageplan_get | List all resilience usage plans in my subscription | none |
 | resilience_usageplan_get | List all resilience usage plans in resource group <resource_group_name> | none |
-| resilience_usageplan_get | Get the details of usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resilience_usageplan_get | Get the details of Azure Resilience Management usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 
 ## Azure Resource Group
 
