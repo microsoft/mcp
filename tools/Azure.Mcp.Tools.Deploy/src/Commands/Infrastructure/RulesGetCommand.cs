@@ -43,7 +43,11 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger) : BaseComma
             string iacRules = IaCRulesTemplateUtil.GetIaCRules(
                 options.DeploymentTool,
                 options.IacType ?? string.Empty,
-                resourceTypes ?? []);
+                resourceTypes ?? [],
+                options.EnablePublicNetworkAccess,
+                options.AllowAzureServices,
+                options.AllowPrivilegedRoles,
+                options.UseConnectionStrings);
 
             context.Response.Message = iacRules;
         }

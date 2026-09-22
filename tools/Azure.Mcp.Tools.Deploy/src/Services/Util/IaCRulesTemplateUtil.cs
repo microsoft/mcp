@@ -12,8 +12,6 @@ namespace Azure.Mcp.Tools.Deploy.Services.Util;
 /// </summary>
 public static class IaCRulesTemplateUtil
 {
-    private static readonly string _databaseCommonRules = TemplateService.LoadTemplate("IaCRules/database-common-rules");
-
     /// <summary>
     /// Generates IaC rules using embedded templates.
     /// </summary>
@@ -21,9 +19,19 @@ public static class IaCRulesTemplateUtil
     /// <param name="iacType">The IaC type (bicep, terraform).</param>
     /// <param name="resourceTypes">Array of resource types.</param>
     /// <returns>A formatted IaC rules string.</returns>
-    public static string GetIaCRules(string deploymentTool, string iacType, string[] resourceTypes)
+    public static string GetIaCRules(string deploymentTool, string iacType, string[] resourceTypes,
+        bool enablePublicNetworkAccess = false, bool allowAzureServices = false,
+        bool allowPrivilegedRoles = false, bool useConnectionStrings = false)
     {
+        if (allowAzureServices && !enablePublicNetworkAccess)
+        {
+            throw new ArgumentException("--allow-azure-services requires --enable-public-network-access.");
+        }
         var parameters = CreateTemplateParameters(deploymentTool, iacType, resourceTypes);
+        parameters.EnablePublicNetworkAccess = enablePublicNetworkAccess;
+        parameters.AllowAzureServices = allowAzureServices;
+        parameters.AllowPrivilegedRoles = allowPrivilegedRoles;
+        parameters.UseConnectionStrings = useConnectionStrings;
         // Default values for optional parameters
         if (deploymentTool.Equals(DeploymentTool.Azd, StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(iacType))
         {
@@ -127,7 +135,7 @@ public static class IaCRulesTemplateUtil
 
         if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureDatabaseForMySql, StringComparer.OrdinalIgnoreCase))
         {
-            rules.Add(GenerateMySqlRules());
+            rules.Add(GenerateMySqlRules(parameters));
         }
 
         if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureCosmosDb, StringComparer.OrdinalIgnoreCase))
@@ -190,7 +198,12 @@ public static class IaCRulesTemplateUtil
         var cliRules = TemplateService.LoadTemplate("IaCRules/aks-cli-rules");
         return TemplateService.ProcessTemplate("IaCRules/aks-rules", new Dictionary<string, string> {
             { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, bicepRules, tfRules, cliRules)},
-            { "KeyvaultIntegrationRules", TemplateService.LoadTemplate("IaCRules/aks-kv-integration-rules") }
+            { "AuthenticationRules", parameters.UseConnectionStrings
+                ? "- Secret-based connection strings are explicitly permitted. Store credentials in Key Vault and consume them through secret references; never plaintext configuration."
+                : "- Use Azure Workload Identity for AKS connections to Azure services. Enable the OIDC issuer, workload identity, and a dedicated Kubernetes service account with federated credentials and least-privilege data roles." },
+            { "KeyvaultIntegrationRules", parameters.UseConnectionStrings
+                ? TemplateService.LoadTemplate("IaCRules/aks-kv-integration-rules")
+                : "- Access Key Vault using the workload identity and Key Vault Secrets User permissions. Do not share node identity credentials with application pods." }
         });
     }
 
@@ -199,33 +212,59 @@ public static class IaCRulesTemplateUtil
         var versionRules = parameters.IacType.Equals(IacType.Terraform, StringComparison.OrdinalIgnoreCase)
             ? "- PostgreSQL SKU name format: B_Standard_B1ms(Burstable tier), GP_Standard_D2s_v3(GeneralPurpose), MO_Standard_E4s_v3(MemoryOptimized)\n- For version, prefer to use '16'."
             : "For version, use '17' or higher.";
-        var cliRules = "- If PostgreSQL server uses Azure AD authentication, use '--microsoft-entra-auth Enabled' when creating.\n- Azure CLI uses parameters '--name <server-name> --rule-name <rule-name>' for firewall rules creation.\n- IMPORTANT: **If using Azure AD authentication, you MUST ADD a database USER for the managed identity and GRANT all privileges to make the connection work.** Use 'az postgres flexible-server execute' command to run SQL commands to create the user and grant privileges.";
+        var cliRules = parameters.AllowPrivilegedRoles
+            ? "- Elevated database privileges are explicitly permitted. Create the managed identity database user and grant the requested privileges only within the application's database."
+            : "- Create a database user for the managed identity. Grant only CONNECT, required schema USAGE, and the table operations required by the application; do not grant ALL privileges by default.";
         return TemplateService.ProcessTemplate("IaCRules/postgresql-rules", new Dictionary<string, string> {
             { "VersionRules",  versionRules },
-            { "DatabaseCommonRules", _databaseCommonRules},
+            { "DatabaseCommonRules", GenerateDatabaseCommonRules(parameters)},
             { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, null, cliRules)}
         });
     }
 
-    private static string GenerateMySqlRules() =>
-        TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", _databaseCommonRules } });
+    private static string GenerateMySqlRules(IaCRulesTemplateParameters parameters) =>
+        TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", GenerateDatabaseCommonRules(parameters) } });
+
+    private static string GenerateDatabaseCommonRules(IaCRulesTemplateParameters parameters) =>
+        TemplateService.ProcessTemplate("IaCRules/database-common-rules", new Dictionary<string, string> { { "NetworkRules", GenerateNetworkRules(parameters) } });
+
+    private static string GenerateNetworkRules(IaCRulesTemplateParameters parameters) =>
+        !parameters.EnablePublicNetworkAccess
+            ? "- Disable public network access. Configure supported private endpoints or virtual network integration, private DNS, and connectivity for the application and deployment runner."
+            : parameters.AllowAzureServices
+                ? "- Public access and the all-Azure-services firewall exception (0.0.0.0) are explicitly permitted for databases. This includes other customers' subscriptions and is not tenant isolation."
+                : "- Public network access is explicitly permitted. Restrict firewall access to explicitly approved client IPs or subnets; do not add an all-Azure-services exception.";
 
     private static string GenerateCosmosDbRules(IaCRulesTemplateParameters parameters) =>
-        TemplateService.ProcessTemplate("IaCRules/cosmosdb-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, null, null) } });
+        TemplateService.ProcessTemplate("IaCRules/cosmosdb-rules", new Dictionary<string, string> { { "NetworkRules", GenerateNetworkRules(parameters) } });
 
     private static string GenerateStorageRules(IaCRulesTemplateParameters parameters)
     {
         var tfRules = "- Add `storage_use_azuread = true` in azurerm provider.";
-        return TemplateService.ProcessTemplate("IaCRules/storage-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, tfRules, null) } });
+        return TemplateService.ProcessTemplate("IaCRules/storage-rules", new Dictionary<string, string> {
+            { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, null, tfRules, null) },
+            { "NetworkRules", parameters.EnablePublicNetworkAccess
+                ? "- Public network access is explicitly permitted; restrict access to approved networks."
+                : "- Disable public network access and configure private endpoints and private DNS." },
+            { "AuthenticationRules", parameters.UseConnectionStrings
+                ? "- Key authentication is explicitly permitted when required for secret-based connections. Store keys in Key Vault."
+                : "- Disable storage account local auth (key access); use Microsoft Entra ID." }
+        });
     }
 
     private static string GenerateKeyVaultRules(IaCRulesTemplateParameters parameters)
     {
-        var bicepRules = "- Allow public access from all networks(set publicNetworkAccess = Enabled).";
+        var bicepRules = string.Empty;
         var tfRules = "- Assign role 'Key Vault Secrets Officer (b86a8fe4-44ce-4948-aee5-eccb2c155cd7)' to current user.This is the dependency for key vault secret creation.";
         var cliRules = "- IMPORTANT: Assign Key Vault Secrets Officer to current user. Add delay after RBAC role assignment to allow propagation before creating secrets.";
 
-        return TemplateService.ProcessTemplate("IaCRules/key-vault-rules", new Dictionary<string, string> { { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, bicepRules, tfRules, cliRules) } });
+        return TemplateService.ProcessTemplate("IaCRules/key-vault-rules", new Dictionary<string, string> {
+            { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, bicepRules, tfRules, cliRules) },
+            { "RuntimeRole", parameters.AllowPrivilegedRoles ? "Key Vault Secrets Officer" : "Key Vault Secrets User" },
+            { "NetworkRules", parameters.EnablePublicNetworkAccess
+                ? "- Public network access is explicitly permitted for Key Vault; restrict its firewall to approved networks."
+                : "- Set publicNetworkAccess to Disabled for Key Vault. Configure private endpoints and private DNS for both the application and deployment runner." }
+        });
     }
 
     /// <summary>

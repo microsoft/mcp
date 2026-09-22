@@ -630,6 +630,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | deploy_app_logs_get | Show me the log of the application deployed by azd | context-required |
 | deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application | context-required |
 | deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep | none |
+| deploy_iac_rules_get | Get Azure CLI and Bicep rules for AKS, Cosmos DB, Storage, and Key Vault with private networking, workload identity, and least-privilege runtime roles | none |
+| deploy_iac_rules_get | Get Azure CLI and Bicep rules for AKS, Cosmos DB, and Key Vault; explicitly permit public networking, all-Azure-services firewall exceptions, privileged application roles, and secret-based connections for this isolated test | none |
 | deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices | context-required |
 | deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates | context-required |
 
