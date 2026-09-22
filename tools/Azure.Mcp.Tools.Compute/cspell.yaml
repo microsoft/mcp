@@ -16,8 +16,11 @@ words:
   - delvm
   - delvms
   - eaaaa
+  - envprod
   - exactdisk
   - galleryimageversionid
+  - leadingperiod
+  - leadingunderscore
   - lnxvmss
   - maaacbaj
   - mysnapshot
@@ -31,10 +34,15 @@ words:
   - otherdisk
   - securedisk
   - swingbench
+  - teamcompute
   - testdatadisk
   - testdisk
+  - testgallery
   - testkey
   - testvm
+  - trailinghyphen
+  - trailingperiod
+  - trailingunderscore
   - uploaddisk
   - uploadnosize
   - uploadsec

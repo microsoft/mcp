@@ -1075,6 +1075,9 @@ Example prompts that generate Azure CLI commands:
 * "Stop VM 'my-vm' in resource group 'my-rg'"
 * "Deallocate VM 'my-vm' in resource group 'my-rg' to stop billing"
 * "Restart VM 'my-vm' in resource group 'my-rg'"
+* "Create an Azure Compute Gallery named 'myGallery' in resource group 'my-resource-group'"
+* "Create a compute gallery 'myGallery' in resource group 'my-rg' in eastus with a description"
+* "I want to publish a VM application, create a gallery 'myGallery' in resource group 'my-rg' first"
 * "Delete virtual machine scale set 'my-vmss' in resource group 'my-resource-group'"
 * "Force delete VMSS 'my-vmss' in resource group 'my-rg' using force-deletion"
 
@@ -1427,7 +1430,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
-- � **Azure Compute** - Virtual Machine, Virtual Machine Scale Set, and Disk management
+- � **Azure Compute** - Virtual Machine, Virtual Machine Scale Set, Disk, and Compute Gallery management
 - �🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management

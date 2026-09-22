@@ -1849,6 +1849,73 @@ public class ComputeService(
         }
     }
 
+    public async Task<GalleryInfo> CreateGalleryAsync(
+        string gallery,
+        string resourceGroup,
+        string subscription,
+        string? location = null,
+        string? description = null,
+        IReadOnlyDictionary<string, string>? tags = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+        var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
+        var galleries = rgResource.Value.GetGalleries();
+
+        var resolvedLocation = location;
+        if (resolvedLocation is null)
+        {
+            // A gallery's location is immutable, so an update has to resend the existing location.
+            // Defaulting to the resource group's location would fail with InvalidResourceLocation
+            // whenever the gallery lives in a different region from its resource group.
+            var existing = await galleries.GetIfExistsAsync(gallery, cancellationToken: cancellationToken);
+            resolvedLocation = existing.HasValue && existing.Value is not null
+                ? existing.Value.Data.Location.Name
+                : rgResource.Value.Data.Location.Name;
+        }
+
+        var galleryData = new GalleryData(new AzureLocation(resolvedLocation))
+        {
+            Description = description
+        };
+
+        if (tags is not null)
+        {
+            foreach (var tag in tags)
+            {
+                galleryData.Tags[tag.Key] = tag.Value;
+            }
+        }
+
+        _logger.LogInformation("Creating gallery {Gallery} in resource group {ResourceGroup}", gallery, resourceGroup);
+
+        var createOperation = await galleries
+            .CreateOrUpdateAsync(WaitUntil.Started, gallery, galleryData, cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
+
+        return ConvertToGalleryModel(createOperation.Value, resourceGroup);
+    }
+
+    private static GalleryInfo ConvertToGalleryModel(GalleryResource galleryResource, string resourceGroup)
+    {
+        var data = galleryResource.Data;
+        return new()
+        {
+            Name = data.Name,
+            Id = data.Id?.ToString(),
+            ResourceGroup = resourceGroup,
+            Location = data.Location.ToString(),
+            Description = data.Description,
+            UniqueName = data.IdentifierUniqueName,
+            ProvisioningState = data.ProvisioningState?.ToString(),
+            SharingPermissions = data.SharingProfile?.Permission?.ToString(),
+            Tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+        };
+    }
+
     internal static readonly string[] s_validSshKeyPrefixes =
     [
         "ssh-rsa ",
