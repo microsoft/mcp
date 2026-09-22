@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     Name = "write",
     Title = "Write OneLake File",
     Description = "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     LocalRequired = false,

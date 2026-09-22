@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
     Name = "validate",
     Title = "Validate Workflow YAML",
     Description = "Validate SRE Agent YAML content for common issues.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

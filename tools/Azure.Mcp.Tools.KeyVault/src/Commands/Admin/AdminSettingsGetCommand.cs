@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
     Name = "get",
     Title = "Get Key Vault Managed HSM Account Settings",
     Description = "Retrieves all Managed HSM account settings for a Key Vault. Returns configuration setting values such as purge protection and soft-delete retention days. This is NOT for secrets, keys, or certificates — use this when the user asks about vault configuration settings or account-level settings. This tool ONLY applies to Managed HSM vaults.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

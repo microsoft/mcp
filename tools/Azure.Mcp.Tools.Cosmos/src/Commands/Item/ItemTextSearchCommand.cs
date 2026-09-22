@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Name = "text-search",
     Title = "Text Search Cosmos DB Documents",
     Description = "Retrieve the TOP N documents in a Cosmos DB container where a given --search-property matches a provided --search-phrase using the Cosmos FullTextContains function. Matching is word-tokenized (not substring) and uses the container's configured full-text analyzer, so language-specific stemming and stop-word filtering apply (e.g., common English words like 'the' or 'hello' may be excluded from the index). Requires a Cosmos DB full-text index on --search-property. Use --count to control how many documents are returned (1-20, default is 10). Optionally pass --properties-to-select to project specific fields instead of the full document.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

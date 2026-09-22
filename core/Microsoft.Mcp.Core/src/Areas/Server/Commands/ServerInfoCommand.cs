@@ -19,6 +19,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Name = "info",
     Title = "Server information.",
     Description = "Displays running MCP server information.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

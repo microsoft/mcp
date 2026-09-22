@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added an Azure Data Manager for Energy tool to search OSDU data with query pagination by default and explicit cursor pagination for snapshots, bulk processing, and results beyond 10000."

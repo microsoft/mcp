@@ -706,11 +706,11 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
         var response = await ExecuteCommandAsync(
-            "--service-group-id", "  /providers/Microsoft.Management/serviceGroups/sg1  ");
+            "--service-group", "  sg1  ");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal("/providers/Microsoft.Management/serviceGroups/sg1", captured!.ServiceGroupId);
+        Assert.Equal("sg1", captured!.ServiceGroup);
 
         // Service Group scope must not pass a subscription.
         await Service.Received(1).ListRecommendationsAsync(
@@ -726,11 +726,11 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     public async Task ExecuteAsync_ServiceGroupScopeWithSubscription_ReturnsBadRequest()
     {
         var response = await ExecuteCommandAsync(
-            "--service-group-id", "/providers/Microsoft.Management/serviceGroups/sg1",
+            "--service-group", "sg1",
             "--subscription", "sub123");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--service-group-id cannot be combined with --subscription", response.Message);
+        Assert.Contains("Specify either --subscription or --service-group, not both", response.Message);
         await Service.DidNotReceive().ListRecommendationsAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -744,11 +744,27 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     public async Task ExecuteAsync_ServiceGroupScopeWithResourceGroup_ReturnsBadRequest()
     {
         var response = await ExecuteCommandAsync(
-            "--service-group-id", "/providers/Microsoft.Management/serviceGroups/sg1",
+            "--service-group", "sg1",
             "--resource-group", "rg1");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--resource-group cannot be combined with --service-group-id", response.Message);
+        Assert.Contains("--resource-group can only be used with subscription scope", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidServiceGroup_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync("--service-group", "bad/name");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("service group ID", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().ListRecommendationsAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -809,7 +825,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
         Assert.Null(captured!.Prioritized);
-        Assert.Null(captured.ServiceGroupId);
+        Assert.Null(captured.ServiceGroup);
     }
 
     [Fact]
@@ -826,13 +842,13 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
         var response = await ExecuteCommandAsync(
-            "--service-group-id", "/providers/Microsoft.Management/serviceGroups/sg1",
+            "--service-group", "sg1",
             "--prioritized", "true",
             "--category", "Cost");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal("/providers/Microsoft.Management/serviceGroups/sg1", captured!.ServiceGroupId);
+        Assert.Equal("sg1", captured!.ServiceGroup);
         Assert.True(captured.Prioritized);
         Assert.Equal("Cost", captured.Category);
     }

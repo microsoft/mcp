@@ -15,10 +15,13 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Name = "list-pipelines",
     Title = "List Pipelines",
     Description = "Lists all pipelines in a specified Microsoft Fabric workspace. Requires the workspace ID.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ListPipelinesCommand(ILogger<ListPipelinesCommand> logger, PipelineHandler handler)
     : AuthenticatedCommand<ListPipelinesOptions, ListPipelinesCommandResult>
 {

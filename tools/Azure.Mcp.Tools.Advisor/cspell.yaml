@@ -25,6 +25,7 @@ words:
   - isolatedv
   - kubernetesconfiguration
   - lasv
+  - leftouter
   - machinelearningservices
   - managedinstances
   - rdma
@@ -40,4 +41,3 @@ words:
   - unscored
   - urity
   - virtualmachinescalesets
-

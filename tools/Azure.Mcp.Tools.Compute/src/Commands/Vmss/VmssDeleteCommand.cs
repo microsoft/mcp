@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
         (passes forceDeletion=true to the Azure API).
         Do not use this to delete a single VM (use VM delete instead) or to update/modify a VMSS (use VMSS update).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

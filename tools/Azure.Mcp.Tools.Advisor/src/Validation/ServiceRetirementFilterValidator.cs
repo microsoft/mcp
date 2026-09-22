@@ -8,27 +8,22 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.Advisor.Validation;
 
 /// <summary>
-/// Validates the service-retirement filter options shared by the Advisor metadata and
-/// recommendation list commands: <c>--sub-category</c>, tracking IDs and
-/// <c>--retirement-date</c>. Tracking IDs and retirement date are only meaningful for the
-/// <c>ServiceUpgradeAndRetirement</c> subcategory. The subcategory may be omitted and is inferred by the
-/// query builder; a conflicting subcategory is rejected.
+/// Validates service-retirement filters shared by Advisor metadata, recommendation list,
+/// and recommendation summary commands.
 /// </summary>
 internal static class ServiceRetirementFilterValidator
 {
     private static readonly string[] AllowedRetirementDateOperators = ["eq", "lt", "le", "gt", "ge"];
 
-    /// <summary>
-    /// Adds an error to <paramref name="validationResult"/> for a subcategory that conflicts with the
-    /// service-retirement filters, or for a malformed <c>--retirement-date</c> expression.
-    /// </summary>
     internal static void Validate(
         ValidationResult validationResult,
         string? subCategory,
         IReadOnlyCollection<string>? trackingIds,
-        string? retirementDate)
+        string? retirementDate,
+        bool serviceRetirementOnly = false)
     {
         var hasServiceRetirementFilter =
+            serviceRetirementOnly ||
             trackingIds?.Any(id => !string.IsNullOrWhiteSpace(id)) == true ||
             !string.IsNullOrWhiteSpace(retirementDate);
         var normalizedSubCategory = subCategory?.Trim();
@@ -40,7 +35,7 @@ internal static class ServiceRetirementFilterValidator
                 StringComparison.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add(
-                "When --sub-category is specified with service-retirement filters, it must be " +
+                "When --sub-category is specified with service-retirement filters or grouping, it must be " +
                 $"{RecommendationMetadataFilters.ServiceRetirementSubCategory}.");
         }
 
@@ -50,10 +45,6 @@ internal static class ServiceRetirementFilterValidator
         }
     }
 
-    /// <summary>
-    /// Parses a <c>--retirement-date</c> expression in <c>&lt;operator&gt;:&lt;yyyy-MM-dd&gt;</c> form.
-    /// An absent expression is valid and yields no operator or date.
-    /// </summary>
     internal static bool TryParseRetirementDate(
         string? expression,
         out string? comparisonOperator,
@@ -64,9 +55,15 @@ internal static class ServiceRetirementFilterValidator
         retirementDate = null;
         error = null;
 
-        if (string.IsNullOrWhiteSpace(expression))
+        if (expression is null)
         {
             return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            error = "--retirement-date cannot be empty.";
+            return false;
         }
 
         var parts = expression.Split(':', 2, StringSplitOptions.TrimEntries);
@@ -92,4 +89,40 @@ internal static class ServiceRetirementFilterValidator
         retirementDate = parsedDate;
         return true;
     }
+
+    internal static string? ResolveSubCategory(string? subCategory, bool serviceRetirementOnly)
+    {
+        var normalized = string.IsNullOrWhiteSpace(subCategory) ? null : subCategory.Trim();
+        if (!serviceRetirementOnly)
+        {
+            return normalized;
+        }
+
+        if (normalized is not null &&
+            !normalized.Equals(
+                RecommendationMetadataFilters.ServiceRetirementSubCategory,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "Service-retirement filters and grouping require the " +
+                $"{RecommendationMetadataFilters.ServiceRetirementSubCategory} subcategory.",
+                nameof(subCategory));
+        }
+
+        return RecommendationMetadataFilters.ServiceRetirementSubCategory;
+    }
+
+    internal static string GetKqlComparisonOperator(string comparisonOperator) =>
+        comparisonOperator.ToLowerInvariant() switch
+        {
+            "eq" => "==",
+            "lt" => "<",
+            "le" => "<=",
+            "gt" => ">",
+            "ge" => ">=",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(comparisonOperator),
+                comparisonOperator,
+                "Unsupported retirement-date comparison operator.")
+        };
 }

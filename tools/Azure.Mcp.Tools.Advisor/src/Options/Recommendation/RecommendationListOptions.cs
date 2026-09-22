@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 /// <summary> Options for filtering and limiting Advisor recommendation list results. </summary>
-public class RecommendationListOptions : ISubscriptionOption
+public class RecommendationListOptions : IRecommendationScopeOptions
 {
     [Option(Description = "Filter recommendations by category (e.g., 'Security', 'Cost', 'Performance', 'HighAvailability', 'OperationalExcellence'). Case-insensitive exact match.")]
     public string? Category { get; set; }
@@ -51,17 +51,15 @@ public class RecommendationListOptions : ISubscriptionOption
         "when specified, it must be ServiceUpgradeAndRetirement.")]
     public string? RetirementDate { get; set; }
 
-    [Option(Description = "Maximum number of items to return. " +
-        "For 'list': defaults to 50, clamped to 1-100 (server-side limit). " +
-        "For 'summary': optional display cap on the number of buckets returned (defaults to all). " +
-        "TotalRecommendations always reflects the complete filtered population regardless of --top.")]
+    [Option(Description = "Maximum number of recommendation records to return. Defaults to 50 and is clamped to the server-side range of 1 through 100.")]
     public int? Top { get; set; }
 
-    [Option(Description = "List recommendations projected to an Azure Service Group, identified by its full ARM ID " +
-        "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'. " +
-        "This selects the independent Service Group scope: it cannot be combined with --subscription or --resource-group. " +
+    [Option(Description = "Summarize or list recommendations for an Azure Service Group instead of a subscription, " +
+        "provided as the name segment of its ARM resource ID (the '{serviceGroupName}' in " +
+        "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'). " +
+        "Specify either --service-group or --subscription, not both; --resource-group applies only to subscription scope. " +
         "Other filters (category, impact, status, search, etc.) and --prioritized still apply.")]
-    public string? ServiceGroupId { get; set; }
+    public string? ServiceGroup { get; set; }
 
     [Option(Description = "Set to true to prioritize recommendations for 'what should I fix first', ranked, top, or " +
         "most-critical requests: it returns only recommendations that have contextual criticality scoring, ordered by " +

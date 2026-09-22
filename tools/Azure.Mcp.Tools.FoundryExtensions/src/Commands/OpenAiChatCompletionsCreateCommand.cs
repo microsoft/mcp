@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         with message history, system instructions, and response customization. Use this when you need to create chat
         completions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

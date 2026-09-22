@@ -23,6 +23,7 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
         about each command, including its name, description, full command path, available subcommands, and all supported
         arguments. Use --name-only to return only tool names, and --namespace to filter by specific namespaces.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

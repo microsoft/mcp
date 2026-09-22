@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
@@ -23,14 +22,16 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Do NOT use this to answer aggregate questions like 'how many', 'top N resource types', 'breakdown by category', " +
         "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
         "entire population, while 'list' returns at most 100 records and reports when results are truncated). " +
+        "Do not use list to summarize, count, or group service retirements by retirement date; use summary for aggregate retirement requests. " +
         "Filter by --status to return New, Postponed, Dismissed, or Completed recommendations; status defaults to New when omitted. " +
         "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
         "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
         "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
         "Scope is either a subscription (--subscription, optionally narrowed by --resource-group) or an Azure Service Group " +
-        "(--service-group-id). The Service Group scope is an independent peer of the subscription scope — the two cannot be " +
-        "combined — and both return the same recommendation shape, including the contextual criticality fields (criticality, " +
-        "criticalityScore) on the subset of recommendations that carry them. " +
+        "(--service-group). Specify either --subscription or --service-group, not both; --resource-group applies only to the " +
+        "subscription scope, and the configured default subscription is used when neither is supplied. Both scopes return the " +
+        "same recommendation shape, including the contextual criticality fields (criticality, criticalityScore) on the subset " +
+        "of recommendations that carry them. " +
         "--prioritized is an orthogonal modifier that applies to whichever scope is selected. Set --prioritized true whenever " +
         "the user asks for a prioritized, ranked, or 'what should I fix/address first' view, or for the most critical, " +
         "highest-impact, or top recommendations: it returns only the recommendations that have contextual criticality scoring " +
@@ -38,6 +39,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "recommendation in the default order. " +
         "Each result uses the standard ARM resource shape; its name is the stable recommendation ID accepted by tools that operate on a recommendation. " +
         "--top caps the number of returned items (default 50, max 100).",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -45,7 +47,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Secret = false,
     LocalRequired = false)]
 public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
+    : RecommendationScopeCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
 {
     private const int MinTop = 1;
     private const int MaxTop = 100;
@@ -56,40 +58,15 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
 
     public override void ValidateOptions(RecommendationListOptions options, ValidationResult validationResult)
     {
-        if (!string.IsNullOrWhiteSpace(options.ServiceGroupId))
-        {
-            // Service Group scope is independent of subscription scope; the two cannot be combined.
-            if (!string.IsNullOrWhiteSpace(options.Subscription))
-            {
-                validationResult.Errors.Add(
-                    "--service-group-id cannot be combined with --subscription. " +
-                    "The Service Group and subscription scopes are independent; specify only one.");
-            }
+        base.ValidateOptions(options, validationResult);
 
-            if (!string.IsNullOrWhiteSpace(options.ResourceGroup))
-            {
-                validationResult.Errors.Add(
-                    "--resource-group cannot be combined with --service-group-id. " +
-                    "Resource group filtering applies to the subscription scope only.");
-            }
-        }
-        else
+        if (options.ServiceGroup is not null && options.ResourceGroup is not null)
         {
-            // Subscription scope: enforce the required --subscription option.
-            base.ValidateOptions(options, validationResult);
+            validationResult.Errors.Add(
+                "--resource-group can only be used with subscription scope and cannot be combined with --service-group.");
         }
 
         RecommendationFilterValidator.Validate(options, validationResult);
-    }
-
-    public override void PostBindOptions(RecommendationListOptions options)
-    {
-        // In Service Group scope there is no subscription, so skip the subscription resolver (which would
-        // otherwise fill it from environment/CLI defaults and appear to conflict with --service-group-id).
-        if (string.IsNullOrWhiteSpace(options.ServiceGroupId))
-        {
-            base.PostBindOptions(options);
-        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationListOptions options, CancellationToken cancellationToken)
@@ -116,7 +93,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 TrackingIds: options.TrackingIds,
                 RetirementDateOperator: retirementDateOperator,
                 RetirementDate: retirementDate,
-                ServiceGroupId: options.ServiceGroupId?.Trim(),
+                ServiceGroup: options.ServiceGroup?.Trim(),
                 Prioritized: options.Prioritized);
 
             var recommendations = await _advisorService.ListRecommendationsAsync(
@@ -133,12 +110,12 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceGroupId: {ServiceGroupId}, Prioritized: {Prioritized}, " +
+                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceGroup: {ServiceGroup}, Prioritized: {Prioritized}, " +
                 "Category: {Category}, Impact: {Impact}, Status: {Status}, RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
                 "SubCategory: {SubCategory}, TrackingIdCount: {TrackingIdCount}, RetirementDate: {RetirementDate}, Top: {Top}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ResourceGroup,
-                options.ServiceGroupId,
+                options.ServiceGroup,
                 options.Prioritized,
                 options.Category,
                 options.Impact,

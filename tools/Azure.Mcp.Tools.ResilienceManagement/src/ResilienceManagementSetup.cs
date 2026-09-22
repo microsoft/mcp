@@ -36,8 +36,10 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<GoalResourceGetCommand>();
         services.AddSingleton<UsagePlanGetCommand>();
         services.AddSingleton<UsagePlanCreateCommand>();
+        services.AddSingleton<UsagePlanDeleteCommand>();
         services.AddSingleton<UsagePlanEnrollmentGetCommand>();
         services.AddSingleton<UsagePlanEnrollmentCreateCommand>();
+        services.AddSingleton<UsagePlanEnrollmentDeleteCommand>();
         services.AddSingleton<RecoveryPlanGetCommand>();
         services.AddSingleton<RecoveryPlanCreateCommand>();
         services.AddSingleton<RecoveryPlanDeleteCommand>();
@@ -65,8 +67,12 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<DrillResourceGetCommand>();
         services.AddSingleton<DrillAddOrUpdateResourcesCommand>();
         services.AddSingleton<DrillRunGetCommand>();
-        services.AddSingleton<DrillRunResourceGetCommand>();
+        services.AddSingleton<DrillRunAddNotesCommand>();
+        services.AddSingleton<DrillRunFailoverCommand>();
+        services.AddSingleton<DrillRunResumeCommand>();
         services.AddSingleton<DrillRunMarkCompleteCommand>();
+        services.AddSingleton<DrillRunReprotectCommand>();
+        services.AddSingleton<DrillRunResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -107,6 +113,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         usagePlans.AddCommand<UsagePlanGetCommand>(serviceProvider);
         usagePlans.AddCommand<UsagePlanCreateCommand>(serviceProvider);
+        usagePlans.AddCommand<UsagePlanDeleteCommand>(serviceProvider);
 
         // Create enrollment subgroup under usageplan
         var enrollments = new CommandGroup("enrollment", "Resilience usage plan enrollment operations - Commands for listing enrollments of a resilience usage plan.");
@@ -114,6 +121,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         enrollments.AddCommand<UsagePlanEnrollmentGetCommand>(serviceProvider);
         enrollments.AddCommand<UsagePlanEnrollmentCreateCommand>(serviceProvider);
+        enrollments.AddCommand<UsagePlanEnrollmentDeleteCommand>(serviceProvider);
 
         // Create recoveryplan subgroup
         var recoveryPlans = new CommandGroup("recoveryplan", "Resilience recoveryplan operations - Commands for listing and getting resilience recovery plans for an Azure service group.");
@@ -176,7 +184,11 @@ public class ResilienceManagementSetup : IAreaSetup
         drills.AddSubGroup(drillRuns);
 
         drillRuns.AddCommand<DrillRunGetCommand>(serviceProvider);
+        drillRuns.AddCommand<DrillRunAddNotesCommand>(serviceProvider);
+        drillRuns.AddCommand<DrillRunFailoverCommand>(serviceProvider);
+        drillRuns.AddCommand<DrillRunResumeCommand>(serviceProvider);
         drillRuns.AddCommand<DrillRunMarkCompleteCommand>(serviceProvider);
+        drillRuns.AddCommand<DrillRunReprotectCommand>(serviceProvider);
 
         // Create resource subgroup under drill run
         var drillRunResources = new CommandGroup("resource", "Resilience drill run resource operations - Commands for listing and getting the resources (targets) of a resilience drill run.");

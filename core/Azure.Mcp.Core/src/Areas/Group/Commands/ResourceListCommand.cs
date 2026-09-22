@@ -22,6 +22,7 @@ namespace Azure.Mcp.Core.Areas.Group.Commands;
         names, IDs, types, and locations. The command returns a JSON object with a `resources`
         array containing these entries.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

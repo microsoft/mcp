@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Hooks;
     Name = "get",
     Title = "Get SRE Agent Hook",
     Description = "Get details for a hook configured on an Azure SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
