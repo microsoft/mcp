@@ -12,6 +12,9 @@ param (
     [string] $ResourceGroupName,
 
     [Parameter()]
+    [string] $Location = '',
+
+    [Parameter()]
     [hashtable] $AdditionalParameters = @{},
 
     # Captures any arguments from the deployment script
@@ -21,10 +24,14 @@ param (
 
 Write-Host "Running Azure.Mcp.Tools.AzureBackup pre-deployment script"
 
-# westus has no VM SKUs enabled for some test subscriptions. Keep an explicit
-# location override, but otherwise deploy the co-located vault and VM in westus2.
+# westus has no VM SKUs enabled for some test subscriptions. Honor an explicit
+# -Location (the standard New-TestResources.ps1 argument used to create the
+# resource group) or a 'location' template parameter override; otherwise
+# deploy the co-located vault and VM in westus2.
 $deploymentLocation = if ($templateFileParameters.ContainsKey('location')) {
     [string]$templateFileParameters['location']
+} elseif ($Location) {
+    $Location
 } else {
     'westus2'
 }

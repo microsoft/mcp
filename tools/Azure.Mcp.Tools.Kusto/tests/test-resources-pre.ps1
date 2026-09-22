@@ -12,6 +12,9 @@ param (
     [string] $ResourceGroupName,
 
     [Parameter()]
+    [string] $Location = '',
+
+    [Parameter()]
     [hashtable] $AdditionalParameters = @{},
 
     # Captures any arguments from the deployment script
@@ -21,17 +24,22 @@ param (
 
 Write-Host "Running Azure.Mcp.Tools.Kusto pre-deployment script"
 
-# westus can restrict the Kusto SKUs used by these tests. Keep an explicit
-# location override, but otherwise deploy the cluster in westus2.
+# westus can restrict the Kusto SKUs used by these tests. Honor an explicit
+# -Location (the standard New-TestResources.ps1 argument used to create the
+# resource group) or a 'location' template parameter override; otherwise
+# deploy the cluster in westus2.
 $deploymentLocation = if ($templateFileParameters.ContainsKey('location')) {
     [string]$templateFileParameters['location']
+} elseif ($Location) {
+    $Location
 } else {
     'westus2'
 }
 
-$clusterSku = Get-AzKustoSku -Location $deploymentLocation |
+$clusterSku = Get-AzKustoClusterSku |
     Where-Object {
-        $_.ResourceType -eq 'clusters' -and
+        $_.Location -contains $deploymentLocation -and
+            $_.ResourceType -eq 'clusters' -and
             $_.Tier -eq 'Standard' -and
             $_.Name -match '^Standard_E2[a-z]*_v\d+$' -and
         ($null -eq $_.Restriction -or @($_.Restriction).Count -eq 0)
