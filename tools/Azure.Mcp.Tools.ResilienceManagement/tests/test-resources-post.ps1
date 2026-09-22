@@ -87,6 +87,24 @@ function Invoke-ResilienceRestPut {
     return $response
 }
 
+function Write-ArmResponseDiagnostics {
+    param(
+        [object] $Response
+    )
+
+    $diagnostics = @("statusCode=$($Response.StatusCode)")
+    Write-Host "  statusCode = $($Response.StatusCode)"
+    foreach ($headerName in @('x-ms-request-id', 'x-ms-correlation-request-id', 'x-ms-routing-request-id', 'Azure-AsyncOperation', 'Location')) {
+        $headerValue = $Response.Headers[$headerName]
+        if ($headerValue) {
+            $diagnostics += "$headerName=$headerValue"
+            Write-Host "  $headerName = $headerValue"
+        }
+    }
+
+    return $diagnostics -join '; '
+}
+
 function Invoke-ResilienceRestPost {
     param(
         [string] $Path,
@@ -132,8 +150,11 @@ function Wait-ResilienceProvisioning {
     )
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $lastResponse = $null
+    $lastState = $null
     while ((Get-Date) -lt $deadline) {
         $response = Invoke-AzRestMethod -Method GET -Path $Path
+        $lastResponse = $response
 
         # Resource creation is eventually consistent. Service groups also create an
         # automatic administrator assignment that can take time to become effective.
@@ -147,12 +168,12 @@ function Wait-ResilienceProvisioning {
             throw "GET $Path failed with status $($response.StatusCode): $($response.Content)"
         }
 
-        $state = ($response.Content | ConvertFrom-Json).properties.provisioningState
-        Write-Host "  provisioningState = $state"
-        if ($state -eq 'Succeeded') {
+        $lastState = ($response.Content | ConvertFrom-Json).properties.provisioningState
+        Write-Host "  provisioningState = $lastState"
+        if ($lastState -eq 'Succeeded') {
             return
         }
-        if ($state -in @('Failed', 'Canceled')) {
+        if ($lastState -in @('Failed', 'Canceled')) {
             $errorDetails = ($response.Content | ConvertFrom-Json).properties.errorDetails
             $errorMessage = if ($errorDetails) {
                 " ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
@@ -160,13 +181,21 @@ function Wait-ResilienceProvisioning {
             else {
                 ''
             }
-            throw "Provisioning of $Path ended in state '$state'.$errorMessage"
+            throw "Provisioning of $Path ended in state '$lastState'.$errorMessage"
         }
 
         Start-Sleep -Seconds 15
     }
 
-    throw "Timed out waiting for $Path to finish provisioning."
+    $responseDiagnostics = if ($lastResponse) {
+        Write-Host '  latest ARM response diagnostics:'
+        Write-ArmResponseDiagnostics -Response $lastResponse
+    }
+    else {
+        'no ARM response received'
+    }
+    $stateMessage = if ($lastState) { " Latest provisioningState: '$lastState'." } else { '' }
+    throw "Timed out waiting for $Path to finish provisioning.$stateMessage Latest ARM response: $responseDiagnostics"
 }
 
 function Add-RecoveryContributorRole {
@@ -260,13 +289,14 @@ Publish-TestRunbook -Name $reprotectRunbookName
 
 # 1a) Create the usage plan outside the Bicep deployment so its provisioning wait is bounded.
 $usagePlanPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $usagePlanPath -Body @{
+$usagePlanResponse = Invoke-ResilienceRestPut -Path $usagePlanPath -Body @{
     location   = 'global'
     properties = @{
         planType = 'Standard'
     }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $usagePlanPath
+}
+Write-ArmResponseDiagnostics -Response $usagePlanResponse | Out-Null
+Wait-ResilienceProvisioning -Path $usagePlanPath -TimeoutSeconds 1800
 
 # 1b) Create the tenant-scoped service group.
 $serviceGroupPath = "$serviceGroupId`?api-version=$serviceGroupApiVersion"
