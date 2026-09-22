@@ -138,10 +138,17 @@ public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture f
 
     [Fact]
     [LiveTestOnly]
-    public async Task Should_validate_required_subscription_parameter()
+    public async Task Should_validate_required_resource_group_parameter()
     {
-        // When subscription is omitted, falls back to default subscription from CLI profile
-        var result = await CallToolAsync("aks_cluster_get", [],
+        // When cluster is provided without a resource group, the service requires
+        // resource-group alongside cluster-name, so this should fail validation.
+        var result = await CallToolAsync(
+            "aks_cluster_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "cluster", Settings.ResourceBaseName }
+            },
             resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
 
         Assert.True(result.HasValue);
