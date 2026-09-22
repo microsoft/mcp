@@ -1434,6 +1434,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | storagesync_service_create | Create a new Storage Sync Service named <service-name> in resource group <resource-group-name> at location <location> | none |
+| storagesync_service_create | Create Storage Sync service <service-name> in <resource-group-name> in <location> allowing virtual network traffic only | none |
+| storagesync_service_create | Create Storage Sync service <service-name> in <resource-group-name> in <location> and explicitly enable its public endpoint | none |
 | storagesync_service_delete | Delete the Storage Sync Service <service-name> from resource group <resource-group-name> | none |
 | storagesync_service_get | Get the details of Storage Sync Service <service-name> in resource group <resource-group-name> | none |
 | storagesync_service_get | List all Storage Sync Services in resource group <resource-group-name> | none |
