@@ -149,9 +149,12 @@ function Wait-ResilienceProvisioning {
         [switch] $WaitForAuthorization
     )
 
-    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $startTime = Get-Date
+    $deadline = $startTime.AddSeconds($TimeoutSeconds)
     $lastResponse = $null
     $lastState = $null
+    $lastLoggedState = $null
+    $nextHeartbeat = $startTime
     while ((Get-Date) -lt $deadline) {
         $response = Invoke-AzRestMethod -Method GET -Path $Path
         $lastResponse = $response
@@ -169,7 +172,13 @@ function Wait-ResilienceProvisioning {
         }
 
         $lastState = ($response.Content | ConvertFrom-Json).properties.provisioningState
-        Write-Host "  provisioningState = $lastState"
+        $now = Get-Date
+        if ($lastState -ne $lastLoggedState -or $now -ge $nextHeartbeat) {
+            $elapsedSeconds = [int] ($now - $startTime).TotalSeconds
+            Write-Host "  provisioningState = $lastState (elapsedSeconds = $elapsedSeconds)"
+            $lastLoggedState = $lastState
+            $nextHeartbeat = $now.AddMinutes(1)
+        }
         if ($lastState -eq 'Succeeded') {
             return
         }
@@ -296,7 +305,7 @@ $usagePlanResponse = Invoke-ResilienceRestPut -Path $usagePlanPath -Body @{
     }
 }
 Write-ArmResponseDiagnostics -Response $usagePlanResponse | Out-Null
-Wait-ResilienceProvisioning -Path $usagePlanPath -TimeoutSeconds 1800
+Wait-ResilienceProvisioning -Path $usagePlanPath -TimeoutSeconds 600
 
 # 1b) Create the tenant-scoped service group.
 $serviceGroupPath = "$serviceGroupId`?api-version=$serviceGroupApiVersion"
