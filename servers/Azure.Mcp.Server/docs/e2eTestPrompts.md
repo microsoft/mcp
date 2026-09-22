@@ -340,6 +340,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in resource group <resource_group> and disable MUA | investigation-required |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv' | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in <location> with public network access disabled | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in <location> and explicitly enable public network access for this test deployment | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
