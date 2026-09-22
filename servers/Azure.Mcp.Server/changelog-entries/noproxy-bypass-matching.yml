@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Support hostname, domain suffix, IPv4 CIDR notation, and IPv6 host literals in NO_PROXY bypass list, and respect lowercase proxy environment variables on Unix (#3338)."
