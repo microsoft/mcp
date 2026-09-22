@@ -680,6 +680,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> | investigation-required |
 | eventhubs_namespace_update | Create a new Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name> | none |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> | clarification-required |
+| eventhubs_namespace_update | Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> with public access and SAS authentication disabled | none |
+| eventhubs_namespace_update | Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> and explicitly enable public access and SAS authentication | none |
 
 ## Azure File Shares
 
