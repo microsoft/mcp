@@ -31,10 +31,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         - Listing all available policies by archetype
 
         **Available scenarios:**
-        - bastion: Turn off Bastion host
-        - ddos: Enable or disable DDoS protection plan
-        - dns: Turn off Private DNS zones and resolvers
-        - gateways: Turn off Virtual Network Gateways (VPN/ExpressRoute)
+        - bastion: Turn off Bastion host (also settable directly: request --bastion disabled)
+        - ddos: Enable or disable DDoS protection plan (also settable directly: request --ddos disabled)
+        - dns: Turn off Private DNS zones and resolvers (also settable directly: request --private-dns disabled)
+        - gateways: Turn off Virtual Network Gateways (also settable directly: request --express-route disabled, request --vpn-gateway disabled)
         - ip-addresses: Adjust CIDR ranges and IP address space
         - regions: Add or remove secondary regions
         - resource-names: Update resource naming prefixes and suffixes
@@ -46,6 +46,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         - defender: Turn off Defender Plans
         - zero-trust: Implement Zero Trust Networking
         - slz: Implement Sovereign Landing Zone controls
+
+        **Prefer the request command for bastion, ddos, dns and gateways.** Those are first-class
+        parameters on the Platform Landing Zone API, and the generated files are regenerated from the
+        resource, so hand-edits to achieve them are overwritten by the next generation run.
 
         **For policy searches:**
         - Use policy-name to search for a specific policy
