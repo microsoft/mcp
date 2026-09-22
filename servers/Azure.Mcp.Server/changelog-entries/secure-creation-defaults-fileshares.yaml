@@ -1,0 +1,5 @@
+changes:
+  - section: Breaking Changes
+    description: New file shares now disable public networking by default, and new NFS shares default to `RootSquash` with encrypted transit. Explicit options remain available for broader access, while omitted security settings preserve existing shares during updates.
+  - section: Bugs Fixed
+    description: Updating an existing file share now replaces supplied tag values and preserves unrelated tags without duplicate-key errors.
