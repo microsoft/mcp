@@ -1410,6 +1410,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_account_create | Create a new storage account called testaccount123 in East US region | clarification-required |
 | storage_account_create | Create a storage account with premium performance and LRS replication | clarification-required |
 | storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled | clarification-required |
+| storage_account_create | Create Storage account <account> in <resource-group> in <location> with private networking and Shared Key authentication disabled | none |
+| storage_account_create | Create Storage account <account> in <resource-group> in <location> and explicitly enable public networking and Shared Key authentication for an isolated test | none |
 | storage_account_get | Show me the details for my storage account <account> | none |
 | storage_account_get | Get details about the storage account <account> | none |
 | storage_account_get | List all storage accounts in my subscription including their location and SKU | none |
