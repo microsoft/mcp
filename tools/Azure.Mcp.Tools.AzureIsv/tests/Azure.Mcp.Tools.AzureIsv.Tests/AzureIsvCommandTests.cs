@@ -46,7 +46,7 @@ public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fix
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "datadog-resource", Settings.ResourceBaseName }
+                { "datadog-resource", $"{Settings.ResourceBaseName}-nonexistent" }
             }, resultProcessor: elem => elem.TryGetProperty("status", out var property) ? property : null);
 
         Assert.NotNull(result);
