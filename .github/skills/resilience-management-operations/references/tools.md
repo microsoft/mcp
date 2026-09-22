@@ -2,7 +2,7 @@
 
 <!-- cspell:words reprotect reprotection -->
 
-This reference lists all 38 tools registered under the `resilience` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
+This reference lists all 39 tools registered under the `resilience` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
 
 ## Usage Plans
 
@@ -23,9 +23,10 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 |---|---|---|
 | `mcp_azure_mcp_ser_resilience_goal_template_get` | List goal templates or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_goal_assignment_create` | Create or update a goal assignment from a legacy goal template supported by the current SDK | **`service-group`**, **`goal-assignment`**, **`goal-template`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
 
-These tools are read-only. Omit `name` to list IDs and names; provide it for full details.
+The get tools are read-only. Omit `name` to list IDs and names; provide it for full details. Goal assignment create is an idempotent mutation that currently requires a pre-existing legacy goal template; migrate callers to inline goal definitions when a supporting SDK is adopted.
 
 ## Drills
 

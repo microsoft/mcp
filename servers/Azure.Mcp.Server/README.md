@@ -1338,6 +1338,7 @@ Example prompts that generate Azure CLI commands:
 * "List all resilience goal templates in service group 'my-service-group'"
 * "Get the details of goal template 'my-template' in service group 'my-service-group'"
 * "List all resilience goal assignments in service group 'my-service-group'"
+* "Create goal assignment 'my-assignment' from goal template 'my-template' in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
 * "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"

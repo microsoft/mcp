@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
+// cspell:ignore GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -177,6 +177,30 @@ public class ResilienceManagementCommandTests(
 
         var assignment = result.AssertProperty("goalAssignment");
         Assert.False(string.IsNullOrEmpty(assignment.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_create_or_update_goal_assignment()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME");
+        var goalTemplate = RegisterOrRetrieveDeploymentOutputVariable("goalTemplateName", "GOALTEMPLATENAME");
+        RegisterVariable("createdGoalAssignmentName", $"gac{Guid.NewGuid():N}"[..24]);
+        var goalAssignment = TestVariables["createdGoalAssignmentName"];
+
+        var result = await CallToolAsync(
+            "resilience_goal_assignment_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "goal-assignment", goalAssignment },
+                { "goal-template", goalTemplate }
+            });
+
+        var assignment = result.AssertProperty("goalAssignment");
+        Assert.False(string.IsNullOrEmpty(assignment.AssertProperty("name").GetString()));
+        Assert.EndsWith($"/goalAssignments/{goalAssignment}", assignment.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Succeeded", assignment.AssertProperty("properties").AssertProperty("provisioningState").GetString());
     }
 
     [Fact]
