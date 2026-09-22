@@ -37,7 +37,7 @@ public class IoTHubDeviceService(
     // Microsoft Entra ID scope for the IoT Hub service (data-plane) REST API.
     private const string IoTHubTokenScope = "https://iothubs.azure.net/.default";
 
-    private async Task<T> ExecuteWithTimeoutAsync<T>(
+    private static async Task<T> ExecuteWithTimeoutAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         string operationName,
         CancellationToken cancellationToken,

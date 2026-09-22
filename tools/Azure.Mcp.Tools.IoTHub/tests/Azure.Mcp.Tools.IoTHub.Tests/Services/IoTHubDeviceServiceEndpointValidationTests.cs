@@ -15,12 +15,14 @@ public class IoTHubDeviceServiceEndpointValidationTests
     [InlineData("hub.service.azure-devices.net", "public")]
     [InlineData("hub.azure-devices.cn", "china")]
     [InlineData("hub.azure-devices.us", "government")]
+    [InlineData("hub.azure-devices.de", "germany")]
     public void CreateValidatedDataPlaneUri_ValidCloudHost_ReturnsEndpoint(string hostname, string cloud)
     {
         var armEnvironment = cloud switch
         {
             "china" => ArmEnvironment.AzureChina,
             "government" => ArmEnvironment.AzureGovernment,
+            "germany" => ArmEnvironment.AzureGermany,
             _ => ArmEnvironment.AzurePublicCloud
         };
 

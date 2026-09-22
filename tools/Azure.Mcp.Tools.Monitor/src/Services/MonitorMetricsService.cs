@@ -8,8 +8,10 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Monitor.Query.Metrics;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
@@ -372,7 +374,10 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         metricsClientOptions.Audience = GetMetricsClientAudience();
         metricsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
-        var metricsClient = new MetricsClient(new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"), credential, metricsClientOptions);
+        var metricsEndpoint = ValidateMetricsEndpoint(
+            new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"),
+            AzureService.CloudConfiguration.ArmEnvironment);
+        var metricsClient = new MetricsClient(metricsEndpoint, credential, metricsClientOptions);
 
         var queryOptions = new MetricsQueryResourcesOptions
         {
@@ -477,6 +482,18 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         }
 
         return compactResult;
+    }
+
+    internal static Uri ValidateMetricsEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "monitor-metrics",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "monitor");
+        return endpoint;
     }
 
     private MetricsClientAudience GetMetricsClientAudience() =>

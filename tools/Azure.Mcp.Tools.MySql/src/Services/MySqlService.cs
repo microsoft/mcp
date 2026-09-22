@@ -44,37 +44,80 @@ public sealed class MySqlService(IAzureService azureService)
                 "https://ossrdbms-aad.database.usgovcloudapi.net/.default",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
                 "https://ossrdbms-aad.database.chinacloudapi.cn/.default",
-            _ =>
-                "https://ossrdbms-aad.database.windows.net/.default"
+            _ => throw new ArgumentException(
+                $"The configured Azure cloud is not supported for MySql connections. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
+                nameof(AzureService.CloudConfiguration.CloudType))
         };
     }
 
-    private string NormalizeServerName(string server)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(server);
-        var hostname = !server.Contains('.')
-            ? AzureService.CloudConfiguration.CloudType switch
-            {
-                AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
-                    server + ".mysql.database.azure.com",
-                AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
-                    server + ".mysql.database.usgovcloudapi.net",
-                AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
-                    server + ".mysql.database.chinacloudapi.cn",
-                _ =>
-                    server + ".mysql.database.azure.com"
-            }
-            : server;
+    /// <summary>
+    /// Gets the appropriate DNS suffix for a MySql endpoint in the given Azure cloud.
+    /// </summary>
+    /// <param name="armEnvironment">The Azure cloud of interest.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">
+    /// Given cloud is not valid or supported.
+    /// </exception>
+    private static string GetMySqlDnsSuffix(ArmEnvironment armEnvironment) =>
+        //EndpointValidator.AllowLists.cs also has a copy of this list. Keep them in sync.
+        ArmEnvironment.AzurePublicCloud.Equals(armEnvironment) ? ".mysql.database.azure.com" :
+        ArmEnvironment.AzureChina.Equals(armEnvironment) ? ".mysql.database.chinacloudapi.cn" :
+        ArmEnvironment.AzureGovernment.Equals(armEnvironment) ? ".mysql.database.usgovcloudapi.net" :
+        throw new ArgumentException(
+            $"The configured Azure cloud is not supported for MySql connections. Value given: '{armEnvironment}'.",
+            nameof(armEnvironment));
 
-        return ValidateServerHostname(
-            hostname,
-            AzureService.CloudConfiguration.ArmEnvironment);
+    /// <summary>
+    /// Returns the full hostname to a MySql server to be used for
+    /// connection string construction.
+    /// </summary>
+    /// <param name="serverNameOrFullHostname">
+    /// A <see cref="string"/> that is either (1) a server name, e.g., mydb or (2) a full DNS
+    /// hostname to a server, e.g., mydb.mysql.database.azure.com in the public cloud.
+    /// </param>
+    /// <returns>
+    /// A server hostname to be used for connection string construction based on the current
+    /// cloud configuration of the application's runtime.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="serverNameOrFullHostname"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="serverNameOrFullHostname"/> is empty or whitespace; is not a bare
+    /// DNS server name or hostname; identifies only the MySql domain suffix without a server
+    /// label; the configured Azure cloud is not supported for MySql connections; or the
+    /// MySql endpoint allow-list is not configured or does not allow the hostname.
+    /// </exception>
+    private string CreateAndValidateServerHostname(string serverNameOrFullHostname)
+    {
+        // GENERAL REMARKS:
+        // This method is building the hostname used in a connection string, NOT an HTTPS URI
+        // to be used by an HttpClient or the like. As such, there are different tests within
+        // this method that EndpointValidator.ValidateAzureServiceEndpoint isn't presently
+        // prepared to handle as it's focused on HTTPS URI validation. To authors: you must
+        // document each step that is unique in this method for knowledge sharing, historical
+        // archiving, and evaluation of correctness.
+        ArgumentException.ThrowIfNullOrWhiteSpace(serverNameOrFullHostname);
+
+        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
+        string mysqlDnsSuffix = GetMySqlDnsSuffix(armEnvironment);
+
+        // Short Azure MySql server names have no domain component, so a dot signals that the
+        // caller supplied a URI-ready, fully qualified host candidate. Preserve that candidate so
+        // validation evaluates the supplied authority; complete only short names with the cloud suffix.
+        string host = serverNameOrFullHostname.Contains('.')
+            ? serverNameOrFullHostname
+            : serverNameOrFullHostname + mysqlDnsSuffix;
+
+        return ValidateServerHostname(host, armEnvironment);
     }
 
     internal static string ValidateServerHostname(string hostname, ArmEnvironment armEnvironment)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(hostname);
 
+        // EndpointValidator authorizes the parsed URI host, while Npgsql receives this raw host string.
+        // Require DNS-only syntax so user-info, ports, paths, or multi-host values cannot make those differ.
         if (Uri.CheckHostName(hostname) != UriHostNameType.Dns)
         {
             throw CreateInvalidServerException(hostname);
@@ -94,6 +137,14 @@ public sealed class MySqlService(IAzureService azureService)
             throw CreateInvalidServerException(hostname, ex);
         }
 
+        // EndpointValidator permits the allow-listed suffix root, but MySql connection endpoints
+        // require a resource-specific server label before that suffix.
+        var mysqlDnsSuffix = GetMySqlDnsSuffix(armEnvironment);
+        if (endpoint.IdnHost.Equals(mysqlDnsSuffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
+        {
+            throw CreateInvalidServerException(hostname);
+        }
+
         return endpoint.IdnHost;
     }
 
@@ -105,7 +156,7 @@ public sealed class MySqlService(IAzureService azureService)
 
     private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
     {
-        var host = NormalizeServerName(server);
+        var host = CreateAndValidateServerHostname(server);
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         return BuildConnectionString(host, database, user, entraIdAccessToken);
     }

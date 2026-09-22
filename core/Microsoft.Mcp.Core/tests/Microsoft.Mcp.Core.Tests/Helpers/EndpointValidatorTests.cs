@@ -93,7 +93,9 @@ public class EndpointValidatorTests
     [InlineData("https://topic.westus2-1.eventgrid.azure.net/api/events", "eventgrid")]
     [InlineData("https://hub.azure-devices.net/devices", "iothub")]
     [InlineData("https://vault.vault.azure.net/secrets", "keyvault")]
+    [InlineData("https://00000000-0000-0000-0000-000000000000.eastus.cnt-prod.loadtesting.azure.com", "loadtesting")]
     [InlineData("https://hsm.managedhsm.azure.net/settings", "managedhsm")]
+    [InlineData("https://eastus.metrics.monitor.azure.com", "monitor-metrics")]
     [InlineData("https://server.mysql.database.azure.com", "mysql")]
     [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
@@ -113,7 +115,9 @@ public class EndpointValidatorTests
     [InlineData("foundry")]
     [InlineData("iothub")]
     [InlineData("keyvault")]
+    [InlineData("loadtesting")]
     [InlineData("managedhsm")]
+    [InlineData("monitor-metrics")]
     [InlineData("mysql")]
     public void ValidateAzureServiceEndpoint_ReviewedToolServices_AreRegistered(string serviceType)
     {
@@ -130,7 +134,9 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.com.evil.example", "foundry")]
     [InlineData("https://hub.azure-devices.net.evil.example", "iothub")]
     [InlineData("https://vault.vault.azure.net.evil.example", "keyvault")]
+    [InlineData("https://resource.eastus.cnt-prod.loadtesting.azure.com.evil.example", "loadtesting")]
     [InlineData("https://hsm.managedhsm.azure.net.evil.example", "managedhsm")]
+    [InlineData("https://eastus.metrics.monitor.azure.com.evil.example", "monitor-metrics")]
     [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
     public void ValidateAzureServiceEndpoint_ReviewedServiceSuffixes_RejectSpoofedHosts(
         string endpoint,
@@ -158,6 +164,8 @@ public class EndpointValidatorTests
     [InlineData("https://evil.com", "azure-openai", "not a valid azure-openai domain")]
     [InlineData("http://my-resource.openai.azure.com", "azure-openai", "must use HTTPS")]
     [InlineData("https://my-resource.openai.azure.com.evil.com", "azure-openai", "not a valid azure-openai domain")]
+    [InlineData("http://resource.eastus.cnt-prod.loadtesting.azure.com", "loadtesting", "must use HTTPS")]
+    [InlineData("http://eastus.metrics.monitor.azure.com", "monitor-metrics", "must use HTTPS")]
     [InlineData("https://attacker.dssldrf.net", "servicebus", "not a valid servicebus domain")]
     [InlineData("http://mynamespace.servicebus.windows.net", "servicebus", "must use HTTPS")]
     [InlineData("https://mynamespace.servicebus.windows.net.evil.com", "servicebus", "not a valid servicebus domain")]
@@ -253,6 +261,7 @@ public class EndpointValidatorTests
     [InlineData("https://hub.azure-devices.cn", "iothub")]
     [InlineData("https://vault.vault.azure.cn", "keyvault")]
     [InlineData("https://hsm.managedhsm.azure.cn", "managedhsm")]
+    [InlineData("https://chinanorth3.metrics.monitor.azure.cn", "monitor-metrics")]
     [InlineData("https://server.mysql.database.chinacloudapi.cn", "mysql")]
     [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
@@ -278,7 +287,9 @@ public class EndpointValidatorTests
     [InlineData("https://topic.usgovvirginia-1.eventgrid.azure.us", "eventgrid")]
     [InlineData("https://hub.azure-devices.us", "iothub")]
     [InlineData("https://vault.vault.usgovcloudapi.net", "keyvault")]
+    [InlineData("https://00000000-0000-0000-0000-000000000000.usgovvirginia.cnt-prod.loadtesting.azure.us", "loadtesting")]
     [InlineData("https://hsm.managedhsm.usgovcloudapi.net", "managedhsm")]
+    [InlineData("https://usgovvirginia.metrics.monitor.azure.us", "monitor-metrics")]
     [InlineData("https://server.mysql.database.usgovcloudapi.net", "mysql")]
     [InlineData("https://mynamespace.servicebus.usgovcloudapi.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)

@@ -24,19 +24,22 @@ public class FoundryExtensionsService(IAzureService azureService)
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
     /// </summary>
-    internal void ValidateProjectEndpoint(string endpoint)
+    internal Uri ValidateProjectEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
+            var uri = new Uri(endpoint);
             EndpointValidator.ValidateAzureServiceEndpoint(
-                endpoint: endpoint,
+                endpoint: uri.AbsoluteUri,
                 serviceType: "foundry",
                 armEnvironment: GetArmEnvironment(),
                 executingToolNamespaceName: "foundryextensions");
+
+            return uri;
         }
-        catch (SecurityException ex)
+        catch (Exception ex) when (ex is SecurityException || ex is UriFormatException)
         {
             throw new ArgumentException($"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
                 nameof(endpoint), ex);
@@ -46,23 +49,22 @@ public class FoundryExtensionsService(IAzureService azureService)
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of an Azure OpenAI endpoint.
     /// </summary>
-    internal void ValidateAzureOpenAiEndpoint(string endpoint)
+    internal Uri ValidateAzureOpenAiEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
+            var uri = new Uri(endpoint);
             EndpointValidator.ValidateAzureServiceEndpoint(
-                endpoint: endpoint,
+                endpoint: uri.AbsoluteUri,
                 serviceType: "azure-openai",
                 armEnvironment: GetArmEnvironment(),
                 executingToolNamespaceName: "foundryextensions");
 
             // Azure OpenAI-specific structural checks beyond domain validation
-            var parsedUri = new Uri(endpoint);
-
             // Azure OpenAI endpoints should not contain path segments
-            var paths = parsedUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var paths = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (paths.Length != 0)
             {
                 throw new ArgumentException("Azure OpenAI endpoint should not contain path segments");
@@ -73,7 +75,7 @@ public class FoundryExtensionsService(IAzureService azureService)
                 ".openai.azure.cn", ".cognitiveservices.azure.cn",
                 ".openai.azure.us", ".cognitiveservices.azure.us",
                 ".openai.azure.de", ".cognitiveservices.azure.de"];
-            var host = parsedUri.Host;
+            var host = uri.Host;
             var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
             if (matchedSuffix != null)
             {
@@ -93,8 +95,15 @@ public class FoundryExtensionsService(IAzureService azureService)
                     throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
                 }
             }
+
+            return uri;
         }
         catch (SecurityException ex)
+        {
+            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint), ex);
+        }
+        catch (UriFormatException ex)
         {
             throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
                 nameof(endpoint), ex);
@@ -118,7 +127,6 @@ public class FoundryExtensionsService(IAzureService azureService)
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
-        ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
 
@@ -157,7 +165,6 @@ public class FoundryExtensionsService(IAzureService azureService)
         ValidateRequiredParameters(
             (nameof(endpoint), endpoint),
             (nameof(indexName), indexName));
-        ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
 
@@ -248,7 +255,7 @@ public class FoundryExtensionsService(IAzureService azureService)
         }
 
         // Create the completion request
-        var messages = new List<OpenAI.Chat.ChatMessage>
+        var messages = new List<ChatMessage>
         {
             new UserChatMessage(promptText)
         };
@@ -551,11 +558,11 @@ public class FoundryExtensionsService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        // Configure AzureOpenAIClientOptions with HttpClient transport for test proxy support
-        var httpClient = AzureService.GetClient();
+        var openAiUri = ValidateAzureOpenAiEndpoint(endpoint);
+
         var clientOptions = new AzureOpenAIClientOptions
         {
-            Transport = new HttpClientPipelineTransport(httpClient)
+            Transport = new HttpClientPipelineTransport(AzureService.GetClient())
         };
 
         switch (authMethod)
@@ -570,12 +577,12 @@ public class FoundryExtensionsService(IAzureService azureService)
                     throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
                 }
 
-                return new(new(endpoint), new AzureKeyCredential(key), clientOptions);
+                return new(openAiUri, new AzureKeyCredential(key), clientOptions);
 
             case AuthMethod.Credential:
             default:
                 var credential = await GetCredential(tenant, cancellationToken);
-                return new(new(endpoint), credential, clientOptions);
+                return new(openAiUri, credential, clientOptions);
         }
     }
 
@@ -584,18 +591,16 @@ public class FoundryExtensionsService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
+        var projectUri = ValidateProjectEndpoint(endpoint);
         var credential = await GetCredential(tenant, cancellationToken);
-        var transport = CreateTransport();
 
         var clientOptions = new AIProjectClientOptions
         {
-            Transport = transport
+            Transport = new HttpClientPipelineTransport(AzureService.GetClient())
         };
 
-        return new(new(endpoint), credential, clientOptions);
+        return new(projectUri, credential, clientOptions);
     }
-
-    private HttpClientPipelineTransport CreateTransport() => new(AzureService.GetClient());
 
     public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
         string subscription,

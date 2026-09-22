@@ -14,12 +14,14 @@ public class ManagedLustreServiceEndpointValidationTests
     [InlineData("https://vault.vault.azure.net/keys/key/version", "public")]
     [InlineData("https://vault.vault.azure.cn/keys/key/version", "china")]
     [InlineData("https://vault.vault.usgovcloudapi.net/keys/key/version", "government")]
+    [InlineData("https://vault.vault.microsoftazure.de/keys/key/version", "germany")]
     public void CreateValidatedKeyUri_ValidCloudEndpoint_ReturnsEndpoint(string endpoint, string cloud)
     {
         var armEnvironment = cloud switch
         {
             "china" => ArmEnvironment.AzureChina,
             "government" => ArmEnvironment.AzureGovernment,
+            "germany" => ArmEnvironment.AzureGermany,
             _ => ArmEnvironment.AzurePublicCloud
         };
 

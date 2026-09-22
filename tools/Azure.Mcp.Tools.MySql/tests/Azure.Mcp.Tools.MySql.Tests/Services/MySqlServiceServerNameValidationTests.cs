@@ -77,6 +77,23 @@ public class MySqlServiceServerNameValidationTests
     }
 
     [Theory]
+    [InlineData("mysql.database.azure.com", "public")]
+    [InlineData("mysql.database.chinacloudapi.cn", "china")]
+    [InlineData("mysql.database.usgovcloudapi.net", "government")]
+    public void ValidateServerHostname_DomainRoot_ThrowsArgumentException(string hostname, string cloud)
+    {
+        var armEnvironment = cloud switch
+        {
+            "china" => ArmEnvironment.AzureChina,
+            "government" => ArmEnvironment.AzureGovernment,
+            _ => ArmEnvironment.AzurePublicCloud
+        };
+
+        Assert.Throws<ArgumentException>(() =>
+            MySqlService.ValidateServerHostname(hostname, armEnvironment));
+    }
+
+    [Theory]
     [InlineData("attacker.com")]
     [InlineData("evil.example.org")]
     public async Task ExecuteQueryAsync_WithNonAzureServerFQDN_ThrowsArgumentException(string maliciousServer)

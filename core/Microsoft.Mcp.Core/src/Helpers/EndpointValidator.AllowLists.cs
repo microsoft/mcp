@@ -148,17 +148,29 @@ public static partial class EndpointValidator
             UsGov: [".vault.usgovcloudapi.net"],
             Germany: [".vault.microsoftazure.de"],
             UseLegacyCheck: false),
+        ["loadtesting"] = new AllowedSuffixManager(
+            Public: [".loadtesting.azure.com"],
+            China: [],
+            UsGov: [".loadtesting.azure.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["managedhsm"] = new AllowedSuffixManager(
             Public: [".managedhsm.azure.net"],
             China: [".managedhsm.azure.cn"],
             UsGov: [".managedhsm.usgovcloudapi.net"],
             Germany: [".managedhsm.microsoftazure.de"],
             UseLegacyCheck: false),
+        ["monitor-metrics"] = new AllowedSuffixManager(
+            Public: [".metrics.monitor.azure.com"],
+            China: [".metrics.monitor.azure.cn"],
+            UsGov: [".metrics.monitor.azure.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["mysql"] = new AllowedSuffixManager(
             Public: [".mysql.database.azure.com"],
             China: [".mysql.database.chinacloudapi.cn"],
             UsGov: [".mysql.database.usgovcloudapi.net"],
-            Germany: [".mysql.database.cloudapi.de"],
+            Germany: [],
             UseLegacyCheck: false),
         ["servicebus"] = new AllowedSuffixManager(
             Public: [".servicebus.windows.net"],

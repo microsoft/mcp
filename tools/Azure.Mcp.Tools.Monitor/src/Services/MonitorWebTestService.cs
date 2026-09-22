@@ -442,11 +442,12 @@ public class MonitorWebTestService(
 
     internal static Uri CreateValidatedRequestUri(string requestUrl, ILogger? logger)
     {
+        var uri = new Uri(requestUrl, UriKind.Absolute);
         EndpointValidator.ValidatePublicTargetUrl(
-            url: requestUrl,
+            url: uri.AbsoluteUri,
             logger: logger,
             executingToolNamespaceName: "monitor");
-        return new Uri(requestUrl, UriKind.Absolute);
+        return uri;
     }
 
     internal static Uri? ResolveValidatedRequestUri(

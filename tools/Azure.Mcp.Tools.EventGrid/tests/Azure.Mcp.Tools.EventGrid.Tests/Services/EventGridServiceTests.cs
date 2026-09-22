@@ -129,6 +129,6 @@ public class EventGridServiceTests()
     public void ValidateTopicEndpoint_NullUri_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            EventGridService.ValidateEventGridEndpoint(new Uri("https://evil.example/api/events"), ArmEnvironment.AzureChina));
+            EventGridService.ValidateEventGridEndpoint(null, ArmEnvironment.AzureChina));
     }
 }
