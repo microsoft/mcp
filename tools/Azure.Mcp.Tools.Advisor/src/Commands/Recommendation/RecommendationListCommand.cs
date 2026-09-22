@@ -28,12 +28,14 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
         "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
         "Scope is either a subscription (--subscription, optionally narrowed by --resource-group) or an Azure Service Group " +
-        "(--service-group-id); the two scopes are independent and cannot be combined. " +
-        "Set --mode Contextual whenever the user asks for a prioritized, ranked, or 'what should I fix/address first' view, " +
-        "or for the most critical, highest-impact, or top recommendations. Prioritization works in both the subscription and " +
-        "Service Group scopes: Contextual returns only recommendations that have contextual criticality scoring, ordered by " +
-        "criticality score (highest first). --mode defaults to All, which returns every matching recommendation without " +
-        "prioritized ordering. " +
+        "(--service-group-id). The Service Group scope is an independent peer of the subscription scope — the two cannot be " +
+        "combined — and both return the same recommendation shape, including the contextual criticality fields (criticality, " +
+        "criticalityScore) on the subset of recommendations that carry them. " +
+        "--prioritized is an orthogonal modifier that applies to whichever scope is selected. Set --prioritized true whenever " +
+        "the user asks for a prioritized, ranked, or 'what should I fix/address first' view, or for the most critical, " +
+        "highest-impact, or top recommendations: it returns only the recommendations that have contextual criticality scoring " +
+        "and orders them by criticality score (highest first). --prioritized defaults to false, which returns every matching " +
+        "recommendation in the default order. " +
         "Each result uses the standard ARM resource shape; its name is the stable recommendation ID accepted by tools that operate on a recommendation. " +
         "--top caps the number of returned items (default 50, max 100).",
     Destructive = false,
@@ -115,7 +117,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 RetirementDateOperator: retirementDateOperator,
                 RetirementDate: retirementDate,
                 ServiceGroupId: options.ServiceGroupId?.Trim(),
-                Mode: options.Mode);
+                Prioritized: options.Prioritized);
 
             var recommendations = await _advisorService.ListRecommendationsAsync(
                 options.Subscription,
@@ -131,13 +133,13 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceGroupId: {ServiceGroupId}, Mode: {Mode}, " +
+                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceGroupId: {ServiceGroupId}, Prioritized: {Prioritized}, " +
                 "Category: {Category}, Impact: {Impact}, Status: {Status}, RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
                 "SubCategory: {SubCategory}, TrackingIdCount: {TrackingIdCount}, RetirementDate: {RetirementDate}, Top: {Top}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ResourceGroup,
                 options.ServiceGroupId,
-                options.Mode,
+                options.Prioritized,
                 options.Category,
                 options.Impact,
                 options.Status,

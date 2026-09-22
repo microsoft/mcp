@@ -761,17 +761,16 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Fact]
     public async Task ExecuteAsync_NoScopeProvided_ReturnsBadRequest()
     {
-        var response = await ExecuteCommandAsync("--mode", "Contextual");
+        var response = await ExecuteCommandAsync("--prioritized", "true");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("subscription", response.Message.ToLower());
     }
 
     [Theory]
-    [InlineData("All", Models.RecommendationMode.All)]
-    [InlineData("Contextual", Models.RecommendationMode.Contextual)]
-    [InlineData("contextual", Models.RecommendationMode.Contextual)]
-    public async Task ExecuteAsync_ForwardsModeToService(string mode, Models.RecommendationMode expected)
+    [InlineData("true", true)]
+    [InlineData("false", false)]
+    public async Task ExecuteAsync_ForwardsPrioritizedToService(string prioritized, bool expected)
     {
         Models.RecommendationFilters? captured = null;
         Service.ListRecommendationsAsync(
@@ -785,15 +784,15 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
-            "--mode", mode);
+            "--prioritized", prioritized);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal(expected, captured!.Mode);
+        Assert.Equal(expected, captured!.Prioritized);
     }
 
     [Fact]
-    public async Task ExecuteAsync_OmittedMode_IsNull()
+    public async Task ExecuteAsync_OmittedPrioritized_IsNull()
     {
         Models.RecommendationFilters? captured = null;
         Service.ListRecommendationsAsync(
@@ -809,29 +808,12 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Null(captured!.Mode);
+        Assert.Null(captured!.Prioritized);
         Assert.Null(captured.ServiceGroupId);
     }
 
     [Fact]
-    public async Task ExecuteAsync_InvalidMode_ReturnsBadRequest()
-    {
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
-            "--mode", "Bogus");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await Service.DidNotReceive().ListRecommendationsAsync(
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<Models.RecommendationFilters?>(),
-            Arg.Any<int>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ServiceGroupScopeWithContextualMode_ForwardsBoth()
+    public async Task ExecuteAsync_ServiceGroupScopeWithPrioritized_ForwardsBoth()
     {
         Models.RecommendationFilters? captured = null;
         Service.ListRecommendationsAsync(
@@ -845,13 +827,13 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         var response = await ExecuteCommandAsync(
             "--service-group-id", "/providers/Microsoft.Management/serviceGroups/sg1",
-            "--mode", "Contextual",
+            "--prioritized", "true",
             "--category", "Cost");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
         Assert.Equal("/providers/Microsoft.Management/serviceGroups/sg1", captured!.ServiceGroupId);
-        Assert.Equal(Models.RecommendationMode.Contextual, captured.Mode);
+        Assert.True(captured.Prioritized);
         Assert.Equal("Cost", captured.Category);
     }
 }

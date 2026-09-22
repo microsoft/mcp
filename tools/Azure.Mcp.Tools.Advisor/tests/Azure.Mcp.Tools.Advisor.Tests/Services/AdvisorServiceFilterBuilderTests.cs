@@ -270,9 +270,9 @@ public class AdvisorServiceFilterBuilderTests
     }
 
     [Fact]
-    public void BuildAdditionalFilter_ContextualOnly_AddsCriticalityPresenceClauses()
+    public void BuildAdditionalFilter_PrioritizedOnly_AddsCriticalityPresenceClauses()
     {
-        var result = AdvisorService.BuildAdditionalFilter(null, contextualOnly: true);
+        var result = AdvisorService.BuildAdditionalFilter(null, prioritizedOnly: true);
 
         Assert.Equal(
             $"{StatusClause} and isnotempty(tostring(properties.criticality)) and isnotnull(properties.criticalityScore)",
@@ -280,12 +280,12 @@ public class AdvisorServiceFilterBuilderTests
     }
 
     [Fact]
-    public void BuildAdditionalFilter_ServiceGroupScopeWithContextual_CombinesClauses()
+    public void BuildAdditionalFilter_ServiceGroupScopeWithPrioritized_CombinesClauses()
     {
         var result = AdvisorService.BuildAdditionalFilter(
             null,
             serviceGroupId: "/providers/Microsoft.Management/serviceGroups/sg1",
-            contextualOnly: true);
+            prioritizedOnly: true);
 
         Assert.Equal(
             $"{StatusClause} and " +
@@ -295,16 +295,16 @@ public class AdvisorServiceFilterBuilderTests
     }
 
     [Fact]
-    public void BuildAdditionalFilter_ContextualOff_DoesNotAddCriticalityClauses()
+    public void BuildAdditionalFilter_PrioritizedOff_DoesNotAddCriticalityClauses()
     {
-        // Contextual presence filtering must only apply when explicitly requested.
+        // Criticality presence filtering must only apply when explicitly requested.
         var result = AdvisorService.BuildAdditionalFilter(null, excludeServiceGroupProjections: true);
 
         Assert.DoesNotContain("criticality", result);
     }
 
     [Fact]
-    public void BuildAdditionalFilter_DefaultParameters_DoNotAddScopeOrContextualClauses()
+    public void BuildAdditionalFilter_DefaultParameters_DoNotAddScopeOrPrioritizedClauses()
     {
         // Preserves the legacy behavior for callers that pass only filters.
         var result = AdvisorService.BuildAdditionalFilter(new RecommendationFilters(Category: "Security"));
@@ -314,12 +314,12 @@ public class AdvisorServiceFilterBuilderTests
     }
 
     [Fact]
-    public void BuildRecommendationListQuery_SubscriptionScope_NoContextual_HasNoOrder()
+    public void BuildRecommendationListQuery_SubscriptionScope_NotPrioritized_HasNoOrder()
     {
         var query = AdvisorService.BuildRecommendationListQuery(
             resourceGroup: null,
             additionalFilter: $"{StatusClause} and isnull(properties.serviceGroupId)",
-            contextual: false,
+            prioritized: false,
             limit: 25);
 
         Assert.StartsWith("advisorresources | where type =~ 'Microsoft.Advisor/recommendations'", query);
@@ -329,12 +329,12 @@ public class AdvisorServiceFilterBuilderTests
     }
 
     [Fact]
-    public void BuildRecommendationListQuery_Contextual_OrdersByCriticalityScoreDescBeforeLimit()
+    public void BuildRecommendationListQuery_Prioritized_OrdersByCriticalityScoreDescBeforeLimit()
     {
         var query = AdvisorService.BuildRecommendationListQuery(
             resourceGroup: null,
             additionalFilter: StatusClause,
-            contextual: true,
+            prioritized: true,
             limit: 10);
 
         Assert.Contains("| order by todouble(properties.criticalityScore) desc", query);
@@ -349,7 +349,7 @@ public class AdvisorServiceFilterBuilderTests
         var query = AdvisorService.BuildRecommendationListQuery(
             resourceGroup: "rg'inject",
             additionalFilter: StatusClause,
-            contextual: false,
+            prioritized: false,
             limit: 50);
 
         Assert.Contains("resourceGroup =~ 'rg''inject'", query);
@@ -361,18 +361,18 @@ public class AdvisorServiceFilterBuilderTests
         var query = AdvisorService.BuildRecommendationListQuery(
             resourceGroup: null,
             additionalFilter: StatusClause,
-            contextual: false,
+            prioritized: false,
             limit: 50);
 
         Assert.DoesNotContain("resourceGroup", query);
     }
 
     [Fact]
-    public void IsContextualMode_ReflectsFilterMode()
+    public void IsPrioritized_ReflectsFilterFlag()
     {
-        Assert.True(AdvisorService.IsContextualMode(new RecommendationFilters(Mode: RecommendationMode.Contextual)));
-        Assert.False(AdvisorService.IsContextualMode(new RecommendationFilters(Mode: RecommendationMode.All)));
-        Assert.False(AdvisorService.IsContextualMode(new RecommendationFilters()));
-        Assert.False(AdvisorService.IsContextualMode(null));
+        Assert.True(AdvisorService.IsPrioritized(new RecommendationFilters(Prioritized: true)));
+        Assert.False(AdvisorService.IsPrioritized(new RecommendationFilters(Prioritized: false)));
+        Assert.False(AdvisorService.IsPrioritized(new RecommendationFilters()));
+        Assert.False(AdvisorService.IsPrioritized(null));
     }
 }

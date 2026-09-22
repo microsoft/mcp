@@ -92,18 +92,18 @@ public class AdvisorService(IAzureService azureService)
             return new([], false);
         }
 
-        var contextual = IsContextualMode(filters);
+        var prioritized = IsPrioritized(filters);
         var additionalFilter = BuildAdditionalFilter(
             filters,
             metadataByTypeId?.Keys,
             serviceGroupId,
             excludeServiceGroupProjections: !isServiceGroupScope,
-            contextualOnly: contextual);
+            prioritizedOnly: prioritized);
 
         var query = BuildRecommendationListQuery(
             isServiceGroupScope ? null : resourceGroup,
             additionalFilter,
-            contextual,
+            prioritized,
             top);
 
         var recommendations = await ExecuteRecommendationListQueryAsync(
@@ -897,7 +897,7 @@ public class AdvisorService(IAzureService azureService)
         IEnumerable<string>? recommendationTypeIds = null,
         string? serviceGroupId = null,
         bool excludeServiceGroupProjections = false,
-        bool contextualOnly = false)
+        bool prioritizedOnly = false)
     {
         // New recommendations are active and actionable, so use that status unless the caller explicitly
         // requests another lifecycle state.
@@ -919,9 +919,9 @@ public class AdvisorService(IAzureService azureService)
             clauses.Add("isnull(properties.serviceGroupId)");
         }
 
-        if (contextualOnly)
+        if (prioritizedOnly)
         {
-            // Contextual mode surfaces only recommendations that carry criticality scoring.
+            // Prioritized mode surfaces only recommendations that carry criticality scoring.
             clauses.Add("isnotempty(tostring(properties.criticality))");
             clauses.Add("isnotnull(properties.criticalityScore)");
         }
@@ -976,17 +976,17 @@ public class AdvisorService(IAzureService azureService)
     // Default KQL clause that restricts results to active ('New') recommendations.
     internal const string ActiveRecommendationClause = "tostring(properties.recommendationStatus) =~ 'New'";
 
-    internal static bool IsContextualMode(RecommendationFilters? filters) =>
-        filters?.Mode == RecommendationMode.Contextual;
+    internal static bool IsPrioritized(RecommendationFilters? filters) =>
+        filters?.Prioritized == true;
 
     /// <summary>
-    /// Builds the recommendation list KQL query for either subscription or Service Group scope. Contextual mode
+    /// Builds the recommendation list KQL query for either subscription or Service Group scope. Prioritized mode
     /// applies an implicit descending order by criticality score before the result set is capped.
     /// </summary>
     internal static string BuildRecommendationListQuery(
         string? resourceGroup,
         string? additionalFilter,
-        bool contextual,
+        bool prioritized,
         int limit)
     {
         var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
@@ -1001,7 +1001,7 @@ public class AdvisorService(IAzureService azureService)
             query += $" and {additionalFilter}";
         }
 
-        if (contextual)
+        if (prioritized)
         {
             query += " | order by todouble(properties.criticalityScore) desc";
         }
