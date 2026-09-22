@@ -37,6 +37,30 @@ public sealed class AdmeServiceHelperTests
         Assert.Equal(responseContent, exception.Message);
     }
 
+    [Fact]
+    public async Task SendAsync_AppendsDataPartitionHintToUnauthorizedResponse()
+    {
+        const string responseContent = "User is unauthorized to perform this action";
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized)
+        {
+            Content = new StringContent(responseContent),
+        });
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+            CreateCredentialProvider(),
+            new FakeHttpClientFactory(handler),
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            null,
+            "/api/test",
+            AdmeJsonContext.Default.JsonElement,
+            TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)HttpStatusCode.Unauthorized, exception.Status);
+        Assert.StartsWith(responseContent, exception.Message);
+        Assert.Contains("verify the data partition name is correct and correctly cased", exception.Message);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.BadRequest, "ADME rejected the client request")]
     [InlineData(HttpStatusCode.Unauthorized, "ADME authentication failed")]
