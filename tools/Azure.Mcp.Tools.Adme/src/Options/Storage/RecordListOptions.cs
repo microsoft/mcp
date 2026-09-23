@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Storage;
 /// </summary>
 public sealed class RecordListOptions
 {
-    [Option(Description = "The fully-qualified kind '{authority}:{source}:{entityType}:{version}', for example 'osdu:wks:master-data--Well:1.0.0'. Use 'azmcp adme schema list' to discover valid kinds.")]
+    [Option(Description = "The fully-qualified kind '{authority}:{source}:{entityType}:{version}', for example 'osdu:wks:master-data--Well:1.0.0'. Use the schema list operation to discover valid kinds.")]
     public required string Kind { get; set; }
 
     [Option(Description = "The number of record ids to return in one page, from 1 through 100. Defaults to 10.")]

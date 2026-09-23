@@ -33,7 +33,7 @@ namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 /// </item>
 /// <item>
 /// <term>"prod"</term>
-/// <description>Environment → Workload Identity → Managed Identity (no interactive fallback)</description>
+/// <description>Environment → Azure Pipelines (when configured) → Workload Identity → Managed Identity (no interactive fallback)</description>
 /// </item>
 /// <item>
 /// <term>"DeviceCodeCredential"</term>
@@ -268,13 +268,18 @@ internal class CustomChainedCredential : TokenCredential
     private static readonly string[] AcceptedTokenCredentialValues =
     [
         "dev", "prod",
-        "EnvironmentCredential", "WorkloadIdentityCredential", "ManagedIdentityCredential",
+        "EnvironmentCredential", "AzurePipelinesCredential", "WorkloadIdentityCredential", "ManagedIdentityCredential",
         "VisualStudioCredential", "VisualStudioCodeCredential",
         "AzureCliCredential", "AzurePowerShellCredential", "AzureDeveloperCliCredential",
         "DeviceCodeCredential", "InteractiveBrowserCredential"
     ];
 
     private static ChainedTokenCredential CreateDefaultCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
+    {
+        return new ChainedTokenCredential([.. CreateDefaultCredentialChain(tenantId, logger)]);
+    }
+
+    internal static IReadOnlyList<TokenCredential> CreateDefaultCredentialChain(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
         var credentials = new List<TokenCredential>();
@@ -294,14 +299,19 @@ internal class CustomChainedCredential : TokenCredential
                     break;
 
                 case "prod":
-                    // Prod chain: Environment -> WorkloadIdentity -> ManagedIdentity
+                    // Prod chain: Environment -> AzurePipelines (when configured) -> WorkloadIdentity -> ManagedIdentity
                     AddEnvironmentCredential(credentials);
+                    AddAzurePipelinesCredential(credentials, required: false);
                     AddWorkloadIdentityCredential(credentials, tenantId);
                     AddManagedIdentityCredential(credentials);
                     break;
 
                 case "environmentcredential":
                     AddEnvironmentCredential(credentials);
+                    break;
+
+                case "azurepipelinescredential":
+                    AddAzurePipelinesCredential(credentials, required: true);
                     break;
 
                 case "workloadidentitycredential":
@@ -351,7 +361,7 @@ internal class CustomChainedCredential : TokenCredential
             AddDefaultCredentialChain(credentials, tenantId);
         }
 
-        return new ChainedTokenCredential([.. credentials]);
+        return credentials;
     }
 
     private static void AddDefaultCredentialChain(List<TokenCredential> credentials, string? tenantId)
@@ -368,6 +378,15 @@ internal class CustomChainedCredential : TokenCredential
     private static void AddEnvironmentCredential(List<TokenCredential> credentials)
     {
         credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential", normalizeScopes: true));
+    }
+
+    private static void AddAzurePipelinesCredential(List<TokenCredential> credentials, bool required)
+    {
+        TokenCredential? credential = AzurePipelinesCredentialFactory.Create(CloudConfiguration, required);
+        if (credential != null)
+        {
+            credentials.Add(new SafeTokenCredential(credential, "AzurePipelinesCredential", includeExceptionMessage: false));
+        }
     }
 
     private static void AddWorkloadIdentityCredential(List<TokenCredential> credentials, string? tenantId)
@@ -555,11 +574,18 @@ internal class CustomChainedCredential : TokenCredential
 /// do not understand arbitrary MSAL permission scopes.
 /// </para>
 /// </summary>
-internal class SafeTokenCredential(TokenCredential innerCredential, string credentialName, bool normalizeScopes = false) : TokenCredential
+internal class SafeTokenCredential(
+    TokenCredential innerCredential,
+    string credentialName,
+    bool normalizeScopes = false,
+    bool includeExceptionMessage = true) : TokenCredential
 {
     private readonly TokenCredential _innerCredential = innerCredential;
     private readonly string _credentialName = credentialName;
     private readonly bool _normalizeScopes = normalizeScopes;
+    private readonly bool _includeExceptionMessage = includeExceptionMessage;
+
+    internal string CredentialName => _credentialName;
 
     /// <summary>
     /// Converts a permission scope to its <c>resource/.default</c> equivalent when it is not
@@ -588,13 +614,18 @@ internal class SafeTokenCredential(TokenCredential innerCredential, string crede
         {
             return _innerCredential.GetToken(requestContext, cancellationToken);
         }
-        catch (CredentialUnavailableException)
+        catch (CredentialUnavailableException ex)
         {
-            throw; // Re-throw CredentialUnavailableException as-is
+            if (_includeExceptionMessage)
+            {
+                throw;
+            }
+
+            throw CreateCredentialUnavailableException(ex);
         }
         catch (Exception ex)
         {
-            throw new CredentialUnavailableException($"{_credentialName} is not available: {ex.Message}", ex);
+            throw CreateCredentialUnavailableException(ex);
         }
     }
 
@@ -605,13 +636,23 @@ internal class SafeTokenCredential(TokenCredential innerCredential, string crede
         {
             return await _innerCredential.GetTokenAsync(requestContext, cancellationToken);
         }
-        catch (CredentialUnavailableException)
+        catch (CredentialUnavailableException ex)
         {
-            throw; // Re-throw CredentialUnavailableException as-is
+            if (_includeExceptionMessage)
+            {
+                throw;
+            }
+
+            throw CreateCredentialUnavailableException(ex);
         }
         catch (Exception ex)
         {
-            throw new CredentialUnavailableException($"{_credentialName} is not available: {ex.Message}", ex);
+            throw CreateCredentialUnavailableException(ex);
         }
     }
+
+    private CredentialUnavailableException CreateCredentialUnavailableException(Exception exception) =>
+        _includeExceptionMessage
+            ? new CredentialUnavailableException($"{_credentialName} is not available: {exception.Message}", exception)
+            : new CredentialUnavailableException($"{_credentialName} is not available.");
 }

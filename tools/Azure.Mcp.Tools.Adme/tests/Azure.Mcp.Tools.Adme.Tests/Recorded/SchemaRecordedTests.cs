@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -182,8 +183,58 @@ public sealed class SchemaRecordedTests(
         Assert.True(await CallToolReturnsErrorAsync(SchemaGetTool, arguments));
     }
 
+    /// <summary>Verifies that schema operations explain an unknown data partition reported as unauthorized.</summary>
+    [Theory]
+    [InlineData(SchemaListTool)]
+    [InlineData(SchemaGetTool)]
+    public async Task SchemaOperation_nonexistent_data_partition_returns_guidance(string tool)
+    {
+        var arguments = CreateSchemaArguments(tool);
+        arguments["data-partition"] += "-does-not-exist";
+
+        await AssertUnauthorizedPartitionGuidanceAsync(tool, arguments);
+    }
+
+    /// <summary>Verifies that schema operations explain a mis-cased data partition reported as unauthorized.</summary>
+    [Theory]
+    [InlineData(SchemaListTool)]
+    [InlineData(SchemaGetTool)]
+    public async Task SchemaOperation_incorrectly_cased_data_partition_returns_guidance(string tool)
+    {
+        var arguments = CreateSchemaArguments(tool);
+        arguments["data-partition"] = Assert.IsType<string>(arguments["data-partition"]).ToUpperInvariant();
+
+        await AssertUnauthorizedPartitionGuidanceAsync(tool, arguments);
+    }
+
     private static IReadOnlyCollection<string?> SchemaIds(JsonElement listResponse) =>
         listResponse.GetProperty("schemaInfos").EnumerateArray()
             .Select(info => info.GetProperty("schemaIdentity").GetProperty("id").GetString())
             .ToHashSet();
+
+    private Dictionary<string, object?> CreateSchemaArguments(string tool)
+    {
+        var arguments = CreateArguments();
+        if (tool == SchemaGetTool)
+        {
+            arguments["kind"] = TestConstants.WellKind;
+        }
+
+        return arguments;
+    }
+
+    private async Task AssertUnauthorizedPartitionGuidanceAsync(
+        string tool,
+        Dictionary<string, object?> arguments)
+    {
+        var response = await Client.CallToolAsync(tool, arguments);
+
+        Assert.True(response.IsError);
+        var content = Assert.IsType<string>(McpTestUtilities.GetFirstText(response.Content));
+        var commandResponse = JsonSerializer.Deserialize<JsonElement>(content);
+        Assert.Equal((int)HttpStatusCode.Unauthorized, commandResponse.GetProperty("status").GetInt32());
+        Assert.Contains(
+            "verify the data partition name is correct and correctly cased",
+            commandResponse.GetProperty("message").GetString());
+    }
 }
