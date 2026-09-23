@@ -1,5 +1,29 @@
 # Release History
 
+
+## 3.0.46 (2026-09-22) (pre-release)
+
+### Added
+
+- Expanded the `azurebackup policy get` tool response contract to return the full Azure Backup policy representation for both Recovery Services vaults (RSV) and Backup vaults (DPP). RSV policies now include a `details` object exposing schedule policy, retention policy (simple and long-term daily/weekly/monthly/yearly schedules), tiering policies, sub-protection policies, and workload-specific properties (time zone, instant restore settings, snapshot consistency, compression). DPP policies now include a `dppDetails` object exposing datasource types, object type, and backup/retention rules with their schedules, tagging criteria, and lifecycle settings. Existing top-level fields are preserved. The contract mirrors the current Azure Backup SDK surface and will be revisited when the underlying Azure.ResourceManager SDK packages are upgraded. [[#3720](https://github.com/microsoft/mcp/pull/3720)]
+- Added `--public-network-access` and `--user-assigned-identity` parameters to the `azurebackup vault update` tool (RSV): `--public-network-access` toggles the Recovery Services vault networking Enabled/Disabled state, and `--user-assigned-identity` attaches user-assigned managed identities when `--identity-type` is `UserAssigned` or `SystemAssigned,UserAssigned`. Added `--private-dns-zone-ids` and `--private-dns-zone-group-name` parameters to the `azurebackup vault privateendpoint create` tool to create a Private DNS zone group linking the new Private Endpoint to one or more Private DNS zones. [[#3703](https://github.com/microsoft/mcp/pull/3703)]
+- Added support for authenticating with Azure Pipelines workload identity federation service connections through AzurePipelinesCredential. [[#3388](https://github.com/microsoft/mcp/pull/3388)]
+
+### Changed
+
+- **Breaking:** Renamed the Azure Resilience Management CLI namespace from `azmcp resilience` to `azmcp resiliency` and all MCP tool wire-name prefixes from `resilience_*` to `resiliency_*`. Clients that invoke tools directly or use tool allow-lists, saved tool names, or namespace filters must replace the old CLI namespace and MCP tool-name prefix with the new values. [[#3689](https://github.com/microsoft/mcp/pull/3689)]
+- **Breaking:** Removed the unused `user` parameter from the `postgres server config get`, `postgres server param get`, and `postgres server param set` tools. [[#3648](https://github.com/microsoft/mcp/pull/3648)]
+- Support hostname, domain suffix, IPv4 CIDR notation, and IPv6 host literals in NO_PROXY bypass list, and respect lowercase proxy environment variables on Unix (#3338). [[#3675](https://github.com/microsoft/mcp/pull/3675)]
+
+### Fixed
+
+- Improved ADME schema validation, simplified health response, request timeouts, and guidance for unauthorized responses caused by unknown or incorrectly cased data partitions. [[#3696](https://github.com/microsoft/mcp/pull/3696)]
+- Storage tools (`storage blob get`, `storage blob upload`, `storage blob container create`, `storage blob container get`, `storage table list`, `storage account get`) now return specific, actionable error messages for common failures instead of raw exception text, including missing data-plane RBAC roles (403), create-only conflicts (409), and not-found (404) cases. `storage account create` now validates the account name up front and documents naming rules, and `storage account get` documents Azure Resource Graph propagation delay. [[#3697](https://github.com/microsoft/mcp/pull/3697)]
+- Fixed Resource Graph queries failing with `No accessible tenant found` when an explicit tenant is supplied. [[#3718](https://github.com/microsoft/mcp/pull/3718)]
+- Return concise errors listing available command names instead of full help when namespace or consolidated tool routing cannot resolve a command, including external-server routing. [[#3630](https://github.com/microsoft/mcp/pull/3630)]
+- The npm wrapper no longer writes `@azure/mcp-<platform>-<arch>` into the calling project's `package.json` and lockfile when it auto-installs a missing platform package. The install now targets a private directory inside the wrapper package, or a per-user cache directory when that is not writable, instead of the inherited working directory. Later runs reuse that install rather than running npm again, and npm's output no longer goes to stdout, which carries the MCP protocol stream in `server start`. [[#3184](https://github.com/microsoft/mcp/pull/3184)]
+- Event Grid topic lookup now requires a resource group when multiple topics in a subscription have the same name. [[#3710](https://github.com/microsoft/mcp/pull/3710)]
+
 ## 3.0.45 (2026-09-17) (pre-release)
 
 ### Added

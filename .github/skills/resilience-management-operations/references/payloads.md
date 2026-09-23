@@ -2,7 +2,7 @@
 
 ## Goal assignment resource updates
 
-`resilience_goal_assignment_update-resources` accepts `resources` as a non-empty JSON **array**, limited to 1 MiB. It targets already discovered resources, not arbitrary additions or service group membership.
+`resiliency_goal_assignment_update-resources` accepts `resources` as a non-empty JSON **array**, limited to 1 MiB. It targets already discovered resources, not arbitrary additions or service group membership.
 
 ```json
 [

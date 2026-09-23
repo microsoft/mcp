@@ -11,9 +11,9 @@ namespace Azure.Mcp.Server.Tests.Infrastructure;
 public sealed class ConsolidatedToolMetadataTests()
 {
     [Theory]
-    [InlineData("resilience_goal_assignment_recommend-capacity", "recommend_azure_resilience_goal_capacity")]
-    [InlineData("resilience_goal_assignment_refresh-resources", "update_azure_resilience_goal_resources")]
-    [InlineData("resilience_goal_assignment_update-resources", "update_azure_resilience_goal_resources")]
+    [InlineData("resiliency_goal_assignment_recommend-capacity", "recommend_azure_resilience_goal_capacity")]
+    [InlineData("resiliency_goal_assignment_refresh-resources", "update_azure_resilience_goal_resources")]
+    [InlineData("resiliency_goal_assignment_update-resources", "update_azure_resilience_goal_resources")]
     public async Task GoalAssignmentActions_AreRegisteredAndMappedExactlyOnce(string commandName, string consolidatedName)
     {
         ServiceCollection serviceCollection = new();
