@@ -240,6 +240,8 @@ output resourceGroupName string = resourceGroup().name
 output diskName string = testDisk.name
 output location string = location
 output galleryImageVersionId string = galleryImageVersion.id
+output availableVmSku string = vmSize
+output availableVmSkuLocation string = location
 
 // Create a test managed disk
 resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {
