@@ -42,8 +42,11 @@ foreach ($deviceId in $testDevices) {
     try {
         # Create device identity
         az iot hub device-identity create --device-id $deviceId --hub-name $iotHubName --auth-type key
+        if ($LASTEXITCODE -ne 0) {
+            throw "az iot hub device-identity create failed with exit code $LASTEXITCODE."
+        }
         Write-Host "Created device: $deviceId"
-        
+
         # Update device twin with test properties
         $twinPatch = @{
             properties = @{
@@ -57,14 +60,23 @@ foreach ($deviceId in $testDevices) {
                 deviceType = "sensor"
             }
         } | ConvertTo-Json -Depth 10
-        
+
         az iot hub device-twin update --device-id $deviceId --hub-name $iotHubName --set "$twinPatch"
+        if ($LASTEXITCODE -ne 0) {
+            throw "az iot hub device-twin update failed with exit code $LASTEXITCODE."
+        }
         Write-Host "Updated device twin for: $deviceId"
     }
     catch {
         Write-Warning "Failed to create/update device ${deviceId}: $_"
     }
 }
+
+# Native az invocations above may leave a stale non-zero $LASTEXITCODE even when the
+# failures were already caught and logged as warnings. Reset it here so the Azure Pipelines
+# task doesn't report this script as failed based on a leftover exit code from a handled,
+# non-fatal az CLI error (e.g. a dynamic extension-install retry).
+$LASTEXITCODE = 0
 
 Write-Host "IoT Hub test setup complete"
 
