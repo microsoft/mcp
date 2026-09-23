@@ -140,13 +140,13 @@ public static partial class EndpointValidator
             Public: [".azure-devices.net"],
             China: [".azure-devices.cn"],
             UsGov: [".azure-devices.us"],
-            Germany: [".azure-devices.de"],
+            Germany: [],
             UseLegacyCheck: false),
         ["keyvault"] = new AllowedSuffixManager(
             Public: [".vault.azure.net"],
             China: [".vault.azure.cn"],
             UsGov: [".vault.usgovcloudapi.net"],
-            Germany: [".vault.microsoftazure.de"],
+            Germany: [],
             UseLegacyCheck: false),
         ["loadtesting"] = new AllowedSuffixManager(
             Public: [".loadtesting.azure.com"],
@@ -158,7 +158,7 @@ public static partial class EndpointValidator
             Public: [".managedhsm.azure.net"],
             China: [".managedhsm.azure.cn"],
             UsGov: [".managedhsm.usgovcloudapi.net"],
-            Germany: [".managedhsm.microsoftazure.de"],
+            Germany: [],
             UseLegacyCheck: false),
         ["monitor-metrics"] = new AllowedSuffixManager(
             Public: [".metrics.monitor.azure.com"],

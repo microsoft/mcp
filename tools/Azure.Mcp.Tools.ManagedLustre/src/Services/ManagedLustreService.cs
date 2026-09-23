@@ -461,6 +461,9 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
     internal static Uri CreateValidatedKeyUri(string keyUrl, ArmEnvironment armEnvironment)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(keyUrl);
+
+        // At this time ManagedLustre only supports Azure Key Vault URIs as the key URL.
+        // https://learn.microsoft.com/azure/security/fundamentals/encryption-customer-managed-keys-support#storage
         var keyUri = new Uri(keyUrl, UriKind.Absolute);
         EndpointValidator.ValidateAzureServiceEndpoint(
             endpoint: keyUri.AbsoluteUri,

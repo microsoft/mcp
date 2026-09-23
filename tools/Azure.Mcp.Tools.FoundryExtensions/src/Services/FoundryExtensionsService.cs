@@ -37,6 +37,16 @@ public class FoundryExtensionsService(IAzureService azureService)
                 armEnvironment: GetArmEnvironment(),
                 executingToolNamespaceName: "foundryextensions");
 
+            var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (pathSegments.Length != 3 ||
+                !pathSegments[0].Equals("api", StringComparison.Ordinal) ||
+                !pathSegments[1].Equals("projects", StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    $"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
+                    nameof(endpoint));
+            }
+
             return uri;
         }
         catch (Exception ex) when (ex is SecurityException || ex is UriFormatException)

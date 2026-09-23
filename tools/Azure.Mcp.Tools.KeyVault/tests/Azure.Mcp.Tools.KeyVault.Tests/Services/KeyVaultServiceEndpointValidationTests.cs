@@ -14,14 +14,12 @@ public class KeyVaultServiceEndpointValidationTests
     [InlineData("https://vault.vault.azure.net/", "public")]
     [InlineData("https://vault.vault.azure.cn/", "china")]
     [InlineData("https://vault.vault.usgovcloudapi.net/", "government")]
-    [InlineData("https://vault.vault.microsoftazure.de/", "germany")]
     public void ValidateVaultEndpoint_ValidCloudEndpoint_ReturnsEndpoint(string endpoint, string cloud)
     {
         var armEnvironment = cloud switch
         {
             "china" => ArmEnvironment.AzureChina,
             "government" => ArmEnvironment.AzureGovernment,
-            "germany" => ArmEnvironment.AzureGermany,
             _ => ArmEnvironment.AzurePublicCloud
         };
         var uri = new Uri(endpoint);
@@ -47,14 +45,12 @@ public class KeyVaultServiceEndpointValidationTests
     [InlineData("https://hsm.managedhsm.azure.net/", "public")]
     [InlineData("https://hsm.managedhsm.azure.cn/", "china")]
     [InlineData("https://hsm.managedhsm.usgovcloudapi.net/", "government")]
-    [InlineData("https://hsm.managedhsm.microsoftazure.de/", "germany")]
     public void ValidateManagedHsmEndpoint_ValidCloudEndpoint_ReturnsEndpoint(string endpoint, string cloud)
     {
         var armEnvironment = cloud switch
         {
             "china" => ArmEnvironment.AzureChina,
             "government" => ArmEnvironment.AzureGovernment,
-            "germany" => ArmEnvironment.AzureGermany,
             _ => ArmEnvironment.AzurePublicCloud
         };
         var uri = new Uri(endpoint);
