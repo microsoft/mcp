@@ -203,7 +203,7 @@ public sealed class SingleProxyToolLoader(
             foreach (var server in serverList)
             {
                 var serverMetadata = server.CreateMetadata();
-                if (!IsNamespaceEnabled(serverMetadata.Id))
+                if (!IsNamespaceAllowed(serverMetadata.Id))
                 {
                     continue;
                 }
@@ -247,15 +247,18 @@ public sealed class SingleProxyToolLoader(
         return;
     }
 
+    private bool IsNamespaceAllowed(string tool) =>
+        _configuration.Value.Namespace is not { Length: > 0 } namespaces ||
+            namespaces.Contains(tool, StringComparer.OrdinalIgnoreCase);
+
     private bool IsNamespaceEnabled(string tool) =>
         !DiscoveryConstants.IgnoredCommandGroups.Contains(tool, StringComparer.OrdinalIgnoreCase) &&
-        (_configuration.Value.Namespace is not { Length: > 0 } namespaces ||
-            namespaces.Contains(tool, StringComparer.OrdinalIgnoreCase));
+        IsNamespaceAllowed(tool);
 
     private async Task<string> GetCanonicalToolAreaAsync(string tool, CancellationToken cancellationToken)
     {
         var group = _commandFactory.RootGroup.SubGroup
-            .FirstOrDefault(group => string.Equals(group.Name, tool, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(group => IsNamespaceEnabled(group.Name) && string.Equals(group.Name, tool, StringComparison.OrdinalIgnoreCase));
         if (group != null)
         {
             return group.Name;
@@ -278,7 +281,7 @@ public sealed class SingleProxyToolLoader(
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<(List<ToolCommandInfo> Commands, string Json)> GetToolCommandsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (!IsNamespaceEnabled(tool))
+        if (!IsNamespaceAllowed(tool))
         {
             return ([], "[]");
         }
@@ -298,7 +301,7 @@ public sealed class SingleProxyToolLoader(
 
     internal async Task<IList<Tool>> GetToolsInGroupAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (!IsNamespaceEnabled(tool))
+        if (!IsNamespaceAllowed(tool))
         {
             return [];
         }
@@ -314,7 +317,7 @@ public sealed class SingleProxyToolLoader(
 
         // Check ICommandFactory first, then call the external discovery strategy if the tool is not found in the local command factory.
         var group = _commandFactory.RootGroup.SubGroup
-            .FirstOrDefault(g => string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(g => IsNamespaceEnabled(g.Name) && string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
         if (group != null)
         {
             var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([group.Name]))
@@ -375,7 +378,7 @@ public sealed class SingleProxyToolLoader(
             var toolName = await GetToolNameFromIntentAsync(request, intent, cancellationToken);
             var availableTool = _cachedTools!.Value.Tools.FirstOrDefault(candidate =>
                 string.Equals(candidate.Name, toolName, StringComparison.OrdinalIgnoreCase));
-            if (availableTool != null && IsNamespaceEnabled(availableTool.Name))
+            if (availableTool != null && IsNamespaceAllowed(availableTool.Name))
             {
                 response = await ToolLearnModeAsync(request, intent, availableTool.Name, cancellationToken);
             }

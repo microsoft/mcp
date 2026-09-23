@@ -234,6 +234,55 @@ public class SingleProxyToolLoaderTests
         Assert.Equal(shouldBeListed, tools.EnumerateArray().Any(tool => tool.GetProperty("tool").GetString() == serverName));
     }
 
+    [Theory]
+    [InlineData("extension", false)]
+    [InlineData("server", false)]
+    [InlineData("tools", false)]
+    [InlineData("subscription", false)]
+    [InlineData("group", false)]
+    [InlineData("extension", true)]
+    public async Task CallToolHandler_WithIgnoredGroupName_AllowsDiscoveredServer(string serverName, bool filterNamespace)
+    {
+        var executions = 0;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("account_list", "List accounts", () =>
+            {
+                executions++;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        await using var toolLoader = CreateToolLoaderWithMockClient(
+            new ServerRuntimeConfiguration
+            {
+                Namespace = filterNamespace ? [serverName] : null,
+                StructuredOutputMode = StructuredOutputMode.Compact
+            }, clientBuilder, serverName, includeIgnoredLocalGroup: true);
+
+        var rootResult = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?> { ["learn"] = true }),
+            TestContext.Current.CancellationToken);
+        Assert.True(rootResult.StructuredContent.HasValue);
+        Assert.Equal(serverName, Assert.Single(rootResult.StructuredContent.Value.GetProperty("tools").EnumerateArray()).GetProperty("tool").GetString());
+
+        using var activity = new Activity("test-activity").Start();
+        var learnResult = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+            {
+                ["tool"] = serverName,
+                ["learn"] = true
+            }),
+            TestContext.Current.CancellationToken);
+        Assert.True(learnResult.StructuredContent.HasValue);
+        Assert.Contains("account_list", learnResult.StructuredContent.Value.GetRawText());
+        activity.AssertTagEquals(TagName.ToolArea, serverName);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallToolRequestWithToolAndCommand(serverName, "account_list"),
+            TestContext.Current.CancellationToken);
+        Assert.False(result.IsError ?? false);
+        Assert.Equal(1, executions);
+        activity.AssertTagEquals(TagName.ToolArea, serverName);
+    }
+
     [Fact]
     public async Task CallToolHandler_WithUppercaseDiscoveredServer_LearnsCanonicalArea()
     {
@@ -783,10 +832,15 @@ public class SingleProxyToolLoaderTests
     private static SingleProxyToolLoader CreateToolLoaderWithMockClient(
         ServerRuntimeConfiguration configuration,
         MockMcpClientBuilder clientBuilder,
-        string serverName)
+        string serverName,
+        bool includeIgnoredLocalGroup = false)
     {
         var commandFactory = Substitute.For<ICommandFactory>();
         var rootGroup = new CommandGroup("azmcp", "Azure MCP");
+        if (includeIgnoredLocalGroup)
+        {
+            rootGroup.AddSubGroup(new CommandGroup(serverName, "Ignored local group"));
+        }
         commandFactory.RootGroup.Returns(rootGroup);
         commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
         var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
