@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added a Resilience Management tool for updating an existing goal assignment's service-level resource mapping.

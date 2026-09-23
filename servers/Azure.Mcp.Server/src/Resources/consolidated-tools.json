@@ -78,6 +78,8 @@
         "resilience_goal_assignment_create",
         "resilience_drill_update",
         "resilience_drill_create",
+        "resilience_goal_assignment_delete",
+        "resilience_goal_assignment_update",
         "resilience_usageplan_create",
         "resilience_usageplan_delete",
         "resilience_usageplan_enrollment_create",

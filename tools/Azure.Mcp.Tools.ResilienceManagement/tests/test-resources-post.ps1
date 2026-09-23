@@ -48,6 +48,8 @@ $workflowEnrollmentName = $DeploymentOutputs['WORKFLOWENROLLMENTNAME']
 $workflowServiceGroupName = $DeploymentOutputs['WORKFLOWSERVICEGROUPNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
+$goalAssignmentDeleteName = $DeploymentOutputs['GOALASSIGNMENTDELETENAME']
+$goalAssignmentUpdateName = $DeploymentOutputs['GOALASSIGNMENTUPDATENAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $workflowRecoveryPlanName = $DeploymentOutputs['WORKFLOWRECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
@@ -425,6 +427,16 @@ Invoke-ResilienceRestPut -Path $goalAssignmentLifecycleTemplatePath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $goalAssignmentLifecycleTemplatePath -WaitForAuthorization
 
+$goalAssignmentDeletePath = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalAssignments/$goalAssignmentDeleteName`?api-version=$resilienceApiVersion"
+$goalAssignmentLifecycleTemplateId = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalTemplates/$goalTemplateName"
+Invoke-ResilienceRestPut -Path $goalAssignmentDeletePath -Body @{
+    properties = @{
+        goalAssignmentType = 'Resiliency'
+        goalTemplateId     = $goalAssignmentLifecycleTemplateId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalAssignmentDeletePath -WaitForAuthorization
+
 # 5) Assign the goal template to the service group.
 $goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
 $goalTemplateId = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
@@ -450,6 +462,15 @@ elseif ($existingGoalAssignment.StatusCode -eq 200) {
 else {
     throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
 }
+
+$goalAssignmentUpdatePath = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalAssignments/$goalAssignmentUpdateName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $goalAssignmentUpdatePath -Body @{
+    properties = @{
+        goalAssignmentType = 'Resiliency'
+        goalTemplateId     = $goalAssignmentLifecycleTemplateId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalAssignmentUpdatePath -WaitForAuthorization
 
 # 6) Create or validate the recoveryplan on the service group. Do not PUT an
 # existing plan because recovery group IDs are referenced by its recovery resources.

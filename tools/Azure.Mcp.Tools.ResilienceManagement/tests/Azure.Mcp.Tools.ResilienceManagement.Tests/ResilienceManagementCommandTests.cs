@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
+// cspell:ignore GOALASSIGNMENTDELETENAME GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME GOALASSIGNMENTUPDATENAME LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -177,6 +177,69 @@ public class ResilienceManagementCommandTests(
 
         var assignment = result.AssertProperty("goalAssignment");
         Assert.False(string.IsNullOrEmpty(assignment.AssertProperty("name").GetString()));
+    }
+
+    [Fact(Skip = "The Resilience Management RP does not support in-place goal assignment update; PUT/PATCH to an existing assignment returns 400. Re-enable once the service supports update.")]
+    public async Task Should_update_goal_assignment()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable(
+            "goalAssignmentLifecycleServiceGroupName",
+            "GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME");
+        var goalAssignment = RegisterOrRetrieveDeploymentOutputVariable("goalAssignmentUpdateName", "GOALASSIGNMENTUPDATENAME");
+        var goalTemplate = RegisterOrRetrieveDeploymentOutputVariable("goalTemplateName", "GOALTEMPLATENAME");
+        var virtualMachineId = RegisterOrRetrieveDeploymentOutputVariable("goalAssignmentUpdateVmId", "GOALASSIGNMENTUPDATEVMID");
+
+        var result = await CallToolAsync(
+            "resilience_goal_assignment_update",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "goal-assignment", goalAssignment },
+                { "service-level-indicator-resource-id", virtualMachineId },
+                { "service-level-objective-resource-id", virtualMachineId }
+            });
+
+        var assignment = result.AssertProperty("goalAssignment");
+        Assert.EndsWith(goalAssignment, assignment.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = assignment.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.EndsWith($"/goalTemplates/{goalTemplate}", properties.AssertProperty("goalTemplateId").GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_delete_goal_assignment()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable(
+            "goalAssignmentLifecycleServiceGroupName",
+            "GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME");
+        var goalAssignment = RegisterOrRetrieveDeploymentOutputVariable(
+            "goalAssignmentDeleteName",
+            "GOALASSIGNMENTDELETENAME");
+
+        var firstResult = await CallToolAsync(
+            "resilience_goal_assignment_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "goal-assignment", goalAssignment }
+            });
+
+        Assert.True(firstResult.AssertProperty("deleted").GetBoolean());
+        Assert.Equal(goalAssignment, firstResult.AssertProperty("goalAssignment").GetString());
+
+        var secondResult = await CallToolAsync(
+            "resilience_goal_assignment_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "goal-assignment", goalAssignment }
+            });
+
+        Assert.False(secondResult.AssertProperty("deleted").GetBoolean());
+        Assert.Equal(goalAssignment, secondResult.AssertProperty("goalAssignment").GetString());
     }
 
     [Fact]

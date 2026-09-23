@@ -4217,6 +4217,18 @@ azmcp resilience goal assignment create --service-group <service-group> \
                                         --goal-assignment <goal-assignment> \
                                         --goal-template <goal-template>
 
+# Update an existing resilience goal assignment with a service-level resource mapping.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal assignment update --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --service-level-indicator-resource-id <service-level-indicator-resource-id> \
+                                        --service-level-objective-resource-id <service-level-objective-resource-id>
+
+# Delete a resilience goal assignment. Returns deleted=false when the assignment does not exist.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resilience goal assignment delete --service-group <service-group> \
+                                        --goal-assignment <goal-assignment>
+
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resilience goal resource get --service-group <service-group> \
