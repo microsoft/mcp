@@ -49,7 +49,7 @@ Before starting, determine:
 - **Never log raw option objects** (`{@Options}`) — they may contain secrets, connection strings, or PII.
 - Log only individually named, known-safe parameters. For example: `options.Subscription`, `options.ResourceGroup`, `Name`.
 - Do not include sensitive field values in error messages returned to callers.
-- `HandleException` includes `ex.Message` in `Response.Results` (and the stack trace in debug builds), even if `GetErrorMessage` is overridden. Do not pass secret-bearing exception messages through it; check both `Response.Message` and `Response.Results` when reviewing error paths.
+- `HandleException` includes `ex.Message` in `Response.Results` (and the stack trace in debug builds), even if `GetErrorMessage` is overridden. If an exception type may contain secrets, tokens, connection strings, or account metadata in `ex.Message`, do **not** pass it through unchanged: catch that exception type and map it to a sanitized exception or safe result before calling `HandleException`, or harden/override the shared handler so `Response.Results` does not include raw `ex.Message` for those cases. When reviewing error paths, check both `Response.Message` and `Response.Results`.
 
 ```csharp
 // ✅ Log only known-safe, individually named fields
@@ -724,7 +724,7 @@ Deserialization rules:
   - ✅ `ValidateAndDeserializeResponse(response, {Toolset}JsonContext.Default.{Operation}CommandResult)`
   - ❌ `JsonSerializer.Deserialize<TestModel>(json)`
 
-**GATE:** `dotnet test --project tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/Azure.Mcp.Tools.{Toolset}.Tests.csproj --filter-class "*{Resource}{Operation}CommandTests"` must discover and pass the intended tests.
+**GATE:** Use a class-level filter here because the goal is to validate the full `{Resource}{Operation}CommandTests` test class: `dotnet test --project tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/Azure.Mcp.Tools.{Toolset}.Tests.csproj --filter-class "*{Resource}{Operation}CommandTests"`. Use `--filter-method` only when you intentionally need to target a single test method (for example, during recording or focused debugging).
 
 ---
 

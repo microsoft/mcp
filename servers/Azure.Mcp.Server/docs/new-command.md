@@ -24,7 +24,7 @@ If your command interacts with Azure resources (storage accounts, databases, VMs
 - ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (required even if basic template)
 - ✅ **MUST include** RBAC role assignments for test application
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
-- ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Paths '{Toolset}'`
+- ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Paths "{Toolset}"` (`{Toolset}` is the toolset directory name suffix, for example `"Storage"` for `tools/Azure.Mcp.Tools.Storage`)
 - ✅ **MUST include** live tests in `Azure.Mcp.Tools.{Toolset}/tests/`
 - ✅ **MUST record** live tests for playback using `RecordedCommandTestsBase` (see [`/docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md))
 
