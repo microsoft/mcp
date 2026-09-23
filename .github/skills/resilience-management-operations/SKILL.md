@@ -37,6 +37,7 @@ For operational Azure Resilience Management requests, use the Azure Resilience M
 
 - Usage plan or enrollment → `mcp_azure_mcp_ser_resilience_usageplan_*`
 - Goal template, assignment, or member → `mcp_azure_mcp_ser_resilience_goal_*`
+- Goal capacity recommendations, resource rediscovery, or goal participation/attestation updates → `mcp_azure_mcp_ser_resilience_goal_assignment_recommend-capacity`, `refresh-resources`, or `update-resources`, respectively. These are asynchronous actions, not assignment definition updates.
 - Drill definition, execution, run, or target → `mcp_azure_mcp_ser_resilience_drill_*`
 - Recovery plan lifecycle or recovery operation → `mcp_azure_mcp_ser_resilience_recoveryplan_*`
 - Recovery plan membership/protection → `mcp_azure_mcp_ser_resilience_recoveryplan_resource_*`

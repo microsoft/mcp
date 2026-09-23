@@ -1136,6 +1136,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resilience_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resilience_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
+| resilience_goal_assignment_recommend-capacity | Recommend zonal resiliency capacity for resources in goal assignment <goal_assignment> in service group <service_group> | none |
+| resilience_goal_assignment_recommend-capacity | Start a capacity recommendation assessment for selected Azure resource IDs under resilience goal assignment <goal_assignment> | none |
+| resilience_goal_assignment_refresh-resources | Rediscover resources for resilience goal assignment <goal_assignment> in service group <service_group> | none |
+| resilience_goal_assignment_refresh-resources | Refresh the resources tracked by my resilience goal assignment to pick up new service group members and remove stale members | none |
+| resilience_goal_assignment_update-resources | Exclude a discovered resource from high availability goals in resilience goal assignment <goal_assignment> | none |
+| resilience_goal_assignment_update-resources | Update goal resource participation and attestation for selected resources in my resilience goal assignment | none |
 | resilience_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resilience_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resilience_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> | none |

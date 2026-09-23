@@ -46,6 +46,37 @@
       ]
     },
     {
+      "name": "recommend_azure_resilience_goal_capacity",
+      "description": "Start zonal resiliency capacity recommendations for selected or all eligible Azure resources in a resilience goal assignment.",
+      "toolMetadata": {
+        "destructive": { "value": false, "description": "Does not change goal participation or Azure resources." },
+        "idempotent": { "value": false, "description": "Starts a new asynchronous assessment." },
+        "openWorld": { "value": false, "description": "Operates within Azure Resilience Management." },
+        "readOnly": { "value": false, "description": "Creates an asynchronous assessment operation." },
+        "secret": { "value": false, "description": "Does not handle secrets." },
+        "localRequired": { "value": false, "description": "Available in local and remote server modes." }
+      },
+      "mappedToolList": [
+        "resilience_goal_assignment_recommend-capacity"
+      ]
+    },
+    {
+      "name": "update_azure_resilience_goal_resources",
+      "description": "Refresh or rediscover resilience goal assignment resources, or update discovered resources' goal participation, attestation, and user confirmations.",
+      "toolMetadata": {
+        "destructive": { "value": true, "description": "Can remove stale goal resources or exclude resources from goals." },
+        "idempotent": { "value": false, "description": "Starts a new asynchronous resource operation." },
+        "openWorld": { "value": false, "description": "Operates within Azure Resilience Management." },
+        "readOnly": { "value": false, "description": "Changes tracked goal resources." },
+        "secret": { "value": false, "description": "Does not handle secrets." },
+        "localRequired": { "value": false, "description": "Available in local and remote server modes." }
+      },
+      "mappedToolList": [
+        "resilience_goal_assignment_refresh-resources",
+        "resilience_goal_assignment_update-resources"
+      ]
+    },
+    {
       "name": "create_azure_resilience_management_resources",
       "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
       "toolMetadata": {

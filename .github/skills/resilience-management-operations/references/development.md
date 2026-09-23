@@ -176,6 +176,16 @@ The Drills backend uses operation IDs for asynchronous work. Before implementing
 
 Never generate independent header and query IDs in MCP code. Preserve the returned ID for diagnostics and subsequent status correlation.
 
+## Goal Assignment Resource Action Contracts
+
+The installed `Azure.ResourceManager.ResilienceManagement` beta.1 SDK uses the flat high-availability/disaster-recovery update schema. Its `GoalMembersData` wire serializer drops read-only ARM `id`, while the Goals `updateGoalResources` service requires it. `GoalResourceUpdateRequestPolicy` preserves only the validated resource-update POST payload; `GoalAssignmentResourceServiceTests` proves the installed SDK omission and policy scope. Do not remove this workaround without verifying the replacement SDK's wire body.
+
+Unlike Drills, Goals action SDK methods have no operation-ID argument. Use ARM's response LRO headers, not a newly generated GUID or the Drills query policy. ProviderHub polling paths have a GUID followed by `*` and a routing hash; return the GUID only, never signed query values or the routing hash. A `202` remains `Accepted` even if the SDK reports completion because polling headers are absent.
+
+Goal-resource update recordings derive ARM IDs from recorded GET responses so sanitized subscription/resource paths survive playback without raw identifiers in recording variables. Error handlers clear base-class exception results after `HandleException` to avoid leaking raw provider bodies or stack traces; recorded error tests inspect the full command envelope.
+
+The service's `GoalResourceUpdateSetupActivity` preserves system-managed exclusion reasons and membership regardless of SDK setters; do not advertise those as writable. Resource updates have replacement semantics, not PATCH. Include desired DR fields to avoid clearing them; HA choices are required, and omitted HA confirmations are preserved by the service.
+
 ## Drill Lifecycle and State Gates
 
 Successful HTTP acceptance is not proof that a drill action finished. Diagnose each action through its own asynchronous operation status and then inspect the drill run for the next allowed verb.

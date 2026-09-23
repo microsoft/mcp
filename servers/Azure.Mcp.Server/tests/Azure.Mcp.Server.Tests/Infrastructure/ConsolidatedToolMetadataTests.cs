@@ -10,6 +10,23 @@ namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public sealed class ConsolidatedToolMetadataTests()
 {
+    [Theory]
+    [InlineData("resilience_goal_assignment_recommend-capacity", "recommend_azure_resilience_goal_capacity")]
+    [InlineData("resilience_goal_assignment_refresh-resources", "update_azure_resilience_goal_resources")]
+    [InlineData("resilience_goal_assignment_update-resources", "update_azure_resilience_goal_resources")]
+    public async Task GoalAssignmentActions_AreRegisteredAndMappedExactlyOnce(string commandName, string consolidatedName)
+    {
+        ServiceCollection serviceCollection = new();
+        Program.ConfigureServices(serviceCollection);
+        await using var services = serviceCollection.BuildServiceProvider();
+        var commands = services.GetRequiredService<ICommandFactory>();
+        Assert.True(commands.AllCommands.ContainsKey(commandName));
+        var definitions = services.GetRequiredService<IConsolidatedToolDefinitionProvider>();
+        var definition = Assert.Single(definitions.GetToolDefinitions(), tool => tool.MappedToolList.Contains(commandName));
+        Assert.Equal(consolidatedName, definition.Name);
+        Assert.True(MetadataMatches(commands.AllCommands[commandName].Metadata, definition.ToolMetadata));
+    }
+
     [Fact]
     public async Task ConsolidatedTools_MappedCommands_HaveMatchingMetadata()
     {

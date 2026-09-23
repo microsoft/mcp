@@ -2,7 +2,7 @@
 
 <!-- cspell:words reprotect reprotection -->
 
-This reference lists all 38 tools registered under the `resilience` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
+This reference lists all 45 tools registered under the `resilience` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
 
 ## Usage Plans
 
@@ -23,9 +23,12 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 |---|---|---|
 | `mcp_azure_mcp_ser_resilience_goal_template_get` | List goal templates or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_goal_assignment_recommend-capacity` | Start zonal capacity assessment; returns acceptance, not recommendations | **`service-group`**, **`goal-assignment`**, `resource-ids?` (underlying Azure ARM IDs; omit for all eligible resources), `tenant?` |
+| `mcp_azure_mcp_ser_resilience_goal_assignment_refresh-resources` | Rediscover assignment resources from service group membership; can remove stale goal resources | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_goal_assignment_update-resources` | Include/exclude discovered resources from goals, or update attestation and user confirmations | **`service-group`**, **`goal-assignment`**, **`resources`** (JSON array; see payload reference), `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
 
-These tools are read-only. Omit `name` to list IDs and names; provide it for full details.
+The `get` tools are read-only. Omit `name` to list IDs and names; provide it for full details. The three assignment actions return `operationId` (nullable when ARM supplies no GUID), `status`, and `hasCompleted`. `Accepted` does not prove completion. Signed polling URLs are never returned.
 
 ## Drills
 
@@ -42,6 +45,10 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | `mcp_azure_mcp_ser_resilience_drill_resource_get` | List drill targets or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_resource_add-or-update` | Include, update, or exclude drill resources and fault settings | **`service-group`**, **`drill`**, **`fault-duration-minutes`**, `include-resources?`, `update-resources?`, `exclude-resources?`, `force-inclusion-and-update?` (`Enable` or `Disable`), `tenant?`. Supply at least one include, update, or exclude payload. |
 | `mcp_azure_mcp_ser_resilience_drill_run_get` | List drill runs or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_drill_run_add-notes` | Add notes to a drill run | **`service-group`**, **`drill`**, **`drill-run`**, **`notes`**, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_drill_run_failover` | Start drill-run failover | **`service-group`**, **`drill`**, **`drill-run`**, **`source-locations`**, `selected-resource-ids?`, `auto-failover?`, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_drill_run_resume` | Resume a drill run when its next stage permits Start | **`service-group`**, **`drill`**, **`drill-run`**, `tenant?` |
+| `mcp_azure_mcp_ser_resilience_drill_run_reprotect` | Reprotect failed-over drill resources | **`service-group`**, **`drill`**, **`drill-run`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_run_mark-complete` | Mark a drill-run stage complete and disable further retries | **`service-group`**, **`drill`**, **`drill-run`**, **`stage`** (`FaultInjection`, `Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`), `tenant?` |
 | `mcp_azure_mcp_ser_resilience_drill_run_resource_get` | List run targets or get one | **`service-group`**, **`drill`**, **`drill-run`**, `name?`, `tenant?` |
 
