@@ -71,6 +71,16 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
             Value = "00000000-0000-0000-0000-000000000000",
         }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = @"(?i)(?<=tenantId=)[0-9a-f-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = @"(?i)(?<=objectId=)[0-9a-f-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
         // Container discovery can return storage accounts registered from other resource groups.
         // These are not test resources, so sanitize their names in container identifiers and ARM IDs.
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
@@ -186,6 +196,29 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var vault = result.AssertProperty("vault");
         Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Disabled", vault.AssertProperty("publicNetworkAccess").GetString());
+    }
+
+    [Fact]
+    public async Task VaultCreate_CreatesPublicRsvVault_WhenExplicitlyEnabled()
+    {
+        var vaultName = RegisterOrRetrieveVariable("createdPublicVaultName", $"test-rsv-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_vault_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "location", "eastus" },
+                { "enable-public-network-access", "true" }
+            });
+
+        var vault = result.AssertProperty("vault");
+        Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Enabled", vault.AssertProperty("publicNetworkAccess").GetString());
     }
 
     [Fact]
