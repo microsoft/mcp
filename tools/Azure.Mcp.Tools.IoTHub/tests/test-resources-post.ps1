@@ -20,7 +20,21 @@ $iotHubName = $DeploymentOutputs['IOTHUB_NAME']
 Write-Host "IoT Hub Name: $iotHubName"
 
 # Ensure Azure IoT CLI extension is installed for `az iot` commands
-try { az extension show --name azure-iot | Out-Null } catch { az extension add --name azure-iot | Out-Null }
+Write-Host "Checking for the Azure IoT CLI extension..."
+az extension show --name azure-iot --output table
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Azure IoT CLI extension is not installed. Installing the preview version..."
+    az extension add --name azure-iot --allow-preview true --yes
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to install the Azure IoT CLI extension. Exit code: $LASTEXITCODE."
+    }
+}
+
+Write-Host "Verifying the Azure IoT CLI extension installation..."
+az extension show --name azure-iot --output table
+if ($LASTEXITCODE -ne 0) {
+    throw "The Azure IoT CLI extension is unavailable after installation. Exit code: $LASTEXITCODE."
+}
 
 # Create test devices for device registry tests
 $testDevices = @('test-device-1', 'test-device-2', 'test-device-3')
