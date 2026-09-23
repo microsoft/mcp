@@ -42,14 +42,14 @@ Before starting, determine:
   - Example: Storage account names are 3–24 lowercase alphanumeric characters only.
   - Example: Resource group names allow letters, digits, underscores, hyphens, and periods up to 90 characters.
   - Reference: [Azure naming rules and restrictions](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
-- Use `ValidateOptions` for semantic constraints beyond nullability (name length, format, mutual exclusivity, and allowed value sets). Only reject characters that are provably invalid for the specific resource type. This applies to both the new two-generic `SubscriptionCommand` pattern and the legacy one-generic pattern — see the `ValidateOptions` override guidance in [Phase 1d](#1d-command-class).
+- Use `ValidateOptions` for semantic constraints beyond nullability (name length, format, mutual exclusivity, and allowed value sets). Only reject characters that are provably invalid for the specific resource type. This applies to both the new two-generic `SubscriptionCommand` pattern and the legacy one-generic pattern — see the `ValidateOptions` override guidance in [Phase 1e](#1e-command-class).
 - Prefer SDK/runtime validators and deterministic checks first (`Length`, explicit allowed-value sets, character/category checks).
 
 ### Secure Logging
 - **Never log raw option objects** (`{@Options}`) — they may contain secrets, connection strings, or PII.
 - Log only individually named, known-safe parameters. For example: `options.Subscription`, `options.ResourceGroup`, `Name`.
 - Do not include sensitive field values in error messages returned to callers.
-- Strip or redact secret values before surfacing exception details.
+- `HandleException` includes `ex.Message` in `Response.Results` (and the stack trace in debug builds), even if `GetErrorMessage` is overridden. Do not pass secret-bearing exception messages through it; check both `Response.Message` and `Response.Results` when reviewing error paths.
 
 ```csharp
 // ✅ Log only known-safe, individually named fields
@@ -80,7 +80,7 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 |--------|----------------------------------------|
 | Input abuse (oversized/malformed names) | Override `ValidateOptions` with resource-specific length and format checks using deterministic validation first (length bounds, allowed-value sets, character/category checks). For query inputs, use a dedicated validator class — see `CosmosQueryValidator.EnsureReadOnlySelect` (`tools/Azure.Mcp.Tools.Cosmos/src/Validation/CosmosQueryValidator.cs`) as a reference for length cap, keyword blocking, and injection pattern detection. |
 | Injection into downstream systems | For user-supplied queries: use a validator class that enforces a single read-only statement, caps length, strips/blocks dangerous tokens, and detects tautology patterns. Do not interpolate user input into query strings directly — prefer parameterized APIs where available. For blob/resource URIs: call `EndpointValidator.ValidateAzureServiceEndpoint` before constructing any client (see `tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs` blob URI handling as a reference). |
-| Secret leakage via logs or error responses | Log only individually named, non-sensitive fields: `options.Subscription`, `options.ResourceGroup`, `Name`. Never use `{@Options}` or log connection strings, keys, or endpoint values. Override `GetErrorMessage` to return actionable but non-revealing messages — strip raw `RequestFailedException` bodies that may contain tokens or account metadata. |
+| Secret leakage via logs or error responses | Log only individually named, non-sensitive fields: `options.Subscription`, `options.ResourceGroup`, `Name`. Never use `{@Options}` or log connection strings, keys, or endpoint values. `GetErrorMessage` only changes `Response.Message`; `HandleException` still puts the original exception message in `Response.Results`. Review both fields and harden the shared handler before claiming a secret-bearing exception is redacted. |
 | Cross-tenant/resource confusion | `SubscriptionCommand` base class enforces that `--subscription` is always present and resolved via `ISubscriptionResolver` before `ExecuteAsync` is called. Pass `options.Tenant` to all service calls so `IAzureService` can validate tenant context per-request. Fail explicitly if tenant context is ambiguous — do not fall back silently. |
 | SSRF-like endpoint misuse | Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers`: `ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment, executingToolNamespaceName)` for Azure data-plane endpoints, `ValidateExternalUrl(url, allowedHosts)` for user-supplied URLs to known hosts, `ValidatePublicTargetUrl(url, logger, executingToolNamespaceName)` for arbitrary user-controlled targets (DNS-resolves and blocks private/reserved IPs). Pass the command's top-level tool namespace to namespace-aware overloads. |
 
@@ -133,7 +133,7 @@ Required setup steps:
 
 1. Add package version to `Directory.Packages.props` (if Azure SDK needed)
  2. Register the project in solution files by running:
-    `pwsh eng/scripts/Update-Solutions.ps1 -All`
+    `pwsh eng/scripts/Update-Solution.ps1 -All`
 3. Register the new toolset in `servers/Azure.Mcp.Server/src/Program.cs` `RegisterAreas()` (alphabetical order)
  4. Choose the appropriate base class:
     - **Commands that need an Azure subscription** (most Azure service tools) → inherit from `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`.
@@ -170,26 +170,26 @@ namespace Azure.Mcp.Tools.{Toolset}.Options.{Resource};
 
 public class {Resource}{Operation}Options : ISubscriptionOption
 {
-    [Option("Description of what this option does (e.g., 'The name of the resource').")]
+    [Option(Description = "Description of what this option does (e.g., 'The name of the resource').")]
     public string? MyOption { get; set; }
 
-    [Option(OptionDescriptions.ResourceGroup)]
+    [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(OptionDescriptions.Tenant)]
+    [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 }
 ```
 
 Rules:
 - Implement `ISubscriptionOption` for commands that need subscription resolution
-- Use `[Option("description")]` for the description — property name auto-converts to `--kebab-case`
-- Use `[Option(Name = "custom")]` only when the default kebab-case conversion is wrong (e.g., when property is named `FooBar` and has `[Option(Name = "foobar")]` you get `--foobar` instead of `--foo-bar`)
-- Use `[Option(OptionDescriptions.X)]` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`)
-- Use `[OptionContainer<TContainer>(Prefix = "prefix")]` for model types which contain nested parameters. `"prefix"` will be prepended to the `[Option]`s in the model type (e.g., when `[OptionContainer<TContainer>(Prefix = "foo")]`'s model contains `[Option(Name = "bar")]` the parameter name is `--foo-bar`).
+- Use `[Option(Description = "description")]` for the description — property name auto-converts to `--kebab-case`
+- Use `Name = "custom"` only when the default kebab-case conversion is wrong (e.g., `[Option(Description = "...", Name = "foobar")]` produces `--foobar` instead of `--foo-bar` for `FooBar`)
+- Use `[Option(Description = OptionDescriptions.X)]` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`)
+- Use `[OptionContainer<TContainer>(Prefix = "prefix")]` for model types which contain nested parameters. `"prefix"` will be prepended to the `[Option]`s in the model type (e.g., when `[OptionContainer<TContainer>(Prefix = "foo")]`'s model contains `[Option(Description = "...", Name = "bar")]` the parameter name is `--foo-bar`).
 - Use `subscription` (never `subscriptionId`) — supports both IDs and names
 - Use `resourceGroup` (never `resourceGroupName`)
 - Use singular nouns for resources (`server` not `serverName`)
@@ -577,9 +577,9 @@ private static IAreaSetup[] RegisterAreas()
 
 The `RegisterAreas()` list **must remain alphabetically sorted** (excluding the `#if !BUILD_NATIVE` block).
 
-Command group naming: concatenated lowercase or dash-separated. Never underscores.
-- ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`, `"entra-admin"`
-- ❌ Bad: `"entra_admin"`, `"resource_group"`, `"storage_account"`
+Command group naming for new groups: concatenated lowercase, with no dashes or underscores.
+- ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`
+- ❌ Bad: `"entra-admin"`, `"entra_admin"`, `"resource_group"`, `"storage_account"`
 
 Command hierarchy patterns and anti-patterns:
 - ✅ Good: `azmcp postgres server param set` (command groups: server → param, operation: set)
@@ -724,7 +724,7 @@ Deserialization rules:
   - ✅ `ValidateAndDeserializeResponse(response, {Toolset}JsonContext.Default.{Operation}CommandResult)`
   - ❌ `JsonSerializer.Deserialize<TestModel>(json)`
 
-**GATE:** `dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests --filter "FullyQualifiedName~{Resource}{Operation}CommandTests"` must pass.
+**GATE:** `dotnet test --project tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/Azure.Mcp.Tools.{Toolset}.Tests.csproj --filter-class "*{Resource}{Operation}CommandTests"` must discover and pass the intended tests.
 
 ---
 
@@ -752,6 +752,11 @@ resource myResource 'Microsoft.{Provider}/{type}@{api-version}' = {
   properties: { /* minimal config */ }
 }
 
+resource roleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+    scope: subscription()
+    name: '<built-in-role-guid>'
+}
+
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(roleDefinition.id, testApplicationOid, myResource.id)
   scope: myResource
@@ -764,16 +769,23 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 output resourceName string = myResource.name
 ```
 
-File: `tests/test-resources-post.ps1` (required even if empty logic)
+File: `tests/test-resources-post.ps1` (required to write live test settings even when no further setup is needed)
 
 ```powershell
-[CmdletBinding()]
 param (
-    [Parameter(Mandatory)] [hashtable] $DeploymentOutputs,
-    [Parameter(Mandatory)] [hashtable] $AdditionalParameters
+    [string] $TenantId,
+    [string] $TestApplicationId,
+    [string] $ResourceGroupName,
+    [string] $BaseName,
+    [hashtable] $DeploymentOutputs,
+    [hashtable] $AdditionalParameters
 )
-Write-Host "{Toolset} post-deployment setup completed."
+
+. "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
+New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
 ```
+
+`$DeploymentOutputs` has flat, uppercase keys. Use the direct `$ResourceGroupName` parameter rather than looking it up in `$AdditionalParameters`.
 
 Validate: `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
 
@@ -792,8 +804,8 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
             "{toolset}_{resource}_{operation}",
             new()
             {
-                ["subscription"] = SubscriptionId,
-                ["resource-group"] = ResourceGroupName,
+                ["subscription"] = Settings.SubscriptionId,
+                ["resource-group"] = Settings.ResourceGroupName,
             });
 
         Assert.NotNull(result);
@@ -839,8 +851,8 @@ eng/common/TestResources/New-TestResources.ps1 `
 
  #### Record tests
  ```powershell
- dotnet test tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests `
-   --filter "FullyQualifiedName~{Resource}{Operation}"
+ dotnet test --project tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/Azure.Mcp.Tools.{Toolset}.Tests.csproj `
+     --filter-method "*{Resource}{Operation}*"
 ```
 
  #### Push recordings
@@ -974,8 +986,8 @@ dotnet build tools/Azure.Mcp.Tools.{Toolset}/src
 # 2. Format
 dotnet format Microsoft.Mcp.slnx --verify-no-changes --include "tools/Azure.Mcp.Tools.{Toolset}/**"
 
-# 3. All unit tests (including existing — no regressions)
-dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests
+# 3. Toolset unit tests and recorded playback tests (including existing — no regressions)
+dotnet test --project tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/Azure.Mcp.Tools.{Toolset}.Tests.csproj
 
 # 4. Spell check
 .\eng\common\spelling\Invoke-Cspell.ps1
@@ -1312,20 +1324,20 @@ Guidelines:
 
 **Never do (new pattern):**
 - ❌ `subscriptionId` → ✅ `subscription`
-- ❌ Options without `[Option]` attribute → ✅ Always add `[Option("description")]` or `[Option(OptionDescriptions.X)]`
+- ❌ Options without `[Option]` attribute → ✅ Always add `[Option(Description = "description")]` or `[Option(Description = OptionDescriptions.X)]`
 - ❌ Inherit options from base class → ✅ Flat POCO implementing `ISubscriptionOption`
 - ❌ Manual `RegisterOptions`/`BindOptions` in new commands → ✅ Use `[Option]` attributes (automatic)
 - ❌ `ExecuteAsync(context, parseResult, ct)` → ✅ `ExecuteAsync(context, options, ct)`
 - ❌ Call `Validate(parseResult.CommandResult, ...)` → ✅ Override `ValidateOptions(options, result)` if needed
 - ❌ Hardcoded cloud URLs → ✅ `CloudConfiguration.CloudType` switch
 - ❌ Logging `{@Options}` → ✅ Log only safe parameters individually
-- ❌ Underscores in group names → ✅ Concatenated lowercase or dash-separated
+- ❌ Dashes or underscores in new group names → ✅ Concatenated lowercase
 - ❌ Missing `CancellationToken` → ✅ Always the final parameter
 - ❌ `CancellationToken.None` in tests → ✅ `TestContext.Current.CancellationToken`
 - ❌ Skip `base.Dispose()` in tests → ✅ Always call when overriding
 - ❌ Skip live test infrastructure for Azure commands → ✅ Create `test-resources.bicep` early
 - ❌ `CommandUnitTestsBase` for subscription commands → ✅ Use `SubscriptionCommandUnitTestsBase`
-- ❌ `[Option(Name = "my-option")]` when default matches → ✅ Only use `Name =` when kebab-case conversion is wrong
+- ❌ `[Option(Description = "...", Name = "my-option")]` when default matches → ✅ Omit `Name =` when kebab-case conversion is right
 - ❌ Forget to register command as singleton → ✅ `services.AddSingleton<MyCommand>()` in `ConfigureServices`
 
 **Always do:**
@@ -1548,10 +1560,10 @@ public abstract class Base{Toolset}Command<
 // Options class implements the interface (stays flat, no inheritance)
 public class MyOptions : ISubscriptionOption, I{Toolset}Option
 {
-    [Option("The account name.")]
+    [Option(Description = "The account name.")]
     public required string Account { get; set; }
 
-    [Option(OptionDescriptions.Subscription)]
+    [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
     // ...
 }
@@ -1686,17 +1698,7 @@ protected override void RegisterOptions(Command command)
 
 ### Status Code Mapping
 
-Base implementation returns `InternalServerError` for all exceptions. Override for service-specific codes:
-
-```csharp
-protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-{
-    Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-    Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-    ValidationException => HttpStatusCode.BadRequest,
-    _ => base.GetStatusCode(ex)
-};
-```
+`BaseCommand` already maps argument, invalid-operation, HTTP, and Azure request failures. `AuthenticatedCommand` also maps authentication failures and timeouts. Override `GetStatusCode` only for service-specific exceptions not covered by these base classes.
 
 ### Error Message Formatting
 
@@ -1705,32 +1707,21 @@ Base returns `ex.Message`. Override for user-actionable messages:
 ```csharp
 protected override string GetErrorMessage(Exception ex) => ex switch
 {
-    Azure.Identity.AuthenticationFailedException authEx =>
-        $"Authentication failed. Please run 'az login' to sign in. Details: {authEx.Message}",
+    Azure.Identity.AuthenticationFailedException =>
+        "Authentication failed. Please sign in to Azure.",
     Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
         "Resource not found. Verify the resource name and that you have access.",
     Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-        $"Access denied. Ensure you have appropriate RBAC permissions. Details: {reqEx.Message}",
-    Azure.RequestFailedException reqEx => reqEx.Message,
+        "Access denied. Ensure you have appropriate RBAC permissions.",
     _ => base.GetErrorMessage(ex)
 };
 ```
 
+This override changes only `Response.Message`. The original exception message remains in `Response.Results` for non-validation errors; changing the displayed message is not redaction.
+
 ### HandleException Response Format
 
-The base `HandleException` in `BaseCommand`:
-```csharp
-protected virtual void HandleException(CommandContext context, Exception ex)
-{
-    context.Activity?.SetStatus(ActivityStatusCode.Error);
-    var result = new ExceptionResult(Message: ex.Message, StackTrace: ex.StackTrace, Type: ex.GetType().Name);
-    response.Status = GetStatusCode(ex);
-    response.Message = GetErrorMessage(ex) + ". To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-    response.Results = ResponseResult.Create(result, JsonSourceGenerationContext.Default.ExceptionResult);
-}
-```
-
-Always call `HandleException(context, ex)` in catch blocks.
+`HandleException` puts validation errors in `Response.Message` without a result payload. For other exceptions it serializes the original `ex.Message` into `ExceptionResult` (and includes the stack trace in debug builds). Always call `HandleException(context, ex)` in catch blocks; when downstream exception text may contain secrets, harden the error path before exposing the command and test the entire response.
 
 ### Error Context Logging
 
@@ -1871,8 +1862,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
 ./eng/scripts/Deploy-TestResources.ps1 -Paths "{Toolset}"
 
 # Run live tests
-pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests'
-dotnet test --filter "Category=Live"
+dotnet test --project tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests/Azure.Mcp.Tools.{Toolset}.Tests.csproj --filter-trait "TestType=Live"
 ```
 
 ### IAsyncLifetime and base.Dispose()
