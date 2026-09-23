@@ -28,6 +28,7 @@ engine:
 
 tools:
   bash: false
+  edit: false
   cli-proxy: false
   github:
     toolsets: [issues, labels]
