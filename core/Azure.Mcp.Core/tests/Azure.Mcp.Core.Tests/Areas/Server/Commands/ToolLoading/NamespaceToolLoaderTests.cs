@@ -243,6 +243,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     [InlineData("keyvault", TagConstants.Unknown, false)]
     [InlineData("keyvault", TagConstants.Unknown, true)]
     [InlineData("storage", "storage", false)]
+    [InlineData("STORAGE", "storage", false)]
     public async Task CallToolHandler_OnlyCapturesAllowedToolIdentity(string namespaceName, string expectedArea, bool learn)
     {
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
@@ -270,7 +271,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // Arrange
         var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
-        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        var request = McpTestUtilities.CreateToolCallRequest(toolName.ToUpperInvariant(), new Dictionary<string, object?>
         {
             ["learn"] = true,
             ["intent"] = "list resources"

@@ -833,8 +833,10 @@ public class RegistryToolLoaderTests
         Assert.Equal("search_docs", result.Tools[0].Name);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool()
+    [Theory]
+    [InlineData(false, "test-server")]
+    [InlineData(true, TagConstants.Unknown)]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool(bool filterReadOnlyTool, string expectedArea)
     {
         // Arrange
         var readOnlyTool = new Tool
@@ -862,16 +864,23 @@ public class RegistryToolLoaderTests
             .Build();
 
         var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+        if (filterReadOnlyTool)
+        {
+            configuration.Tool = ["write-tool"];
+        }
 
         var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
 
         // Act - Try to call the non-read-only tool directly
         var request = McpTestUtilities.CreateToolCallRequest("write-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to read-only mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, expectedArea);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);
@@ -957,11 +966,14 @@ public class RegistryToolLoaderTests
 
         // Act - Try to call the local-required tool in HTTP mode
         var request = McpTestUtilities.CreateToolCallRequest("local-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to HTTP mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("HTTP mode", errorText.Text);
@@ -992,11 +1004,14 @@ public class RegistryToolLoaderTests
 
         // Act - Try to call a tool with null annotations in read-only mode
         var request = McpTestUtilities.CreateToolCallRequest("no-annotations-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject since null annotations means ReadOnlyHint is not true
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);

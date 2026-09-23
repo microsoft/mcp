@@ -217,6 +217,44 @@ public class SingleProxyToolLoaderTests
     }
 
     [Theory]
+    [InlineData("storage", true)]
+    [InlineData("registry-server", false)]
+    public async Task CallToolHandler_WithNamespaceFilter_OnlyLearnsEnabledDiscoveredServers(string serverName, bool shouldBeListed)
+    {
+        await using var toolLoader = CreateToolLoaderWithMockClient(
+            new ServerRuntimeConfiguration { Namespace = ["storage"], StructuredOutputMode = StructuredOutputMode.Compact },
+            new MockMcpClientBuilder(),
+            serverName);
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?> { ["learn"] = true });
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.StructuredContent.HasValue);
+        var tools = result.StructuredContent.Value.GetProperty("tools");
+        Assert.Equal(shouldBeListed, tools.EnumerateArray().Any(tool => tool.GetProperty("tool").GetString() == serverName));
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithUppercaseDiscoveredServer_LearnsCanonicalArea()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("account_list", "List storage accounts", () => new CallToolResult { Content = [], IsError = false });
+        await using var toolLoader = CreateToolLoaderWithMockClient(
+            new ServerRuntimeConfiguration { Namespace = ["registry-server"] }, clientBuilder, "registry-server");
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+        {
+            ["tool"] = "REGISTRY-SERVER",
+            ["learn"] = true
+        });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError ?? false);
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task CallToolHandler_WithUnknownTool_RecordsUnknownIdentity(bool learn)
@@ -411,7 +449,7 @@ public class SingleProxyToolLoaderTests
         var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
         {
             ["intent"] = "List storage commands",
-            ["tool"] = "storage",
+            ["tool"] = "STORAGE",
             ["learn"] = true
         });
         using var activity = new Activity("test-activity").Start();
@@ -460,7 +498,7 @@ public class SingleProxyToolLoaderTests
             Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["storage"] }),
             CreateServerConfigurationOptions(),
             discoveryStrategy);
-        var request = CreateCallToolRequestWithToolAndCommand("storage", commandName);
+        var request = CreateCallToolRequestWithToolAndCommand("STORAGE", commandName);
         using var activity = new Activity("test-activity").Start();
 
         // Act
@@ -791,7 +829,7 @@ public class SingleProxyToolLoaderTests
             Namespace = ["storage"],
             StructuredOutputMode = StructuredOutputMode.Duplicated
         }, clientBuilder, "storage");
-        var request = CreateCallToolRequestWithToolAndCommand("storage", commandName);
+        var request = CreateCallToolRequestWithToolAndCommand("STORAGE", commandName);
         using var activity = new Activity("test-activity").Start();
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);

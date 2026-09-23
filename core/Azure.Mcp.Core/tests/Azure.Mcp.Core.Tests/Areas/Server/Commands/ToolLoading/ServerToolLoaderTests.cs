@@ -310,6 +310,8 @@ public class ServerToolLoaderTests
     [InlineData("storage", "user@example.com", TagConstants.Unknown, "storage")]
     [InlineData("storage", "account_list", "account_list", "storage")]
     [InlineData("storage", "ACCOUNT_LIST", "account_list", "storage")]
+    [InlineData("STORAGE", "account_list", "account_list", "storage")]
+    [InlineData("STORAGE", "user@example.com", TagConstants.Unknown, "storage")]
     public async Task CallToolHandler_OnlyCapturesAllowedToolIdentity(
         string serverName, string command, string expectedName, string expectedArea)
     {
@@ -329,6 +331,21 @@ public class ServerToolLoaderTests
         Assert.Equal(expectedName == "account_list", executed);
         activity.AssertTagEquals(TagName.ToolName, expectedName);
         activity.AssertTagEquals(TagName.ToolArea, expectedArea);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithUppercaseProvider_LearnsCanonicalArea()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(CreateRoutingTool("account_list"), _ => new CallToolResult { Content = [], IsError = false });
+        await using var loader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "storage");
+        var request = McpTestUtilities.CreateToolCallRequest("STORAGE", new Dictionary<string, object?> { ["learn"] = true });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(result.Content);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
     }
 
     [Fact]

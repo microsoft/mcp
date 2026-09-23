@@ -243,7 +243,7 @@ public sealed class ServerToolLoader(
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
             if (availableTools.Count > 0)
             {
-                Activity.Current?.SetTag(TagName.ToolArea, tool);
+                Activity.Current?.SetTag(TagName.ToolArea, await GetProviderNameAsync(tool, cancellationToken));
             }
             else
             {
@@ -398,7 +398,7 @@ public sealed class ServerToolLoader(
         var tools = await GetChildToolListAsync(request, tool, cancellationToken);
         if (tools.Count > 0)
         {
-            Activity.Current?.SetTag(TagName.ToolArea, tool);
+            Activity.Current?.SetTag(TagName.ToolArea, await GetProviderNameAsync(tool, cancellationToken));
         }
         else
         {
@@ -433,6 +433,12 @@ public sealed class ServerToolLoader(
             }
         }
         return response;
+    }
+
+    private async Task<string> GetProviderNameAsync(string tool, CancellationToken cancellationToken)
+    {
+        var provider = await _serverDiscoveryStrategy.FindServerProviderAsync(tool, cancellationToken);
+        return provider.CreateMetadata().Name;
     }
 
     /// <summary>

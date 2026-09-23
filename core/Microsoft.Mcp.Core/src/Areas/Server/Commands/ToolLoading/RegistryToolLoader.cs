@@ -151,6 +151,8 @@ public sealed class RegistryToolLoader(
         // Enforce read-only mode at execution time
         if (_configuration.Value.ReadOnly && kvp.Tool.Annotations?.ReadOnlyHint != true)
         {
+            Activity.Current?.SetTag(TagName.ToolArea, GetVisibleToolArea(kvp.ServerName))
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"Tool '{request.Params.Name}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
@@ -166,6 +168,8 @@ public sealed class RegistryToolLoader(
         // Enforce HTTP mode restrictions at execution time
         if (_configuration.Value.IsHttpMode && McpHelper.HasHint(kvp.Tool, McpHelper.LocalRequiredHintMetaKey))
         {
+            Activity.Current?.SetTag(TagName.ToolArea, GetVisibleToolArea(kvp.ServerName))
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"Tool '{request.Params.Name}' is not available. This server is running in HTTP mode and this tool requires local execution.",
@@ -189,6 +193,17 @@ public sealed class RegistryToolLoader(
         // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
         // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
         return await kvp.Client.CallToolAsync(kvp.OriginalToolName, parameters, cancellationToken: cancellationToken);
+    }
+
+    private string GetVisibleToolArea(string serverName)
+    {
+        var toolFilter = _configuration.Value.Tool;
+        return _toolClientMap.Values.Any(tool =>
+            string.Equals(tool.ServerName, serverName, StringComparison.OrdinalIgnoreCase) &&
+            ShouldKeepTool(tool.Tool, _configuration.Value) &&
+            (toolFilter is not { Length: > 0 } ||
+                toolFilter.Any(name => name.Contains(tool.OriginalToolName, StringComparison.OrdinalIgnoreCase))))
+            ? serverName : TagConstants.Unknown;
     }
 
     /// <summary>

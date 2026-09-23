@@ -164,7 +164,8 @@ public sealed class NamespaceToolLoader(
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
-        string tool = request.Params.Name;
+        string tool = _availableNamespaces.Value.FirstOrDefault(namespaceName =>
+            string.Equals(namespaceName, request.Params.Name, StringComparison.OrdinalIgnoreCase)) ?? request.Params.Name;
         var args = request.Params.Arguments;
         string? intent = null;
         string? command = null;

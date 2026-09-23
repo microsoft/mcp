@@ -203,6 +203,11 @@ public sealed class SingleProxyToolLoader(
             foreach (var server in serverList)
             {
                 var serverMetadata = server.CreateMetadata();
+                if (!IsNamespaceEnabled(serverMetadata.Id))
+                {
+                    continue;
+                }
+
                 tools.Add(new Tool
                 {
                     Name = serverMetadata.Id,
@@ -246,6 +251,24 @@ public sealed class SingleProxyToolLoader(
         !DiscoveryConstants.IgnoredCommandGroups.Contains(tool, StringComparer.OrdinalIgnoreCase) &&
         (_configuration.Value.Namespace is not { Length: > 0 } namespaces ||
             namespaces.Contains(tool, StringComparer.OrdinalIgnoreCase));
+
+    private async Task<string> GetCanonicalToolAreaAsync(string tool, CancellationToken cancellationToken)
+    {
+        var group = _commandFactory.RootGroup.SubGroup
+            .FirstOrDefault(group => string.Equals(group.Name, tool, StringComparison.OrdinalIgnoreCase));
+        if (group != null)
+        {
+            return group.Name;
+        }
+
+        if (_discoveryStrategy != null)
+        {
+            var provider = await _discoveryStrategy.FindServerProviderAsync(tool, cancellationToken);
+            return provider.CreateMetadata().Id;
+        }
+
+        return TagConstants.Unknown;
+    }
 
     /// <summary>
     /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup">.
@@ -294,7 +317,7 @@ public sealed class SingleProxyToolLoader(
             .FirstOrDefault(g => string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
         if (group != null)
         {
-            var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([tool]))
+            var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([group.Name]))
                 .Where(command => ShouldKeepBaseCommand(command.Value, _configuration.Value))
                 .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
                 .ToList();
@@ -374,7 +397,7 @@ public sealed class SingleProxyToolLoader(
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
 
-        Activity.Current?.SetTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.ToolArea, await GetCanonicalToolAreaAsync(tool, cancellationToken));
 
         var contentText = $"""
             Here are the available commands and their input schema for '{tool}' tool.
@@ -419,7 +442,7 @@ public sealed class SingleProxyToolLoader(
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
 
-        Activity.Current?.SetTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.ToolArea, await GetCanonicalToolAreaAsync(tool, cancellationToken));
 
         var resolvedTool = tools.FirstOrDefault(tool => tool.Name.Equals(command, StringComparison.OrdinalIgnoreCase));
         if (resolvedTool == null)
@@ -666,8 +689,7 @@ public sealed class SingleProxyToolLoader(
 
         command = resolvedTool.Name;
 
-        Activity.Current?.SetTag(TagName.ToolArea, tool)
-            .SetTag(TagName.ToolName, command);
+        Activity.Current?.SetTag(TagName.ToolName, command);
 
         // Enforce mode restrictions at execution time: look up the actual tool and check its properties.
         if (_configuration.Value.ReadOnly || _configuration.Value.IsHttpMode)
