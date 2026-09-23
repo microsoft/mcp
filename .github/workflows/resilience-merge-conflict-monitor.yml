@@ -77,7 +77,7 @@ jobs:
                 issue_number: pullRequest.number,
                 per_page: 100
               });
-              const statusComment = comments.find(comment => comment.body?.includes(commentMarker));
+const statusComment = comments.find(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(commentMarker));
 
               if (hasConflict) {
                 if (!hasConflictLabel) {
