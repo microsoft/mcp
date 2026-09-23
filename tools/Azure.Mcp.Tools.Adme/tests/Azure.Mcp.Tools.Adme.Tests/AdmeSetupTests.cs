@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Adme.Commands.Search;
 using Azure.Mcp.Tools.Adme.Commands.Storage;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -17,6 +18,18 @@ namespace Azure.Mcp.Tools.Adme.Tests;
 
 public sealed class AdmeSetupTests
 {
+    [Fact]
+    public void Setup_ConfiguresExtendedRequestTimeouts()
+    {
+        var options = new HttpStandardResilienceOptions();
+
+        AdmeSetup.ConfigureTimeouts(options);
+
+        Assert.Equal(TimeSpan.FromSeconds(60), options.AttemptTimeout.Timeout);
+        Assert.Equal(TimeSpan.FromSeconds(120), options.CircuitBreaker.SamplingDuration);
+        Assert.Equal(TimeSpan.FromSeconds(120), options.TotalRequestTimeout.Timeout);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.RequestTimeout)]
     [InlineData(HttpStatusCode.TooManyRequests)]

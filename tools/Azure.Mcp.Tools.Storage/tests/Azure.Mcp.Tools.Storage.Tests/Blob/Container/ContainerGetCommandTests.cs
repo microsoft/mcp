@@ -220,7 +220,7 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("Container not found", response.Message);
+        Assert.Contains("Storage account or container not found", response.Message);
     }
 
     [Fact]
