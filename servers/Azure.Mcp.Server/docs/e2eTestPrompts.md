@@ -990,7 +990,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azuremigrate_platformlandingzone_request | Generate a platform landing zone | none |
 | azuremigrate_platformlandingzone_request | Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name> | none |
 | azuremigrate_platformlandingzone_request | Start landing zone generation for migrate project <migrate-project-name> | none |
+| azuremigrate_platformlandingzone_request | Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name>. Distinguish a generation request that is in progress from a completed result with a download URL. | none |
 | azuremigrate_platformlandingzone_request | Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
+| azuremigrate_platformlandingzone_request | Download the landing zone for migrate project <migrate-project-name> in resource group <resource-group-name>. If generation failed, show the backend error details instead of reporting success or asking me to keep waiting. | none |
 | azuremigrate_platformlandingzone_request | Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name> | none |
 | azuremigrate_platformlandingzone_request | Verify if all parameters are set for migrate project <migrate-project-name> | none |
 

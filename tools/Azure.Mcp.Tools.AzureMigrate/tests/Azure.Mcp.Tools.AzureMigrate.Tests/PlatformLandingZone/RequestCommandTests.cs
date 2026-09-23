@@ -278,7 +278,7 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
     }
 
     [Fact]
-    public async Task ExecuteAsync_GenerateAction_HandlesTimeout()
+    public async Task ExecuteAsync_GenerateAction_ReportsInProgress()
     {
         // Arrange
         var subscription = "sub123";
@@ -305,6 +305,8 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
         var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
 
         Assert.Contains("in progress", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("generated successfully", result.Message);
+        Assert.DoesNotContain("Download URL:", result.Message);
     }
 
     [Fact]

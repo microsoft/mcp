@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Azure Migrate platform landing zone generation reporting success before a download URL is available, and preserved backend failure details during generation and download."
