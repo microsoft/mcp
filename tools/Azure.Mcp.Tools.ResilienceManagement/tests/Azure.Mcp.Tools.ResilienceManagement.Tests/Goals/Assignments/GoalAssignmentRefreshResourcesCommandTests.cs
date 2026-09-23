@@ -62,11 +62,13 @@ public sealed class GoalAssignmentRefreshResourcesCommandTests
     [InlineData(0)]
     public async Task ExecuteAsync_SanitizesErrors(int status)
     {
+        Exception exception = status == 0 ? new Exception("secret-provider-detail") : new RequestFailedException(status, "secret-provider-detail");
         Service.RefreshGoalAssignmentResourcesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(status == 0 ? new Exception("secret-provider-detail") : new RequestFailedException(status, "secret-provider-detail"));
+            .ThrowsAsync(exception);
         var response = await ExecuteCommandAsync("--service-group sg --goal-assignment ga");
         Assert.Equal((HttpStatusCode)(status == 0 ? 500 : status), response.Status);
         Assert.DoesNotContain("secret-provider-detail", response.Message);
         Assert.Null(response.Results);
+        Assert.Contains(Logger.ReceivedCalls(), call => call.GetMethodInfo().Name == "Log" && ReferenceEquals(call.GetArguments()[3], exception));
     }
 }

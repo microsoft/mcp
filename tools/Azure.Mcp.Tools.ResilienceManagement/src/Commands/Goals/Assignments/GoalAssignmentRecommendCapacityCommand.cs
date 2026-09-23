@@ -38,7 +38,7 @@ public sealed class GoalAssignmentRecommendCapacityCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError("Goal assignment capacity recommendation failed.");
+            logger.LogError(ex, "Goal assignment capacity recommendation failed.");
             HandleException(context, ex);
             context.Response.Results = null;
         }

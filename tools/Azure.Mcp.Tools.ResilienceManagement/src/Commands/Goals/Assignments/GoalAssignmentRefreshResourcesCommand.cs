@@ -37,7 +37,7 @@ public sealed class GoalAssignmentRefreshResourcesCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError("Goal assignment resource refresh failed.");
+            logger.LogError(ex, "Goal assignment resource refresh failed.");
             HandleException(context, ex);
             context.Response.Results = null;
         }
