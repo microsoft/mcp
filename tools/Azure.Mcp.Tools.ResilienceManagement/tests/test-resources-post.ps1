@@ -25,13 +25,14 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 # $DeploymentOutputs keys are all UPPERCASE
 
-# The tenant-scoped service group and the usage plan enrollment are created here via
+# The usage plan, tenant-scoped service group, and usage plan enrollment are created here via
 # direct ARM REST calls (Invoke-AzRestMethod) because:
+#  - The preview usage plan resource does not complete its ARM deployment operation reliably,
+#    even when the resource itself finishes provisioning.
 #  - Microsoft.Management/serviceGroups is a tenant-scoped resource that cannot be created
 #    in the resource-group-scoped test-resources.bicep deployment, and a direct PUT only
 #    requires serviceGroups write (not tenant-level deployment write).
-#  - The enrollment requires the service group to already exist; the usage plan it enrolls
-#    into is created by test-resources.bicep.
+#  - The enrollment requires the service group and usage plan to already exist.
 
 $tenantId = $testSettings.TenantId
 $subscriptionId = $testSettings.SubscriptionId
@@ -86,6 +87,24 @@ function Invoke-ResilienceRestPut {
     return $response
 }
 
+function Write-ArmResponseDiagnostics {
+    param(
+        [object] $Response
+    )
+
+    $diagnostics = @("statusCode=$($Response.StatusCode)")
+    Write-Host "  statusCode = $($Response.StatusCode)"
+    foreach ($headerName in @('x-ms-request-id', 'x-ms-correlation-request-id', 'x-ms-routing-request-id', 'Azure-AsyncOperation', 'Location')) {
+        $headerValue = $Response.Headers[$headerName]
+        if ($headerValue) {
+            $diagnostics += "$headerName=$headerValue"
+            Write-Host "  $headerName = $headerValue"
+        }
+    }
+
+    return $diagnostics -join '; '
+}
+
 function Invoke-ResilienceRestPost {
     param(
         [string] $Path,
@@ -130,9 +149,15 @@ function Wait-ResilienceProvisioning {
         [switch] $WaitForAuthorization
     )
 
-    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $startTime = Get-Date
+    $deadline = $startTime.AddSeconds($TimeoutSeconds)
+    $lastResponse = $null
+    $lastState = $null
+    $lastLoggedState = $null
+    $nextHeartbeat = $startTime
     while ((Get-Date) -lt $deadline) {
         $response = Invoke-AzRestMethod -Method GET -Path $Path
+        $lastResponse = $response
 
         # Resource creation is eventually consistent. Service groups also create an
         # automatic administrator assignment that can take time to become effective.
@@ -146,12 +171,18 @@ function Wait-ResilienceProvisioning {
             throw "GET $Path failed with status $($response.StatusCode): $($response.Content)"
         }
 
-        $state = ($response.Content | ConvertFrom-Json).properties.provisioningState
-        Write-Host "  provisioningState = $state"
-        if ($state -eq 'Succeeded') {
+        $lastState = ($response.Content | ConvertFrom-Json).properties.provisioningState
+        $now = Get-Date
+        if ($lastState -ne $lastLoggedState -or $now -ge $nextHeartbeat) {
+            $elapsedSeconds = [int] ($now - $startTime).TotalSeconds
+            Write-Host "  provisioningState = $lastState (elapsedSeconds = $elapsedSeconds)"
+            $lastLoggedState = $lastState
+            $nextHeartbeat = $now.AddMinutes(1)
+        }
+        if ($lastState -eq 'Succeeded') {
             return
         }
-        if ($state -in @('Failed', 'Canceled')) {
+        if ($lastState -in @('Failed', 'Canceled')) {
             $errorDetails = ($response.Content | ConvertFrom-Json).properties.errorDetails
             $errorMessage = if ($errorDetails) {
                 " ErrorCode: $($errorDetails.code). Message: $($errorDetails.message)"
@@ -159,13 +190,21 @@ function Wait-ResilienceProvisioning {
             else {
                 ''
             }
-            throw "Provisioning of $Path ended in state '$state'.$errorMessage"
+            throw "Provisioning of $Path ended in state '$lastState'.$errorMessage"
         }
 
         Start-Sleep -Seconds 15
     }
 
-    throw "Timed out waiting for $Path to finish provisioning."
+    $responseDiagnostics = if ($lastResponse) {
+        Write-Host '  latest ARM response diagnostics:'
+        Write-ArmResponseDiagnostics -Response $lastResponse
+    }
+    else {
+        'no ARM response received'
+    }
+    $stateMessage = if ($lastState) { " Latest provisioningState: '$lastState'." } else { '' }
+    throw "Timed out waiting for $Path to finish provisioning.$stateMessage Latest ARM response: $responseDiagnostics"
 }
 
 function Add-RecoveryContributorRole {
@@ -257,7 +296,18 @@ function Publish-TestRunbook {
 Publish-TestRunbook -Name $failoverRunbookName
 Publish-TestRunbook -Name $reprotectRunbookName
 
-# 1) Create the tenant-scoped service group.
+# 1a) Create the usage plan outside the Bicep deployment so its provisioning wait is bounded.
+$usagePlanPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName`?api-version=$resilienceApiVersion"
+$usagePlanResponse = Invoke-ResilienceRestPut -Path $usagePlanPath -Body @{
+    location   = 'global'
+    properties = @{
+        planType = 'Standard'
+    }
+}
+Write-ArmResponseDiagnostics -Response $usagePlanResponse | Out-Null
+Wait-ResilienceProvisioning -Path $usagePlanPath -TimeoutSeconds 600
+
+# 1b) Create the tenant-scoped service group.
 $serviceGroupPath = "$serviceGroupId`?api-version=$serviceGroupApiVersion"
 Invoke-ResilienceRestPut -Path $serviceGroupPath -Body @{
     properties = @{
@@ -341,7 +391,7 @@ Invoke-ResilienceRestPut -Path $workflowMembershipPath -Body @{
     }
 } | Out-Null
 
-# 3) Enroll the service group into the usage plan (the usage plan is created by the bicep template).
+# 3) Enroll the service groups into the usage plan created above.
 $enrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$enrollmentName`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPut -Path $enrollmentPath -Body @{
     properties = @{
