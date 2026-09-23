@@ -164,6 +164,37 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
+    /// Regression test for https://github.com/microsoft/mcp/issues/3768: option types in the CLI
+    /// tools list output must reflect each option's actual value type instead of always reporting
+    /// "string". Verifies that non-string JSON Schema keywords (e.g. boolean, array) are emitted.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_PopulatesOptionTypesFromValueType()
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync();
+
+        // Assert
+        var result = DeserializeCommandsResults(response);
+        Assert.NotNull(result.Commands);
+
+        var optionTypes = result.Commands
+            .Where(cmd => cmd.Options is not null)
+            .SelectMany(cmd => cmd.Options!)
+            .Select(option => option.Type)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        // Before the fix, every option reported "string". There must now be multiple distinct
+        // types, including keywords derived from non-string value types.
+        Assert.True(
+            optionTypes.Count > 1,
+            $"Expected multiple option types but found only: {string.Join(", ", optionTypes)}");
+        Assert.Contains("boolean", optionTypes);
+        Assert.Contains("array", optionTypes);
+    }
+
+    /// <summary>
     /// Verifies that the command handles null service provider gracefully
     /// and returns appropriate error response.
     /// </summary>
