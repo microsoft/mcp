@@ -136,8 +136,11 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var osType = vm.GetProperty("osType");
         Assert.Equal("Linux", osType.GetString());
 
+        // Since we are updating the VM in other tests, the provisioning
+        // state may be "Succeeded" or "Updating" depending on timing.
+        var validStates = new[] { "Creating", "Succeeded", "Updating" };
         var provisioningState = vm.GetProperty("provisioningState");
-        Assert.Equal("Succeeded", provisioningState.GetString());
+        Assert.Contains(provisioningState.GetString(), validStates);
     }
 
     [Fact]
