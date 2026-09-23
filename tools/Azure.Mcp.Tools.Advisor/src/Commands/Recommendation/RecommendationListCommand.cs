@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "e3f09221-523a-4107-a715-823cebd97902",
     Name = "list",
     Title = "List Advisor Recommendations",
-    Description = "List, show, search, or find individual Azure Advisor recommendation records in a subscription, including affected resource details when available. " +
+    Description = "List, show, search, or find individual Azure Advisor recommendation records in a subscription or Azure service group, including affected resource details when available. " +
         "Use this when the user wants actual recommendation contents or details in the Cost, Security, Performance, HighAvailability, or OperationalExcellence categories. " +
         "Filter by category, business impact, recommendation type ID, impacted Azure resource type (for example, Microsoft.Storage/storageAccounts), resource name or ID, recommendation text, subcategory, Service Health tracking IDs, or retirement date. " +
         "Do NOT use this to answer aggregate questions like 'how many', 'top N resource types', 'breakdown by category', " +

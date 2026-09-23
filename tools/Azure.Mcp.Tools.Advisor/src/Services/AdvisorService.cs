@@ -72,8 +72,8 @@ public class AdvisorService(IAzureService azureService)
         {
             if (!isServiceGroupScope)
             {
-                // Validate the scope so an invalid subscription or resource group fails instead of returning an empty success.
-                await ValidateScopeAsync(subscription!, resourceGroup, tenant, cancellationToken);
+                // Validate the resource group so an invalid one fails instead of returning an empty success.
+                await EnsureResourceGroupExistsAsync(subscriptionResource!, resourceGroup, cancellationToken);
             }
 
             return new([], false);
@@ -104,6 +104,7 @@ public class AdvisorService(IAzureService azureService)
 
         var recommendations = await ExecuteRecommendationListQueryAsync(
             query,
+            top,
             subscriptionResource,
             tenant,
             cancellationToken);
@@ -113,7 +114,7 @@ public class AdvisorService(IAzureService azureService)
             if (!isServiceGroupScope)
             {
                 // Preserve the resource-group-not-found signal that the subscription-scoped query would produce.
-                await ValidateScopeAsync(subscription!, resourceGroup, tenant, cancellationToken);
+                await EnsureResourceGroupExistsAsync(subscriptionResource!, resourceGroup, cancellationToken);
             }
 
             return recommendations;
@@ -166,6 +167,7 @@ public class AdvisorService(IAzureService azureService)
 
     private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueryAsync(
         string query,
+        int limit,
         SubscriptionResource? subscriptionResource,
         string? tenant,
         CancellationToken cancellationToken)
@@ -202,7 +204,8 @@ public class AdvisorService(IAzureService azureService)
             }
         }
 
-        return new(results, result?.ResultTruncated == ResultTruncated.True);
+        // ARG's '| limit' does not set ResultTruncated, so flag truncation when the cap is reached.
+        return new(results, result?.ResultTruncated == ResultTruncated.True || results.Count >= limit);
     }
 
     private async Task<TenantResource> GetTenantResourceForSubscriptionAsync(
@@ -295,25 +298,23 @@ public class AdvisorService(IAzureService azureService)
         return await pipeline.SendRequestAsync(request, cancellationToken);
     }
 
-    private async Task<SubscriptionResource> ValidateScopeAsync(
-        string subscription,
+    private static async Task EnsureResourceGroupExistsAsync(
+        SubscriptionResource subscriptionResource,
         string? resourceGroup,
-        string? tenant,
         CancellationToken cancellationToken)
     {
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
-
-        if (!string.IsNullOrEmpty(resourceGroup))
+        if (string.IsNullOrWhiteSpace(resourceGroup))
         {
-            var rgExists = await subscriptionResource.GetResourceGroups().ExistsAsync(resourceGroup, cancellationToken);
-            if (!rgExists.Value)
-            {
-                throw new KeyNotFoundException(
-                    $"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
-            }
+            return;
         }
 
-        return subscriptionResource;
+        var normalizedResourceGroup = resourceGroup.Trim();
+        var rgExists = await subscriptionResource.GetResourceGroups().ExistsAsync(normalizedResourceGroup, cancellationToken);
+        if (!rgExists.Value)
+        {
+            throw new KeyNotFoundException(
+                $"Resource group '{normalizedResourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
+        }
     }
 
     internal static bool HasMetadataOnlyFilters(RecommendationFilters? filters) =>

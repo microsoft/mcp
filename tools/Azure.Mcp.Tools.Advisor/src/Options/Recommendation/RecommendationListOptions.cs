@@ -54,7 +54,7 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     [Option(Description = "Maximum number of recommendation records to return. Defaults to 50 and is clamped to the server-side range of 1 through 100.")]
     public int? Top { get; set; }
 
-    [Option(Description = "Summarize or list recommendations for an Azure Service Group instead of a subscription, " +
+    [Option(Description = "List recommendations for an Azure Service Group instead of a subscription, " +
         "provided as the name segment of its ARM resource ID (the '{serviceGroupName}' in " +
         "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'). " +
         "Specify either --service-group or --subscription, not both; --resource-group applies only to subscription scope. " +
