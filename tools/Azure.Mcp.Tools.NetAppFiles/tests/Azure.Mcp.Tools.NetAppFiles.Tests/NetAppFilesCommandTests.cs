@@ -18,13 +18,16 @@ public class NetAppFilesCommandTests(
     [Fact]
     public async Task AccountGet_ReturnsAccount()
     {
+        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+
         await CallToolAsync(
             "netappfiles_account_create",
             new()
             {
-                { "account", Settings.ResourceBaseName },
+                { "account", accountName },
                 { "location", "eastus" },
-                { "resource-group", Settings.ResourceGroupName },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -33,8 +36,8 @@ public class NetAppFilesCommandTests(
             "netappfiles_account_get",
             new()
             {
-                { "account", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
+                { "account", accountName },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -50,13 +53,16 @@ public class NetAppFilesCommandTests(
     [Fact]
     public async Task AccountCreate_ReturnsCreatedAccount()
     {
+        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+
         var result = await CallToolAsync(
             "netappfiles_account_create",
             new()
             {
-                { "account", Settings.ResourceBaseName },
+                { "account", accountName },
                 { "location", "eastus" },
-                { "resource-group", Settings.ResourceGroupName },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -72,13 +78,16 @@ public class NetAppFilesCommandTests(
     [Fact]
     public async Task AccountUpdate_ReturnsUpdatedAccount()
     {
+        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+
         await CallToolAsync(
             "netappfiles_account_create",
             new()
             {
-                { "account", Settings.ResourceBaseName },
+                { "account", accountName },
                 { "location", "eastus" },
-                { "resource-group", Settings.ResourceGroupName },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -87,8 +96,8 @@ public class NetAppFilesCommandTests(
             "netappfiles_account_update",
             new()
             {
-                { "account", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
+                { "account", accountName },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId },
                 { "tags", "{\"recorded-test\":\"account-update\"}" }

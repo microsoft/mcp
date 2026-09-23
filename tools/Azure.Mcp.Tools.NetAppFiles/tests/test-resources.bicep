@@ -17,7 +17,6 @@ resource netAppFilesContributorRoleAssignment 'Microsoft.Authorization/roleAssig
   name: guid(resourceGroup().id, testApplicationOid, contributorRoleDefinition.id)
   properties: {
     principalId: testApplicationOid
-    principalType: 'ServicePrincipal'
     roleDefinitionId: contributorRoleDefinition.id
     description: 'Contributor for Azure NetApp Files live tests'
   }
