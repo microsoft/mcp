@@ -240,8 +240,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_vm_with_password_auth()
     {
-        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "availableVmSku");
-        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "availableVmSkuLocation");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
         var createVmName = RegisterOrRetrieveVariable("createVmName", $"testvm{DateTime.UtcNow:MMddHHmmss}");
 
         var result = await CallToolAsync(
@@ -280,8 +280,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_windows_vm_with_password_auth()
     {
-        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "availableVmSku");
-        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "availableVmSkuLocation");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
         var createVmName = RegisterOrRetrieveVariable("createWinVmName", $"winvm{DateTime.UtcNow:MMddHHmmss}");
 
         var result = await CallToolAsync(
@@ -370,8 +370,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var createVmssName = RegisterOrRetrieveVariable("createWinVmssName", $"wvs{DateTime.UtcNow:HHmmss}");
 
-        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "availableVmSku");
-        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "availableVmSkuLocation");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
         var result = await CallToolAsync(
             "compute_vmss_create",
             new()
@@ -1023,7 +1023,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var newDiskName = $"{Settings.ResourceBaseName}-gallery-test";
         var galleryImageVersionId = Settings.DeploymentOutputs.GetValueOrDefault("GALLERYIMAGEVERSIONID", "Sanitized");
-        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "availableVmSkuLocation");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         // Act - create disk from gallery image (OS disk, no LUN)
         // Use eastus2 location to match gallery image replication target region
@@ -1056,7 +1056,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var newDiskName = $"{Settings.ResourceBaseName}-gallery-lun-test";
         var galleryImageVersionId = Settings.DeploymentOutputs.GetValueOrDefault("GALLERYIMAGEVERSIONID", "Sanitized");
-        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "availableVmSkuLocation");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         // Act - create disk from gallery image data disk at LUN 0
         // Use eastus2 location to match gallery image replication target region
