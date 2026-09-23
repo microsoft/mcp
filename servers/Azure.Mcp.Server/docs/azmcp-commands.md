@@ -4211,6 +4211,39 @@ azmcp resiliency goal template get --service-group <service-group> \
 azmcp resiliency goal assignment get --service-group <service-group> \
                                      [--name <name>]
 
+# Start zonal capacity recommendations (omit resource IDs to assess all eligible resources)
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment recommend-capacity --service-group <service-group> \
+                                                    --goal-assignment <goal-assignment> \
+                                                    [--resource-ids <azure-resource-arm-id>] \
+                                                    [--tenant <tenant>]
+
+# Refresh/rediscover goal resources from service group membership, removing stale goal resources
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment refresh-resources --service-group <service-group> \
+                                                   --goal-assignment <goal-assignment> \
+                                                   [--tenant <tenant>]
+
+# Update discovered goal resource participation, attestation, or confirmations
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update-resources --service-group <service-group> \
+                                                  --goal-assignment <goal-assignment> \
+                                                  --resources <json-array> \
+                                                  [--tenant <tenant>]
+
+# The three actions return status, hasCompleted, and the actual operationId when supplied by ARM.
+# Accepted means only submission, not completed recommendations or persisted resource updates.
+# --resource-ids is repeatable and uses underlying Azure ARM IDs, not goal resource IDs.
+# --resources requires a non-empty array (maximum 1 MiB) with id and properties for each resource:
+# properties.resourceArmId, highAvailabilityGoalParticipation (Included/Excluded), and
+# highAvailabilityAttestationStatus (NotAttested/ManuallyAttested) are required.
+# Optional properties: disasterRecoveryGoalParticipation, disasterRecoveryAttestationStatus, and
+# userConfirmationForHighAvailability. Exclusion reasons are system-managed and cannot be set.
+# This is per-resource replacement, not PATCH; supply desired DR fields to avoid clearing them.
+# See the resilience skill payload reference for enum values.
+# Use goal resource get first; IDs must be unique and belong to the specified assignment.
+# Inclusion/exclusion changes goal participation, not service group membership or Azure resources.
+
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal resource get --service-group <service-group> \

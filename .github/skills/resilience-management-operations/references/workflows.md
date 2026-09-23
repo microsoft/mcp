@@ -1,5 +1,15 @@
 # Resilience Operation Workflow Recipes
 
+## Goal assignment resource operations
+
+1. Resolve the exact service group and assignment with goal assignment get. Do not reuse an ambiguous assignment.
+2. For rediscovery, call `resiliency_goal_assignment_refresh-resources` with `service-group` and `goal-assignment`. This reconciles goal resources with existing service group membership, including removal of stale goal resources; it does not modify underlying Azure resources.
+3. List goal resources, then get each selected member's details before changing participation.
+4. Call `resiliency_goal_assignment_update-resources` with a `resources` array following [payloads.md](./payloads.md#goal-assignment-resource-updates). Use the discovered goal resource ID as `id`, and its underlying Azure resource ID as `properties.resourceArmId`. Preserve desired attestation and other values. Exclusion does not delete the Azure resource; inclusion does not enroll a resource in a service group.
+5. Re-read changed goal resources to prove persistence. `Accepted` is not a completed update.
+6. To assess zonal capacity, call `resiliency_goal_assignment_recommend-capacity`; optionally supply underlying Azure `resource-ids`. Omission assesses all eligible resources. This starts asynchronous assessment, not completed recommendations.
+7. Retain the actual service operation ID when present. No polling/get-operation tool is currently exposed for these actions; do not invent completion, polling URLs, or capacity results. Report state, entitlement, or authorization blockers rather than switching execution surfaces.
+
 <!-- cspell:words reprotect reprotection -->
 
 Use these recipes after resolving the exact service group and target names. The [tool reference](./tools.md) remains authoritative for parameter spelling.

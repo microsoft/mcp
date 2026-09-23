@@ -33,6 +33,9 @@ public class ResilienceManagementSetup : IAreaSetup
 
         services.AddSingleton<GoalTemplateGetCommand>();
         services.AddSingleton<GoalAssignmentGetCommand>();
+        services.AddSingleton<GoalAssignmentRecommendCapacityCommand>();
+        services.AddSingleton<GoalAssignmentRefreshResourcesCommand>();
+        services.AddSingleton<GoalAssignmentUpdateResourcesCommand>();
         services.AddSingleton<GoalResourceGetCommand>();
         services.AddSingleton<UsagePlanGetCommand>();
         services.AddSingleton<UsagePlanCreateCommand>();
@@ -95,7 +98,7 @@ public class ResilienceManagementSetup : IAreaSetup
         goals.AddSubGroup(templates);
 
         // Create assignment subgroup under goal
-        var assignments = new CommandGroup("assignment", "Resilience goal assignment operations - Commands for listing resilience goal assignments for Azure service groups.");
+        var assignments = new CommandGroup("assignment", "Resilience goal assignment operations - Get assignments, recommend capacity, rediscover resources, and update goal resource participation.");
         goals.AddSubGroup(assignments);
 
         // Create resource subgroup under goal
@@ -105,6 +108,9 @@ public class ResilienceManagementSetup : IAreaSetup
         // Register commands
         templates.AddCommand<GoalTemplateGetCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentGetCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentRecommendCapacityCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentRefreshResourcesCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentUpdateResourcesCommand>(serviceProvider);
         goalResources.AddCommand<GoalResourceGetCommand>(serviceProvider);
 
         // Create usageplan subgroup
