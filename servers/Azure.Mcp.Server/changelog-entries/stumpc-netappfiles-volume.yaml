@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added `netappfiles volume create`, `netappfiles volume get`, and `netappfiles volume update` commands for creating, retrieving, and updating Azure NetApp Files volumes.
