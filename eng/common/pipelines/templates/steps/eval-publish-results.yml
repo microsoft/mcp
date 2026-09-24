@@ -1,0 +1,43 @@
+# Public, data-only publisher: no dashboard/enterprise checkout or evaluator dependency.
+parameters:
+  - name: publishDashboardResults
+    type: boolean
+    default: false
+
+steps:
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+    parameters:
+      npmrcPath: $(Build.SourcesDirectory)/.npmrc
+      registryUrl: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-tools/npm/registry/
+      CustomCondition: and(succeeded(), eq(variables['EvalSummaryComplete'], 'true'))
+
+  - script: npm ci --omit=dev --ignore-scripts --userconfig "$(Build.SourcesDirectory)/.npmrc"
+    displayName: 'Install publisher dependencies'
+    workingDirectory: eng/common/scripts/eval/publisher
+    condition: and(succeeded(), eq(variables['EvalSummaryComplete'], 'true'))
+
+  - script: |
+      node --experimental-strip-types "$(Build.SourcesDirectory)/eng/common/scripts/eval/publisher/prepare-bundle.ts" \
+        --index "$(Pipeline.Workspace)/eval-results/shard-index.json" \
+        --summary "$(Build.ArtifactStagingDirectory)/eval-summary/eval-summary.md" \
+        --output "$(Build.ArtifactStagingDirectory)/eval-summary/dashboard-bundle.zip"
+    displayName: 'Prepare one complete build result bundle'
+    condition: and(succeeded(), eq(variables['EvalSummaryComplete'], 'true'))
+
+  # Exclude the credential-bearing task from PR validation, not merely its upload.
+  # For a draft PR pilot, manually queue the trusted feature BRANCH, not refs/pull/*.
+  # All consumers use this reviewed connection/container pair; queue-time inputs cannot redirect it.
+  - ${{ if and(parameters.publishDashboardResults, eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))) }}:
+    - task: AzureCLI@2
+      displayName: 'Publish saved build bundle directly to Blob'
+      condition: and(succeeded(), eq(variables['EvalSummaryComplete'], 'true'), eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')))
+      inputs:
+        azureSubscription: eval-dashboard-sc
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          node --experimental-strip-types "$(Build.SourcesDirectory)/eng/common/scripts/eval/publisher/publish-bundle.ts" \
+            --bundle "$(Build.ArtifactStagingDirectory)/eval-summary/dashboard-bundle.zip" \
+            --result "$(Build.ArtifactStagingDirectory)/eval-summary/storage-publication-result.json"
+      env:
+        EVAL_STORAGE_CONTAINER_URL: https://evaltestsummary.blob.core.windows.net/vally-results

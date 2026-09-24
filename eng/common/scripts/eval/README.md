@@ -7,8 +7,45 @@ the committed `package-lock.json` instead of resolved fresh from semver ranges o
 It lives under `eng/common` so it syncs to every repo that consumes the shared eval pipeline
 templates.
 
-- The only dependency should be `@microsoft/vally-cli`, pinned to the version CI should evaluate with.
+- This evaluator package's only dependency is `@microsoft/vally-cli`, pinned to the version CI should evaluate with.
 - `package-lock.json` must be committed so `npm ci` is deterministic.
+- Optional Blob publication is isolated in [publisher](publisher/README.md), with
+  its own small package/lock and tests. Shard evaluator restores do not install it.
+
+## Complete build results and direct Blob publishing
+
+Shards now retain the newest invocation's raw JSONL, JUnit and a completion marker
+via [stage-eval-results.ts](stage-eval-results.ts), including failed evaluations.
+Summary checks the full Prepare matrix and selects each expected shard's highest
+attempt once for Markdown, the Tests tab and bundling. Missing, interrupted or
+corrupt results remain incomplete; later failed attempts never fall back to older
+successful artifacts. The selected-results path requires valid current-build
+timeline evidence; omitting it cannot authorize publication. The legacy JUnit-only
+summary remains supported. No historical build download or reconstruction is involved.
+
+The shared archetype supports opt-in `createDashboardBundle` and
+`publishDashboardResults`. The shared publishing step defines the reviewed
+`eval-dashboard-sc` connection and dashboard Blob container once; neither is a
+queue-time parameter.
+Workflow, skill and live entrypoints support scoped automatic publication for
+their trusted tools-repo main definitions. Other consumers and feature branches
+remain opt-in; explicitly enabling publication writes to Blob using `AzureCLI@2`.
+There is no dashboard ZIP upload or enterprise repository checkout.
+
+For an approved storage publishing run, `allowAzureStorageNetworkAccess=true`
+selects the documented `AzureStorage` network-isolation allow policy while
+retaining Default Deny and all CFS policies. It defaults off and only reaches the
+repo-owned 1ES redirect for internal, non-PR publishing runs. This is pipeline-wide
+Azure Storage egress, not a single-container grant; see the publisher guide for
+scope and cross-repo redirect compatibility. Other pipelines' defaults are unchanged.
+
+All entrypoints run their normal evaluation matrix; there is no separate
+synthetic publication mode. PR validation never receives the publishing task.
+See [publisher setup and real-run parameters](publisher/README.md).
+Every successful publication sends a targeted notification to the fixed reviewed
+URL/audience pair. There is no notification toggle or Summary-pool override. Receiver
+authentication and network access are onboarded separately, and a failed signal
+does not fail the durable upload.
 
 ## TypeScript (no build step)
 
@@ -17,6 +54,7 @@ no `enum`/`namespace`/parameter properties, no emit). CI pins Node `22.x`, which
 unflagged on `>=22.18`; the pipeline `node` invocations and the `npm test` script pass
 `--experimental-strip-types` so the same sources also run on older local Node (`>=22.6`), which
 prints a harmless `ExperimentalWarning`. Relative imports use explicit `.ts` specifiers, as Node requires.
+The standalone Blob publisher uses the same execution model; it adds no compiler or TypeScript runtime dependency.
 
 ## Vendored files
 
@@ -45,6 +83,7 @@ cd ../../../..
 ./eng/common/scripts/eval/node_modules/.bin/vally lint .
 ```
 
-This matches the CI job step-for-step, so a green local run on the current lockfile means a green CI run.
+This uses the same locked CLI as CI. A passing local run does not validate the
+agent's credentials, network access, artifact permissions or live-service behavior.
 
 A global install (`npm install -g @microsoft/vally-cli@<version>`) still works for ad-hoc iteration, but it won't match the transitive dependency tree CI uses and isn't a substitute for the steps above when validating a version bump.
