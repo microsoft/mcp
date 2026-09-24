@@ -30,19 +30,19 @@
         }
       },
       "mappedToolList": [
-        "resilience_goal_template_get",
-        "resilience_goal_assignment_get",
-        "resilience_goal_resource_get",
-        "resilience_usageplan_get",
-        "resilience_usageplan_enrollment_get",
-        "resilience_recoveryplan_get",
-        "resilience_recoveryplan_resource_get",
-        "resilience_recoveryjob_get",
-        "resilience_recoveryjob_resource_get",
-        "resilience_drill_get",
-        "resilience_drill_resource_get",
-        "resilience_drill_run_get",
-        "resilience_drill_run_resource_get"
+        "resiliency_goal_template_get",
+        "resiliency_goal_assignment_get",
+        "resiliency_goal_resource_get",
+        "resiliency_usageplan_get",
+        "resiliency_usageplan_enrollment_get",
+        "resiliency_recoveryplan_get",
+        "resiliency_recoveryplan_resource_get",
+        "resiliency_recoveryjob_get",
+        "resiliency_recoveryjob_resource_get",
+        "resiliency_drill_get",
+        "resiliency_drill_resource_get",
+        "resiliency_drill_run_get",
+        "resiliency_drill_run_resource_get"
       ]
     },
     {
@@ -75,20 +75,20 @@
         }
       },
       "mappedToolList": [
-        "resilience_goal_assignment_create",
-        "resilience_drill_update",
-        "resilience_drill_create",
-        "resilience_goal_assignment_delete",
-        "resilience_goal_assignment_update",
-        "resilience_usageplan_create",
-        "resilience_usageplan_delete",
-        "resilience_usageplan_enrollment_create",
-        "resilience_usageplan_enrollment_delete",
-        "resilience_recoveryplan_create",
-        "resilience_recoveryplan_delete",
-        "resilience_recoveryplan_resource_update",
-        "resilience_drill_resource_add-or-update",
-        "resilience_drill_run_mark-complete"
+        "resiliency_goal_assignment_create",
+        "resiliency_drill_update",
+        "resiliency_drill_create",
+        "resiliency_goal_assignment_delete",
+        "resiliency_goal_assignment_update",
+        "resiliency_usageplan_create",
+        "resiliency_usageplan_delete",
+        "resiliency_usageplan_enrollment_create",
+        "resiliency_usageplan_enrollment_delete",
+        "resiliency_recoveryplan_create",
+        "resiliency_recoveryplan_delete",
+        "resiliency_recoveryplan_resource_update",
+        "resiliency_drill_resource_add-or-update",
+        "resiliency_drill_run_mark-complete"
       ]
     },
     {
@@ -121,7 +121,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_add-notes"
+        "resiliency_drill_run_add-notes"
       ]
     },
     {
@@ -154,7 +154,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_failover"
+        "resiliency_drill_run_failover"
       ]
     },
     {
@@ -187,7 +187,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_resume"
+        "resiliency_drill_run_resume"
       ]
     },
     {
@@ -220,7 +220,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_reprotect"
+        "resiliency_drill_run_reprotect"
       ]
     },
     {
@@ -253,7 +253,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_finalize"
+        "resiliency_recoveryplan_finalize"
       ]
     },
     {
@@ -286,7 +286,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_failover"
+        "resiliency_recoveryplan_failover"
       ]
     },
     {
@@ -319,7 +319,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_reprotect"
+        "resiliency_recoveryplan_reprotect"
       ]
     },
     {
@@ -352,7 +352,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryjob_retry"
+        "resiliency_recoveryjob_retry"
       ]
     },
     {
@@ -385,7 +385,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryjob_resume"
+        "resiliency_recoveryjob_resume"
       ]
     },
     {
@@ -418,7 +418,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforfailover"
+        "resiliency_recoveryplan_validateforfailover"
       ]
     },
     {
@@ -451,7 +451,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforreprotect"
+        "resiliency_recoveryplan_validateforreprotect"
       ]
     },
     {
@@ -484,7 +484,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforoperation"
+        "resiliency_recoveryplan_validateforoperation"
       ]
     },
     {
@@ -517,9 +517,9 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_checkreadiness",
-        "resilience_drill_check-resync-readiness",
-        "resilience_drill_validate-for-execution"
+        "resiliency_recoveryplan_checkreadiness",
+        "resiliency_drill_check-resync-readiness",
+        "resiliency_drill_validate-for-execution"
       ]
     },
     {
@@ -552,7 +552,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_delete"
+        "resiliency_drill_delete"
       ]
     },
     {
@@ -585,8 +585,8 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_start",
-        "resilience_drill_end"
+        "resiliency_drill_start",
+        "resiliency_drill_end"
       ]
     },
     {

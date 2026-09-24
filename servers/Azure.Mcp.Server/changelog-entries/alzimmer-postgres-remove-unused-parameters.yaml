@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed the unused `user` parameter from the `postgres server config get`, `postgres server param get`, and `postgres server param set` tools."
