@@ -39,6 +39,51 @@ public class RulesGetCommandTests : CommandUnitTestsBase<RulesGetCommand, object
         Assert.DoesNotContain("{{", result.Message);
     }
 
+    [Theory]
+    [InlineData("azuredatabaseforpostgresql")]
+    [InlineData("azuredatabaseformysql")]
+    public async Task DatabaseCredentials_RequireExplicitOptIn(string resourceType)
+    {
+        var secure = await ExecuteCommandAsync("--deployment-tool", "AzCli", "--iac-type", "bicep",
+            "--resource-types", resourceType);
+
+        Assert.Equal(HttpStatusCode.OK, secure.Status);
+        Assert.Contains("Use Microsoft Entra managed identity and passwordless database authentication", secure.Message);
+        Assert.DoesNotContain("If username and password are required", secure.Message);
+        Assert.DoesNotContain("Create secrets in Key Vault to store the connection string", secure.Message);
+
+        var optedIn = await ExecuteCommandAsync("--deployment-tool", "AzCli", "--iac-type", "bicep",
+            "--resource-types", resourceType, "--use-connection-strings", "true");
+
+        Assert.Equal(HttpStatusCode.OK, optedIn.Status);
+        Assert.Contains("If username and password are required", optedIn.Message);
+        Assert.Contains("Create secrets in Key Vault to store the connection string", optedIn.Message);
+    }
+
+    [Theory]
+    [InlineData("bicep")]
+    [InlineData("terraform")]
+    public async Task AzureSqlNetworking_RequiresExplicitPublicOptIn(string iacType)
+    {
+        var secure = await ExecuteCommandAsync("--deployment-tool", "AzCli", "--iac-type", iacType,
+            "--resource-types", "azuresqldatabase");
+
+        Assert.Equal(HttpStatusCode.OK, secure.Status);
+        Assert.Contains("Microsoft.Sql/servers logical server", secure.Message);
+        Assert.Contains("publicNetworkAccess to Disabled", secure.Message);
+        Assert.Contains("privatelink.database.windows.net", secure.Message);
+        Assert.Contains("Use Microsoft Entra managed identity", secure.Message);
+        Assert.DoesNotContain("{{", secure.Message);
+
+        var optedIn = await ExecuteCommandAsync("--deployment-tool", "AzCli", "--iac-type", iacType,
+            "--resource-types", "azuresqldatabase", "--enable-public-network-access", "true");
+
+        Assert.Equal(HttpStatusCode.OK, optedIn.Status);
+        Assert.Contains("publicNetworkAccess to Enabled", optedIn.Message);
+        Assert.DoesNotContain("privatelink.database.windows.net", optedIn.Message);
+        Assert.DoesNotContain("0.0.0.0", optedIn.Message);
+    }
+
     [Fact]
     public async Task SecurityGuidance_RejectsAzureExceptionWithoutPublicAccess()
     {
@@ -78,13 +123,15 @@ public class RulesGetCommandTests : CommandUnitTestsBase<RulesGetCommand, object
         Assert.Contains("main.tf", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public async Task Should_get_infrastructure_rules_for_function_app()
+    [Theory]
+    [InlineData("bicep")]
+    [InlineData("terraform")]
+    public async Task Should_get_infrastructure_rules_for_function_app(string iacType)
     {
         // arrange & act
         var result = await ExecuteCommandAsync(
             "--deployment-tool", "azd",
-            "--iac-type", "bicep",
+            "--iac-type", iacType,
             "--resource-types", "function");
 
         // assert
@@ -92,7 +139,20 @@ public class RulesGetCommandTests : CommandUnitTestsBase<RulesGetCommand, object
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Additional requirements for Function Apps", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Storage Blob Data Owner", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Storage Blob Data Owner", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("bicep", "Microsoft.Authorization/roleAssignments")]
+    [InlineData("terraform", "azurerm_role_assignment")]
+    public async Task FunctionAppOwnerRole_RequiresExplicitOptIn(string iacType, string assignmentType)
+    {
+        var result = await ExecuteCommandAsync("--deployment-tool", "azd", "--iac-type", iacType,
+            "--resource-types", "function", "--allow-privileged-roles", "true");
+
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.Contains("Storage Blob Data Owner", result.Message);
+        Assert.Contains(assignmentType, result.Message);
     }
 
     [Fact]

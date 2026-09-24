@@ -138,6 +138,11 @@ public static class IaCRulesTemplateUtil
             rules.Add(GenerateMySqlRules(parameters));
         }
 
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureSqlDatabase, StringComparer.OrdinalIgnoreCase))
+        {
+            rules.Add(GenerateAzureSqlRules(parameters));
+        }
+
         if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureCosmosDb, StringComparer.OrdinalIgnoreCase))
         {
             rules.Add(GenerateCosmosDbRules(parameters));
@@ -184,8 +189,16 @@ public static class IaCRulesTemplateUtil
 
     private static string GenerateFunctionAppRules(IaCRulesTemplateParameters parameters)
     {
-        var bicepRules = TemplateService.LoadTemplate("IaCRules/functionapp-bicep-rules");
-        var tfRules = TemplateService.LoadTemplate("IaCRules/functionapp-tf-rules");
+        var bicepRules = TemplateService.ProcessTemplate("IaCRules/functionapp-bicep-rules", new Dictionary<string, string> {
+            { "PrivilegedRoleRule", parameters.AllowPrivilegedRoles
+                ? "- MANDATORY: Add a Microsoft.Authorization/roleAssignments resource to assign the Storage Blob Data Owner (b7e6dc6d-f1e8-4753-8033-0f276bb0955b) role to the user-assigned managed identity"
+                : string.Empty }
+        });
+        var tfRules = TemplateService.ProcessTemplate("IaCRules/functionapp-tf-rules", new Dictionary<string, string> {
+            { "PrivilegedRoleRule", parameters.AllowPrivilegedRoles
+                ? "- MANDATORY: Add a azurerm_role_assignment resource to assign the Storage Blob Data Owner (b7e6dc6d-f1e8-4753-8033-0f276bb0955b) role to the user-assigned managed identity"
+                : string.Empty }
+        });
         return TemplateService.ProcessTemplate("IaCRules/functionapp-rules", new Dictionary<string, string> {
             { "ToolSpecificRules", GetToolSpecificResourceRules(parameters.IacType, bicepRules, tfRules, null)}
         });
@@ -225,8 +238,21 @@ public static class IaCRulesTemplateUtil
     private static string GenerateMySqlRules(IaCRulesTemplateParameters parameters) =>
         TemplateService.ProcessTemplate("IaCRules/mysql-rules", new Dictionary<string, string> { { "DatabaseCommonRules", GenerateDatabaseCommonRules(parameters) } });
 
+    private static string GenerateAzureSqlRules(IaCRulesTemplateParameters parameters) =>
+        TemplateService.ProcessTemplate("IaCRules/azuresql-rules", new Dictionary<string, string> {
+            { "DatabaseCommonRules", GenerateDatabaseCommonRules(parameters) },
+            { "SqlNetworkRules", parameters.EnablePublicNetworkAccess
+                ? "- Set publicNetworkAccess to Enabled on the Azure SQL logical server only when public networking is explicitly requested. Restrict server firewall access to approved IPs."
+                : "- Set publicNetworkAccess to Disabled on the Azure SQL logical server. Configure a private endpoint for the sqlServer subresource and the privatelink.database.windows.net private DNS zone for the application and deployment runner." }
+        });
+
     private static string GenerateDatabaseCommonRules(IaCRulesTemplateParameters parameters) =>
-        TemplateService.ProcessTemplate("IaCRules/database-common-rules", new Dictionary<string, string> { { "NetworkRules", GenerateNetworkRules(parameters) } });
+        TemplateService.ProcessTemplate("IaCRules/database-common-rules", new Dictionary<string, string> {
+            { "NetworkRules", GenerateNetworkRules(parameters) },
+            { "AuthenticationRules", parameters.UseConnectionStrings
+                ? "- If username and password are required, you MUST leave them as params.\n- Create secrets in Key Vault to store the connection string or credentials, and assign `Key Vault Secrets User` role to the user-assigned managed identity."
+                : "- Use Microsoft Entra managed identity and passwordless database authentication. Create a database user mapped to the application identity with only the required permissions; do not request passwords or create connection-string secrets." }
+        });
 
     private static string GenerateNetworkRules(IaCRulesTemplateParameters parameters) =>
         !parameters.EnablePublicNetworkAccess
