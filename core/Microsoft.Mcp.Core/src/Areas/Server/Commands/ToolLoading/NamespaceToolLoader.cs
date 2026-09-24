@@ -724,7 +724,7 @@ public sealed class NamespaceToolLoader(
         }
         catch
         {
-            _logger.LogError("Failed to get command and parameters from intent: {Intent} for namespace: {Namespace}", intent, namespaceName);
+            _logger.LogError("Failed to get command and parameters from intent for namespace: {Namespace}", namespaceName);
         }
 
         return (null, new Dictionary<string, JsonElement>());

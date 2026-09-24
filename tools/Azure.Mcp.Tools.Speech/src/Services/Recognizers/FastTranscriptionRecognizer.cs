@@ -124,7 +124,7 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorMessage = $"Fast Transcription API failed with status {response.StatusCode}: {responseContent}";
+                    var errorMessage = $"Fast Transcription API failed with status {response.StatusCode}.";
                     _logger.LogWarning("Fast Transcription failed. Status: {StatusCode}, Response: {Response}, Attempt: {Attempt}/{MaxAttempts}",
                         response.StatusCode, responseContent, attempt + 1, maxRetries + 1);
 
