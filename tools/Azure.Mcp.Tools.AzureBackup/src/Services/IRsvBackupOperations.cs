@@ -41,6 +41,8 @@ public interface IRsvBackupOperations
         string? softDeleteRetentionDays,
         string? immutabilityState,
         string? identityType,
+        string? userAssignedIdentity,
+        string? publicNetworkAccess,
         string? tags,
         string? tenant,
         CancellationToken cancellationToken);
@@ -270,6 +272,8 @@ public interface IRsvBackupOperations
         string groupId,
         string? location,
         bool autoApprove,
+        string? privateDnsZoneIds,
+        string? privateDnsZoneGroupName,
         string? tenant,
         CancellationToken cancellationToken);
 
