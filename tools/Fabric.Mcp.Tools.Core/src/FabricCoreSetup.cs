@@ -19,6 +19,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddHttpClient<IFabricCoreService, FabricCoreService>();
         services.AddSingleton<ItemCreateCommand>();
         services.AddSingleton<CatalogSearchCommand>();
+        services.AddSingleton<ItemGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -28,6 +29,7 @@ public class FabricCoreSetup : IAreaSetup
             Microsoft Fabric Core Operations - Search, create, and manage Fabric items.
             Use this tool when you need to:
             - Search the OneLake catalog to discover Fabric items across workspaces
+            - Get metadata for a known Fabric item by workspace ID and item ID
             - Create new Fabric items (Lakehouse, Notebook, etc.)
             - Manage core Fabric workspace items
             This tool provides core operations for working with Fabric resources.
@@ -35,6 +37,7 @@ public class FabricCoreSetup : IAreaSetup
 
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
 
         return fabricCore;
     }
