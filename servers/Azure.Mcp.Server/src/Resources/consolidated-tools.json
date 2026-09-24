@@ -47,7 +47,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
+      "description": "Create, update, or delete Azure Resilience Management resources, including legacy goal-template assignments, usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -75,8 +75,11 @@
         }
       },
       "mappedToolList": [
+        "resiliency_goal_assignment_create",
         "resiliency_drill_update",
         "resiliency_drill_create",
+        "resiliency_goal_assignment_delete",
+        "resiliency_goal_assignment_update",
         "resiliency_usageplan_create",
         "resiliency_usageplan_delete",
         "resiliency_usageplan_enrollment_create",

@@ -2,6 +2,11 @@ targetScope = 'resourceGroup'
 
 param baseName string = resourceGroup().name
 
+@secure()
+param goalAssignmentUpdateVmAdminPassword string = newGuid()
+
+param goalAssignmentUpdateVmAdminUsername string = 'azureuser'
+
 // Deterministic, schema-valid names.
 // Usage plan and enrollment names must match ^[a-zA-Z0-9-]{3,24}$.
 var uniqueSuffix = uniqueString(resourceGroup().id, baseName)
@@ -10,18 +15,23 @@ var enrollmentName = take('en${uniqueSuffix}', 24)
 var serviceGroupName = 'sgr${uniqueSuffix}'
 var lifecycleEnrollmentName = take('el${uniqueSuffix}', 24)
 var lifecycleServiceGroupName = take('sgl${uniqueSuffix}', 24)
+var goalAssignmentLifecycleEnrollmentName = take('eg${uniqueSuffix}', 24)
+var goalAssignmentLifecycleServiceGroupName = take('sga${uniqueSuffix}', 24)
 var planLifecycleEnrollmentName = take('ep${uniqueSuffix}', 24)
 var planLifecycleServiceGroupName = take('sgp${uniqueSuffix}', 24)
 var workflowEnrollmentName = take('ew${uniqueSuffix}', 24)
 var workflowServiceGroupName = take('sgw${uniqueSuffix}', 24)
 var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
+var goalAssignmentDeleteName = take('gd${uniqueSuffix}', 24)
+var goalAssignmentUpdateName = take('gg${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
 var workflowRecoveryPlanName = take('rw${uniqueSuffix}', 24)
 var drillName = take('dr${uniqueSuffix}', 24)
 var deleteDrillName = take('dd${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 var managedDiskName = take('md${uniqueSuffix}', 80)
+var goalAssignmentUpdateVmName = take('vm${uniqueSuffix}', 64)
 var automationAccountName = take('aa${uniqueSuffix}', 50)
 var failoverRunbookName = 'Failover-${take(uniqueSuffix, 20)}'
 var reprotectRunbookName = 'Reprotect-${take(uniqueSuffix, 19)}'
@@ -72,6 +82,86 @@ resource managedDisk 'Microsoft.Compute/disks@2024-03-02' = {
   }
 }
 
+resource goalAssignmentUpdateVnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+  name: take('vn${uniqueSuffix}', 64)
+  location: resourceGroup().location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+}
+
+resource goalAssignmentUpdateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+  name: take('ni${uniqueSuffix}', 80)
+  location: resourceGroup().location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: goalAssignmentUpdateVnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+}
+
+resource goalAssignmentUpdateVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+  name: goalAssignmentUpdateVmName
+  location: resourceGroup().location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_B1s'
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'Canonical'
+        offer: '0001-com-ubuntu-server-jammy'
+        sku: '22_04-lts-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+    }
+    osProfile: {
+      computerName: goalAssignmentUpdateVmName
+      adminUsername: goalAssignmentUpdateVmAdminUsername
+      adminPassword: goalAssignmentUpdateVmAdminPassword
+      linuxConfiguration: {
+        disablePasswordAuthentication: false
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: goalAssignmentUpdateNic.id
+          properties: {
+            primary: true
+          }
+        }
+      ]
+    }
+  }
+}
+
 resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
   name: automationAccountName
   location: resourceGroup().location
@@ -98,18 +188,23 @@ output enrollmentName string = enrollmentName
 output serviceGroupName string = serviceGroupName
 output lifecycleEnrollmentName string = lifecycleEnrollmentName
 output lifecycleServiceGroupName string = lifecycleServiceGroupName
+output goalAssignmentLifecycleEnrollmentName string = goalAssignmentLifecycleEnrollmentName
+output goalAssignmentLifecycleServiceGroupName string = goalAssignmentLifecycleServiceGroupName
 output planLifecycleEnrollmentName string = planLifecycleEnrollmentName
 output planLifecycleServiceGroupName string = planLifecycleServiceGroupName
 output workflowEnrollmentName string = workflowEnrollmentName
 output workflowServiceGroupName string = workflowServiceGroupName
 output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
+output goalAssignmentDeleteName string = goalAssignmentDeleteName
+output goalAssignmentUpdateName string = goalAssignmentUpdateName
 output recoveryPlanName string = recoveryPlanName
 output workflowRecoveryPlanName string = workflowRecoveryPlanName
 output drillName string = drillName
 output deleteDrillName string = deleteDrillName
 output storageAccountName string = storageAccountName
 output storageAccountId string = storageAccount.id
+output goalAssignmentUpdateVmId string = goalAssignmentUpdateVm.id
 output automationAccountName string = automationAccountName
 output automationAccountId string = automationAccount.id
 output failoverRunbookName string = failoverRunbookName

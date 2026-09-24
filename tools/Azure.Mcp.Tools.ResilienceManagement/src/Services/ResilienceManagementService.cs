@@ -18,6 +18,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan GoalAssignmentOperationTimeout = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan UsagePlanOperationTimeout = TimeSpan.FromMinutes(10);
 
@@ -118,6 +119,80 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         GoalAssignmentResource resource = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
 
         return MapGoalAssignment(resource.Data);
+    }
+
+    public async Task<GoalAssignmentInfo> UpdateGoalAssignmentAsync(
+        string serviceGroup,
+        string goalAssignment,
+        string serviceLevelIndicatorResourceId,
+        string serviceLevelObjectiveResourceId,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
+        NullableResponse<GoalAssignmentResource> existingAssignment = await goalAssignments.GetIfExistsAsync(goalAssignment, cancellationToken);
+        if (!existingAssignment.HasValue || existingAssignment.Value is null)
+        {
+            throw new RequestFailedException(404, "Goal assignment not found.");
+        }
+
+        GoalAssignmentProperties existingProperties = existingAssignment.Value.Data.Properties;
+        var data = new GoalAssignmentData
+        {
+            Properties = new GoalAssignmentProperties(existingProperties.GoalTemplateId, existingProperties.GoalAssignmentType)
+        };
+        data.Properties.ServiceLevelResources.Add(new ServiceLevelTarget(
+            new ResourceIdentifier(serviceLevelIndicatorResourceId),
+            new ResourceIdentifier(serviceLevelObjectiveResourceId)));
+
+        ArmOperation operation = await existingAssignment.Value.UpdateAsync(WaitUntil.Started, data, cancellationToken);
+        await ExecuteWithTimeoutAsync(
+            async token =>
+            {
+                await WaitForLroCompletionAsync(operation, token);
+                return true;
+            },
+            "goal assignment update",
+            GoalAssignmentOperationTimeout,
+            cancellationToken);
+
+        GoalAssignmentResource updatedAssignment = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
+        return MapGoalAssignment(updatedAssignment.Data);
+    }
+
+    public async Task<bool> DeleteGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+
+        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
+        GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
+        NullableResponse<GoalAssignmentResource> existingAssignment = await goalAssignments.GetIfExistsAsync(goalAssignment, cancellationToken);
+        if (!existingAssignment.HasValue || existingAssignment.Value is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            ArmOperation operation = await existingAssignment.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await ExecuteWithTimeoutAsync(
+                async token =>
+                {
+                    await WaitForLroCompletionAsync(operation, token);
+                    return true;
+                },
+                "goal assignment delete",
+                GoalAssignmentOperationTimeout,
+                cancellationToken);
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return false;
+        }
     }
 
     private static GoalAssignmentInfo MapGoalAssignment(GoalAssignmentData data)

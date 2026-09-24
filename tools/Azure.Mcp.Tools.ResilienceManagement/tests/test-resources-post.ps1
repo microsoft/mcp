@@ -40,12 +40,16 @@ $usagePlanName = $DeploymentOutputs['USAGEPLANNAME']
 $enrollmentName = $DeploymentOutputs['ENROLLMENTNAME']
 $lifecycleEnrollmentName = $DeploymentOutputs['LIFECYCLEENROLLMENTNAME']
 $lifecycleServiceGroupName = $DeploymentOutputs['LIFECYCLESERVICEGROUPNAME']
+$goalAssignmentLifecycleEnrollmentName = $DeploymentOutputs['GOALASSIGNMENTLIFECYCLEENROLLMENTNAME']
+$goalAssignmentLifecycleServiceGroupName = $DeploymentOutputs['GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME']
 $planLifecycleEnrollmentName = $DeploymentOutputs['PLANLIFECYCLEENROLLMENTNAME']
 $planLifecycleServiceGroupName = $DeploymentOutputs['PLANLIFECYCLESERVICEGROUPNAME']
 $workflowEnrollmentName = $DeploymentOutputs['WORKFLOWENROLLMENTNAME']
 $workflowServiceGroupName = $DeploymentOutputs['WORKFLOWSERVICEGROUPNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
+$goalAssignmentDeleteName = $DeploymentOutputs['GOALASSIGNMENTDELETENAME']
+$goalAssignmentUpdateName = $DeploymentOutputs['GOALASSIGNMENTUPDATENAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $workflowRecoveryPlanName = $DeploymentOutputs['WORKFLOWRECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
@@ -65,6 +69,8 @@ $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupNa
 $serviceGroupResilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
 $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
 $lifecycleServiceGroupResilienceBase = "$lifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement"
+$goalAssignmentLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$goalAssignmentLifecycleServiceGroupName"
+$goalAssignmentLifecycleServiceGroupResilienceBase = "$goalAssignmentLifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement"
 $planLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$planLifecycleServiceGroupName"
 $workflowServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$workflowServiceGroupName"
 $workflowServiceGroupResilienceBase = "$workflowServiceGroupId/providers/Microsoft.AzureResilienceManagement"
@@ -168,23 +174,23 @@ function Wait-ResilienceProvisioning {
     throw "Timed out waiting for $Path to finish provisioning."
 }
 
-function Add-RecoveryContributorRole {
+function Add-ResilienceRole {
     param(
         [string] $Scope,
+        [string] $RoleName,
         [int] $TimeoutSeconds = 900
     )
 
-    $roleName = 'Azure Resilience Management Recovery Contributor'
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
         try {
-            $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction Stop
+            $assignment = Get-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $RoleName -ErrorAction Stop
             if ($assignment) {
                 return
             }
 
-            Write-Host "Assigning $roleName to test identity at $Scope"
-            New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $roleName -ErrorAction Stop | Out-Null
+            Write-Host "Assigning $RoleName to test identity at $Scope"
+            New-AzRoleAssignment -ObjectId $TestApplicationOid -Scope $Scope -RoleDefinitionName $RoleName -ErrorAction Stop | Out-Null
             return
         }
         catch {
@@ -197,7 +203,7 @@ function Add-RecoveryContributorRole {
         }
     }
 
-    throw "Timed out assigning $roleName to test identity at $Scope."
+    throw "Timed out assigning $RoleName to test identity at $Scope."
 }
 
 function Add-DrillsAdministratorRole {
@@ -282,6 +288,19 @@ Invoke-ResilienceRestPut -Path $lifecycleServiceGroupPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $lifecycleServiceGroupPath -WaitForAuthorization
 
+# Goal-assignment lifecycle tests use a dedicated service group because only one
+# resiliency assignment can exist in a service group.
+$goalAssignmentLifecycleServiceGroupPath = "$goalAssignmentLifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
+Invoke-ResilienceRestPut -Path $goalAssignmentLifecycleServiceGroupPath -Body @{
+    properties = @{
+        displayName = $goalAssignmentLifecycleServiceGroupName
+        parent      = @{
+            resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId"
+        }
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalAssignmentLifecycleServiceGroupPath -WaitForAuthorization
+
 # Recoveryplan lifecycle tests use a separate service group because only one plan of each
 # type can exist in a service group and the drill delete fixture reserves the lifecycle group.
 $planLifecycleServiceGroupPath = "$planLifecycleServiceGroupId`?api-version=$serviceGroupApiVersion"
@@ -306,9 +325,10 @@ Invoke-ResilienceRestPut -Path $workflowServiceGroupPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $workflowServiceGroupPath -WaitForAuthorization
 
-Add-RecoveryContributorRole -Scope $serviceGroupId
-Add-RecoveryContributorRole -Scope $lifecycleServiceGroupId
-Add-RecoveryContributorRole -Scope $planLifecycleServiceGroupId
+Add-ResilienceRole -Scope $serviceGroupId -RoleName 'Azure Resilience Management Recovery Contributor'
+Add-ResilienceRole -Scope $lifecycleServiceGroupId -RoleName 'Azure Resilience Management Recovery Contributor'
+Add-ResilienceRole -Scope $goalAssignmentLifecycleServiceGroupId -RoleName 'Azure Resilience Management Goals Contributor'
+Add-ResilienceRole -Scope $planLifecycleServiceGroupId -RoleName 'Azure Resilience Management Recovery Contributor'
 Add-DrillsAdministratorRole -Scope "/subscriptions/$subscriptionId"
 
 # 2) Add the resource group as a member of the service group so its resources
@@ -358,6 +378,14 @@ Invoke-ResilienceRestPut -Path $lifecycleEnrollmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $lifecycleEnrollmentPath
 
+$goalAssignmentLifecycleEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$goalAssignmentLifecycleEnrollmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $goalAssignmentLifecycleEnrollmentPath -Body @{
+    properties = @{
+        serviceGroupId = $goalAssignmentLifecycleServiceGroupId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalAssignmentLifecycleEnrollmentPath
+
 $planLifecycleEnrollmentPath = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName/enrollments/$planLifecycleEnrollmentName`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPut -Path $planLifecycleEnrollmentPath -Body @{
     properties = @{
@@ -387,6 +415,28 @@ Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $goalTemplatePath -WaitForAuthorization
 
+$goalAssignmentLifecycleTemplatePath = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $goalAssignmentLifecycleTemplatePath -Body @{
+    properties = @{
+        goalType                       = 'Resiliency'
+        requireHighAvailability        = 'Required'
+        requireDisasterRecovery        = 'NotRequired'
+        regionalRecoveryPointObjective = 'PT15M'
+        regionalRecoveryTimeObjective  = 'PT30M'
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalAssignmentLifecycleTemplatePath -WaitForAuthorization
+
+$goalAssignmentDeletePath = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalAssignments/$goalAssignmentDeleteName`?api-version=$resilienceApiVersion"
+$goalAssignmentLifecycleTemplateId = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalTemplates/$goalTemplateName"
+Invoke-ResilienceRestPut -Path $goalAssignmentDeletePath -Body @{
+    properties = @{
+        goalAssignmentType = 'Resiliency'
+        goalTemplateId     = $goalAssignmentLifecycleTemplateId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalAssignmentDeletePath -WaitForAuthorization
+
 # 5) Assign the goal template to the service group.
 $goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
 $goalTemplateId = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
@@ -412,6 +462,15 @@ elseif ($existingGoalAssignment.StatusCode -eq 200) {
 else {
     throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
 }
+
+$goalAssignmentUpdatePath = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalAssignments/$goalAssignmentUpdateName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $goalAssignmentUpdatePath -Body @{
+    properties = @{
+        goalAssignmentType = 'Resiliency'
+        goalTemplateId     = $goalAssignmentLifecycleTemplateId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalAssignmentUpdatePath -WaitForAuthorization
 
 # 6) Create or validate the recoveryplan on the service group. Do not PUT an
 # existing plan because recovery group IDs are referenced by its recovery resources.
