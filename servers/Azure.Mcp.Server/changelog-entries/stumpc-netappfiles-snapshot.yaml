@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added the `netappfiles snapshot create`, `netappfiles snapshot get`, and `netappfiles snapshot update` commands for creating, retrieving, and updating snapshots of Azure NetApp Files volumes.
