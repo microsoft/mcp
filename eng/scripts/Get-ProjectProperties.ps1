@@ -3,9 +3,9 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true, ParameterSetName='ByProjectName')]
+    [Parameter(Mandatory = $true, ParameterSetName = 'ByProjectName')]
     [string] $ProjectName,
-    [Parameter(Mandatory=$true, ParameterSetName='ByPath')]
+    [Parameter(Mandatory = $true, ParameterSetName = 'ByPath')]
     [string] $Path
 )
 
@@ -24,7 +24,8 @@ if ($ProjectName) {
         Write-Error "Multiple project files found matching '$ProjectName'."
         exit 1
     }
-} elseif ($Path) {
+}
+elseif ($Path) {
     $projectFiles = @(Get-Item $Path -ErrorAction SilentlyContinue)
     if (-not $projectFiles) {
         Write-Error "No project file found at path '$Path'."
@@ -67,7 +68,8 @@ $propertyList = @(
     'AzureSupportedClouds',
 
     'HasLiveTests',
-    'HasUnitTests'
+    'HasUnitTests',
+    'LiveTestResourcesCanBeReused'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1
