@@ -2798,7 +2798,11 @@ azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy iac rules get --deployment-tool <deployment-tool> \
                            [--iac-type <iac-type>] \
-                           [--resource-types <resource-types>]
+                           [--resource-types <resource-types>] \
+                           [--enable-public-network-access <true|false>] \
+                           [--allow-azure-services <true|false>] \
+                           [--allow-privileged-roles <true|false>] \
+                           [--use-connection-strings <true|false>]
 
 # Get the ci/cd pipeline guidance
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

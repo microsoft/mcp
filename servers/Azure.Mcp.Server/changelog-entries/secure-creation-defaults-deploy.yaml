@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: Deployment IaC guidance now defaults to private networking, workload identity, and least-privilege application roles. Separate opt-in parameters permit public networking, all-Azure-services firewall exceptions, privileged application roles, and secret-based connections.

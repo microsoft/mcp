@@ -1,6 +1,5 @@
-﻿- Add firewall rules to allow traffic from Azure Services (allow IP 0.0.0.0).
-- If username and password are required, you MUST leave them as params.
-- Create secrets in Key Vault to store the connection string or credentials, and assign `Key Vault Secrets User` role to the user-assigned managed identity.
+﻿{{NetworkRules}}
+{{AuthenticationRules}}
 - If app used Managed Identity to connect the database, MUST add a post-provision step to use Service Connector create a connection between containerapp and database: 
     1) Prerequisites: Ensure the Service Connector extension installed in local environment: 'az extension add --name serviceconnector-passwordless'. Check if the app uses user-assigned managed identity or system-assigned managed identity.
     2) Run Command: az containerapp connection create mysql-flexible/postgres-flexible/sql --connection connectionname --user-identity client-id=XX subs-id=XX --source-id <azure resource id > --tg <db resource group> --server servername --database dbname -y. 
