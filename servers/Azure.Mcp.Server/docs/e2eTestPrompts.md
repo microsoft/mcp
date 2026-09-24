@@ -605,6 +605,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> | none |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> | none |
 
+## Azure NetApp Files
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| netappfiles_account_create | Create an Azure NetApp Files account named \<account> in \<location> in resource group \<resource_group> | none |
+| netappfiles_account_create | Create a NetApp Files account called \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
+| netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+
 ## Azure Database for PostgreSQL
 
 | Tool Name | Test Prompt | Interaction |
