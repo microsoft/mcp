@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class PostgreSQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IAzureService azureService)
-    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
+public class PostgreSQLUsageChecker(ArmClient resourceClient, TokenCredential credential, string subscriptionId, ILogger<PostgreSQLUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(resourceClient, credential, subscriptionId, logger, azureService)
 {
     private const string CoresMagicString = "cores";
     private const int MinimumCoresRequired = 2;
@@ -17,8 +20,10 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
     {
         try
         {
-            var requestUrl = $"{GetManagementEndpoint()}/subscriptions/{SubscriptionId}/providers/Microsoft.DBforPostgreSQL/locations/{location}/resourceType/flexibleServers/usages?api-version=2023-06-01-preview";
-            using var rawResponse = await GetQuotaByUrlAsync(requestUrl, cancellationToken);
+            string escapedSubscriptionId = Uri.EscapeDataString(SubscriptionId);
+            string escapedLocation = Uri.EscapeDataString(location);
+            string relativePath = $"/subscriptions/{escapedSubscriptionId}/providers/Microsoft.DBforPostgreSQL/locations/{escapedLocation}/resourceType/flexibleServers/usages?api-version=2023-06-01-preview";
+            using JsonDocument? rawResponse = await GetQuotaByUrlAsync(relativePath, cancellationToken);
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
             {
@@ -79,7 +84,7 @@ public class PostgreSQLUsageChecker(TokenCredential credential, string subscript
 
             return result;
         }
-        catch (Exception error)
+        catch (Exception error) when (error is not SecurityException && error is not ArgumentException)
         {
             Logger.LogError(error, "Error fetching PostgreSQL quotas");
             return [];

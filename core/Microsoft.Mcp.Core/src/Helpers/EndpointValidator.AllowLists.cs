@@ -100,6 +100,13 @@ public static partial class EndpointValidator
             UsGov: [".azconfig.azure.us"],
             Germany: [".azconfig.azure.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["arm"] = new AllowedSuffixManager(
+            // Raw ARM requests in Quota and Resource Health use ArmEnvironment.Endpoint to construct these hosts.
+            Public: ["management.azure.com"],
+            China: ["management.chinacloudapi.cn"],
+            UsGov: ["management.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: true),
         ["azure-openai"] = new AllowedSuffixManager(
             Public: [
                 ".openai.azure.com",

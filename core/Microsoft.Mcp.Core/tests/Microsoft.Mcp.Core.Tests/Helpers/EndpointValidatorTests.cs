@@ -85,6 +85,7 @@ public class EndpointValidatorTests
     [InlineData("https://my-instance.energy.azure.com", "adme")]
     [InlineData("https://my-instance.oep.ppe.azure-int.net", "adme")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://my-foundry.services.ai.azure.com", "foundry")]
     [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]
@@ -160,6 +161,10 @@ public class EndpointValidatorTests
     [InlineData("https://evil.com/.communication.azure.com", "communication", "not a valid communication domain")]
     [InlineData("http://mycomm.communication.azure.com", "communication", "must use HTTPS")]
     [InlineData("ftp://myconfig.azconfig.io", "appconfig", "must use HTTPS")]
+    [InlineData("https://evil.com", "arm", "not a valid arm domain")]
+    [InlineData("http://management.azure.com", "arm", "must use HTTPS")]
+    [InlineData("https://management.azure.com.evil.com", "arm", "not a valid arm domain")]
+    [InlineData("https://sub.management.azure.com", "arm", "not a valid arm domain")]
     [InlineData("https://evil.com", "foundry", "not a valid foundry domain")]
     [InlineData("http://my-foundry.services.ai.azure.com", "foundry", "must use HTTPS")]
     [InlineData("https://my-foundry.services.ai.azure.com.evil.com", "foundry", "not a valid foundry domain")]
@@ -263,6 +268,7 @@ public class EndpointValidatorTests
     // Azure China Cloud
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://management.chinacloudapi.cn/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://mycomm.communication.azure.cn", "communication")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
@@ -291,6 +297,7 @@ public class EndpointValidatorTests
     // Azure US Government
     [InlineData("https://myregistry.azurecr.us", "acr")]
     [InlineData("https://myconfig.azconfig.azure.us", "appconfig")]
+    [InlineData("https://management.usgovcloudapi.net/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://mycomm.communication.azure.us", "communication")]
     [InlineData("https://my-foundry.services.ai.azure.us", "foundry")]
     [InlineData("https://my-resource.openai.azure.us", "azure-openai")]
@@ -321,6 +328,7 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in China cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com", "arm")]
     [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
     [InlineData("https://prices.azure.com", "pricing")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InChinaCloud_Throws(string endpoint, string serviceType)
@@ -340,6 +348,7 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in Gov cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com", "arm")]
     [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
     [InlineData("https://prices.azure.com", "pricing")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InGovCloud_Throws(string endpoint, string serviceType)
@@ -359,6 +368,7 @@ public class EndpointValidatorTests
     // China cloud endpoint should fail in public cloud
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://management.chinacloudapi.cn", "arm")]
     [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
     [InlineData("https://prices.azure.cn", "pricing")]
     public void ValidateAzureServiceEndpoint_ChinaCloudEndpoint_InPublicCloud_Throws(string endpoint, string serviceType)
