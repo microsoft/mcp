@@ -26,6 +26,8 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 /// <exception cref="ArgumentNullException">Thrown if any required dependencies are null.</exception>
 public sealed class McpRuntime(IToolLoader toolLoader, ITelemetryService telemetry) : IMcpRuntime
 {
+    internal static readonly TimeSpan s_defaultToolListTimeToLive = TimeSpan.FromHours(1);
+
     private readonly IToolLoader _toolLoader = toolLoader ?? throw new ArgumentNullException(nameof(toolLoader));
     private readonly ITelemetryService _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
 
@@ -191,7 +193,7 @@ public sealed class McpRuntime(IToolLoader toolLoader, ITelemetryService telemet
         {
             var result = await _toolLoader.ListToolsHandler(request, cancellationToken);
             result.CacheScope = CacheScope.Public; // ListTools results are safe to cache publicly, as they contain no sensitive information.
-            result.TimeToLive = TimeSpan.FromHours(1); // Cache ListTools results for 1 hour to reduce load on the tool loader.
+            result.TimeToLive ??= s_defaultToolListTimeToLive;
             activity?.SetStatus(ActivityStatusCode.Ok);
 
             return result;

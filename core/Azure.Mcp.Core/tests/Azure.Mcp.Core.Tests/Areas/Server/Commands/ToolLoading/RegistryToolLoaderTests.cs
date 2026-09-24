@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -80,6 +81,95 @@ public class RegistryToolLoaderTests
         Assert.Equal(2, result.Tools.Count);
         Assert.Contains(result.Tools, t => t.Name == "test-tool-1");
         Assert.Contains(result.Tools, t => t.Name == "test-tool-2");
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMultipleServerTimeToLives_UsesShortest()
+    {
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("first", "first", "First server", new MockMcpClientBuilder()
+                .AddTool("first-tool", "First tool", "First result")
+                .WithTimeToLive(TimeSpan.FromMinutes(30)))
+            .AddServer("second", "second", "Second server", new MockMcpClientBuilder()
+                .AddTool("second-tool", "Second tool", "Second result")
+                .WithTimeToLive(TimeSpan.FromMinutes(10)))
+            .AddServer("third", "third", "Third server", new MockMcpClientBuilder()
+                .AddTool("third-tool", "Third tool", "Third result"))
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, result.Tools.Count);
+        Assert.Equal(TimeSpan.FromMinutes(10), result.TimeToLive);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithPaginatedServer_UsesShortestPageTimeToLive()
+    {
+        var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            var isSecondPage = request.Params?["cursor"]?.GetValue<string>() == "next";
+            var response = new JsonObject
+            {
+                ["tools"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["name"] = isSecondPage ? "second-tool" : "first-tool",
+                        ["inputSchema"] = new JsonObject { ["type"] = "object" }
+                    }
+                },
+                ["ttlMs"] = isSecondPage ? 300_000 : 1_800_000
+            };
+            if (!isSecondPage)
+            {
+                response["nextCursor"] = "next";
+            }
+
+            return new JsonRpcResponse { Result = response };
+        });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", client)
+            .Build();
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, tool => tool.Name == "first-tool");
+        Assert.Contains(result.Tools, tool => tool.Name == "second-tool");
+        Assert.Equal(TimeSpan.FromMinutes(5), result.TimeToLive);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_AfterRemoteTimeToLiveExpires_UsesUpdatedToolMap()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("old-tool", "Old tool", "Old result")
+            .WithTimeToLive(TimeSpan.Zero);
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder)
+            .Build();
+        var toolLoader = new CompositeToolLoader(
+            [CreateToolLoader(discoveryStrategy)], Substitute.For<ILogger<CompositeToolLoader>>());
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        var initial = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        clientBuilder.RemoveTool("old-tool").AddTool("new-tool", "New tool", "New result");
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("new-tool"), TestContext.Current.CancellationToken);
+        var refreshed = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal("old-tool", Assert.Single(initial.Tools).Name);
+        Assert.Equal("new-tool", Assert.Single(refreshed.Tools).Name);
+        Assert.False(result.IsError);
+        Assert.Equal("New result", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
     }
 
     [Fact]

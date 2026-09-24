@@ -101,6 +101,76 @@ public class CompositeToolLoaderTests
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithMultipleToolLoaders_UsesShortestTimeToLive()
+    {
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
+        var firstLoader = Substitute.For<IToolLoader>();
+        var secondLoader = Substitute.For<IToolLoader>();
+        var thirdLoader = Substitute.For<IToolLoader>();
+
+        firstLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("first")], TimeToLive = TimeSpan.FromMinutes(30) });
+        secondLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("second")], TimeToLive = TimeSpan.FromMinutes(10) });
+        thirdLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("third")] });
+
+        var toolLoader = new CompositeToolLoader([firstLoader, secondLoader, thirdLoader], logger);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(TimeSpan.FromMinutes(10), result.TimeToLive);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_AfterTimeToLiveExpires_RefreshesToolsAndRouting()
+    {
+        var mockLoader = Substitute.For<IToolLoader>();
+        var currentResponse = new ListToolsResult { Tools = [CreateTestTool("old-tool")], TimeToLive = TimeSpan.Zero };
+        mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
+            .Returns(_ => currentResponse);
+
+        var toolLoader = new CompositeToolLoader([mockLoader], Substitute.For<ILogger<CompositeToolLoader>>());
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        var initial = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        currentResponse = new ListToolsResult { Tools = [CreateTestTool("new-tool")], TimeToLive = TimeSpan.FromMinutes(10) };
+        var refreshed = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        var cached = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal("old-tool", Assert.Single(initial.Tools).Name);
+        Assert.Equal("new-tool", Assert.Single(refreshed.Tools).Name);
+        Assert.Equal("new-tool", Assert.Single(cached.Tools).Name);
+        Assert.Equal(TimeSpan.FromMinutes(10), refreshed.TimeToLive);
+        Assert.True((await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("old-tool"), TestContext.Current.CancellationToken)).IsError);
+        await mockLoader.Received(2).ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_AfterTimeToLiveExpires_RefreshesBeforeRouting()
+    {
+        var mockLoader = Substitute.For<IToolLoader>();
+        var currentResponse = new ListToolsResult { Tools = [CreateTestTool("old-tool")], TimeToLive = TimeSpan.Zero };
+        mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
+            .Returns(_ => currentResponse);
+        mockLoader.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
+            .Returns(new CallToolResult { Content = [new TextContentBlock { Text = "Updated" }], IsError = false });
+
+        var toolLoader = new CompositeToolLoader([mockLoader], Substitute.For<ILogger<CompositeToolLoader>>());
+        await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+        currentResponse = new ListToolsResult { Tools = [CreateTestTool("new-tool")], TimeToLive = TimeSpan.FromMinutes(10) };
+
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("new-tool"), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        await mockLoader.Received(2).ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>());
+        await mockLoader.Received(1).CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ListToolsHandler_WithToolLoaderReturningNull_ReturnsEmptyResult()
     {
         var logger = Substitute.For<ILogger<CompositeToolLoader>>();
