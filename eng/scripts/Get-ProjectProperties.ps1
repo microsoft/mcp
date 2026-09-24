@@ -83,6 +83,10 @@ $propertyArgument = "-getProperty:$($propertyList -join ',')"
 
 if ($propertyList.Count -eq 1) {
     $propertyValue = dotnet build $projectFile $propertyArgument
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet build failed to retrieve '$($propertyList[0])' from '$($projectFile.FullName)' (exit code $LASTEXITCODE)."
+    }
+
     $result = [ordered]@{}
     $result[$propertyList[0]] = @($propertyValue) -join [Environment]::NewLine
     return [pscustomobject] $result

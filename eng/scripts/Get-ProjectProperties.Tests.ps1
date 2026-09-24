@@ -14,6 +14,7 @@ Describe 'Get-ProjectProperties.ps1' {
             switch ($propertyArgument) {
                 '-getProperty:TargetFramework' { 'net10.0' }
                 '-getProperty:DefinitelyNotAProjectProperty' { return }
+                '-getProperty:BrokenProperty' { $global:LASTEXITCODE = 1; return }
                 default { '{"Properties":{"TargetFramework":"net10.0","OutputType":"Exe"}}' }
             }
         }
@@ -21,6 +22,7 @@ Describe 'Get-ProjectProperties.ps1' {
 
     BeforeEach {
         $global:CapturedDotnetArguments = @()
+        $global:LASTEXITCODE = 0
     }
 
     AfterAll {
@@ -68,6 +70,14 @@ Describe 'Get-ProjectProperties.ps1' {
 
         @($result.PSObject.Properties.Name) | Should -Be 'DefinitelyNotAProjectProperty'
         $result.DefinitelyNotAProjectProperty | Should -Be ''
+    }
+
+    It 'fails when dotnet cannot evaluate a requested property' {
+        $projectPath = Join-Path $TestDrive 'Test.csproj'
+        Set-Content -Path $projectPath -Value '<Project />'
+
+        { & $scriptPath -Path $projectPath -Properties 'BrokenProperty' } |
+        Should -Throw -ExpectedMessage '*dotnet build*'
     }
 
     It 'rejects an empty property name' {

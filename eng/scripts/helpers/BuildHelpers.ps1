@@ -13,12 +13,12 @@ function Get-RepoRelativePath {
     param(
         [parameter(Mandatory, ValueFromPipeline)]
         [string] $Path,
-        [switch] $NormalizeSeparators
+        [switch] $NormalizeSeparators,
+        [string] $RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..' '..' '..')).Path
     )
 
     process {
-        $root = Resolve-Path (Join-Path $PSScriptRoot ".." ".." "..")
-        $relativePath = Resolve-Path -LiteralPath $Path -Relative -RelativeBasePath $root
+        $relativePath = Resolve-Path -LiteralPath $Path -Relative -RelativeBasePath $RepositoryRoot
 
         # trim the leading ./
         if ($relativePath.StartsWith('./') -or $relativePath.StartsWith('.\')) {
@@ -94,11 +94,13 @@ function Get-ServersToBuild {
     $dependencyProjectPathsByServer = @{}
     foreach ($server in $Servers) {
         $graphPath = Join-Path ([IO.Path]::GetTempPath()) "mcp-$($server.name)-$([guid]::NewGuid().ToString('N')).json"
+        $escapedServerPath = $server.path.Replace("'", "''")
+        $escapedGraphPath = $graphPath.Replace("'", "''")
         try {
-            Invoke-LoggedMsBuildCommand "dotnet msbuild '$($server.path)' /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath='$graphPath' /nologo" -GroupOutput | Out-Host
+            Invoke-LoggedMsBuildCommand "dotnet msbuild '$escapedServerPath' /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath='$escapedGraphPath' /nologo" -GroupOutput | Out-Host
             $dependencyGraph = Get-Content $graphPath -Raw | ConvertFrom-Json -AsHashtable
             $dependencyProjectPathsByServer[$server.name] = @($dependencyGraph.projects.Keys |
-                Get-RepoRelativePath -NormalizeSeparators |
+                Get-RepoRelativePath -NormalizeSeparators -RepositoryRoot $RepositoryRoot |
                 ForEach-Object { Get-CanonicalProjectPath $_ } |
                 Where-Object { $_ } |
                 Sort-Object -Unique)

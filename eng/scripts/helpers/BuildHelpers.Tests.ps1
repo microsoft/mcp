@@ -74,4 +74,54 @@ Describe 'Get-ServersToBuild' {
             -RepositoryRoot $TestDrive |
         Should -Be @('Azure.Mcp.Server', 'Fabric.Mcp.Server')
     }
+
+    It 'escapes single quotes in server paths passed to the restore graph command' {
+        $serverPath = "servers/Example'Mcp.Server/src/Example.csproj"
+        $script:BuildCommand = $null
+        function Invoke-LoggedMsBuildCommand {
+            param([string] $Command, [switch] $GroupOutput)
+            $script:BuildCommand = $Command
+            throw 'Build command captured'
+        }
+
+        { Get-ServersToBuild -Servers @(@{ name = 'Example.Mcp.Server'; path = $serverPath }) -ChangedFiles @('core/Microsoft.Mcp.Core/src/Core.cs') -IsPullRequest } |
+        Should -Throw -ExpectedMessage 'Build command captured'
+
+        $escapedServerPath = $serverPath.Replace("'", "''")
+        $script:BuildCommand | Should -Match ([regex]::Escape("'$escapedServerPath'"))
+    }
+
+    It 'selects only servers referencing a changed project in the restore graph' {
+        $toolProject = Join-Path $TestDrive 'tools/Example.Mcp.Tools/src/Example.Mcp.Tools.csproj'
+        $dependentProject = Join-Path $TestDrive 'servers/Dependent.Mcp.Server/src/Dependent.Mcp.Server.csproj'
+        $unrelatedProject = Join-Path $TestDrive 'servers/Unrelated.Mcp.Server/src/Unrelated.Mcp.Server.csproj'
+        foreach ($projectPath in @($toolProject, $dependentProject, $unrelatedProject)) {
+            New-Item -ItemType Directory -Path (Split-Path $projectPath) -Force | Out-Null
+        }
+
+        $minimalProject = '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>'
+        Set-Content -LiteralPath $toolProject -Value $minimalProject
+        Set-Content -LiteralPath $unrelatedProject -Value $minimalProject
+        Set-Content -LiteralPath $dependentProject -Value @'
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+    <ItemGroup><ProjectReference Include="../../../tools/Example.Mcp.Tools/src/Example.Mcp.Tools.csproj" /></ItemGroup>
+</Project>
+'@
+
+        function Invoke-LoggedMsBuildCommand {
+            param([string] $Command, [switch] $GroupOutput)
+            Invoke-Expression $Command
+            if ($LASTEXITCODE -ne 0) {
+                throw "dotnet msbuild failed with exit code $LASTEXITCODE"
+            }
+        }
+
+        $fixtureServers = @(
+            @{ name = 'Dependent.Mcp.Server'; path = $dependentProject }
+            @{ name = 'Unrelated.Mcp.Server'; path = $unrelatedProject }
+        )
+        Get-ServersToBuild -Servers $fixtureServers -ChangedFiles @('tools/Example.Mcp.Tools/src/Changed.cs') -IsPullRequest -RepositoryRoot $TestDrive |
+        Should -Be 'Dependent.Mcp.Server'
+    }
 }
