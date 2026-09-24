@@ -18,7 +18,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       issues: write
-      pull-requests: read
+      # Required for labeling pull requests; issues: write alone returned 403 in a live GITHUB_TOKEN run.
+      pull-requests: write
     steps:
       - name: Check merge conflicts
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
