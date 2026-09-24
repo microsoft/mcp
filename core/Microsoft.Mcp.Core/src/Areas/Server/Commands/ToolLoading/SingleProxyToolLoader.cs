@@ -301,8 +301,8 @@ public sealed class SingleProxyToolLoader(
         {
             var clientOptions = CreateClientOptions(request.Server);
             var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
-            var cachedAt = Stopwatch.GetTimestamp();
             var toolsResponse = await ToolListCache.ListRemoteToolsAsync(client, cancellationToken);
+            var cachedAt = Stopwatch.GetTimestamp();
             var remoteTools = toolsResponse.Tools
                 .Where(tool => ShouldKeepTool(tool, _configuration.Value))
                 .ToArray();

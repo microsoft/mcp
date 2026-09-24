@@ -148,6 +148,58 @@ public class RegistryToolLoaderTests
     }
 
     [Fact]
+    public async Task ListRemoteToolsAsync_WithMultiplePages_ReturnsToolsFromEveryPage()
+    {
+        var listRequestCount = 0;
+        var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            listRequestCount++;
+            var cursor = request.Params?["cursor"]?.GetValue<string>();
+            var response = new JsonObject
+            {
+                ["tools"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["name"] = cursor switch
+                        {
+                            "next" => "second-tool",
+                            "last" => "third-tool",
+                            _ => "first-tool"
+                        },
+                        ["inputSchema"] = new JsonObject { ["type"] = "object" }
+                    }
+                },
+                ["ttlMs"] = cursor == "next" ? 300_000 : 1_800_000
+            };
+            if (cursor is null)
+            {
+                response["nextCursor"] = "next";
+            }
+            else if (cursor == "next")
+            {
+                response["nextCursor"] = "last";
+            }
+
+            return new JsonRpcResponse { Result = response };
+        });
+
+        var result = await ToolListCache.ListRemoteToolsAsync(client, TestContext.Current.CancellationToken);
+
+        Assert.Collection(result.Tools,
+            tool => Assert.Equal("first-tool", tool.Name),
+            tool => Assert.Equal("second-tool", tool.Name),
+            tool => Assert.Equal("third-tool", tool.Name));
+        Assert.Equal(TimeSpan.FromMinutes(5), result.TimeToLive);
+        Assert.Equal(3, listRequestCount);
+    }
+
+    [Fact]
     public async Task CallToolHandler_AfterRemoteTimeToLiveExpires_UsesUpdatedToolMap()
     {
         var clientBuilder = new MockMcpClientBuilder()

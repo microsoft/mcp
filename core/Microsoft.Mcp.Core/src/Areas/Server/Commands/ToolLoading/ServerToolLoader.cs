@@ -439,8 +439,8 @@ public sealed class ServerToolLoader(
             return [];
         }
 
-        var cachedAt = Stopwatch.GetTimestamp();
         var toolsResponse = await ToolListCache.ListRemoteToolsAsync(client, cancellationToken);
+        var cachedAt = Stopwatch.GetTimestamp();
         var list = toolsResponse.Tools.ToList();
 
         _cachedAllToolLists[tool] = (list, cachedAt, toolsResponse.TimeToLive);
