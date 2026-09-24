@@ -38,6 +38,27 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
     }
 
     [Theory]
+    [InlineData("--public-ip-address test-ip", false)]
+    [InlineData("--public-ip-address test-ip --no-public-ip false", true)]
+    public async Task ExecuteAsync_NamedPublicIpRequiresExplicitOptIn(string networkOptions, bool allowed)
+    {
+        var response = await ExecuteCommandAsync($"--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123! {networkOptions}");
+
+        if (!allowed)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.Contains("--no-public-ip false", response.Message);
+            Assert.Empty(Service.ReceivedCalls());
+            return;
+        }
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var call = Assert.Single(Service.ReceivedCalls());
+        Assert.Equal("test-ip", call.GetArguments()[12]);
+        Assert.Equal(false, call.GetArguments()[14]);
+    }
+
+    [Theory]
     [InlineData("Linux", null, null)]
     [InlineData("Windows", null, null)]
     [InlineData("Linux", "203.0.113.0/24", "22")]

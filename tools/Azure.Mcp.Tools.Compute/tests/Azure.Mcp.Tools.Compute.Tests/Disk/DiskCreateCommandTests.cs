@@ -3,12 +3,16 @@
 
 using System.Net;
 using System.Security;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -30,6 +34,49 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
         var response = await ExecuteCommandAsync($"--subscription test-sub --resource-group testrg --disk-name testdisk --size-gb 128 {options}");
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal(expectedPolicy, Assert.Single(Service.ReceivedCalls()).GetArguments()[11]);
+    }
+
+    [Theory]
+    [InlineData("--source https://teststorage.blob.core.windows.net/disks/disk.vhd", null)]
+    [InlineData("--upload-type Upload --upload-size-bytes 20972032", null)]
+    [InlineData("--upload-type UploadWithSecurityData --upload-size-bytes 20972032 --security-type TrustedLaunch", null)]
+    [InlineData("--upload-type Upload --upload-size-bytes 20972032 --network-access-policy DenyAll", null)]
+    [InlineData("--upload-type Upload --upload-size-bytes 20972032 --network-access-policy AllowPrivate", null)]
+    [InlineData("--source https://teststorage.blob.core.windows.net/disks/disk.vhd --network-access-policy AllowAll", "AllowAll")]
+    [InlineData("--upload-type Upload --upload-size-bytes 20972032 --network-access-policy AllowAll", "AllowAll")]
+    [InlineData("--upload-type Upload --upload-size-bytes 20972032 --network-access-policy AllowPrivate --disk-access /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/testrg/providers/Microsoft.Compute/diskAccesses/access", "AllowPrivate")]
+    public async Task ExecuteAsync_TransferRequiresExplicitNetworkPolicy(string options, string? expectedPolicy)
+    {
+        var response = await ExecuteCommandAsync($"--subscription test-sub --resource-group testrg --disk-name testdisk {options}");
+
+        if (expectedPolicy is null)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.Contains("--network-access-policy", response.Message);
+            Assert.Empty(Service.ReceivedCalls());
+            return;
+        }
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(expectedPolicy, Assert.Single(Service.ReceivedCalls()).GetArguments()[11]);
+    }
+
+    [Theory]
+    [InlineData("https://teststorage.blob.core.windows.net/disks/disk.vhd", null)]
+    [InlineData(null, "Upload")]
+    [InlineData(null, "UploadWithSecurityData")]
+    public async Task CreateDiskAsync_RejectsBlockedTransfersBeforeAzureCalls(string? source, string? uploadType)
+    {
+        var azureService = Substitute.For<IAzureService>();
+        var service = new ComputeService(azureService, Substitute.For<ILogger<ComputeService>>(),
+            Substitute.For<IOptions<ServerRuntimeConfiguration>>());
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateDiskAsync(
+            "testdisk", "testrg", "test-sub", source: source, uploadType: uploadType,
+            networkAccessPolicy: "DenyAll", cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("AllowAll", exception.Message);
+        Assert.Empty(azureService.ReceivedCalls());
     }
 
     [Fact]
@@ -557,7 +604,8 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             "--subscription", subscription,
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
-            "--source", source);
+            "--source", source,
+            "--network-access-policy", "AllowAll");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
@@ -817,7 +865,8 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             "--resource-group", resourceGroup,
             "--disk-name", diskName,
             "--upload-type", "Upload",
-            "--upload-size-bytes", uploadSizeBytes.ToString());
+            "--upload-size-bytes", uploadSizeBytes.ToString(),
+            "--network-access-policy", "AllowAll");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
@@ -901,7 +950,8 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             "--upload-type", "UploadWithSecurityData",
             "--upload-size-bytes", uploadSizeBytes.ToString(),
             "--security-type", "TrustedLaunch",
-            "--hyper-v-generation", "V2");
+            "--hyper-v-generation", "V2",
+            "--network-access-policy", "AllowAll");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, ComputeJsonContext.Default.DiskCreateCommandResult);
@@ -1208,7 +1258,8 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
-            "--source", source);
+            "--source", source,
+            "--network-access-policy", "AllowAll");
 
         // Assert
         Assert.NotNull(response);
@@ -1257,7 +1308,8 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             "--subscription", "test-sub",
             "--resource-group", "testrg",
             "--disk-name", "testdisk",
-            "--source", source);
+            "--source", source,
+            "--network-access-policy", "AllowAll");
 
         // Assert
         Assert.NotNull(response);

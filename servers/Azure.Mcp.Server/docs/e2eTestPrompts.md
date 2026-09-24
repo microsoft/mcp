@@ -497,15 +497,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_disk_create | Create a new Premium_LRS disk called \<disk-name> in resource group \<resource-group> with 256 GB | none |
 | compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> in eastus | none |
 | compute_disk_create | Create a disk from snapshot \<snapshot-resource-id> in resource group \<resource-group> | none |
-| compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> from blob \<blob-uri> | none |
+| compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> from blob \<blob-uri>; explicitly use AllowAll network access for this isolated test | none |
 | compute_disk_create | Create a 64 GB Standard_LRS Linux disk named \<disk-name> in resource group \<resource-group> in zone 1 | none |
 | compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> with tags env=prod team=infra | none |
 | compute_disk_create | Create a 128 GB Premium_LRS disk named \<disk-name> in resource group \<resource-group> with performance tier P30 | none |
 | compute_disk_create | Create a disk \<disk-name> in resource group \<resource-group> with customer-managed encryption using disk encryption set \<disk-encryption-set-id> | none |
 | compute_disk_create | Create a managed disk from gallery image version \<image-version-resource-id> in resource group \<resource-group> | none |
 | compute_disk_create | Create a data disk from LUN 0 of gallery image version \<image-version-resource-id> in resource group \<resource-group> | none |
-| compute_disk_create | Create a disk ready for upload named \<disk-name> in resource group \<resource-group> with upload size 20972032 bytes | none |
-| compute_disk_create | Create an Azure managed disk named \<disk-name> in resource group \<resource-group> as a Trusted Launch upload disk with UploadWithSecurityData type and TrustedLaunch security type | none |
+| compute_disk_create | Create a disk ready for upload named \<disk-name> in resource group \<resource-group> with upload size 20972032 bytes; explicitly use AllowAll network access for this isolated test | none |
+| compute_disk_create | Create an Azure managed disk named \<disk-name> in resource group \<resource-group> as a Trusted Launch upload disk with UploadWithSecurityData type, TrustedLaunch security type, and explicit AllowAll network access for this isolated test | none |
 | compute_disk_create | Create an UltraSSD_LRS disk named \<disk-name> in resource group \<resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput | none |
 | compute_disk_create | Create a shared managed disk named \<disk-name> in resource group \<resource-group> with 512 GB and max shares set to 3 | none |
 | compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> with network access policy DenyAll and disk access \<disk-access-resource-id> | none |

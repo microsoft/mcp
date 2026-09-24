@@ -1094,6 +1094,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "disk-name", newDiskName },
                 { "upload-type", "Upload" },
                 { "upload-size-bytes", 20972032L },
+                { "network-access-policy", "AllowAll" },
                 { "sku", "Standard_LRS" }
             });
 
@@ -1127,6 +1128,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "upload-size-bytes", 20972032L },
                 { "sku", "Standard_LRS" },
                 { "security-type", "TrustedLaunch" },
+                { "network-access-policy", "AllowAll" },
                 { "hyper-v-generation", "V2" }
             });
 

@@ -1568,6 +1568,17 @@ public class ComputeService(
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
+        var isNetworkTransfer = !string.IsNullOrEmpty(uploadType) ||
+            (source?.StartsWith("https://", StringComparison.OrdinalIgnoreCase) == true ||
+             source?.StartsWith("http://", StringComparison.OrdinalIgnoreCase) == true);
+        if (isNetworkTransfer &&
+            !string.Equals(networkAccessPolicy, "AllowAll", StringComparison.OrdinalIgnoreCase) &&
+            !(string.Equals(networkAccessPolicy, "AllowPrivate", StringComparison.OrdinalIgnoreCase) &&
+              !string.IsNullOrWhiteSpace(diskAccessId)))
+        {
+            throw new ArgumentException("Blob imports and uploads require network access policy AllowAll, or AllowPrivate with a disk access resource for private transfers.", nameof(networkAccessPolicy));
+        }
+
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
