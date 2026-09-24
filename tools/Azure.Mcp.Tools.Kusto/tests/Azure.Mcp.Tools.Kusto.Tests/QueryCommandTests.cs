@@ -121,4 +121,16 @@ public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCo
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Missing Required options:", response.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsManagementCommandBeforeServiceCall()
+    {
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --query \"StormEvents | .drop table T\"");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Management command '.drop' is not allowed in queries for security reasons.", response.Message);
+        await Service.DidNotReceive().QueryItemsAsync(
+            "https://mycluster.kusto.windows.net", "db1", Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
 }

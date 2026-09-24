@@ -200,7 +200,10 @@ internal static class LogSearchQueryValidator
             if (s_unsupportedOperators.Contains(token))
             {
                 throw new CommandValidationException(
-                    $"The '{token}' operator is not supported for Basic or Auxiliary table searches.");
+                    $"The '{token}' operator is not supported for Basic or Auxiliary table searches.")
+                {
+                    TelemetrySafeMessage = "Unsupported log search operator."
+                };
             }
 
             if (s_sourceFunctions.Contains(token) &&
@@ -208,7 +211,10 @@ internal static class LogSearchQueryValidator
                 tokens[index + 1] == "(")
             {
                 throw new CommandValidationException(
-                    $"The '{token}()' source form is not allowed in a workspace log search.");
+                    $"The '{token}()' source form is not allowed in a workspace log search.")
+                {
+                    TelemetrySafeMessage = "Disallowed log search source function."
+                };
             }
         }
     }

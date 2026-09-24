@@ -148,7 +148,10 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
                         $"2. Identify which columns have non-standard data types.\n" +
                         $"3. Modify the query to convert them to a supported type (e.g. using CAST or converting to text, integer, or the appropriate standard type).\n" +
                         $"4. Re-execute the modified query.\n" +
-                        $"Please perform steps 1-4 now and re-execute.", HttpStatusCode.BadRequest);
+                        $"Please perform steps 1-4 now and re-execute.", HttpStatusCode.BadRequest)
+                    {
+                        TelemetrySafeMessage = "Unsupported PostgreSQL query column type."
+                    };
                 }
             }
             rows.Add(string.Join(", ", row));

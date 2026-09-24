@@ -46,12 +46,14 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
 
         if (!startIpIsValid)
         {
-            validationResult.Errors.Add($"Invalid start IP address format: '{options.StartIpAddress}'. Must be a valid IPv4 address.");
+            validationResult.AddError($"Invalid start IP address format: '{options.StartIpAddress}'. Must be a valid IPv4 address.",
+                "Invalid SQL firewall start IP.");
         }
 
         if (!endIpIsValid)
         {
-            validationResult.Errors.Add($"Invalid end IP address format: '{options.EndIpAddress}'. Must be a valid IPv4 address.");
+            validationResult.AddError($"Invalid end IP address format: '{options.EndIpAddress}'. Must be a valid IPv4 address.",
+                "Invalid SQL firewall end IP.");
         }
 
         if (startIpIsValid && endIpIsValid && IsDangerousRange(options.StartIpAddress, options.EndIpAddress))

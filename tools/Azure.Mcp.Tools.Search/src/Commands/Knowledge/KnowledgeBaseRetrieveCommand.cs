@@ -60,7 +60,7 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
                 }
                 catch (ArgumentException ex)
                 {
-                    validationResult.Errors.Add($"Message {index}: {ex.Message}");
+                    validationResult.AddError($"Message {index}: {ex.Message}", "Invalid knowledge retrieval message.");
                     continue;
                 }
             }

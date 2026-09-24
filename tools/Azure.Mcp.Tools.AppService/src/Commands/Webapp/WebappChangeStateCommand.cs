@@ -53,7 +53,7 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
 
         if (!ValidateStateChange(options.StateChange, out var errorMessage))
         {
-            validationResult.Errors.Add(errorMessage);
+            validationResult.AddError(errorMessage, "Invalid App Service state change.");
         }
         else
         {

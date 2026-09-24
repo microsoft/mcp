@@ -17,13 +17,13 @@ public abstract class BaseSpeechCommand<[DynamicallyAccessedMembers(TrimAnnotati
         // Validate endpoint option
         if (!Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var uri))
         {
-            validationResult.Errors.Add($"Invalid endpoint URL: {options.Endpoint}");
+            validationResult.AddError($"Invalid endpoint URL: {options.Endpoint}", "Invalid Speech endpoint.");
             return;
         }
 
         if (uri.Scheme != Uri.UriSchemeHttps)
         {
-            validationResult.Errors.Add($"Endpoint must use HTTPS: {options.Endpoint}");
+            validationResult.AddError($"Endpoint must use HTTPS: {options.Endpoint}", "Speech endpoint requires HTTPS.");
             return;
         }
 
@@ -37,7 +37,8 @@ public abstract class BaseSpeechCommand<[DynamicallyAccessedMembers(TrimAnnotati
         var matchedSuffix = Array.Find(validSuffixes, suffix => uri.Host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
         if (matchedSuffix == null)
         {
-            validationResult.Errors.Add($"Endpoint must be a valid Azure AI Services endpoint. Host must end with '.cognitiveservices.azure.com' (or sovereign cloud equivalent): {uri.Host}");
+            validationResult.AddError($"Endpoint must be a valid Azure AI Services endpoint. Host must end with '.cognitiveservices.azure.com' (or sovereign cloud equivalent): {uri.Host}",
+                "Untrusted Speech endpoint host.");
             return;
         }
 

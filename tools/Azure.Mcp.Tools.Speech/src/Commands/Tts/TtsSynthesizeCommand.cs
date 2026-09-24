@@ -61,7 +61,8 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
                 // Check if file already exists (don't allow overwriting)
                 if (File.Exists(canonicalPath))
                 {
-                    validationResult.Errors.Add($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.");
+                    validationResult.AddError($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.",
+                        "Speech output file already exists.");
                 }
 
                 // Validate file extension
@@ -69,12 +70,13 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
 
                 if (!s_supportedExtensions.Contains(extension))
                 {
-                    validationResult.Errors.Add($"Unsupported output file format: {extension}. Only {string.Join(", ", s_supportedExtensions)} are supported.");
+                    validationResult.AddError($"Unsupported output file format: {extension}. Only {string.Join(", ", s_supportedExtensions)} are supported.",
+                        "Unsupported Speech output format.");
                 }
             }
             catch (ArgumentException ex)
             {
-                validationResult.Errors.Add($"Invalid output file path: {ex.Message}");
+                validationResult.AddError($"Invalid output file path: {ex.Message}", "Invalid Speech output file path.");
             }
         }
 
@@ -84,7 +86,8 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
             // Basic validation: language should be in format like "en-US", "es-ES"
             if (!LanguageRegex().IsMatch(options.Language))
             {
-                validationResult.Errors.Add($"Language must be in format 'xx-XX' (e.g., 'en-US', 'es-ES'). Got: {options.Language}");
+                validationResult.AddError($"Language must be in format 'xx-XX' (e.g., 'en-US', 'es-ES'). Got: {options.Language}",
+                    "Invalid Speech language.");
             }
         }
     }

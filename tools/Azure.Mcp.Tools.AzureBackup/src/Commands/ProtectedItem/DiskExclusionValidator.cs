@@ -40,9 +40,10 @@ internal static class DiskExclusionValidator
             var normalized = diskListSetting!.Trim();
             if (!AllowedSettings.Contains(normalized))
             {
-                validationResult.Errors.Add(
+                validationResult.AddError(
                     $"Invalid --disk-list-setting value '{diskListSetting}'. " +
-                    $"Allowed values: {string.Join(", ", AllowedSettings)}.");
+                    $"Allowed values: {string.Join(", ", AllowedSettings)}.",
+                    "Invalid backup disk list setting.");
                 return;
             }
 
@@ -98,8 +99,9 @@ internal static class DiskExclusionValidator
                 {
                     if (!int.TryParse(raw, out var lun) || lun < 0)
                     {
-                        validationResult.Errors.Add(
-                            $"Invalid disk LUN '{raw}' in --disks-list. LUNs must be non-negative integers (e.g. '0,1,3').");
+                        validationResult.AddError(
+                            $"Invalid disk LUN '{raw}' in --disks-list. LUNs must be non-negative integers (e.g. '0,1,3').",
+                            "Invalid backup disk LUN.");
                         break;
                     }
                 }

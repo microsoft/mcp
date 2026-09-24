@@ -31,6 +31,7 @@ internal static class FoundryExtensionsHelpers
             }
         }
 
-        validationResult.Errors.Add(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
+        validationResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}",
+            "Invalid Foundry project endpoint.");
     }
 }

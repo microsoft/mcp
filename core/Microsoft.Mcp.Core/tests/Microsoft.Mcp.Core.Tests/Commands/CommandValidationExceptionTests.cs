@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Net;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -53,6 +54,25 @@ public sealed class CommandValidationExceptionTests
     {
         var exception = new CommandValidationException("Validation failed.");
         Assert.Equal("ValidationError", exception.Code);
+    }
+
+    [Fact]
+    public void TelemetrySafeMessage_DefaultsToGenericMessage()
+    {
+        var exception = new CommandValidationException("Invalid value 'private input'.");
+
+        Assert.Equal("Command validation failed.", exception.TelemetrySafeMessage);
+    }
+
+    [Fact]
+    public void TelemetrySafeMessage_WhenBlank_UsesGenericMessage()
+    {
+        var exception = new CommandValidationException("Invalid value 'private input'.")
+        {
+            TelemetrySafeMessage = " "
+        };
+
+        Assert.Equal("Command validation failed.", exception.TelemetrySafeMessage);
     }
 
     [Fact]
@@ -115,5 +135,38 @@ public sealed class CommandValidationExceptionTests
         Assert.Equal(HttpStatusCode.BadRequest, context.Response.Status);
         Assert.Equal("Missing Required options: --resource-group, --account", context.Response.Message);
         Assert.Null(context.Response.Results);
+    }
+
+    [Fact]
+    public void HandleException_PreservesUserMessageAndCapturesSafeTelemetry()
+    {
+        using var activity = new Activity("validation-test");
+        activity.Start();
+        var command = new ValidationTestCommand();
+        var context = new CommandContext(activity);
+
+        command.InvokeHandleException(context, new CommandValidationException("Invalid value 'private input'.")
+        {
+            TelemetrySafeMessage = "Invalid value."
+        });
+
+        Assert.Equal("Invalid value 'private input'.", context.Response.Message);
+        Assert.Equal("Invalid value.", context.Response.TelemetryFailureMessage);
+        Assert.Equal("Invalid value.", activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [Fact]
+    public void HandleException_WithoutExplicitSafeMessage_UsesGenericTelemetry()
+    {
+        using var activity = new Activity("validation-test");
+        activity.Start();
+        var command = new ValidationTestCommand();
+        var context = new CommandContext(activity);
+
+        command.InvokeHandleException(context, new CommandValidationException("Invalid value 'private input'."));
+
+        Assert.Equal("Invalid value 'private input'.", context.Response.Message);
+        Assert.Equal("Command validation failed.", context.Response.TelemetryFailureMessage);
+        Assert.Equal("Command validation failed.", activity.GetTagItem(TagName.ExceptionMessage));
     }
 }

@@ -40,7 +40,8 @@ public sealed class RecommendationApplyCommand(ILogger<RecommendationApplyComman
             var normalized = options.Resource.Trim();
             if (!s_availableResources.Value.Contains(normalized))
             {
-                validationResult.Errors.Add($"Invalid resource '{options.Resource}'. Available resources: {string.Join(", ", s_availableResources.Value.OrderBy(r => r))}");
+                validationResult.AddError($"Invalid resource '{options.Resource}'. Available resources: {string.Join(", ", s_availableResources.Value.OrderBy(r => r))}",
+                    "Invalid Advisor recommendation resource.");
             }
         }
     }

@@ -59,8 +59,9 @@ public sealed class RecommendationSummaryCommand(
                  normalizedGroupBy,
                  StringComparer.OrdinalIgnoreCase)))
         {
-            validationResult.Errors.Add(
-                $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", RecommendationSummaryService.AllowedGroupBy)}.");
+            validationResult.AddError(
+                $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", RecommendationSummaryService.AllowedGroupBy)}.",
+                "Invalid Advisor summary grouping.");
         }
 
         if (options.Top is < MinTop or > MaxTop)

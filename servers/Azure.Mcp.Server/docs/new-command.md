@@ -625,6 +625,16 @@ public override void ValidateOptions(MyCommandOptions options, ValidationResult 
 }
 ```
 
+If an error includes an option value, provide a separate static, telemetry-safe message:
+
+```csharp
+validationResult.AddError(
+    $"Invalid --format value '{options.Format}'. Use json, table, or csv.",
+    "Invalid format option.");
+```
+
+The first message is returned to the caller unchanged; only the second is used for failure telemetry. Never include option values or exception text in the telemetry-safe message. Existing `Errors.Add` calls remain supported, but if any error lacks a safe message, telemetry uses the generic "Invalid options." value.
+
 **Pattern 4: Options with interface constraints for shared base command behavior**
 
 When base commands need type-safe access to specific options, define small interfaces:

@@ -79,7 +79,10 @@ public static class KqlQueryValidator
         {
             throw new CommandValidationException(
                 $"Management command '{match.Value.TrimStart('|', ';').Trim()}' is not allowed in queries for security reasons.",
-                HttpStatusCode.BadRequest);
+                HttpStatusCode.BadRequest)
+            {
+                TelemetrySafeMessage = "Disallowed KQL management command."
+            };
         }
     }
 

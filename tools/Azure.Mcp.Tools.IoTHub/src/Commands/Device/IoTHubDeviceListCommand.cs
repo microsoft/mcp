@@ -49,14 +49,16 @@ public sealed class IoTHubDeviceListCommand(
 
         if (options.MaxCount is < MinMaxCount)
         {
-            validationResult.Errors.Add(
-                $"The entered max-count '{options.MaxCount}' is less than 1 device. Please specify a value of at least 1.");
+            validationResult.AddError(
+                $"The entered max-count '{options.MaxCount}' is less than 1 device. Please specify a value of at least 1.",
+                "Invalid IoT Hub max-count.");
         }
 
         if (options.MaxCount is > MaxMaxCount)
         {
-            validationResult.Errors.Add(
-                $"The entered max-count '{options.MaxCount}' is greater than the maximum of {MaxMaxCount} devices. Please specify a value of at most {MaxMaxCount}.");
+            validationResult.AddError(
+                $"The entered max-count '{options.MaxCount}' is greater than the maximum of {MaxMaxCount} devices. Please specify a value of at most {MaxMaxCount}.",
+                "Invalid IoT Hub max-count.");
         }
     }
 

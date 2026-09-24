@@ -117,4 +117,16 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidTableBeforeServiceCall()
+    {
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --table bad|table");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("tableName contains invalid characters. Only letters, digits, underscores, spaces, hyphens, and periods are allowed.", response.Message);
+        await Service.DidNotReceive().GetTableSchemaAsync(
+            "https://mycluster.kusto.windows.net", "db1", Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
 }

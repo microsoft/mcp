@@ -96,7 +96,10 @@ internal static class ServerParameterValidator
             throw new CommandValidationException(
                 $"Parameter '{trimmed}' cannot be modified through this tool because it is security-sensitive. {reason} " +
                 "Use the Azure Portal or Azure CLI directly to modify this parameter with appropriate review.",
-                HttpStatusCode.Forbidden);
+                HttpStatusCode.Forbidden)
+            {
+                TelemetrySafeMessage = "Blocked PostgreSQL parameter."
+            };
         }
     }
 }
