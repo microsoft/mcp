@@ -605,6 +605,23 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> | none |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> | none |
 
+## Azure NetApp Files
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| netappfiles_account_create | Create an Azure NetApp Files account named \<account> in \<location> in resource group \<resource_group> | none |
+| netappfiles_account_create | Create a NetApp Files account called \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
+| netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
+| netappfiles_volumegroup_create | Create an SAP HANA volume group named \<volume_group> in NetApp Files account \<account> using the supplied JSON volume specifications | none |
+| netappfiles_volumegroup_create | Create an Oracle application volume group named \<volume_group> in NetApp Files account \<account> and resource group \<resource_group> | none |
+| netappfiles_volumegroup_get | Get the application volume group named \<volume_group> in NetApp Files account \<account> and resource group \<resource_group> | none |
+| netappfiles_volumegroup_get | Show me details and member volumes for NetApp Files volume group \<volume_group> in account \<account> | none |
+| netappfiles_volumegroup_update | Update the application identifier for NetApp Files volume group \<volume_group> in account \<account> to OR2 | none |
+| netappfiles_volumegroup_update | Replace the member volumes for NetApp Files volume group \<volume_group> in account \<account> using the supplied JSON volume specifications | none |
+
 ## Azure Database for PostgreSQL
 
 | Tool Name | Test Prompt | Interaction |
