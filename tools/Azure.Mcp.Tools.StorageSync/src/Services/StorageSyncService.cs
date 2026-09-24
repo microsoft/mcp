@@ -115,10 +115,14 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         var armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var services = resourceGroupResource.Value.GetStorageSyncServices();
+        var existing = await services.GetIfExistsAsync(storageSyncServiceName, cancellationToken);
 
         var content = new StorageSyncServiceCreateOrUpdateContent(new(location))
         {
-            IncomingTrafficPolicy = new(enablePublicNetworkAccess ? "AllowAllTraffic" : "AllowVirtualNetworksOnly")
+            IncomingTrafficPolicy = existing.HasValue
+                ? existing.Value!.Data.IncomingTrafficPolicy
+                : new(enablePublicNetworkAccess ? "AllowAllTraffic" : "AllowVirtualNetworksOnly")
         };
         if (tags != null)
         {
@@ -128,7 +132,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             }
         }
 
-        var operation = await resourceGroupResource.Value.GetStorageSyncServices().CreateOrUpdateAsync(
+        var operation = await services.CreateOrUpdateAsync(
             WaitUntil.Started,
             storageSyncServiceName,
             content,
