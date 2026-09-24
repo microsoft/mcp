@@ -419,6 +419,32 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
+    public async Task Should_CreateStorageAccount_WithPublicNetworkAndSharedKeyAccess()
+    {
+        var accountName = RegisterOrRetrieveVariable(
+            "createdAccountWithPublicAccess",
+            $"testacct{Guid.NewGuid():N}"[..24]);
+
+        var result = await CallToolAsync(
+            "storage_account_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", accountName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "location", "eastus" },
+                { "enable-public-network-access", true },
+                { "allow-shared-key-access", true }
+            });
+
+        var account = result.AssertProperty("account");
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : accountName, account.GetProperty("name").GetString());
+        var properties = account.GetProperty("properties");
+        Assert.Equal("Enabled", properties.GetProperty("publicNetworkAccess").GetString());
+        Assert.True(properties.GetProperty("allowSharedKeyAccess").GetBoolean());
+    }
+
+    [Fact]
     public async Task Should_list_storage_tables_with_tenant_id()
     {
         var result = await CallToolAsync(
