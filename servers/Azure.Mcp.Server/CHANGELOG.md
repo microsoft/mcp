@@ -2,15 +2,13 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.47 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
+## 3.0.0-beta.47 (2026-09-24)
 
 ### Other Changes
+
+#### Dependency Updates
+
+- Updated the .NET SDK to version 10.0.401. [[#3751](https://github.com/microsoft/mcp/pull/3751)]
 
 ## 3.0.0-beta.46 (2026-09-22)
 
