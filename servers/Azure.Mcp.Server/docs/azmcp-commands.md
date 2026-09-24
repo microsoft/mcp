@@ -2676,6 +2676,107 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```
 
+### Azure NetApp Files Operations
+
+```bash
+# Gets an Azure NetApp Files account by name from a specified resource group.
+# Returns the account name, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account get --account <account> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--tenant <tenant>]
+
+# Creates an Azure NetApp Files account in a specified resource group and region.
+# Returns the account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account create --account <account> \
+                                 --location <location> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tenant <tenant>]
+
+# Updates the tags or NFSv4 user ID mapping domain of an Azure NetApp Files account.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account update --account <account> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tags <json-key-value-object>] \
+                                 [--nfs-v4-id-domain <nfs-v4-id-domain>] \
+                                 [--tenant <tenant>]
+
+# Creates a snapshot of an Azure NetApp Files volume.
+# Returns the snapshot name, resource ID, location, provisioning state, snapshot ID, and creation time.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot create --account <account> \
+                                  --pool <pool> \
+                                  --volume <volume> \
+                                  --snapshot <snapshot> \
+                                  --resource-group <resource-group> \
+                                  --subscription <subscription> \
+                                  [--tenant <tenant>]
+
+# Gets an Azure NetApp Files snapshot by name from a volume.
+# Returns the snapshot name, resource ID, location, provisioning state, snapshot ID, and creation time.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot get --account <account> \
+                               --pool <pool> \
+                               --volume <volume> \
+                               --snapshot <snapshot> \
+                               --resource-group <resource-group> \
+                               --subscription <subscription> \
+                               [--tenant <tenant>]
+
+# Updates an Azure NetApp Files snapshot using the service-supported snapshot patch operation.
+# Azure NetApp Files currently exposes no mutable snapshot-specific properties.
+# Returns the updated snapshot name, resource ID, location, provisioning state, snapshot ID, and creation time.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles snapshot update --account <account> \
+                                  --pool <pool> \
+                                  --volume <volume> \
+                                  --snapshot <snapshot> \
+                                  --resource-group <resource-group> \
+                                  --subscription <subscription> \
+                                  [--tenant <tenant>]
+
+# Creates an NFSv3 Azure NetApp Files volume in a capacity pool.
+# Returns the volume name, resource ID, location, provisioning state, quota, and service level.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume create --account <account> \
+                                --pool <pool> \
+                                --volume <volume> \
+                                --location <location> \
+                                --subnet-id <subnet-resource-id> \
+                                --quota-gib <quota-gib> \
+                                --service-level <Standard|Premium|Ultra> \
+                                --resource-group <resource-group> \
+                                --subscription <subscription> \
+                                [--tenant <tenant>]
+
+# Gets an Azure NetApp Files volume by name from a capacity pool.
+# Returns the volume name, resource ID, location, provisioning state, quota, and service level.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume get --account <account> \
+                                      --pool <pool> \
+                                      --volume <volume> \
+                                      --resource-group <resource-group> \
+                                      --subscription <subscription> \
+                                      [--tenant <tenant>]
+
+# Updates the storage quota of an Azure NetApp Files volume.
+# Returns the updated volume name, resource ID, location, provisioning state, quota, and service level.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles volume update --account <account> \
+                                --pool <pool> \
+                                --volume <volume> \
+                                --quota-gib <quota-gib> \
+                                --resource-group <resource-group> \
+                                --subscription <subscription> \
+                                [--tenant <tenant>]
+```
+
 ### Azure Database for MySQL Operations
 
 ```bash
