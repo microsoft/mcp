@@ -204,6 +204,55 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
+    public async Task Should_CreateStorageSyncService_WithPublicNetworkAccess()
+    {
+        var serviceName = $"{Settings.ResourceBaseName}-public";
+        var created = false;
+        try
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", serviceName },
+                    { "location", "eastus" },
+                    { "enable-public-network-access", true }
+                });
+            created = true;
+
+            var service = result.AssertProperty("result");
+            Assert.Equal("AllowAllTraffic", service.GetProperty("properties").GetProperty("incomingTrafficPolicy").GetString());
+
+            result = await CallToolAsync(
+                "storagesync_service_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", serviceName }
+                });
+            service = Assert.Single(result.AssertProperty("results").EnumerateArray());
+            Assert.Equal("AllowAllTraffic", service.GetProperty("properties").GetProperty("incomingTrafficPolicy").GetString());
+        }
+        finally
+        {
+            if (created)
+            {
+                await CallToolAsync(
+                    "storagesync_service_delete",
+                    new()
+                    {
+                        { "subscription", Settings.SubscriptionId },
+                        { "resource-group", Settings.ResourceGroupName },
+                        { "name", serviceName }
+                    });
+            }
+        }
+    }
+
+    [Fact]
     public async Task Should_Crud_sync_group()
     {
         // Create storage sync service

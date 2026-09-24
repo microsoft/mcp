@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: New Storage Sync services now use `AllowVirtualNetworksOnly` for incoming traffic by default. Use `--enable-public-network-access true` to explicitly select `AllowAllTraffic`.

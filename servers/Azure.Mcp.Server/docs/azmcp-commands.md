@@ -5159,6 +5159,7 @@ azmcp storagesync service create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
                                  --location <location> \
+                                 [--enable-public-network-access <true|false>] \
                                  [--tags <tag-key=tag-value>]
 
 # Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
