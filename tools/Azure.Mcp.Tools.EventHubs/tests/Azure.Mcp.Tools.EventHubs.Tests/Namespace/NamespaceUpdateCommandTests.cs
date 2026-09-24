@@ -55,12 +55,14 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             """;
 
         JsonElement? requestBody = null;
+        HttpMethod? updateMethod = null;
         using var handler = Substitute.For<HttpMessageHandler>();
         handler.ReturnsForAll(async callInfo =>
         {
             var request = callInfo.Arg<HttpRequestMessage>();
-            if (request.Method == HttpMethod.Put)
+            if (request.Method == HttpMethod.Put || request.Method == HttpMethod.Patch)
             {
+                updateMethod = request.Method;
                 using var document = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
                 requestBody = document.RootElement.Clone();
             }
@@ -89,11 +91,34 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             tags: new() { ["environment"] = "production", ["project"] = "mcp" },
             cancellationToken: TestContext.Current.CancellationToken);
 
-        var tags = Assert.IsType<JsonElement>(requestBody).GetProperty("tags");
+        Assert.Equal(HttpMethod.Patch, updateMethod);
+        var body = Assert.IsType<JsonElement>(requestBody);
+        Assert.False(body.TryGetProperty("sku", out _));
+        if (body.TryGetProperty("properties", out var properties))
+        {
+            Assert.False(properties.TryGetProperty("publicNetworkAccess", out _));
+            Assert.False(properties.TryGetProperty("disableLocalAuth", out _));
+        }
+        var tags = body.GetProperty("tags");
         Assert.Equal("production", tags.GetProperty("environment").GetString());
         Assert.Equal("existing-owner", tags.GetProperty("owner").GetString());
         Assert.Equal("mcp", tags.GetProperty("project").GetString());
         Assert.Equal(3, tags.EnumerateObject().Count());
+
+        requestBody = null;
+        updateMethod = null;
+        await service.CreateOrUpdateNamespaceAsync(
+            "test-namespace", "test-rg", subscription,
+            enablePublicNetworkAccess: false,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpMethod.Patch, updateMethod);
+        body = Assert.IsType<JsonElement>(requestBody);
+        Assert.False(body.TryGetProperty("tags", out _));
+        Assert.False(body.TryGetProperty("sku", out _));
+        properties = body.GetProperty("properties");
+        Assert.Equal("Disabled", properties.GetProperty("publicNetworkAccess").GetString());
+        Assert.False(properties.TryGetProperty("disableLocalAuth", out _));
     }
 
     [Theory]
@@ -108,6 +133,17 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
         var call = Assert.Single(Service.ReceivedCalls());
         Assert.Equal(publicAccess, call.GetArguments()[13]);
         Assert.Equal(sasAuth, call.GetArguments()[14]);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoChangesListsSecurityOptions()
+    {
+        var response = await ExecuteCommandAsync("--subscription test-sub --resource-group test-rg --namespace test-ns");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("enable-public-network-access", response.Message);
+        Assert.Contains("enable-sas-authentication", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]

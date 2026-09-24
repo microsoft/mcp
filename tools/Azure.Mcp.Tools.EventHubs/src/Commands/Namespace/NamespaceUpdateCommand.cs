@@ -62,7 +62,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
             !options.EnableSasAuthentication.HasValue &&
             string.IsNullOrEmpty(options.Tags))
         {
-            validationResult.Errors.Add("At least one update property must be provided (location, sku-name, sku-tier, sku-capacity, is-auto-inflate-enabled, maximum-throughput-units, kafka-enabled, zone-redundant, or tags).");
+            validationResult.Errors.Add("At least one update property must be provided (location, sku-name, sku-tier, sku-capacity, is-auto-inflate-enabled, maximum-throughput-units, kafka-enabled, zone-redundant, enable-public-network-access, enable-sas-authentication, or tags).");
         }
 
         // Validate auto-inflate settings

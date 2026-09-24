@@ -184,10 +184,9 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
 
         var namespaceCollection = resourceGroupResource.Value.GetEventHubsNamespaces();
         var existing = await namespaceCollection.GetIfExistsAsync(namespaceName, cancellationToken: cancellationToken);
-        var namespaceData = existing.HasValue && existing.Value is { } resource
-            ? resource.Data
-            : new EventHubsNamespaceData(namespaceLocation);
-        ConfigureNamespaceSecurity(namespaceData, !existing.HasValue, enablePublicNetworkAccess, enableSasAuthentication);
+        var existingResource = existing.HasValue ? existing.Value : null;
+        var namespaceData = new EventHubsNamespaceData(existingResource?.Data.Location.ToString() ?? namespaceLocation);
+        ConfigureNamespaceSecurity(namespaceData, existingResource is null, enablePublicNetworkAccess, enableSasAuthentication);
 
         // Set SKU if provided
         if (!string.IsNullOrEmpty(skuName))
@@ -231,14 +230,34 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
 
         if (tags != null && tags.Count > 0)
         {
+            if (existingResource?.Data.Tags is { } existingTags)
+            {
+                foreach (var tag in existingTags)
+                {
+                    namespaceData.Tags[tag.Key] = tag.Value;
+                }
+            }
+
             foreach (var tag in tags)
             {
                 namespaceData.Tags[tag.Key] = tag.Value;
             }
         }
 
-        // Create or update the namespace
-        var operation = await resourceGroupResource.Value.GetEventHubsNamespaces()
+        if (existingResource is not null)
+        {
+            var updated = await existingResource.UpdateAsync(namespaceData, cancellationToken);
+            if (updated.Value is not { } updatedResource)
+            {
+                throw new InvalidOperationException($"Failed to update Event Hubs namespace '{namespaceName}'");
+            }
+            _logger.LogInformation(
+                "Successfully updated Event Hubs namespace '{NamespaceName}' in resource group '{ResourceGroup}'",
+                namespaceName, resourceGroup);
+            return ConvertToNamespace(updatedResource.Data, resourceGroup);
+        }
+
+        var operation = await namespaceCollection
             .CreateOrUpdateAsync(WaitUntil.Started, namespaceName, namespaceData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
