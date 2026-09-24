@@ -139,14 +139,13 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     }
 
     /// <summary>
-    /// Adds a command-provided, sanitized message to telemetry for failed responses.
+    /// Adds a command-provided, sanitized message to telemetry for failed responses or interim failure detection.
     /// </summary>
     /// <param name="context">The command execution context containing the telemetry activity.</param>
     /// <param name="response">The command response containing the optional telemetry message.</param>
     private static void CaptureTelemetryFailureMessage(CommandContext context, CommandResponse response)
     {
-        var isError = response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous;
-        if (isError && !string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
+        if (!string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
         {
             context.Activity?.SetTag(TagName.ToolFailureMessage, response.TelemetryFailureMessage);
         }
