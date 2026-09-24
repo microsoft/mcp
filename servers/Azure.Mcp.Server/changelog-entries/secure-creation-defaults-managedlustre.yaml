@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: New Azure Managed Lustre file systems now default to `RootOnly` root squashing with UID and GID 65534 and no exempt clients. Use `--root-squash-mode None` to explicitly retain client root privileges.

@@ -25,6 +25,17 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
     private const string Zone = "1";
 
     [Fact]
+    public void RootSquash_DefaultsToUnprivilegedRootMapping()
+    {
+        var settings = ManagedLustreService.GenerateRootSquashSettings(null, null, null, null);
+        Assert.Equal("RootOnly", settings.Mode?.ToString());
+        Assert.Equal(65534, settings.SquashUID);
+        Assert.Equal(65534, settings.SquashGID);
+        Assert.Null(settings.NoSquashNidLists);
+        Assert.Equal("None", ManagedLustreService.GenerateRootSquashSettings("None", null, null, null).Mode?.ToString());
+    }
+
+    [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
         Assert.Equal("create", CommandDefinition.Name);
