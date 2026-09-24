@@ -342,7 +342,27 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         }
     }
 
-    private static string BuildConnectionString(string host, string database, string user, string password)
+    internal const int DefaultCommandTimeout = 300;
+    internal const int DefaultKeepAlive = 30;
+    internal const string CommandTimeoutEnvVar = "AZURE_MCP_POSTGRES_COMMAND_TIMEOUT";
+
+    internal static int ResolveCommandTimeout(int? explicitTimeout = null)
+    {
+        if (explicitTimeout.HasValue && explicitTimeout.Value >= 0)
+        {
+            return explicitTimeout.Value;
+        }
+
+        var envVal = Environment.GetEnvironmentVariable(CommandTimeoutEnvVar);
+        if (!string.IsNullOrEmpty(envVal) && int.TryParse(envVal, out var parsed) && parsed >= 0)
+        {
+            return parsed;
+        }
+
+        return DefaultCommandTimeout;
+    }
+
+    private static string BuildConnectionString(string host, string database, string user, string password, int? commandTimeout = null)
     {
         var builder = new NpgsqlConnectionStringBuilder
         {
@@ -350,7 +370,10 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
             Database = database,
             Username = user,
             Password = password,
-            SslMode = SslMode.Require
+            SslMode = SslMode.Require,
+            KeepAlive = DefaultKeepAlive,
+            TcpKeepAlive = true,
+            CommandTimeout = ResolveCommandTimeout(commandTimeout)
         };
         return builder.ConnectionString;
     }
