@@ -96,11 +96,14 @@ public class AdvisorService(IAzureService azureService)
             recommendationTypeIds: metadataByTypeId?.Keys,
             scope: scope);
 
+        // A single tenant-scoped query joins recommendations with the metadata catalog and overrides the
+        // type-level fields server-side, so no follow-up metadata call or client-side merge is needed.
         var query = BuildRecommendationListQuery(
-            isServiceGroupScope ? null : resourceGroup,
+            scope,
             predicates,
             prioritized,
-            top);
+            top,
+            MetadataJoinLanguage);
 
         var recommendations = await ExecuteRecommendationListQueryAsync(
             query,
@@ -109,28 +112,13 @@ public class AdvisorService(IAzureService azureService)
             tenant,
             cancellationToken);
 
-        if (recommendations.Results.Count == 0)
+        if (recommendations.Results.Count == 0 && !isServiceGroupScope)
         {
-            if (!isServiceGroupScope)
-            {
-                // Preserve the resource-group-not-found signal that the subscription-scoped query would produce.
-                await EnsureResourceGroupExistsAsync(subscriptionResource!, resourceGroup, cancellationToken);
-            }
-
-            return recommendations;
+            // Preserve the resource-group-not-found signal that the subscription-scoped query would produce.
+            await EnsureResourceGroupExistsAsync(subscriptionResource!, resourceGroup, cancellationToken);
         }
 
-        // Enrich recommendations with matching type-level metadata before returning them.
-        metadataByTypeId ??= BuildMetadataLookup(
-            await GetRecommendationMetadataByTypeIdsAsync(
-                recommendations.Results.Select(r => r.Properties.RecommendationTypeId),
-                MetadataJoinLanguage,
-                metadataTenant,
-                cancellationToken));
-
-        return new(
-            JoinWithMetadata(recommendations.Results, metadataByTypeId),
-            recommendations.AreResultsTruncated);
+        return recommendations;
     }
 
     // Prioritized mode surfaces only criticality-scored recommendations, ranked by criticality score.
@@ -138,16 +126,22 @@ public class AdvisorService(IAzureService azureService)
         filters?.Prioritized == true;
 
     internal static string BuildRecommendationListQuery(
-        string? resourceGroup,
+        RecommendationQueryScope scope,
         string? predicates,
         bool prioritized,
-        int limit)
+        int limit,
+        string language)
     {
         var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
 
-        if (!string.IsNullOrEmpty(resourceGroup))
+        if (scope.SubscriptionId is { } subscriptionId)
         {
-            query += $" and resourceGroup =~ '{RecommendationQueryBuilder.EscapeKqlString(resourceGroup.Trim())}'";
+            query += $" and subscriptionId =~ '{RecommendationQueryBuilder.EscapeKqlString(subscriptionId)}'";
+        }
+
+        if (scope.ResourceGroup is { } resourceGroup)
+        {
+            query += $" and resourceGroup =~ '{RecommendationQueryBuilder.EscapeKqlString(resourceGroup)}'";
         }
 
         if (!string.IsNullOrEmpty(predicates))
@@ -157,13 +151,77 @@ public class AdvisorService(IAzureService azureService)
 
         if (prioritized)
         {
-            // Only recommendations that carry criticality scoring, ordered highest first.
+            // Only recommendations that carry criticality scoring participate in the ranked view.
             query += " and isnotempty(tostring(properties.criticality)) and isnotnull(properties.criticalityScore)";
-            query += " | order by todouble(properties.criticalityScore) desc";
         }
+
+        query += " | extend joinTypeId = tolower(tostring(properties.recommendationTypeId))";
+        query += BuildMetadataJoinClause(language);
+        query += MetadataOverrideClause;
+
+        if (prioritized)
+        {
+            // Rank by the recommendation type's metadata priority score; break ties on equal scores by business
+            // impact (High -> Medium -> Low), then keep each type's instances contiguous, then order by criticality
+            // within the type. Ordering runs before the projection so the metadata-only sort keys survive; missing
+            // scores/impact sort last, and id is the final tiebreaker for a fully deterministic result.
+            query += " | extend metadataImpactRank = case(" +
+                "tolower(metadataImpact) == 'high', 0, " +
+                "tolower(metadataImpact) == 'medium', 1, " +
+                "tolower(metadataImpact) == 'low', 2, 3)";
+            query += " | order by metadataPriorityScore desc, metadataImpactRank asc, joinTypeId asc," +
+                " todouble(properties.criticalityScore) desc, id asc";
+        }
+
+        query += " | project id, name, type, properties";
 
         return query + $" | limit {limit}";
     }
+
+    // Left-outer join to the English recommendation-type catalog, projecting the fields the list view overrides.
+    private static string BuildMetadataJoinClause(string language) =>
+        " | join kind=leftouter (" +
+        " advisorresources" +
+        " | where type =~ 'microsoft.advisor/metadata'" +
+        $" | where tostring(properties.language) =~ '{RecommendationQueryBuilder.EscapeKqlString(language.Trim())}'" +
+        " | extend joinTypeId = tolower(tostring(properties.recommendationTypeId))" +
+        " | project joinTypeId," +
+        " metadataCategory = tostring(properties.recommendationCategory)," +
+        " metadataImpact = tostring(properties.recommendationImpact)," +
+        " metadataSubCategory = tostring(properties.recommendationSubCategory)," +
+        " metadataDisplayName = tostring(properties.displayName)," +
+        " metadataLabel = tostring(properties.label)," +
+        " metadataDescription = tostring(properties.detailedDescription)," +
+        " metadataLearnMoreLink = tostring(properties.learnMoreLink)," +
+        " metadataPotentialBenefits = tostring(properties.potentialBenefits)," +
+        " metadataRetirementDate = tostring(properties.sourceProperties.serviceRetirement.retirementDate)," +
+        " metadataRetirementFeatureName = tostring(properties.sourceProperties.serviceRetirement.retirementFeatureName)," +
+        " metadataPriorityScore = todouble(properties.priorityScore)" +
+        " ) on joinTypeId";
+
+    // Reapplies the field precedence the former client-side merge used, then rewrites properties in place.
+    private const string MetadataOverrideClause =
+        " | extend instanceLabel = tostring(properties.label), instanceSourceSystem = tostring(properties.sourceSystem)" +
+        " | extend mergedLabel = iff(isempty(instanceSourceSystem)," +
+        " iff(isnotempty(metadataLabel), metadataLabel, instanceLabel)," +
+        " iff(isnotempty(instanceLabel), instanceLabel, metadataLabel))" +
+        " | extend hasExtendedAdditions = isnotempty(metadataSubCategory) or isnotempty(metadataRetirementDate) or isnotempty(metadataRetirementFeatureName)" +
+        " | extend mergedExtendedProperties = bag_merge(" +
+        " coalesce(properties.extendedProperties, dynamic({}))," +
+        " iff(isnotempty(metadataSubCategory), pack('recommendationSubCategory', metadataSubCategory), dynamic({}))," +
+        " iff(isnotempty(metadataRetirementDate), pack('retirementDate', metadataRetirementDate), dynamic({}))," +
+        " iff(isnotempty(metadataRetirementFeatureName), pack('retirementFeatureName', metadataRetirementFeatureName), dynamic({})))" +
+        " | extend metadataOverrides = bag_merge(" +
+        " iff(isnotempty(metadataCategory), pack('category', metadataCategory), dynamic({}))," +
+        " iff(isnotempty(metadataImpact), pack('impact', metadataImpact), dynamic({}))," +
+        " iff(isnotempty(metadataDescription), pack('description', metadataDescription), dynamic({}))," +
+        " iff(isnotempty(metadataLearnMoreLink), pack('learnMoreLink', metadataLearnMoreLink), dynamic({}))," +
+        " iff(isnotempty(metadataPotentialBenefits), pack('potentialBenefits', metadataPotentialBenefits), dynamic({}))," +
+        " iff(isnotempty(mergedLabel), pack('label', mergedLabel), dynamic({}))," +
+        " iff(isnull(properties.shortDescription) and isnotempty(metadataDisplayName)," +
+        " pack('shortDescription', pack('problem', metadataDisplayName, 'solution', metadataDisplayName)), dynamic({}))," +
+        " iff(hasExtendedAdditions, pack('extendedProperties', mergedExtendedProperties), dynamic({})))" +
+        " | extend properties = bag_merge(properties, metadataOverrides)";
 
     private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueryAsync(
         string query,
@@ -172,22 +230,12 @@ public class AdvisorService(IAzureService azureService)
         string? tenant,
         CancellationToken cancellationToken)
     {
-        TenantResource tenantResource;
-        ResourceQueryContent queryContent;
-        if (subscriptionResource is not null)
-        {
-            tenantResource = await GetTenantResourceForSubscriptionAsync(subscriptionResource, cancellationToken);
-            queryContent = new ResourceQueryContent(query)
-            {
-                Subscriptions = { subscriptionResource.Data.SubscriptionId },
-            };
-        }
-        else
-        {
-            // Service Group scope: query at the tenant level without subscription scoping.
-            tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
-            queryContent = new ResourceQueryContent(query);
-        }
+        // The query joins tenant-level metadata, so it runs at tenant scope for both subscription and
+        // Service Group scopes; the subscription filter is expressed inside the query itself.
+        var tenantResource = subscriptionResource is not null
+            ? await GetTenantResourceForSubscriptionAsync(subscriptionResource, cancellationToken)
+            : await GetTenantResourceAsync(tenant, cancellationToken);
+        var queryContent = new ResourceQueryContent(query);
 
         ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
 
@@ -376,82 +424,6 @@ public class AdvisorService(IAzureService azureService)
         return lookup;
     }
 
-    internal static List<Recommendation> JoinWithMetadata(
-        IEnumerable<Recommendation> recommendations,
-        IReadOnlyDictionary<string, RecommendationMetadata> metadataByTypeId)
-    {
-        var joined = new List<Recommendation>();
-
-        foreach (var recommendation in recommendations)
-        {
-            if (string.IsNullOrWhiteSpace(recommendation.Properties.RecommendationTypeId) ||
-                !metadataByTypeId.TryGetValue(recommendation.Properties.RecommendationTypeId, out var metadata))
-            {
-                joined.Add(recommendation);
-                continue;
-            }
-
-            joined.Add(recommendation with
-            {
-                Properties = recommendation.Properties with
-                {
-                    Category = metadata.Category ?? recommendation.Properties.Category,
-                    Impact = metadata.Impact ?? recommendation.Properties.Impact,
-                    ShortDescription = recommendation.Properties.ShortDescription ??
-                        (metadata.DisplayName is null
-                            ? null
-                            : new RecommendationShortDescription(metadata.DisplayName, metadata.DisplayName)),
-                    Description = metadata.DetailedDescription ?? recommendation.Properties.Description,
-                    // Recommendations from an external source system carry a per-instance label that differs from the catalog, so prefer it.
-                    Label = string.IsNullOrWhiteSpace(recommendation.Properties.SourceSystem)
-                        ? metadata.Label ?? recommendation.Properties.Label
-                        : recommendation.Properties.Label ?? metadata.Label,
-                    LearnMoreLink = metadata.LearnMoreLink ?? recommendation.Properties.LearnMoreLink,
-                    PotentialBenefits = metadata.PotentialBenefits ?? recommendation.Properties.PotentialBenefits,
-                    ExtendedProperties = AddMetadataSubCategory(
-                        AddMetadataRetirementProperties(
-                            recommendation.Properties.ExtendedProperties,
-                            metadata.ServiceRetirement),
-                        metadata.SubCategory),
-                },
-            });
-        }
-
-        return joined;
-    }
-
-    private async Task<List<RecommendationMetadata>> GetRecommendationMetadataByTypeIdsAsync(
-        IEnumerable<string?> recommendationTypeIds,
-        string language,
-        string? tenant,
-        CancellationToken cancellationToken)
-    {
-        var distinctIds = recommendationTypeIds
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .Select(id => id!.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        if (distinctIds.Count == 0)
-        {
-            return [];
-        }
-
-        return await ExecuteMetadataQueryAsync(
-            BuildMetadataByTypeIdsQuery(distinctIds, language),
-            tenant,
-            cancellationToken);
-    }
-
-    internal static string BuildMetadataByTypeIdsQuery(
-        IReadOnlyCollection<string> recommendationTypeIds,
-        string language) =>
-        "advisorresources " +
-        "| where type =~ 'microsoft.advisor/metadata' " +
-        $"| where tostring(properties.language) =~ '{EscapeKqlString(language.Trim())}' " +
-        $"| where tostring(properties.recommendationTypeId) in~ ({FormatKqlStringList(recommendationTypeIds)}) " +
-        "| project properties";
-
     private static string FormatKqlStringList(IEnumerable<string> values) =>
         string.Join(", ", values.Select(value => $"'{RecommendationQueryBuilder.SanitizeForKql(value)}'"));
 
@@ -582,25 +554,6 @@ public class AdvisorService(IAzureService azureService)
         [.. metadata
             .OrderBy(r => ImpactRank.TryGetValue(r.Impact ?? string.Empty, out var rank) ? rank : int.MaxValue)
             .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)];
-
-    private async Task<List<RecommendationMetadata>> ExecuteMetadataQueryAsync(
-        string query,
-        string? tenant,
-        CancellationToken cancellationToken)
-    {
-        var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
-
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(
-            new ResourceQueryContent(query),
-            cancellationToken);
-
-        if (result == null || result.Count == 0)
-        {
-            return [];
-        }
-
-        return ParseMetadata(result.Data);
-    }
 
     internal static string BuildMetadataListQuery(
         string language,
@@ -889,55 +842,6 @@ public class AdvisorService(IAzureService azureService)
     {
         return JsonSerializer.Deserialize(item, AdvisorJsonContext.Default.Recommendation)
             ?? throw new InvalidOperationException("Failed to parse Advisor recommendation update response");
-    }
-
-    private static IReadOnlyDictionary<string, JsonElement>? AddMetadataSubCategory(
-        IReadOnlyDictionary<string, JsonElement>? properties,
-        string? subCategory)
-    {
-        if (string.IsNullOrWhiteSpace(subCategory))
-        {
-            return properties;
-        }
-
-        var result = properties is null
-            ? new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase)
-            : new Dictionary<string, JsonElement>(properties, StringComparer.OrdinalIgnoreCase);
-        result["recommendationSubCategory"] = JsonSerializer.SerializeToElement(
-            subCategory,
-            Commands.AdvisorJsonContext.Default.String);
-        return result;
-    }
-
-    private static IReadOnlyDictionary<string, JsonElement>? AddMetadataRetirementProperties(
-        IReadOnlyDictionary<string, JsonElement>? properties,
-        RecommendationServiceRetirement? serviceRetirement)
-    {
-        if (serviceRetirement is null)
-        {
-            return properties;
-        }
-
-        var result = properties is null
-            ? new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase)
-            : new Dictionary<string, JsonElement>(properties, StringComparer.OrdinalIgnoreCase);
-
-        AddStringProperty(result, "retirementDate", serviceRetirement.RetirementDate);
-        AddStringProperty(result, "retirementFeatureName", serviceRetirement.RetirementFeatureName);
-        return result;
-    }
-
-    private static void AddStringProperty(
-        IDictionary<string, JsonElement> properties,
-        string name,
-        string? value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            properties[name] = JsonSerializer.SerializeToElement(
-                value,
-                Commands.AdvisorJsonContext.Default.String);
-        }
     }
 
     private static string? GetExtendedPropertyString(
