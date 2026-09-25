@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
@@ -9,7 +10,9 @@ using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -437,12 +440,15 @@ public class RegistryToolLoaderTests
         Assert.False(McpHelper.HasHint(notLocalRequiredToolResult, McpHelper.LocalRequiredHintMetaKey));
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult()
+    [Theory]
+    [InlineData("unknown-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult(string toolName)
     {
         // Arrange
         var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
-        var request = McpTestUtilities.CreateToolCallRequest("unknown-tool");
+        var request = McpTestUtilities.CreateToolCallRequest(toolName);
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -456,8 +462,40 @@ public class RegistryToolLoaderTests
         // Verify the error message
         var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(textContent);
-        Assert.Contains("unknown-tool", textContent.Text);
+        Assert.Contains(toolName, textContent.Text);
         Assert.Contains("was not found", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+    }
+
+    [Theory]
+    [InlineData("blocked-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithToolFilter_RejectsToolOutsideAllowList(string toolName)
+    {
+        var executions = 0;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("blocked-tool", "Blocked tool", () =>
+            {
+                executions++;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy,
+            new ServerRuntimeConfiguration { Tool = ["allowed-tool"] });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(toolName), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Equal(0, executions);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
     }
 
     [Fact]
@@ -515,6 +553,7 @@ public class RegistryToolLoaderTests
         {
             { "question", "how to implement mcp server in azure" }
         });
+        using var activity = new Activity("test-activity").Start();
 
         // Act - Call CallToolHandler, which should initialize tools first
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -529,6 +568,9 @@ public class RegistryToolLoaderTests
         var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(textContent);
         Assert.Equal("Tool executed successfully", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "microsoft_docs_search");
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, true);
     }
 
     [Fact]
@@ -933,8 +975,10 @@ public class RegistryToolLoaderTests
         Assert.Equal("search_docs", result.Tools[0].Name);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool(bool filterReadOnlyTool)
     {
         // Arrange
         var readOnlyTool = new Tool
@@ -962,16 +1006,23 @@ public class RegistryToolLoaderTests
             .Build();
 
         var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+        if (filterReadOnlyTool)
+        {
+            configuration.Tool = ["write-tool"];
+        }
 
         var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
 
         // Act - Try to call the non-read-only tool directly
         var request = McpTestUtilities.CreateToolCallRequest("write-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to read-only mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "write-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);
@@ -1057,11 +1108,14 @@ public class RegistryToolLoaderTests
 
         // Act - Try to call the local-required tool in HTTP mode
         var request = McpTestUtilities.CreateToolCallRequest("local-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to HTTP mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "local-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("HTTP mode", errorText.Text);
@@ -1092,11 +1146,14 @@ public class RegistryToolLoaderTests
 
         // Act - Try to call a tool with null annotations in read-only mode
         var request = McpTestUtilities.CreateToolCallRequest("no-annotations-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject since null annotations means ReadOnlyHint is not true
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "no-annotations-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);

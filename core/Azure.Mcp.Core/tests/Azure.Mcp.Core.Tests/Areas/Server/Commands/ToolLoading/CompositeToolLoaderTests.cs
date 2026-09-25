@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -202,8 +205,10 @@ public class CompositeToolLoaderTests
         Assert.Contains("At least one tool loader must be provided", exception.Message);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult()
+    [Theory]
+    [InlineData("unknown-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult(string toolName)
     {
         var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
@@ -220,7 +225,8 @@ public class CompositeToolLoaderTests
         await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         // Now try to call an unknown tool
-        var callRequest = McpTestUtilities.CreateToolCallRequest("unknown-tool");
+        var callRequest = McpTestUtilities.CreateToolCallRequest(toolName);
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
@@ -230,6 +236,11 @@ public class CompositeToolLoaderTests
         var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
         Assert.NotNull(callRequest.Params);
         Assert.Equal($"The tool {callRequest.Params.Name} was not found", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+        await mockLoader.DidNotReceive().CallToolHandler(
+            Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -243,12 +254,20 @@ public class CompositeToolLoaderTests
             Content = [new TextContentBlock { Text = "Tool executed successfully" }],
             IsError = false
         };
+        using var activity = new Activity("test-activity").Start();
 
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
             .Returns(new ListToolsResult { Tools = new List<Tool> { CreateTestTool("test-tool") } });
 
         mockLoader.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
+            .Returns(_ =>
+            {
+                activity.AssertTagDoesNotExist(TagName.ToolName);
+                activity.AssertTagDoesNotExist(TagName.ToolArea);
+                activity.SetTag(TagName.ToolName, "test-tool")
+                    .SetTag(TagName.ToolArea, "test-area");
+                return expectedResult;
+            });
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
@@ -264,6 +283,8 @@ public class CompositeToolLoaderTests
         Assert.NotNull(result);
         Assert.False(result.IsError);
         Assert.Equal(expectedResult.Content, result.Content);
+        activity.AssertTagEquals(TagName.ToolName, "test-tool");
+        activity.AssertTagEquals(TagName.ToolArea, "test-area");
 
         // Verify the mock loader was called with the correct request
         await mockLoader.Received(1).CallToolHandler(callRequest, Arg.Any<CancellationToken>());
@@ -321,6 +342,7 @@ public class CompositeToolLoaderTests
 
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = McpTestUtilities.CreateToolCallRequest((CallToolRequestParams)null!, Substitute.For<McpServer>());
+        using var activity = new Activity("test-activity").Start();
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -330,6 +352,8 @@ public class CompositeToolLoaderTests
         Assert.Single(result.Content);
         var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
         Assert.Equal("Cannot call tools with null parameters.", textContent.Text);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolArea);
     }
 
     [Fact]
@@ -344,6 +368,7 @@ public class CompositeToolLoaderTests
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = McpTestUtilities.CreateToolCallRequest("test-tool");
+        using var activity = new Activity("test-activity").Start();
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -353,6 +378,8 @@ public class CompositeToolLoaderTests
         Assert.Single(result.Content);
         var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
         Assert.Contains("Failed to initialize tool loaders", textContent.Text);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolArea);
     }
 
     [Fact]

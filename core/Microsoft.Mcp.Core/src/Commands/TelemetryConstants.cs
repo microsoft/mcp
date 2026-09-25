@@ -64,7 +64,7 @@ public class TagName
     public const string ToolId = "ToolId";
 
     /// <summary>
-    /// Name of the MCP tool that was executed.
+    /// Name of the MCP tool, or <see cref="TagConstants.Unknown"/> if the tool name was invalid.
     /// </summary>
     public const string ToolName = "ToolName";
 
@@ -74,7 +74,7 @@ public class TagName
     public const string ToolFailureMessage = "ToolFailureMessage";
 
     /// <summary>
-    /// Name of the area of the tool that was executed.
+    /// Name of the tool area, or <see cref="TagConstants.Unknown"/> if tool area was invalid.
     /// </summary>
     public const string ToolArea = "ToolArea";
 
@@ -184,6 +184,14 @@ public class TagName
     /// The W3C tracestate header value for the request.
     /// </summary>
     public const string TraceState = "w3c.tracestate";
+}
+
+public class TagConstants
+{
+    /// <summary>
+    /// Represents an unknown value for a telemetry tag.
+    /// </summary>
+    public const string Unknown = "<Unknown>";
 }
 
 public class ActivityName

@@ -104,7 +104,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             };
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         // Ensure tool loader map is populated before attempting tool lookup
@@ -130,6 +130,8 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
 
         if (!_toolLoaderMap.TryGetValue(request.Params.Name, out var toolLoader))
         {
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"The tool {request.Params.Name} was not found",

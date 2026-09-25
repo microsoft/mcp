@@ -38,12 +38,11 @@ public class SpeechSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var speech = new CommandGroup(Name,
-            """
-            Speech operations - Commands to work with Azure AI Services Speech, including speech-to-text (STT) recognition,
-            text-to-speech (TTS) synthesis, audio processing, and language detection. Uses a hierarchical MCP command model
-            with command and parameters; set learn=true to discover sub-commands. Supports multiple audio formats, languages,
-            and output options.
-            """, Title);
+            "Speech operations - Commands to work with Azure AI Services Speech, including speech-to-text (STT) " +
+            "recognition, text-to-speech (TTS) synthesis, audio processing, and language detection. Uses a " +
+            "hierarchical MCP command model with command and parameters; set learn=true to discover sub-commands. " +
+            "Supports multiple audio formats, languages, and output options.",
+            Title);
 
         var stt = new CommandGroup(
             name: "stt",

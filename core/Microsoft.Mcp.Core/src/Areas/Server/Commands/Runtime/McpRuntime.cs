@@ -60,8 +60,6 @@ public sealed class McpRuntime(IToolLoader toolLoader, ITelemetryService telemet
             };
         }
 
-        activity?.AddTag(TagName.ToolName, request.Params.Name);
-
         var subscriptionArgument = request.Params?.Arguments?
             .Where(kvp => string.Equals(kvp.Key, "subscription", StringComparison.OrdinalIgnoreCase))
             .Select(kvp => kvp.Value)
