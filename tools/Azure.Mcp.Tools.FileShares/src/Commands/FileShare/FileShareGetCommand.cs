@@ -1,105 +1,91 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.FileShares.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
 using Azure.Mcp.Tools.FileShares.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
 
-public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFileSharesService service)
-    : BaseFileSharesCommand<FileShareGetOptions>(logger, service)
+[CommandMetadata(
+    Id = "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
+    Name = "get",
+    Title = "Get File Share",
+    Description = """
+        Get details of a specific Azure File Share or list Azure File Shares in a subscription or resource group.
+        Use this command instead of generic Azure resource listing when the user asks to list file shares.
+        Provide --name and --resource-group to get one file share; omit --name to list file shares.
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
+    : BaseFileSharesCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get File Share";
-    public override string Id => "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f";
-    public override string Name => "get";
-    public override string Description => "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.";
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(FileShareGetOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(FileSharesOptionDefinitions.FileShare.Name.AsOptional());
-    }
-
-    protected override FileShareGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileShareName = parseResult.GetValueOrDefault<string>(FileSharesOptionDefinitions.FileShare.Name.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (!string.IsNullOrWhiteSpace(options.Name) && string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
-            return context.Response;
+            validationResult.Errors.Add("--resource-group is required when --name is provided.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileShareGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             // If file share name is provided, get specific file share
-            if (!string.IsNullOrEmpty(options.FileShareName))
+            if (!string.IsNullOrEmpty(options.Name))
             {
-                _logger.LogInformation("Getting file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
-                    options.Subscription, options.ResourceGroup, options.FileShareName);
+                logger.LogInformation("Getting file share. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FileShareName: {FileShareName}",
+                    options.Subscription, options.ResourceGroup, options.Name);
 
-                var fileShare = await _fileSharesService.GetFileShareAsync(
+                var fileShare = await fileSharesService.GetFileShareAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
-                    options.FileShareName!,
+                    options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([fileShare]), FileSharesJsonContext.Default.FileShareGetCommandResult);
 
-                _logger.LogInformation("Successfully retrieved file share. FileShareName: {FileShareName}", options.FileShareName);
+                logger.LogInformation("Successfully retrieved file share. FileShareName: {FileShareName}", options.Name);
             }
             else
             {
                 // List all file shares
-                _logger.LogInformation("Listing file shares. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}",
+                logger.LogInformation("Listing file shares. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}",
                     options.Subscription, options.ResourceGroup ?? "(all)");
 
-                var fileShares = await _fileSharesService.ListFileSharesAsync(
+                var fileShares = await fileSharesService.ListFileSharesAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(fileShares ?? []), FileSharesJsonContext.Default.FileShareGetCommandResult);
 
-                _logger.LogInformation("Successfully listed {Count} file shares", fileShares?.Count ?? 0);
+                logger.LogInformation("Successfully listed {Count} file shares", fileShares?.Count ?? 0);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get file share(s)");
+            logger.LogError(ex, "Failed to get file share(s)");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record FileShareGetCommandResult(List<FileShareInfo> FileShares);
+    public sealed record FileShareGetCommandResult(List<FileShareInfo> FileShares);
 }

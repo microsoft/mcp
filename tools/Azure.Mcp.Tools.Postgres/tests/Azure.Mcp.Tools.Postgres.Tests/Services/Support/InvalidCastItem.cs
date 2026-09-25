@@ -1,0 +1,12 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+
+internal class InvalidCastItem
+{
+    public override string ToString()
+    {
+        throw new InvalidCastException("This is an invalid cast item.");
+    }
+}

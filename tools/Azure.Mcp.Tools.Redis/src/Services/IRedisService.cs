@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Redis.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
@@ -13,14 +12,12 @@ public interface IRedisService
     /// </summary>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="tenant">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="cancellationToken">A cancellation token</param>
     /// <returns>List of Redis resource details</returns>
     /// <exception cref="Exception">When the service request fails</exception>
     Task<IEnumerable<Resource>> ListResourcesAsync(
     string subscription,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null,
     CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -36,7 +33,6 @@ public interface IRedisService
     /// <param name="publicNetworkAccessEnabled">Whether to enable public network access (default false)</param>
     /// <param name="modules">The modules to enable (e.g. "RedisJSON", "RedisBloom")</param>
     /// <param name="tenant">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="cancellationToken">A cancellation token</param>
     /// <returns>Details of the Redis resource being created.</returns>
     /// <exception cref="Exception">When the service request fails</exception>
@@ -50,6 +46,5 @@ public interface IRedisService
         bool? publicNetworkAccessEnabled = false,
         string[]? modules = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

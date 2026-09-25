@@ -2,93 +2,61 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Compute.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
-public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
-    : BaseComputeCommand<VmssDeleteOptions>(true)
-{
-    private const string CommandTitle = "Delete Virtual Machine Scale Set";
-    private readonly ILogger<VmssDeleteCommand> _logger = logger;
-
-    public override string Id => "e5f3d9b2-7a4c-4e8f-c9d8-2b3f4a5e6d7c";
-
-    public override string Name => "delete";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "e5f3d9b2-7a4c-4e8f-c9d8-2b3f4a5e6d7c",
+    Name = "delete",
+    Title = "Delete Virtual Machine Scale Set",
+    Description = """
         Delete, remove, or destroy an Azure Virtual Machine Scale Set (VMSS) and all its VM instances.
         Use this to permanently remove a scale set that is no longer needed.
         Equivalent to 'az vmss delete'. This operation is irreversible and all VMSS instances will be lost.
         Use --force-deletion to force delete the VMSS even if it is in a running or failed state
         (passes forceDeletion=true to the Azure API).
-        Do not use this to delete a single VM (use VM delete instead).
-        """;
+        Do not use this to delete a single VM (use VM delete instead) or to update/modify a VMSS (use VMSS update).
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VmssDeleteOptions, VmssDeleteCommand.VmssDeleteCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<VmssDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmssDeleteOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-
-        // Required options
-        command.Options.Add(ComputeOptionDefinitions.VmssName.AsRequired());
-        command.Options.Add(ComputeOptionDefinitions.ForceDeletion);
-    }
-
-    protected override VmssDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
-        options.ForceDeletion = parseResult.GetValueOrDefault(ComputeOptionDefinitions.ForceDeletion);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
-        var computeService = context.GetService<IComputeService>();
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            await computeService.DeleteVmssAsync(
-                options.VmssName!,
-                options.ResourceGroup!,
+            var deleted = await _computeService.DeleteVmssAsync(
+                options.VmssName,
+                options.ResourceGroup,
                 options.Subscription!,
                 options.ForceDeletion ? true : null,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
+            var message = deleted
+                ? $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'."
+                : $"Virtual machine scale set '{options.VmssName}' was not found in resource group '{options.ResourceGroup}'. Nothing was deleted.";
+
             context.Response.Results = ResponseResult.Create(
-                new VmssDeleteCommandResult(
-                    $"Virtual machine scale set '{options.VmssName}' was successfully deleted from resource group '{options.ResourceGroup}'.",
-                    true),
+                new(message, deleted),
                 ComputeJsonContext.Default.VmssDeleteCommandResult);
         }
         catch (Exception ex)
@@ -112,5 +80,5 @@ public sealed class VmssDeleteCommand(ILogger<VmssDeleteCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssDeleteCommandResult(string Message, bool Success);
+    public sealed record VmssDeleteCommandResult(string Message, bool Success);
 }

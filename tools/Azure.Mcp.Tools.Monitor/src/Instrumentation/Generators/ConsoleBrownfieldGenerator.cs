@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Console app (and class library) brownfield projects migrating from
@@ -18,8 +21,7 @@ public class ConsoleBrownfieldGenerator : BrownfieldGeneratorBase
     protected override string EntryPointMethodName => "TelemetryConfiguration.CreateDefault";
 
     protected override ProjectInfo FindProject(Analysis analysis)
-        => analysis.Projects.First(p =>
-            p.AppType is AppType.Console or AppType.Library);
+        => analysis.Projects.First(p => p.AppType is AppType.Console or AppType.Library);
 
     public override bool CanHandle(Analysis analysis)
     {
@@ -42,10 +44,12 @@ public class ConsoleBrownfieldGenerator : BrownfieldGeneratorBase
 
     protected override List<string> BuildLearnResources(BrownfieldFindings? findings)
     {
-        var resources = new List<string> { MigrationCodeResource };
-
-        // Always include non-DI extensibility doc
-        resources.Add(LearningResources.ApiConfigureOpenTelemetryBuilder);
+        var resources = new List<string>
+        {
+            MigrationCodeResource,
+            // Always include non-DI extensibility doc
+            LearningResources.ApiConfigureOpenTelemetryBuilder
+        };
 
         if (findings?.Initializers is { Found: true, Implementations.Count: > 0 }
             || findings?.Processors is { Found: true, Implementations.Count: > 0 })
@@ -137,8 +141,10 @@ public class ConsoleBrownfieldGenerator : BrownfieldGeneratorBase
     }
 
     protected override string AddRemovedMethodActions(
-        OnboardingSpecBuilder builder, ServiceOptionsFindings opts,
-        string entryPoint, string lastDependency)
+        OnboardingSpecBuilder builder,
+        ServiceOptionsFindings opts,
+        string entryPoint,
+        string lastDependency)
     {
         // Console apps don't have UseApplicationInsights() or ConfigureTelemetryModule
         // but may have TelemetryProcessorChainBuilder usage

@@ -1,79 +1,66 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 
-public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger, IAppServiceService appServiceService)
-    : BaseAppServiceCommand<AppSettingsUpdateOptions>(resourceGroupRequired: true, appRequired: true)
-{
-    private const string CommandTitle = "Updates Azure App Service Web App Application Settings";
-    private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
-    private readonly IAppServiceService _appServiceService = appServiceService;
-    public override string Id => "08ca52a3-f766-4c62-9597-702f629efaf6";
-    public override string Name => "update-appsettings";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "08ca52a3-f766-4c62-9597-702f629efaf6",
+    Name = "update-appsettings",
+    Title = "Updates Azure App Service Web App Application Settings",
+    Description = """
         Updates the application setting for an App Service web app. Three types of updating are available:
-        
+
         - Add: adds a new application setting with the specified name and value. If the application setting already exists, the operation will fail and return an error message.
         - Set: sets the value of an application setting. If the application setting does not exist, this is equivalent to add. If the application setting already exists, the value will be overwritten.
         - Delete: deletes an application setting with the specified name. If the application setting does not exist, nothing happens.
 
         For add and set update types, both the application setting name and value are required. For delete update type, only the application setting name is required.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> logger, IAppServiceService appServiceService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AppSettingsUpdateOptions, AppSettingsUpdateCommand.AppSettingsUpdateResult>(subscriptionResolver)
+{
+    private readonly ILogger<AppSettingsUpdateCommand> _logger = logger;
+    private readonly IAppServiceService _appServiceService = appServiceService;
 
-    public override string Title => CommandTitle;
+    private static readonly HashSet<string> s_validUpdateTypes = ["add", "set", "delete"];
 
-    private static readonly HashSet<string> ValidUpdateTypes = ["add", "set", "delete"];
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(AppSettingsUpdateOptions options, ValidationResult validationResult)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        Secret = false,
-        LocalRequired = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AppServiceOptionDefinitions.AppSettingName);
-        command.Options.Add(AppServiceOptionDefinitions.AppSettingValue);
-        command.Options.Add(AppServiceOptionDefinitions.AppSettingUpdateType);
-        command.Validators.Add(commandResult =>
+        if (!ValidateUpdateType(options.SettingUpdateType, out var errorMessage))
         {
-            var updateType = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingUpdateType.Name);
-            var settingValue = commandResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingValue.Name);
+            validationResult.Errors.Add(errorMessage);
+        }
 
-            if (!ValidateUpdateType(updateType, out var errorMessage))
-            {
-                commandResult.AddError(errorMessage);
-            }
-
-            if (!ValidateSettingValue(updateType, settingValue, out errorMessage))
-            {
-                commandResult.AddError(errorMessage);
-            }
-        });
+        if (!ValidateSettingValue(options.SettingUpdateType, options.SettingValue, out errorMessage))
+        {
+            validationResult.Errors.Add(errorMessage);
+        }
     }
 
     internal static bool ValidateUpdateType(string? settingUpdateType, out string errorMessage)
     {
         errorMessage = string.Empty;
-        if (!ValidUpdateTypes.Contains(settingUpdateType, StringComparer.OrdinalIgnoreCase))
+        if (!s_validUpdateTypes.Contains(settingUpdateType, StringComparer.OrdinalIgnoreCase))
         {
-            errorMessage = $"'{AppServiceOptionDefinitions.AppSettingUpdateTypeName}' must be one of the following values: {string.Join(", ", ValidUpdateTypes)}.";
+            errorMessage = $"'{AppServiceOptionDefinitions.AppSettingUpdateTypeName}' must be one of the following values: {string.Join(", ", s_validUpdateTypes)}.";
             return false;
         }
         return true;
@@ -91,46 +78,28 @@ public sealed class AppSettingsUpdateCommand(ILogger<AppSettingsUpdateCommand> l
         return true;
     }
 
-    protected override AppSettingsUpdateOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AppSettingsUpdateOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.SettingName = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingName.Name);
-        options.SettingValue = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingValue.Name);
-        options.SettingUpdateType = parseResult.GetValueOrDefault<string>(AppServiceOptionDefinitions.AppSettingUpdateType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        // Validate first, then bind
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var updateResult = await _appServiceService.UpdateAppSettingsAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.AppName!,
-                options.SettingName!,
-                options.SettingUpdateType!,
+                options.ResourceGroup,
+                options.App,
+                options.SettingName,
+                options.SettingUpdateType,
                 options.SettingValue,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(updateResult), AppServiceJsonContext.Default.AppSettingsUpdateResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to '{SettingUpdateType}' application setting '{SettingName}' for Web App details for '{AppName}' in subscription {Subscription} and resource group {ResourceGroup}",
-                options.SettingUpdateType, options.SettingName, options.AppName, options.Subscription, options.ResourceGroup);
+            _logger.LogError(ex, "Failed to '{SettingUpdateType}' application setting '{SettingName}' for Web App details for '{App}' in subscription {Subscription} and resource group {ResourceGroup}",
+                options.SettingUpdateType, options.SettingName, options.App, options.Subscription, options.ResourceGroup);
             HandleException(context, ex);
         }
 

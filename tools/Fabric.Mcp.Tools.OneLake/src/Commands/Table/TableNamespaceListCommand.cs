@@ -1,122 +1,67 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
-public sealed class TableNamespaceListCommand(
-    ILogger<TableNamespaceListCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<TableNamespaceListOptions>()
+[CommandMetadata(
+    Id = "173cfc00-7c12-486d-a0e7-c0d4c1de23fd",
+    Name = "list-table-namespaces",
+    Title = "List OneLake Table Namespaces",
+    Description = "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
+public sealed class TableNamespaceListCommand(ILogger<TableNamespaceListCommand> logger, IOneLakeService oneLakeService)
+    : AuthenticatedCommand<TableNamespaceListOptions, TableNamespaceListCommand.TableNamespaceListCommandResult>
 {
     private readonly ILogger<TableNamespaceListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Id => "173cfc00-7c12-486d-a0e7-c0d4c1de23fd";
-    public override string Name => "list_table_namespaces";
-    public override string Title => "List OneLake Table Namespaces";
-    public override string Description => "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.";
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(TableNamespaceListOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
-    }
-
-    protected override TableNamespaceListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.Workspace = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        options.Item = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.IsNullOrWhiteSpace(options.ItemId) && string.IsNullOrWhiteSpace(options.Item))
+        {
+            validationResult.Errors.Add("Item identifier is required. Provide --item or --item-id.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableNamespaceListOptions options, CancellationToken cancellationToken)
+    {
+        var workspaceId = !string.IsNullOrWhiteSpace(options.WorkspaceId) ? options.WorkspaceId : options.Workspace;
+        var itemId = !string.IsNullOrWhiteSpace(options.ItemId) ? options.ItemId : options.Item;
+
         try
         {
-            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
-                ? options.WorkspaceId
-                : options.Workspace;
-
-            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
-                ? options.ItemId
-                : options.Item;
-
-            var namespaceResult = await _oneLakeService.ListTableNamespacesAsync(workspaceIdentifier!, itemIdentifier!, cancellationToken);
+            var namespaceResult = await _oneLakeService.ListTableNamespacesAsync(workspaceId!, itemId!, cancellationToken);
             var result = new TableNamespaceListCommandResult(namespaceResult.Workspace, namespaceResult.Item, namespaceResult.Namespaces, namespaceResult.RawResponse);
             context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.TableNamespaceListCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing table namespaces. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}.", options.WorkspaceId, options.ItemId);
+            _logger.LogError(ex, "Error listing table namespaces. WorkspaceId: {WorkspaceId}, ItemId: {ItemId}.", workspaceId, itemId);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    public sealed class TableNamespaceListCommandResult
-    {
-        public string Workspace { get; init; } = string.Empty;
-        public string Item { get; init; } = string.Empty;
-        public JsonElement Namespaces { get; init; } = default;
-        public string RawResponse { get; init; } = string.Empty;
-
-        public TableNamespaceListCommandResult()
-        {
-        }
-
-        public TableNamespaceListCommandResult(string workspace, string item, JsonElement namespaces, string rawResponse)
-        {
-            Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
-            Item = item ?? throw new ArgumentNullException(nameof(item));
-            Namespaces = namespaces;
-            RawResponse = rawResponse ?? string.Empty;
-        }
-    }
+    public sealed record TableNamespaceListCommandResult(string Workspace, string Item, JsonElement Namespaces, string RawResponse);
 }

@@ -15,11 +15,7 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK from global.json"
-    retryCountOnTaskFailure: 3
-    inputs:
-      useGlobalJson: true
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - pwsh: |
       Write-Host "Attaching build reason string to the build for additional tag generation."

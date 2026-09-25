@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Next.js greenfield projects (no existing telemetry)
@@ -12,11 +15,10 @@ public class NextJsGreenfieldGenerator : IGenerator
     {
         // Single Next.js project, greenfield
         var nextjsProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.NextJs)
-            .ToList();
+            .Count(p => p.AppType == AppType.NextJs);
 
         return analysis.Language == Language.NodeJs
-            && nextjsProjects.Count == 1
+            && nextjsProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 

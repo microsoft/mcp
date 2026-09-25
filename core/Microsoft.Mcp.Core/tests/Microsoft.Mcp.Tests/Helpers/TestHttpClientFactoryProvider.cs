@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Services.Http;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -20,15 +21,18 @@ public static class TestHttpClientFactoryProvider
     /// <returns>
     /// A <see cref="ServiceProvider"/> containing the configured HTTP client services for use in tests.
     /// </returns>
-    public static ServiceProvider Create(TestProxyFixture? fixture = null)
+    public static ServiceProvider Create(TestProxyFixture? fixture = null, Action<ServiceCollection>? configureServices = null)
     {
         Func<Uri?>? recordingProxyResolver = fixture == null ? null : fixture.GetProxyUri;
 
         var services = new ServiceCollection();
         services.AddOptions();
         services.Configure<HttpClientOptions>(_ => { });
-        services.Configure<ServiceStartOptions>(_ => { });
+        services.Configure<ServerStartOptions>(_ => { });
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
         services.AddHttpClient();
+
+        configureServices?.Invoke(services);
 
         services.ConfigureDefaultHttpClient(recordingProxyResolver);
         return services.BuildServiceProvider();

@@ -8,6 +8,7 @@ This article provides a breakdown of the definition structure for dataflow items
 |--|--|--|--|
 | `queryMetadata.json` | [Metadata ContentDetails](#metadata-contentdetails) (JSON) | true | Describes metadata related to query options in dataflow  |
 | `mashup.pq`          | [Mashup ContentDetails](#mashup-contentdetails-example) (PQ) | true | Describes mashup content of payload. It contains sequence of all the steps performed in dataflow |
+| `<mdfTransformName>.mdf` | [MDFTransform ContentDetails](#mdftransform-contentdetails) (JSON) | false | Describes Mapping Data Flow (MDF) transform content of the payload. There can be multiple MDF transforms within a dataflow |
 
 ## Metadata ContentDetails
 
@@ -85,6 +86,11 @@ Describes content of payload
       "queryGroupId": null,
       "isHidden": false,
       "loadEnabled": true
+    },
+    "MDF transform": {
+      "queryId": "9c6d7c87-83db-4718-b382-c0c1aa1636d7",
+      "queryName": "MDF transform",
+      "loadEnabled": false
     }
   },
   "connections": [
@@ -114,4 +120,122 @@ let  Source = Lakehouse.Contents([]),
 #"Lowercased text" = Table.TransformColumns(#"Changed column type", {{"countryRegionCode", each Text.Lower(_), type nullable text}}),  
 #"Uppercased text" = Table.TransformColumns(#"Lowercased text", {{"normalizeHolidayName", each Text.Upper(_), type nullable text}}),  
 #"Calculated text length" = Table.TransformColumns(#"Uppercased text", {{"countryOrRegion", each Text.Length(_), type nullable Int64.Type}})in  #"Calculated text length";
+[ItemType = "MDF"]
+shared #"MDF transform" = "___ExternalResource-Placeholder___";
+```
+
+## MDFTransform ContentDetails
+
+Describes the content of a Mapping Data Flow payload.
+
+| Name                  | Type            | Required        | Description                         |
+|-----------------------|-----------------|-----------------|-------------------------------------|
+| name                  | String          | true            | The name of the mapping data flow |
+| properties            | [Properties](#mdftransform-properties-contents)      | true            | The properties of the mapping data flow |
+
+### MDFTransform Properties Contents
+
+| Name                  | Type            | Required        | Description                         |
+|-----------------------|-----------------|-----------------|-------------------------------------|
+| type                  | String          | true            | The type of the dataflow. The allowed value is `MappingDataFlow` |
+| typeProperties        | [TypeProperties](#mdftransform-typeproperties-contents)  | true            | The type properties of the mapping data flow |
+
+### MDFTransform TypeProperties Contents
+
+| Name                  | Type            | Required        | Description                         |
+|-----------------------|-----------------|-----------------|-------------------------------------|
+| sources               | [Source](#mdftransform-source-contents)[]          | false           | The list of sources in the mapping data flow |
+| sinks                 | [Sink](#mdftransform-sink-contents)[]            | false           | The list of sinks in the mapping data flow |
+| transformations       | [Transformation](#mdftransform-transformation-contents)[]  | false           | The list of transformations in the mapping data flow |
+| scriptLines           | String[]        | true            | The script lines that define the mapping data flow logic |
+
+### MDFTransform Source Contents
+
+| Name                  | Type            | Required        | Description                         |
+|-----------------------|-----------------|-----------------|-------------------------------------|
+| name                  | String          | true            | The name of the source |
+| externalReferences    | [ExternalReferences](#mdftransform-externalreferences-contents) | false           | The external references for the source |
+
+### MDFTransform Sink Contents
+
+| Name                  | Type            | Required        | Description                         |
+|-----------------------|-----------------|-----------------|-------------------------------------|
+| name                  | String          | true            | The name of the sink |
+| externalReferences    | [ExternalReferences](#mdftransform-externalreferences-contents) | false           | The external references for the sink |
+
+### MDFTransform Transformation Contents
+
+| Name                  | Type            | Required        | Description                         |
+|-----------------------|-----------------|-----------------|-------------------------------------|
+| name                  | String          | true            | The name of the transformation |
+
+### MDFTransform ExternalReferences Contents
+
+| Name                  | Type            | Required        | Description                         |
+|-----------------------|-----------------|-----------------|-------------------------------------|
+| connection            | String          | false           | The connection ID for the external reference |
+
+### MDFTransform ContentDetails example
+
+```json
+{
+  "name": "MDF",
+  "properties": {
+    "type": "MappingDataFlow",
+    "typeProperties": {
+      "sources": [
+        {
+          "name": "source1",
+          "externalReferences": {
+            "connection": "<source1ConnectionId>"
+          }
+        }
+      ],
+      "sinks": [
+        {
+          "name": "sink1",
+          "externalReferences": {
+            "connection": "<sink1ConnectionId>"
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "name": "derivedColumn1"
+        }
+      ],
+      "scriptLines": [
+        "source(output(",
+        "          Column1 as short,",
+        "          Column2 as string,",
+        "          Column3 as date,",
+        "          Column4 as boolean,",
+        "          Column5 as string,",
+        "          Column6 as double",
+        "     ),",
+        "     useSchema: false,",
+        "     allowSchemaDrift: true,",
+        "     validateSchema: false,",
+        "     ignoreNoFilesFound: false,",
+        "     format: 'delimited',",
+        "     fileSystem: 'folder1',",
+        "     fileName: 'file1.csv',",
+        "     columnDelimiter: ',',",
+        "     escapeChar: '\\\\',",
+        "     quoteChar: '\\\"',",
+        "     columnNamesAsHeader: true) ~> source1",
+        "source1 derive(isColumn6GreaterThan10 = Column6>10) ~> derivedColumn1",
+        "derivedColumn1 sink(allowSchemaDrift: true,",
+        "     validateSchema: false,",
+        "     format: 'json',",
+        "     fileSystem: 'output1',",
+        "     umask: 0022,",
+        "     preCommands: [],",
+        "     postCommands: [],",
+        "     skipDuplicateMapInputs: true,",
+        "     skipDuplicateMapOutputs: true) ~> sink1"
+      ]
+    }
+  }
+}
 ```

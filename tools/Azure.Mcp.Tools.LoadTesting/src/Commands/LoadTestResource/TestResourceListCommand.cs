@@ -1,58 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
-using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 
-public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestResourceListOptions>
-{
-    private const string _commandTitle = "Test Resource List";
-    private readonly ILogger<TestResourceListCommand> _logger = logger;
-    private readonly ILoadTestingService _loadTestingService = loadTestingService;
-    public override string Id => "eb44ef6c-93dc-4fa1-949c-a5e8939d5052";
-    public override string Name => "list";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "eb44ef6c-93dc-4fa1-949c-a5e8939d5052",
+    Name = "list",
+    Title = "Test Resource List",
+    Description = """
         Lists all Azure Load Testing resources available in the selected subscription and resource group.
         Returns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.
-        """;
-    public override string Title => _commandTitle;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> logger, ILoadTestingService loadTestingService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TestResourceListOptions, TestResourceListCommand.TestResourceListCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<TestResourceListCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TestResourceListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation(s)
@@ -61,7 +43,6 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
                 options.ResourceGroup,
                 options.TestResourceName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
             // Set results if any were returned
             context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestResourceListCommandResult);
@@ -69,11 +50,13 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         catch (Exception ex)
         {
             // Log error with context information
-            _logger.LogError(ex, "Error in {Operation}. Options: {Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TestResourceName: {TestResourceName}",
+                Name, options.Subscription, options.ResourceGroup, options.TestResourceName);
             // Let base class handle standard error processing
             HandleException(context, ex);
         }
         return context.Response;
     }
-    internal record TestResourceListCommandResult(List<TestResource> LoadTest);
+
+    public sealed record TestResourceListCommandResult(List<TestResource> LoadTest);
 }

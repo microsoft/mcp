@@ -1,0 +1,23 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "dataAgentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "datasourceId": "c1c6d12f-8d2a-4d5b-9ca1-8bb7b42d4a30",
+        "fewShotId": "c3f5e2a1-9b8d-4f7e-a6b2-1d0c8e3f9a5b",
+        "updateDataAgentFewshotRequest": {
+            "query": "SELECT COUNT(*) FROM dbo.Trip WHERE MONTH(start_date) = 1 AND YEAR(start_date) = 2024"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "c3f5e2a1-9b8d-4f7e-a6b2-1d0c8e3f9a5b",
+                "question": "How many trips were there in January?",
+                "query": "SELECT COUNT(*) FROM dbo.Trip WHERE MONTH(start_date) = 1 AND YEAR(start_date) = 2024",
+                "validationStatus": {
+                    "value": "Validating"
+                }
+            }
+        }
+    }
+}

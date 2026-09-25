@@ -1,4 +1,7 @@
-namespace Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 public sealed record ImplementationTemplate
 {

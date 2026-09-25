@@ -10,9 +10,26 @@ using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger) : BaseCommand<EmptyOptions>
+[CommandMetadata(
+    Id = "6c29659e-406d-4b9b-8150-e3d4fd7ba31c",
+    Name = "ai_app",
+    Title = "Get AI App Best Practices",
+    Description = """
+        Returns best practices and code generation guidance for building AI applications in Azure.
+        Use this command when you need recommendations on how to write code for AI agents, chatbots, workflows, or any AI / LLM features.
+        This command also provides guidance for code generation on Microsoft Foundry for application development.
+        When the request involves code generation of AI components or AI applications in any capacity, use this command instead of calling the general code generation best practices command.
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger)
+    : BaseCommand<EmptyOptions, AIAppBestPracticesCommand.AIAppBestPracticesCommandResult>
 {
-    private const string CommandTitle = "Get AI App Best Practices";
     private readonly ILogger<AIAppBestPracticesCommand> _logger = logger;
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
 
@@ -36,37 +53,15 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    public override string Id => "6c29659e-406d-4b9b-8150-e3d4fd7ba31c";
-
-    public override string Name => "ai_app";
-
-    public override string Description =>
-        @"Returns best practices and code generation guidance for building AI applications in Azure. 
-        Use this command when you need recommendations on how to write code for AI agents, chatbots, workflows, or any AI / LLM features.
-        This command also provides guidance for code generation on Microsoft Foundry for application development. 
-        When the request involves code generation of AI components or AI applications in any capacity, use this command instead of calling the general code generation best practices command.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
     {
         try
         {
             var bestPractices = GetBestPracticesText();
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(
+                new([bestPractices]),
+                AzureBestPracticesJsonContext.Default.AIAppBestPracticesCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -77,4 +72,6 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record AIAppBestPracticesCommandResult(List<string> BestPractices);
 }

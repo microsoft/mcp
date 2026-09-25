@@ -1,0 +1,209 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
+using Xunit;
+
+namespace Azure.Mcp.Tools.AzureBackup.Tests;
+
+public class AzureBackupSetupTests
+{
+    [Fact]
+    public void Constructor_ShouldCreateInstance()
+    {
+        var setup = new AzureBackupSetup();
+        Assert.NotNull(setup);
+        Assert.Equal("azurebackup", setup.Name);
+    }
+
+    [Fact]
+    public void RegisterCommands_WithValidParameters_ShouldSucceed()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var result = setup.RegisterCommands(services);
+        Assert.NotNull(result);
+        Assert.Equal("azurebackup", result.Name);
+    }
+
+    [Fact]
+    public void RegisterCommands_ShouldHaveAllExpectedSubGroups()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+
+        var groupNames = root.SubGroup.Select(g => g.Name).ToList();
+
+        Assert.Contains("vault", groupNames);
+        Assert.Contains("policy", groupNames);
+        Assert.Contains("protecteditem", groupNames);
+        Assert.Contains("protectableitem", groupNames);
+        Assert.Contains("container", groupNames);
+        Assert.Contains("backup", groupNames);
+        Assert.Contains("container", groupNames);
+        Assert.Contains("job", groupNames);
+        Assert.Contains("recoverypoint", groupNames);
+        Assert.Contains("governance", groupNames);
+        Assert.Contains("disasterrecovery", groupNames);
+        Assert.Contains("security", groupNames);
+    }
+
+    [Fact]
+    public void RegisterCommands_DisasterRecoveryGroupUsesCorrectName()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+
+        // "disasterrecovery" is the correct name (not "dr")
+        var drGroup = root.SubGroup.FirstOrDefault(g => g.Name == "disasterrecovery");
+        Assert.NotNull(drGroup);
+        Assert.Contains(drGroup.Commands, c => c.Key == "enable-crr");
+
+        // "dr" should NOT exist
+        var oldDrGroup = root.SubGroup.FirstOrDefault(g => g.Name == "dr");
+        Assert.Null(oldDrGroup);
+    }
+
+    [Fact]
+    public void RegisterCommands_VaultGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var vault = root.SubGroup.First(g => g.Name == "vault");
+
+        Assert.Contains(vault.Commands, c => c.Key == "get");
+        Assert.Contains(vault.Commands, c => c.Key == "create");
+        Assert.Contains(vault.Commands, c => c.Key == "update");
+
+        var privateEndpoint = vault.SubGroup.First(g => g.Name == "privateendpoint");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "create");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "get");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "delete");
+        Assert.Contains(privateEndpoint.Commands, c => c.Key == "approve-reject");
+    }
+
+    [Fact]
+    public void RegisterCommands_GovernanceGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var governance = root.SubGroup.First(g => g.Name == "governance");
+
+        Assert.Contains(governance.Commands, c => c.Key == "find-unprotected");
+        Assert.Contains(governance.Commands, c => c.Key == "immutability");
+        Assert.Contains(governance.Commands, c => c.Key == "soft-delete");
+    }
+
+    [Fact]
+    public void RegisterCommands_ProtectedItemGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var protectedItem = root.SubGroup.First(g => g.Name == "protecteditem");
+
+        Assert.Contains(protectedItem.Commands, c => c.Key == "get");
+        Assert.Contains(protectedItem.Commands, c => c.Key == "protect");
+        Assert.Contains(protectedItem.Commands, c => c.Key == "undelete");
+    }
+
+    [Fact]
+    public void RegisterCommands_ContainerGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var container = root.SubGroup.First(g => g.Name == "container");
+
+        Assert.Contains(container.Commands, c => c.Key == "get");
+        Assert.Contains(container.Commands, c => c.Key == "list-available");
+        Assert.Contains(container.Commands, c => c.Key == "refresh");
+        Assert.Contains(container.Commands, c => c.Key == "register");
+    }
+
+    [Fact]
+    public void RegisterCommands_ProtectableItemGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var protectableItem = root.SubGroup.First(g => g.Name == "protectableitem");
+
+        Assert.Contains(protectableItem.Commands, c => c.Key == "list");
+        Assert.Contains(protectableItem.Commands, c => c.Key == "inquire");
+    }
+
+    [Fact]
+    public void RegisterCommands_PolicyGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var policy = root.SubGroup.First(g => g.Name == "policy");
+
+        Assert.Contains(policy.Commands, c => c.Key == "get");
+        Assert.Contains(policy.Commands, c => c.Key == "create");
+        Assert.Contains(policy.Commands, c => c.Key == "update");
+    }
+
+    [Fact]
+    public void RegisterCommands_SecurityGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var security = root.SubGroup.First(g => g.Name == "security");
+
+        Assert.Contains(security.Commands, c => c.Key == "enable-mua");
+        Assert.Contains(security.Commands, c => c.Key == "disable-mua");
+        Assert.Contains(security.Commands, c => c.Key == "configure-encryption");
+    }
+
+    [Fact]
+    public void RegisterCommands_ResourceGuardGroup_ShouldHaveExpectedCommands()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+
+        var root = setup.RegisterCommands(services);
+        var resourceGuard = root.SubGroup.First(g => g.Name == "resourceguard");
+
+        Assert.Contains(resourceGuard.Commands, c => c.Key == "create");
+        Assert.Contains(resourceGuard.Commands, c => c.Key == "get");
+        Assert.Contains(resourceGuard.Commands, c => c.Key == "delete");
+    }
+
+    [Fact]
+    public void RegisterCommands_WithNullServiceProvider_ShouldThrow()
+    {
+        var setup = new AzureBackupSetup();
+        Assert.Throws<ArgumentNullException>(() => setup.RegisterCommands(null!));
+    }
+
+    private static IServiceProvider CreateServiceProvider(AzureBackupSetup setup)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(Substitute.For<IAzureService>());
+        services.AddSingleton(Substitute.For<ISubscriptionResolver>());
+        setup.ConfigureServices(services);
+        return services.BuildServiceProvider();
+    }
+}

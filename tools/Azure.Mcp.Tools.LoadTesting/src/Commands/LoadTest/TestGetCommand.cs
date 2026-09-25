@@ -1,78 +1,49 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
-using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 
-public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestGetOptions>
+[CommandMetadata(
+    Id = "be7c3864-0713-42f8-8eb7-b7ca28a951fb",
+    Name = "get",
+    Title = "Test Get",
+    Description = """
+        Get the configuration and setup details for a load test by its test ID in a Load Testing resource.
+        Returns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.
+        """,
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingService loadTestingService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TestGetOptions, TestGetCommand.TestGetCommandResult>(subscriptionResolver)
 {
-    private const string _commandTitle = "Test Get";
     private readonly ILogger<TestGetCommand> _logger = logger;
     private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
-    public override string Id => "be7c3864-0713-42f8-8eb7-b7ca28a951fb";
-    public override string Name => "get";
-    public override string Description =>
-        $"""
-        Get the configuration and setup details for a load test by its test ID in a Load Testing resource.
-        Returns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.
-        """;
-    public override string Title => _commandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TestGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(LoadTestingOptionDefinitions.Test);
-    }
-
-    protected override TestGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Call service operation(s)
             var results = await _loadTestingService.GetTestAsync(
                 options.Subscription!,
-                options.TestResourceName!,
-                options.TestId!,
+                options.TestResourceName,
+                options.TestId,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Set results if any were returned
@@ -83,11 +54,13 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger, ILoadTestingS
         catch (Exception ex)
         {
             // Log error with context information
-            _logger.LogError(ex, "Error in {Operation}. Options: {Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, TestResourceName: {TestResourceName}, TestId: {TestId}",
+                Name, options.Subscription, options.TestResourceName, options.TestId);
             // Let base class handle standard error processing
             HandleException(context, ex);
         }
         return context.Response;
     }
-    internal record TestGetCommandResult(Test Test);
+
+    public sealed record TestGetCommandResult(Test Test);
 }

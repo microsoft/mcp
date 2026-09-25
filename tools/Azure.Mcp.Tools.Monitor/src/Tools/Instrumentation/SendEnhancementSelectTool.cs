@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Monitor.Generators;
-using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
-namespace Azure.Mcp.Tools.Monitor.Tools;
+namespace Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 
 public class SendEnhancementSelectTool
 {
-    public string Send(string sessionId, string enhancementKeys)
+    public static string Send(string sessionId, string enhancementKeys)
     {
-        if (!OrchestratorTool.Sessions.TryGetValue(sessionId, out var session))
+        if (!OrchestratorTool.s_sessions.TryGetValue(sessionId, out var session))
         {
             return Respond(new OrchestratorResponse
             {
@@ -86,7 +86,5 @@ public class SendEnhancementSelectTool
     }
 
     private static string Respond(OrchestratorResponse response)
-    {
-        return JsonSerializer.Serialize(response, OnboardingJsonContext.Default.OrchestratorResponse);
-    }
+        => JsonSerializer.Serialize(response, OnboardingJsonContext.Default.OrchestratorResponse);
 }

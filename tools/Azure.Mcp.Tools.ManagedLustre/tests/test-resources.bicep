@@ -37,6 +37,7 @@ param testApplicationUamiId string = ''
 param hpcCacheRpObjectId string
 
 var kvCryptoUserRoleDefinitionId = '14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
+var readerRoleDefinitionId = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 
 var userAssignedName = '${baseName}-uai'
 
@@ -60,6 +61,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         name: 'amlfs'
         properties: {
           addressPrefix: amlfsSubnetPrefix
+          defaultOutboundAccess: false
           natGateway: {
             id: natGateway.id
           }
@@ -71,6 +73,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         name: 'amlfs-small'
         properties: {
           addressPrefix: amlfsSubnetSmallPrefix
+          defaultOutboundAccess: false
           natGateway: {
             id: natGateway.id
           }
@@ -156,6 +159,16 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments
   }
 }
 
+// Expansion requires the HPC Cache RP to read the virtual network and subnet.
+resource hpcCacheRpReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, readerRoleDefinitionId, 'hpc-cache-rp-reader')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', readerRoleDefinitionId)
+    principalId: hpcCacheRpObjectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2025-01-01' = {
   parent: storageAccount
   name: 'default'
@@ -221,6 +234,7 @@ resource keyVaultKey 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
 resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   name: baseName
   location: location
+  zones: ['1']
   sku: {
     name: amlfsSku
   }

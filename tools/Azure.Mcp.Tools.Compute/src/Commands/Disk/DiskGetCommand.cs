@@ -1,87 +1,56 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text.RegularExpressions;
-using Azure.Mcp.Tools.Compute.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Options.Disk;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Disk;
 
 /// <summary>
 /// Command to get details of an Azure managed disk.
 /// </summary>
-public sealed class DiskGetCommand(
-    ILogger<DiskGetCommand> logger)
-    : BaseComputeCommand<DiskGetOptions>(false)
+[CommandMetadata(
+    Id = "01ab6f7e-2b27-4d6e-b0cc-b29043efac8e",
+    Name = "get",
+    Title = "Get Disk Details",
+    Description = "Lists available Azure managed disks or retrieves detailed information about a specific disk. Shows all disks in a subscription or resource group, including disk size, SKU, provisioning state, and OS type. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<DiskGetOptions, DiskGetCommand.DiskGetCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get Disk Details";
-    private const string CommandDescription = "Lists available Azure managed disks or retrieves detailed information about a specific disk. Shows all disks in a subscription or resource group, including disk size, SKU, provisioning state, and OS type. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.";
-
     private readonly ILogger<DiskGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService;
 
-    public override string Id => "01ab6f7e-2b27-4d6e-b0cc-b29043efac8e";
-
-    public override string Name => "get";
-
-    public override string Title => CommandTitle;
-
-    public override string Description => CommandDescription;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiskGetOptions options, CancellationToken cancellationToken)
     {
-        OpenWorld = false,
-        Destructive = false,
-        Idempotent = true,
-        ReadOnly = true,
-        Secret = false,
-        LocalRequired = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(ComputeOptionDefinitions.Disk.AsOptional());
-    }
-
-    protected override DiskGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Disk = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Disk.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
         try
         {
-            var diskNamePattern = options.Disk;
+            var diskNamePattern = options.DiskName;
             var hasWildcard = !string.IsNullOrEmpty(diskNamePattern) && (diskNamePattern.Contains('*') || diskNamePattern.Contains('?'));
             var hasResourceGroup = !string.IsNullOrEmpty(options.ResourceGroup);
-            var computeService = context.GetService<IComputeService>();
 
             if (!string.IsNullOrEmpty(diskNamePattern) && !hasWildcard && hasResourceGroup)
             {
                 // Get specific disk by exact name and resource group
                 _logger.LogInformation("Getting disk {DiskName} in resource group {ResourceGroup}", diskNamePattern, options.ResourceGroup!);
 
-                var disk = await computeService.GetDiskAsync(
+                var disk = await _computeService.GetDiskAsync(
                     diskNamePattern,
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([disk]), ComputeJsonContext.Default.DiskGetCommandResult);
@@ -92,11 +61,10 @@ public sealed class DiskGetCommand(
                 _logger.LogInformation("Listing disks in subscription {Subscription}, resource group {ResourceGroup}, pattern {Pattern}",
                     options.Subscription, options.ResourceGroup, diskNamePattern);
 
-                var disks = await computeService.ListDisksAsync(
+                var disks = await _computeService.ListDisksAsync(
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 // Apply wildcard filtering if disk name pattern is provided
@@ -111,7 +79,7 @@ public sealed class DiskGetCommand(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting disks. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.Disk, options.ResourceGroup);
+            _logger.LogError(ex, "Error getting disks. Disk: {Disk}, ResourceGroup: {ResourceGroup}.", options.DiskName, options.ResourceGroup);
             HandleException(context, ex);
         }
 
@@ -130,14 +98,6 @@ public sealed class DiskGetCommand(
         return $"^{pattern}$";
     }
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
-
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == 404 =>
@@ -154,5 +114,5 @@ public sealed class DiskGetCommand(
     /// <summary>
     /// Result record for the disk get command.
     /// </summary>
-    public record DiskGetCommandResult(List<Models.DiskInfo> Disks);
+    public sealed record DiskGetCommandResult(List<Models.DiskInfo> Disks);
 }

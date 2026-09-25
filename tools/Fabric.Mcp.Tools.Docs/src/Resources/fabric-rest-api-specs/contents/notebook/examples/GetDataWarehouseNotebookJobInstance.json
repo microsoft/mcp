@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "workspaceId": "1ede770b-e7b7-4b30-8acf-1c985425f4a7",
+        "notebookId": "28ecef4f-a073-485e-be94-fd75c68bfd49",
+        "jobInstanceId": "f2d65699-dd22-4889-980c-15226deb0e1b",
+        "beta": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "f2d65699-dd22-4889-980c-15226deb0e1b",    
+                "itemId": "28ecef4f-a073-485e-be94-fd75c68bfd49",
+                "jobType": "Execute",
+                "invokeType": "Manual",
+                "status": "Completed",
+                "rootActivityId": "8c2ee553-53a4-7edb-1042-0d8189a9e0ca",
+                "startTimeUtc": "2023-04-22T06:35:00.7812154",
+                "endTimeUtc": "2023-04-22T06:35:00.8033333",
+                "failureReason": null,
+                "properties": {
+                    "exitValue": null,
+                    "compute": "DataWarehouse",
+                    "computeDetails": {
+                        "primaryWarehouse": {
+                            "workspaceId": "1ede770b-e7b7-4b30-8acf-1c985425f4a7",
+                            "itemId": "98b8ebff-757a-470c-858c-ffaf5a696f4f",
+                            "referenceType": "ById"
+                        },
+                        "monitoringInfo": { 
+                            "executionSnapshotUrl": "https://app.fabric.microsoft.com/groups/1ede770b-e7b7-4b30-8acf-1c985425f4a7/synapsenotebooks/28ecef4f-a073-485e-be94-fd75c68bfd49/snapshots/f2d65699-dd22-4889-980c-15226deb0e1b?experience=power-bi"
+                        }
+                    }
+	            }
+            }
+        }
+    }
+}

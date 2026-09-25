@@ -1,9 +1,11 @@
-﻿using Azure.Core;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Postgres.Auth
+using Azure.Core;
+
+namespace Azure.Mcp.Tools.Postgres.Providers;
+
+public interface IEntraTokenProvider
 {
-    public interface IEntraTokenProvider
-    {
-        Task<AccessToken> GetEntraToken(TokenCredential tokenCredential, CancellationToken cancellationToken);
-    }
+    Task<AccessToken> GetEntraToken(TokenCredential tokenCredential, CancellationToken cancellationToken);
 }

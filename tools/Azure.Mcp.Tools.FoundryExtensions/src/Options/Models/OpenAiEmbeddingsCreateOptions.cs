@@ -1,28 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public class OpenAiEmbeddingsCreateOptions : SubscriptionOptions
+public sealed class OpenAiEmbeddingsCreateOptions : ISubscriptionOption
 {
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.ResourceName)]
-    public string? ResourceName { get; set; }
+    [Option(Description = FoundryExtensionsOptionDescriptions.ResourceName)]
+    public required string ResourceName { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.DeploymentName)]
-    public string? DeploymentName { get; set; }
+    [Option(Description = FoundryExtensionsOptionDescriptions.Deployment)]
+    public required string Deployment { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.InputText)]
-    public string? InputText { get; set; }
+    [Option(Description = "The input text to generate embeddings for.")]
+    public required string InputText { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.User)]
-    public string? User { get; set; }
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.EncodingFormat)]
-    public string? EncodingFormat { get; set; } = "float";
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
 
-    [JsonPropertyName(FoundryExtensionsOptionDefinitions.Dimensions)]
-    public int? Dimensions { get; set; }
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
+    [Option(Description = OptionDescriptions.AuthMethod)]
+    public AuthMethod? AuthMethod { get; set; }
 }

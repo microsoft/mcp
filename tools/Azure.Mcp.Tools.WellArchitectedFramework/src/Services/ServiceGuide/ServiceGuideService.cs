@@ -12,7 +12,7 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 public sealed class ServiceGuideService : IServiceGuideService
 {
     private static Dictionary<string, ServiceGuideModel>? s_serviceGuidesCache;
-    private static readonly object s_lock = new();
+    private static readonly Lock s_lock = new();
 
     public string? GetServiceGuideUrl(string serviceName)
     {
@@ -80,7 +80,7 @@ public sealed class ServiceGuideService : IServiceGuideService
             var serviceGuides = JsonSerializer.Deserialize(
                 jsonContent,
                 WellArchitectedFrameworkJsonContext.Default.DictionaryStringServiceGuide);
-            s_serviceGuidesCache = serviceGuides ?? new Dictionary<string, ServiceGuideModel>();
+            s_serviceGuidesCache = serviceGuides ?? [];
 
             return;
         }
@@ -98,7 +98,7 @@ public sealed class ServiceGuideService : IServiceGuideService
     {
         return serviceName
             .ToLowerInvariant()
-            .Trim(new char[] { ' ', '"', '\'' })
+            .Trim([' ', '"', '\''])
             .Replace("-", string.Empty)
             .Replace("_", string.Empty)
             .Replace(" ", string.Empty);

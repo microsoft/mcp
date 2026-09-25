@@ -1,0 +1,3 @@
+changes:
+  - section: Other Changes
+    description: Added validation of the platform landing zone download URL in the Azure Migrate tools before the file is retrieved.

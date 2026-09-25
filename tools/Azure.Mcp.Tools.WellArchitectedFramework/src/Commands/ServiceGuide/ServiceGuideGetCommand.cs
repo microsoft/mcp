@@ -6,66 +6,36 @@ using Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 using Azure.Mcp.Tools.WellArchitectedFramework.Services.ServiceGuide;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Commands.ServiceGuide;
 
+[CommandMetadata(
+    Id = "a7d4e9f2-8c3b-4a1e-9f5d-6b2c8e4a7d3f",
+    Name = "get",
+    Title = "Get Well-Architected Framework Service Guide",
+    Description = """
+        Get Azure Well-Architected Framework guidance for a specific Azure service, or list all supported services when no service is specified. When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: reliability, security, cost optimization, operational excellence, and performance efficiency.
+        Service name format: case-insensitive; hyphens, underscores, spaces, and name variations allowed; use double quotes (not single quotes) for names with spaces. e.g., cosmos-db, Cosmos_DB, "Cosmos DB", cosmosdb, cosmos-database, cosmosdatabase
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logger, IServiceGuideService serviceGuideService)
-    : BaseCommand<ServiceGuideGetOptions>
+    : BaseCommand<ServiceGuideGetOptions, ServiceGuideGetCommand.ServiceGuideGetCommandResult>
 {
-    private const string CommandTitle = "Get Well-Architected Framework Service Guide";
     private readonly ILogger<ServiceGuideGetCommand> _logger = logger;
     private readonly IServiceGuideService _serviceGuideService = serviceGuideService;
 
-    public override string Id => "a7d4e9f2-8c3b-4a1e-9f5d-6b2c8e4a7d3f";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "Get Azure Well-Architected Framework guidance for a specific Azure service, " +
-        "or list all supported services when no service is specified. " +
-        "When a service is provided, returns architectural best practices, design patterns, and recommendations based on the five pillars: " +
-        "reliability, security, cost optimization, operational excellence, and performance efficiency. " +
-        "Optional: --service: " + WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(WellArchitectedFrameworkOptionDefinitions.Service);
-    }
-
-    protected override ServiceGuideGetOptions BindOptions(ParseResult parseResult)
-    {
-        return new ServiceGuideGetOptions
-        {
-            Service = parseResult.GetValueOrDefault<string>(WellArchitectedFrameworkOptionDefinitions.Service.Name)
-        };
-    }
-
     public override Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        ServiceGuideGetOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
         context.Activity?.AddTag("WellArchitectedFramework_Service", options.Service);
 
         try
@@ -76,7 +46,9 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             if (string.IsNullOrWhiteSpace(options.Service))
             {
                 var listResponse = GetServiceListResponse(supportedServicesBulletList);
-                context.Response.Results = ResponseResult.Create([listResponse], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Results = ResponseResult.Create(
+                    new([listResponse]),
+                    WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
             }
             else
             {
@@ -88,7 +60,9 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
                     ? GetGuidanceNotAvailable(serviceName, supportedServicesBulletList)
                     : GetGuidanceAvailable(serviceName, serviceGuideUrl);
 
-                context.Response.Results = ResponseResult.Create([guidance], WellArchitectedFrameworkJsonContext.Default.ListString);
+                context.Response.Results = ResponseResult.Create(
+                    new([guidance]),
+                    WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -124,19 +98,19 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
             """;
     }
 
-    private string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
+    private static string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
     {
         return $"For detailed Azure Well-Architected Framework guidance on '{serviceName}' service, " +
             $"please refer to the markdown file at this URL: {serviceGuideUrl}";
     }
 
-    private string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
+    private static string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
     {
         return $"""
             Azure Well-Architected Framework guidance for '{serviceName}' service is not available.
 
             Please try a different variation of the service name using the following format for the --service option:
-            {WellArchitectedFrameworkOptionDefinitions.ServiceNameDescription}
+            {WellArchitectedFrameworkOptionDescriptions.Service}
 
             Supported services:
             {supportedServicesBulletList}
@@ -152,4 +126,6 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
 
         return supportedServicesBulletList;
     }
+
+    public sealed record ServiceGuideGetCommandResult(List<string> Guidance);
 }

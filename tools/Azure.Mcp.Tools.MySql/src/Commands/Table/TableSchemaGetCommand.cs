@@ -1,65 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.MySql.Commands.Database;
-using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Table;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Table;
 
-public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
+[CommandMetadata(
+    Id = "1c8d2584-fa52-4641-85f9-fb67a8f5c7c9",
+    Name = "get",
+    Title = "Get MySQL Table Schema",
+    Description = "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService)
+    : AuthenticatedCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>
 {
-    private const string CommandTitle = "Get MySQL Table Schema";
+    private readonly IMySqlService _mysqlService = mysqlService;
+    private readonly ILogger<TableSchemaGetCommand> _logger = logger;
 
-    public override string Id => "1c8d2584-fa52-4641-85f9-fb67a8f5c7c9";
-
-    public override string Name => "get";
-
-    public override string Description => "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(MySqlOptionDefinitions.Table);
-    }
-
-    protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Table.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            var schema = await mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!, cancellationToken);
+            var schema = await _mysqlService.GetTableSchemaAsync(options.User, options.Server, options.Database, options.Table, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), MySqlJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)
@@ -70,5 +42,5 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
         return context.Response;
     }
 
-    public record TableSchemaGetCommandResult(List<string> Schema);
+    public sealed record TableSchemaGetCommandResult(List<string> Schema);
 }

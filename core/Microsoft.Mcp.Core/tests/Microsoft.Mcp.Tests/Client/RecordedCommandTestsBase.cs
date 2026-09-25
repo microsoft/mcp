@@ -10,11 +10,12 @@ using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
 using Xunit;
-using Xunit.v3;
 
 namespace Microsoft.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
+[Trait("TestType", "Live")]
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
+    : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 
@@ -161,6 +162,27 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     // todo: use this when we have versioned tests to run this against.
     protected virtual string? VersionQualifier => null;
 
+    /// <summary>
+    /// In HTTP mode, verifies that a local-only tool is unavailable and indicates that the test should return early.
+    /// </summary>
+    /// <param name="toolName">The fully qualified MCP tool name.</param>
+    /// <returns><see langword="true"/> when running in HTTP mode; otherwise, <see langword="false"/>.</returns>
+    protected async Task<bool> AssertLocalToolIsUnavailableInHttpMode(string toolName)
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var result = await Client.CallToolAsync(
+            toolName,
+            new Dictionary<string, object?>(),
+            cancellationToken: TestContext.Current.CancellationToken);
+        Assert.True(result.IsError);
+        Assert.Contains("not found", McpTestUtilities.GetFirstText(result.Content), StringComparison.OrdinalIgnoreCase);
+        return true;
+    }
+
     protected override async ValueTask LoadSettingsAsync()
     {
         await base.LoadSettingsAsync();
@@ -175,10 +197,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         var methodInfo = TestMethodResolver.TryResolveCurrentMethodInfo();
 
         // skip tests marked [LiveTestOnly] when not in Live mode
-        if (TestMode != TestMode.Live && HasLiveTestOnlyAttribute(methodInfo))
-        {
-            Assert.Skip("Test is marked [LiveTestOnly] and cannot run in Playback or Record mode.");
-        }
+        CheckLiveTestOnly(methodInfo);
 
         if (fixture.Proxy == null)
         {
@@ -193,7 +212,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await StartRecordOrPlayback();
 
         // apply custom matcher if test has attribute
-        await ApplyAttributeMatcherSettings(methodInfo);
+        await ApplyAttributeMatcherSettings(TestMethodResolver.TryResolveCurrentMethodInfo());
 
         SetRecordingOptions(RecordingOptions);
     }
@@ -228,11 +247,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         };
 
         await SetMatcher(matcher, RecordingId);
-    }
-
-    private static bool HasLiveTestOnlyAttribute(MethodInfo? methodInfo)
-    {
-        return methodInfo?.GetCustomAttribute<LiveTestOnlyAttribute>() != null;
     }
 
     private async Task SetMatcher(CustomDefaultMatcher matcher, string? recordingId = null)
@@ -303,15 +317,26 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         // Registering a few common sanitizers for values that we know will be universally present and cleaned up
         if (EnableDefaultSanitizerAdditions)
         {
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            GeneralRegexSanitizers.Add(new(new()
             {
                 Regex = Settings.ResourceBaseName,
                 Value = "Sanitized",
             }));
-            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            GeneralRegexSanitizers.Add(new(new()
             {
                 Regex = Settings.SubscriptionId,
                 Value = EmptyGuid,
+            }));
+            // Sanitize Resource Group name from the URI. This is needed as there is another default GeneralRegexSanitizer for
+            // Settings.ResourceBaseName. But there are two issues we hit with that:
+            // 1. Resource group names often have other characters added to it, like prepending or appending for uniqueness.
+            // 2. In playback, Settings.ResourceBaseName and Settings.ResourceGroupName are both configured to be 'Sanitized',
+            //    so it won't find the right string.
+            UriRegexSanitizers.Add(new(new()
+            {
+                Value = "Sanitized",
+                Regex = "/resource[gG]roups/(?<rgname>[\\w\\-.()]{1,90})(?=/|\\?|$)",
+                GroupForReplace = "rgname"
             }));
         }
     }
@@ -331,13 +356,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task ApplySanitizersAsync()
     {
-        List<SanitizerAddition> sanitizers = new();
-
-        sanitizers.AddRange(GeneralRegexSanitizers);
-        sanitizers.AddRange(BodyRegexSanitizers);
-        sanitizers.AddRange(HeaderRegexSanitizers);
-        sanitizers.AddRange(UriRegexSanitizers);
-        sanitizers.AddRange(BodyKeySanitizers);
+        List<SanitizerAddition> sanitizers =
+        [
+            .. GeneralRegexSanitizers,
+            .. BodyRegexSanitizers,
+            .. HeaderRegexSanitizers,
+            .. UriRegexSanitizers,
+            .. BodyKeySanitizers,
+        ];
 
         if (sanitizers.Count > 0)
         {
@@ -482,4 +508,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;
     }
+
+    /// <summary>
+    /// Determines the polling interval to use for long-running operations. During live testing (Live or Record) the
+    /// poll interval will use liveMilliseconds for the interval. During playback testing a static 1 millisecond poll
+    /// interval is used.
+    /// </summary>
+    /// <param name="liveMilliseconds">Polling interval in milliseconds for live tests.</param>
+    /// <returns>The polling interval TimeSpan.</returns>
+    public TimeSpan PollInterval(long liveMilliseconds)
+        => TestMode == TestMode.Playback ? TimeSpan.FromMilliseconds(1) : TimeSpan.FromMilliseconds(liveMilliseconds);
 }

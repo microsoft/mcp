@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using System.Text.Json;
 
 namespace Microsoft.Mcp.Core.Helpers;
 

@@ -92,7 +92,7 @@
       "required": [ "parts" ],
       "properties": {
         "format": {
-          "description": "The format of the item definition.",
+          "description": "The format of the copy job definition.",
           "type": "string",
           "readOnly": false
         },
@@ -139,6 +139,33 @@
           "description": "The CopyJob description. Maximum length is 256 characters.",
           "type": "string",
           "readOnly": false
+        }
+      }
+    },
+    "CopyJobEntityResetPayload": {
+      "description": "A list of CopyJobEntities to reset.",
+      "type": "object",
+      "properties": {
+        "resetAllCopyJobEntities": {
+          "description": "Whether to reset all CopyJob entities.",
+          "type": "boolean"
+        },
+        "copyJobEntitiesToReset": {
+          "description": "A list of CopyJob entities to reset.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyJobEntityReset"
+          }
+        }
+      }
+    },
+    "CopyJobEntityReset": {
+      "description": "The Id of a CopyJobEntity to reset.",
+      "type": "object",
+      "properties": {
+        "copyJobEntityId": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     }

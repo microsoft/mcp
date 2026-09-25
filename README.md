@@ -1,6 +1,5 @@
 # 🌟 Microsoft MCP Servers
 
-
 ## 📘 What is MCP?
 
 **Model Context Protocol (MCP)** is an open protocol that standardizes how applications provide context to large language models (LLMs). It allows AI applications to connect with various data sources and tools in a consistent manner, enhancing their capabilities and flexibility. MCP follows a client-server architecture:
@@ -44,7 +43,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **DESCRIPTION**: All Azure MCP tools in a single server.  The Azure MCP Server implements the MCP specification to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in VS Code.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
-- **INSTALL**: [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP in IntelliJ](https://img.shields.io/badge/IntelliJ%20IDEA-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
+- **INSTALL**: [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP in IntelliJ](https://img.shields.io/badge/IntelliJ%20IDEA-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse) [![Install Azure MCP in Claude Code](https://img.shields.io/badge/Claude_Code-Install-orange?style=flat-square)](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#claude-code)
 
 ### ✨ Microsoft Foundry
 - **DOCUMENTATION**: [Get started with Foundry MCP Server](https://learn.microsoft.com/azure/ai-foundry/mcp/get-started?view=foundry&tabs=user)
@@ -52,6 +51,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `REMOTE` - `https://mcp.ai.azure.com`
 - **INSTALL**: [![Install Microsoft Foundry MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22foundry-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.azure.com%22%7D) [![Install Microsoft Foundry in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22foundry-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.azure.com%22%7D)
+
+### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> Azure Resource Manager
+- **REPOSITORY**: [Azure/Azure-Resource-Manager-MCP](https://github.com/Azure/Azure-Resource-Manager-MCP)
+- **DESCRIPTION**: A Model Context Protocol server with tools to use Azure Resource Graph to retrieve and filter information about Azure resources in a customer's subscription, and tools to manage ARM template deployments.
+- **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `REMOTE` - `https://mcp.management.azure.com`
+- **INSTALL**: [![Install Azure Resource Manager MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22arm-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.management.azure.com%22%7D) [![Install Azure Resource Manager MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22arm-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.management.azure.com%22%7D)
 
 ### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/1062064-Products-1.2-24x24" alt="Microsoft Azure DevOps Logo" /> Azure DevOps
 - **REPOSITORY**: [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp)
@@ -67,6 +73,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
 - **INSTALL**: [![Install AKS MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://github.com/Azure/aks-mcp)
+
+### 💻 Binlog MCP Server
+- **REPOSITORY**: [dotnet/skills](https://github.com/dotnet/skills)
+- **DESCRIPTION**: A Model Context Protocol (MCP) server for analyzing MSBuild binary logs (`.binlog` files). Exposes structured access to build errors, warnings, targets, tasks, and properties so AI agents can triage CI failures and answer build-diagnostic questions.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+- **INSTALL**: .NET global tool from [NuGet.org](https://www.nuget.org/packages/Microsoft.AITools.BinlogMcp) — `dotnet tool install --global Microsoft.AITools.BinlogMcp`
 
 ### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub
 - **REPOSITORY**: [github/github-mcp-server](https://github.com/github/github-mcp-server)
@@ -119,7 +132,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 
 ### 👤 Microsoft 365 User
 - **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_MeServer)
-- **DESCRIPTION**: Tools for retrieving user details, manager, team, or direct reportees from Microsoft Graph. Serves as the agent's self-knowledge and organizational awareness layer.
+- **DESCRIPTION**: Tools for retrieving user details, manager, team, or direct reports from Microsoft Graph. Serves as the agent's self-knowledge and organizational awareness layer.
 - **CATEGORY**: `PRODUCTIVITY`
 - **TYPE**: `REMOTE` - `https://agent365.svc.cloud.microsoft/agents/tenants/{tenant_id}/servers/mcp_MeServer`
 - **INSTALL**: [![Install Microsoft 365 User MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=agent365-meserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MeServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D) [![Install Microsoft 365 User MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=agent365-meserver&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//agent365.svc.cloud.microsoft/agents/tenants/%24%7Binput%3Atenant_id%7D/servers/mcp_MeServer%22%7D&inputs=%5B%7B%22id%22%3A%22tenant_id%22%2C%22type%22%3A%22promptString%22%2C%22description%22%3A%22Microsoft%20Entra%20tenant%20ID%20(GUID)%22%7D%5D&quality=insiders)
@@ -173,6 +186,14 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `REMOTE` - `https://learn.microsoft.com/api/mcp`
 - **INSTALL**: [![Install Microsoft Learn MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=microsoft.docs.mcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Flearn.microsoft.com%2Fapi%2Fmcp%22%7D) [![Install Microsoft Learn MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=microsoft.docs.mcp&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Flearn.microsoft.com%2Fapi%2Fmcp%22%7D&quality=insiders) [![Install Microsoft Learn MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/vs/mcp-install?%7B%22name%22%3A%22microsoft.docs.mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Flearn.microsoft.com%2Fapi%2Fmcp%22%7D)
 
+### 🔐 Microsoft MCP Server for Enterprise
+- **DOCUMENTATION**: [Overview of Microsoft MCP Server for Enterprise](https://learn.microsoft.com/graph/mcp-server/overview)
+- **REPOSITORY**: [microsoft/EnterpriseMCP](https://github.com/microsoft/EnterpriseMCP)
+- **DESCRIPTION**: Access Microsoft Entra data by converting natural-language queries into Microsoft Graph API calls. Supports read-only enterprise IT scenarios including security posture, privileged access, application risk, access governance, device readiness, and audit telemetry.
+- **CATEGORY**: `SECURITY`
+- **TYPE**: `REMOTE` - `https://mcp.svc.cloud.microsoft/enterprise`
+- **INSTALL**: [![Install Microsoft MCP Server for Enterprise in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22enterprise-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.svc.cloud.microsoft%2Fenterprise%22%7D) [![Install Microsoft MCP Server for Enterprise in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22enterprise-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.svc.cloud.microsoft%2Fenterprise%22%7D)
+
 ### 🛡️ Microsoft Sentinel Data Exploration
 - **DOCUMENTATION**: [Explore Microsoft Sentinel data lake with data exploration collection](https://aka.ms/mcp/data-exploration)
 - **DESCRIPTION**: The data exploration tool collection in the Microsoft Sentinel Model Context Protocol (MCP) server lets you search for relevant tables and retrieve data from Microsoft Sentinel's data lake using natural language. Learn more: [aka.ms/mcp/data-exploration](https://aka.ms/mcp/data-exploration).
@@ -181,11 +202,11 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **INSTALL**: [![Install Microsoft Sentinel Data Exploration MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22microsoft-sentinel-data-exploration%22%2C%22url%22%3A%22https%3A%2F%2Fsentinel.microsoft.com%2Fmcp%2Fdata-exploration%22%7D) [![Install Microsoft Sentinel Data Exploration MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22microsoft-sentinel-data-exploration%22%2C%22url%22%3A%22https%3A%2F%2Fsentinel.microsoft.com%2Fmcp%2Fdata-exploration%22%7D)
 
 ### 🛢️ Microsoft SQL
-- **REPOSITORY**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
+- **REPOSITORY**: [MSSQL MCP Server](https://aka.ms/sql/mcp)
 - **DESCRIPTION**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
-- **INSTALL**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
+- **INSTALL**: [MSSQL MCP Server](https://aka.ms/sql/mcp)
 
 ### 💬 Microsoft Teams
 - **REPOSITORY**: [bap-microsoft/MCP-Platform](https://github.com/bap-microsoft/MCP-Platform/tree/main/src/Services/WebApi/MCPServers/FirstParty/CodeBased/mcp_TeamsServer)

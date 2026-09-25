@@ -1,0 +1,141 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Catalog data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "CatalogEntry": {
+      "type": "object",
+      "description": "A catalog entry object.",
+      "required": ["id", "catalogEntryType", "displayName"],
+      "discriminator": "catalogEntryType",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The objectId of the catalog entry.",
+          "format": "uuid"
+        },
+         "displayName": {
+          "type": "string",
+          "description": "The catalog entry display name."
+        },
+        "catalogEntryType": {
+            "description": "The catalog entry type.",
+            "$ref": "#/definitions/CatalogEntryType"
+        },
+        "description": {
+          "type": "string",
+          "description": "The description of the catalog entry."
+        }
+      }
+    },
+    "CatalogEntryType": {
+      "type": "string",
+      "description": "The catalog entry type. Additional `CatalogEntryType` types may be added over time.",
+      "enum": ["FabricItem"],
+      "x-ms-enum": {
+        "name": "CatalogEntryType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "FabricItem",
+            "description": "A Fabric item catalog entry type."
+          }
+        ]
+      }
+    },
+    "ItemCatalogEntry": {
+      "description": "A Fabric item type of catalog entry.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "description": "The Fabric item type.",
+          "type": "string",
+          "$ref": "../../common/definitions.json#/definitions/ItemType"
+        },
+        "hierarchy": {
+          "description": "The hierarchy of the catalog entry.",
+          "type": "object",
+          "$ref": "#/definitions/ItemCatalogEntryHierarchy"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/CatalogEntry"
+        }
+      ],
+      "x-ms-discriminator-value": "FabricItem"
+    },
+    "ItemCatalogEntryHierarchy": {
+      "description": "The immediate ancestors of the item in Fabric's data architecture. Only applicable levels are returned.",
+      "type": "object",
+      "properties": {
+        "workspace": {
+          "description": "The workspace that contains the item.",
+          "type": "object",
+          "$ref": "#/definitions/CatalogWorkspace"
+        }
+      }
+    },
+    "CatalogWorkspace": {
+      "description": "The workspace for the catalog entry.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "The display name of the workspace.",
+          "type": "string"
+        },
+        "id": {
+          "description": "The ID of the workspace.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "CatalogQueryRequest": {
+      "type": "object",
+      "description": "The query for the search.",
+      "properties": {
+        "search": {
+          "description": "The text query for the search. This field supports searching across the display name, workspace display name and description of the CatalogEntry.",
+          "type": "string"
+        },
+        "pageSize": {
+          "type": "integer",
+          "description": "The page size that needs to be returned. Page size must be between 1 and 1000."
+        },
+        "filter": {
+          "type": "string",
+          "description": "The filter for the search. Currently the filter supports filter by type of entries. Additional filter options may be added over time.\n\n The filter parameter supports the following operators to refine results:\n\n* eq : Equals; matches the exact value.\n\n* ne : Not Equals; excludes the specified value.\n\n* or : Logical OR; matches if any of the conditions are true.\n\n* ( ) : Parentheses; groups expressions to define logical hierarchy."
+        },
+        "continuationToken": {
+          "type": "string",
+          "description": "The continuationToken for the next page."
+        }
+      }
+    },
+    "CatalogQueryResponse": {
+      "type": "object",
+      "description": "The results of the search.",
+      "required": ["value"],
+      "properties": {
+        "continuationToken": {
+          "type": "string",
+          "description": "The continuationToken for the next page."
+        },
+        "value": {
+          "type": "array",
+          "description": "A list of catalog entries",
+          "items": {
+            "$ref": "#/definitions/CatalogEntry"
+          }
+        }
+      }
+    }
+  }
+}

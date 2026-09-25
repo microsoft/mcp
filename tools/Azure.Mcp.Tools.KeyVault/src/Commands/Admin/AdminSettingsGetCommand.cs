@@ -1,64 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
-public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<BaseKeyVaultOptions>
+[CommandMetadata(
+    Id = "2e89755e-8c64-4c08-ae10-8fd47aead570",
+    Name = "get",
+    Title = "Get Key Vault Managed HSM Account Settings",
+    Description = "Retrieves all Managed HSM account settings for a Key Vault. Returns configuration setting values such as purge protection and soft-delete retention days. This is NOT for secrets, keys, or certificates — use this when the user asks about vault configuration settings or account-level settings. This tool ONLY applies to Managed HSM vaults.",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<BaseKeyVaultOptions, AdminSettingsGetCommand.AdminSettingsGetCommandResult>
 {
-    private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    public override string Id => "2e89755e-8c64-4c08-ae10-8fd47aead570";
-    public override string Name => "get";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseKeyVaultOptions options, CancellationToken cancellationToken)
     {
-        OpenWorld = false,       // Command queries Azure resources (vault settings)
-        Destructive = false,     // Command only reads settings, no modifications
-        Idempotent = true,       // Same call produces same result
-        ReadOnly = true,         // Only reads data, no state changes
-        Secret = false,          // Returns configuration settings, not secrets
-        LocalRequired = false    // Pure Azure API call, no local resources needed
-    };
-
-    public override string Description =>
-        "Retrieves all Key Vault Managed HSM account settings for a given vault. This includes settings such as purge protection and soft-delete retention days. This tool ONLY applies to Managed HSM vaults.";
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName.AsRequired());
-    }
-
-    protected override BaseKeyVaultOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var settingsResult = await _keyVaultService.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken);
+            var settingsResult = await _keyVaultService.GetVaultSettings(options.Vault, options.Tenant, cancellationToken);
 
             // Convert settings to a dictionary of strings for easier serialization in case the service adds new settings in the future.
             Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);
@@ -70,16 +43,16 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
                 }
             }
 
-            context.Response.Results = ResponseResult.Create(new(options.VaultName!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(options.Vault!, settings), KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting admin settings for vault {VaultName}", options.VaultName);
+            _logger.LogError(ex, "Error getting admin settings for vault {VaultName}", options.Vault);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AdminSettingsGetCommandResult(string Name, Dictionary<string, string> Settings);
+    public sealed record AdminSettingsGetCommandResult(string Name, Dictionary<string, string> Settings);
 }

@@ -7,13 +7,13 @@ namespace Fabric.Mcp.Tools.Docs.Services;
 
 public interface IFabricPublicApiService
 {
-    Task<IEnumerable<string>> ListWorkloadsAsync(CancellationToken cancellationToken);
+    Task<IEnumerable<string>> ListItemTypesAsync(CancellationToken cancellationToken);
 
-    Task<FabricWorkloadPublicApi> GetWorkloadPublicApis(string workloadType, CancellationToken cancellationToken);
+    Task<FabricPublicApi> GetPublicApis(string itemType, CancellationToken cancellationToken);
 
-    Task<IDictionary<string, string>> GetWorkloadExamplesAsync(string workloadType, CancellationToken cancellationToken);
+    Task<IDictionary<string, string>> GetExamplesAsync(string itemType, CancellationToken cancellationToken);
 
-    string GetWorkloadItemDefinition(string workloadType);
+    string GetItemDefinition(string itemType);
 
     IEnumerable<string> GetTopicBestPractices(string topic);
 }

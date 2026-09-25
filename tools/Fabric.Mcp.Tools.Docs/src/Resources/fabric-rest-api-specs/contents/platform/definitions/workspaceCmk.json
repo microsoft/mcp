@@ -1,0 +1,155 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Workspace CMK Encryption data types",
+        "version": "v1"
+    },
+    "paths": {},
+  "definitions": {
+    "Encryption": {
+      "description": "Workspace encryption details using a customer-managed key (CMK).",
+      "type": "object",
+      "properties": {
+        "keyIdentifier": {
+          "description": "The encryption key identifier.",
+          "type": "string"
+        },
+        "status": {
+          "description": "The CMK encryption status of the workspace.",
+          "$ref": "#/definitions/EncryptionStatus"
+        },
+        "previousKeyIdentifier": {
+          "description": "The previous encryption key identifier.",
+          "type": "string"
+        },
+        "previousStatus": {
+          "description": "The previous CMK encryption status of the workspace.",
+          "$ref": "#/definitions/EncryptionStatus"
+        }
+      }
+    },
+    "AssignWorkspaceEncryptionRequest": {
+      "description": "The Assign Workspace CMK Encryption request payload.",
+      "required": [
+        "keyIdentifier"
+      ],
+      "properties": {
+        "keyIdentifier": {
+          "description": "The Azure Key Vault key identifier. This must be a versionless key URI.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "WorkspaceEncryptionDetail": {
+      "description": "Workspace encryption settings and status details.",
+
+      "type": "object",
+      "properties": {
+        "encryptionDetail": {
+          "description": "The workspace encryption detail.",
+          "$ref": "#/definitions/EncryptionDetail"
+        },
+        "previousEncryptionDetail": {
+          "description": "The previous workspace encryption detail.",
+          "$ref": "#/definitions/EncryptionDetail"
+        },
+        "workspaceEncryptionItemsDetails": {
+          "description": "The encryption status of items in the workspace.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkspaceEncryptionItemsDetail"
+          }
+        }
+      }
+    },
+    "EncryptionDetail": {
+      "description": "Workspace encryption details.",
+      "type": "object",
+      "properties": {
+        "keyIdentifier": {
+          "description": "The key identifier.",
+          "type": "string"
+        },
+        "encryptionStatus": {
+          "description": "The workspace encryption status.",
+          "$ref": "#/definitions/EncryptionStatus"
+        }
+      }
+    },
+    "WorkspaceEncryptionItemsDetail": {
+
+      "description": "Encryption status details for items in the workspace.",
+      "type": "object",
+      "properties": {
+        "items": {
+          "description": "The array of workspace item details.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkspaceEncryptionItem"
+          }
+        },
+        "encryptionStatus": {
+          "description": "The encryption status for the items.",
+          "$ref": "#/definitions/EncryptionStatus"
+        }
+      }
+    },
+    "WorkspaceEncryptionItem": {
+      "description": "Workspace item details.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "The item display name.",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "description": "The item Id.",
+          "type": "string"
+        },
+        "type": {
+          "description": "The item type.",
+          "type": "string"
+        }
+      }
+    },
+    "EncryptionStatus": {
+      "type": "string",
+      "description": "Workspace encryption status. Additional encryption status may be added over time.",
+      "enum": [
+        "Disabled",
+        "Active",
+        "EnableInProgress",
+        "DisableInProgress",
+        "Failed"
+      ],
+      "x-ms-enum": {
+        "name": "WorkspaceEncryptionStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Disabled",
+            "description": "Workspace encryption is not active."
+          },
+          {
+            "value": "Active",
+            "description": "Workspace encryption is active and the workspace is encrypted."
+          },
+          {
+            "value": "EnableInProgress",
+            "description": "Workspace encryption is enabling."
+          },
+          {
+            "value": "DisableInProgress",
+            "description": "Workspace encryption is disabling."
+          },
+          {
+            "value": "Failed",
+            "description": "Workspace encryption application failed."
+          }
+        ]
+      }
+    }
+  }
+}

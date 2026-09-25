@@ -1,0 +1,1595 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.DataProtectionBackup;
+using Azure.ResourceManager.DataProtectionBackup.Models;
+using Azure.ResourceManager.Resources;
+
+namespace Azure.Mcp.Tools.AzureBackup.Services;
+
+public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureService(azureService), IDppBackupOperations
+{
+    private const string VaultType = VaultTypeResolver.Dpp;
+
+    /// <summary>
+    /// Resolves the DPP datasource profile from a user-supplied or auto-detected type string.
+    /// Handles auto-detection (e.g. "Microsoft.Storage/storageAccounts" -> Blob profile)
+    /// and friendly name mapping (e.g. "aks" -> AKS profile).
+    /// </summary>
+    internal static DppDatasourceProfile ResolveProfile(string datasourceTypeOrArm)
+    {
+        var autoDetected = DppDatasourceRegistry.TryAutoDetect(datasourceTypeOrArm);
+        if (autoDetected != null)
+        {
+            return autoDetected;
+        }
+
+        return DppDatasourceRegistry.Resolve(datasourceTypeOrArm);
+    }
+
+    public async Task<VaultCreateResult> CreateVaultAsync(
+        string vaultName, string resourceGroup, string subscription, string location,
+        string? sku, string? storageType, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(location), location));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var collection = rgResource.GetDataProtectionBackupVaults();
+
+        var storageSettings = new List<DataProtectionBackupStorageSetting>
+        {
+            new()
+            {
+                DataStoreType = StorageSettingStoreType.VaultStore,
+                StorageSettingType = storageType?.ToLowerInvariant() switch
+                {
+                    "locallyredundant" => StorageSettingType.LocallyRedundant,
+                    "zoneredundant" => StorageSettingType.ZoneRedundant,
+                    "georedundant" or null => StorageSettingType.GeoRedundant,
+                    _ => throw new ArgumentException($"Invalid storage type: '{storageType}'.")
+                }
+            }
+        };
+
+        var vaultData = new DataProtectionBackupVaultData(new AzureLocation(location), new DataProtectionBackupVaultProperties(storageSettings))
+        {
+            // DPP (Backup Vault) requires a Managed Identity to authenticate to protected
+            // datasources (storage accounts, disks, PG Flex, etc.). Without it every
+            // 'protecteditem protect' call would fail server-side with VaultMSIUnauthorized.
+            // Default to SystemAssigned so the vault is usable out of the box; callers can
+            // change this later via 'vault update --identity-type ...'.
+            Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
+                Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned)
+        };
+
+        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
+        await WaitForLroCompletionAsync(result, cancellationToken);
+
+        return new VaultCreateResult(
+            result.Value.Id?.ToString(),
+            result.Value.Data.Name,
+            VaultType,
+            result.Value.Data.Location.Name,
+            result.Value.Data.Properties?.ProvisioningState?.ToString());
+    }
+
+    public async Task<BackupVaultInfo> GetVaultAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
+
+        var mua = (expand & VaultExpand.Mua) != 0
+            ? await GetMuaProxyAsync(vaultResource, cancellationToken)
+            : default;
+
+        return MapToVaultInfo(vault.Value.Data, resourceGroup, expand, mua.state, mua.resourceGuardId);
+    }
+
+    public async Task<List<BackupVaultInfo>> ListVaultsAsync(
+        string subscription, string? tenant,
+        CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
+        var subResource = armClient.GetSubscriptionResource(subId);
+
+        var vaults = new List<BackupVaultInfo>();
+        await foreach (var vault in subResource.GetDataProtectionBackupVaultsAsync(cancellationToken))
+        {
+            var rg = vault.Id?.ResourceGroupName;
+            var mua = (expand & VaultExpand.Mua) != 0
+                ? await GetMuaProxyAsync(vault, cancellationToken)
+                : default;
+            vaults.Add(MapToVaultInfo(vault.Data, rg, expand, mua.state, mua.resourceGuardId));
+        }
+
+        return vaults;
+    }
+
+    private static async Task<(string? state, string? resourceGuardId)> GetMuaProxyAsync(
+        DataProtectionBackupVaultResource vaultResource, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var proxyResponse = await vaultResource.GetResourceGuardProxyBaseResourceAsync("DppResourceGuardProxy", cancellationToken);
+            var proxyId = proxyResponse.Value.Data.Properties?.ResourceGuardResourceId;
+            return ("Enabled", proxyId);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return ("Disabled", null);
+        }
+    }
+
+    public async Task<ProtectResult> ProtectItemAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string policyName, string? datasourceType,
+        string? aksLabelSelectors, string? aksIncludeClusterScopeResources,
+        string? aksSnapshotResourceGroup,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(datasourceId), datasourceId),
+            (nameof(policyName), policyName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var vaultData = await vaultResource.GetAsync(cancellationToken);
+        var collection = vaultResource.GetDataProtectionBackupInstances();
+
+        var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
+        ResourceIdentifier datasourceResourceId;
+        try
+        {
+            datasourceResourceId = new ResourceIdentifier(datasourceId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid datasource ID '{datasourceId}'. Expected a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/disks/{name}).", ex);
+        }
+
+        string resolvedDatasourceType;
+        if (!string.IsNullOrEmpty(datasourceType))
+        {
+            resolvedDatasourceType = datasourceType;
+        }
+        else
+        {
+            try
+            {
+                resolvedDatasourceType = datasourceResourceId.ResourceType.ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(
+                    $"Could not determine datasource type from '{datasourceId}'. " +
+                    "The ARM resource ID may be malformed. Provide --datasource-type explicitly or fix the resource ID.", ex);
+            }
+        }
+        var profile = ResolveProfile(resolvedDatasourceType);
+
+        var instanceName = DppDatasourceRegistry.GenerateInstanceName(profile, datasourceResourceId);
+
+        var policyInfo = new BackupInstancePolicyInfo(policyId);
+
+        if (profile.RequiresSnapshotResourceGroup)
+        {
+            var snapshotRg = !string.IsNullOrWhiteSpace(aksSnapshotResourceGroup)
+                ? aksSnapshotResourceGroup
+                : datasourceResourceId.ResourceGroupName ?? resourceGroup;
+            var snapshotRgId = ResourceGroupResource.CreateResourceIdentifier(subscription, snapshotRg);
+            var opStoreSettings = new OperationalDataStoreSettings(DataStoreType.OperationalStore)
+            {
+                ResourceGroupId = snapshotRgId,
+            };
+            policyInfo.PolicyParameters = new BackupInstancePolicySettings();
+            policyInfo.PolicyParameters.DataStoreParametersList.Add(opStoreSettings);
+        }
+
+        if (profile.BackupParametersMode == DppBackupParametersMode.KubernetesCluster)
+        {
+            policyInfo.PolicyParameters ??= new BackupInstancePolicySettings();
+
+            var includeClusterScope = string.IsNullOrWhiteSpace(aksIncludeClusterScopeResources)
+                || aksIncludeClusterScopeResources.Equals("true", StringComparison.OrdinalIgnoreCase);
+
+            var aksSettings = new KubernetesClusterBackupDataSourceSettings(
+                isSnapshotVolumesEnabled: true,
+                isClusterScopeResourcesIncluded: includeClusterScope);
+
+            if (!string.IsNullOrWhiteSpace(aksLabelSelectors))
+            {
+                foreach (var label in aksLabelSelectors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    aksSettings.LabelSelectors.Add(label);
+                }
+            }
+
+            policyInfo.PolicyParameters.BackupDataSourceParametersList.Add(aksSettings);
+        }
+
+        var dataSourceInfo = new DataSourceInfo(datasourceResourceId)
+        {
+            DataSourceType = profile.ArmResourceType,
+            ObjectType = "Datasource",
+            ResourceType = datasourceResourceId.ResourceType,
+            ResourceName = datasourceResourceId.Name,
+            ResourceLocation = vaultData.Value.Data.Location,
+        };
+        var instanceProperties = new DataProtectionBackupInstanceProperties(
+            dataSourceInfo,
+            policyInfo,
+            string.Empty)
+        {
+            ObjectType = "BackupInstance",
+        };
+
+        if (profile.DataSourceSetMode != DppDataSourceSetMode.None)
+        {
+            var setId = profile.DataSourceSetMode == DppDataSourceSetMode.Parent
+                ? DppDatasourceRegistry.GetParentResourceId(datasourceResourceId)
+                : datasourceResourceId;
+            instanceProperties.DataSourceSetInfo = new DataSourceSetInfo(setId)
+            {
+                DataSourceType = profile.ArmResourceType,
+                ObjectType = "DatasourceSet",
+                ResourceType = setId.ResourceType,
+                ResourceName = setId.Name,
+                ResourceLocation = vaultData.Value.Data.Location,
+            };
+        }
+
+        var instanceData = new DataProtectionBackupInstanceData
+        {
+            Properties = instanceProperties
+        };
+
+        // DPP protection is asynchronous on the server side and is NOT surfaced as a
+        // backup job (only on-demand backup, restore, etc. are jobs). MCP must therefore
+        // wait for the underlying operationStatus to reach a terminal state and then read
+        // back the BackupInstance to confirm the protection actually configured. Using
+        // WaitUntil.Completed lets the SDK poll the Azure-AsyncOperation header for us
+        // and surface the real server-side error (e.g. VaultMSIUnauthorized) as a
+        // RequestFailedException, instead of silently returning "Accepted".
+        ArmOperation<DataProtectionBackupInstanceResource> operation;
+        try
+        {
+            operation = await collection.CreateOrUpdateAsync(
+                WaitUntil.Started, instanceName, instanceData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (RequestFailedException ex)
+        {
+            return new ProtectResult(
+                "Failed",
+                instanceName,
+                JobId: null,
+                $"Protection failed for backup instance '{instanceName}': {ex.Message}",
+                ProtectionStatus: null,
+                ErrorMessage: ex.Message);
+        }
+
+        // Re-read the backup instance to capture the authoritative protection status.
+        // The LRO can complete while the BI is still in ConfiguringProtection; both
+        // outcomes are surfaced to the caller via ProtectionStatus. If the re-read
+        // fails with a transient error, report success (protection did complete) and
+        // let the caller verify with 'protecteditem get'.
+        string? protectionStatus = null;
+        try
+        {
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
+            var bi = await instanceResource.GetAsync(cancellationToken);
+            protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
+        }
+        catch (RequestFailedException)
+        {
+            // Transient re-read failure; protection itself succeeded.
+        }
+
+        return new ProtectResult(
+            "Succeeded",
+            instanceName,
+            JobId: null,
+            $"Protection configured for backup instance '{instanceName}' (status: {protectionStatus ?? "Unknown"}). " +
+            $"Use 'azurebackup protecteditem get --protected-item {instanceName}' to view details.",
+            ProtectionStatus: protectionStatus,
+            ErrorMessage: null);
+    }
+
+    public async Task<ProtectedItemInfo> GetProtectedItemAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string protectedItemName, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(protectedItemName), protectedItemName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        // First try direct lookup by exact instance name
+        try
+        {
+            var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
+            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
+            var instance = await instanceResource.GetAsync(cancellationToken);
+            return MapToProtectedItemInfo(instance.Value.Data);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            // Direct lookup failed  -  search by friendly/datasource name
+        }
+
+        // Fall back to listing all items and searching by friendly name
+        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
+        var found = items.FirstOrDefault(i =>
+            (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
+            MatchesDppFriendlyName(i, protectedItemName));
+        return found ?? throw new KeyNotFoundException(
+            $"Protected item '{protectedItemName}' not found in vault '{vaultName}'. " +
+            "Use the full backup instance name from 'azurebackup protecteditem get' list output.");
+    }
+
+    /// <summary>
+    /// Checks whether a DPP backup instance matches a user-provided friendly name.
+    /// DPP instance names follow patterns like: rg-diskname-guid or parent-child-guid.
+    /// This checks the datasource resource name from the datasource ID.
+    /// </summary>
+    private static bool MatchesDppFriendlyName(ProtectedItemInfo item, string friendlyName)
+    {
+        if (!string.IsNullOrEmpty(item.DatasourceId))
+        {
+            var datasourceResourceName = item.DatasourceId.Split('/').LastOrDefault();
+            if (string.Equals(datasourceResourceName, friendlyName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var collection = vaultResource.GetDataProtectionBackupInstances();
+
+        var items = new List<ProtectedItemInfo>();
+
+        // BUG-B fix: DPP backup instances sometimes deserialize to an "unknown" polymorphic
+        // subtype whose base-properties converter throws (ArgumentNullException /
+        // ArgumentException / FormatException / InvalidOperationException) inside
+        // MoveNextAsync. Previously the whole listing failed with an MCP-classified
+        // exception. Now we skip past the bad item and continue - matching the pattern
+        // already used by ListPoliciesAsync above - so a single unsupported instance
+        // does not blank out the entire list. Cap consecutive failures so a page-level
+        // deserialization loop can not spin forever.
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
+        {
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    items.Add(MapToProtectedItemInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (
+                    ex is FormatException
+                    or ArgumentNullException
+                    or ArgumentException
+                    or InvalidOperationException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
+        }
+
+        return items;
+    }
+
+    public async Task<BackupPolicyInfo> GetPolicyAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string policyName, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(policyName), policyName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var policyId = DataProtectionBackupPolicyResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, policyName);
+        var policyResource = armClient.GetDataProtectionBackupPolicyResource(policyId);
+
+        try
+        {
+            var policy = await policyResource.GetAsync(cancellationToken);
+            return MapToPolicyInfo(policy.Value.Data);
+        }
+        catch (FormatException)
+        {
+            // The Azure SDK may throw FormatException when deserializing the policy's
+            // retention/duration fields (XmlConvert.ToTimeSpan limitation in
+            // DataProtectionBackupAbsoluteDeleteSetting). Fall back to listing all
+            // policies and matching by name to work around this SDK limitation.
+            var policies = await ListPoliciesAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
+            return policies.FirstOrDefault(p => p.Name == policyName)
+                ?? throw new KeyNotFoundException(
+                    $"Policy '{policyName}' not found in vault '{vaultName}'. " +
+                    $"If the policy exists, it may contain a retention/duration format not yet supported by the Azure SDK.");
+        }
+    }
+
+    public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var collection = vaultResource.GetDataProtectionBackupPolicies();
+
+        var policies = new List<BackupPolicyInfo>();
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        // The Azure SDK may throw FormatException when deserializing policies with
+        // non-standard ISO 8601 retention/duration fields (XmlConvert.ToTimeSpan
+        // limitation in DataProtectionBackupAbsoluteDeleteSetting). When that happens
+        // we try to skip past the offending item and continue, so valid policies that
+        // appear after a bad one are still returned. If the SDK enumerator becomes
+        // unusable (typical for page-level deserialization failures), MoveNextAsync
+        // will keep throwing - cap consecutive failures so we cannot loop forever.
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
+        {
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    policies.Add(MapToPolicyInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
+        }
+
+        return policies;
+    }
+
+    public async Task<OperationResult> UndeleteProtectedItemAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string datasourceId, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(datasourceId), datasourceId));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        // List soft-deleted backup instances and find the one matching the datasource ID.
+        // Wrap the enumerator so a single soft-deleted item with an unknown polymorphic
+        // discriminator (introduced by a newer service version) does not blank out the
+        // whole search. Matches the resilient-enumerator pattern used by
+        // ListPoliciesAsync and ListProtectedItemsAsync.
+        var deletedCollection = vaultResource.GetDeletedDataProtectionBackupInstances();
+
+        DeletedDataProtectionBackupInstanceResource? matchedInstance = null;
+        var enumerator = deletedCollection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
+        {
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    var deletedInstance = enumerator.Current;
+                    var deletedDatasourceId = deletedInstance.Data?.Properties?.DataSourceInfo?.ResourceId?.ToString();
+                    if (string.Equals(deletedDatasourceId, datasourceId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchedInstance = deletedInstance;
+                        break;
+                    }
+                    consecutiveFailures = 0;
+                }
+                catch (Exception ex) when (ex is FormatException or ArgumentException or ArgumentNullException or InvalidOperationException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
+        }
+
+        if (matchedInstance is null)
+        {
+            throw new KeyNotFoundException(
+                $"No soft-deleted backup instance found with datasource ID '{datasourceId}' in vault '{vaultName}'. " +
+                "Verify the datasource ID is correct and the item is in a soft-deleted state.");
+        }
+
+        var undeleteOperation = await matchedInstance.UndeleteAsync(WaitUntil.Started, cancellationToken);
+        var jobId = ExtractJobIdFromOperation(undeleteOperation.GetRawResponse());
+        var monitorMessage = string.IsNullOrWhiteSpace(jobId)
+            ? $"Restore operation started, but no backup job ID was returned. Operation ID: '{undeleteOperation.Id}'."
+            : $"Use 'azurebackup job get --job {jobId}' to monitor progress.";
+
+        return new OperationResult("Accepted", jobId,
+            $"Restore of soft-deleted backup instance for datasource '{datasourceId}' has been started in vault '{vaultName}'. {monitorMessage}");
+    }
+
+    public async Task<BackupJobInfo> GetJobAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string jobId, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(jobId), jobId));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var jobResourceId = DataProtectionBackupJobResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, jobId);
+        var jobResource = armClient.GetDataProtectionBackupJobResource(jobResourceId);
+
+        try
+        {
+            var job = await jobResource.GetAsync(cancellationToken);
+            return MapToJobInfo(job.Value.Data);
+        }
+        catch (FormatException)
+        {
+            // The Azure SDK may throw FormatException when parsing the job's duration field
+            // (e.g., non-standard ISO 8601 durations from the service). Fall back to listing
+            // all jobs and matching by ID to work around this SDK limitation.
+            // Note: ListJobsAsync may return a partial list if it also hits FormatException
+            // during enumeration — so a null result does NOT mean the job is missing; it may
+            // exist beyond the point where the enumerator broke. Re-throw FormatException
+            // (not KeyNotFoundException) to preserve SDK-parse-failure semantics.
+            // Tracked in azure-sdk-for-net#59306.
+            var jobs = await ListJobsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
+            return jobs.FirstOrDefault(j => j.Name == jobId)
+                ?? throw new FormatException($"Job '{jobId}' exists but the Azure SDK cannot parse its duration field (XmlConvert.ToTimeSpan limitation).");
+        }
+    }
+
+    public async Task<List<BackupJobInfo>> ListJobsAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var collection = vaultResource.GetDataProtectionBackupJobs();
+
+        var jobs = new List<BackupJobInfo>();
+        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        // The Azure SDK may throw FormatException when deserializing jobs with
+        // non-standard ISO 8601 duration fields (XmlConvert.ToTimeSpan limitation).
+        // Try to skip past the offending item so valid jobs after a bad one are still
+        // returned; cap consecutive failures so a permanently-broken enumerator
+        // (typical for page-level deserialization failures) cannot loop forever.
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
+        {
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    jobs.Add(MapToJobInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
+        }
+
+        return jobs;
+    }
+
+    public async Task<RecoveryPointInfo> GetRecoveryPointAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string protectedItemName, string recoveryPointId, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(protectedItemName), protectedItemName),
+            (nameof(recoveryPointId), recoveryPointId));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rpId = DataProtectionBackupRecoveryPointResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName, recoveryPointId);
+        var rpResource = armClient.GetDataProtectionBackupRecoveryPointResource(rpId);
+        var rp = await rpResource.GetAsync(cancellationToken);
+
+        return MapToRecoveryPointInfo(rp.Value.Data);
+    }
+
+    public async Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string protectedItemName, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(protectedItemName), protectedItemName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
+        var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
+        var collection = instanceResource.GetDataProtectionBackupRecoveryPoints();
+
+        var points = new List<RecoveryPointInfo>();
+        // The DPP recovery-point deserializer may throw on unknown polymorphic
+        // discriminators introduced by newer service versions. Skip the offending
+        // item instead of blanking out the entire recovery-point list. Matches the
+        // pattern used by ListPoliciesAsync and ListProtectedItemsAsync.
+        var enumerator = collection.GetAllAsync(cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
+        const int maxConsecutiveFailures = 3;
+        var consecutiveFailures = 0;
+        try
+        {
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    points.Add(MapToRecoveryPointInfo(enumerator.Current.Data));
+                    consecutiveFailures = 0;
+                }
+                catch (Exception ex) when (ex is FormatException or ArgumentException or ArgumentNullException or InvalidOperationException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
+        }
+
+        return points;
+    }
+
+
+    public async Task<OperationResult> UpdateVaultAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? redundancy, string? softDelete, string? softDeleteRetentionDays,
+        string? immutabilityState, string? identityType, string? userAssignedIdentity,
+        string? publicNetworkAccess, string? tags,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        if (!string.IsNullOrEmpty(redundancy))
+        {
+            throw new ArgumentException(
+                "Storage redundancy cannot be changed after a Data Protection (DPP) vault is created. " +
+                "Set --storage-type during vault creation instead.");
+        }
+
+        if (!string.IsNullOrEmpty(publicNetworkAccess))
+        {
+            throw new ArgumentException(
+                "--public-network-access is only supported for Recovery Services vaults (RSV) via this tool. Configure public network access on a Backup vault (DPP) through the Azure portal or ARM.");
+        }
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
+
+        var patchData = new DataProtectionBackupVaultPatch();
+
+        if (!string.IsNullOrEmpty(identityType))
+        {
+            patchData.Identity = VaultIdentityHelper.BuildManagedServiceIdentity(identityType, userAssignedIdentity);
+        }
+        else if (!string.IsNullOrEmpty(userAssignedIdentity))
+        {
+            throw new ArgumentException(
+                "--user-assigned-identity was provided but --identity-type is not set. Set --identity-type to 'UserAssigned' or 'SystemAssigned,UserAssigned' to associate user-assigned identities.");
+        }
+
+        var securitySettings = new BackupVaultSecuritySettings();
+        var hasSecurityUpdate = false;
+
+        if (!string.IsNullOrEmpty(softDelete))
+        {
+            var softDeleteSettings = new BackupVaultSoftDeleteSettings
+            {
+                State = new BackupVaultSoftDeleteState(softDelete)
+            };
+            if (double.TryParse(softDeleteRetentionDays, out var retDays))
+            {
+                softDeleteSettings.RetentionDurationInDays = retDays;
+            }
+            securitySettings.SoftDeleteSettings = softDeleteSettings;
+            hasSecurityUpdate = true;
+        }
+
+        if (!string.IsNullOrEmpty(immutabilityState))
+        {
+            securitySettings.ImmutabilityState = new BackupVaultImmutabilityState(immutabilityState);
+            hasSecurityUpdate = true;
+        }
+
+        if (hasSecurityUpdate)
+        {
+            patchData.Properties ??= new DataProtectionBackupVaultPatchProperties();
+            patchData.Properties.SecuritySettings = securitySettings;
+        }
+
+        if (!string.IsNullOrEmpty(tags))
+        {
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(tags);
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    patchData.Tags[prop.Name] = prop.Value.GetString() ?? string.Empty;
+                }
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                throw new ArgumentException($"Invalid JSON format for --tags. Expected a JSON object like '{{\"key\":\"value\"}}'. Details: {ex.Message}", ex);
+            }
+        }
+
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
+    }
+
+    public async Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var policyName = request.Policy;
+        var workloadType = request.WorkloadType;
+
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(policyName), policyName),
+            (nameof(workloadType), workloadType));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var collection = vaultResource.GetDataProtectionBackupPolicies();
+
+        var profile = DppDatasourceRegistry.Resolve(workloadType);
+        var policyProperties = Policy.DppPolicyBuilder.Build(request, profile);
+        var policyData = new DataProtectionBackupPolicyData { Properties = policyProperties };
+
+        try
+        {
+            var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 400 && ex.ErrorCode == "UserErrorBMSUpdatePolicyNotSupported")
+        {
+            // DPP does not support updating an existing policy via CreateOrUpdate.
+            // If the policy already exists, treat it as success (idempotent create).
+            return new OperationResult("Succeeded", null, $"Policy '{policyName}' already exists in vault '{vaultName}'.");
+        }
+
+        return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
+    }
+
+    public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        // Pre-check current state. Re-enabling an already-enabled CRR returns a generic
+        // CloudInternalError on the DPP backend, which is indistinguishable from a real
+        // platform failure - so we avoid the call entirely when CRR is already enabled.
+        var vault = await vaultResource.GetAsync(cancellationToken);
+        var existingFeatureSettings = vault.Value.Data.Properties?.FeatureSettings;
+        if (existingFeatureSettings?.CrossRegionRestoreState == CrossRegionRestoreState.Enabled)
+        {
+            return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+        }
+
+        // Preserve any sibling feature-setting fields (e.g. CrossSubscriptionRestoreState) that
+        // the newer DPP api-version requires to be present on the PATCH payload. Sending a bare
+        // FeatureSettings PATCH with only CrossRegionRestoreState populated is rejected as an
+        // incomplete PATCH after the Azure.ResourceManager.DataProtectionBackup upgrade.
+        var featureSettings = new BackupVaultFeatureSettings
+        {
+            CrossRegionRestoreState = CrossRegionRestoreState.Enabled
+        };
+        if (existingFeatureSettings?.CrossSubscriptionRestoreState is { } crossSubState)
+        {
+            featureSettings.CrossSubscriptionRestoreState = crossSubState;
+        }
+
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                FeatureSettings = featureSettings
+            }
+        };
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
+    }
+
+    public async Task<OperationResult> ConfigureImmutabilityAsync(
+        string vaultName, string resourceGroup, string subscription,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
+            }
+        };
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for an immutability update.
+    /// Extracted for regression testing. DPP has no ImmutabilityConfiguration
+    /// (Type / DurationInDays); those parameters are RSV-only and are intentionally
+    /// ignored here. Only the top-level <c>ImmutabilityState</c> is populated because
+    /// the DPP api-version does not expose a nested <c>ImmutabilitySettings.State</c>
+    /// on the security-settings surface.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        _ = immutabilityType;
+        _ = immutabilityDurationDays;
+
+        var dppState = immutabilityState switch
+        {
+            AzureBackupImmutabilityState.Disabled => BackupVaultImmutabilityState.Disabled,
+            AzureBackupImmutabilityState.Unlocked => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Enabled => BackupVaultImmutabilityState.Unlocked,
+            AzureBackupImmutabilityState.Locked => BackupVaultImmutabilityState.Locked,
+            _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            ImmutabilityState = dppState,
+        };
+    }
+
+    public async Task<OperationResult> ConfigureSoftDeleteAsync(
+        string vaultName, string resourceGroup, string subscription,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
+            }
+        };
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the DPP vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing. Retention is always sent — RP rejects
+    /// state-only patches on newer api-versions.
+    /// </summary>
+    internal static BackupVaultSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var dppState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => BackupVaultSoftDeleteState.On,
+            AzureBackupSoftDeleteState.Off => BackupVaultSoftDeleteState.Off,
+            AzureBackupSoftDeleteState.AlwaysOn => BackupVaultSoftDeleteState.AlwaysOn,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new BackupVaultSecuritySettings
+        {
+            SoftDeleteSettings = new BackupVaultSoftDeleteSettings
+            {
+                State = dppState,
+                RetentionDurationInDays = softDeleteRetentionDays,
+            },
+        };
+    }
+
+    public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string resourceGuardId, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(resourceGuardId), resourceGuardId));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+        var proxyCollection = vaultResource.GetResourceGuardProxyBaseResources();
+
+        var proxyData = new ResourceGuardProxyBaseResourceData
+        {
+            Properties = new ResourceGuardProxyBase
+            {
+                ResourceGuardResourceId = resourceGuardId
+            }
+        };
+
+        var operation = await proxyCollection.CreateOrUpdateAsync(
+            WaitUntil.Started,
+            "DppResourceGuardProxy",
+            proxyData,
+            cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Multi-User Authorization enabled on vault '{vaultName}' with Resource Guard '{resourceGuardId}'.");
+    }
+
+    public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var proxyResponse = await vaultResource.GetResourceGuardProxyBaseResourceAsync("DppResourceGuardProxy", cancellationToken);
+        var operation = await proxyResponse.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
+    }
+
+    public async Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(keyVaultUri), keyVaultUri),
+            (nameof(keyName), keyName),
+            (nameof(identityType), identityType));
+
+        var isSystemAssigned = "SystemAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+        var isUserAssigned = "UserAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+
+        if (!isSystemAssigned && !isUserAssigned)
+        {
+            throw new ArgumentException(
+                $"Invalid identity type '{identityType}' for CMK encryption. Supported values: 'SystemAssigned', 'UserAssigned'.");
+        }
+
+        if (isUserAssigned && string.IsNullOrWhiteSpace(userAssignedIdentityId))
+        {
+            throw new ArgumentException(
+                "The --user-assigned-identity-id parameter is required when --identity-type is 'UserAssigned'.");
+        }
+
+        // Build the full key URI: {keyVaultUri}/keys/{keyName}[/{keyVersion}]
+        var kvUri = keyVaultUri.TrimEnd('/');
+        var keyUriString = string.IsNullOrEmpty(keyVersion)
+            ? $"{kvUri}/keys/{keyName}"
+            : $"{kvUri}/keys/{keyName}/{keyVersion}";
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
+
+        var kekIdentity = new BackupVaultCmkKekIdentity
+        {
+            IdentityType = isSystemAssigned
+                ? BackupVaultCmkKekIdentityType.SystemAssigned
+                : BackupVaultCmkKekIdentityType.UserAssigned,
+            IdentityId = isUserAssigned ? userAssignedIdentityId : null
+        };
+
+        var patchData = new DataProtectionBackupVaultPatch
+        {
+            Properties = new DataProtectionBackupVaultPatchProperties
+            {
+                SecuritySettings = new BackupVaultSecuritySettings
+                {
+                    EncryptionSettings = new BackupVaultEncryptionSettings
+                    {
+                        State = BackupVaultEncryptionState.Enabled,
+                        KeyUri = new Uri(keyUriString),
+                        KekIdentity = kekIdentity
+                    }
+                }
+            }
+        };
+
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null,
+            $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");
+    }
+
+
+    private static BackupVaultInfo MapToVaultInfo(DataProtectionBackupVaultData data, string? resourceGroup)
+        => MapToVaultInfo(data, resourceGroup, VaultExpand.None, muaState: null, muaResourceGuardId: null);
+
+    private static BackupVaultInfo MapToVaultInfo(
+        DataProtectionBackupVaultData data,
+        string? resourceGroup,
+        VaultExpand expand,
+        string? muaState,
+        string? muaResourceGuardId)
+    {
+        var properties = data.Properties;
+        var securitySettings = properties?.SecuritySettings;
+        var softDeleteSettings = securitySettings?.SoftDeleteSettings;
+        var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
+
+        string? crossRegionRestoreState = null;
+        string? encryptionState = null;
+        string? encryptionKeyUri = null;
+
+        if ((expand & VaultExpand.Security) != 0)
+        {
+            crossRegionRestoreState = properties?.FeatureSettings?.CrossRegionRestoreState?.ToString();
+            var encryption = securitySettings?.EncryptionSettings;
+            encryptionState = encryption?.State?.ToString();
+            encryptionKeyUri = encryption?.KeyUri?.ToString();
+        }
+
+        return new BackupVaultInfo(
+            data.Id?.ToString(),
+            data.Name,
+            VaultType,
+            data.Location.Name,
+            resourceGroup,
+            properties?.ProvisioningState?.ToString(),
+            null,
+            properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
+            properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString(),
+            softDeleteSettings?.State?.ToString(),
+            softDeleteSettings?.RetentionDurationInDays.HasValue == true ? (int)softDeleteSettings.RetentionDurationInDays.Value : null,
+            securitySettings?.ImmutabilityState?.ToString(),
+            identityType,
+            data.Tags?.ToDictionary(t => t.Key, t => t.Value),
+            MuaState: muaState,
+            MuaResourceGuardId: muaResourceGuardId,
+            CrossRegionRestoreState: crossRegionRestoreState,
+            EncryptionState: encryptionState,
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
+    }
+
+    private static ProtectedItemInfo MapToProtectedItemInfo(DataProtectionBackupInstanceData data)
+    {
+        var properties = data.Properties;
+        var dataSourceInfo = properties?.DataSourceInfo;
+        var dataSourceSetInfo = properties?.DataSourceSetInfo;
+        var policyInfo = properties?.PolicyInfo;
+        var protectionStatus = properties?.ProtectionStatus;
+        var resourceProtectionError = properties?.ResourceProtectionErrorDetails;
+        var identityDetails = properties?.IdentityDetails;
+
+        return new ProtectedItemInfo(
+            data.Id?.ToString(),
+            data.Name,
+            VaultType,
+            protectionStatus?.Status?.ToString(),
+            dataSourceInfo?.DataSourceType,
+            dataSourceInfo?.ResourceId?.ToString(),
+            policyInfo?.PolicyId?.Name,
+            null,
+            null,
+            null,
+            new ProtectedItemDppDetails(
+                FriendlyName: properties?.FriendlyName,
+                CurrentProtectionState: properties?.CurrentProtectionState?.ToString(),
+                ProvisioningState: properties?.ProvisioningState?.ToString(),
+                ValidationType: properties?.ValidationType?.ToString(),
+                ObjectType: properties?.ObjectType,
+                ResourceGuardOperationRequests: properties?.ResourceGuardOperationRequests?.ToList(),
+                DataSourceInfo: dataSourceInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        ResourceId: dataSourceInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceInfo.ResourceName,
+                        DataSourceType: dataSourceInfo.DataSourceType,
+                        ResourceType: dataSourceInfo.ResourceType,
+                        ResourceLocation: dataSourceInfo.ResourceLocation,
+                        ObjectType: dataSourceInfo.ObjectType,
+                        ResourceUriString: dataSourceInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceInfo.ResourceProperties)),
+                DataSourceSetInfo: dataSourceSetInfo is null
+                    ? null
+                    : new ProtectedItemDppDataSourceReference(
+                        ResourceId: dataSourceSetInfo.ResourceId?.ToString(),
+                        ResourceName: dataSourceSetInfo.ResourceName,
+                        DataSourceType: dataSourceSetInfo.DataSourceType,
+                        ResourceType: dataSourceSetInfo.ResourceType,
+                        ResourceLocation: dataSourceSetInfo.ResourceLocation,
+                        ObjectType: dataSourceSetInfo.ObjectType,
+                        ResourceUriString: dataSourceSetInfo.ResourceUriString,
+                        ResourceProperties: ConvertToString(dataSourceSetInfo.ResourceProperties)),
+                PolicyInfo: policyInfo is null
+                    ? null
+                    : new ProtectedItemDppPolicyInfo(
+                        PolicyId: policyInfo.PolicyId?.ToString(),
+                        PolicyVersion: policyInfo.PolicyVersion,
+                        PolicyParameters: ConvertToString(policyInfo.PolicyParameters)),
+                ProtectionStatus: protectionStatus is null
+                    ? null
+                    : new ProtectedItemDppProtectionStatus(
+                        Status: protectionStatus.Status?.ToString(),
+                        ErrorDetails: null,
+                        protectionStatus.ProtectionStatusErrorDetails is null
+                            ? null
+                            : [MapToDppError(protectionStatus.ProtectionStatusErrorDetails)]),
+                ResourceProtectionError: resourceProtectionError is null
+                    ? null
+                    : MapToDppError(resourceProtectionError),
+                DataSourceAuthCredentialsType: properties?.DataSourceAuthCredentials?.GetType().Name,
+                IdentityDetails: identityDetails is null
+                    ? null
+                    : new ProtectedItemDppIdentityDetails(
+                        UserAssignedIdentityArmUri: null,
+                        UseSystemAssignedIdentity: identityDetails.UseSystemAssignedIdentity,
+                        UserAssignedIdentityId: identityDetails.UserAssignedIdentityId)));
+    }
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupUserFacingError error) =>
+        new(
+            error.Code,
+            error.Message,
+            error.RecommendedAction?.ToList(),
+            error.Target,
+            error.IsRetryable,
+            error.IsUserError,
+            error.Details?.Select(MapToDppError).ToList(),
+            error.InnerError is null ? null : MapToDppError(error.InnerError),
+            error.Properties?.ToDictionary(p => p.Key, p => p.Value));
+
+    private static ProtectedItemDppError MapToDppError(DataProtectionBackupInnerError error) =>
+        new(
+            error.Code,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            error.EmbeddedInnerError is null ? null : MapToDppError(error.EmbeddedInnerError),
+            error.AdditionalInfo?.ToDictionary(p => p.Key, p => p.Value));
+
+    private static ProtectedItemDppError MapToDppError(Azure.ResponseError error) =>
+        new(
+            error.Code,
+            error.Message,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+
+    private static string? ConvertToString(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        return value.ToString();
+    }
+
+    private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)
+    {
+        var properties = data.Properties;
+        var datasourceTypes = properties is DataProtectionBackupPolicyPropertiesBase props
+            ? props.DataSourceTypes?.ToList() as IReadOnlyList<string>
+            : null;
+
+        string? scheduleFrequency = null;
+        string? scheduleTime = null;
+        int? dailyRetentionDays = null;
+        BackupPolicyDppDetails? dppDetails = null;
+
+        if (properties is RuleBasedBackupPolicy ruleBasedPolicy)
+        {
+            foreach (var rule in ruleBasedPolicy.PolicyRules)
+            {
+                if (rule is DataProtectionBackupRule backupRule &&
+                    backupRule.Trigger is ScheduleBasedBackupTriggerContext scheduleTrigger)
+                {
+                    var repeatingInterval = scheduleTrigger.Schedule?.RepeatingTimeIntervals?.FirstOrDefault();
+                    if (repeatingInterval != null)
+                    {
+                        // Parse repeating interval format: R/{startTime}/{interval}
+                        var parts = repeatingInterval.Split('/');
+                        if (parts.Length >= 3)
+                        {
+                            if (DateTimeOffset.TryParse(parts[1], out var startTime))
+                            {
+                                scheduleTime = startTime.ToString("HH:mm");
+                            }
+
+                            scheduleFrequency = parts[2]; // e.g. "PT4H", "P1D", "P1W"
+                        }
+                    }
+                }
+                else if (rule is DataProtectionRetentionRule retentionRule && retentionRule.IsDefault == true)
+                {
+                    var lifecycle = retentionRule.Lifecycles?.FirstOrDefault();
+                    if (lifecycle?.DeleteAfter is DataProtectionBackupAbsoluteDeleteSetting deleteSetting)
+                    {
+                        dailyRetentionDays = (int)deleteSetting.Duration.TotalDays;
+                    }
+                }
+            }
+
+            dppDetails = new BackupPolicyDppDetails(
+                DataSourceTypes: datasourceTypes,
+                ObjectType: ruleBasedPolicy.GetType().Name,
+                Rules: MapDppPolicyRules(ruleBasedPolicy.PolicyRules));
+        }
+        else if (properties is not null)
+        {
+            dppDetails = new BackupPolicyDppDetails(
+                DataSourceTypes: datasourceTypes,
+                ObjectType: properties.GetType().Name,
+                Rules: null);
+        }
+
+        return new BackupPolicyInfo(
+            data.Id?.ToString(),
+            data.Name,
+            VaultType,
+            datasourceTypes,
+            null,
+            scheduleFrequency,
+            scheduleTime,
+            dailyRetentionDays,
+            Details: null,
+            DppDetails: dppDetails);
+    }
+
+    private static IReadOnlyList<BackupPolicyDppRule>? MapDppPolicyRules(IEnumerable<DataProtectionBasePolicyRule>? rules)
+    {
+        if (rules is null)
+        {
+            return null;
+        }
+
+        var mapped = new List<BackupPolicyDppRule>();
+        foreach (var rule in rules)
+        {
+            switch (rule)
+            {
+                case DataProtectionBackupRule backupRule:
+                    var scheduleTrigger = backupRule.Trigger as ScheduleBasedBackupTriggerContext;
+                    mapped.Add(new BackupPolicyDppRule(
+                        Name: backupRule.Name,
+                        ObjectType: backupRule.GetType().Name,
+                        IsDefault: null,
+                        BackupType: (backupRule.BackupParameters as DataProtectionBackupSettings)?.BackupType,
+                        DataStoreType: backupRule.DataStore?.DataStoreType.ToString(),
+                        ScheduleTimeZone: scheduleTrigger?.Schedule?.TimeZone,
+                        RepeatingTimeIntervals: scheduleTrigger?.Schedule?.RepeatingTimeIntervals?.ToList(),
+                        TaggingCriteria: MapDppTaggingCriteria(scheduleTrigger?.TaggingCriteriaList),
+                        Lifecycles: null));
+                    break;
+                case DataProtectionRetentionRule retentionRule:
+                    mapped.Add(new BackupPolicyDppRule(
+                        Name: retentionRule.Name,
+                        ObjectType: retentionRule.GetType().Name,
+                        IsDefault: retentionRule.IsDefault,
+                        BackupType: null,
+                        DataStoreType: null,
+                        ScheduleTimeZone: null,
+                        RepeatingTimeIntervals: null,
+                        TaggingCriteria: null,
+                        Lifecycles: MapDppLifecycles(retentionRule.Lifecycles)));
+                    break;
+            }
+        }
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppTaggingCriteria>? MapDppTaggingCriteria(
+        IEnumerable<DataProtectionBackupTaggingCriteria>? taggingCriteria)
+    {
+        if (taggingCriteria is null)
+        {
+            return null;
+        }
+
+        var mapped = taggingCriteria.Select(static criteria => new BackupPolicyDppTaggingCriteria(
+            criteria.TagInfo?.TagName,
+            criteria.IsDefault,
+            criteria.TaggingPriority,
+            criteria.Criteria?.Select(static c => c.GetType().Name).ToList())).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppLifecycle>? MapDppLifecycles(IEnumerable<SourceLifeCycle>? lifecycles)
+    {
+        if (lifecycles is null)
+        {
+            return null;
+        }
+
+        var mapped = lifecycles.Select(static lifecycle => new BackupPolicyDppLifecycle(
+            SourceDataStoreType: lifecycle.SourceDataStore?.DataStoreType.ToString(),
+            DeleteAfterDuration: lifecycle.DeleteAfter?.Duration.ToString(),
+            DeleteAfterType: lifecycle.DeleteAfter?.GetType().Name,
+            TargetCopySettings: MapDppCopySettings(lifecycle.TargetDataStoreCopySettings))).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppCopySetting>? MapDppCopySettings(IEnumerable<TargetCopySetting>? copySettings)
+    {
+        if (copySettings is null)
+        {
+            return null;
+        }
+
+        var mapped = copySettings.Select(static copySetting => new BackupPolicyDppCopySetting(
+            copySetting.DataStore?.DataStoreType.ToString(),
+            copySetting.CopyAfter?.GetType().Name)).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static BackupJobInfo MapToJobInfo(DataProtectionBackupJobData data)
+    {
+        return new BackupJobInfo(
+            data.Id?.ToString(),
+            data.Name,
+            VaultType,
+            data.Properties?.OperationCategory,
+            data.Properties?.Status,
+            data.Properties?.StartOn,
+            data.Properties?.EndOn,
+            data.Properties?.DataSourceType,
+            data.Properties?.DataSourceName);
+    }
+
+    private static RecoveryPointInfo MapToRecoveryPointInfo(DataProtectionBackupRecoveryPointData data)
+    {
+        DateTimeOffset? rpTime = null;
+        string? rpType = null;
+
+        if (data.Properties is DataProtectionBackupDiscreteRecoveryPointProperties rpProps)
+        {
+            rpTime = rpProps.RecoverOn;
+            rpType = rpProps.RecoveryPointType;
+        }
+
+        return new RecoveryPointInfo(
+            data.Id?.ToString(),
+            data.Name,
+            VaultType,
+            rpTime,
+            rpType);
+    }
+
+    private static string? ExtractJobIdFromOperation(Response response)
+    {
+        if (response.Headers.TryGetValue("Azure-AsyncOperation", out var asyncOpUrl) && !string.IsNullOrEmpty(asyncOpUrl))
+        {
+            var uri = new Uri(asyncOpUrl);
+            var segments = uri.AbsolutePath.Split('/');
+            return segments.Length > 0 ? segments[^1] : null;
+        }
+
+        return null;
+    }
+}

@@ -16,6 +16,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [128-Tool Limit Issue](#128-tool-limit-issue)
       - [How to Check Your Tool Count](#how-to-check-your-tool-count)
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
+    - [A new command is missing from consolidated mode or the README](#a-new-command-is-missing-from-consolidated-mode-or-the-readme)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
     - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
@@ -239,6 +240,23 @@ The Azure MCP Server can run in multiple modes. Review your MCP configuration to
 - `azmcp server start --mode single` - Launches an MCP server with a single `azure` tool that performs internal dynamic proxy and tool selection
 - `azmcp server start --mode namespace` - Explicitly use namespace proxy mode (same as default)
 
+### A new command is missing from consolidated mode or the README
+
+When a newly registered command appears in `all` mode but is missing from consolidated mode or the public command examples, update all of these surfaces:
+
+1. Add the command to the best matching `mappedToolList` in `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`. The command and consolidated tool must have identical tool metadata. Update the consolidated tool description to mention the new capability.
+2. Add a representative prompt to `servers/Azure.Mcp.Server/README.md`. Update the supported-service description when the command introduces a new resource or capability.
+3. Update `servers/Azure.Mcp.Server/docs/azmcp-commands.md` and `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+4. Build the server, verify the command registration, and run the consolidated discovery tests:
+
+    ```powershell
+    dotnet build servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj
+    servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe tools list --namespace <service> --mode all
+    dotnet test core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Azure.Mcp.Core.Tests.csproj -- --filter-class '*ConsolidatedToolDiscoveryStrategyTests'
+    ```
+
+See the [new command guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#consolidated-mode-requirements) for the complete authoring checklist.
+
 ### VS Code Permission Dialog for Language Model Calls
 
 When using the Azure MCP Server in VS Code, you may see a permission dialog requesting authorization for the MCP server to make language model calls:
@@ -426,7 +444,7 @@ The Azure Identity SDK supports fine-grained control over which authentication m
 
 #### Exclude Credential Categories
 
-To use only **production credentials** (Environment, Workload Identity, Managed Identity), set:
+To use only **production credentials** (Environment, Azure Pipelines when configured, Workload Identity, Managed Identity), set:
 ```bash
 AZURE_TOKEN_CREDENTIALS=prod
 ```
@@ -438,7 +456,7 @@ AZURE_TOKEN_CREDENTIALS=dev
 
 When `prod` is used, the credential chain becomes:
 ```
-Environment → Workload Identity → Managed Identity
+Environment → Azure Pipelines (when configured) → Workload Identity → Managed Identity
 ```
 **Note:** `InteractiveBrowserCredential` is NOT added as fallback. Authentication will fail fast if none of these credentials are available.
 
@@ -462,6 +480,9 @@ AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 # Use only Environment credential (for CI/CD scenarios)
 AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
 
+# Use an Azure Pipelines workload identity service connection
+AZURE_TOKEN_CREDENTIALS=AzurePipelinesCredential
+
 # Use only Interactive Browser credential
 AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
 
@@ -475,6 +496,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 - `AzureCliCredential`
 - `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
+- `AzurePipelinesCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
 - `ManagedIdentityCredential`
@@ -942,7 +964,7 @@ The Azure MCP wrapper automatically installs the correct platform-specific packa
 
 5. **Verify Node.js and npm versions:**
    ```bash
-   node --version  # Should be 20.0.0 or later
+   node --version  # Should be an active LTS version
    npm --version
    ```
 
@@ -1050,7 +1072,7 @@ If authentication still fails after switching clouds, check the following:
 
 #### Sovereign cloud in Remote (using Azure Container Apps)
 
-When authenicating in remote, the following environment variables need to be set on the container:
+When authenticating in remote, the following environment variables need to be set on the container:
 
 - AZURE_CLOUD
 - AzureAd__ClientCredentials__0__TokenExchangeUrl

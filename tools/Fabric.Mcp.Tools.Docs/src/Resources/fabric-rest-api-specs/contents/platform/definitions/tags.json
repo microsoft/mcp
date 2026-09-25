@@ -17,9 +17,8 @@
                     "description": "The array of tag IDs.",
                     "type": "array",
                     "items": {
-                      "type": "string",
-                      "format": "uuid",
-                      "readOnly": false
+                    "type": "string",
+                    "format": "uuid"
                     }
                 }
             }
@@ -35,9 +34,42 @@
                     "description": "The array of tag IDs.",
                     "type": "array",
                     "items": {
-                      "type": "string",
-                      "format": "uuid",
-                      "readOnly": false
+                    "type": "string",
+                    "format": "uuid"
+                    }
+                }
+            }
+        },
+        "ApplyWorkspaceTagsRequest": {
+            "type": "object",
+            "required": [
+                "tags"
+            ],
+            "description": "The request payload for applying tags.",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "description": "An array of tag IDs to apply.",
+                    "items": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                }
+            }
+        },
+        "UnapplyWorkspaceTagsRequest": {
+            "type": "object",
+            "required": [
+                "tags"
+            ],
+            "description": "The request payload for unapplying tags.",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "description": "An array of tag IDs to unapply.",
+                    "items": {
+                        "type": "string",
+                        "format": "uuid"
                     }
                 }
             }

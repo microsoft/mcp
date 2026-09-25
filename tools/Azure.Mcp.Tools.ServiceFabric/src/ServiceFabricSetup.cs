@@ -26,7 +26,9 @@ public class ServiceFabricSetup : IAreaSetup
     {
         var serviceFabric = new CommandGroup(
             Name,
-            "Azure Service Fabric operations - Manage and query Azure Service Fabric managed cluster resources across subscriptions. Use when you need visibility into managed cluster nodes, including node status, node types, IP addresses, and fault/upgrade domains.",
+            "Azure Service Fabric operations - Manage and query Azure Service Fabric managed cluster resources " +
+            "across subscriptions. Use when you need visibility into managed cluster nodes, including node " +
+            "status, node types, IP addresses, and fault/upgrade domains.",
             Title);
 
         var managedCluster = new CommandGroup(
@@ -39,16 +41,14 @@ public class ServiceFabricSetup : IAreaSetup
             "Node operations - Commands for getting and querying nodes in a Service Fabric managed cluster.");
         managedCluster.AddSubGroup(node);
 
-        var nodeGet = serviceProvider.GetRequiredService<ManagedClusterNodeGetCommand>();
-        node.AddCommand(nodeGet.Name, nodeGet);
+        node.AddCommand<ManagedClusterNodeGetCommand>(serviceProvider);
 
         var nodetype = new CommandGroup(
             "nodetype",
             "Node type operations - Commands for managing node types in a Service Fabric managed cluster.");
         managedCluster.AddSubGroup(nodetype);
 
-        var nodeTypeRestart = serviceProvider.GetRequiredService<ManagedClusterNodeTypeRestartCommand>();
-        nodetype.AddCommand(nodeTypeRestart.Name, nodeTypeRestart);
+        nodetype.AddCommand<ManagedClusterNodeTypeRestartCommand>(serviceProvider);
 
         return serviceFabric;
     }

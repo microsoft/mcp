@@ -2,78 +2,53 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Options.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.Monitor.Commands;
+namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 
-public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger)
-    : BaseCommand<OrchestratorNextOptions>
+[CommandMetadata(
+    Id = "dd7d9a59-fb6d-436a-9e08-8bbdf6d5f9d5",
+    Name = "orchestrator-next",
+    Title = "Get Next Azure Monitor Instrumentation Action",
+    Description = """
+        Get the next instrumentation action after completing the current one.
+        Call this ONLY after you have executed the EXACT instruction from the previous response.
+        DO NOT skip steps. DO NOT improvise. DO NOT add extra code or commands.
+
+        Expected workflow:
+        1. You received an action from orchestrator-start or orchestrator-next
+        2. You executed EXACTLY what the 'instruction' field told you to do
+        3. Now call this tool to get the next action
+
+        Returns: The next action to execute, or 'complete' status when all steps are done.
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger, OrchestratorTool orchestratorTool)
+    : BaseCommand<OrchestratorNextOptions, OrchestratorNextCommand.OrchestratorNextCommandResult>
 {
     private readonly ILogger<OrchestratorNextCommand> _logger = logger;
+    private readonly OrchestratorTool _orchestratorTool = orchestratorTool;
 
-    public override string Id => "dd7d9a59-fb6d-436a-9e08-8bbdf6d5f9d5";
-
-    public override string Name => "orchestrator-next";
-
-    public override string Description => @"Get the next instrumentation action after completing the current one.
-Call this ONLY after you have executed the EXACT instruction from the previous response.
-DO NOT skip steps. DO NOT improvise. DO NOT add extra code or commands.
-
-Expected workflow:
-1. You received an action from orchestrator-start or orchestrator-next
-2. You executed EXACTLY what the 'instruction' field told you to do
-3. Now call this tool to get the next action
-
-Returns: The next action to execute, or 'complete' status when all steps are done.";
-
-    public override string Title => "Get Next Azure Monitor Instrumentation Action";
-
-    public override ToolMetadata Metadata => new()
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, OrchestratorNextOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.SessionId);
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.CompletionNote);
-    }
-
-    protected override OrchestratorNextOptions BindOptions(ParseResult parseResult)
-    {
-        return new OrchestratorNextOptions
-        {
-            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
-            CompletionNote = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.CompletionNote.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var tool = context.GetService<OrchestratorTool>();
-            var result = tool.Next(options.SessionId!, options.CompletionNote!);
+            var result = _orchestratorTool.Next(options.SessionId, options.CompletionNote);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                MonitorJsonContext.Default.OrchestratorNextCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -84,4 +59,6 @@ Returns: The next action to execute, or 'complete' status when all steps are don
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record OrchestratorNextCommandResult(string Result);
 }

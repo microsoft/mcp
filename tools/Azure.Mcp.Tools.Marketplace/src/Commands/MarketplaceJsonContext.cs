@@ -41,28 +41,10 @@ namespace Azure.Mcp.Tools.Marketplace.Commands;
 [JsonSerializable(typeof(BillingPlan))]
 [JsonSerializable(typeof(FilterInstruction))]
 [JsonSerializable(typeof(RelatedSku))]
-[JsonSerializable(typeof(LegalTermsType))]
-[JsonSerializable(typeof(AzureBenefit))]
-[JsonSerializable(typeof(Badge))]
-[JsonSerializable(typeof(PublisherType))]
-[JsonSerializable(typeof(PublishingStage))]
-[JsonSerializable(typeof(ProductType))]
-[JsonSerializable(typeof(PricingType))]
-[JsonSerializable(typeof(RatingBucket))]
-[JsonSerializable(typeof(StopSellReason))]
-[JsonSerializable(typeof(CspState))]
-[JsonSerializable(typeof(VmArchitectureType))]
-[JsonSerializable(typeof(VmSecurityType))]
-[JsonSerializable(typeof(PricingAudience))]
-[JsonSerializable(typeof(ArtifactType))]
 [JsonSerializable(typeof(IList<string>))]
 [JsonSerializable(typeof(IReadOnlyList<string>))]
 [JsonSerializable(typeof(IList<PlanDetails>))]
 [JsonSerializable(typeof(IReadOnlyList<PlanSummary>))]
-[JsonSerializable(typeof(IReadOnlyList<RatingBucket>))]
-[JsonSerializable(typeof(IReadOnlyList<Badge>))]
-[JsonSerializable(typeof(IReadOnlyList<PricingType>))]
-[JsonSerializable(typeof(IReadOnlyList<VmSecurityType>))]
 [JsonSerializable(typeof(IList<LinkProperties>))]
 [JsonSerializable(typeof(IList<ImageGroup>))]
 [JsonSerializable(typeof(IList<Artifact>))]
@@ -79,7 +61,11 @@ namespace Azure.Mcp.Tools.Marketplace.Commands;
 [JsonSerializable(typeof(IDictionary<string, string>))]
 [JsonSerializable(typeof(Dictionary<string, int[]>))]
 [JsonSerializable(typeof(IReadOnlyList<PlanSkuRelation>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
- UseStringEnumConverter = true,
-  DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(LeadGenerationInfo))]
+[JsonSerializable(typeof(ExperienceConfig))]
+[JsonSerializable(typeof(ExperienceConfig.AzurePortalConfig))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    UseStringEnumConverter = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class MarketplaceJsonContext : JsonSerializerContext;

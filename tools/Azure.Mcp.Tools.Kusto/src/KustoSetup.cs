@@ -34,7 +34,11 @@ public class KustoSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Kusto command group
-        var kusto = new CommandGroup(Name, "Kusto operations - Commands for managing and querying Azure Data Explorer (Kusto) resources. Includes operations for listing clusters and databases, executing KQL queries, retrieving table schemas, and working with Kusto data analytics workloads.", Title);
+        var kusto = new CommandGroup(Name,
+            "Kusto operations - Commands for managing and querying Azure Data Explorer (Kusto) resources. " +
+            "Includes operations for listing clusters and databases, executing KQL queries, retrieving table " +
+            "schemas, and working with Kusto data analytics workloads.",
+            Title);
 
         // Create Kusto cluster subgroups
         var clusters = new CommandGroup("cluster", "Kusto cluster operations - Commands for listing clusters in your Azure subscription.");
@@ -46,23 +50,16 @@ public class KustoSetup : IAreaSetup
         var tables = new CommandGroup("table", "Kusto table operations - Commands for listing tables in a database.");
         kusto.AddSubGroup(tables);
 
-        var sampleCommand = serviceProvider.GetRequiredService<SampleCommand>();
-        kusto.AddCommand(sampleCommand.Name, sampleCommand);
-        var queryCommand = serviceProvider.GetRequiredService<QueryCommand>();
-        kusto.AddCommand(queryCommand.Name, queryCommand);
+        kusto.AddCommand<SampleCommand>(serviceProvider);
+        kusto.AddCommand<QueryCommand>(serviceProvider);
 
-        var clusterList = serviceProvider.GetRequiredService<ClusterListCommand>();
-        clusters.AddCommand(clusterList.Name, clusterList);
-        var clusterGet = serviceProvider.GetRequiredService<ClusterGetCommand>();
-        clusters.AddCommand(clusterGet.Name, clusterGet);
+        clusters.AddCommand<ClusterListCommand>(serviceProvider);
+        clusters.AddCommand<ClusterGetCommand>(serviceProvider);
 
-        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
-        databases.AddCommand(databaseList.Name, databaseList);
+        databases.AddCommand<DatabaseListCommand>(serviceProvider);
 
-        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
-        tables.AddCommand(tableList.Name, tableList);
-        var tableSchema = serviceProvider.GetRequiredService<TableSchemaCommand>();
-        tables.AddCommand(tableSchema.Name, tableSchema);
+        tables.AddCommand<TableListCommand>(serviceProvider);
+        tables.AddCommand<TableSchemaCommand>(serviceProvider);
 
         return kusto;
     }

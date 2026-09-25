@@ -548,8 +548,13 @@
   "monitor_activitylog_list": [
     "List the activity logs of the last month for <resource_name>"
   ],
-  "monitor_healthmodels_entity_get": [
-    "Show me the health status of entity <entity_id> using the health model <health_model_name>"
+  "monitor_healthmodels_get": [
+    "Show me the health model <health_model_name> in resource group <resource_group>",
+    "Get the Azure Monitor health model named <health_model_name>"
+  ],
+  "monitor_healthmodels_list": [
+    "List the Azure Monitor health models in my subscription",
+    "What health models are in resource group <resource_group>?"
   ],
   "monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",
@@ -574,13 +579,6 @@
   "monitor_table_type_list": [
     "List all available table types in the Log Analytics workspace <workspace_name>",
     "Show me the available table types in the Log Analytics workspace <workspace_name>"
-  ],
-  "monitor_webtests_get": [
-    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>",
-    "List all Web Test resources in my subscription",
-    "List all Web Test resources in my subscription in <resource_group>",
-    "Show me all web tests in my subscription",
-    "Show me web tests in resource group <resource_group>"
   ],
   "monitor_webtests_createorupdate": [
     "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
@@ -808,7 +806,6 @@
     "How can I use Bicep to create an Azure OpenAI service?"
   ],
   "cloudarchitect_design": [
-    "Please help me design an architecture for a large-scale file upload, storage, and retrieval service",
     "Help me design an Azure cloud service that will serve as an ATM for users",
     "I want to design a cloud app for ordering groceries",
     "How can I design a cloud service in Azure that will store and present videos for users?"
@@ -847,7 +844,7 @@
   "foundry_models_list": [
     "List all Microsoft Foundry models",
     "Show me the available Microsoft Foundry models"
-  ],  
+  ],
   "foundryextensions_openai_chat-completions-create": [
     "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource"
   ],

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 
@@ -17,6 +18,4 @@ namespace Azure.Mcp.Tools.CloudArchitect;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     PropertyNameCaseInsensitive = true)]
-public partial class CloudArchitectJsonContext : JsonSerializerContext
-{
-}
+public partial class CloudArchitectJsonContext : JsonSerializerContext;

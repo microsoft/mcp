@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.KeyVault.Options.Certificate;
 
-public class CertificateGetOptions : BaseKeyVaultOptions
+public sealed class CertificateGetOptions : BaseKeyVaultOptions
 {
-    public string? CertificateName { get; set; }
+    [Option(Description = KeyVaultOptionDescriptions.Certificate)]
+    public string? Certificate { get; set; }
 }

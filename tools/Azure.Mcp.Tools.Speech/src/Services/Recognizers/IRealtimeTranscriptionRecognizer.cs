@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Speech.Models.Realtime;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 
@@ -21,7 +20,6 @@ public interface IRealtimeTranscriptionRecognizer
     /// <param name="phrases">Optional phrases to improve recognition accuracy</param>
     /// <param name="format">Output format (simple or detailed)</param>
     /// <param name="profanity">Profanity filtering option (masked, removed, or raw)</param>
-    /// <param name="retryPolicy">Optional retry policy for resilience</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Continuous recognition result containing full text and individual segments</returns>
     Task<RealtimeRecognitionContinuousResult> RecognizeAsync(
@@ -31,6 +29,5 @@ public interface IRealtimeTranscriptionRecognizer
         string[]? phrases = null,
         string? format = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

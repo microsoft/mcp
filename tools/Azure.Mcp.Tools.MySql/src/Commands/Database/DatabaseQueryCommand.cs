@@ -1,64 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Database;
 
-public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
+[CommandMetadata(
+    Id = "b73afaa5-4c3f-41e8-9ef3-c54e75215a97",
+    Name = "query",
+    Title = "Query MySQL Database",
+    Description = "Executes a SQL statement against a database on Azure Database for MySQL Flexible Server. Use this tool to explore or retrieve table data, or to modify data when the signed-in user has permission to do so. Only a single statement is executed per call; SQL comments and stacked statements are rejected. Best practices: List needed columns (avoid SELECT *), add WHERE filters, use LIMIT/OFFSET for paging, ORDER BY for deterministic results, and avoid unnecessary sensitive data. Example: SELECT id, name, status FROM customers WHERE status = 'Active' ORDER BY name LIMIT 50;",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger, IMySqlService mysqlService)
+    : AuthenticatedCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>
 {
-    private const string CommandTitle = "Query MySQL Database";
+    private readonly IMySqlService _mysqlService = mysqlService;
+    private readonly ILogger<DatabaseQueryCommand> _logger = logger;
 
-    public override string Id => "b73afaa5-4c3f-41e8-9ef3-c54e75215a97";
-
-    public override string Name => "query";
-
-    public override string Description => "Executes a safe, read-only SQL SELECT query against a database on Azure Database for MySQL Flexible Server. Use this tool to explore or retrieve table data without modifying it. Rejects non-SELECT statements (INSERT/UPDATE/DELETE/REPLACE/MERGE/TRUNCATE/ALTER/CREATE/DROP), multi-statements, comments hiding writes, transaction control (BEGIN/COMMIT/ROLLBACK), INTO OUTFILE, and other destructive keywords. Only a single SELECT is executed to ensure data integrity. Best practices: List needed columns (avoid SELECT *), add WHERE filters, use LIMIT/OFFSET for paging, ORDER BY for deterministic results, and avoid unnecessary sensitive data. Example: SELECT id, name, status FROM customers WHERE status = 'Active' ORDER BY name LIMIT 50;";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseQueryOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(MySqlOptionDefinitions.Query);
-    }
-
-    protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Query.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            var result = await mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Query!, cancellationToken);
+            var result = await _mysqlService.ExecuteQueryAsync(options.User, options.Server, options.Database, options.Query, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result ?? []), MySqlJsonContext.Default.DatabaseQueryCommandResult);
         }
         catch (Exception ex)
@@ -69,5 +42,5 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
         return context.Response;
     }
 
-    public record DatabaseQueryCommandResult(List<string> Results);
+    public sealed record DatabaseQueryCommandResult(List<string> Results);
 }

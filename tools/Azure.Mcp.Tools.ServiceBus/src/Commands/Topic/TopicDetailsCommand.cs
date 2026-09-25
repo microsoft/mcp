@@ -2,79 +2,46 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
-using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 
-public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : SubscriptionCommand<BaseTopicOptions>
-{
-    private const string CommandTitle = "Get Service Bus Topic Details";
-    private readonly ILogger<TopicDetailsCommand> _logger = logger;
-
-    public override string Id => "c2487c40-58d0-40f7-98f1-105744865a11";
-
-    public override string Name => "details";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "c2487c40-58d0-40f7-98f1-105744865a11",
+    Name = "details",
+    Title = "Get Service Bus Topic Details",
+    Description = """
         Retrieves details about a Service Bus topic. Returns runtime information and topic properties including number of subscriptions, max message size, max topic size, number of scheduled messages, etc.
         Required arguments are namespace: The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net) and topic: Topic name to get information about.
         Do not use this to get details on Service Bus subscription- instead use servicebus_topic_subscription_details.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger, IServiceBusService serviceBusService)
+    : AuthenticatedCommand<BaseTopicOptions, TopicDetailsCommand.TopicDetailsCommandResult>
+{
+    private readonly ILogger<TopicDetailsCommand> _logger = logger;
+    private readonly IServiceBusService _serviceBusService = serviceBusService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseTopicOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
-        command.Options.Add(ServiceBusOptionDefinitions.Topic);
-    }
-
-    protected override BaseTopicOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TopicName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Topic.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var service = context.GetService<IServiceBusService>();
-            var details = await service.GetTopicDetails(
-                options.Namespace!,
-                options.TopicName!,
+            var details = await _serviceBusService.GetTopicDetails(
+                options.Namespace,
+                options.Topic,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
@@ -91,7 +58,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ServiceBusException exception when exception.Reason == ServiceBusFailureReason.MessagingEntityNotFound =>
-            $"Subscription not found. Please check the topic and subscription name and try again.",
+            $"Topic not found. Please check the topic name and try again.",
         _ => base.GetErrorMessage(ex)
     };
 
@@ -101,5 +68,5 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
         _ => base.GetStatusCode(ex)
     };
 
-    internal record TopicDetailsCommandResult(TopicDetails TopicDetails);
+    public sealed record TopicDetailsCommandResult(TopicDetails TopicDetails);
 }

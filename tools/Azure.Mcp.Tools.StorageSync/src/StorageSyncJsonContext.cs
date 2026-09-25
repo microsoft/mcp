@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
 using Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
@@ -28,6 +27,7 @@ namespace Azure.Mcp.Tools.StorageSync;
 [JsonSerializable(typeof(SyncGroupDeleteCommand.SyncGroupDeleteCommandResult))]
 [JsonSerializable(typeof(CloudEndpointGetCommand.CloudEndpointGetCommandResult))]
 [JsonSerializable(typeof(CloudEndpointCreateCommand.CloudEndpointCreateCommandResult))]
+[JsonSerializable(typeof(CloudEndpointUpdateCommand.CloudEndpointUpdateCommandResult))]
 [JsonSerializable(typeof(CloudEndpointDeleteCommand.CloudEndpointDeleteCommandResult))]
 [JsonSerializable(typeof(CloudEndpointTriggerChangeDetectionCommand.CloudEndpointTriggerChangeDetectionCommandResult))]
 [JsonSerializable(typeof(ServerEndpointGetCommand.ServerEndpointGetCommandResult))]
@@ -35,6 +35,7 @@ namespace Azure.Mcp.Tools.StorageSync;
 [JsonSerializable(typeof(ServerEndpointUpdateCommand.ServerEndpointUpdateCommandResult))]
 [JsonSerializable(typeof(ServerEndpointDeleteCommand.ServerEndpointDeleteCommandResult))]
 [JsonSerializable(typeof(ServerEndpointSyncStatusSchema))]
+[JsonSerializable(typeof(ServerEndpointSyncActivityStatusSchema))]
 [JsonSerializable(typeof(ServerEndpointCloudTieringSchema))]
 [JsonSerializable(typeof(ServerEndpointOfflineDataTransferSchema))]
 [JsonSerializable(typeof(ServerEndpointSyncPoliciesSchema))]
@@ -43,6 +44,4 @@ namespace Azure.Mcp.Tools.StorageSync;
 [JsonSerializable(typeof(StorageSyncServiceIdentitySchema))]
 [JsonSerializable(typeof(StorageSyncServicePropertiesSchema))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class StorageSyncJsonContext : JsonSerializerContext
-{
-}
+internal partial class StorageSyncJsonContext : JsonSerializerContext;

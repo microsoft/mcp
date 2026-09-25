@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Options;
 
-public class AppendEntryOptions : BaseConfidentialLedgerOptions
+public sealed class AppendEntryOptions : BaseConfidentialLedgerOptions
 {
-    [JsonPropertyName(ConfidentialLedgerOptionDefinitions.ContentName)]
-    public string? Content { get; set; }
+    [Option(Description = "The JSON or text payload to append as a tamper-proof ledger entry.")]
+    public required string Content { get; set; }
 
-    [JsonPropertyName(ConfidentialLedgerOptionDefinitions.CollectionIdName)]
+    [Option(Description = ConfidentialLedgerOptionDescriptions.CollectionId)]
     public string? CollectionId { get; set; }
 }

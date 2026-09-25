@@ -2,93 +2,65 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FunctionApp.Models;
-using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 
-public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService)
-    : BaseFunctionAppCommand<FunctionAppGetOptions>()
-{
-    private const string CommandTitle = "Get Azure Function App Details";
-    private readonly ILogger<FunctionAppGetCommand> _logger = logger;
-    private readonly IFunctionAppService _functionAppService = functionAppService;
-
-    public override string Id => "5249839c-a3c6-4f9e-b62b-afde801d95a6";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "5249839c-a3c6-4f9e-b62b-afde801d95a6",
+    Name = "get",
+    Title = "Get Azure Function App Details",
+    Description = """
         Gets Azure Function App details. Lists all Function Apps in the subscription or resource group.  If function app name and resource group
         is specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,
         location, status, and app service plan name.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger, IFunctionAppService functionAppService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FunctionAppGetOptions, FunctionAppGetCommand.FunctionAppGetCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<FunctionAppGetCommand> _logger = logger;
+    private readonly IFunctionAppService _functionAppService = functionAppService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(FunctionAppGetOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(FunctionAppOptionDefinitions.FunctionApp);
-
-        command.Validators.Add(result =>
+        if (!string.IsNullOrWhiteSpace(options.FunctionApp) && string.IsNullOrWhiteSpace(options.ResourceGroup))
         {
-            if (result.HasOptionResult(FunctionAppOptionDefinitions.FunctionApp.Name) && !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name))
-            {
-                result.AddError($"--{FunctionAppOptionDefinitions.FunctionApp.Name} option requires --{OptionDefinitions.Common.ResourceGroup.Name} option to be specified.");
-            }
-        });
+            validationResult.Errors.Add($"--function-app option requires --resource-group option to be specified.");
+        }
     }
 
-    protected override FunctionAppGetOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FunctionAppGetOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FunctionAppName = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.FunctionApp.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var functionApps = await _functionAppService.GetFunctionApp(
                 options.Subscription!,
-                options.FunctionAppName,
+                options.FunctionApp,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         }
         catch (Exception ex)
         {
-            if (options.FunctionAppName is null)
+            if (options.FunctionApp is null)
             {
                 _logger.LogError(ex, "Error listing function apps. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}.",
                     options.Subscription, options.ResourceGroup);
@@ -97,7 +69,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
             {
                 _logger.LogError(ex,
                     "Error getting function app. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, FunctionApp: {FunctionApp}.",
-                    options.Subscription, options.ResourceGroup, options.FunctionAppName);
+                    options.Subscription, options.ResourceGroup, options.FunctionApp);
             }
             HandleException(context, ex);
         }
@@ -115,5 +87,5 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record FunctionAppGetCommandResult(List<FunctionAppInfo> FunctionApps);
+    public sealed record FunctionAppGetCommandResult(List<FunctionAppInfo> FunctionApps);
 }

@@ -1,0 +1,33 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "mirroredCatalogId": "5b218778-e7a5-4d73-8187-f10824047715"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "definition": {
+          "parts": [
+            {
+              "path": "MirroredCatalogDefinition.json",
+              "payload": "eyIkc2NoZW1hIjoiaHR0cHM6Ly9kZXZlbG9wZXIubWljcm9zb2Z0LmNvbS9qc29uLXNjaGVtYXMvZmFicmljL2l0ZW0vbWlycm9yZWRDYXRhbG9nL2RlZmluaXRpb24vbWlycm9yZWRDYXRhbG9nRGVmaW5pdGlvbi8xLjAuMC9zY2hlbWEuanNvbiIsInByb3BlcnRpZXMiOnsic291cmNlIjp7InR5cGUiOiJEcmVtaW9JY2ViZXJnQ2F0YWxvZyIsInR5cGVQcm9wZXJ0aWVzIjp7ImNvbm5lY3Rpb25JZCI6IjRlYjZiNzY3LWU3ODYtNDVlZC1iN2NmLWQyNTAyM2U1MjIyMiIsInNjb3BlIjpbIkFjY291bnRpbmciLCJVUyJdfX0sIm1vdW50ZWRUYWJsZXMiOlt7InNvdXJjZSI6eyJ0eXBlUHJvcGVydGllcyI6eyJmdWxseVF1YWxpZmllZFNjb3BlIjpbIkFjY291bnRpbmciLCJVUyIsIlRheGVzIl0sInRhYmxlTmFtZSI6IlRheEluZm8ifX19LHsic291cmNlIjp7InR5cGVQcm9wZXJ0aWVzIjp7ImZ1bGx5UXVhbGlmaWVkU2NvcGUiOlsiQWNjb3VudGluZyIsIlVTIiwiUmVjZWl2YWJsZSJdLCJ0YWJsZU5hbWUiOiJJbnZvaWNlcyJ9fX1dfX0=",
+              "payloadType": "InlineBase64"
+            },
+            {
+              "path": ".platform",
+              "payload": "eyIkc2NoZW1hIjoiaHR0cHM6Ly9kZXZlbG9wZXIubWljcm9zb2Z0LmNvbS9qc29uLXNjaGVtYXMvZmFicmljL2dpdEludGVncmF0aW9uL3BsYXRmb3JtUHJvcGVydGllcy8yLjAuMC9zY2hlbWEuanNvbiIsIm1ldGFkYXRhIjp7ImRpc3BsYXlOYW1lIjoid2FyZWhvdXNlX29wcyIsImRlc2NyaXB0aW9uIjoiTWlycm9yIHNlbGVjdGVkIG9wcyBzY2hlbWFzL3RhYmxlcyJ9LCJjb25maWciOnsidmVyc2lvbiI6IjIuMCIsImxvZ2ljYWxJZCI6IjViMjE4Nzc4LWU3YTUtNGQ3My04MTg3LWYxMDgyNDA0NzcxNSJ9fQ==",
+              "payloadType": "InlineBase64"
+            }
+          ]
+        }
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+        "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+        "Retry-After": 30
+      }
+    }
+  }
+}

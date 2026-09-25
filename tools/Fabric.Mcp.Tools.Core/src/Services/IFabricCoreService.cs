@@ -8,4 +8,6 @@ namespace Fabric.Mcp.Tools.Core.Services;
 public interface IFabricCoreService
 {
     Task<FabricItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default);
+
+    Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default);
 }

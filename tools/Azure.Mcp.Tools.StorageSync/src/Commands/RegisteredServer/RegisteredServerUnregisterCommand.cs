@@ -1,79 +1,47 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.StorageSync.Options.RegisteredServer;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.RegisteredServer;
 
-public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUnregisterCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<RegisteredServerUnregisterOptions>
+[CommandMetadata(
+    Id = "346661e1-64be-463a-96c6-3626966f55fa",
+    Name = "unregister",
+    Title = "Unregister Server",
+    Description = "Unregister a server from a Storage Sync service.",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUnregisterCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RegisteredServerUnregisterOptions, RegisteredServerUnregisterCommand.RegisteredServerUnregisterCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Unregister Server";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<RegisteredServerUnregisterCommand> _logger = logger;
 
-    public override string Id => "346661e1-64be-463a-96c6-3626966f55fa";
-
-    public override string Name => "unregister";
-
-    public override string Description => "Unregister a server from a Storage Sync service.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RegisteredServerUnregisterOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsRequired());
-        command.Options.Add(StorageSyncOptionDefinitions.RegisteredServer.ServerId.AsRequired());
-    }
-
-    protected override RegisteredServerUnregisterOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.StorageSyncServiceName = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        options.RegisteredServerId = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.RegisteredServer.ServerId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             _logger.LogInformation("Unregistering server. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}, ServerId: {ServerId}",
-                options.Subscription, options.ResourceGroup, options.StorageSyncServiceName, options.RegisteredServerId);
+                options.Subscription, options.ResourceGroup, options.Name, options.ServerId);
 
             await _service.UnregisterServerAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.StorageSyncServiceName!,
-                options.RegisteredServerId!,
+                options.ResourceGroup,
+                options.Name,
+                options.ServerId,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Server unregistered successfully";
@@ -88,6 +56,5 @@ public sealed class RegisteredServerUnregisterCommand(ILogger<RegisteredServerUn
         return context.Response;
     }
 
-    [JsonSerializable(typeof(RegisteredServerUnregisterCommandResult))]
-    internal record RegisteredServerUnregisterCommandResult(string Message);
+    public sealed record RegisteredServerUnregisterCommandResult(string Message);
 }

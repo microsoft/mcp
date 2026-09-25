@@ -2,73 +2,43 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.Deploy.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Deploy.Options.App;
 using Azure.Mcp.Tools.Deploy.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.App;
 
-public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployService deployService) : SubscriptionCommand<LogsGetOptions>()
+[CommandMetadata(
+    Id = "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b",
+    Name = "get",
+    Title = "Get AZD deployed App Logs",
+    Description = "Shows application logs for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace. Supports Container Apps, App Services, and Function Apps deployed via 'azd up'. Requires local workspace access to read the azure.yaml project file. Automatically discovers the correct Log Analytics workspace and resources based on azd environment configuration. Returns console log entries for checking deployment status or troubleshooting post-deployment issues.",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployService deployService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<LogsGetOptions, string>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get AZD deployed App Logs";
     private readonly ILogger<LogsGetCommand> _logger = logger;
     private readonly IDeployService _deployService = deployService;
-    public override string Id => "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b";
 
-    public override string Name => "get";
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, LogsGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override string Description =>
-        """
-        Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.
-        """;
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.Limit);
-    }
-
-    protected override LogsGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder.Name)!;
-        options.AzdEnvName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName.Name)!;
-        options.Limit = parseResult.GetValueOrDefault<int>(DeployOptionDefinitions.AzdAppLogOptions.Limit.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var result = await _deployService.GetAzdResourceLogsAsync(
-                options.WorkspaceFolder!,
-                options.AzdEnvName!,
+                options.WorkspaceFolder,
+                options.AzdEnvName,
                 options.Subscription!,
-                options.Limit, cancellationToken);
+                options.Limit,
+                cancellationToken);
 
             context.Response.Message = result;
         }
@@ -80,5 +50,4 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger, IDeployServic
 
         return context.Response;
     }
-
 }

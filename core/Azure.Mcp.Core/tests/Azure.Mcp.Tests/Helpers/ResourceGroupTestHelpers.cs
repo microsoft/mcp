@@ -22,6 +22,4 @@ public static class ResourceGroupTestHelpers
         var id = $"/subscriptions/{subscriptionId}/resourceGroups/{name}";
         return new ResourceGroupInfo(name, id, location);
     }
-
-
 }

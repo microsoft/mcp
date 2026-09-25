@@ -1,0 +1,44 @@
+{
+    "parameters": {
+        "catalogQueryRequest": {
+            "search": "Sales Revenue",
+            "pageSize": 2,
+            "filter": "Type eq 'Report' or Type eq 'Lakehouse'"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "0acd697c-1550-43cd-b998-91bfb12347c6",
+                        "type": "Report",
+                        "catalogEntryType": "FabricItem",
+                        "displayName": "Monthly Sales Revenue",
+                        "description": "Consolidated revenue report for the current fiscal year.",
+                        "hierarchy": {
+                            "workspace": {
+                                "id": "7f2c8a91-3b4d-4e5f-a6b7-c8d9e0f1a2b3",
+                                "displayName": "Sales Analytics"
+                            }
+                        }
+                    },
+                    {
+                        "id": "5e8f2a1b-9c3d-4e7f-b6a5-d4c3b2a1e0f9",
+                        "type": "Lakehouse",
+                        "catalogEntryType": "FabricItem",
+                        "displayName": "Sales Revenue Lakehouse",
+                        "description": "Central lakehouse for sales transaction data.",
+                        "hierarchy": {
+                            "workspace": {
+                                "id": "a2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d",
+                                "displayName": "Finance Platform"
+                            }
+                        }
+                    }
+                ],
+                "continuationToken": "eyJza2lwIjoyLCJ0YWtl..."
+            }
+        }
+    }
+}

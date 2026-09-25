@@ -1,0 +1,247 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.CommandLine;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Helpers;
+
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
+
+/// <summary>
+/// Builds the JSON Schema fragment that describes a command's input parameters
+/// (the MCP <c>inputSchema</c>) by delegating per-option type mapping to
+/// <see cref="JsonSchemaExporter"/>.
+/// </summary>
+/// <remarks>
+/// AOT note: <c>Microsoft.Mcp.Core</c> sets <c>IsAotCompatible=true</c>, which
+/// promotes <c>RequiresUnreferencedCode</c>/<c>RequiresDynamicCode</c> warnings
+/// into build errors. Option value types come from <c>System.CommandLine</c> as
+/// runtime <see cref="Type"/> values, so this helper has to use
+/// <see cref="DefaultJsonTypeInfoResolver"/> and
+/// <see cref="JsonStringEnumConverter"/>, both annotated. The
+/// <see cref="UnconditionalSuppressMessageAttribute"/> attributes below are used
+/// because this class uses the exporter only to read schema metadata (no
+/// (de)serialization, no enum materialization), and because the actual option
+/// types in use are primitives, enums, <see cref="Guid"/>, nullables of those,
+/// and arrays of those, which the default resolver handles without trimming or
+/// dynamic-codegen concerns.
+/// </remarks>
+internal static class OptionSchemaGenerator
+{
+    private static readonly JsonSerializerOptions SchemaOptions = CreateSchemaOptions();
+
+    private static readonly JsonSchemaExporterOptions ExporterOptions = new()
+    {
+        TreatNullObliviousAsNonNullable = true,
+    };
+
+    private static readonly JsonSchemaExporterOptions OutputExporterOptions = new()
+    {
+        TreatNullObliviousAsNonNullable = true,
+        TransformSchemaNode = static (context, schema) =>
+        {
+            if (schema is JsonObject schemaObject && StructuredOutputHelper.IsObjectRoot(schemaObject))
+            {
+                ReconcileRequiredProperties(schemaObject, context.TypeInfo);
+            }
+
+            return schema;
+        },
+    };
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
+        Justification = "Option value types are primitives, enums, and arrays of primitives that the default resolver handles without trim concerns.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
+        Justification = "Option value types are primitives, enums, and arrays of primitives that the default resolver handles without dynamic code generation.")]
+    private static JsonSerializerOptions CreateSchemaOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+            Converters = { new JsonStringEnumConverter() },
+        };
+        options.MakeReadOnly();
+        return options;
+    }
+
+    /// <summary>
+    /// Returns a JSON Schema fragment for the supplied option value type, with the
+    /// option description applied at the root.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
+        Justification = "Option value types are primitives, enums, and arrays of primitives that the default resolver handles without trim concerns.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
+        Justification = "Option value types are primitives, enums, and arrays of primitives that the default resolver handles without dynamic code generation.")]
+    public static JsonNode CreatePropertySchema(Type optionType, string? description)
+    {
+        ArgumentNullException.ThrowIfNull(optionType);
+
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(SchemaOptions, optionType, ExporterOptions);
+
+        if (schema is JsonObject schemaObject && !string.IsNullOrWhiteSpace(description))
+        {
+            schemaObject["description"] = description;
+        }
+
+        return schema;
+    }
+
+    /// <summary>
+    /// Builds the <c>inputSchema</c> root <see cref="JsonObject"/> for the supplied options.
+    /// Always emits an <c>"object"</c> schema with <c>additionalProperties: false</c> for OpenAI strict-mode compatibility.
+    /// </summary>
+    public static JsonObject CreateInputSchema(IReadOnlyList<Option> options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        var properties = new JsonObject();
+        var required = new JsonArray();
+
+        foreach (var option in options)
+        {
+            var propName = NameNormalization.NormalizeOptionName(option.Name);
+            properties[propName] = CreatePropertySchema(option.ValueType, option.Description);
+
+            if (option.Required)
+            {
+                required.Add((JsonNode)propName);
+            }
+        }
+
+        var root = new JsonObject
+        {
+            ["type"] = "object",
+            ["properties"] = properties,
+        };
+
+        if (required.Count > 0)
+        {
+            root["required"] = required;
+        }
+
+        root["additionalProperties"] = false;
+
+        return root;
+    }
+
+    /// <summary>
+    /// Builds the <c>outputSchema</c> root <see cref="JsonObject"/> for the supplied result type.
+    /// MCP requires the root schema to be an <c>"object"</c>, so result types that export as a
+    /// non-object root (arrays or scalars) are wrapped under a single <c>value</c> property. Unlike the
+    /// input schema, <c>additionalProperties</c> is intentionally left unset for forward compatibility
+    /// with evolving result shapes.
+    /// </summary>
+    public static JsonObject CreateOutputSchema(JsonTypeInfo resultTypeInfo)
+    {
+        ArgumentNullException.ThrowIfNull(resultTypeInfo);
+
+        var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, OutputExporterOptions);
+
+        if (schema is JsonObject rootObject && StructuredOutputHelper.IsObjectRoot(rootObject))
+        {
+            return rootObject;
+        }
+
+        return new JsonObject
+        {
+            ["type"] = "object",
+            ["properties"] = StructuredOutputHelper.WrapValue(schema),
+            ["required"] = new JsonArray { (JsonNode)StructuredOutputHelper.ValuePropertyName },
+        };
+    }
+
+    private static void ReconcileRequiredProperties(JsonObject schema, JsonTypeInfo resultTypeInfo)
+    {
+        if (schema["required"] is not JsonArray required
+            || schema["properties"] is not JsonObject properties)
+        {
+            return;
+        }
+
+        var propertyMetadata = resultTypeInfo.Properties.ToDictionary(property => property.Name, StringComparer.Ordinal);
+        for (var index = required.Count - 1; index >= 0; index--)
+        {
+            var propertyName = required[index]?.GetValue<string>();
+            if (propertyName is null
+                || !properties.TryGetPropertyValue(propertyName, out var propertySchema)
+                || !propertyMetadata.TryGetValue(propertyName, out var propertyInfo))
+            {
+                continue;
+            }
+
+            if (CanBeOmitted(propertyInfo, resultTypeInfo.Options.DefaultIgnoreCondition, propertySchema))
+            {
+                required.RemoveAt(index);
+            }
+        }
+
+        if (required.Count == 0)
+        {
+            schema.Remove("required");
+        }
+    }
+
+    private static bool CanBeOmitted(
+        JsonPropertyInfo propertyInfo,
+        JsonIgnoreCondition defaultIgnoreCondition,
+        JsonNode? propertySchema)
+    {
+        JsonIgnoreAttribute? ignoreAttribute = null;
+        if (propertyInfo.ShouldSerialize is not null)
+        {
+            // Source-generated metadata uses ShouldSerialize for property-level JsonIgnore conditions.
+            // Read the attribute to distinguish Never from conditions that can omit the property.
+            ignoreAttribute = propertyInfo.AttributeProvider?
+                .GetCustomAttributes(typeof(JsonIgnoreAttribute), inherit: true)
+                .OfType<JsonIgnoreAttribute>()
+                .SingleOrDefault();
+
+            if (ignoreAttribute is null)
+            {
+                // A custom ShouldSerialize predicate can omit the property, so it cannot be required.
+                return true;
+            }
+        }
+
+        var ignoreCondition = ignoreAttribute?.Condition ?? defaultIgnoreCondition;
+        return ignoreCondition switch
+        {
+            JsonIgnoreCondition.Always
+                or JsonIgnoreCondition.WhenWriting
+                or JsonIgnoreCondition.WhenWritingDefault => true,
+            JsonIgnoreCondition.WhenWritingNull => AllowsNull(propertySchema),
+            _ => false,
+        };
+    }
+
+    private static bool AllowsNull(JsonNode? schema)
+    {
+        if (schema is not JsonObject schemaObject)
+        {
+            return false;
+        }
+
+        if (schemaObject["type"] is JsonValue typeValue
+            && typeValue.TryGetValue<string>(out var typeName))
+        {
+            return typeName == "null";
+        }
+
+        if (schemaObject["type"] is JsonArray types
+            && types.Any(type => type?.GetValue<string>() == "null"))
+        {
+            return true;
+        }
+
+        return AllowsNullInUnion(schemaObject["anyOf"]) || AllowsNullInUnion(schemaObject["oneOf"]);
+    }
+
+    private static bool AllowsNullInUnion(JsonNode? union) =>
+        union is JsonArray variants && variants.Any(AllowsNull);
+}

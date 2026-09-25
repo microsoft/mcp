@@ -24,9 +24,18 @@ parameters:
 - name: PackageMCPB
   type: boolean
   default: false
+- name: RunVSCodeIntegrationTests
+  type: boolean
+  default: false
 - name: TestTimeoutInMinutes
   type: number
-  default: 30
+  default: 45
+- name: BuildTimeoutInMinutes
+  type: number
+  default: 90
+- name: RunPerfTests
+  type: boolean
+  default: false
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -38,7 +47,7 @@ resources:
   - repository: azure-sdk-build-tools
     type: git
     name: internal/azure-sdk-build-tools
-    ref: refs/tags/azure-sdk-build-tools_20251112.1
+    ref: refs/tags/azure-sdk-build-tools_20260702.2
 
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
@@ -79,6 +88,7 @@ extends:
         - template: /eng/pipelines/templates/jobs/build.yml
           parameters:
             TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+            BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
             ServerName: ${{ parameters.ServerName }}
             PublishTarget: ${{ parameters.PublishTarget }}
             OSName: ${{ os }}
@@ -88,12 +98,53 @@ extends:
       - template: /eng/pipelines/templates/jobs/build.yml
         parameters:
           TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+          BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}
           ServerName: ${{ parameters.ServerName }}
           PublishTarget: ${{ parameters.PublishTarget }}
           OSName: linux
           Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.linuxBuildMatrices.arm64']
           MaxParallel: 4
           HostArchitecture: arm64
+
+    - stage: VSIXPack
+      displayName: "VSIX pack"
+      dependsOn:
+      - Initialize
+      - Build
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+      pool:
+        name: $(LINUXPOOL)
+        image: $(LINUXVMIMAGE)
+        os: linux
+      variables:
+      - template: /eng/pipelines/templates/variables/image.yml
+      - template: /eng/pipelines/templates/variables/globals.yml
+      jobs:
+      - template: /eng/pipelines/templates/jobs/vsix/pack-vsix-pr.yml
+
+    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunPerfTests, 'true')) }}:
+      - stage: Perf
+        displayName: 'Performance test'
+        dependsOn:
+        - Build
+        pool:
+          name: $(WINDOWSPOOL)
+          image: $(WINDOWSVMIMAGE)
+          os: windows
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/perf-test.yml
+          parameters:
+            Runs: 10
+            # Uncomment to gate on regressions once a baseline is committed:
+            # BaselinePath: eng/perf-baseline.json
+            # ResourceBaselinePath: eng/resource-baseline.json
+            # DispatchBaselinePath: eng/dispatch-baseline.json
+            # ConcurrencyBaselinePath: eng/concurrency-baseline.json
+            # Uncomment to run the (~30 min) BenchmarkDotNet micro-benchmarks:
+            # RunMicroBenchmarks: true
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test
@@ -113,6 +164,22 @@ extends:
             Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
             MaxParallel: 10
             TimeoutInMinutes: 75
+
+    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunVSCodeIntegrationTests, true)) }}:
+      - stage: VSCodeIntegration
+        displayName: 'VS Code integration test'
+        dependsOn:
+        - Initialize
+        # - Build # @vukelich 2026-07-17: This is not a necessary dependency. See https://github.com/microsoft/mcp/issues/3093
+        pool:
+          name: $(WINDOWSPOOL)
+          image: $(WINDOWSVMIMAGE)
+          os: windows
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/vscode-integration.yml
 
     - ${{ if ne(parameters.PublishTarget, 'none') }}:
       # We only sign if we're going to publish

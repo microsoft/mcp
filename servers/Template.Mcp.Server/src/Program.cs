@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
@@ -11,6 +12,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
@@ -28,8 +30,8 @@ internal class Program
     {
         try
         {
-            ServiceStartCommand.ConfigureServices = ConfigureServices;
-            ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+            ServerStartCommand.ConfigureServices = ConfigureServices;
+            ServerStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
             ConfigureServices(services);
@@ -46,7 +48,42 @@ internal class Program
             var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            var status = await parseResult.InvokeAsync();
+            var command = parseResult.CommandResult.Command;
+            int status = 0;
+
+            if (command is ExtendedCommand extendedCommand &&
+                (extendedCommand.BaseCommand is ServerStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+            {
+                // One of the special commands that need to be handled differently.
+                status = await parseResult.InvokeAsync();
+            }
+            else
+            {
+                // Command wasn't one of the registered ServerSetup commands, so bind up a Host of all the services
+                // to run the command.
+                var builder = Host.CreateApplicationBuilder();
+                builder.Logging.ClearProviders();
+                builder.Logging.AddEventSourceLogger();
+                ConfigureServices(builder.Services);
+                builder.Services.AddAzureMcpServer(new()
+                {
+                    Transport = TransportTypes.StdIo
+                });
+
+                using var host = builder.Build();
+
+                await InitializeServicesAsync(host.Services);
+                await host.StartAsync();
+
+                commandFactory = host.Services.GetRequiredService<ICommandFactory>();
+                rootCommand = commandFactory.RootCommand;
+                parseResult = rootCommand.Parse(args);
+
+                status = await parseResult.InvokeAsync();
+
+                await host.StopAsync();
+                await host.WaitForShutdownAsync();
+            }
 
             if (status == 0)
             {
@@ -99,12 +136,12 @@ internal class Program
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
     /// </item>
     /// <item>
-    /// <see cref="ServiceStartCommand"/>'s execution: The container is created by some
+    /// <see cref="ServerStartCommand"/>'s execution: The container is created by some
     /// dynamically created <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) or
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http). While the
-    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServiceStartCommand"/>
+    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServerStartCommand"/>
     /// is created by the first container, this second container it creates and runs is
-    /// built separately during <see cref="ServiceStartCommand.ExecuteAsync"/>. Thus, this
+    /// built separately during <see cref="ServerStartCommand.ExecuteAsync"/>. Thus, this
     /// container is built and this <see cref="ConfigureServices"/> method is called sometime
     /// during that method execution.
     /// </item>
@@ -116,11 +153,11 @@ internal class Program
     /// </para>
     /// <para>
     /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
-    /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
+    /// on <see cref="IAzureService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
     /// but such transport-specific registrations must be overridden within
-    /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
+    /// <see cref="ServerStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
     /// <para>
@@ -129,13 +166,15 @@ internal class Program
     /// project if needed. Below is the list of known differences:
     /// </para>
     /// <list type="bullet">
-    /// <item>Template's Program.cs doesn't add ITenantService.</item>
+    /// <item>Template's Program.cs doesn't add IAzureService.</item>
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
-        services.InitializeConfigurationAndOptions();
+        var thisAssembly = typeof(Program).Assembly;
+
+        services.InitializeConfigurationAndOptions(thisAssembly);
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
@@ -146,8 +185,8 @@ internal class Program
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ICacheService.
         // The http-transport-specific implementations and configurations must be registered
-        // within ServiceStartCommand.ExecuteAsync().
-        services.AddSingleUserCliCacheService();
+        // within ServerStartCommand.ExecuteAsync().
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {

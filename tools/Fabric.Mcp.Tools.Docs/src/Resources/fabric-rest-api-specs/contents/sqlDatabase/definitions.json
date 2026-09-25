@@ -59,12 +59,12 @@
                     "type": "string"
                 },
                 "earliestRestorePoint": {
-                    "description": "The earliest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "description": "ISO 8601 timestamp for the earliest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
                     "type": "string",
                     "format": "date-time"
                 },
                 "latestRestorePoint": {
-                    "description": "The latest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "description": "ISO 8601 timestamp for the latest restore point of the database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
                     "type": "string",
                     "format": "date-time"
                 },
@@ -75,6 +75,61 @@
                 },
                 "collation": {
                     "description": "The collation of the SQL database.",
+                    "type": "string"
+                }
+            }
+        },
+        "RestorableDeletedSQLDatabase": {
+            "description": "A restorable deleted SQL database object.",
+            "type": "object", 
+            "properties": {
+                "displayName": {
+                    "description": "The Fabric display name of the restorable deleted SQL database.",
+                    "type": "string"
+                },
+                "properties": {
+                    "description": "The restorable deleted SQL database properties.",
+                    "$ref": "#/definitions/RestorableDeletedSQLDatabaseProperties"
+                }
+            }
+        },
+        "RestorableDeletedSQLDatabases": {
+            "description": "A list of restorable deleted SQL databases.",
+            "required": ["value"],
+            "properties": {
+                "value": {
+                    "description": "Properties of a restorable deleted SQL database.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RestorableDeletedSQLDatabase"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "RestorableDeletedSQLDatabaseProperties": {
+            "required": ["restorableDeletedDatabaseName", "earliestRestorePoint", "latestRestorePoint", "deletionTimestamp"],
+            "description": "The restorable deleted SQL database properties.",
+            "type": "object",
+            "properties": {
+                "restorableDeletedDatabaseName": {
+                    "description": "The name of the restorable deleted SQL database. This is the name that will be used in the creation payload when restoring from this restorable deleted database.",
+                    "type": "string"
+                },
+                "earliestRestorePoint": {
+                    "description": "ISO 8601 timestamp for the earliest restore point of the database in UTC (e.g., '2024-12-01T00:00:00Z').",
+                    "type": "string"
+                },
+                "latestRestorePoint": {
+                    "description": "ISO 8601 timestamp for the latest restore point of the database in UTC (e.g., '2024-12-02T00:00:00Z').",
+                    "type": "string"
+                },
+                "deletionTimestamp": {
+                    "description": "ISO 8601 timestamp for the deletion of the database in UTC (e.g., '2024-12-01T00:00:00Z').",
                     "type": "string"
                 }
             }
@@ -162,7 +217,7 @@
         "CreationMode": {
           "description": "The creation mode of the creation payload. Additional CreationMode types may be added over time.",
           "type": "string",
-          "enum": [ "New", "Restore" ],
+          "enum": [ "New", "Restore", "RestoreDeletedDatabase" ],
           "x-ms-enum": {
             "name": "CreationMode",
             "modelAsString": true,
@@ -174,7 +229,11 @@
               {
                 "value": "Restore",
                 "description": "The creation mode for restoring from a source database. The 'sourceDatabaseReference' and 'restorePointInTime' properties are required. No other properties are accepted."
-              }
+              },
+              {
+                "value": "RestoreDeletedDatabase",
+                "description": "The creation mode for restoring from a restorable deleted database. The 'restorableDeletedDatabaseName' and 'restorePointInTime' properties are required. No other properties are accepted."
+              }            
             ]
           }
         },
@@ -212,7 +271,7 @@
                 },
                 "sourceDatabaseReference": {
                     "description": "Set the reference for the source database to be restored from.",
-                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
                 }
             },
             "allOf": [
@@ -222,11 +281,41 @@
             ],
             "x-ms-discriminator-value": "Restore"
         },
+        "RestoreDeletedDatabaseCreationPayload": {
+            "description": "> [!NOTE]\n> PITR from deleted databases is currently in Preview ([learn more](/fabric/fundamentals/preview)). \n\nCreates a SQL database item by restoring from a restorable deleted database.",
+            "type": "object",
+            "required": [
+                "restorePointInTime",
+                "restorableDeletedDatabaseName"
+            ],
+            "properties": {
+                "restorePointInTime": {
+                    "description": "Set the time to restore the source database in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "restorableDeletedDatabaseName": {
+                    "description": "Set the name for the restorable deleted database to be restored.",
+                     "type": "string"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SQLDatabaseCreationPayload"
+                }
+            ],
+            "x-ms-discriminator-value": "RestoreDeletedDatabase"
+        },
         "SQLDatabaseDefinition" : {
             "description": "The SQL database public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/sql-database-definition) for more details on the structure of the SQL database definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {
+                "format": {
+                    "description": "The format of the SQL database definition. Supported format: `dacpac` and `sqlproj`. If no format is provided, `dacpac` is used.",
+                    "type": "string",
+                    "readOnly": false
+                },
                 "parts": {
                     "description": "A list of definition parts.",
                     "type": "array",
@@ -242,7 +331,7 @@
             "type": "object",
             "properties": {
                 "path": {
-                    "description": "The SQL database public definition part path.",
+                    "description": "The SQL database public definition part path. Supported SQL database content extensions: `.dacpac` for `dacpac` format; `.sqlproj`, `.sql` for `sqlproj` format.",
                     "type": "string",
                     "readOnly": false
                 },

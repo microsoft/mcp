@@ -21,6 +21,14 @@
                                 "userPrincipalName": "caleb@example.com"
                             }
                         },
+                        "defaultIdentity": {
+                            "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                            "displayName": "Caleb Foster",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "caleb@example.com"
+                            }
+                        },
                         "tags": [
                             {
                                 "displayName": "Tag 1",
@@ -42,6 +50,14 @@
                         "workspaceId": "8f4496db-9929-47bd-89c0-d7eb2f517a95",
                         "capacityId": "D5E336D6-D919-4ECC-B424-1F881A506851",
                         "creatorPrincipal": {
+                            "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                            "displayName": "Jacob Hancock",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "jacob@example.com"
+                            }
+                        },
+                        "defaultIdentity": {
                             "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
                             "displayName": "Jacob Hancock",
                             "type": "User",

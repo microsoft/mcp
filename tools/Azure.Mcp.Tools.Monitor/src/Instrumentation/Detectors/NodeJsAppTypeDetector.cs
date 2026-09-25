@@ -1,7 +1,10 @@
-using System.Text.Json;
-using Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+using System.Text.Json;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 public class NodeJsAppTypeDetector : IAppTypeDetector
 {
@@ -49,7 +52,7 @@ public class NodeJsAppTypeDetector : IAppTypeDetector
         return projects;
     }
 
-    private AppType DetectAppType(JsonElement root)
+    private static AppType DetectAppType(JsonElement root)
     {
         var dependencies = new List<string>();
 
@@ -135,7 +138,7 @@ public class NodeJsAppTypeDetector : IAppTypeDetector
         return AppType.ConsoleNodeJs;
     }
 
-    private string DetectEntryPoint(string workspacePath, JsonElement root)
+    private static string DetectEntryPoint(string workspacePath, JsonElement root)
     {
         // Check package.json "main" field
         if (root.TryGetProperty("main", out var mainElement))

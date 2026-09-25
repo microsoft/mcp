@@ -1,0 +1,23 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+    "importOneLakeWorkspaceLifecyclePolicyRequest": {
+      "properties": {
+        "policy": {
+          "rules": []
+        }
+      }
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "properties": {
+          "policy": {
+            "rules": []
+          }
+        }
+      }
+    }
+  }
+}

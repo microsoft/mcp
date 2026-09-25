@@ -1,0 +1,524 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "MirroredCatalog data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "MirroredCatalog": {
+            "description": "A mirrored catalog item.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The mirrored catalog properties.",
+                    "$ref": "#/definitions/MirroredCatalogProperties",
+                    "readOnly": true
+                }
+            }
+        },
+        "MirroredCatalogProperties": {
+            "description": "The mirrored catalog properties.",
+            "type": "object",
+            "properties": {
+                "sourceType": {
+                    "description": "The source type for the underlying connection.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "connectionId": {
+                    "description": "The connection ID used for the mirrored catalog.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "scope": {
+                    "description": "The namespace hierarchy path that scopes the mirroring. Must be a `Selectable` scope as returned by the List Scopes API.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "readOnly": true
+                },
+                "oneLakeTablesPath": {
+                    "description": "OneLake path to the mirrored catalog tables directory.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "sqlEndpointProperties": {
+                    "description": "An object containing the properties of the SQL endpoint.",
+                    "$ref": "#/definitions/SqlEndpointProperties",
+                    "readOnly": true
+                }
+            }
+        },
+        "SqlEndpointProperties": {
+            "description": "An object containing the properties of the SQL endpoint.",
+            "type": "object",
+            "required": [
+                "provisioningStatus"
+            ],
+            "properties": {
+                "id": {
+                    "description": "SQL endpoint ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "connectionString": {
+                    "description": "SQL endpoint connection string.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "provisioningStatus": {
+                    "description": "SQL endpoint provisioning status. Additional statuses may be added over time.",
+                    "type": "string",
+                    "readOnly": true,
+                    "enum": [
+                        "NotStarted",
+                        "InProgress",
+                        "Success",
+                        "Failed"
+                    ],
+                    "x-ms-enum": {
+                        "name": "ProvisioningStatus",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "NotStarted",
+                                "description": "The SQL endpoint provisioning is not started yet."
+                            },
+                            {
+                                "value": "InProgress",
+                                "description": "The SQL endpoint provisioning is currently in progress."
+                            },
+                            {
+                                "value": "Success",
+                                "description": "The SQL endpoint has been successfully provisioned."
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "The SQL endpoint provisioning has failed."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "MirroredCatalogs": {
+            "description": "A list of mirrored catalogs.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of mirrored catalogs.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MirroredCatalog"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateMirroredCatalogRequest": {
+            "description": "Create mirrored catalog request payload.",
+            "type": "object",
+            "required": [
+                "displayName",
+                "definition"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The mirrored catalog display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The mirrored catalog description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the item is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The mirrored catalog public definition.",
+                    "$ref": "#/definitions/MirroredCatalogDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateMirroredCatalogRequest": {
+            "description": "Update mirrored catalog request.",
+            "type": "object",
+            "properties": {
+                "displayName": {
+                    "description": "The mirrored catalog display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The mirrored catalog description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateMirroredCatalogDefinitionRequest": {
+            "description": "Update mirrored catalog public definition request payload.",
+            "type": "object",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/MirroredCatalogDefinition"
+                }
+            }
+        },
+        "MirroredCatalogDefinitionResponse": {
+            "description": "Mirrored catalog public definition response.",
+            "type": "object",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/MirroredCatalogDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "MirroredCatalogDefinition": {
+            "description": "Mirrored catalog public definition object. Refer to [Mirrored Catalog definition](/rest/api/fabric/articles/item-management/definitions/mirrored-catalog-definition) article for more details.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "format": {
+                    "description": "The format of the mirrored catalog definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MirroredCatalogDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "MirroredCatalogDefinitionPart": {
+            "description": "Mirrored catalog definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The mirrored catalog definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The mirrored catalog definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "ScopesResponse": {
+            "description": "A list of scopes from the source catalog. When listing from the root level (no `parent` specified), the response contains a single virtual `(root)` entry with `fullyQualifiedScope: []` as the top-level item in `value`, with all actual namespaces nested under its `children` array. When `parent` is specified, the child namespaces are returned directly in `value` without the `(root)` wrapper.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of namespace scopes.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Scope"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Scope": {
+            "description": "A namespace scope from the source catalog.",
+            "type": "object",
+            "required": [
+                "name",
+                "fullyQualifiedScope",
+                "isSelectable"
+            ],
+            "properties": {
+                "name": {
+                    "description": "The namespace name (leaf segment of the hierarchy). When listing from the root level, the top-level entry is a virtual `(root)` node.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "fullyQualifiedScope": {
+                    "description": "Full namespace hierarchy as an array. For `Selectable` namespaces, this array can be passed as the `scope` when creating a MirroredCatalog.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "readOnly": true
+                },
+                "isSelectable": {
+                    "description": "Indicates whether this namespace can be selected as a `scope`.",
+                    "$ref": "#/definitions/IsSelectable",
+                    "readOnly": true
+                },
+                "children": {
+                    "description": "Nested child namespaces. Only populated when `recursive=true`.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Scope"
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "IsSelectable": {
+            "type": "string",
+            "description": "Indicates whether a namespace can be used as a mirroring scope. Only `Selectable` namespaces can be used when creating or updating a MirroredCatalog. Additional values may be added over time.",
+            "enum": [
+                "Selectable",
+                "NotSelectable"
+            ],
+            "x-ms-enum": {
+                "name": "IsSelectable",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Selectable",
+                        "description": "This namespace can be used as a mirroring scope. It is a parent of one or more leaf namespaces that contain tables. Leaf namespaces under it become schemas in the mirrored catalog."
+                    },
+                    {
+                        "value": "NotSelectable",
+                        "description": "This namespace cannot be used as a mirroring scope. It is either a leaf namespace that contains tables directly, or it has no leaf namespace children."
+                    }
+                ]
+            }
+        },
+        "TablesResponse": {
+            "description": "A list of tables from the source catalog.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of tables within the namespace scope.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TableInfo"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "TableInfo": {
+            "description": "Information about a table in the source catalog.",
+            "type": "object",
+            "required": [
+                "fullyQualifiedScope",
+                "name"
+            ],
+            "properties": {
+                "fullyQualifiedScope": {
+                    "description": "The complete namespace hierarchy from scope to the leaf schema containing the table. Use this value in `mountedTables[].source.typeProperties.fullyQualifiedScope`.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "readOnly": true
+                },
+                "name": {
+                    "description": "The table name. Use this value in `mountedTables[].source.typeProperties.tableName`.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "MirroringStatusResponse": {
+            "description": "Response containing the overall mirroring status of the mirrored catalog.",
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "description": "Current mirror status.",
+                    "$ref": "#/definitions/ItemMirroringState",
+                    "readOnly": true
+                },
+                "lastSyncDateTime": {
+                    "description": "Last sync attempt timestamp. Null if no sync has been attempted yet. The timestamp is in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "error": {
+                    "description": "Item-level error details. Set when the item status is `Failed`. Null when the item is healthy or running.",
+                    "$ref": "../common/definitions.json#/definitions/ErrorResponse",
+                    "readOnly": true
+                }
+            }
+        },
+        "ItemMirroringState": {
+            "type": "string",
+            "description": "The mirroring state of the catalog. Additional `ItemMirroringState` types may be added over time.",
+            "enum": [
+                "Running",
+                "Stopped",
+                "Failed"
+            ],
+            "x-ms-enum": {
+                "name": "ItemMirroringState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Running",
+                        "description": "Catalog mirroring is running."
+                    },
+                    {
+                        "value": "Stopped",
+                        "description": "Catalog mirroring has stopped."
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "Catalog mirroring failed. Check the `error` field for details."
+                    }
+                ]
+            }
+        },
+        "TablesMirroringStatusResponse": {
+            "description": "Response containing the per-table mirroring status for the mirrored catalog.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of per-table mirroring statuses.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TableMirroringStatus"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "TableMirroringStatus": {
+            "description": "The mirroring status for a single table.",
+            "type": "object",
+            "required": [
+                "schemaName",
+                "name",
+                "status"
+            ],
+            "properties": {
+                "schemaName": {
+                    "description": "The schema (leaf namespace) name where the table resides.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "name": {
+                    "description": "The table name.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "status": {
+                    "description": "Table mirroring state.",
+                    "$ref": "#/definitions/TableMirroringState",
+                    "readOnly": true
+                },
+                "lastSyncDateTime": {
+                    "description": "Last sync attempt timestamp for this table. Null if the table was discovered but has not completed its first sync cycle yet. The timestamp is in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "lastUpdateDateTime": {
+                    "description": "Last successful shortcut creation or update timestamp for this table. Null if the shortcut has never been successfully created. The timestamp is in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "error": {
+                    "description": "Populated when an error occurs while mirroring this table.",
+                    "$ref": "../common/definitions.json#/definitions/ErrorResponse",
+                    "readOnly": true
+                }
+            }
+        },
+        "TableMirroringState": {
+            "type": "string",
+            "description": "The table mirroring state. Additional `TableMirroringState` types may be added over time.",
+            "enum": [
+                "Running",
+                "Failed",
+                "Stopped"
+            ],
+            "x-ms-enum": {
+                "name": "TableMirroringState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Running",
+                        "description": "Table is actively being mirrored and ready for use."
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "Table mirroring failed. Check the `error` field for details."
+                    },
+                    {
+                        "value": "Stopped",
+                        "description": "Table is not being mirrored."
+                    }
+                ]
+            }
+        }
+    }
+}

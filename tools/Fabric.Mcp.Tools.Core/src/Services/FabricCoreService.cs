@@ -25,6 +25,14 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return await JsonSerializer.DeserializeAsync<FabricItem>(response, CoreJsonContext.Default.FabricItem, cancellationToken) ?? new FabricItem();
     }
 
+    public async Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default)
+    {
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/catalog/search";
+        var jsonContent = JsonSerializer.Serialize(request, CoreJsonContext.Default.CatalogSearchRequest);
+        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
+        return await JsonSerializer.DeserializeAsync<CatalogSearchResponse>(response, CoreJsonContext.Default.CatalogSearchResponse, cancellationToken) ?? new CatalogSearchResponse();
+    }
+
     private async Task<Stream> SendFabricApiRequestAsync(
         HttpMethod method,
         string url,

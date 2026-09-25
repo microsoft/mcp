@@ -99,7 +99,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         keywords = $keywords
         bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
         repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
-        engines = @{ node = '>=20.0.0' }
+        engines = @{ node = '>=22.0.0' }
         bin = @{ $cliName = './index.js' }
         os = @()
         cpu = @()
@@ -153,7 +153,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             keywords = $keywords
             bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
             repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
-            engines = @{ node = '>=20.0.0' }
+            engines = @{ node = '>=22.0.0' }
             main = './index.js'
             bin = @{ "$cliName-$nodeOs-$arch" = "./$binPath" }
             os = @($nodeOs)

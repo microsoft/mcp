@@ -1,0 +1,182 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using System.Text.Json;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using ModelContextProtocol;
+using ModelContextProtocol.Protocol;
+using Xunit;
+
+namespace Azure.Mcp.Core.Tests;
+
+public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture)
+    : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
+{
+    private const string StatelessProtocolVersion = "2026-07-28";
+
+    [Fact]
+    public async Task Should_List_Tools()
+    {
+        var tools = await Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        Assert.NotEmpty(tools);
+    }
+
+    [Fact]
+    public async Task Client_Should_Invoke_Tool_Successfully()
+    {
+        var result = await Client.CallToolAsync("subscription_list", new Dictionary<string, object?> { },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        string? content = McpTestUtilities.GetFirstText(result.Content);
+
+        Assert.False(string.IsNullOrWhiteSpace(content));
+
+        var root = JsonSerializer.Deserialize<JsonElement>(content!);
+        Assert.Equal(JsonValueKind.Object, root.ValueKind);
+
+        var results = root.AssertProperty("results");
+        var subscriptionsArray = results.AssertProperty("subscriptions");
+        Assert.Equal(JsonValueKind.Array, subscriptionsArray.ValueKind);
+
+        Assert.NotEmpty(subscriptionsArray.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Client_Should_Handle_Invalid_Tools()
+    {
+        var result = await Client.CallToolAsync("non_existent_tool", new Dictionary<string, object?>(), cancellationToken: TestContext.Current.CancellationToken);
+
+        // When calling a non-existent tool, the server should return an error response
+        Assert.True(result.IsError, "Expected error response for non-existent tool");
+
+        string? content = McpTestUtilities.GetFirstText(result.Content);
+        Assert.False(string.IsNullOrWhiteSpace(content), "Expected error message content");
+        Assert.Contains("The tool non_existent_tool was not found", content);
+    }
+
+    [Fact]
+    public async Task Client_Should_Ping_Server_Successfully()
+    {
+        await AssertProtocolMethodBehaviorAsync(
+            async () => await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "ping",
+            Client.NegotiatedProtocolVersion);
+    }
+
+    [Fact]
+    public async Task Should_Error_When_Resources_List_Not_Supported()
+    {
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "resources/list");
+    }
+
+    [Fact]
+    public async Task Should_Error_When_Resources_Read_Not_Supported()
+    {
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken),
+            "resources/read");
+    }
+
+    [Fact]
+    public async Task Should_Error_When_Resources_Templates_List_Not_Supported()
+    {
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "resources/templates/list");
+    }
+
+    [Fact]
+    public async Task Should_Error_When_Resources_Subscribe_Not_Supported()
+    {
+        await AssertMethodNotFoundAsync(
+            () => Client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken),
+            "resources/subscribe");
+    }
+
+    [Fact]
+    public async Task Should_Error_When_Resources_Unsubscribe_Not_Supported()
+    {
+        await AssertMethodNotFoundAsync(
+            () => Client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken),
+            "resources/unsubscribe");
+    }
+
+    [Fact]
+    public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported()
+    {
+#pragma warning disable MCP9005 // Type or member is obsolete
+        await AssertProtocolMethodBehaviorAsync(
+            () => Client.SetLoggingLevelAsync(LoggingLevel.Info,
+                cancellationToken: TestContext.Current.CancellationToken),
+            "logging/setLevel",
+            Client.NegotiatedProtocolVersion);
+#pragma warning restore MCP9005 // Type or member is obsolete
+    }
+
+    [Fact]
+    public async Task Should_Error_When_Prompts_List_Not_Supported()
+    {
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "prompts/list");
+    }
+
+    [Fact]
+    public async Task Should_Error_When_Prompts_Get_Not_Supported()
+    {
+        await AssertMethodNotFoundAsync(
+            async () => await Client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken),
+            "prompts/get");
+    }
+
+    private static async Task AssertMethodNotFoundAsync(Func<Task> action, string method)
+    {
+        // With the C# MCP SDK 2.1.0, HTTP turns an unsupported method into an HTTP 404
+        // while stdio surfaces the JSON-RPC MethodNotFound error as McpProtocolException.
+        // This transport-dependent behavior is controlled by the SDK; if it becomes
+        // consistent across transports, these assertions can be consolidated.
+        if (string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
+        {
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(action);
+            Assert.Equal(HttpStatusCode.NotFound, exception.StatusCode);
+            Assert.Contains(method, exception.Message, StringComparison.OrdinalIgnoreCase);
+            return;
+        }
+
+        var protocolException = await Assert.ThrowsAsync<McpProtocolException>(action);
+        Assert.Equal(McpErrorCode.MethodNotFound, protocolException.ErrorCode);
+        Assert.Contains(method, protocolException.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task AssertProtocolMethodBehaviorAsync(
+        Func<Task> action,
+        string method,
+        string? negotiatedProtocolVersion)
+    {
+        if (string.Equals(negotiatedProtocolVersion, StatelessProtocolVersion, StringComparison.Ordinal))
+        {
+            await AssertMethodNotFoundAsync(action, method);
+            return;
+        }
+
+        await action();
+    }
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        .. base.BodyRegexSanitizers,
+        // Sanitize tag contents
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody
+        {
+            Regex = @"(?is)""tags""\s*:\s*{(.*?)}",
+            GroupForReplace = "1",
+            Value = ""
+        })
+    ];
+}

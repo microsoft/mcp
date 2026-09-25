@@ -1,0 +1,20 @@
+{
+  "parameters": {
+    "createWorkloadAssignmentRequest": {
+      "capacityId": "a7b12741-80ce-444a-a493-ecf92fed4ffd",
+      "type": "Capacity",
+      "workloadId": "Fabric.SampleWorkloadV2"
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "id": "b70c0007-6524-402c-86a2-489752e219a6",
+        "type": "Capacity",
+        "workloadId": "Fabric.SampleWorkloadV2",
+        "capacityId": "a7b12741-80ce-444a-a493-ecf92fed4ffd",
+        "capacityName": "F4 Capacity"
+      }
+    }
+  }
+}

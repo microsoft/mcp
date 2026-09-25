@@ -86,12 +86,13 @@ public class ResourceVisitor
     {
         (string providerName, _, _) = ResourceParser.ParseResourceType(resourceTypeName);
 
-        if (!GetAllResourceTypesAndVersionsByProvider().TryGetValue(providerName, out ProviderResourceTypes? provider))
+        if (!GetAllResourceTypesAndVersionsByProvider().TryGetValue(providerName, out ProviderResourceTypes? provider)
+            || !provider.ResourceTypes.TryGetValue(resourceTypeName.ToLowerInvariant(), out UniqueResourceType? uniqueResourceType))
         {
-            throw new Exception($"Resource type {resourceTypeName} not found.");
+            throw new InvalidDataException($"Resource type {resourceTypeName} not found.");
         }
 
-        return [.. provider.ResourceTypes[resourceTypeName.ToLowerInvariant()].ApiVersions];
+        return [.. uniqueResourceType.ApiVersions];
     }
 
     public TypesDefinitionResult LoadSingleResource(string resourceTypeName, string apiVersion)
@@ -198,7 +199,7 @@ public class ResourceVisitor
     }
 
     // This finds all the types the referenced type depends on, and adds them to the typesToWrite list.
-    private void FindTypesToWrite(List<TypeBase> typesToWrite, ITypeReference typeReference)
+    private static void FindTypesToWrite(List<TypeBase> typesToWrite, ITypeReference typeReference)
     {
         switch (typeReference.Type)
         {
@@ -229,7 +230,7 @@ public class ResourceVisitor
         }
     }
 
-    private void ProcessTypeLinks(List<TypeBase> typesToWrite, ITypeReference typeReference, bool skipParent)
+    private static void ProcessTypeLinks(List<TypeBase> typesToWrite, ITypeReference typeReference, bool skipParent)
     {
         if (!typesToWrite.Contains(typeReference.Type))
         {
@@ -242,7 +243,7 @@ public class ResourceVisitor
         }
     }
 
-    private ComplexType WriteComplexType(TypeBase typeBase)
+    private static ComplexType WriteComplexType(TypeBase typeBase)
     {
         switch (typeBase)
         {
@@ -298,7 +299,7 @@ public class ResourceVisitor
         }
     }
 
-    private PropertyInfo WriteTypeProperty(string propertyName, ObjectTypeProperty property)
+    private static PropertyInfo WriteTypeProperty(string propertyName, ObjectTypeProperty property)
     {
         return new PropertyInfo(
             propertyName,
@@ -308,7 +309,7 @@ public class ResourceVisitor
             GetModifiers(property.Type.Type));
     }
 
-    private string GetTypeName(TypeBase typeBase)
+    private static string GetTypeName(TypeBase typeBase)
     {
         return typeBase switch
         {
@@ -329,12 +330,12 @@ public class ResourceVisitor
         };
     }
 
-    private string? GetFlags(ObjectTypePropertyFlags flags)
+    private static string? GetFlags(ObjectTypePropertyFlags flags)
     {
         return flags == ObjectTypePropertyFlags.None ? null : flags.ToString();
     }
 
-    private string? GetModifiers(TypeBase typeBase)
+    private static string? GetModifiers(TypeBase typeBase)
     {
         return typeBase switch
         {
@@ -344,14 +345,14 @@ public class ResourceVisitor
         };
     }
 
-    private string GetIntegerModifiers(IntegerType integerType)
+    private static string GetIntegerModifiers(IntegerType integerType)
     {
         return FormatModifiers(
             integerType.MinValue != null ? $"minValue: {integerType.MinValue}" : null,
             integerType.MaxValue != null ? $"maxValue: {integerType.MaxValue}" : null);
     }
 
-    private string GetStringModifiers(StringType stringType)
+    private static string GetStringModifiers(StringType stringType)
     {
         return FormatModifiers(
             stringType.Sensitive == true ? "sensitive" : null,
@@ -360,13 +361,13 @@ public class ResourceVisitor
             stringType.Pattern != null ? $"pattern: {stringType.Pattern}" : null);
     }
 
-    private string FormatModifiers(params string?[] modifiers)
+    private static string FormatModifiers(params string?[] modifiers)
     {
         string modifiersString = string.Join(", ", modifiers.Where(m => !string.IsNullOrEmpty(m)));
         return string.IsNullOrEmpty(modifiersString) ? string.Empty : modifiersString;
     }
 
-    private bool IsComplexType(TypeBase typeBase)
+    private static bool IsComplexType(TypeBase typeBase)
     {
         return typeBase switch
         {

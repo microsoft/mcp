@@ -155,7 +155,10 @@ public sealed class NodePoolNetworkProfile
 
 public sealed class PortRange
 {
+    [System.Text.Json.Serialization.JsonPropertyName("portStart")]
     public int? StartPort { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("portEnd")]
     public int? EndPort { get; set; }
 }
 

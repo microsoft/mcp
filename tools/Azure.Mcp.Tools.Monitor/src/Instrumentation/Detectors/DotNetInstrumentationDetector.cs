@@ -1,8 +1,11 @@
-using System.Xml.Linq;
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+using System.Xml.Linq;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 public class DotNetInstrumentationDetector : IInstrumentationDetector
 {
@@ -37,19 +40,16 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         var version = ExtractVersion(evidence);
         var isTargetVersion = IsAlreadyOnTargetVersion(instrumentationType, version);
 
-        return new InstrumentationResult(
-            InstrumentationState.Brownfield,
-            new ExistingInstrumentation
-            {
-                Type = instrumentationType,
-                Version = version,
-                IsTargetVersion = isTargetVersion,
-                Evidence = evidence
-            }
-        );
+        return new(InstrumentationState.Brownfield, new ExistingInstrumentation
+        {
+            Type = instrumentationType,
+            Version = version,
+            IsTargetVersion = isTargetVersion,
+            Evidence = evidence
+        });
     }
 
-    private List<Evidence> CheckPackagesConfig(string workspacePath)
+    private static List<Evidence> CheckPackagesConfig(string workspacePath)
     {
         var evidence = new List<Evidence>();
         var packagesConfigs = Directory.GetFiles(workspacePath, "packages.config", SearchOption.AllDirectories);
@@ -68,11 +68,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
 
                     if (PackageDetection.AiSdkPackages.Any(p => id.Equals(p, StringComparison.OrdinalIgnoreCase)))
                     {
-                        evidence.Add(new Evidence
-                        {
-                            File = configFile,
-                            Indicator = $"PackageReference: {id} {version}"
-                        });
+                        evidence.Add(new(configFile, $"PackageReference: {id} {version}"));
                     }
                 }
             }
@@ -85,7 +81,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         return evidence;
     }
 
-    private List<Evidence> AnalyzeProjectReferences(string csprojPath)
+    private static List<Evidence> AnalyzeProjectReferences(string csprojPath)
     {
         var evidence = new List<Evidence>();
 
@@ -103,27 +99,15 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
 
                 if (PackageDetection.AiSdkPackages.Any(p => include.Equals(p, StringComparison.OrdinalIgnoreCase)))
                 {
-                    evidence.Add(new Evidence
-                    {
-                        File = csprojPath,
-                        Indicator = $"PackageReference: {include} {version}"
-                    });
+                    evidence.Add(new(csprojPath, $"PackageReference: {include} {version}"));
                 }
                 else if (PackageDetection.OtelPackages.Any(p => include.Equals(p, StringComparison.OrdinalIgnoreCase)))
                 {
-                    evidence.Add(new Evidence
-                    {
-                        File = csprojPath,
-                        Indicator = $"PackageReference: {include} {version}"
-                    });
+                    evidence.Add(new(csprojPath, $"PackageReference: {include} {version}"));
                 }
                 else if (PackageDetection.AzureMonitorDistroPackages.Any(p => include.Equals(p, StringComparison.OrdinalIgnoreCase)))
                 {
-                    evidence.Add(new Evidence
-                    {
-                        File = csprojPath,
-                        Indicator = $"PackageReference: {include} {version}"
-                    });
+                    evidence.Add(new(csprojPath, $"PackageReference: {include} {version}"));
                 }
             }
         }
@@ -135,7 +119,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         return evidence;
     }
 
-    private List<Evidence> CheckConfigFiles(string workspacePath)
+    private static List<Evidence> CheckConfigFiles(string workspacePath)
     {
         var evidence = new List<Evidence>();
 
@@ -143,11 +127,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         var aiConfig = Directory.GetFiles(workspacePath, "applicationinsights.config", SearchOption.AllDirectories);
         foreach (var config in aiConfig)
         {
-            evidence.Add(new Evidence
-            {
-                File = config,
-                Indicator = "applicationinsights.config file present"
-            });
+            evidence.Add(new(config, "applicationinsights.config file present"));
         }
 
         // Check appsettings.json for instrumentation key or connection string
@@ -159,19 +139,11 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
                 var content = File.ReadAllText(settings);
                 if (content.Contains("InstrumentationKey", StringComparison.OrdinalIgnoreCase))
                 {
-                    evidence.Add(new Evidence
-                    {
-                        File = settings,
-                        Indicator = "InstrumentationKey found in configuration"
-                    });
+                    evidence.Add(new(settings, "InstrumentationKey found in configuration"));
                 }
                 if (content.Contains("ApplicationInsights", StringComparison.OrdinalIgnoreCase))
                 {
-                    evidence.Add(new Evidence
-                    {
-                        File = settings,
-                        Indicator = "ApplicationInsights configuration section found"
-                    });
+                    evidence.Add(new(settings, "ApplicationInsights configuration section found"));
                 }
             }
             catch
@@ -183,7 +155,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         return evidence;
     }
 
-    private InstrumentationType DetermineInstrumentationType(List<Evidence> evidence)
+    private static InstrumentationType DetermineInstrumentationType(List<Evidence> evidence)
     {
         var indicators = evidence.Select(e => e.Indicator).ToList();
 
@@ -202,7 +174,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         return InstrumentationType.Other;
     }
 
-    private string? ExtractVersion(List<Evidence> evidence)
+    private static string? ExtractVersion(List<Evidence> evidence)
     {
         // Try to extract version from package reference evidence
         foreach (var e in evidence)

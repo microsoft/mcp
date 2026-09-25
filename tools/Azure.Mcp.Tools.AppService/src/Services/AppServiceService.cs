@@ -1,30 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Http.Headers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppService.Commands;
+using Azure.Mcp.Tools.AppService.Commands.Webapp;
 using Azure.Mcp.Tools.AppService.Commands.Webapp.Settings;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppService.Services;
 
-public class AppServiceService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<AppServiceService> logger) : BaseAzureService(tenantService), IAppServiceService
+public class AppServiceService(IAzureService azureService, ILogger<AppServiceService> logger)
+    : BaseAzureService(azureService), IAppServiceService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppServiceService> _logger = logger;
 
     private static readonly string[] supportedTypes = ["sqlserver", "mysql", "postgresql", "cosmosdb"];
@@ -38,7 +31,6 @@ public class AppServiceService(
         string connectionString,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
@@ -55,7 +47,7 @@ public class AppServiceService(
             (nameof(subscription), subscription));
 
         // Get Azure resources
-        var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
 
         // Prepare connection string
         var finalConnectionString = PrepareConnectionString(connectionString, databaseType, databaseServer, databaseName);
@@ -72,9 +64,9 @@ public class AppServiceService(
     }
 
     private async Task<WebSiteResource> GetWebAppResourceAsync(string subscription, string resourceGroup,
-        string appName, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string appName, string? tenant, CancellationToken cancellationToken)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         if (resourceGroupResource?.Value == null)
@@ -120,7 +112,7 @@ public class AppServiceService(
             string.Equals(cs.Name, connectionStringName, StringComparison.OrdinalIgnoreCase));
 
         // Add the new connection string
-        connectionStrings.Add(new ConnStringInfo
+        connectionStrings.Add(new()
         {
             Name = connectionStringName,
             ConnectionString = connectionString,
@@ -131,8 +123,9 @@ public class AppServiceService(
         var configData = config.Value.Data;
         configData.ConnectionStrings = connectionStrings;
 
-        var updatedConfig = await configResource.CreateOrUpdateAsync(WaitUntil.Completed, configData, cancellationToken);
-        if (updatedConfig?.Value == null)
+        var updateOperation = await configResource.CreateOrUpdateAsync(WaitUntil.Started, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
+        if (updateOperation?.Value == null)
         {
             throw new InvalidOperationException($"Failed to update configuration for web app '{webApp.Data.Name}'.");
         }
@@ -141,7 +134,7 @@ public class AppServiceService(
     private static DatabaseConnectionInfo CreateDatabaseConnectionInfo(string databaseType, string databaseServer,
         string databaseName, string connectionString, string connectionStringName)
     {
-        return new DatabaseConnectionInfo
+        return new()
         {
             DatabaseType = databaseType,
             DatabaseServer = databaseServer,
@@ -179,7 +172,7 @@ public class AppServiceService(
 
     private string BuildCosmosConnectionString(string databaseServer, string databaseName)
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};",
@@ -196,12 +189,11 @@ public class AppServiceService(
         string? resourceGroup = null,
         string? appName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         var results = new List<WebappDetails>();
 
@@ -255,12 +247,11 @@ public class AppServiceService(
         string resourceGroup,
         string appName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
 
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         var configResource = await webAppResource.GetApplicationSettingsAsync(cancellationToken: cancellationToken);
 
         return configResource.Value.Properties;
@@ -274,7 +265,6 @@ public class AppServiceService(
         string settingUpdateType,
         string? settingValue = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -294,7 +284,7 @@ public class AppServiceService(
             throw new ArgumentException(errorMessage);
         }
 
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         var configResource = await webAppResource.GetApplicationSettingsAsync(cancellationToken: cancellationToken);
 
         // Don't worry about an else case here because validation should have already caught invalid update types
@@ -334,12 +324,11 @@ public class AppServiceService(
         string appName,
         string? deploymentId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
 
-        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
 
         var results = new List<DeploymentDetails>();
 
@@ -368,7 +357,6 @@ public class AppServiceService(
         string resourceGroup,
         string appName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(appName), appName));
@@ -376,7 +364,7 @@ public class AppServiceService(
         // TODO (alzimmer): Once https://github.com/Azure/azure-sdk-for-net/issues/51444 is resolved,
         // use WebSiteResource.GetSiteDetectors().GetAllAsync instead of using a direct HttpClient.
         // var results = new List<DetectorDetails>();
-        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         // await foreach (var detector = await webAppResource.GetSiteDetectors().GetAllAsync(cancellationToken))
         // {
         //     results.Add(MapToDetectorDetails(detector.Data));
@@ -413,6 +401,7 @@ public class AppServiceService(
 
     private static DetectorDetails MapToDetectorDetails(JsonElement metadata)
     {
+        var id = metadata.GetProperty("id").GetString()!;
         var name = metadata.GetProperty("name").GetString()!;
         var type = metadata.GetProperty("type").GetString()!;
         var description = metadata.GetProperty("description").GetString();
@@ -421,7 +410,7 @@ public class AppServiceService(
             ? analysisTypesElement.EnumerateArray().Select(at => at.GetString() ?? string.Empty).Where(at => !string.IsNullOrEmpty(at)).ToList()
             : null;
 
-        return new DetectorDetails(name, type, description, category, categories);
+        return new(id, name, type, description, category, categories);
     }
 
     public async Task<DiagnosisResults> DiagnoseDetectorAsync(
@@ -433,7 +422,6 @@ public class AppServiceService(
         DateTimeOffset? endTime = null,
         string? interval = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -444,11 +432,21 @@ public class AppServiceService(
 
         // TODO (alzimmer): Once https://github.com/Azure/azure-sdk-for-net/issues/51444 is resolved,
         // // use WebSiteResource.GetSiteDetectorAsync instead of using a direct HttpClient.
-        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
+        // var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
         // var diagnoses = await webAppResource.GetSiteDetectorAsync(detectorName, startTime, endTime, interval, cancellationToken);
 
         // return new DiagnosesResults(diagnoses.Value.Data.Dataset, diagnoses.Value.Data.Metadata);
-        return await CallDetectorsAsync(tenant, subscription, resourceGroup, appName, MapToDiagnosesResults, detectorName: detectorName, cancellationToken: cancellationToken);
+        return await CallDetectorsAsync(
+            tenant,
+            subscription,
+            resourceGroup,
+            appName,
+            MapToDiagnosesResults,
+            detectorName: detectorName,
+            startTime: startTime,
+            endTime: endTime,
+            interval: interval,
+            cancellationToken: cancellationToken);
     }
 
     private static DiagnosisResults MapToDiagnosesResults(JsonDocument jsonDocument)
@@ -461,7 +459,7 @@ public class AppServiceService(
         var dataset = JsonSerializer.Deserialize(properties.GetProperty("dataset"), AppServiceJsonContext.Default.IListDiagnosticDataset)!;
         var detector = MapToDetectorDetails(properties.GetProperty("metadata"));
 
-        return new DiagnosisResults(dataset, detector);
+        return new(dataset, detector);
     }
 
     private string GetDetectorsEndpoint(string subscriptionId, string resourceGroupName, string siteName, string? detectorName = null)
@@ -469,7 +467,7 @@ public class AppServiceService(
         string subscriptionPath = string.IsNullOrEmpty(detectorName)
             ? $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors?api-version=2025-05-01"
             : $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors/{detectorName}?api-version=2025-05-01";
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
@@ -485,26 +483,47 @@ public class AppServiceService(
         string appName,
         Func<JsonDocument, T> mapFunc,
         string? detectorName = null,
+        DateTimeOffset? startTime = null,
+        DateTimeOffset? endTime = null,
+        string? interval = null,
         CancellationToken cancellationToken = default)
     {
-        var httpRequest = new HttpRequestMessage(HttpMethod.Get, GetDetectorsEndpoint(subscription, resourceGroup, appName, detectorName));
+        var uriString = GetDetectorsEndpoint(subscription, resourceGroup, appName, detectorName);
+        if (detectorName != null)
+        {
+            // Only append endTime, startTime, and interval when detectorName isn't null.
+            // This method is used by both the detector listing and detector diagnose functionality, and those parameters are only relevant for the latter.
+            if (endTime != null)
+            {
+                uriString += $"&endTime={endTime?.ToString("yyyy-MM-ddThh:mm")}";
+            }
+            if (startTime != null)
+            {
+                uriString += $"&startTime={startTime?.ToString("yyyy-MM-ddThh:mm")}";
+            }
+            if (interval != null)
+            {
+                uriString += $"&interval={interval}";
+            }
+        }
+        var httpRequest = new HttpRequestMessage(HttpMethod.Get, uriString);
         var scopes = new string[]
         {
-            _tenantService.CloudConfiguration.ArmEnvironment.DefaultScope
+            AzureService.CloudConfiguration.ArmEnvironment.DefaultScope
         };
         var clientRequestId = "AzMcp" + Guid.NewGuid().ToString();
         var tokenRequestContext = new TokenRequestContext(scopes, clientRequestId);
 
-        var tokenCredential = await _tenantService.GetTokenCredentialAsync(tenant, cancellationToken: cancellationToken);
+        var tokenCredential = await AzureService.GetTokenCredentialAsync(tenant, cancellationToken: cancellationToken);
         var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("bearer", accessToken.Token);
+        httpRequest.Headers.Authorization = new("bearer", accessToken.Token);
         httpRequest.Headers.Add("User-Agent", UserAgent);
         httpRequest.Headers.Add("x-ms-client-request-id", clientRequestId);
         httpRequest.Headers.Add("x-ms-app", "AzureMCP");
         httpRequest.Headers.Add("x-ms-client-version", "AppService.Client.Light");
-        httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequest.Headers.Accept.Add(new("application/json"));
 
-        using var httpResponse = await TenantService.GetClient().SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
+        using var httpResponse = await AzureService.GetClient().SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
         if (!httpResponse.IsSuccessStatusCode)
         {
             string errorContent = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
@@ -515,5 +534,50 @@ public class AppServiceService(
         using var jsonDoc = await JsonDocument.ParseAsync(contentStream, cancellationToken: cancellationToken);
 
         return mapFunc(jsonDoc);
+    }
+
+    public async Task<string> ChangeWebAppStateAsync(
+        string subscription,
+        string resourceGroup,
+        string appName,
+        string stateChange,
+        bool softRestart,
+        bool waitForCompletion,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(appName), appName),
+            (nameof(stateChange), stateChange));
+
+        if (!WebappChangeStateCommand.ValidateStateChange(stateChange, out var errorMessage))
+        {
+            throw new ArgumentException(errorMessage);
+        }
+
+        var webAppResource = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, cancellationToken);
+
+        if (stateChange.Equals("start", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.StartAsync(cancellationToken: cancellationToken);
+            return $"Web app '{appName}' start initiated successfully.";
+        }
+        else if (stateChange.Equals("stop", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.StopAsync(cancellationToken: cancellationToken);
+            return $"Web app '{appName}' stop initiated successfully.";
+        }
+        else if (stateChange.Equals("restart", StringComparison.OrdinalIgnoreCase))
+        {
+            await webAppResource.RestartAsync(softRestart: softRestart, synchronous: waitForCompletion, cancellationToken: cancellationToken);
+            return waitForCompletion
+                ? $"Web app '{appName}' restart completed successfully (Soft restart: {softRestart})."
+                : $"Web app '{appName}' restart initiated successfully (Soft restart: {softRestart}).";
+        }
+
+        // Should never reach this.
+        throw new ArgumentException($"Invalid state change action: {stateChange}. Valid values are: start, stop, restart.");
     }
 }

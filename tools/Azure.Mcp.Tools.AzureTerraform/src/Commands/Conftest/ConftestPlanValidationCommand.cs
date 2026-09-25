@@ -1,0 +1,76 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.AzureTerraform.Models;
+using Azure.Mcp.Tools.AzureTerraform.Options.Conftest;
+using Azure.Mcp.Tools.AzureTerraform.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+
+namespace Azure.Mcp.Tools.AzureTerraform.Commands.Conftest;
+
+[CommandMetadata(
+    Id = "b2c3d4e5-f6a7-8901-bcde-f01234567890",
+    Name = "plan",
+    Title = "Validate Terraform Plan with Conftest",
+    Description = """
+        Generates a conftest command to validate a Terraform plan JSON file against Azure policies.
+        Returns the command and arguments for the agent to execute locally.
+        Uses the Azure policy library (policy-library-avm) for validation with configurable policy sets.
+        Specify --plan-folder with the path to the folder containing tfplan.json. Optionally configure the policy set
+        ('all', 'Azure-Proactive-Resiliency-Library-v2', or 'avmsec'), severity filter (for avmsec), and custom policy paths.
+        If conftest is not installed locally, returns installation instructions instead.
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class ConftestPlanValidationCommand(
+    ILogger<ConftestPlanValidationCommand> logger,
+    IConftestService conftestService) : BaseCommand<ConftestPlanValidationOptions, ConftestCommandResult>
+{
+    private readonly ILogger<ConftestPlanValidationCommand> _logger = logger;
+    private readonly IConftestService _conftestService = conftestService;
+
+    public override async Task<CommandResponse> ExecuteAsync(
+        CommandContext context,
+        ConftestPlanValidationOptions options,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var isAvailable = await _conftestService.IsConftestAvailableAsync(cancellationToken).ConfigureAwait(false);
+
+            ConftestCommandResult result;
+            if (!isAvailable)
+            {
+                result = ConftestService.NotFoundResult($"Validate Terraform plan in: {options.PlanFolder}");
+            }
+            else
+            {
+                result = _conftestService.GeneratePlanValidationCommand(
+                    options.PlanFolder,
+                    options.PolicySet ?? "all",
+                    options.SeverityFilter,
+                    options.CustomPolicies);
+            }
+
+            context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.ConftestCommandResult);
+
+            context.Activity
+                ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "conftest")
+                .AddTag(AzureTerraformTelemetryTags.PolicySet, options.PolicySet ?? "all");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating conftest plan validation command for {PlanFolder}", options.PlanFolder);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+}

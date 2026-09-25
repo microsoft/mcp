@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Fabric.Mcp.Tools.OneLake.Models;
 
 // Core OneLake entities
-public class Workspace
+public sealed class Workspace
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
@@ -33,13 +33,13 @@ public class Workspace
     public WorkspaceMetadata? Metadata { get; set; }
 }
 
-public class WorkspaceProperties
+public sealed class WorkspaceProperties
 {
     [JsonPropertyName("lastModified")]
     public DateTime? LastModified { get; set; }
 }
 
-public class WorkspaceMetadata
+public sealed class WorkspaceMetadata
 {
     [JsonPropertyName("regionalServiceEndpoint")]
     public string? RegionalServiceEndpoint { get; set; }
@@ -81,7 +81,7 @@ public class OneLakeItem
     public OneLakeItemMetadata? Metadata { get; set; }
 }
 
-public class OneLakeItemMetadata
+public sealed class OneLakeItemMetadata
 {
     [JsonPropertyName("artifactId")]
     public string? ArtifactId { get; set; }
@@ -96,7 +96,7 @@ public class OneLakeItemMetadata
     public string? BlobType { get; set; }
 }
 
-public class Lakehouse : OneLakeItem
+public sealed class Lakehouse : OneLakeItem
 {
     [JsonPropertyName("sqlAnalyticsEndpoint")]
     public OneLakeEndpoint? SqlAnalyticsEndpoint { get; set; }
@@ -115,7 +115,7 @@ public class Lakehouse : OneLakeItem
 }
 
 // File and directory information
-public class OneLakeFileInfo
+public sealed class OneLakeFileInfo
 {
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
@@ -182,8 +182,7 @@ public sealed record BlobGetResult(
     [property: JsonPropertyName("versionId")] string? VersionId,
     [property: JsonPropertyName("requestId")] string? RequestId,
     [property: JsonPropertyName("clientRequestId")] string? ClientRequestId,
-    [property: JsonPropertyName("rootActivityId")] string? RootActivityId
-)
+    [property: JsonPropertyName("rootActivityId")] string? RootActivityId)
 {
     [JsonPropertyName("contentFilePath")]
     public string? ContentFilePath { get; init; }
@@ -200,11 +199,10 @@ public sealed record BlobDeleteResult(
     [property: JsonPropertyName("versionId")] string? VersionId,
     [property: JsonPropertyName("requestId")] string? RequestId,
     [property: JsonPropertyName("clientRequestId")] string? ClientRequestId,
-    [property: JsonPropertyName("rootActivityId")] string? RootActivityId
-);
+    [property: JsonPropertyName("rootActivityId")] string? RootActivityId);
 
 // Request/response models
-public class CreateItemRequest
+public sealed class CreateItemRequest
 {
     [JsonPropertyName("displayName")]
     public string DisplayName { get; set; } = string.Empty;
@@ -219,7 +217,7 @@ public class CreateItemRequest
     public object? Definition { get; set; }
 }
 
-public class UpdateItemRequest
+public sealed class UpdateItemRequest
 {
     [JsonPropertyName("displayName")]
     public string? DisplayName { get; set; }
@@ -232,7 +230,7 @@ public class UpdateItemRequest
 }
 
 // Collection response models
-public class WorkspacesResponse
+public sealed class WorkspacesResponse
 {
     [JsonPropertyName("value")]
     public List<Workspace> Value { get; set; } = [];
@@ -241,7 +239,7 @@ public class WorkspacesResponse
     public string? ContinuationToken { get; set; }
 }
 
-public class ItemsResponse
+public sealed class ItemsResponse
 {
     [JsonPropertyName("value")]
     public List<OneLakeItem> Value { get; set; } = [];
@@ -250,7 +248,7 @@ public class ItemsResponse
     public string? ContinuationToken { get; set; }
 }
 
-public class LakehousesResponse
+public sealed class LakehousesResponse
 {
     [JsonPropertyName("value")]
     public List<Lakehouse> Value { get; set; } = [];
@@ -260,7 +258,7 @@ public class LakehousesResponse
 }
 
 // Endpoint and authentication models
-public class OneLakeEndpoint
+public sealed class OneLakeEndpoint
 {
     [JsonPropertyName("connectionString")]
     public string? ConnectionString { get; set; }
@@ -270,7 +268,7 @@ public class OneLakeEndpoint
 }
 
 // File system models for hierarchical directory views
-public class FileSystemItem
+public sealed class FileSystemItem
 {
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
@@ -313,96 +311,17 @@ public class FileSystemItem
 public static class OneLakeEndpoints
 {
     public const string FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1";
+    public const string FabricScope = "https://api.fabric.microsoft.com/.default";
     public const string StorageScope = "https://storage.azure.com/.default";
 
-    // Environment-aware Fabric API base URL
-    public static string GetFabricApiBaseUrl() => GetEndpoints(CurrentEnvironment).FabricApiBaseUrl;
+    public const string OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com";
+    public const string OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com";
+    public const string OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com";
+    public const string OneLakeTableApiBaseUrl = "https://onelake.table.fabric.microsoft.com";
 
-    // Environment-aware Fabric authentication scope
-    public static string GetFabricScope() => GetEndpoints(CurrentEnvironment).FabricScope;
+    public static readonly string[] FabricScopes = [FabricScope];
 
-    public static readonly string[] FabricScopes =
-    [
-        "https://api.fabric.microsoft.com/.default"
-    ];
+    public static string GetFabricApiBaseUrl() => FabricApiBaseUrl;
 
-    // Environment-specific endpoints
-    private static readonly Dictionary<string, OneLakeEnvironmentEndpoints> EnvironmentEndpoints = new()
-    {
-        ["PROD"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        },
-        ["DAILY"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://daily-api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://daily-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://daily-onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://daily-onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://dailyapi.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        },
-        ["DXT"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://dxt-api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://dxt-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://dxt-onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://dxt-onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://dxt-api.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        },
-        ["MSIT"] = new OneLakeEnvironmentEndpoints
-        {
-            OneLakeDataPlaneBaseUrl = "https://msit-api.onelake.fabric.microsoft.com",
-            OneLakeDataPlaneDfsBaseUrl = "https://msit-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://msit-onelake.blob.fabric.microsoft.com",
-            OneLakeTableApiBaseUrl = "https://msit-onelake.table.fabric.microsoft.com",
-            FabricApiBaseUrl = "https://msit-api.fabric.microsoft.com/v1",
-            FabricScope = "https://api.fabric.microsoft.com/.default"
-        }
-    };
-
-    // Get current environment from environment variable or default to PROD
-    private static string CurrentEnvironment =>
-        Environment.GetEnvironmentVariable("ONELAKE_ENVIRONMENT")?.ToUpperInvariant() ?? "PROD";
-
-    // Public properties that return environment-specific URLs
-    public static string OneLakeDataPlaneBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneBaseUrl;
-
-    public static string OneLakeDataPlaneDfsBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneDfsBaseUrl;
-
-    public static string OneLakeDataPlaneBlobBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeDataPlaneBlobBaseUrl;
-
-    public static string OneLakeTableApiBaseUrl =>
-        EnvironmentEndpoints[CurrentEnvironment].OneLakeTableApiBaseUrl;
-
-    // Method to get endpoints for a specific environment
-    public static OneLakeEnvironmentEndpoints GetEndpoints(string environment)
-    {
-        var env = environment.ToUpperInvariant();
-        return EnvironmentEndpoints.TryGetValue(env, out var endpoints)
-            ? endpoints
-            : EnvironmentEndpoints["PROD"];
-    }
-
-    // Method to list available environments
-    public static IEnumerable<string> GetAvailableEnvironments() => EnvironmentEndpoints.Keys;
-}
-
-public class OneLakeEnvironmentEndpoints
-{
-    public string OneLakeDataPlaneBaseUrl { get; set; } = string.Empty;
-    public string OneLakeDataPlaneDfsBaseUrl { get; set; } = string.Empty;
-    public string OneLakeDataPlaneBlobBaseUrl { get; set; } = string.Empty;
-    public string OneLakeTableApiBaseUrl { get; set; } = string.Empty;
-    public string FabricApiBaseUrl { get; set; } = string.Empty;
-    public string FabricScope { get; set; } = string.Empty;
+    public static string GetFabricScope() => FabricScope;
 }

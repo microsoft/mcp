@@ -2,90 +2,55 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Models;
-using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vmss;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
 
-public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeService computeService)
-    : BaseComputeCommand<VmssGetOptions>(false)
+[CommandMetadata(
+    Id = "a5e2f7i9-8j6h-8e0i-2g1f-3h6i7j8e9f0g",
+    Name = "get",
+    Title = "Get Virtual Machine Scale Set(s)",
+    Description = "List, show, or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Show all scale sets or get a specific VMSS by name. Get VMSS instance details by instance ID. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information. Do not use this for single standalone VMs (use VM get instead).",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VmssGetOptions, VmssGetCommand.VmssGetResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get Virtual Machine Scale Set(s)";
     private readonly ILogger<VmssGetCommand> _logger = logger;
     private readonly IComputeService _computeService = computeService;
 
-    public override string Id => "a5e2f7i9-8j6h-8e0i-2g1f-3h6i7j8e9f0g";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        List or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(VmssGetOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-
-        // Add optional vmss-name
-        command.Options.Add(ComputeOptionDefinitions.VmssName);
-
-        // Add optional instance-id
-        command.Options.Add(ComputeOptionDefinitions.InstanceId);
-        command.Validators.Add(commandResult =>
+        // Custom validation: If vmss-name is specified, resource-group is required (can't get specific VMSS without resource-group)
+        if (!string.IsNullOrEmpty(options.VmssName) && string.IsNullOrEmpty(options.ResourceGroup))
         {
-            var vmssName = commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
-            // Custom validation: If vmss-name is specified, resource-group is required (can't get specific VMSS without resource-group)
-            if (!string.IsNullOrEmpty(vmssName) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name)))
-            {
-                commandResult.AddError("The --resource-group option is required when retrieving a specific VMSS with --vmss-name.");
-            }
-
-            // Custom validation: If instance-id is specified, vmss-name is required
-            if (!string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.InstanceId.Name)) &&
-                string.IsNullOrEmpty(vmssName))
-            {
-                commandResult.AddError("When --instance-id is specified, --vmss-name is required.");
-            }
-        });
-    }
-
-    protected override VmssGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VmssName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmssName.Name);
-        options.InstanceId = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.InstanceId.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("The --resource-group option is required when retrieving a specific VMSS with --vmss-name.");
         }
 
-        var options = BindOptions(parseResult);
+        // Custom validation: If instance-id is specified, vmss-name is required
+        if (!string.IsNullOrEmpty(options.InstanceId) && string.IsNullOrEmpty(options.VmssName))
+        {
+            validationResult.Errors.Add("When --instance-id is specified, --vmss-name is required.");
+        }
+    }
 
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmssGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             // Scenario 1: Get specific VM instance in VMSS
@@ -97,10 +62,9 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmInstance), ComputeJsonContext.Default.VmssGetVmInstanceResult);
+                context.Response.Results = ResponseResult.Create(new(null, vmInstance, null), ComputeJsonContext.Default.VmssGetResult);
             }
             // Scenario 2: Get specific VMSS
             else if (!string.IsNullOrEmpty(options.VmssName))
@@ -110,10 +74,9 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmss), ComputeJsonContext.Default.VmssGetSingleResult);
+                context.Response.Results = ResponseResult.Create(new(vmss, null, null), ComputeJsonContext.Default.VmssGetResult);
             }
             // Scenario 3: List VMSS in resource group
             else
@@ -122,10 +85,9 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(new(vmssList ?? []), ComputeJsonContext.Default.VmssGetListResult);
+                context.Response.Results = ResponseResult.Create(new(null, null, vmssList ?? []), ComputeJsonContext.Default.VmssGetResult);
             }
         }
         catch (Exception ex)
@@ -149,7 +111,8 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmssGetSingleResult(VmssInfo Vmss);
-    internal record VmssGetListResult(List<VmssInfo> VmssList);
-    internal record VmssGetVmInstanceResult(VmssVmInfo VmInstance);
+    public sealed record VmssGetResult(
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmssInfo? Vmss,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] VmssVmInfo? VmInstance,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] List<VmssInfo>? VmssList);
 }

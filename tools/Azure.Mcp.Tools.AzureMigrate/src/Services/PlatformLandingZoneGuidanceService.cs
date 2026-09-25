@@ -16,10 +16,10 @@ public sealed class PlatformLandingZoneGuidanceService(
     IHttpClientFactory httpClientFactory,
     ILogger<PlatformLandingZoneGuidanceService> logger) : IPlatformLandingZoneGuidanceService
 {
-    private static readonly ConcurrentDictionary<string, string> DocumentationCache = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly ConcurrentDictionary<string, string> ExpandedBaseUrlCache = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly ConcurrentDictionary<string, List<PolicyLocation>> PolicyLocationCache = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly Lock PolicyCacheLock = new();
+    private static readonly ConcurrentDictionary<string, string> s_documentationCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, string> s_expandedBaseUrlCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, List<PolicyLocation>> s_policyLocationCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Lock s_policyCacheLock = new();
     private static DateTime s_policyCacheLoadedAt = DateTime.MinValue;
 
     /// <summary>
@@ -64,7 +64,7 @@ public sealed class PlatformLandingZoneGuidanceService(
 
         var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var (policyName, locations) in PolicyLocationCache)
+        foreach (var (policyName, locations) in s_policyLocationCache)
         {
             foreach (var loc in locations)
             {
@@ -92,7 +92,7 @@ public sealed class PlatformLandingZoneGuidanceService(
         var search = searchTerm.ToUpperInvariant();
         var results = new List<PolicyLocationResult>();
 
-        foreach (var (policyName, locations) in PolicyLocationCache)
+        foreach (var (policyName, locations) in s_policyLocationCache)
         {
             var upperPolicy = policyName.ToUpperInvariant();
 
@@ -109,7 +109,7 @@ public sealed class PlatformLandingZoneGuidanceService(
 
     private async Task<string?> FetchDocumentationAsync(string key, ScenarioInfo info, CancellationToken cancellationToken)
     {
-        if (DocumentationCache.TryGetValue(key, out var cached))
+        if (s_documentationCache.TryGetValue(key, out var cached))
             return cached;
 
         try
@@ -125,7 +125,7 @@ public sealed class PlatformLandingZoneGuidanceService(
             }
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            DocumentationCache.TryAdd(key, content);
+            s_documentationCache.TryAdd(key, content);
             return content;
         }
         catch (Exception ex)
@@ -137,7 +137,7 @@ public sealed class PlatformLandingZoneGuidanceService(
 
     private async Task EnsurePolicyLocationCacheAsync(CancellationToken cancellationToken)
     {
-        if (!PolicyLocationCache.IsEmpty && DateTime.UtcNow - s_policyCacheLoadedAt < PlatformLandingZoneConstants.PolicyCacheExpiry)
+        if (!s_policyLocationCache.IsEmpty && DateTime.UtcNow - s_policyCacheLoadedAt < PlatformLandingZoneConstants.PolicyCacheExpiry)
             return;
 
         var newData = new Dictionary<string, List<PolicyLocation>>(StringComparer.OrdinalIgnoreCase);
@@ -171,14 +171,14 @@ public sealed class PlatformLandingZoneGuidanceService(
             }
         }
 
-        lock (PolicyCacheLock)
+        lock (s_policyCacheLock)
         {
-            if (!PolicyLocationCache.IsEmpty && DateTime.UtcNow - s_policyCacheLoadedAt < PlatformLandingZoneConstants.PolicyCacheExpiry)
+            if (!s_policyLocationCache.IsEmpty && DateTime.UtcNow - s_policyCacheLoadedAt < PlatformLandingZoneConstants.PolicyCacheExpiry)
                 return;
 
-            PolicyLocationCache.Clear();
+            s_policyLocationCache.Clear();
             foreach (var (key, value) in newData)
-                PolicyLocationCache[key] = value;
+                s_policyLocationCache[key] = value;
 
             s_policyCacheLoadedAt = DateTime.UtcNow;
         }
@@ -186,7 +186,7 @@ public sealed class PlatformLandingZoneGuidanceService(
 
     private async Task<string> GetExpandedBaseUrlAsync(string shortBaseUrl, CancellationToken cancellationToken)
     {
-        if (ExpandedBaseUrlCache.TryGetValue(shortBaseUrl, out var cached))
+        if (s_expandedBaseUrlCache.TryGetValue(shortBaseUrl, out var cached))
             return cached;
 
         try
@@ -196,7 +196,7 @@ public sealed class PlatformLandingZoneGuidanceService(
 
             if (!string.IsNullOrWhiteSpace(resolvedUrl))
             {
-                ExpandedBaseUrlCache.TryAdd(shortBaseUrl, resolvedUrl);
+                s_expandedBaseUrlCache.TryAdd(shortBaseUrl, resolvedUrl);
                 return resolvedUrl;
             }
         }

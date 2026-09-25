@@ -39,7 +39,8 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
             ["javascript"] = "JavaScript",
             ["java"] = "Java",
             ["csharp"] = "CSharp",
-            ["powershell"] = "PowerShell"
+            ["powershell"] = "PowerShell",
+            ["go"] = "Go"
         };
 
     /// <summary>
@@ -310,6 +311,47 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
                 ],
                 TemplateParameterName = null,
                 RecommendationNotes = null
+            },
+            ["go"] = new LanguageInfoStatic
+            {
+                Name = "Go",
+                Runtime = "native",
+                ProgrammingModel = "Native Go worker SDK",
+                Prerequisites = ["Go 1.24+", "Azure Functions Core Tools v4.12+"],
+                DevelopmentTools = ["VS Code with Go + Azure Functions extensions", "Azure Functions Core Tools"],
+                InitCommand = "go mod init <module-name>",
+                RunCommand = "func start",
+                BuildCommand = "go build ./...",
+                ProjectFiles = ["go.mod", "go.sum"],
+                InitInstructions = """
+                    ## Go Azure Functions Project Setup
+
+                    1. Initialize the Go module:
+                       ```bash
+                       go mod init <module-name>
+                       ```
+
+                    2. Add or merge the template's dependencies into `go.mod`
+
+                    3. Build and run locally:
+                       ```bash
+                       go build ./...
+                       func start
+                       ```
+                    """,
+                ProjectStructure =
+                [
+                    "*.go                # Go source files",
+                    "go.mod              # Go module definition and dependencies",
+                    "go.sum              # Go dependency checksums",
+                    "host.json           # Azure Functions host configuration",
+                    "local.settings.json # Local development settings (do not commit)",
+                    "README.md           # Project documentation",
+                    ".gitignore          # Git ignore patterns",
+                    ".funcignore         # Files to exclude from deployment"
+                ],
+                TemplateParameterName = null,
+                RecommendationNotes = null
             }
         };
 
@@ -324,7 +366,8 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
             ["javascript"] = new RuntimeVersionInfo { Supported = ["20"], Default = "20" },
             ["java"] = new RuntimeVersionInfo { Supported = ["21"], Default = "21" },
             ["csharp"] = new RuntimeVersionInfo { Supported = ["8"], Default = "8" },
-            ["powershell"] = new RuntimeVersionInfo { Supported = ["7.4"], Default = "7.4" }
+            ["powershell"] = new RuntimeVersionInfo { Supported = ["7.4"], Default = "7.4" },
+            ["go"] = new RuntimeVersionInfo { Supported = [], Preview = ["1.0"], Default = "1.0" }
         };
 
     /// <summary>
@@ -341,8 +384,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
     public IEnumerable<string> SupportedLanguages => s_languageInfo.Keys;
 
     /// <inheritdoc />
-    public bool IsValidLanguage(string language) =>
-        s_languageInfo.ContainsKey(language);
+    public bool IsValidLanguage(string language) => s_languageInfo.ContainsKey(language);
 
     /// <inheritdoc />
     public LanguageInfo? GetLanguageInfo(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions = null)
@@ -425,7 +467,7 @@ public sealed class LanguageMetadataProvider : ILanguageMetadataProvider
     /// <summary>
     /// Gets runtime versions for a language, preferring manifest data over fallback.
     /// </summary>
-    private RuntimeVersionInfo GetRuntimeVersions(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions)
+    private static RuntimeVersionInfo GetRuntimeVersions(string language, IReadOnlyDictionary<string, RuntimeVersionInfo>? manifestRuntimeVersions)
     {
         // Try manifest first using the PascalCase key mapping
         if (manifestRuntimeVersions is not null &&

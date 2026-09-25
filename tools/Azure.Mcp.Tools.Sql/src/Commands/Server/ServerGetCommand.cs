@@ -3,97 +3,66 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.Sql.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
-public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
-    : SubscriptionCommand<ServerGetOptions>
-{
-    private const string CommandTitle = "Get SQL Server";
-
-    private readonly ILogger<ServerGetCommand> _logger = logger;
-
-    public override string Id => "7f9a1c3e-5b7d-4a6c-8e0f-2b4d6a8c0e1f";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "7f9a1c3e-5b7d-4a6c-8e0f-2b4d6a8c0e1f",
+    Name = "get",
+    Title = "Get SQL Server",
+    Description = """
         Show, get, or list Azure SQL servers in a resource group. Shows details for a specific Azure SQL server
         by name, or lists all Azure SQL servers in the specified resource group. Use to show, display, or
         retrieve Azure SQL server information. Equivalent to 'az sql server show' (show one Azure SQL server) or
         'az sql server list' (list all Azure SQL servers in a resource group). Returns server information
         including configuration details and current state.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerGetOptions, ServerGetCommand.ServerGetCommandResult>(subscriptionResolver)
+{
+    private readonly ISqlService _sqlService = sqlService;
+    private readonly ILogger<ServerGetCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(SqlOptionDefinitions.Server.AsOptional());
-    }
-
-    protected override ServerGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Server = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.Server.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var sqlService = context.GetService<ISqlService>();
-
             if (!string.IsNullOrEmpty(options.Server))
             {
-                var server = await sqlService.GetServerAsync(
+                var server = await _sqlService.GetServerAsync(
                     options.Server,
-                    options.ResourceGroup!,
+                    options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create([server], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(
+                    new([server]),
+                    SqlJsonContext.Default.ServerGetCommandResult);
             }
             else
             {
-                var servers = await sqlService.ListServersAsync(
-                    options.ResourceGroup!,
+                var servers = await _sqlService.ListServersAsync(
+                    options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(servers ?? [], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(
+                    new(servers ?? []),
+                    SqlJsonContext.Default.ServerGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -117,4 +86,5 @@ public sealed class ServerGetCommand(ILogger<ServerGetCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
+    public sealed record ServerGetCommandResult(List<SqlServer> Servers);
 }

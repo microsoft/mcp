@@ -1,0 +1,1498 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.CommandLine;
+using System.Diagnostics;
+using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using ModelContextProtocol.Protocol;
+using NSubstitute;
+using Xunit;
+
+namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
+
+public sealed class NamespaceToolLoaderTests : IAsyncDisposable
+{
+    private readonly ServiceProvider _serviceProvider;
+    private readonly ICommandFactory _commandFactory;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration;
+    private readonly ILogger<NamespaceToolLoader> _logger;
+
+    public NamespaceToolLoaderTests()
+    {
+        _serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider() as ServiceProvider
+            ?? throw new InvalidOperationException("Failed to create service provider");
+        _commandFactory = CommandFactoryHelpers.CreateCommandFactory(_serviceProvider);
+        _configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        _logger = Substitute.For<ILogger<NamespaceToolLoader>>();
+    }
+
+    [Fact]
+    public void Constructor_InitializesSuccessfully()
+    {
+        Assert.NotNull(new NamespaceToolLoader(_commandFactory, _configuration, _logger));
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullCommandFactory()
+    {
+        // Arrange & Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new NamespaceToolLoader(null!, _configuration, _logger));
+    }
+
+    [Fact]
+    public void Constructor_ThrowsOnNullOptions()
+    {
+        // Arrange & Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new NamespaceToolLoader(_commandFactory, null!, _logger));
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_ReturnsNamespaceTools()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.NotEmpty(result.Tools);
+        // We're using a real command factory, so we expect a significant number of tools to be loaded
+        Assert.True(result.Tools.Count > 50, "Expected more than 50 tools to be loaded from the command factory");
+
+        // Verify hierarchical structure
+        foreach (var tool in result.Tools)
+        {
+            Assert.NotNull(tool.Name);
+            Assert.NotNull(tool.Description);
+            Assert.Contains("hierarchical", tool.Description, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("set \"command\" and wrap its args in \"parameters\"", tool.Description);
+            Assert.Contains("Set \"learn=true\"", tool.Description);
+
+            // Verify hierarchical schema structure
+            var schema = tool.InputSchema;
+            var properties = schema.AssertProperty("properties");
+            properties.AssertProperty("intent");
+            properties.AssertProperty("command");
+            properties.AssertProperty("parameters");
+            properties.AssertProperty("learn");
+            Assert.False(tool.OutputSchema.HasValue);
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CachesResults()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act - Call twice
+        var result1 = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should return same cached instance
+        Assert.Same(result1.Tools, result2.Tools);
+    }
+
+    [Theory]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Compact)]
+    public async Task ListToolsHandler_StructuredOutputModeEmitsAggregateSchemaWithoutChangingInputSchema(
+        string executionMode,
+        StructuredOutputMode mode)
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = executionMode,
+            StructuredOutputMode = mode
+        });
+        var loader = new NamespaceToolLoader(
+            _commandFactory,
+            options,
+            _logger,
+            applyFilter: executionMode != ModeTypes.ConsolidatedProxy);
+
+        var result = await loader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(result.Tools);
+        Assert.All(result.Tools, tool =>
+        {
+            Assert.True(tool.OutputSchema.HasValue);
+            Assert.Equal(4, tool.InputSchema.GetProperty("properties").EnumerateObject().Count());
+            Assert.Equal("object", tool.OutputSchema.Value.GetProperty("type").GetString());
+            Assert.Equal(3, tool.OutputSchema.Value.GetProperty("oneOf").GetArrayLength());
+        });
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_FiltersNamespacesWhenConfigured()
+    {
+        // Arrange
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Namespace = ["storage", "keyvault"],
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result.Tools);
+        Assert.All(result.Tools, tool =>
+        {
+            Assert.True(tool.Name == "storage" || tool.Name == "keyvault");
+            Assert.True(tool.OutputSchema.HasValue);
+        });
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        var storageCommand = Substitute.For<IBaseCommand>();
+        storageCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = true });
+        storageGroup.AddCommand("readonly", storageCommand);
+        var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
+        var keyvaultCommand = Substitute.For<IBaseCommand>();
+        keyvaultCommand.Metadata.Returns(new ToolMetadata() { ReadOnly = false });
+        keyvaultGroup.AddCommand("not-readonly", keyvaultCommand);
+        rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
+        commandFactory.RootGroup.Returns(rootGroup);
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            ReadOnly = true
+        });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Single(result.Tools);
+        Assert.All(result.Tools, tool => Assert.Equal("storage", tool.Name));
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        var storageCommand = Substitute.For<IBaseCommand>();
+        storageCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = true });
+        storageGroup.AddCommand("localrequired", storageCommand);
+        var keyvaultGroup = new CommandGroup("keyvault", "Key Vault commands");
+        var keyvaultCommand = Substitute.For<IBaseCommand>();
+        keyvaultCommand.Metadata.Returns(new ToolMetadata() { LocalRequired = false });
+        keyvaultGroup.AddCommand("not-localrequired", keyvaultCommand);
+        rootGroup.SubGroup.AddRange([storageGroup, keyvaultGroup]);
+        commandFactory.RootGroup.Returns(rootGroup);
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Transport = TransportTypes.Http
+        });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Single(result.Tools);
+        Assert.All(result.Tools, tool => Assert.Equal("keyvault", tool.Name));
+    }
+
+    [Theory]
+    [InlineData("user@example.com", TagConstants.Unknown, false)]
+    [InlineData("user@example.com", TagConstants.Unknown, true)]
+    [InlineData("keyvault", TagConstants.Unknown, false)]
+    [InlineData("keyvault", TagConstants.Unknown, true)]
+    [InlineData("storage", "storage", false)]
+    [InlineData("STORAGE", "storage", false)]
+    public async Task CallToolHandler_OnlyCapturesAllowedToolIdentity(string namespaceName, string expectedArea, bool learn)
+    {
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Namespace = ["storage"]
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest(namespaceName, new Dictionary<string, object?>
+        {
+            ["command"] = "user@example.com",
+            ["learn"] = learn
+        });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, expectedArea);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_ReturnsAvailableCommands()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = McpTestUtilities.CreateToolCallRequest(toolName.ToUpperInvariant(), new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources"
+        });
+        using var activity = new Activity("test-activity").Start();
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Content);
+        Assert.Single(result.Content);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+        Assert.Contains("available command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagEquals(TagName.ToolArea, toolName);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Duplicated, false)]
+    [InlineData(StructuredOutputMode.Compact, true)]
+    public async Task CallToolHandler_LearnReturnsAggregateToolList(
+        StructuredOutputMode mode,
+        bool expectsCompactContent)
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = mode
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+        var namespaceName = GetFirstAvailableNamespace();
+        var request = McpTestUtilities.CreateToolCallRequest(namespaceName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources"
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.NotEmpty(result.StructuredContent.Value.GetProperty("tools").EnumerateArray());
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        if (expectsCompactContent)
+        {
+            Assert.Equal(StructuredOutputHelper.CompactContentMessage, text);
+        }
+        else
+        {
+            var toolsJson = result.StructuredContent.Value.GetProperty("tools").GetRawText();
+            Assert.Equal(
+                $"""
+                Here are the available commands and their input schema for '{namespaceName}' tool.
+                If you do not find a suitable "command", run again with the "learn=true" to get a list of available commands and their parameters.
+                Next, identify the command you want to execute and run again with the "command" and "parameters" arguments, respecting "required" parameters if present.
+
+                {toolsJson}
+                """,
+                text);
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithLearnTrue_CachesCommandList()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "list resources"
+        });
+
+        // Act - Call twice
+        var result1 = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Both should succeed and return same cached content
+        Assert.False(result1.IsError);
+        Assert.False(result2.IsError);
+
+        var text1 = (result1.Content[0] as TextContentBlock)?.Text;
+        var text2 = (result2.Content[0] as TextContentBlock)?.Text;
+        Assert.Equal(text1, text2);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithIntentButNoCommand_AutoEnablesLearn()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        {
+            ["intent"] = "list resources"
+            // No command specified, should auto-enable learn
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+        Assert.Contains("available command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithInvalidNamespace_ReturnsError()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("nonexistent-namespace", new Dictionary<string, object?>
+        {
+            ["learn"] = true
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+        Assert.Contains("not found", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithNullToolName_ThrowsArgumentException()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest(null!);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await loader.CallToolHandler(request, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithoutCommandOrLearn_ReturnsHelpMessage()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+        var request = McpTestUtilities.CreateToolCallRequest(toolName);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+
+        var textContent = result.Content[0] as TextContentBlock;
+        Assert.NotNull(textContent);
+        Assert.Contains("command", textContent.Text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("learn", textContent.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactHelpReturnsAggregateMessage()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = ModeTypes.NamespaceProxy,
+            StructuredOutputMode = StructuredOutputMode.Compact
+        });
+        var loader = new NamespaceToolLoader(_commandFactory, options, _logger);
+
+        var result = await loader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(
+                GetFirstAvailableNamespace(),
+                new Dictionary<string, object?>()),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(
+            StructuredOutputHelper.CompactContentMessage,
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("message", result.StructuredContent.Value.GetProperty("kind").GetString());
+        Assert.Contains(
+            "command",
+            result.StructuredContent.Value.GetProperty("message").GetString(),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Duplicated, false)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, true)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Duplicated, false)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Compact, true)]
+    public async Task CallToolHandler_ChildResultUsesAggregateEnvelope(
+        string executionMode,
+        StructuredOutputMode mode,
+        bool expectsCompactContent)
+    {
+        var response = CreateSuccessfulCommandResponse();
+        var loader = CreateLoaderWithCommand(executionMode, mode, response);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "read data",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.True(result.StructuredContent.HasValue);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Equal(
+            expectsCompactContent
+                ? StructuredOutputHelper.CompactContentMessage
+                : JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse),
+            text);
+        var structuredContent = result.StructuredContent.Value;
+        Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+        Assert.Equal("read-cmd", structuredContent.GetProperty("command").GetString());
+        Assert.Equal("alpha", structuredContent.GetProperty("result").GetProperty("name").GetString());
+        Assert.Equal(3, structuredContent.GetProperty("result").GetProperty("count").GetInt32());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactChildErrorOmitsStructuredContent()
+    {
+        var response = CreateSuccessfulCommandResponse();
+        response.Status = System.Net.HttpStatusCode.BadRequest;
+        response.Message = "Invalid request.";
+        var loader = CreateLoaderWithCommand(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, response);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "read data",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.False(result.StructuredContent.HasValue);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains("Invalid request.", text, StringComparison.Ordinal);
+        Assert.NotEqual(StructuredOutputHelper.CompactContentMessage, text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CompactMessageOnlyChildPreservesMessage()
+    {
+        var response = new CommandResponse
+        {
+            Status = System.Net.HttpStatusCode.OK,
+            Message = "Use zone-redundant storage for production workloads."
+        };
+        var loader = CreateLoaderWithCommand(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact, response);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["intent"] = "get guidance",
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(
+            StructuredOutputHelper.CompactContentMessage,
+            Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        var structuredContent = Assert.IsType<JsonElement>(result.StructuredContent);
+        Assert.Equal("tool-result", structuredContent.GetProperty("kind").GetString());
+        Assert.Equal(
+            response.Message,
+            structuredContent.GetProperty("result").GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ParsesHierarchicalStructure()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "list resources",
+            ["command"] = "list",
+            ["parameters"] = new Dictionary<string, string>() { ["subscription"] = "test-sub" },
+            ["learn"] = false
+        };
+
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        // Result depends on whether command exists, but parsing should succeed
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ConvertsObjectDictionaryToJsonElements()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "list resources",
+            ["command"] = "list",
+            ["parameters"] = new Dictionary<string, object?> { ["subscription"] = "test-sub" },
+            ["learn"] = false
+        };
+
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        // Conversion should succeed without throwing
+    }
+
+    [Fact]
+    public async Task CallToolHandler_HandlesCommandNotFoundGracefully()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        {
+            ["intent"] = "do something",
+            ["command"] = "nonexistent-command",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, toolName, "nonexistent-command",
+            loader.GetChildToolList(request, toolName).Select(tool => tool.Name).Order(StringComparer.Ordinal).ToArray());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_LazyLoadsCommandsPerNamespace()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+
+        // Get two different namespaces
+        var listRequest = McpTestUtilities.CreateToolListRequest();
+        var tools = await loader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
+
+        if (tools.Tools.Count < 2)
+        {
+            // Skip test if not enough namespaces
+            return;
+        }
+
+        var namespace1 = tools.Tools[0].Name;
+        var namespace2 = tools.Tools[1].Name;
+
+        // Act - Access only first namespace
+        var request1 = McpTestUtilities.CreateToolCallRequest(namespace1, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "test"
+        });
+
+        await loader.CallToolHandler(request1, TestContext.Current.CancellationToken);
+
+        // Now access second namespace
+        var request2 = McpTestUtilities.CreateToolCallRequest(namespace2, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "test"
+        });
+
+        var result2 = await loader.CallToolHandler(request2, TestContext.Current.CancellationToken);
+
+        // Assert - Both should succeed, proving lazy loading works
+        Assert.NotNull(result2);
+        Assert.False(result2.IsError);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ThreadSafeLazyLoading()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        // Act - Simulate concurrent access
+        var tasks = Enumerable.Range(0, 10).Select(async _ =>
+        {
+            var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+            {
+                ["learn"] = true,
+                ["intent"] = "concurrent test"
+            });
+
+            return await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        });
+
+        var results = await Task.WhenAll(tasks);
+
+        // Assert - All should succeed without race conditions
+        Assert.All(results, result =>
+        {
+            Assert.NotNull(result);
+            Assert.False(result.IsError);
+        });
+
+        // All should return same cached content
+        var firstText = (results[0].Content[0] as TextContentBlock)?.Text;
+        Assert.All(results, result =>
+        {
+            var text = (result.Content[0] as TextContentBlock)?.Text;
+            Assert.Equal(firstText, text);
+        });
+    }
+
+    [Fact]
+    public async Task DisposeAsync_ClearsCaches()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        // Populate cache
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["intent"] = "test"
+        });
+
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Act
+        await loader.DisposeAsync();
+
+        // Assert - No exception should be thrown
+        // Cache clearing is internal, but disposal should complete successfully
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithInvalidCommand_ReturnsErrorWithGuidance()
+    {
+        // Arrange - Test error handling and guidance message structure
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        // Create request with invalid command that doesn't exist
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        {
+            ["command"] = "nonexistent_invalid_command_xyz",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, toolName, "nonexistent_invalid_command_xyz",
+            loader.GetChildToolList(request, toolName).Select(tool => tool.Name).Order(StringComparer.Ordinal).ToArray());
+    }
+
+    [Theory]
+    [InlineData(ModeTypes.NamespaceProxy, null)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.NamespaceProxy, StructuredOutputMode.Compact)]
+    [InlineData(ModeTypes.ConsolidatedProxy, null)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Duplicated)]
+    [InlineData(ModeTypes.ConsolidatedProxy, StructuredOutputMode.Compact)]
+    public async Task CallToolHandler_UnknownCommandWithoutUsableSampling_ReturnsNamesOnly(
+        string executionMode, StructuredOutputMode? outputMode)
+    {
+        var commands = new Dictionary<string, IBaseCommand>
+        {
+            ["storage_zeta"] = CreateRoutingCommand("storage_zeta"),
+            ["storage_alpha"] = CreateRoutingCommand("storage_alpha")
+        };
+        await using var loader = CreateRoutingLoader(commands, new ServerRuntimeConfiguration
+        {
+            Mode = executionMode,
+            StructuredOutputMode = outputMode
+        });
+
+        (string? Intent, bool SupportsSampling)[] scenarios =
+        [
+            (null, false), (null, true), ("", true), (" \t ", true), ("list resources", false)
+        ];
+        foreach (var (intent, supportsSampling) in scenarios)
+        {
+            var server = BaseToolLoaderTests.CreateSamplingServer(supportsSampling,
+                """{"command":"storage_alpha","parameters":{}}""");
+            var request = BaseToolLoaderTests.CreateCommandRequest(server, intent: intent);
+
+            var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+            var text = BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "invalid_command",
+                "storage_alpha", "storage_zeta");
+            Assert.DoesNotContain("Catalog detail.", text);
+            await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+        }
+
+        foreach (var command in commands.Values)
+        {
+            await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Theory]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(false, true, true)]
+    [InlineData(true, true, true)]
+    public async Task CallToolHandler_UnknownCommand_ListsOnlyCommandsAllowedByConfiguration(
+        bool readOnly, bool isHttpMode, bool emptyCatalog)
+    {
+        var commands = new Dictionary<string, IBaseCommand>
+        {
+            ["storage_blocked"] = CreateRoutingCommand("storage_blocked", readOnly: false, localRequired: true)
+        };
+        if (!emptyCatalog)
+        {
+            commands["storage_allowed"] = CreateRoutingCommand("storage_allowed");
+        }
+        await using var loader = CreateRoutingLoader(commands, new ServerRuntimeConfiguration
+        {
+            ReadOnly = readOnly,
+            Transport = isHttpMode ? TransportTypes.Http : TransportTypes.StdIo
+        });
+        var server = BaseToolLoaderTests.CreateSamplingServer(false);
+        var request = BaseToolLoaderTests.CreateCommandRequest(server, command: "storage_blocked");
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "storage_blocked",
+            emptyCatalog ? [] : ["storage_allowed"]);
+        foreach (var command in commands.Values)
+        {
+            await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        }
+        await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CallToolHandler_UnknownCommandWithEmptyCatalog_DoesNotSample(bool supportsSampling)
+    {
+        await using var loader = CreateRoutingLoader([]);
+        var server = BaseToolLoaderTests.CreateSamplingServer(supportsSampling);
+
+        var result = await loader.CallToolHandler(
+            BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "invalid_command");
+        await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("storage_alpha")]
+    [InlineData("STORAGE_ALPHA")]
+    public async Task CallToolHandler_SamplingCorrection_ExecutesCanonicalCommandOnceWithSampledParameters(string sampledName)
+    {
+        var command = CreateRoutingCommand("storage_alpha");
+        await using var loader = CreateRoutingLoader(new Dictionary<string, IBaseCommand>
+        {
+            ["storage_alpha"] = command
+        });
+        var server = BaseToolLoaderTests.CreateSamplingServer(true,
+            $$$"""{"command":"{{{sampledName}}}","parameters":{"subscription":"sampled-subscription","limit":3}}""");
+        var request = BaseToolLoaderTests.CreateCommandRequest(server,
+            parametersJson: """{"subscription":"original-subscription","limit":1}""");
+        using var activity = new Activity("test-activity").Start();
+        server.When(samplingServer => samplingServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>()))
+            .Do(_ => activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown));
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        activity.AssertTagEquals(TagName.ToolName, "storage_alpha");
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
+        await command.Received(1).ExecuteAsync(
+            Arg.Any<CommandContext>(),
+            Arg.Is<ParseResult>(parsed => parsed.GetValue<string>("--subscription") == "sampled-subscription"
+                && parsed.GetValue<int>("--limit") == 3),
+            TestContext.Current.CancellationToken);
+        await command.ReceivedWithAnyArgs(1).ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        await server.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData(" \t ", false)]
+    [InlineData("not JSON", false)]
+    [InlineData("null", false)]
+    [InlineData("[]", false)]
+    [InlineData("{}", false)]
+    [InlineData("""{"command":null}""", false)]
+    [InlineData("""{"command":17}""", false)]
+    [InlineData("""{"command":""}""", false)]
+    [InlineData("""{"command":" "}""", false)]
+    [InlineData("""{"command":"Unknown","parameters":{}}""", false)]
+    [InlineData("""{"command":"nonexistent","parameters":{}}""", false)]
+    [InlineData(null, true)]
+    public async Task CallToolHandler_UnusableSamplingCorrection_ReturnsErrorWithoutExecutionOrRetry(
+        string? samplingText, bool failSampling)
+    {
+        var command = CreateRoutingCommand("storage_alpha");
+        await using var loader = CreateRoutingLoader(new Dictionary<string, IBaseCommand>
+        {
+            ["storage_alpha"] = command
+        });
+        var server = BaseToolLoaderTests.CreateSamplingServer(true, samplingText, failSampling);
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await loader.CallToolHandler(
+            BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "invalid_command", "storage_alpha");
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
+        await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        await server.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task CallToolHandler_FilteredSamplingCorrection_DoesNotExecuteOrRetry(bool readOnly, bool isHttpMode)
+    {
+        var commands = new Dictionary<string, IBaseCommand>
+        {
+            ["storage_alpha"] = CreateRoutingCommand("storage_alpha"),
+            ["storage_blocked"] = CreateRoutingCommand("storage_blocked", readOnly: !readOnly, localRequired: isHttpMode)
+        };
+        await using var loader = CreateRoutingLoader(commands, new ServerRuntimeConfiguration
+        {
+            ReadOnly = readOnly,
+            Transport = isHttpMode ? TransportTypes.Http : TransportTypes.StdIo
+        });
+        var server = BaseToolLoaderTests.CreateSamplingServer(true,
+            """{"command":"STORAGE_BLOCKED","parameters":{}}""");
+
+        var result = await loader.CallToolHandler(
+            BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "invalid_command", "storage_alpha");
+        foreach (var command in commands.Values)
+        {
+            await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        }
+        await server.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(true, false, "list resources")]
+    [InlineData(false, false, "list resources")]
+    [InlineData(true, true, "")]
+    [InlineData(true, true, " \t ")]
+    public async Task CallToolHandler_LearnOrIntentOnlyWithoutSampling_PreservesFullCatalog(
+        bool explicitLearn, bool supportsSampling, string intent)
+    {
+        var command = CreateRoutingCommand("storage_alpha");
+        await using var loader = CreateRoutingLoader(new Dictionary<string, IBaseCommand>
+        {
+            ["storage_alpha"] = command
+        });
+        var server = BaseToolLoaderTests.CreateSamplingServer(supportsSampling,
+            """{"command":"storage_alpha","parameters":{}}""");
+        var request = BaseToolLoaderTests.CreateCommandRequest(server,
+            command: explicitLearn ? "invalid_command" : null, intent: intent, learn: explicitLearn);
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains("storage_alpha", text);
+        Assert.Contains("Catalog detail.", text);
+        Assert.Contains("\"inputSchema\"", text);
+        await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task CallToolHandler_LearnOrIntentOnlyWithInvalidSample_DoesNotReenterCorrection(bool explicitLearn)
+    {
+        var command = CreateRoutingCommand("storage_alpha");
+        await using var loader = CreateRoutingLoader(new Dictionary<string, IBaseCommand>
+        {
+            ["storage_alpha"] = command
+        });
+        var server = BaseToolLoaderTests.CreateSamplingServer(true,
+            """{"command":"nonexistent","parameters":{}}""");
+        var request = BaseToolLoaderTests.CreateCommandRequest(server,
+            command: explicitLearn ? "invalid_command" : null, learn: explicitLearn);
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains("storage_alpha", text);
+        Assert.Contains("\"inputSchema\"", text);
+        await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        await server.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_InvalidAppServiceCommand_IsMuchSmallerThanLearnAndIndependentOfCatalogDetails()
+    {
+        await using var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var server = BaseToolLoaderTests.CreateSamplingServer(false);
+        var request = BaseToolLoaderTests.CreateCommandRequest(server, command: "appservice_webapp_list", toolName: "appservice");
+        var availableNames = _commandFactory.GroupCommands(["appservice"]).Keys.Order(StringComparer.Ordinal).ToArray();
+        Assert.Contains("appservice_webapp_get", availableNames);
+        Assert.DoesNotContain("appservice_webapp_list", availableNames);
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        var learn = await loader.CallToolHandler(
+            BaseToolLoaderTests.CreateCommandRequest(server, learn: true, toolName: "appservice"),
+            TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "appservice", "appservice_webapp_list", availableNames);
+        Assert.False(learn.IsError);
+        Assert.Contains("\"inputSchema\"", Assert.IsType<TextContentBlock>(Assert.Single(learn.Content)).Text);
+        var errorBytes = JsonSerializer.SerializeToUtf8Bytes(result, ServerJsonContext.Default.CallToolResult);
+        var learnBytes = JsonSerializer.SerializeToUtf8Bytes(learn, ServerJsonContext.Default.CallToolResult);
+        TestContext.Current.TestOutputHelper?.WriteLine($"App Service error: {errorBytes.Length} bytes; learn: {learnBytes.Length} bytes.");
+        Assert.True(errorBytes.Length < learnBytes.Length / 4,
+            $"Names-only error ({errorBytes.Length} bytes) should be much smaller than learn ({learnBytes.Length} bytes).");
+
+        var previousCatalogSize = 0;
+        foreach (var descriptionRepeats in new[] { 1, 200 })
+        {
+            var syntheticCommands = availableNames.ToDictionary(
+                name => name, name => CreateRoutingCommand(name, descriptionRepeats: descriptionRepeats));
+            await using var syntheticLoader = CreateRoutingLoader(syntheticCommands, namespaceName: "appservice");
+            var syntheticResult = await syntheticLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+            var catalogSize = JsonSerializer.SerializeToUtf8Bytes(
+                syntheticLoader.GetChildToolList(request, "appservice"), ServerJsonContext.Default.IEnumerableTool).Length;
+
+            Assert.True(catalogSize > previousCatalogSize);
+            previousCatalogSize = catalogSize;
+            Assert.Equal(errorBytes, JsonSerializer.SerializeToUtf8Bytes(syntheticResult, ServerJsonContext.Default.CallToolResult));
+            foreach (var command in syntheticCommands.Values)
+            {
+                await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+            }
+        }
+        await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ReadOnlyMode_RejectsNonReadOnlyCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var writeCmd = Substitute.For<IBaseCommand>();
+        writeCmd.Metadata.Returns(new ToolMetadata { ReadOnly = false });
+        writeCmd.GetCommand().Returns(new System.CommandLine.Command("write-cmd", "A write command"));
+        writeCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("write-cmd", writeCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["write-cmd"] = writeCmd });
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { ReadOnly = true });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "write-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - non-read-only command should not have been executed
+        Assert.False(executed, "Non-read-only command should not be executed in read-only mode");
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "write-cmd");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_ReadOnlyMode_AllowsReadOnlyCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var readCmd = Substitute.For<IBaseCommand>();
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
+        readCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("read-cmd", readCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { ReadOnly = true });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - read-only command should have been executed
+        Assert.True(executed, "Read-only command should be executed in read-only mode");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_UnknownParameters_RejectsToolCall()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var readCmd = Substitute.For<IBaseCommand>();
+        readCmd.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        readCmd.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "A read command"));
+        storageGroup.AddCommand("read-cmd", readCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = readCmd });
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { ReadOnly = true });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "read-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+            {
+                { "unknown-param", "some-value" }
+            }
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to unknown parameter
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("unknown-param", errorText);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_HttpMode_RejectsLocalRequiredCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var localCmd = Substitute.For<IBaseCommand>();
+        localCmd.Metadata.Returns(new ToolMetadata { LocalRequired = true });
+        localCmd.GetCommand().Returns(new System.CommandLine.Command("local-cmd", "A local command"));
+        localCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("local-cmd", localCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["local-cmd"] = localCmd });
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Transport = TransportTypes.Http });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "local-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - local-required command should not have been executed in HTTP mode
+        Assert.False(executed, "Local-required command should not be executed in HTTP mode");
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "local-cmd");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_HttpMode_AllowsNonLocalRequiredCommand()
+    {
+        // Arrange
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("root", "Root command group");
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+
+        var executed = false;
+        var remoteCmd = Substitute.For<IBaseCommand>();
+        remoteCmd.Metadata.Returns(new ToolMetadata { LocalRequired = false, Destructive = false });
+        remoteCmd.GetCommand().Returns(new System.CommandLine.Command("remote-cmd", "A remote command"));
+        remoteCmd.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(call =>
+        {
+            executed = true;
+            return new Microsoft.Mcp.Core.Models.Command.CommandResponse { Status = System.Net.HttpStatusCode.OK };
+        });
+        storageGroup.AddCommand("remote-cmd", remoteCmd);
+
+        rootGroup.SubGroup.Add(storageGroup);
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["remote-cmd"] = remoteCmd });
+
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Transport = TransportTypes.Http });
+
+        var loader = new NamespaceToolLoader(commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage", new Dictionary<string, object?>
+        {
+            ["command"] = "remote-cmd",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - non-local-required command should have been executed in HTTP mode
+        Assert.True(executed, "Non-local-required command should be executed in HTTP mode");
+    }
+
+    [Fact]
+    public async Task GetChildToolList_WithReadOnlyOption_ReturnsOnlyReadOnlyTools()
+    {
+        // Arrange
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            ReadOnly = true
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
+
+        // Act
+        var tools = loader.GetChildToolList(request, "storage");
+
+        // Assert
+        Assert.NotNull(tools);
+        Assert.All(tools, tool => Assert.True(tool.Annotations?.ReadOnlyHint, $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled"));
+    }
+
+    [Fact]
+    public async Task GetChildToolList_WithIsHttpOption_DoesNotReturnLocalRequiredTools()
+    {
+        // Arrange
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Transport = TransportTypes.Http
+        });
+
+        var loader = new NamespaceToolLoader(_commandFactory, configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
+
+        // Act
+        var tools = loader.GetChildToolList(request, "storage");
+
+        // Assert
+        Assert.NotNull(tools);
+        Assert.All(tools, tool =>
+        {
+            Assert.False(McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey),
+                $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
+        });
+    }
+
+    // Telemetry tests
+
+    [Fact]
+    public async Task NamespaceToolLoader_HasNamespaceToolParameters_WhenToolDoesNotGetCalled()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+        var toolName = GetFirstAvailableNamespace();
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        {
+            ["intent"] = "do something",
+            ["command"] = "nonexistent-command",
+            ["parameters"] = new Dictionary<string, object?>()
+        });
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, toolName, "nonexistent-command",
+            loader.GetChildToolList(request, toolName).Select(tool => tool.Name).Order(StringComparer.Ordinal).ToArray());
+        activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
+        {
+            var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+            Assert.NotNull(parametersList);
+            Assert.Equal(3, parametersList.Count);
+            Assert.Contains("intent", parametersList);
+            Assert.Contains("command", parametersList);
+            Assert.Contains("parameters", parametersList);
+        });
+    }
+
+    [Fact]
+    public async Task NamespaceToolLoader_HasNoToolParameters_WhenToolCallHasNoParameters()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "get storage accounts",
+            ["command"] = "storage_account_get",
+            ["parameters"] = new Dictionary<string, object?>(),
+            ["learn"] = false
+        };
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var request = McpTestUtilities.CreateToolCallRequest("storage", arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+
+        activity.AssertTagDoesNotExist(TagName.ToolParameters);
+    }
+
+    [Fact]
+    public async Task NamespaceToolLoader_CollectsToolParameters_WhenToolCallHasParameters()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _configuration, _logger);
+
+        var arguments = new Dictionary<string, object?>
+        {
+            ["intent"] = "get storage accounts",
+            ["command"] = "storage_account_get",
+            ["parameters"] = new Dictionary<string, object?> { ["subscription"] = "test-sub" },
+            ["learn"] = false
+        };
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var request = McpTestUtilities.CreateToolCallRequest("storage", arguments);
+
+        // Act
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
+        {
+            var parametersList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);
+            Assert.NotNull(parametersList);
+            Assert.Single(parametersList);
+            Assert.Contains("subscription", parametersList);
+        });
+    }
+
+    // Helper methods
+
+    private NamespaceToolLoader CreateRoutingLoader(
+        Dictionary<string, IBaseCommand> commands,
+        ServerRuntimeConfiguration? configuration = null,
+        string namespaceName = "storage")
+    {
+        var group = new CommandGroup(namespaceName, "Namespace commands");
+        foreach (var (name, command) in commands)
+        {
+            group.AddCommand(name, command);
+        }
+        var root = new CommandGroup("root", "Root command group");
+        root.SubGroup.Add(group);
+        var factory = Substitute.For<ICommandFactory>();
+        factory.RootGroup.Returns(root);
+        factory.GroupCommands(Arg.Any<string[]>()).Returns(commands);
+        configuration ??= new ServerRuntimeConfiguration();
+        return new NamespaceToolLoader(factory, Microsoft.Extensions.Options.Options.Create(configuration), _logger,
+            applyFilter: configuration.Mode != ModeTypes.ConsolidatedProxy);
+    }
+
+    private static IBaseCommand CreateRoutingCommand(
+        string name, bool readOnly = true, bool localRequired = false, int descriptionRepeats = 1)
+    {
+        var description = string.Concat(Enumerable.Repeat("Catalog detail. ", descriptionRepeats));
+        var underlyingCommand = new Command(name, description);
+        underlyingCommand.Options.Add(new Option<string>("--subscription") { Description = description });
+        underlyingCommand.Options.Add(new Option<int>("--limit") { Description = description });
+        var command = Substitute.For<IBaseCommand>();
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = readOnly, LocalRequired = localRequired, Destructive = false });
+        command.GetCommand().Returns(underlyingCommand);
+        command.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(CreateSuccessfulCommandResponse());
+        return command;
+    }
+
+    private NamespaceToolLoader CreateLoaderWithCommand(
+        string executionMode,
+        StructuredOutputMode mode,
+        CommandResponse response)
+    {
+        var command = Substitute.For<IBaseCommand>();
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new System.CommandLine.Command("read-cmd", "Reads data."));
+        command.ExecuteAsync(default!, default!, default!)
+            .ReturnsForAnyArgs(response);
+
+        var storageGroup = new CommandGroup("storage", "Storage commands");
+        storageGroup.AddCommand("read-cmd", command);
+        var rootGroup = new CommandGroup("root", "Root command group");
+        rootGroup.SubGroup.Add(storageGroup);
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Any<string[]>())
+            .Returns(new Dictionary<string, IBaseCommand> { ["read-cmd"] = command });
+
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
+        {
+            Mode = executionMode,
+            StructuredOutputMode = mode
+        });
+        return new NamespaceToolLoader(
+            commandFactory,
+            options,
+            _logger,
+            applyFilter: executionMode != ModeTypes.ConsolidatedProxy);
+    }
+
+    private static CommandResponse CreateSuccessfulCommandResponse()
+    {
+        using var document = JsonDocument.Parse("""{"name":"alpha","count":3}""");
+        return new CommandResponse
+        {
+            Status = System.Net.HttpStatusCode.OK,
+            Results = ResponseResult.Create(
+                document.RootElement.Clone(),
+                ServerJsonContext.Default.JsonElement)
+        };
+    }
+
+    private string GetFirstAvailableNamespace()
+    {
+        var namespaces = _commandFactory.RootGroup.SubGroup
+            .Where(g => !DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
+            .Select(g => g.Name)
+            .ToList();
+
+        return namespaces.FirstOrDefault() ?? "storage";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_serviceProvider != null)
+        {
+            await _serviceProvider.DisposeAsync();
+        }
+
+        GC.SuppressFinalize(this);
+    }
+}

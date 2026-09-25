@@ -55,7 +55,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-06-01' = {
 // ============================================================================
 
 // FileShare 1 - Primary file share with VNet association
-resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
+resource fileShare1 'Microsoft.FileShares/fileShares@2026-06-01' = {
   name: '${baseName}-fileshare-01'
   location: 'eastus'
   properties: {
@@ -65,6 +65,9 @@ resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
     provisionedStorageGiB: 32
     provisionedIOPerSec: 3000
     provisionedThroughputMiBPerSec: 125
+    nfsProtocolProperties: {
+      encryptionInTransitRequired: 'Enabled'
+    }
   }
   tags: {
     environment: 'test'
@@ -73,7 +76,7 @@ resource fileShare1 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
 }
 
 // FileShare 2 - Secondary file share with VNet association
-resource fileShare2 'Microsoft.FileShares/fileShares@2025-06-01-preview' = {
+resource fileShare2 'Microsoft.FileShares/fileShares@2026-06-01' = {
   name: '${baseName}-fileshare-02'
   location: 'eastus'
   properties: {

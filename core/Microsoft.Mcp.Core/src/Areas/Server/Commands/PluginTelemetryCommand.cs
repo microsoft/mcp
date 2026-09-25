@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging.Console;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Logging;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
@@ -24,39 +23,29 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main tool list and intended for programmatic use only.
 /// </summary>
 [HiddenCommand]
-public sealed class PluginTelemetryCommand(
-    IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
-    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider,
-    IServiceProvider serviceProvider) : BaseCommand<PluginTelemetryOptions>
-{
-    private const string CommandTitle = "Plugin Telemetry";
-    private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
-    private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
-
-    public override string Id => "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94";
-
-    public override string Name => "plugin-telemetry";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b3e7c1a2-4f85-4d9e-a6c3-8f2b1e0d7a94",
+    Name = "plugin-telemetry",
+    Title = "Plugin Telemetry",
+    Description = """
         Publish plugin-related telemetry events from agent hooks.
         Accepts command-line options such as '--timestamp', '--event-type', '--session-id', '--client-type', '--client-name', 
         '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
         Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    LocalRequired = false,
+    Secret = false)]
+public sealed class PluginTelemetryCommand(
+    IPluginFileReferenceAllowlistProvider fileReferenceAllowlistProvider,
+    IPluginSkillNameAllowlistProvider skillNameAllowlistProvider) : BaseCommand<PluginTelemetryOptions, string>
+{
+    private readonly IPluginFileReferenceAllowlistProvider _fileReferenceAllowlistProvider = fileReferenceAllowlistProvider;
+    private readonly IPluginSkillNameAllowlistProvider _skillNameAllowlistProvider = skillNameAllowlistProvider;
 
     /// <summary>
     /// Gets or sets the service configuration action.
@@ -76,10 +65,8 @@ public sealed class PluginTelemetryCommand(
     /// <param name="pluginRelativePath">The plugin-relative path to check.</param>
     /// <param name="allowlistProvider">The provider that validates allowed file references.</param>
     /// <returns>True if the path is in the allowlist, false otherwise.</returns>
-    private static bool IsPathAllowed(string pluginRelativePath, IPluginFileReferenceAllowlistProvider allowlistProvider)
-    {
-        return allowlistProvider.IsPathAllowed(pluginRelativePath);
-    }
+    private static bool IsPathAllowed(string pluginRelativePath, IPluginFileReferenceAllowlistProvider allowlistProvider) =>
+        allowlistProvider.IsPathAllowed(pluginRelativePath);
 
     /// <summary>
     /// Checks if a skill name is allowed based on the exact skill name allowlist.
@@ -87,10 +74,8 @@ public sealed class PluginTelemetryCommand(
     /// <param name="skillName">The skill name to check.</param>
     /// <param name="allowlistProvider">The provider that validates allowed skill names.</param>
     /// <returns>True if the skill name is in the allowlist, false otherwise.</returns>
-    private static bool IsSkillNameAllowed(string skillName, IPluginSkillNameAllowlistProvider allowlistProvider)
-    {
-        return allowlistProvider.IsSkillNameAllowed(skillName);
-    }
+    private static bool IsSkillNameAllowed(string skillName, IPluginSkillNameAllowlistProvider allowlistProvider) =>
+        allowlistProvider.IsSkillNameAllowed(skillName);
 
     /// <summary>
     /// Known client-specific prefixes for tool names, ordered most specific first.
@@ -99,7 +84,7 @@ public sealed class PluginTelemetryCommand(
     /// - VS Code: mcp_azure_mcp_
     /// - Copilot CLI: azure-
     /// </summary>
-    private static readonly string[] KnownToolNamePrefixes =
+    private static readonly string[] s_knownToolNamePrefixes =
     [
         "mcp__plugin_azure_azure__",
         "mcp_azure_mcp_",
@@ -113,7 +98,7 @@ public sealed class PluginTelemetryCommand(
     /// </summary>
     internal static string StripClientPrefix(string toolName)
     {
-        foreach (var prefix in KnownToolNamePrefixes)
+        foreach (var prefix in s_knownToolNamePrefixes)
         {
             if (toolName.StartsWith(prefix, StringComparison.Ordinal))
             {
@@ -128,7 +113,7 @@ public sealed class PluginTelemetryCommand(
     /// Azure extension tool names that are not azmcp commands but should still be tracked.
     /// These are tools from the @azure VS Code extension (e.g., auth, resource graph, templates).
     /// </summary>
-    private static readonly HashSet<string> AllowlistedExtensionTools = new(StringComparer.Ordinal)
+    private static readonly HashSet<string> s_allowlistedExtensionTools = new(StringComparer.Ordinal)
     {
         "azure_auth-set_auth_context",
         "azure_get_auth_context",
@@ -147,7 +132,7 @@ public sealed class PluginTelemetryCommand(
     internal static string? ValidateAndNormalizeToolName(string toolName, ICommandFactory commandFactory)
     {
         // Check allowlisted Azure extension tools first (pass through without normalization)
-        if (AllowlistedExtensionTools.Contains(toolName))
+        if (s_allowlistedExtensionTools.Contains(toolName))
         {
             return toolName;
         }
@@ -178,39 +163,6 @@ public sealed class PluginTelemetryCommand(
         return null;
     }
 
-    protected override void RegisterOptions(Command command)
-    {
-        command.Options.Add(PluginTelemetryOptionDefinitions.Timestamp);
-        command.Options.Add(PluginTelemetryOptionDefinitions.EventType);
-        command.Options.Add(PluginTelemetryOptionDefinitions.SessionId);
-        command.Options.Add(PluginTelemetryOptionDefinitions.ClientType);
-        command.Options.Add(PluginTelemetryOptionDefinitions.ClientName);
-        command.Options.Add(PluginTelemetryOptionDefinitions.PluginName);
-        command.Options.Add(PluginTelemetryOptionDefinitions.PluginVersion);
-        command.Options.Add(PluginTelemetryOptionDefinitions.SkillName);
-        command.Options.Add(PluginTelemetryOptionDefinitions.SkillVersion);
-        command.Options.Add(PluginTelemetryOptionDefinitions.ToolName);
-        command.Options.Add(PluginTelemetryOptionDefinitions.FileReference);
-    }
-
-    protected override PluginTelemetryOptions BindOptions(ParseResult parseResult)
-    {
-        return new PluginTelemetryOptions
-        {
-            Timestamp = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.Timestamp.Name),
-            EventType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.EventType.Name),
-            SessionId = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SessionId.Name),
-            ClientType = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientType.Name),
-            ClientName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ClientName.Name),
-            PluginName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginName.Name),
-            PluginVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.PluginVersion.Name),
-            SkillName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillName.Name),
-            SkillVersion = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.SkillVersion.Name),
-            ToolName = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.ToolName.Name),
-            FileReference = parseResult.GetValueOrDefault<string?>(PluginTelemetryOptionDefinitions.FileReference.Name)
-        };
-    }
-
     /// <summary>
     /// Executes the plugin telemetry command by validating and logging telemetry.
     /// This method validates required options, checks paths and skill names against allowlists,
@@ -218,18 +170,11 @@ public sealed class PluginTelemetryCommand(
     /// and logs the telemetry event.
     /// </summary>
     /// <param name="context">The command execution context containing the response object.</param>
-    /// <param name="parseResult">The parsed command-line arguments containing telemetry event data.</param>
+    /// <param name="options">The parsed command-line arguments containing telemetry event data.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A task containing the command response with status and any error messages.</returns>
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PluginTelemetryOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             // Validate file reference if provided
@@ -256,11 +201,15 @@ public sealed class PluginTelemetryCommand(
                 }
             }
 
+            // Create host and log telemetry
+            using var host = CreateStdioHost(options);
+            await InitializeServicesAsync(host.Services);
+
             // Validate tool name if provided: strip client-specific prefixes and check against registered commands/areas
             if (!string.IsNullOrWhiteSpace(options.ToolName))
             {
                 // Resolve ICommandFactory lazily to avoid circular dependency during construction
-                var commandFactory = _serviceProvider.GetRequiredService<ICommandFactory>();
+                var commandFactory = host.Services.GetRequiredService<ICommandFactory>();
 
                 var normalizedToolName = ValidateAndNormalizeToolName(options.ToolName, commandFactory);
                 if (normalizedToolName == null)
@@ -274,9 +223,6 @@ public sealed class PluginTelemetryCommand(
                 options.ToolName = normalizedToolName;
             }
 
-            // Create host and log telemetry
-            using var host = CreateStdioHost(options);
-            await InitializeServicesAsync(host.Services);
             await host.StartAsync(cancellationToken);
 
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
@@ -346,7 +292,7 @@ public sealed class PluginTelemetryCommand(
     /// <param name="options">The plugin telemetry options that may contain a support logging folder path.</param>
     private static void ConfigureSupportLogging(ILoggingBuilder logging, PluginTelemetryOptions options)
     {
-        if (options.SupportLoggingFolder is null)
+        if (options.DangerouslyWriteSupportLogsToDir is null)
         {
             return;
         }
@@ -355,17 +301,17 @@ public sealed class PluginTelemetryCommand(
         logging.SetMinimumLevel(LogLevel.Debug);
 
         // Add file logging to the specified folder
-        logging.AddSupportFileLogging(options.SupportLoggingFolder);
+        logging.AddSupportFileLogging(options.DangerouslyWriteSupportLogsToDir);
     }
+
     /// <summary>
     /// Creates a host for STDIO transport with full MCP server services.
     /// The host is configured with logging (including debug and support logging if enabled),
     /// authentication services, custom services from ConfigureServices, and the full Azure MCP server stack.
-    /// PluginTelemetryOptions inherits from ServiceStartOptions to enable complete service registration.
     /// </summary>
     /// <param name="options">The plugin telemetry configuration options including debug and support logging settings.</param>
     /// <returns>An IHost instance configured for telemetry publishing with all required services registered.</returns>
-    private IHost CreateStdioHost(PluginTelemetryOptions options)
+    private static IHost CreateStdioHost(PluginTelemetryOptions options)
     {
         return Host.CreateDefaultBuilder()
             .ConfigureLogging(logging =>
@@ -402,8 +348,8 @@ public sealed class PluginTelemetryCommand(
                 // Allow custom service configuration
                 ConfigureServices(services);
 
-                // Register full Azure MCP Server services (works because SkillTelemetryOptions inherits from ServiceStartOptions)
-                services.AddAzureMcpServer(options);
+                // Pass a newed up instance of ServerStartOptions as PluginTelemetryCommand doesn't bind any of those options.
+                services.AddAzureMcpServer(new());
             })
             .Build();
     }

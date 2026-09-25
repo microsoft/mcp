@@ -22,18 +22,11 @@ public interface IRegionChecker
     Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken);
 }
 
-public abstract class AzureRegionChecker : IRegionChecker
+public abstract class AzureRegionChecker(ArmClient armClient, string subscriptionId, ILogger logger) : IRegionChecker
 {
-    protected readonly string SubscriptionId;
-    protected readonly ArmClient ResourceClient;
-    protected readonly ILogger Logger;
-
-    protected AzureRegionChecker(ArmClient armClient, string subscriptionId, ILogger logger)
-    {
-        SubscriptionId = subscriptionId;
-        ResourceClient = armClient;
-        Logger = logger;
-    }
+    protected readonly string SubscriptionId = subscriptionId;
+    protected readonly ArmClient ResourceClient = armClient;
+    protected readonly ILogger Logger = logger;
 
     public abstract Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken);
 }
@@ -73,19 +66,12 @@ public class DefaultRegionChecker(ArmClient armClient, string subscriptionId, IL
     }
 }
 
-public class CognitiveServicesRegionChecker : AzureRegionChecker
+public class CognitiveServicesRegionChecker(ArmClient armClient, string subscriptionId, ILogger<CognitiveServicesRegionChecker> logger, string? skuName = null, string? apiVersion = null, string? modelName = null)
+    : AzureRegionChecker(armClient, subscriptionId, logger)
 {
-    private readonly string? _skuName;
-    private readonly string? _apiVersion;
-    private readonly string? _modelName;
-
-    public CognitiveServicesRegionChecker(ArmClient armClient, string subscriptionId, ILogger<CognitiveServicesRegionChecker> logger, string? skuName = null, string? apiVersion = null, string? modelName = null)
-        : base(armClient, subscriptionId, logger)
-    {
-        _skuName = skuName;
-        _apiVersion = apiVersion;
-        _modelName = modelName;
-    }
+    private readonly string? _skuName = skuName;
+    private readonly string? _apiVersion = apiVersion;
+    private readonly string? _modelName = modelName;
 
     public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
     {
@@ -100,7 +86,7 @@ public class CognitiveServicesRegionChecker : AzureRegionChecker
             .FirstOrDefault(rt => rt.ResourceType.Equals(resourceTypeName, StringComparison.OrdinalIgnoreCase))
             ?.Locations?
             .Select(location => location.Replace(" ", "").ToLowerInvariant())
-            .ToList() ?? new List<string>();
+            .ToList() ?? [];
 
         var tasks = regions.Select(async region =>
         {
@@ -151,7 +137,7 @@ public class PostgreSqlRegionChecker(ArmClient armClient, string subscriptionId,
             .FirstOrDefault(rt => rt.ResourceType.Equals(resourceTypeName, StringComparison.OrdinalIgnoreCase))
             ?.Locations?
             .Select(location => location.Replace(" ", "").ToLowerInvariant())
-            .ToList() ?? new List<string>();
+            .ToList() ?? [];
 
         var tasks = regions.Select(async region =>
         {

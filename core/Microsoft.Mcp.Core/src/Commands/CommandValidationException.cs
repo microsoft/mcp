@@ -11,13 +11,13 @@ namespace Microsoft.Mcp.Core.Commands;
 /// </summary>
 public class CommandValidationException(
     string message,
-    HttpStatusCode statusCode = HttpStatusCode.InternalServerError,
+    HttpStatusCode statusCode = HttpStatusCode.BadRequest,
     string? code = null,
     IReadOnlyList<string>? missingOptions = null) : Exception(message)
 {
 
     /// <summary>
-    /// HTTP status code to return in the response. Defaults to InternalServerError (500).
+    /// HTTP status code to return in the response. Defaults to BadRequest (400).
     /// </summary>
     public HttpStatusCode StatusCode { get; } = statusCode;
 

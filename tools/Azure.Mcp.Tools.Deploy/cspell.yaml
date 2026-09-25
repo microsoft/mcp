@@ -1,0 +1,47 @@
+# Spell-check overrides for this toolset/server.
+# Inherits the global config at the repo root.
+#
+# Add words that only appear in this folder here, in alphabetical order.
+# Cross-cutting terms should go in the root cspell.yaml instead.
+version: "0.2"
+import:
+  - ../../.vscode/cspell.json
+words:
+  - acaenvironment
+  - appabcde
+  - appmod
+  - aztfmod
+  - azuread
+  - azureaisearch
+  - azureaiservices
+  - azureapplicationinsights
+  - azurebotservice
+  - azurecaf
+  - azurecontainerapp
+  - azuredocs
+  - azurekeyvault
+  - azureprivateendpoint
+  - azuresignalrservice
+  - azurestorageaccount
+  - azurewebpubsub
+  - backendservice
+  - classdef
+  - containerappenv
+  - copilotmd
+  - fakeservice
+  - frontendservice
+  - hostings
+  - jsonencode
+  - kubenet
+  - kvabcde
+  - kvname
+  - mycontainerapp
+  - mylog
+  - passwordless
+  - rgabcde
+  - serviceconnector
+  - sqlabcde
+  - staticwebapps
+  - svcazurecontainerapps
+  - svcazurekubernetesservice
+  - tfvars

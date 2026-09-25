@@ -13,13 +13,38 @@ parameters:
     - windows-x64
     - windows-arm64
 
-
 jobs:
+# Regular job: Create an authenticated .npmrc once and publish it so each
+# deployment job can install @vscode/vsce from the internal feed without
+# needing service-connection access from inside the production release job.
+- job: AuthenticateNpmrc
+  displayName: "Create authenticated .npmrc for vsce install"
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  pool:
+    name: $(LINUXPOOL)
+    image: $(LINUXVMIMAGE)
+    os: linux
+  steps:
+  - checkout: self
+
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+    parameters:
+      npmrcPath: $(Agent.TempDirectory)/vsix_npmrc/.npmrc
+
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: Publish authenticated .npmrc
+    inputs:
+      path: $(Agent.TempDirectory)
+      artifact: vsix_npmrc
+
 # Deployment Jobs: Publish VSIX artifacts to Marketplace for each vsix target
 - ${{ each VsixTarget in parameters.VsixTargets }}:
   - deployment: PublishVSIX_${{ replace(VsixTarget, '-', '_') }}
     displayName: "Publish VSIX Artifact to Marketplace - ${{ VsixTarget }}"
-    dependsOn: ${{ parameters.DependsOn }}
+    dependsOn:
+    - ${{ parameters.DependsOn }}
+    - AuthenticateNpmrc
     condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
     templateContext:
       type: releaseJob
@@ -31,6 +56,9 @@ jobs:
       - input: pipelineArtifact
         artifactName: build_info
         targetPath: $(Pipeline.Workspace)/build_info
+      - input: pipelineArtifact
+        artifactName: vsix_npmrc
+        targetPath: $(Agent.TempDirectory)/vsix_npmrc
     environment: package-publish
     pool:
       name: azsdk-pool
@@ -70,8 +98,8 @@ jobs:
                 Is Prerelease: $($server.vsixIsPrerelease)
                 "@
 
-                Write-Host "`nInstalling vsce..."
-                npm install -g @vscode/vsce
+                Write-Host "`nInstalling vsce from authenticated feed..."
+                npm install -g @vscode/vsce --userconfig "$(Agent.TempDirectory)/vsix_npmrc/.npmrc"
 
                 Write-Host "Executing: vsce publish $($publishArgs -join ' ')"
                 vsce publish @publishArgs

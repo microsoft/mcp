@@ -2,94 +2,39 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
-using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
-using Microsoft.Extensions.Logging;
+using Azure.ResourceManager.MySql.FlexibleServers.Models;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
 
-public class MySqlService(IResourceGroupService resourceGroupService, ITenantService tenantService, ILogger<MySqlService> logger) : BaseAzureService(tenantService), IMySqlService
+public sealed class MySqlService(IAzureService azureService)
+    : BaseAzureService(azureService), IMySqlService
 {
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-    private readonly ILogger<MySqlService> _logger = logger;
+    // Maximum number of rows to return to prevent DoS attacks and performance issues
+    private const int MaxRowCount = 10_000;
 
-    // Maximum number of items to return to prevent DoS attacks and performance issues
-    private const int MaxResultLimit = 10000;
+    // Maximum allowed query length in characters to prevent oversized inputs
+    private const int MaxQueryLengthChars = 10_000;
 
-    // Static arrays for security validation - initialized once per class
-    private static readonly string[] DangerousKeywords =
-    [
-        // Data manipulation that could be harmful
-        "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
-        // Set operations that can be used for data exfiltration
-        "UNION", "INTERSECT", "EXCEPT",
-        // Administrative operations
-        "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
-        // Information disclosure
-        "SHOW MASTER", "SHOW SLAVE", "SHOW BINARY", "SHOW BINLOG",
-        // System operations
-        "LOAD DATA", "OUTFILE", "DUMPFILE", "LOAD_FILE", "INTO OUTFILE",
-        // User/privilege management
-        "CREATE USER", "DROP USER", "ALTER USER", "RENAME USER",
-        // Database structure changes
-        "CREATE DATABASE", "DROP DATABASE", "CREATE SCHEMA", "DROP SCHEMA",
-        // Stored procedures and functions
-        "CREATE PROCEDURE", "DROP PROCEDURE", "CREATE FUNCTION", "DROP FUNCTION",
-        // Triggers and events
-        "CREATE TRIGGER", "DROP TRIGGER", "CREATE EVENT", "DROP EVENT",
-        // Views that could modify data
-        "CREATE VIEW", "DROP VIEW",
-        // Index operations
-        "CREATE INDEX", "DROP INDEX",
-        // Table operations
-        "CREATE TABLE", "DROP TABLE", "RENAME TABLE",
-        // Lock operations
-        "LOCK TABLES", "UNLOCK TABLES",
-        // Transaction control in unsafe contexts
-        "START TRANSACTION", "BEGIN", "COMMIT", "ROLLBACK",
-        // System variables
-        "SET GLOBAL", "SET SESSION", "SET SQL_MODE"
-    ];
-
-    private static readonly string[] ObfuscationFunctions =
-    [
-        "CHAR", "CHR", "ASCII", "ORD", "HEX", "UNHEX", "CONV",
-        "CONVERT", "CAST", "BINARY", "CONCAT_WS", "MAKE_SET",
-        "ELT", "FIELD", "FIND_IN_SET", "EXPORT_SET", "LOAD_FILE",
-        "FROM_BASE64", "TO_BASE64", "COMPRESS", "UNCOMPRESS",
-        "AES_ENCRYPT", "AES_DECRYPT", "DES_ENCRYPT", "DES_DECRYPT",
-        "ENCODE", "DECODE", "PASSWORD", "OLD_PASSWORD"
-    ];
-
-    // Pre-compiled regex patterns for word-boundary keyword matching
-    private static readonly Regex DangerousKeywordsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", DangerousKeywords.Select(Regex.Escape)) + @")\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex ObfuscationFunctionsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    // Pre-compiled regex used to detect multiple / stacked statements
+    private static readonly Regex s_multipleStatementsPattern =
+        RegexHelper.CreateRegex(@";\s*\w", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-
-        var tokenRequestContext = new TokenRequestContext([GetOpenSourceRDBMSScope()]);
-        var tokenCredential = await GetCredential(cancellationToken);
-        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        var tokenCredential = await GetCredential(null, cancellationToken);
+        var accessToken = await tokenCredential.GetTokenAsync(new([GetOpenSourceRDBMSScope()]), cancellationToken);
         return accessToken.Token;
     }
 
     private string GetOpenSourceRDBMSScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 "https://ossrdbms-aad.database.windows.net/.default",
@@ -113,7 +58,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     {
         if (!server.Contains('.'))
         {
-            return _tenantService.CloudConfiguration.CloudType switch
+            return AzureService.CloudConfiguration.CloudType switch
             {
                 AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                     server + ".mysql.database.azure.com",
@@ -156,6 +101,11 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return builder.ConnectionString;
     }
 
+    /// <summary>
+    /// Performs lightweight structural validation of a query. This does not restrict which SQL verbs may be
+    /// executed; the caller's database permissions are the authority on what is allowed. Validation is limited
+    /// to rejecting empty or oversized input, SQL comments, and multiple / stacked statements.
+    /// </summary>
     internal static void ValidateQuerySafety(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -164,9 +114,9 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         }
 
         // Prevent DoS attacks by limiting query length
-        if (query.Length > MaxResultLimit)
+        if (query.Length > MaxQueryLengthChars)
         {
-            throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxResultLimit:N0} characters to prevent potential DoS attacks.");
+            throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxQueryLengthChars:N0} characters to prevent potential DoS attacks.");
         }
 
         // Strip string literals before checking for comment markers to avoid
@@ -191,45 +141,14 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             throw new ArgumentException("Query cannot be empty after removing comments and whitespace.", nameof(query));
         }
 
-        // Regex pattern to detect multiple SQL statements (semicolon not at end)
-        var multipleStatementsPattern = RegexHelper.CreateRegex(
-            @";\s*\w",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled
-        );
-
-        if (multipleStatementsPattern.IsMatch(cleanedQuery))
+        if (s_multipleStatementsPattern.IsMatch(cleanedQuery))
         {
-            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
-        }
-
-        // List of dangerous SQL keywords that should be blocked (word-boundary matching)
-        var keywordMatch = DangerousKeywordsPattern.Match(cleanedQuery);
-        if (keywordMatch.Success)
-        {
-            throw new InvalidOperationException($"Query contains dangerous keyword '{keywordMatch.Value.ToUpperInvariant()}' which is not allowed for security reasons.");
-        }
-
-        // Check for character conversion functions that may be used for obfuscation
-        var funcMatch = ObfuscationFunctionsPattern.Match(cleanedQuery);
-        if (funcMatch.Success)
-        {
-            throw new InvalidOperationException($"Character conversion and obfuscation functions like '{funcMatch.Groups[1].Value.ToUpperInvariant()}' are not allowed for security reasons.");
-        }
-
-        // Additional validation: Only allow SELECT statements
-        var trimmedQuery = cleanedQuery.Trim();
-        var allowedStartPatterns = new[]
-        {
-            "SELECT"
-        };
-
-        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern, StringComparison.OrdinalIgnoreCase));
-
-        if (!isAllowed)
-        {
-            throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
+            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single statement.");
         }
     }
+
+    internal static (string Query, List<(string Name, string Value)> Parameters) ParameterizeStringLiterals(string query) =>
+        SqlQueryParameterizer.Parameterize(query, SqlQueryParameterizer.SqlDialect.MySql);
 
     public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
     {
@@ -241,7 +160,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         var dbs = new List<string>();
         var dbCount = 0;
-        while (await reader.ReadAsync(cancellationToken) && dbCount < MaxResultLimit)
+        while (await reader.ReadAsync(cancellationToken) && dbCount < MaxRowCount)
         {
             var dbName = reader.GetString(0);
             // Filter out system databases
@@ -252,22 +171,30 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             }
         }
 
-        if (dbCount >= MaxResultLimit)
+        if (dbCount >= MaxRowCount)
         {
-            dbs.Add($"... (output limited to {MaxResultLimit:N0} databases for security and performance reasons)");
+            dbs.Add($"... (output limited to {MaxRowCount:N0} databases for security and performance reasons)");
         }
 
         return dbs;
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query, CancellationToken cancellationToken)
+    public async Task<List<string>> ExecuteQueryAsync(string user, string server, string database, string query, CancellationToken cancellationToken)
     {
         ValidateQuerySafety(query);
+
+        var (parameterizedQuery, queryParameters) = ParameterizeStringLiterals(query);
 
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
         await using var resource = await MySqlResource.CreateAsync(connectionString, cancellationToken);
-        await using var command = new MySqlCommand(query, resource.Connection);
+        await using var command = new MySqlCommand(parameterizedQuery, resource.Connection);
+
+        foreach (var (name, value) in queryParameters)
+        {
+            command.Parameters.AddWithValue(name, value);
+        }
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
         var rows = new List<string>();
@@ -279,7 +206,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
         var rowCount = 0;
 
-        while (await reader.ReadAsync(cancellationToken) && rowCount < MaxResultLimit)
+        while (await reader.ReadAsync(cancellationToken) && rowCount < MaxRowCount)
         {
             var row = new List<string>();
             for (int i = 0; i < reader.FieldCount; i++)
@@ -290,15 +217,15 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             rowCount++;
         }
 
-        if (rowCount >= MaxResultLimit)
+        if (rowCount >= MaxRowCount)
         {
-            rows.Add($"... (output limited to {MaxResultLimit:N0} rows for security and performance reasons)");
+            rows.Add($"... (output limited to {MaxRowCount:N0} rows for security and performance reasons)");
         }
 
         return rows;
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table, CancellationToken cancellationToken)
+    public async Task<List<string>> GetTableSchemaAsync(string user, string server, string database, string table, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
@@ -315,10 +242,10 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return schema;
     }
 
-    public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, string user, CancellationToken cancellationToken)
+    public async Task<List<string>> ListServersAsync(string subscriptionId, string resourceGroup, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var serverList = new List<string>();
         await foreach (MySqlFlexibleServerResource server in rg.GetMySqlFlexibleServers().GetAllAsync(cancellationToken: cancellationToken))
@@ -328,7 +255,18 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return serverList;
     }
 
-    public async Task<List<string>> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, CancellationToken cancellationToken)
+    public async Task<List<string>> ListServersInSubscriptionAsync(string subscriptionId, CancellationToken cancellationToken)
+    {
+        var subscriptionResource = await AzureService.GetSubscription(subscriptionId, cancellationToken: cancellationToken);
+        var serverList = new List<string>();
+        await foreach (MySqlFlexibleServerResource server in subscriptionResource.GetMySqlFlexibleServersAsync(cancellationToken: cancellationToken))
+        {
+            serverList.Add(server.Data.Name);
+        }
+        return serverList;
+    }
+
+    public async Task<TableListResult> GetTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 
@@ -338,24 +276,21 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         var tables = new List<string>();
         var tableCount = 0;
-        while (await reader.ReadAsync(cancellationToken) && tableCount < MaxResultLimit)
+        while (await reader.ReadAsync(cancellationToken) && tableCount < MaxRowCount)
         {
             tables.Add(reader.GetString(0));
             tableCount++;
         }
 
-        if (tableCount >= MaxResultLimit)
-        {
-            tables.Add($"... (output limited to {MaxResultLimit:N0} tables for security and performance reasons)");
-        }
+        var isTruncated = tableCount >= MaxRowCount && await reader.ReadAsync(cancellationToken);
 
-        return tables;
+        return new TableListResult(tables, isTruncated);
     }
 
-    public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string user, string server, CancellationToken cancellationToken)
+    public async Task<string> GetServerConfigAsync(string subscriptionId, string resourceGroup, string server, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
         var mysqlServerData = mysqlServer.Value.Data;
@@ -372,38 +307,40 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return System.Text.Json.JsonSerializer.Serialize(config, MySqlJsonContext.Default.ServerConfigGetResult);
     }
 
-    public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string user, string server, string param, CancellationToken cancellationToken)
+    public async Task<string> GetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
 
         var configResponse = await mysqlServer.Value.GetMySqlFlexibleServerConfigurationAsync(param, cancellationToken);
         if (configResponse?.Value?.Data == null)
         {
-            throw new Exception($"Parameter '{param}' not found.");
+            throw new KeyNotFoundException($"Parameter '{param}' not found on server '{server}'.");
         }
         return configResponse.Value.Data.Value;
     }
 
-    public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string user, string server, string param, string value, CancellationToken cancellationToken)
+    public async Task<string> SetServerParameterAsync(string subscriptionId, string resourceGroup, string server, string param, string value, CancellationToken cancellationToken)
     {
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscriptionId, resourceGroup, null, null, cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+        var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, null, cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var mysqlServer = await rg.GetMySqlFlexibleServerAsync(server, cancellationToken);
 
         var configuration = await mysqlServer.Value.GetMySqlFlexibleServerConfigurationAsync(param, cancellationToken);
         if (configuration?.Value?.Data == null)
         {
-            throw new Exception($"Parameter '{param}' not found.");
+            throw new KeyNotFoundException($"Parameter '{param}' not found on server '{server}'.");
         }
 
         var configData = configuration.Value.Data;
         configData.Value = value;
+        configData.Source = MySqlFlexibleServerConfigurationSource.UserOverride;
 
-        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Completed, param, configData, cancellationToken);
+        var updateOperation = await mysqlServer.Value.GetMySqlFlexibleServerConfigurations().CreateOrUpdateAsync(WaitUntil.Started, param, configData, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
         return updateOperation.Value.Data.Value;
     }
 

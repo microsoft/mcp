@@ -1,0 +1,47 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "mirroredCatalogId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "beta": true
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "schemaName": "Taxes",
+            "name": "TaxInfo",
+            "status": "Running",
+            "lastSyncDateTime": "2026-03-19T02:12:58.5404355Z",
+            "lastUpdateDateTime": "2026-03-19T02:12:59.1234567Z"
+          },
+          {
+            "schemaName": "Taxes",
+            "name": "AnotherTable",
+            "status": "Running",
+            "lastSyncDateTime": null
+          },
+          {
+            "schemaName": "Receivable",
+            "name": "AccountRecords",
+            "status": "Running",
+            "lastSyncDateTime": "2026-03-19T02:10:12.3456789Z",
+            "lastUpdateDateTime": "2026-03-19T02:10:13.456789Z"
+          },
+          {
+            "schemaName": "Receivable",
+            "name": "Invoices",
+            "status": "Failed",
+            "lastSyncDateTime": "2026-03-19T02:08:30Z",
+            "error": {
+              "errorCode": "TableLocationNotAccessible",
+              "message": "Table location not accessible: s3://bucket/path/invoices"
+            }
+          }
+        ],
+        "continuationToken": null,
+        "continuationUri": null
+      }
+    }
+  }
+}

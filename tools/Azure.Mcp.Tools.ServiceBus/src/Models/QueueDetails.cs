@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.ServiceBus.Models.utilities;
+using Azure.Mcp.Tools.ServiceBus.Models.Utilities;
 using Azure.Messaging.ServiceBus.Administration;
 
 namespace Azure.Mcp.Tools.ServiceBus.Models;

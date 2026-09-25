@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.MySql.Options.Server;
 
-public class ServerParamGetOptions : MySqlServerOptions
+public sealed class ServerParamGetOptions : MySqlServerOptions
 {
-    [JsonPropertyName(MySqlOptionDefinitions.ParamName)]
-    public string? Param { get; set; }
+    [Option(Description = MySqlOptionDescriptions.Param)]
+    public required string Param { get; set; }
 }

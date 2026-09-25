@@ -3,10 +3,13 @@
 
 using Microsoft.Mcp.Core.Options;
 
-namespace Fabric.Mcp.Tools.OneLake.Commands.Workspace;
+namespace Fabric.Mcp.Tools.OneLake.Options;
 
-public sealed class WorkspaceListOptions : GlobalOptions
+public sealed class WorkspaceListOptions
 {
+    [Option(Description = OneLakeOptionDescriptions.ContinuationToken)]
     public string? ContinuationToken { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Format)]
     public string? Format { get; set; }
 }

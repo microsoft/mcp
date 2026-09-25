@@ -1,25 +1,52 @@
-[
-  "appinsights-instrumentation",
-  "azure-ai",
-  "azure-aigateway",
-  "azure-cloud-migrate",
-  "azure-compliance",
-  "azure-compute",
-  "azure-cost-optimization",
-  "azure-deploy",
-  "azure-diagnostics",
-  "azure-enterprise-infra-planner",
-  "azure-hosted-copilot-sdk",
-  "azure-kusto",
-  "azure-messaging",
-  "azure-prepare",
-  "azure-quotas",
-  "azure-rbac",
-  "azure-resource-lookup",
-  "azure-resource-visualizer",
-  "azure-storage",
-  "azure-upgrade",
-  "azure-validate",
-  "entra-app-registration",
-  "microsoft-foundry"
-]
+{
+  "skills": {
+    "azure-cost": [
+      "cost-analysis",
+      "cost-estimation",
+      "cost-governance",
+      "cost-optimization"
+    ],
+    "azure-kusto-graph-skills": [
+      "azure-kusto-graph",
+      "azure-kusto-irql",
+      "azure-kusto-irql-graph"
+    ],
+    "azure-local-skills": [
+      "azure-local",
+      "azure-local-multi-rack"
+    ],
+    "azure-skills": [
+      "airunway-aks-setup",
+      "appinsights-instrumentation",
+      "azure-ai",
+      "azure-aigateway",
+      "azure-app-onboard",
+      "azure-app-onboard-prereq",
+      "azure-cloud-migrate",
+      "azure-compliance",
+      "azure-compute",
+      "azure-deploy",
+      "azure-diagnostics",
+      "azure-enterprise-infra-planner",
+      "azure-kubernetes",
+      "azure-kusto",
+      "azure-messaging",
+      "azure-prepare",
+      "azure-quotas",
+      "azure-reliability",
+      "azure-resource-lookup",
+      "azure-resource-visualizer",
+      "azure-storage",
+      "azure-upgrade",
+      "azure-validate",
+      "discover-azure-skills",
+      "entra-agent-id",
+      "entra-app-registration",
+      "microsoft-foundry",
+      "python-appservice-deploy"
+    ],
+    "foundry-iq-skills": [
+      "foundry-iq"
+    ]
+  }
+}

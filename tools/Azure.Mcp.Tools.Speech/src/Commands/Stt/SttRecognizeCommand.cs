@@ -3,123 +3,98 @@
 
 using System.Net;
 using Azure.Mcp.Tools.Speech.Models;
-using Azure.Mcp.Tools.Speech.Options;
 using Azure.Mcp.Tools.Speech.Options.Stt;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
-public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : BaseSpeechCommand<SttRecognizeOptions>()
-{
-    internal record SttRecognizeCommandResult(SpeechRecognitionResult Result);
-
-    private const string CommandTitle = "Recognize Speech from Audio File";
-    private readonly ILogger<SttRecognizeCommand> _logger = logger;
-
-    public override string Id => "c725eb52-ca2c-4fe4-9422-935e7557b701";
-
-    public override string Name => "recognize";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "c725eb52-ca2c-4fe4-9422-935e7557b701",
+    Name = "recognize",
+    Title = "Recognize Speech from Audio File",
+    Description = """
         Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.
         You must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file.
         Supported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.
         Optional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService)
+    : BaseSpeechCommand<SttRecognizeOptions, SttRecognizeCommand.SttRecognizeCommandResult>()
+{
+    public sealed record SttRecognizeCommandResult(SpeechRecognitionResult Result);
 
-    public override string Title => CommandTitle;
+    private readonly ILogger<SttRecognizeCommand> _logger = logger;
+    private readonly ISpeechService _speechService = speechService;
 
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(SttRecognizeOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = true, // Requires local audio file access
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-
-        command.Options.Add(SpeechOptionDefinitions.File);
-        command.Options.Add(SpeechOptionDefinitions.Language);
-        command.Options.Add(SpeechOptionDefinitions.Phrases);
-        command.Options.Add(SpeechOptionDefinitions.Format);
-        command.Options.Add(SpeechOptionDefinitions.Profanity);
-
-        // Command-level validation for file-specific options
-        command.Validators.Add(commandResult =>
+        // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
+        string canonicalPath;
+        try
         {
-            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.File.Name);
+            canonicalPath = FilePathValidator.ValidateAndCanonicalize(options.File);
+        }
+        catch (ArgumentException ex)
+        {
+            validationResult.Errors.Add($"Invalid audio file path: {ex.Message}");
+            return;
+        }
 
-            // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
-            string canonicalPath;
-            try
+        // Validate file path exists
+        if (!File.Exists(canonicalPath))
+        {
+            validationResult.Errors.Add($"Audio file not found: {canonicalPath}");
+        }
+        else
+        {
+            // Validate file extension
+            var extension = Path.GetExtension(canonicalPath).ToLowerInvariant();
+            var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
+            if (!supportedExtensions.Contains(extension))
             {
-                canonicalPath = FilePathValidator.ValidateAndCanonicalize(fileValue!);
+                validationResult.Errors.Add($"Unsupported audio file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
             }
-            catch (ArgumentException ex)
-            {
-                commandResult.AddError($"Invalid audio file path: {ex.Message}");
-                return;
-            }
+        }
 
-            // Validate file path exists
-            if (!File.Exists(canonicalPath))
+        // Validate format option if provided
+        if (!string.IsNullOrEmpty(options.Format))
+        {
+            if (options.Format != "simple" && options.Format != "detailed")
             {
-                commandResult.AddError($"Audio file not found: {canonicalPath}");
+                validationResult.Errors.Add("Format must be 'simple' or 'detailed'.");
             }
-            else
-            {
-                // Validate file extension
-                var extension = Path.GetExtension(canonicalPath).ToLowerInvariant();
-                var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
-                if (!supportedExtensions.Contains(extension))
-                {
-                    commandResult.AddError($"Unsupported audio file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
-                }
-            }
+        }
 
-            // Validate format option if provided
-            var formatValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Format.Name);
-            if (!string.IsNullOrEmpty(formatValue))
+        // Validate profanity option if provided
+        if (!string.IsNullOrEmpty(options.Profanity))
+        {
+            if (options.Profanity != "masked" && options.Profanity != "removed" && options.Profanity != "raw")
             {
-                if (formatValue != "simple" && formatValue != "detailed")
-                {
-                    commandResult.AddError("Format must be 'simple' or 'detailed'.");
-                }
+                validationResult.Errors.Add("Profanity filter must be 'masked', 'removed', or 'raw'.");
             }
-
-            // Validate profanity option if provided
-            var profanityValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Profanity.Name);
-            if (!string.IsNullOrEmpty(profanityValue))
-            {
-                if (profanityValue != "masked" && profanityValue != "removed" && profanityValue != "raw")
-                {
-                    commandResult.AddError("Profanity filter must be 'masked', 'removed', or 'raw'.");
-                }
-            }
-        });
+        }
     }
-    protected override SttRecognizeOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.File = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.File.Name);
-        options.Language = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Language.Name);
 
+    public override void PostBindOptions(SttRecognizeOptions options)
+    {
+        base.PostBindOptions(options);
         // Process phrases to support comma-separated values
-        var rawPhrases = parseResult.GetValueOrDefault<string[]?>(SpeechOptionDefinitions.Phrases.Name);
-        if (rawPhrases != null && rawPhrases.Length > 0)
+        if (options.Phrases != null && options.Phrases.Length > 0)
         {
             var processedPhrases = new List<string>();
-            foreach (var phrase in rawPhrases)
+            foreach (var phrase in options.Phrases)
             {
                 if (string.IsNullOrWhiteSpace(phrase))
                     continue;
@@ -133,37 +108,19 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             }
             options.Phrases = processedPhrases.Count > 0 ? processedPhrases.ToArray() : null;
         }
-        else
-        {
-            options.Phrases = rawPhrases;
-        }
-
-        options.Format = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Format.Name);
-        options.Profanity = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Profanity.Name);
-
-        return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SttRecognizeOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var speechService = context.GetService<ISpeechService>();
-            var result = await speechService.RecognizeSpeechFromFile(
-                options.Endpoint!,
-                options.File!,
+            var result = await _speechService.RecognizeSpeechFromFile(
+                options.Endpoint,
+                options.File,
                 options.Language,
                 options.Phrases,
                 options.Format,
                 options.Profanity,
-                options.RetryPolicy,
                 cancellationToken);
 
             _logger.LogInformation(

@@ -2,79 +2,48 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Policy.Models;
-using Azure.Mcp.Tools.Policy.Options;
 using Azure.Mcp.Tools.Policy.Options.Assignment;
 using Azure.Mcp.Tools.Policy.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Policy.Commands.Assignment;
 
-public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger)
-    : SubscriptionCommand<PolicyAssignmentListOptions>
-{
-    private const string CommandTitle = "List Policy Assignments";
-    private readonly ILogger<PolicyAssignmentListCommand> _logger = logger;
-
-    public override string Id => "b7c4d3e2-0f1a-4b8c-9d6e-5a7b8c9d0e1f";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "b7c4d3e2-0f1a-4b8c-9d6e-5a7b8c9d0e1f",
+    Name = "list",
+    Title = "List Policy Assignments",
+    Description = """
         List policy assignments in a subscription or scope. This command retrieves all Azure Policy
         assignments along with their complete policy definition details (rules, effects, parameters schema),
         enforcement modes, assignment parameters, and metadata. This enables agents to understand policy
         requirements and design compliant cloud services. You can optionally filter by scope to list
         assignments at a specific resource group, resource, or management group level.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListCommand> logger, IPolicyService policyService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<PolicyAssignmentListOptions, PolicyAssignmentListCommand.PolicyAssignmentListCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<PolicyAssignmentListCommand> _logger = logger;
+    private readonly IPolicyService _policyService = policyService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PolicyAssignmentListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(PolicyOptionDefinitions.Scope.AsOptional());
-    }
-
-    protected override PolicyAssignmentListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Scope = parseResult.GetValueOrDefault<string>(PolicyOptionDefinitions.Scope.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var policyService = context.GetService<IPolicyService>();
-            var assignments = await policyService.ListPolicyAssignmentsAsync(
+            var assignments = await _policyService.ListPolicyAssignmentsAsync(
                 options.Subscription!,
                 options.Scope,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -101,12 +70,5 @@ public sealed class PolicyAssignmentListCommand(ILogger<PolicyAssignmentListComm
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,
-        _ => base.GetStatusCode(ex)
-    };
-
-    public record PolicyAssignmentListCommandResult(List<PolicyAssignment> Assignments);
+    public sealed record PolicyAssignmentListCommandResult(List<PolicyAssignment> Assignments);
 }

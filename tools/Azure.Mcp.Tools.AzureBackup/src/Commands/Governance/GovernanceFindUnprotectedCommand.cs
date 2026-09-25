@@ -1,0 +1,96 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.AzureBackup.Models;
+using Azure.Mcp.Tools.AzureBackup.Options.Governance;
+using Azure.Mcp.Tools.AzureBackup.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+
+namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
+
+[CommandMetadata(
+    Id = "73b050ca-2e20-448c-a76c-08e8cd5bbe25",
+    Name = "find-unprotected",
+    Title = "Find Unprotected Resources",
+    Description = """
+        Scans the subscription to find Azure resources that are not currently protected by any
+        backup policy using two-level discovery: (1) ARM resource enumeration finds top-level
+        unprotected resources, and (2) RSV vault protectable-items enrichment discovers
+        unprotected sub-resources that vaults have discovered but not yet protected.
+        Results include a 'discoverySource' field ('arm' or 'vault') indicating how each item
+        was found, and vault-discovered items include 'protectionState' to distinguish
+        never-protected items from items where protection was stopped.
+        Optionally filter by resource type, resource group, or tags.
+        Note: tag filtering applies only to ARM-discovered resources; vault-discovered
+        sub-resources do not carry ARM tags and are not filtered by the tag parameter.
+
+        Workload coverage and discovery level:
+        - IaaS VM: ARM (VM level)
+        - SQL in IaaS VM: Vault discovery (database level)
+        - SAP HANA in IaaS VM: Vault discovery (database level)
+        - Azure File Shares: Vault discovery (file share level)
+        - Blob Storage: ARM (storage account level)
+        - ADLS Gen2: ARM (storage account level)
+        - AKS: ARM (cluster level)
+        - Managed Disks: ARM (disk level)
+        - PostgreSQL Flexible: ARM (server level)
+        - Cosmos DB: ARM (account level)
+        - Elastic SAN: ARM (volume group level)
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class GovernanceFindUnprotectedCommand(ILogger<GovernanceFindUnprotectedCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<GovernanceFindUnprotectedOptions, GovernanceFindUnprotectedCommand.GovernanceFindUnprotectedCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<GovernanceFindUnprotectedCommand> _logger = logger;
+    private readonly IAzureBackupService _azureBackupService = azureBackupService;
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GovernanceFindUnprotectedOptions options, CancellationToken cancellationToken)
+    {
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
+        context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, "scan");
+
+        try
+        {
+            var resources = await _azureBackupService.FindUnprotectedResourcesAsync(
+                options.Subscription!,
+                options.ResourceTypeFilter,
+                options.ResourceGroup,
+                options.TagFilter,
+                options.Tenant,
+                cancellationToken);
+
+            context.Response.Results = ResponseResult.Create(
+                new(resources),
+                AzureBackupJsonContext.Default.GovernanceFindUnprotectedCommandResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding unprotected resources. Subscription: {Subscription}", options.Subscription);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx => argEx.Message,
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            "Authorization failed scanning for unprotected resources. Ensure you have 'Reader' role at subscription scope.",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
+
+    public sealed record GovernanceFindUnprotectedCommandResult(List<UnprotectedResourceInfo> Resources);
+}

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
@@ -9,65 +10,48 @@ using Azure.Mcp.Tools.Deploy.Options.Architecture;
 using Azure.Mcp.Tools.Deploy.Services.Templates;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
 
-public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand<DiagramGenerateOptions>
+[CommandMetadata(
+    Id = "34d7ec6a-e229-4775-8af3-85f81ae3e6d3",
+    Name = "generate",
+    Title = "Generate Architecture Diagram",
+    Description = "Generates a Mermaid architecture diagram showing recommended Azure services and their connections for an application. Input is a structured AppTopology JSON built by scanning the workspace: detect services, frameworks, ports, Docker settings, and dependencies from connection strings and environment variables. For .NET Aspire applications, check aspireManifest.json. Returns a Mermaid diagram string. Supported compute types include AppService, FunctionApp, ContainerApp, StaticWebApp, and AKS. Supported dependency types include SQL, Cosmos, Redis, Storage, ServiceBus, KeyVault, and other supported Azure services.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger)
+    : BaseCommand<DiagramGenerateOptions, string>
 {
-    private const string CommandTitle = "Generate Architecture Diagram";
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
-    public override string Id => "34d7ec6a-e229-4775-8af3-85f81ae3e6d3";
 
-    public override string Name => "generate";
-
-    public override string Description =>
-        """
-        Generates an Azure service architecture diagram showing the recommended Azure services and their connections for an application. Use this tool when the user asks to generate, create, or visualize an Azure architecture diagram for their application, or wants to see which Azure services to use. Renders the diagram from an application topology (AppTopology) provided as input; scan the workspace first to build this topology by detecting services, frameworks, and environment variables for connection strings, and for .NET Aspire applications, check aspireManifest.json. Do not use this tool when the user needs a detailed network topology or security design.
-        """;
-
-    public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(DiagramGenerateOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
-        command.Validators.Add(result =>
+        try
         {
-            var rawMcpToolInput = result.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
-            if (string.IsNullOrWhiteSpace(rawMcpToolInput))
-            {
-                result.AddError("App topology cannot be null or empty.");
-            }
-        });
+            JsonSerializer.Deserialize(options.RawMcpToolInput, DeployJsonContext.Default.AppTopology);
+        }
+        catch
+        {
+            validationResult.Errors.Add($"--raw-mcp-tool-input must be valid JSON.");
+        }
     }
 
-    protected override DiagramGenerateOptions BindOptions(ParseResult parseResult)
-    {
-        return new()
-        {
-            RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, DiagramGenerateOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var options = BindOptions(parseResult);
             var rawMcpToolInput = options.RawMcpToolInput;
 
-            AppTopology appTopology = JsonSerializer.Deserialize(rawMcpToolInput!, DeployJsonContext.Default.AppTopology)
+            AppTopology appTopology = JsonSerializer.Deserialize(rawMcpToolInput, DeployJsonContext.Default.AppTopology)
                 ?? throw new ArgumentException("Failed to deserialize app topology.", nameof(rawMcpToolInput));
 
             context.Activity?
@@ -80,7 +64,6 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             if (appTopology.Services.Length == 0)
             {
                 _logger.LogWarning("No services detected in the app topology.");
-                context.Response.Status = HttpStatusCode.OK;
                 context.Response.Message = "No service detected.";
                 return Task.FromResult(context.Response);
             }

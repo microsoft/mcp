@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
@@ -14,25 +13,15 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 /// <summary>
 /// Command to get platform landing zone modification guidance and recommendations.
 /// </summary>
-public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
-    : BaseAzureMigrateCommand<GetGuidanceOptions>()
-{
-    private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
-    private const string CommandTitle = "Get Platform Landing Zone Modification Guidance";
-
-    /// <inheritdoc/>
-    public override string Id => "d4e8c9b2-5f3a-4d1c-8b7e-2a9f1c6d5e4b";
-
-    /// <inheritdoc/>
-    public override string Name => "getguidance";
-
-    /// <inheritdoc/>
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "d4e8c9b2-5f3a-4d1c-8b7e-2a9f1c6d5e4b",
+    Name = "getguidance",
+    Title = "Get Platform Landing Zone Modification Guidance",
+    Description = """
         Get how-to guidance for modifying, configuring, or customizing an existing Platform Landing Zone.
         Use this tool when user asks "how do I", "show me how to", "get guidance for", or asks about 
         disabling, enabling, turning off, changing, or modifying Landing Zone settings.
-        
+
         **Use this tool for questions about:**
         - How to turn off or disable Bastion, DDoS, DNS, gateways, Defender, or monitoring
         - How to change IP addresses, CIDR ranges, network topology, or regions
@@ -40,7 +29,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         - How to change resource naming patterns or conventions
         - Finding or searching for specific policies within a Landing Zone
         - Listing all available policies by archetype
-        
+
         **Available scenarios:**
         - bastion: Turn off Bastion host
         - ddos: Enable or disable DDoS protection plan
@@ -57,56 +46,29 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         - defender: Turn off Defender Plans
         - zero-trust: Implement Zero Trust Networking
         - slz: Implement Sovereign Landing Zone controls
-        
+
         **For policy searches:**
         - Use policy-name to search for a specific policy
         - Use list-policies=true to list ALL policies by archetype
-        """;
-
-    /// <inheritdoc/>
-    public override string Title => CommandTitle;
-
-    /// <inheritdoc/>
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = true,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
-
-    /// <inheritdoc/>
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.Scenario);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.PolicyName);
-        command.Options.Add(PlatformLandingZoneOptionDefinitions.ListPolicies);
-    }
-
-    /// <inheritdoc/>
-    protected override GetGuidanceOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Scenario = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.Scenario);
-        options.PolicyName = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.PolicyName);
-        options.ListPolicies = parseResult.GetValueOrDefault(PlatformLandingZoneOptionDefinitions.ListPolicies);
-        return options;
-    }
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = true,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlatformLandingZoneGuidanceService guidanceService)
+    : AuthenticatedCommand<GetGuidanceOptions, GetGuidanceCommand.GetGuidanceCommandResult>()
+{
+    private readonly IPlatformLandingZoneGuidanceService _guidanceService = guidanceService;
 
     /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        GetGuidanceOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            return context.Response;
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var response = new StringBuilder();
@@ -116,7 +78,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
 
             if (options.ListPolicies)
             {
-                Dictionary<string, List<string>> allPolicies = await _guidanceService.GetAllPoliciesAsync(cancellationToken);
+                var allPolicies = await _guidanceService.GetAllPoliciesAsync(cancellationToken);
                 response.AppendLine("\n--- All Policies by Archetype ---");
                 foreach (var (archetype, policies) in allPolicies.OrderBy(kv => kv.Key))
                 {
@@ -129,7 +91,7 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
             if (!string.IsNullOrWhiteSpace(options.PolicyName) &&
                 options.Scenario is "policy-enforcement" or "policy-assignment")
             {
-                List<PlatformLandingZoneGuidanceService.PolicyLocationResult> locations = await _guidanceService.SearchPoliciesAsync(options.PolicyName, cancellationToken);
+                var locations = await _guidanceService.SearchPoliciesAsync(options.PolicyName, cancellationToken);
                 if (locations.Count > 0)
                 {
                     response.AppendLine("\n--- Matching Policies ---");
@@ -157,5 +119,9 @@ public sealed class GetGuidanceCommand(ILogger<GetGuidanceCommand> logger, IPlat
         return context.Response;
     }
 
-    internal record GetGuidanceCommandResult(string Guidance);
+    /// <summary>
+    /// Represents the result of the GetGuidanceCommand.
+    /// </summary>
+    /// <param name="Guidance">The guidance.</param>
+    public sealed record GetGuidanceCommandResult(string Guidance);
 }

@@ -1,9 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.Monitor.Models;
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 /// <summary>
 /// Configuration model for generator actions loaded from JSON

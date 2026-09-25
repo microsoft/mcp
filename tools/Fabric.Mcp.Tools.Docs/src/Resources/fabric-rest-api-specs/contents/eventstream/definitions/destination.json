@@ -13,7 +13,8 @@
                 "Activator",
                 "CustomEndpoint",
                 "Eventhouse",
-                "Lakehouse"
+                "Lakehouse",
+                "Notebook"
             ],
             "x-ms-enum": {
                 "name": "DestinationType",
@@ -34,6 +35,10 @@
                     {
                         "value": "Lakehouse",
                         "description": "The Lakehouse destination type."
+                    },
+                    {
+                        "value": "Notebook",
+                        "description": "The Notebook destination type."
                     }
                 ]
             }
@@ -95,7 +100,7 @@
         },
         "DestinationConnectionResponse": {
             "type": "object",
-            "description": "Represents the connection information for a destination custom endpoint.",
+            "description": "Represents the connection information for an eventstream destination.",
             "required": [
                 "consumerGroupName"
             ],
@@ -185,6 +190,25 @@
                 }
             ],
             "x-ms-discriminator-value": "Lakehouse"
+        },
+        "NotebookDestinationResponse": {
+            "type": "object",
+            "description": "Represents a Notebook destination response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Notebook destination.",
+                    "$ref": "#/definitions/NotebookDestinationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DestinationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "Notebook"
         },
         "ActivatorDestinationProperties": {
             "type": "object",
@@ -348,6 +372,26 @@
                 },
                 "inputSerialization": {
                     "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "NotebookDestinationProperties": {
+            "type": "object",
+            "description": "Notebook destination properties.",
+            "required": [
+                "workspaceId",
+                "itemId"
+            ],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The Notebook workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The Notebook item identifier.",
+                    "format": "uuid"
                 }
             }
         }

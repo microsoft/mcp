@@ -5,7 +5,7 @@
     "updateMirroredAzureDatabricksCatalogRequest": {
       "displayName": "MirroredAzureDatabricksCatalog_New_Name",
       "description": "A new description for mirroredAzureDatabricksCatalog.",
-      "publicUpdateableExtendedProperties": {
+      "properties": {
         "autoSync": "Enabled",
         "mirroringMode": "Full",
         "storageConnectionId": "c1128f28-d84f-417c-8234-0feb91e35f87"

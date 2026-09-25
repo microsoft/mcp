@@ -1,28 +1,24 @@
-using Azure.Mcp.Tools.Monitor.Detectors;
-using Azure.Mcp.Tools.Monitor.Generators;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
 
-namespace Azure.Mcp.Tools.Monitor.Pipeline;
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
 
-public class WorkspaceAnalyzer
+public class WorkspaceAnalyzer(
+    IEnumerable<ILanguageDetector> languageDetectors,
+    IEnumerable<IAppTypeDetector> appTypeDetectors,
+    IEnumerable<IInstrumentationDetector> instrumentationDetectors,
+    IEnumerable<IGenerator> generators)
 {
-    private readonly IEnumerable<ILanguageDetector> _languageDetectors;
-    private readonly IEnumerable<IAppTypeDetector> _appTypeDetectors;
-    private readonly IEnumerable<IInstrumentationDetector> _instrumentationDetectors;
-    private readonly IEnumerable<IGenerator> _generators;
-
-    public WorkspaceAnalyzer(
-        IEnumerable<ILanguageDetector> languageDetectors,
-        IEnumerable<IAppTypeDetector> appTypeDetectors,
-        IEnumerable<IInstrumentationDetector> instrumentationDetectors,
-        IEnumerable<IGenerator> generators)
-    {
-        _languageDetectors = languageDetectors;
-        _appTypeDetectors = appTypeDetectors;
-        _instrumentationDetectors = instrumentationDetectors;
-        _generators = generators;
-    }
+    private readonly IEnumerable<ILanguageDetector> _languageDetectors = languageDetectors;
+    private readonly IEnumerable<IAppTypeDetector> _appTypeDetectors = appTypeDetectors;
+    private readonly IEnumerable<IInstrumentationDetector> _instrumentationDetectors = instrumentationDetectors;
+    private readonly IEnumerable<IGenerator> _generators = generators;
 
     public OnboardingSpec Analyze(string workspacePath)
     {
@@ -132,7 +128,7 @@ public class WorkspaceAnalyzer
         return generator.Generate(analysis);
     }
 
-    private OnboardingSpec CreateErrorSpec(string message)
+    private static OnboardingSpec CreateErrorSpec(string message)
     {
         var analysis = new Analysis
         {
@@ -148,7 +144,7 @@ public class WorkspaceAnalyzer
             .BuildWithoutValidation();
     }
 
-    private OnboardingSpec CreateMultiProjectSpec(Analysis analysis)
+    private static OnboardingSpec CreateMultiProjectSpec(Analysis analysis)
     {
         var instrumentable = analysis.Projects
             .Where(p => p.AppType != AppType.Library)
@@ -163,7 +159,7 @@ public class WorkspaceAnalyzer
             .BuildWithoutValidation();
     }
 
-    private OnboardingSpec CreateUnsupportedSpec(Analysis analysis)
+    private static OnboardingSpec CreateUnsupportedSpec(Analysis analysis)
     {
         var project = analysis.Projects.FirstOrDefault();
         var appType = project?.AppType ?? AppType.Unknown;

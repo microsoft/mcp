@@ -1,0 +1,35 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "dataAgentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "datasourceId": "c1c6d12f-8d2a-4d5b-9ca1-8bb7b42d4a30"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "U2NoZW1hcw==",
+                        "isSelected": false,
+                        "displayName": "Schemas",
+                        "type": "Schemas",
+                        "hasSubElements": true,
+                        "state": "Available",
+                        "lastSyncDateTime": "2025-06-15T10:30:00Z"
+                    },
+                    {
+                        "id": "VGFibGVz",
+                        "isSelected": false,
+                        "displayName": "Tables",
+                        "type": "Tables",
+                        "hasSubElements": true,
+                        "state": "Available",
+                        "lastSyncDateTime": "2025-06-15T10:30:00Z"
+                    }
+                ],
+                "continuationToken": null,
+                "continuationUri": null
+            }
+        }
+    }
+}

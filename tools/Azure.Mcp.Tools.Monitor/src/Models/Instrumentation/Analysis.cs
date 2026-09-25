@@ -1,4 +1,7 @@
-namespace Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 public record Analysis
 {
@@ -27,8 +30,4 @@ public record ExistingInstrumentation
     public List<Evidence> Evidence { get; init; } = [];
 }
 
-public record Evidence
-{
-    public string File { get; init; } = null!;
-    public string Indicator { get; init; } = null!;
-}
+public sealed record Evidence(string File, string Indicator);

@@ -1,0 +1,27 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "mirroredCatalogId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "updateMirroredCatalogDefinitionRequest": {
+      "definition": {
+        "parts": [
+          {
+            "path": "MirroredCatalogDefinition.json",
+            "payload": "eyIkc2NoZW1hIjoiaHR0cHM6Ly9kZXZlbG9wZXIubWljcm9zb2Z0LmNvbS9qc29uLXNjaGVtYXMvZmFicmljL2l0ZW0vbWlycm9yZWRDYXRhbG9nL2RlZmluaXRpb24vbWlycm9yZWRDYXRhbG9nRGVmaW5pdGlvbi8xLjAuMC9zY2hlbWEuanNvbiIsInByb3BlcnRpZXMiOnsic291cmNlIjp7InR5cGUiOiJEcmVtaW9JY2ViZXJnQ2F0YWxvZyIsInR5cGVQcm9wZXJ0aWVzIjp7ImNvbm5lY3Rpb25JZCI6IjRlYjZiNzY3LWU3ODYtNDVlZC1iN2NmLWQyNTAyM2U1MjIyMiIsInNjb3BlIjpbIkFjY291bnRpbmciLCJVUyJdfX0sIm1vdW50ZWRUYWJsZXMiOlt7InNvdXJjZSI6eyJ0eXBlUHJvcGVydGllcyI6eyJmdWxseVF1YWxpZmllZFNjb3BlIjpbIkFjY291bnRpbmciLCJVUyIsIlRheGVzIl0sInRhYmxlTmFtZSI6IlRheEluZm8ifX19LHsic291cmNlIjp7InR5cGVQcm9wZXJ0aWVzIjp7ImZ1bGx5UXVhbGlmaWVkU2NvcGUiOlsiQWNjb3VudGluZyIsIlVTIiwiVGF4ZXMiXSwidGFibGVOYW1lIjoiTmV3VGFibGUifX19LHsic291cmNlIjp7InR5cGVQcm9wZXJ0aWVzIjp7ImZ1bGx5UXVhbGlmaWVkU2NvcGUiOlsiQWNjb3VudGluZyIsIlVTIiwiUmVjZWl2YWJsZSJdLCJ0YWJsZU5hbWUiOiJJbnZvaWNlcyJ9fX0seyJzb3VyY2UiOnsidHlwZVByb3BlcnRpZXMiOnsiZnVsbHlRdWFsaWZpZWRTY29wZSI6WyJBY2NvdW50aW5nIiwiVVMiLCJSZWNlaXZhYmxlIl0sInRhYmxlTmFtZSI6IlBheWFibGVzIn19fV19fQ==",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "200": {},
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/ea72fc0b-5e31-44b0-b48f-add98bff6cdb",
+        "x-ms-operation-id": "ea72fc0b-5e31-44b0-b48f-add98bff6cdb",
+        "Retry-After": 30
+      }
+    }
+  }
+}

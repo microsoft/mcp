@@ -1,0 +1,31 @@
+{
+    "parameters": {
+        "workspaceId": "66666666-6666-6666-6666-666666666666"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+                        "workspaceId": "66666666-6666-6666-6666-666666666666",
+                        "relatedWorkspaceId": "88888888-8888-8888-8888-888888888888",
+                        "relationType": "Base"
+                    },
+                    {
+                        "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                        "workspaceId": "66666666-6666-6666-6666-666666666666",
+                        "relatedWorkspaceId": "22222222-2222-2222-2222-222222222222",
+                        "relationType": "RelatedWorkspace"
+                    },
+                    {
+                        "id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+                        "workspaceId": "66666666-6666-6666-6666-666666666666",
+                        "relatedWorkspaceId": "44444444-4444-4444-4444-444444444444",
+                        "relationType": "RelatedWorkspace"
+                    }
+                ]
+            }
+        }
+    }
+}

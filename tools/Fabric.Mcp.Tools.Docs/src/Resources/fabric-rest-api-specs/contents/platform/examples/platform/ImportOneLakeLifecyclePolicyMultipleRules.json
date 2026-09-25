@@ -1,0 +1,103 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+    "importOneLakeWorkspaceLifecyclePolicyRequest": {
+      "properties": {
+        "policy": {
+          "rules": [
+            {
+              "name": "Rule1_CoolAfterAccess",
+              "enabled": true,
+              "type": "Lifecycle",
+              "definition": {
+                "filters": {
+                  "blobTypes": [
+                    "blockBlob"
+                  ]
+                },
+                "actions": {
+                  "baseBlob": {
+                    "tierToCool": {
+                      "daysAfterLastAccessTimeGreaterThan": 14.0
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Rule2_ColdAfterCreation",
+              "enabled": true,
+              "type": "Lifecycle",
+              "definition": {
+                "filters": {
+                  "blobTypes": [
+                    "blockBlob"
+                  ]
+                },
+                "actions": {
+                  "baseBlob": {
+                    "tierToCold": {
+                      "daysAfterCreationGreaterThan": 180.0
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "properties": {
+          "lastModifiedTime": "2026-02-27T00:20:12.345678Z",
+          "policy": {
+            "rules": [
+              {
+                "name": "Rule1_CoolAfterAccess",
+                "enabled": true,
+                "type": "Lifecycle",
+                "definition": {
+                  "actions": {
+                    "baseBlob": {
+                      "tierToCool": {
+                        "daysAfterLastAccessTimeGreaterThan": 14.0
+                      }
+                    }
+                  },
+                  "filters": {
+                    "blobTypes": [
+                      "blockBlob"
+                    ]
+                  }
+                }
+              },
+              {
+                "name": "Rule2_ColdAfterCreation",
+                "enabled": true,
+                "type": "Lifecycle",
+                "definition": {
+                  "actions": {
+                    "baseBlob": {
+                      "tierToCold": {
+                        "daysAfterCreationGreaterThan": 180.0
+                      }
+                    }
+                  },
+                  "filters": {
+                    "blobTypes": [
+                      "blockBlob"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "type": "Microsoft.Storage/storageAccounts/managementPolicies"
+      }
+    }
+  }
+}

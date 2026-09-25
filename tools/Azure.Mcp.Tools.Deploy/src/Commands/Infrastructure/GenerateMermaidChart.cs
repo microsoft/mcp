@@ -10,11 +10,10 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 public static class GenerateMermaidChart
 {
     // used to create a subgraph for AKS cluster in the chart
-    private const string aksClusterInternalName = "akscluster";
-    private const string aksClusterName = "Azure Kubernetes Service (AKS) Cluster";
-
-    private const string acaEnvInternalName = "acaenvironment";
-    private const string acaEnvName = "Azure Container Apps Environment";
+    private const string AksClusterInternalName = "akscluster";
+    private const string AksClusterName = "Azure Kubernetes Service (AKS) Cluster";
+    private const string AcaEnvInternalName = "acaenvironment";
+    private const string AcaEnvName = "Azure Container Apps Environment";
 
     public static string GenerateChart(string workspaceFolder, AppTopology appTopology)
     {
@@ -67,14 +66,14 @@ public static class GenerateMermaidChart
                 if (!aksClusterExists)
                 {
                     // Add AKS cluster as a subgraph
-                    resources.Add($"subgraph {aksClusterInternalName} [\"{aksClusterName}\"]");
+                    resources.Add($"subgraph {AksClusterInternalName} [\"{AksClusterName}\"]");
                     // containerized services share the same AKS cluster
                     foreach (var aksservice in appTopology.Services.Where(s => s.AzureComputeHost == "aks"))
                     {
                         resources.Add(CreateComponentName($"{aksservice.AzureComputeHost}_{aksservice.Name}", $"{aksservice.Name} (Containerized Service)", NodeShape.RoundedRectangle));
                     }
                     resources.Add("end");
-                    resources.Add($"{aksClusterInternalName}:::cluster");
+                    resources.Add($"{AksClusterInternalName}:::cluster");
                     aksClusterExists = true;
                 }
             }
@@ -83,7 +82,7 @@ public static class GenerateMermaidChart
                 if (!containerAppEnvExists)
                 {
                     // Add Container App Environment as a subgraph
-                    resources.Add($"subgraph {acaEnvInternalName} [\"{acaEnvName}\"]");
+                    resources.Add($"subgraph {AcaEnvInternalName} [\"{AcaEnvName}\"]");
                     // containerized services share the same Container App Environment
                     foreach (var containerAppService in appTopology.Services.Where(s => s.AzureComputeHost == "containerapp"))
                     {
@@ -143,47 +142,36 @@ public static class GenerateMermaidChart
         return $"{EnsureUrlFriendlyName(internalName)}{nodeShapeBrackets[0]}\"`{name}`\"{nodeShapeBrackets[1]}";
     }
 
-    private static string CreateRelationshipString(string sourceName, string targetName, string connectionDescription, ArrowType arrowType)
-    {
-        var arrowSymbol = GetArrowSymbol(arrowType);
-        return $"{EnsureUrlFriendlyName(sourceName)} {arrowSymbol} |\"{connectionDescription}\"| {EnsureUrlFriendlyName(targetName)}";
-    }
+    private static string CreateRelationshipString(string sourceName, string targetName, string connectionDescription, ArrowType arrowType) =>
+        $"{EnsureUrlFriendlyName(sourceName)} {GetArrowSymbol(arrowType)} |\"{connectionDescription}\"| {EnsureUrlFriendlyName(targetName)}";
 
-    private static string EnsureUrlFriendlyName(string name)
-    {
-        return name.Replace('.', '_')
-                  .Replace(" ", "_")
-                  .Trim()
-                  .ToLowerInvariant();
-    }
+    private static string EnsureUrlFriendlyName(string name) =>
+        name.Replace('.', '_')
+            .Replace(" ", "_")
+            .Trim()
+            .ToLowerInvariant();
 
-    private static string[] GetNodeShapeBrackets(NodeShape nodeShape)
+    private static string[] GetNodeShapeBrackets(NodeShape nodeShape) => nodeShape switch
     {
-        return nodeShape switch
-        {
-            NodeShape.Rectangle => ["[", "]"],
-            NodeShape.Circle => ["((", "))"],
-            NodeShape.RoundedRectangle => ["(", ")"],
-            NodeShape.Cylinder => ["[(", ")]"],
-            NodeShape.Hexagon => ["{{", "}}"],
-            _ => ["[", "]"]
-        };
-    }
+        NodeShape.Rectangle => ["[", "]"],
+        NodeShape.Circle => ["((", "))"],
+        NodeShape.RoundedRectangle => ["(", ")"],
+        NodeShape.Cylinder => ["[(", ")]"],
+        NodeShape.Hexagon => ["{{", "}}"],
+        _ => ["[", "]"]
+    };
 
-    private static string GetArrowSymbol(ArrowType arrowType)
+    private static string GetArrowSymbol(ArrowType arrowType) => arrowType switch
     {
-        return arrowType switch
-        {
-            ArrowType.Solid => "-->",
-            ArrowType.Open => "->",
-            ArrowType.Dotted => "-.->",
-            _ => "-->"
-        };
-    }
+        ArrowType.Solid => "-->",
+        ArrowType.Open => "->",
+        ArrowType.Dotted => "-.->",
+        _ => "-->"
+    };
 
     private static string GetFormalName(string name)
     {
-        if (ResourceTypeConverter.TryGetValue(name, out var formalName))
+        if (s_resourceTypeConverter.TryGetValue(name, out var formalName))
         {
             return formalName;
         }
@@ -191,17 +179,13 @@ public static class GenerateMermaidChart
 
     }
 
-    private static string FlattenServiceType(string serviceType)
-    {
-        return serviceType.ToLowerInvariant().Replace("azure", "");
-    }
+    private static string FlattenServiceType(string serviceType) =>
+        serviceType.ToLowerInvariant().Replace("azure", "");
 
-    private static bool IsComputeResourceType(string serviceType)
-    {
-        return Enum.GetNames<AzureServiceConstants.AzureComputeServiceType>().Contains(serviceType, StringComparer.OrdinalIgnoreCase);
-    }
+    private static bool IsComputeResourceType(string serviceType) =>
+        Enum.GetNames<AzureServiceConstants.AzureComputeServiceType>().Contains(serviceType, StringComparer.OrdinalIgnoreCase);
 
-    private static IDictionary<string, string> ResourceTypeConverter = new Dictionary<string, string>
+    private static readonly IDictionary<string, string> s_resourceTypeConverter = new Dictionary<string, string>
     {
         { "appservice", "Azure App Service" },
         { "containerapp", "Azure Container Apps" },

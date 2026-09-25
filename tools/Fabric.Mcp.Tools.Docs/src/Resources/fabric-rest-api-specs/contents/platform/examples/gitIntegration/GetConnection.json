@@ -17,7 +17,8 @@
                     "head": "eaa737b48cda41b37ffefac772ea48f6fed3eac4",
                     "lastSyncTime": "2021-11-20T09:26:43.153"
                 },
-                "gitConnectionState": "ConnectedAndInitialized"
+                "gitConnectionState": "ConnectedAndInitialized",
+                "gitConnectionType": "Full"
             }
         }
     }

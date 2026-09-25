@@ -1,98 +1,52 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
 
-public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<SecretCreateOptions>
+[CommandMetadata(
+    Id = "fb1322cd-05b0-4264-9e96-6a9b3d9291a0",
+    Name = "create",
+    Title = "Create Key Vault Secret",
+    Description = "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = true,
+    LocalRequired = false)]
+public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<SecretCreateOptions, SecretDetails>
 {
-    private const string CommandTitle = "Create Key Vault Secret";
     private readonly ILogger<SecretCreateCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    public override string Id => "fb1322cd-05b0-4264-9e96-6a9b3d9291a0";
-
-    public override string Name => "create";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SecretCreateOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = true
-    };
-
-    public override string Description =>
-        "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.";
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.SecretName);
-        command.Options.Add(KeyVaultOptionDefinitions.SecretValue);
-    }
-
-    protected override SecretCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        options.SecretName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.SecretName.Name);
-        options.SecretValue = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.SecretValue.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var secret = await _keyVaultService.CreateSecret(
-                options.VaultName!,
-                options.SecretName!,
-                options.SecretValue!,
-                options.Subscription!,
+                options.Vault!,
+                options.Secret!,
+                options.Value!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
-                    secret.Name,
-                    secret.Value,
-                    secret.Properties.Enabled,
-                    secret.Properties.NotBefore,
-                    secret.Properties.ExpiresOn,
-                    secret.Properties.CreatedOn,
-                    secret.Properties.UpdatedOn),
-                KeyVaultJsonContext.Default.SecretCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(SecretDetails.FromSecret(secret), KeyVaultJsonContext.Default.SecretDetails);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating secret {SecretName} in vault {VaultName}", options.SecretName, options.VaultName);
+            _logger.LogError(ex, "Error creating secret {SecretName} in vault {VaultName}", options.Secret, options.Vault);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
-
-    internal record SecretCreateCommandResult(string Name, string Value, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn);
 }

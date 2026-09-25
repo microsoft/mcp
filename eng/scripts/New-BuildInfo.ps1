@@ -9,7 +9,8 @@ param(
     [string] $ServerName,
     [switch] $IncludeNative,
     [switch] $TestPipeline,
-    [switch] $CI
+    [switch] $CI,
+    [bool] $CommonCodeBuildsAll = $true
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -20,6 +21,10 @@ $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
 $architectures = @('x64', 'arm64')
+
+# Supported Azure clouds for where the MCP tools may operate. This is used to determine which clouds to run tests against.
+# The set of valid values in this list should align with the ones in eng\common\TestResources\New-TestResources.ps1 line 66.
+$azureSupportedClouds = @('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')
 
 # Get-OperatingSystems returns an array of objects with properties: name, nodeName, dotnetName, extension
 $operatingSystems = Get-OperatingSystems
@@ -32,29 +37,24 @@ $excludedPlatforms = @(
 # Platforms outside of the standard combinations that should also be built.  Setting a "specialPurpose" allows then to
 # be targeted or excluded in packaging scripts
 $additionalPlatforms = @(
-    # We currently use a prerelease version of Microsoft.Identity.Web with AOT-safe HTTP support,
-    # which allows shipping trimmed azmcp with http across all distributions (including Docker). 
-    # Previously, Docker was shipped untrimmed to enable http support, while only other distributions
-    # where trimmed without HTTP support. These additional Docker platforms are retained as a rollback safety net
-    # in case we need to revert to the non-prerelease version and limit HTTP support to Docker only.
-    # Once Microsoft.Identity.Web with AOT support reaches GA, additionalPlatforms should be removed
-    # and Docker builds should use the standard platform definitions.
-    # https://github.com/microsoft/mcp/issues/1764
+    # Add additional builds for Docker as they use the musl runtime variant which differs from the default Linux builds.
+    # In the future we can evaluate if these can be moved to the standard Linux builds to remove two jobs from our
+    # standard pipeline.
     @{
-        name = 'linux-musl-x64-docker'
+        name            = 'linux-musl-x64-docker'
         operatingSystem = 'linux'
-        architecture = 'musl-x64'
-        native = $false
-        trimmed = $true
-        specialPurpose = 'docker'
+        architecture    = 'musl-x64'
+        native          = $false
+        trimmed         = $true
+        specialPurpose  = 'docker'
     }
     @{
-        name = 'linux-musl-arm64-docker'
+        name            = 'linux-musl-arm64-docker'
         operatingSystem = 'linux'
-        architecture = 'musl-arm64'
-        native = $false
-        trimmed = $true
-        specialPurpose = 'docker'
+        architecture    = 'musl-arm64'
+        native          = $false
+        trimmed         = $true
+        specialPurpose  = 'docker'
     }
 )
 
@@ -63,12 +63,12 @@ if ($IncludeNative) {
     # When native builds are shipped, we still may want to build only linux-x64 native in pull requests for pipeline performance
 
     $additionalPlatforms += @{
-        name = 'linux-x64-native'
+        name            = 'linux-x64-native'
         operatingSystem = 'linux'
-        architecture = 'x64'
-        native = $true
-        trimmed = $false
-        specialPurpose = 'native'
+        architecture    = 'x64'
+        native          = $true
+        trimmed         = $false
+        specialPurpose  = 'native'
     }
 }
 
@@ -76,7 +76,8 @@ if ($BuildId -eq 0) {
     if ($isPipelineRun) {
         LogError 'A non-zero BuildId is required when running in a pipeline.'
         $exitCode = 1
-    } else {
+    }
+    else {
         $BuildId = 99999
     }
 }
@@ -86,7 +87,7 @@ if ($isPipelineRun -and !$PublishTarget) {
     $exitCode = 1
 }
 
-if(!$OutputPath) {
+if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build_info.json"
 }
 
@@ -119,7 +120,7 @@ function Get-LatestMarketplaceVersion {
             )
             # flags 914 = IncludeVersions | IncludeFiles | IncludeAssetUri | IncludeStatistics
             # This requests version information needed to determine the latest published version
-            flags = 914
+            flags   = 914
         } | ConvertTo-Json -Depth 10
 
         $response = Invoke-RestMethod -Uri $marketplaceUrl -Method Post -Body $body -ContentType "application/json" -ErrorAction SilentlyContinue
@@ -134,7 +135,7 @@ function Get-LatestMarketplaceVersion {
                 } | ForEach-Object {
                     [PSCustomObject]@{
                         Version = $_
-                        Patch = [int]$Matches[1]
+                        Patch   = [int]$Matches[1]
                     }
                 }
 
@@ -142,8 +143,8 @@ function Get-LatestMarketplaceVersion {
                     $maxPatch = ($matchingVersions | Measure-Object -Property Patch -Maximum).Maximum
                     return [PSCustomObject]@{
                         LatestVersion = "$MajorVersion.0.$maxPatch"
-                        MaxPatch = $maxPatch
-                        NextPatch = $maxPatch + 1
+                        MaxPatch      = $maxPatch
+                        NextPatch     = $maxPatch + 1
                     }
                 }
             }
@@ -163,7 +164,8 @@ function CheckVariable($name) {
             LogError "Environment variable $name is not set."
             $script:exitCode = 1
             return ""
-        } else {
+        }
+        else {
             return "Missing-$name"
         }
     }
@@ -180,15 +182,22 @@ $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
 $linuxArm64VmImage = CheckVariable 'LINUXARM64VMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
+<# This function takes a semicolon or comma delimited string and splits it into an array,
+  trimming whitespace and removing empty entries.
+
+  For example, the NpmPackageKeywords property may be defined in a csproj as:
+  <NpmPackageKeywords>keyword1; keyword2, keyword3</NpmPackageKeywords>
+
+  This function will split that string into an array: @('keyword1', 'keyword2', 'keyword3')
+#>
+function Split-PropertyGroup {
+    param([string]$propertyGroup)
+
+    return @($propertyGroup -split '[;,]' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+}
+
 function Get-PathsToTest {
     Write-Host "Getting paths to test"
-
-    # When "core" is modified, include storage and keyVault as the canary service tools.
-    # TODO: These should be sourced from csproj files
-    $canaryPaths = @{
-        "core/Azure.Mcp.Core"= @('tools/Azure.Mcp.Tools.Storage', 'tools/Azure.Mcp.Tools.KeyVault')
-        "core/Microsoft.Mcp.Core"= @('tools/Azure.Mcp.Tools.Storage', 'tools/Azure.Mcp.Tools.KeyVault')
-    }
 
     # While there is a "core" directory at the repo root, we consider the "core" path to be all of the repo outside of the
     # "tools" directory.
@@ -215,7 +224,8 @@ function Get-PathsToTest {
 
         # We can put full paths here because they'll be reduced to relative project directory paths in the "reduce down" step below
         @() + $serverProject + $projectReferences
-    } else {
+    }
+    else {
         @() + $coreDirectories + $serverDirectories + $toolDirectories
     }
 
@@ -223,16 +233,15 @@ function Get-PathsToTest {
     #   tools/Azure.Mcp.Tools.Storage
     #   core/Fabric.Mcp.Core
     #   servers/Azure.Mcp.Server
-
     $projectDirectoryPattern = '^(tools|servers|core)/[^/]+'
 
     $normalizedPaths = $paths
-        | Get-RepoRelativePath -NormalizeSeparators
-        | Where-Object { $_ -match $projectDirectoryPattern }
-        | ForEach-Object { $Matches[0] }
-        | Sort-Object -Unique
+    | Get-RepoRelativePath -NormalizeSeparators
+    | Where-Object { $_ -match $projectDirectoryPattern }
+    | ForEach-Object { $Matches[0] }
+    | Sort-Object -Unique
 
-    if($isPullRequestBuild) {
+    if ($isPullRequestBuild) {
         # Set of files that don't require build or test when changed
         $skipFiles = @(
             'CHANGELOG.md',
@@ -248,79 +257,120 @@ function Get-PathsToTest {
 
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
-        # Assuming $changedFiles = [
-        #   tools/Azure.Mcp.Tools.Storage/src/someFile.cs    <- "Azure.Mcp.Tools.Storage"
-        #   tools/Azure.Mcp.Tools.Monitoring/README.md       <- "Azure.Mcp.Tools.Monitoring"
-        #   core/src/commonClass.cs                          <- "Core"
-        #   eng/scripts/SomeScript.ps1                       <- "Core"
-        # ]
-        Write-Host ''
-
-        # Currently, we don't exclude non-code files from the changed files list.
-        # For example, updating a markdown file in a service path will still trigger tests for that path.
-        # Updating a file outside of the defined paths will be seen as a change to the core path.
-        $changedPaths = @($changedFiles
-        | Where-Object { $skipFiles -notcontains (Split-Path $_ -Leaf) }
-        | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[0] ? $Matches[0] : 'core/Microsoft.Mcp.Core' }
-        | Sort-Object -Unique)
-
-        <# This makes $changedPaths = @(
-            'tools/Azure.Mcp.Tools.Storage',
-            'tools/Azure.Mcp.Tools.Monitoring',
-            'core/Microsoft.Mcp.Core'
-        ) #>
-
-        if($changedPaths.Count -eq 0) {
-            Write-Host "No changed, testable paths detected. Defaulting to core." -ForegroundColor Yellow
-            $changedPaths = @('core/Microsoft.Mcp.Core')
-        } else {
-            Write-Host "Changed paths detected: $($changedPaths -join ', ')"
+        # When common code builds all, track whether engineering, the Core libraries, or shared build changed. If so, build everything.
+        $coreChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
+        $engChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
+        $sharedBuildChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
+        if ($coreChanged -or $engChanged -or $sharedBuildChanged) {
+            Write-Host "Core, engineering, or shared build changes detected. Building everything." -ForegroundColor Yellow
+            $pathsToTest = @()
         }
+        else {
+            # Assuming $changedFiles = [
+            #   tools/Azure.Mcp.Tools.Storage/src/someFile.cs    <- "Azure.Mcp.Tools.Storage"
+            #   tools/Azure.Mcp.Tools.Monitoring/README.md       <- "Azure.Mcp.Tools.Monitoring"
+            #   core/src/commonClass.cs                          <- "Core"
+            #   eng/scripts/SomeScript.ps1                       <- "Core"
+            # ]
+            Write-Host ''
 
-        $pathsToTest = $changedPaths
-        # If any affected path has "canaries", add them to the paths to test
-        foreach ($canaryKey in $canaryPaths.Keys) {
-            if($changedPaths -contains $canaryKey) {
-                $canaries = $canaryPaths[$canaryKey]
-                Write-Host "$canaryKey changes detected. Including canary paths: $($canaries -join ', ')" -ForegroundColor Cyan
-                $pathsToTest += $canaries
+            # Currently, we don't exclude non-code files from the changed files list.
+            # For example, updating a markdown file in a service path will still trigger tests for that path.
+            # Updating a file outside of the defined paths will be seen as a change to the core path.
+            $changedPaths = @($changedFiles
+                | Where-Object { $skipFiles -notcontains (Split-Path $_ -Leaf) }
+                | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[0] ? $Matches[0] : 'core/Microsoft.Mcp.Core' }
+                | Sort-Object -Unique)
+
+            <# This makes $changedPaths = @(
+                'tools/Azure.Mcp.Tools.Storage',
+                'tools/Azure.Mcp.Tools.Monitoring',
+                'core/Microsoft.Mcp.Core'
+            ) #>
+
+            if ($changedPaths.Count -eq 0) {
+                Write-Host "No changed, testable paths detected. Defaulting to core." -ForegroundColor Yellow
+                $changedPaths = @('core/Microsoft.Mcp.Core')
             }
+            else {
+                Write-Host "Changed paths detected: $($changedPaths -join ', ')"
+            }
+
+            if ($pathsToTest -notcontains 'core/Microsoft.Mcp.Core') {
+                $pathsToTest = $changedPaths
+            }
+
+            # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
+            if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
+                Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
+                $pathsToTest += 'servers/Azure.Mcp.Server'
+            }
+
+            $normalizedPaths = @($pathsToTest | Sort-Object -Unique)
+
+            <# Making $paths = @(
+                'tools/Azure.Mcp.Tools.Storage',
+                'tools/Azure.Mcp.Tools.Monitoring',
+                'core/Microsoft.Mcp.Core',
+                'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's server canary list
+            ) #>
         }
-
-        # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
-        if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
-            Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
-            $pathsToTest += 'servers/Azure.Mcp.Server'
-        }
-
-        $normalizedPaths = @($pathsToTest | Sort-Object -Unique)
-
-        <# Making $paths = @(
-            'tools/Azure.Mcp.Tools.Storage',
-            'tools/Azure.Mcp.Tools.Monitoring',
-            'core/Microsoft.Mcp.Core',
-            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's server canary list
-        ) #>
     }
 
-    $pathsToTest = @()
-    foreach ($path in $normalizedPaths) {
+    $pathsToTest = $normalizedPaths | ForEach-Object -ThrottleLimit 5 -Parallel {
+        $path = $_
+        $azureSupportedClouds = $using:azureSupportedClouds
+
+        Write-Progress -Activity "Checking for test resources" -Status $path
+
+        $projectName = (Get-Item $path).Name
         $testResourcesPath = "$path/tests"
-        $rootedTestResourcesPath = "$RepoRoot/$testResourcesPath"
+        $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
-        $hasLiveTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.LiveTests.csproj' -Recurse).Count -gt 0
+        $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
+        $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
+        $result = $false
+        # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
+        $hasUnitTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result
+        $hasLiveTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result
         $hasRecordedTests = $hasLiveTests -and (Get-ChildItem $rootedTestResourcesPath -Filter 'assets.json' -Recurse).Count -gt 0
-        $hasUnitTests = (Get-ChildItem $rootedTestResourcesPath -Filter '*.UnitTests.csproj' -Recurse).Count -gt 0
 
-        $pathsToTest += @{
-            path = $path
-            hasTestResources = $hasTestResources
-            testResourcesPath = $hasTestResources ? $testResourcesPath : $null
-            hasLiveTests = $hasLiveTests
-            hasUnitTests = $hasUnitTests
-            hasRecordedTests = $hasRecordedTests
+        $sourcePath = Join-Path $using:RepoRoot $path "src"
+
+        $sourceProject = Get-ChildItem $sourcePath -Filter '*.csproj' | Select-Object -First 1
+        if (-not $sourceProject) {
+            Write-Error "No source project found for path $path at expected location $sourcePath. Ensure there is a .csproj file in the src directory for this path."
+            return @{ _error = $true }
+        }
+
+        $sourceProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $sourceProject.FullName
+
+        $resolvedClouds = $sourceProjectDetails.AzureSupportedClouds `
+            ? @($sourceProjectDetails.AzureSupportedClouds -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+        : $azureSupportedClouds
+
+        if ($sourceProjectDetails.AzureSupportedClouds -and ($resolvedClouds | Where-Object { $azureSupportedClouds -notcontains $_ })) {
+            Write-Error "Project $($sourceProject.FullName) specifies supported Azure clouds that are not in the global supported list: $($sourceProjectDetails.AzureSupportedClouds). Supported clouds must be a subset of $($azureSupportedClouds -join ', ')."
+            return @{ _error = $true }
+        }
+
+        return @{
+            _error               = $false
+            path                 = $path
+            hasTestResources     = $hasTestResources
+            testResourcesPath    = $hasTestResources ? $testResourcesPath : $null
+            hasLiveTests         = $hasLiveTests
+            hasUnitTests         = $hasUnitTests
+            hasRecordedTests     = $hasRecordedTests
+            azureSupportedClouds = $resolvedClouds
         }
     }
+
+    if ($pathsToTest | Where-Object { $_._error }) {
+        $script:exitCode = 1
+    }
+
+    $pathsToTest = $pathsToTest | Where-Object { -not $_._error } | ForEach-Object { $_.Remove('_error'); $_ } | Sort-Object { $_.path }
 
     return $pathsToTest
 }
@@ -347,6 +397,10 @@ function Get-TestMatrix {
 
             $entry.testResourcesPath = $path.TestResourcesPath
             $entry.hasTestResources = $path.HasTestResources
+
+            if ($ServerName) {
+                $entry.serverName = $ServerName
+            }
         }
 
         if ($TestType -eq 'Unit' -and !$path.HasUnitTests) {
@@ -376,7 +430,7 @@ function Get-ServerDetails {
 
     $serverProperties = @()
 
-    foreach($serverProject in $serverProjects) {
+    foreach ($serverProject in $serverProjects) {
         $props = & "$PSScriptRoot/Get-ProjectProperties.ps1" -Path $serverProject
 
         $serverName = $serverProject.BaseName
@@ -408,6 +462,15 @@ function Get-ServerDetails {
                 $vsixVersion = "$($version.Major).$($version.Minor).$($version.PrereleaseNumber)"
                 $vsixIsPrerelease = $true
             }
+            elseif ($serverName -eq 'Fabric.Mcp.Server') {
+                # Fabric MCP Server follows a GA-only, minor-increment versioning strategy and
+                # drives its own explicit version numbers. Use the .csproj version verbatim so the
+                # VSIX stays in sync with the other release targets (npm, NuGet, etc.) instead of the
+                # Major.0.X marketplace-derived patch scheme used by other servers.
+                $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
+                $vsixIsPrerelease = $false
+                Write-Host "Fabric MCP Server: using .csproj version for VSIX: $vsixVersion" -ForegroundColor Green
+            }
             else {
                 # For all non-beta versions, calculate next patch version from marketplace
                 $vscodePath = "$RepoRoot/servers/$serverName/vscode"
@@ -430,12 +493,26 @@ function Get-ServerDetails {
                             Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
                         }
                         else {
-                            # No matching versions found - this is an illegal state for non-beta releases
-                            LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
-                            LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                            LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
-                            $script:exitCode = 1
-                            continue
+                            # No matching versions found on the marketplace for the Major.0.X series.
+                            # Special case: if the .csproj version is exactly 1.0.0 (stable, no prerelease label),
+                            # this is the very first GA publish — use the csproj version directly since there is
+                            # no prior marketplace version to increment from.
+                            # This exception is intentionally limited to 1.0.0; any other version with no
+                            # marketplace history (e.g. 1.0.1, 2.0.0) is an error because it implies a potential gap
+                            # in the published version history that must be investigated.
+                            if ([string]::IsNullOrEmpty($version.PrereleaseLabel) -and
+                                $version.Major -eq 1 -and $version.Minor -eq 0 -and $version.Patch -eq 0) {
+                                $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
+                                $vsixIsPrerelease = $false
+                                Write-Host "No marketplace versions found for $($version.Major).0.X. Using .csproj version for first GA VSIX (1.0.0): $vsixVersion" -ForegroundColor Green
+                            }
+                            else {
+                                LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
+                                LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
+                                LogError "The 1.0.0 first-GA exception does not apply here. Ensure the extension has been published at least once before running a subsequent GA build."
+                                $script:exitCode = 1
+                                continue
+                            }
                         }
                     }
                     else {
@@ -465,15 +542,15 @@ function Get-ServerDetails {
 
                 if ($excludedPlatforms -notcontains $name) {
                     $platforms += [ordered]@{
-                        name = $name
-                        artifactPath = "$serverName/$name"
+                        name            = $name
+                        artifactPath    = "$serverName/$name"
                         operatingSystem = $os.name
-                        nodeOs = $os.nodeName
-                        dotnetOs = $os.dotnetName
-                        architecture = $arch
-                        extension = $os.extension
-                        native = $false
-                        trimmed = $true
+                        nodeOs          = $os.nodeName
+                        dotnetOs        = $os.dotnetName
+                        architecture    = $arch
+                        extension       = $os.extension
+                        native          = $false
+                        trimmed         = $true
                     }
                 }
             }
@@ -490,49 +567,49 @@ function Get-ServerDetails {
             }
 
             $platforms += [ordered]@{
-                name = $name
-                artifactPath = "$serverName/$name"
+                name            = $name
+                artifactPath    = "$serverName/$name"
                 operatingSystem = $os.name
-                nodeOs = $os.nodeName
-                dotnetOs = $os.dotnetName
-                architecture = $additionalPlatform.architecture
-                extension = $os.extension
-                native = $additionalPlatform.native
-                trimmed = $additionalPlatform.trimmed
-                specialPurpose = $additionalPlatform.specialPurpose
+                nodeOs          = $os.nodeName
+                dotnetOs        = $os.dotnetName
+                architecture    = $additionalPlatform.architecture
+                extension       = $os.extension
+                native          = $additionalPlatform.native
+                trimmed         = $additionalPlatform.trimmed
+                specialPurpose  = $additionalPlatform.specialPurpose
             }
         }
 
         $serverProperties += [ordered]@{
-            name = $serverProject.BaseName
-            path = $serverProject | Get-RepoRelativePath -NormalizeSeparators
-            artifactPath = $serverName
-            version = $version.ToString()
-            vsixVersion = $vsixVersion
-            vsixIsPrerelease = $vsixIsPrerelease
-            releaseTag = "$serverName-$version"
-            cliName = $props.CliName
-            assemblyTitle = $props.AssemblyTitle
-            description = $props.Description
-            readmeUrl = $props.ReadmeUrl
-            readmePath = $props.ReadmePath | Get-RepoRelativePath -NormalizeSeparators
-            packageIcon = $props.PackageIcon | Get-RepoRelativePath -NormalizeSeparators
-            npmPackageName = $props.NpmPackageName
-            npmDescription = $props.NpmDescription
-            npmPackageKeywords = @($props.NpmPackageKeywords -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            dockerImageName = $props.DockerImageName
-            dockerDescription = $props.DockerDescription
-            dnxPackageId = $props.DnxPackageId
-            dnxDescription = $props.DnxDescription
-            dnxToolCommandName = $props.DnxToolCommandName
-            dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            pypiPackageName = $props.PypiPackageName
-            pypiDescription = $props.PypiDescription
-            pypiPackageKeywords = @($props.PypiPackageKeywords -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            platforms = $platforms
-            mcpRepositoryName = $props.McpRepositoryName
-            mcpbPlatforms = @($props.McpbPlatforms -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            serverJsonPath = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators
+            name                = $serverProject.BaseName
+            path                = $serverProject | Get-RepoRelativePath -NormalizeSeparators
+            artifactPath        = $serverName
+            version             = $version.ToString()
+            vsixVersion         = $vsixVersion
+            vsixIsPrerelease    = $vsixIsPrerelease
+            releaseTag          = "$serverName-$version"
+            cliName             = $props.CliName
+            assemblyTitle       = $props.AssemblyTitle
+            description         = $props.Description
+            readmeUrl           = $props.ReadmeUrl
+            readmePath          = $props.ReadmePath | Get-RepoRelativePath -NormalizeSeparators
+            packageIcon         = $props.PackageIcon | Get-RepoRelativePath -NormalizeSeparators
+            npmPackageName      = $props.NpmPackageName
+            npmDescription      = $props.NpmDescription
+            npmPackageKeywords  = Split-PropertyGroup $props.NpmPackageKeywords
+            dockerImageName     = $props.DockerImageName
+            dockerDescription   = $props.DockerDescription
+            dnxPackageId        = $props.DnxPackageId
+            dnxDescription      = $props.DnxDescription
+            dnxToolCommandName  = $props.DnxToolCommandName
+            dnxPackageTags      = Split-PropertyGroup $props.DnxPackageTags
+            pypiPackageName     = $props.PypiPackageName
+            pypiDescription     = $props.PypiDescription
+            pypiPackageKeywords = Split-PropertyGroup $props.PypiPackageKeywords
+            platforms           = $platforms
+            mcpRepositoryName   = $props.McpRepositoryName
+            mcpbPlatforms       = Split-PropertyGroup $props.McpbPlatforms
+            serverJsonPath      = $props.ServerJsonPath | Get-RepoRelativePath -NormalizeSeparators 
         }
     }
 
@@ -555,7 +632,7 @@ function Get-BuildMatrices {
         # Select-Object -Unique doesn't work here because we're working with hashtable
         | Sort-Object { "$($_.architecture)-$(!$_.native)-$($_.specialPurpose)" } -Descending -Unique  # x64 before arm64, non-native before native, non-special before special purpose
 
-        foreach($platform in $supportedPlatforms) {
+        foreach ($platform in $supportedPlatforms) {
             $arch = $platform.architecture
             $legName = $platform.name -replace '\W', '_' # e.g. linux-arm64 or windows-x64-native
 
@@ -568,13 +645,13 @@ function Get-BuildMatrices {
             # All other arm64 targets (windows-arm64, macos-arm64, linux-musl-arm64-docker) cross-compile on x64.
             $needsArm64Hardware = $os -eq 'linux' -and $arch -like '*arm64*' -and !$platform.specialPurpose
 
-            $pool = switch($os) {
+            $pool = switch ($os) {
                 'windows' { $windowsPool }
                 'linux' { if ($needsArm64Hardware) { $linuxArm64Pool } else { $linuxPool } }
                 'macos' { $macPool }
             }
 
-            $vmImage = switch($os) {
+            $vmImage = switch ($os) {
                 'windows' { $windowsVmImage }
                 'linux' { if ($needsArm64Hardware) { $linuxArm64VmImage } else { $linuxVmImage } }
                 'macos' { $macVmImage }
@@ -582,13 +659,12 @@ function Get-BuildMatrices {
 
             # we do not currently have a method to get an arm64 mac or windows agent at this time, so we will have to skip $runUnitTests for those platforms
             # if a set of unit tests exists, we should run them
-            $runUnitTests = !!($pathsToTest | Where-Object { $_.hasUnitTests })
+            $runUnitTests = !!($pathsToTest | Where-Object { $_.hasUnitTests -or $_.hasRecordedTests })
 
             # except for certain platforms
             if ($platform.native -or $platform.specialPurpose -or ($arch -like '*arm64*' -and $os -ne 'linux')) {
                 $runUnitTests = $false
             }
-            $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
             $publishCoverage = $runUnitTests -and -not ($arch -like '*arm64*')
 
             $hostArchitecture = if ($needsArm64Hardware) { 'Arm64' } else { '' }
@@ -600,20 +676,19 @@ function Get-BuildMatrices {
 
             $buildMatricesByArch[$architectureKey][$legName] = [ordered]@{
                 BuildPlatformName = $platform.name
-                Pool = $pool
-                OSVmImage = $vmImage
-                HostArchitecture = $hostArchitecture
-                RunUnitTests = $runUnitTests
-                RunRecordedTests = $runRecordedTests
-                PublishCoverage = $publishCoverage
+                Pool              = $pool
+                OSVmImage         = $vmImage
+                HostArchitecture  = $hostArchitecture
+                RunUnitTests      = $runUnitTests
+                PublishCoverage   = $publishCoverage
             }
 
-            if($runUnitTests) {
+            if ($runUnitTests) {
                 $smokeTestMatrix[$legName] = [ordered]@{
-                    Pool = $pool
-                    OSVmImage = $vmImage
+                    Pool             = $pool
+                    OSVmImage        = $vmImage
                     HostArchitecture = $hostArchitecture
-                    Architecture = $arch
+                    Architecture     = $arch
                 }
             }
         }
@@ -645,14 +720,14 @@ function Get-ServerMatrix {
         @{
             Architecture = 'amd64'
             PlatformName = 'linux-musl-x64-docker'
-            Pool = $linuxPool
-            VMImage = $linuxVmImage
+            Pool         = $linuxPool
+            VMImage      = $linuxVmImage
         }
         @{
             Architecture = 'arm64'
             PlatformName = 'linux-musl-arm64-docker'
-            Pool = $linuxArm64Pool
-            VMImage = $linuxArm64VmImage
+            Pool         = $linuxArm64Pool
+            VMImage      = $linuxArm64VmImage
         }
     )
 
@@ -667,18 +742,18 @@ function Get-ServerMatrix {
             $matrixKey = "$($server.name)_$($archConfig.Architecture)"
 
             $serverMatrix[$matrixKey] = [ordered]@{
-                ServerName = $server.name
-                CliName = $server.cliName
-                ArtifactPath = $server.artifactPath
-                Version = $server.version
-                ImageName = $imageName
+                ServerName     = $server.name
+                CliName        = $server.cliName
+                ArtifactPath   = $server.artifactPath
+                Version        = $server.version
+                ImageName      = $imageName
                 ExecutableName = $server.cliName + $executableExtension
                 DockerLocalTag = $imageName + ":" + $BuildId
                 # Docker build configuration
-                Platform = $archConfig.PlatformName
-                Architecture = $archConfig.Architecture
-                Pool = $archConfig.Pool
-                VMImage = $archConfig.VMImage
+                Platform       = $archConfig.PlatformName
+                Architecture   = $archConfig.Architecture
+                Pool           = $archConfig.Pool
+                VMImage        = $archConfig.VMImage
             }
         }
     }
@@ -699,22 +774,23 @@ try {
     $commitSha = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEVERSION') : (git rev-parse HEAD)
 
     if ($isPipelineRun) {
-        foreach($key in $matrices.Keys) {
+        foreach ($key in $matrices.Keys) {
             if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
                 if ($key -match 'BuildMatrices$') {
                     $emptyByArch = [ordered]@{}
-                    foreach($archKey in @('x64', 'arm64')) {
+                    foreach ($archKey in @('x64', 'arm64')) {
                         $emptyByArch[$archKey] = @{}
                     }
                     $matrices[$key] = $emptyByArch
-                } else {
+                }
+                else {
                     $matrices[$key] = @{}
                 }
             }
 
             $value = $matrices[$key]
             if ($key -match 'BuildMatrices$' -and $value -is [System.Collections.IDictionary]) {
-                foreach($subKey in $value.Keys) {
+                foreach ($subKey in $value.Keys) {
                     $subJson = $value[$subKey] | ConvertTo-Json -Compress
                     Write-Host "##vso[task.setvariable variable=${key}.${subKey};isOutput=true]$subJson"
                 }
@@ -726,15 +802,15 @@ try {
     }
 
     $buildInfo = [ordered]@{
-        buildId = $BuildId
-        publishTarget = $PublishTarget
+        buildId                  = $BuildId
+        publishTarget            = $PublishTarget
         dynamicPrereleaseVersion = $dynamicPrereleaseVersion
-        repositoryUrl = 'https://github.com/microsoft/mcp'
-        branch = $branch
-        commitSha = $commitSha
-        servers = $serverDetails
-        pathsToTest = $pathsToTest
-        matrices = $matrices
+        repositoryUrl            = 'https://github.com/microsoft/mcp'
+        branch                   = $branch
+        commitSha                = $commitSha
+        servers                  = $serverDetails
+        pathsToTest              = $pathsToTest
+        matrices                 = $matrices
     }
 
     Write-Host "Writing build info to $OutputPath"

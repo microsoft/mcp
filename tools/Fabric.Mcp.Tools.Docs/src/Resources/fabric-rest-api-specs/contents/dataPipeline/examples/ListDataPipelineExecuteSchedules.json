@@ -1,0 +1,47 @@
+{
+  "parameters": {
+    "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+    "dataPipelineId": "dddddddd-9999-0000-1111-eeeeeeeeeeee"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "bbbbbbbb-1111-2222-3333-cccccccccccc",
+            "enabled": true,
+            "createdDateTime": "2024-05-28T05:35:20.5366667",
+            "configuration": {
+              "startDateTime": "2026-03-28T00:00:00",
+              "endDateTime": "2026-03-30T23:59:00",
+              "localTimeZoneId": "Central Standard Time",
+              "type": "Cron",
+              "interval": 10
+            },
+            "owner": {
+              "id": "33dd33dd-ee44-ff55-aa66-77bb77bb77bb",
+              "type": "User"
+            }
+          },
+          {
+            "id": "cccccccc-2222-3333-4444-dddddddddddd",
+            "enabled": true,
+            "createdDateTime": "2024-05-28T05:35:20.5366667",
+            "configuration": {
+              "startDateTime": "2026-03-28T00:00:00",
+              "endDateTime": "2026-03-30T23:59:00",
+              "localTimeZoneId": "Central Standard Time",
+              "type": "Weekly",
+              "weekdays": ["Monday", "Tuesday"],
+              "times": ["18:09", "17:12"]
+            },
+            "owner": {
+              "id": "33dd33dd-ee44-ff55-aa66-77bb77bb77bb",
+              "type": "User"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

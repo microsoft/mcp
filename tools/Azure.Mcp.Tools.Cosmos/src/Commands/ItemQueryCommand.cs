@@ -1,89 +1,65 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.Mcp.Tools.Cosmos.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 
-public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseContainerCommand<ItemQueryOptions>()
+[CommandMetadata(
+    Id = "5c19a92a-4e0c-44dc-b1e7-5560a0d277b5",
+    Name = "query",
+    Title = "Query Cosmos DB Container",
+    Description = "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
+    : BaseCosmosCommand<ItemQueryOptions, ItemQueryCommand.ItemQueryCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Query Cosmos DB Container";
     private readonly ILogger<ItemQueryCommand> _logger = logger;
+    private readonly ICosmosService _cosmosService = cosmosService;
     private const string DefaultQuery = "SELECT * FROM c";
-    public override string Id => "5c19a92a-4e0c-44dc-b1e7-5560a0d277b5";
 
-    public override string Name => "query";
-
-    public override string Description =>
-    "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(ItemQueryOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(CosmosOptionDefinitions.Query);
-        command.Validators.Add(result =>
+        if (options.Query != null)
         {
-            var query = result.GetValueOrDefault<string>(CosmosOptionDefinitions.Query.Name);
-            if (query != null)
+            var result = CosmosQueryValidator.EnsureReadOnlySelect(options.Query);
+            if (!string.IsNullOrEmpty(result))
             {
-                var validationResult = CosmosQueryValidator.EnsureReadOnlySelect(query);
-                if (!string.IsNullOrEmpty(validationResult))
-                {
-                    result.AddError(validationResult);
-                }
+                validationResult.Errors.Add(result);
             }
-        });
-    }
-
-    protected override ItemQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Query.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemQueryOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var cosmosService = context.GetService<ICosmosService>();
             var queryToRun = options.Query ?? DefaultQuery;
 
-            var items = await cosmosService.QueryItems(
-                options.Account!,
-                options.Database!,
-                options.Container!,
+            var items = await _cosmosService.QueryItems(
+                options.Account,
+                options.Database,
+                options.Container,
                 queryToRun,
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(items ?? []), CosmosJsonContext.Default.ItemQueryCommandResult);
@@ -99,5 +75,5 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
         return context.Response;
     }
 
-    internal record ItemQueryCommandResult(List<JsonElement> Items);
+    public sealed record ItemQueryCommandResult(List<JsonElement> Items);
 }

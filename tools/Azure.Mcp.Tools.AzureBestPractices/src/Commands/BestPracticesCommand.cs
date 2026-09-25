@@ -1,112 +1,87 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions>
-{
-    private const string CommandTitle = "Get Azure Best Practices";
-    private readonly ILogger<BestPracticesCommand> _logger = logger;
-    private static readonly Dictionary<string, string> s_bestPracticesCache = new();
-
-    public override string Id => "ff12e8fb-f7ce-446a-884b-996dac118b83";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        @"This tool returns a list of best practices for code generation, operations and deployment
+[CommandMetadata(
+    Id = "ff12e8fb-f7ce-446a-884b-996dac118b83",
+    Name = "get",
+    Title = "Get Azure Best Practices",
+    Description = """
+        This tool returns a list of best practices for code generation, operations and deployment
         when working with Azure services. It should be called for any code generation, deployment or
         operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container
         Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,
         Azure App Services, or any other Azure technology or programming language. Only call this function
         when you are confident the user is discussing Azure. If this tool needs to be categorized,
-        it belongs to the Azure Best Practices category.";
+        it belongs to the Azure Best Practices category.
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger)
+    : BaseCommand<BestPracticesOptions, BestPracticesCommand.BestPracticesCommandResult>
+{
+    private readonly ILogger<BestPracticesCommand> _logger = logger;
+    private static readonly ConcurrentDictionary<string, string> s_bestPracticesCache = [];
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(BestPracticesOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        command.Options.Add(BestPracticesOptionDefinitions.Resource);
-        command.Options.Add(BestPracticesOptionDefinitions.Action);
-        command.Validators.Add(commandResult =>
+        if (string.IsNullOrWhiteSpace(options.Resource) || string.IsNullOrWhiteSpace(options.Action))
         {
-            commandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out string? resource);
-            commandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out string? action);
-
-            if (string.IsNullOrWhiteSpace(resource) || string.IsNullOrWhiteSpace(action))
-            {
-                commandResult.AddError("Both resource and action parameters are required.");
-            }
-            else
-            {
-                bool validResource = resource == "general" || resource == "azurefunctions" || resource == "static-web-app" || resource == "coding-agent";
-                bool validAction = action == "all" || action == "code-generation" || action == "deployment";
-
-                if (!validResource)
-                {
-                    commandResult.AddError("Invalid resource. Must be 'general', 'azurefunctions', 'static-web-app', or 'coding-agent'.");
-                }
-                if (!validAction)
-                {
-                    commandResult.AddError("Invalid action. Must be 'all', 'code-generation' or 'deployment'.");
-                }
-                if (resource == "static-web-app" && action != "all")
-                {
-                    commandResult.AddError("The 'static-web-app' resource only supports 'all' action.");
-                }
-                if (resource == "coding-agent" && action != "all")
-                {
-                    commandResult.AddError("The 'coding-agent' resource only supports 'all' action.");
-                }
-            }
-        });
-    }
-
-    protected override BestPracticesOptions BindOptions(ParseResult parseResult)
-    {
-        return new BestPracticesOptions
-        {
-            Resource = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Resource.Name),
-            Action = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Action.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
+            validationResult.Errors.Add("Both resource and action parameters are required.");
         }
+        else
+        {
+            bool validResource = options.Resource == "general" || options.Resource == "azurefunctions" || options.Resource == "static-web-app" || options.Resource == "coding-agent";
+            bool validAction = options.Action == "all" || options.Action == "code-generation" || options.Action == "deployment";
 
-        var options = BindOptions(parseResult);
+            if (!validResource)
+            {
+                validationResult.Errors.Add("Invalid resource. Must be 'general', 'azurefunctions', 'static-web-app', or 'coding-agent'.");
+            }
+            if (!validAction)
+            {
+                validationResult.Errors.Add("Invalid action. Must be 'all', 'code-generation' or 'deployment'.");
+            }
+            if (options.Resource == "static-web-app" && options.Action != "all")
+            {
+                validationResult.Errors.Add("The 'static-web-app' resource only supports 'all' action.");
+            }
+            if (options.Resource == "coding-agent" && options.Action != "all")
+            {
+                validationResult.Errors.Add("The 'coding-agent' resource only supports 'all' action.");
+            }
+        }
+    }
 
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, BestPracticesOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var resourceFileName = GetResourceFileName(options.Resource!, options.Action!);
+            var resourceFileName = GetResourceFileName(options.Resource, options.Action);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(
+                new([bestPractices]),
+                AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);
@@ -188,4 +163,6 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
         }
     }
+
+    public sealed record BestPracticesCommandResult(List<string> BestPractices);
 }

@@ -52,7 +52,7 @@ public sealed record FileShareDataSchema(
                 props.ProvisionedThroughputNextAllowedDowngradeOn?.DateTime,
                 props.IncludedBurstIOPerSec,
                 props.MaxBurstIOPerSecCredits,
-                props.NfsProtocolRootSquash != null ? new NfsProtocolPropertiesSchema(props.NfsProtocolRootSquash?.ToString()) : null,
+                props.NfsProtocolProperties != null ? new NfsProtocolPropertiesSchema(props.NfsProtocolProperties.RootSquash?.ToString(), props.NfsProtocolProperties.EncryptionInTransitRequired?.ToString()) : null,
                 props.PublicAccessAllowedSubnets?.Count > 0 ? new PublicAccessPropertiesSchema(props.PublicAccessAllowedSubnets.ToList()) : null,
                 props.ProvisioningState?.ToString(),
                 props.PublicNetworkAccess?.ToString(),
@@ -95,7 +95,8 @@ public sealed record FileSharePropertiesSchema(
 /// Represents NFS protocol-specific properties schema.
 /// </summary>
 public sealed record NfsProtocolPropertiesSchema(
-    [property: JsonPropertyName("rootSquash")] string? RootSquash = null);
+    [property: JsonPropertyName("rootSquash")] string? RootSquash = null,
+    [property: JsonPropertyName("encryptionInTransitRequired")] string? EncryptionInTransitRequired = null);
 
 /// <summary>
 /// Represents public access properties schema for a file share.

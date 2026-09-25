@@ -1,57 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
 /// A tool loader that creates MCP tools from the registered command factory.
-/// Exposes AzureMcp commands as MCP tools that can be invoked through the MCP protocol.
+/// Exposes MCP commands as MCP tools that can be invoked through the MCP protocol.
 /// </summary>
 public sealed class CommandFactoryToolLoader(
-    IServiceProvider serviceProvider,
     ICommandFactory commandFactory,
-    IOptions<ToolLoaderOptions> options,
+    IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly ICommandFactory _commandFactory = commandFactory;
-    private readonly IOptions<ToolLoaderOptions> _options = options;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
+    private bool StructuredOutputEnabled => _configuration.Value.StructuredOutputMode != null;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
-        (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
+        (configuration.Value.Namespace == null || configuration.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
-            : commandFactory.GroupCommands(options.Value.Namespace);
-
-    public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
-
-    private static bool IsRawMcpToolInputOption(Option option)
-    {
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        foreach (var alias in option.Aliases)
-        {
-            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+            : commandFactory.GroupCommands(configuration.Value.Namespace);
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -64,19 +46,19 @@ public sealed class CommandFactoryToolLoader(
         var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
 
         // Filter by specific tools if provided
-        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
             visibleCommands = visibleCommands.Where(kvp =>
             {
                 var toolKey = kvp.Key;
-                return _options.Value.Tool.Any(tool => tool.Contains(toolKey, StringComparison.OrdinalIgnoreCase));
+                return _configuration.Value.Tool.Any(tool => tool.Contains(toolKey, StringComparison.OrdinalIgnoreCase));
             });
         }
 
         var tools = visibleCommands
-            .Where(kvp => !_options.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
-            .Where(kvp => !_options.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
-            .Select(kvp => GetTool(kvp.Key, kvp.Value))
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
+            .Select(kvp => GetTool(kvp.Key, kvp.Value, StructuredOutputEnabled))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -94,7 +76,6 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>The result of the tool call operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -109,16 +90,21 @@ public sealed class CommandFactoryToolLoader(
             };
         }
 
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
+
         var toolName = request.Params.Name;
 
         // Check if tool filtering is enabled and validate the requested tool
-        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
-            if (!_options.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
+            if (!_configuration.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
             {
+                activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                    .SetTag(TagName.ToolName, TagConstants.Unknown);
                 var content = new TextContentBlock
                 {
-                    Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
+                    Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _configuration.Value.Tool.Select(t => $"'{t}'"))}",
                 };
 
                 return new CallToolResult
@@ -129,11 +115,11 @@ public sealed class CommandFactoryToolLoader(
             }
         }
 
-        var activity = Activity.Current?.SetTag(TagName.ToolName, toolName);
-
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
         {
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"Could not find command: {toolName}",
@@ -145,10 +131,18 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
-        activity?.SetTag(TagName.ToolId, command.Id);
+
+        var serviceArea = _commandFactory.GetServiceArea(toolName);
+
+        // serviceArea shouldn't be null here, but safe guard just in case.
+        activity?.SetTag(TagName.ToolArea, serviceArea ?? TagConstants.Unknown)
+            .SetTag(TagName.ToolName, toolName)
+            .SetTag(TagName.ToolId, command.Id)
+            .SetTag(TagName.ToolSource, "internal")
+            .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(command));
 
         // Enforce read-only mode at execution time
-        if (_options.Value.ReadOnly && !command.Metadata.ReadOnly)
+        if (_configuration.Value.ReadOnly && !command.Metadata.ReadOnly)
         {
             var content = new TextContentBlock
             {
@@ -159,11 +153,12 @@ public sealed class CommandFactoryToolLoader(
             {
                 Content = [content],
                 IsError = true,
+                Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
             };
         }
 
         // Enforce HTTP mode restrictions at execution time
-        if (_options.Value.IsHttpMode && command.Metadata.LocalRequired)
+        if (_configuration.Value.IsHttpMode && command.Metadata.LocalRequired)
         {
             var content = new TextContentBlock
             {
@@ -174,18 +169,22 @@ public sealed class CommandFactoryToolLoader(
             {
                 Content = [content],
                 IsError = true,
+                Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
             };
         }
 
-        var commandContext = new CommandContext(_serviceProvider, activity);
+        var commandContext = new CommandContext(activity)
+        {
+            McpServer = request.Server,
+            ProgressToken = request.Params.ProgressToken
+        };
 
         // Check if this tool requires elicitation for sensitive or destructive operations
-        var metadata = command.Metadata;
         var elicitationResult = await HandleElicitationAsync(
             request,
             toolName,
-            metadata,
-            _options.Value.DangerouslyDisableElicitation,
+            command,
+            _configuration.Value.DangerouslyDisableElicitation,
             _logger,
             cancellationToken);
 
@@ -197,39 +196,50 @@ public sealed class CommandFactoryToolLoader(
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
+        var effectiveOptions = realCommand.Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
+
+        if (effectiveOptions.Count == 1 && IsRawMcpToolInputOption(effectiveOptions[0]))
         {
             commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
         else
         {
-            commandOptions = realCommand.ParseFromDictionary(request.Params.Arguments);
+            if (!realCommand.TryParseFromDictionary(request.Params.Arguments, out commandOptions, out var parseErrors))
+            {
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = parseErrors!,
+                        }
+                    ],
+                    IsError = true,
+                    Meta = new([new(McpHelper.ToolIdMetaKey, command.Id)])
+                };
+            }
         }
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);
 
-        if (commandContext.Activity != null)
-        {
-            var serviceArea = _commandFactory.GetServiceArea(toolName);
-            commandContext.Activity.SetTag(TagName.ToolArea, serviceArea);
-        }
-
         try
         {
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
-            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, cancellationToken);
-            var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
+            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            return new CallToolResult
-            {
-                Content = [
-                    new TextContentBlock {
-                        Text = jsonResponse
-                    }
-                ],
-                IsError = isError
-            };
+            var callToolResult = StructuredOutputHelper.CreateCallToolResult(
+                _configuration.Value.StructuredOutputMode,
+                () => JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse),
+                command.ResultTypeInfo is null
+                    ? null
+                    : () => StructuredOutputHelper.TryBuildStructuredContent(commandResponse.Results),
+                isError);
+
+            return McpHelper.InjectToolIdMetadata(callToolResult, command.Id);
         }
         catch (Exception ex)
         {
@@ -248,7 +258,10 @@ public sealed class CommandFactoryToolLoader(
     /// <param name="fullName">The full name of the command.</param>
     /// <param name="command">The command to convert.</param>
     /// <returns>An MCP tool definition.</returns>
-    private static Tool GetTool(string fullName, IBaseCommand command)
+    private static Tool GetTool(
+        string fullName,
+        IBaseCommand command,
+        bool structuredOutputEnabled)
     {
         var underlyingCommand = command.GetCommand();
         var tool = new Tool
@@ -268,47 +281,37 @@ public sealed class CommandFactoryToolLoader(
             Title = command.Title,
         };
 
-        JsonObject? meta = null;
+        JsonObject meta = [new(McpHelper.ToolIdMetaKey, command.Id)];
         // Add Secret metadata to tool.Meta if the property exists
         if (metadata.Secret)
         {
-            meta ??= new();
-            meta["SecretHint"] = metadata.Secret;
+            meta[McpHelper.SecretHintMetaKey] = metadata.Secret;
         }
         // Add LocalRequired metadata to tool.Meta if the property exists
         if (metadata.LocalRequired)
         {
-            meta ??= new();
-            meta["LocalRequiredHint"] = metadata.LocalRequired;
+            meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
         }
         tool.Meta = meta;
 
-        var options = command.GetCommand().Options;
-
-        var schema = new ToolInputSchema();
-
-        if (options != null && options.Count > 0)
+        var resultTypeInfo = structuredOutputEnabled
+            ? command.ResultTypeInfo
+            : null;
+        if (resultTypeInfo != null)
         {
-            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
-            {
-                var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
-                tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
-                return tool;
-            }
-            else
-            {
-                foreach (var option in options)
-                {
-                    // Use the CreatePropertySchema method to properly handle array types with items
-                    var propName = NameNormalization.NormalizeOptionName(option.Name);
-                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
-                }
-
-                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
-            }
+            var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo);
+            tool.OutputSchema = JsonSerializer.SerializeToElement(outputSchema, ServerJsonContext.Default.JsonObject);
         }
 
-        tool.InputSchema = JsonSerializer.SerializeToElement(schema, ServerJsonContext.Default.ToolInputSchema);
+        var options = command.GetCommand().Options
+            .Where(o => !CommandFactory.IsLearnOption(o))
+            .ToList();
+
+        var inputSchema = options.Count == 1 && IsRawMcpToolInputOption(options[0])
+            ? JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? []
+            : OptionSchemaGenerator.CreateInputSchema(options);
+
+        tool.InputSchema = JsonSerializer.SerializeToElement(inputSchema, ServerJsonContext.Default.JsonObject);
 
         return tool;
     }

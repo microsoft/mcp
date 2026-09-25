@@ -2,104 +2,66 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Compute.Models;
-using Azure.Mcp.Tools.Compute.Options;
 using Azure.Mcp.Tools.Compute.Options.Vm;
 using Azure.Mcp.Tools.Compute.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Compute.Commands.Vm;
 
-public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
-    : BaseComputeCommand<VmUpdateOptions>(true)
-{
-    private const string CommandTitle = "Update Virtual Machine";
-    private readonly ILogger<VmUpdateCommand> _logger = logger;
-
-    public override string Id => "f330138e-8048-4a4a-8170-d8b6f958eaa4";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Update, modify, or reconfigure an existing Azure Virtual Machine (VM).
-        Use this to resize a VM, update tags, configure boot diagnostics, or change user data.
+[CommandMetadata(
+    Id = "f330138e-8048-4a4a-8170-d8b6f958eaa4",
+    Name = "update",
+    Title = "Update Virtual Machine",
+    Description = """
+        Update, modify, or reconfigure an existing Azure Virtual Machine (VM) configuration.
+        Use this to add or change tags on a VM, resize a VM to a different size, enable or configure boot diagnostics, or update user data.
         Equivalent to 'az vm update'. The VM may need to be deallocated before resizing to certain sizes.
+        Do not use this to change VM power state (start, stop, deallocate, restart); use VM power-state instead.
         Do not use this to create a new VM (use VM create) or to update Virtual Machine Scale Sets (use VMSS update).
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger, IComputeService computeService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VmUpdateOptions, VmUpdateCommand.VmUpdateCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<VmUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IComputeService _computeService = computeService ?? throw new ArgumentNullException(nameof(computeService));
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(VmUpdateOptions options, ValidationResult validationResult)
     {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-
-        // Required options
-        command.Options.Add(ComputeOptionDefinitions.VmName.AsRequired());
-
-        // Update options (at least one required - validated in command)
-        command.Options.Add(ComputeOptionDefinitions.VmSize);
-        command.Options.Add(ComputeOptionDefinitions.Tags);
-        command.Options.Add(ComputeOptionDefinitions.LicenseType);
-        command.Options.Add(ComputeOptionDefinitions.BootDiagnostics);
-        command.Options.Add(ComputeOptionDefinitions.UserData);
-
-        // Resource group is required for update
-        command.Validators.Add(commandResult =>
+        // Custom validation: At least one update property must be specified.
+        // Note: Tags may be an empty string ("") to clear all tags — use GetResult to detect
+        // whether the option was explicitly passed even with an empty value, since HasOptionResult
+        // returns false for empty-string tokens.
+        if (string.IsNullOrEmpty(options.VmSize) &&
+            options.Tags == null &&
+            string.IsNullOrEmpty(options.LicenseType) &&
+            options.BootDiagnostics == null &&
+            string.IsNullOrEmpty(options.UserData))
         {
-            // Custom validation: At least one update property must be specified
-            if (string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name)) &&
-                string.IsNullOrEmpty(commandResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name)))
-            {
-                commandResult.AddError("At least one update property must be specified: --vm-size, --tags, --license-type, --boot-diagnostics, or --user-data.");
-            }
-        });
-    }
-
-    protected override VmUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VmName = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmName.Name);
-        options.VmSize = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.VmSize.Name);
-        options.Tags = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.Tags.Name);
-        options.LicenseType = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.LicenseType.Name);
-        options.BootDiagnostics = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.BootDiagnostics.Name);
-        options.UserData = parseResult.GetValueOrDefault<string>(ComputeOptionDefinitions.UserData.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("At least one update property must be specified: --vm-size, --tags, --license-type, --boot-diagnostics, or --user-data.");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
-        var computeService = context.GetService<IComputeService>();
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VmUpdateOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             context.Activity?.AddTag("subscription", options.Subscription);
 
-            var result = await computeService.UpdateVmAsync(
+            var result = await _computeService.UpdateVmAsync(
                 options.VmName!,
                 options.ResourceGroup!,
                 options.Subscription!,
@@ -109,7 +71,6 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
                 options.BootDiagnostics,
                 options.UserData,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), ComputeJsonContext.Default.VmUpdateCommandResult);
@@ -139,5 +100,5 @@ public sealed class VmUpdateCommand(ILogger<VmUpdateCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VmUpdateCommandResult(VmUpdateResult Vm);
+    public sealed record VmUpdateCommandResult(VmUpdateResult Vm);
 }

@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "createWorkloadAssignmentRequest": {
+      "type": "Tenant",
+      "workloadId": "Fabric.SampleWorkloadV2"
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "id": "07f7c957-9942-442d-83d9-d6a0f317c1c5",
+        "type": "Tenant",
+        "workloadId": "Fabric.SampleWorkloadV2"
+      }
+    }
+  }
+}

@@ -3,8 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Utilities;
 using Azure.ResourceManager;
@@ -13,35 +11,55 @@ using Azure.ResourceManager.Compute.Models;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
 public class ComputeService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<ComputeService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IComputeService
+    IAzureService azureService,
+    ILogger<ComputeService> logger,
+    IOptions<ServerRuntimeConfiguration> configuration)
+    : BaseAzureResourceService(azureService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
 
-    // Default VM size matching Azure CLI (az vm create --size default)
-    private const string DefaultVmSize = "Standard_DS1_v2";
+    // Default VM size (D-series v5, approximately 2 vCPU and 8 GB RAM)
+    private const string DefaultVmSize = "Standard_D2s_v5";
 
-    private static readonly Dictionary<string, (string Publisher, string Offer, string Sku, string Version)> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
+    private sealed record ImageSource
     {
-        ["Ubuntu2404"] = ("Canonical", "ubuntu-24_04-lts", "server", "latest"),
-        ["Ubuntu2204"] = ("Canonical", "0001-com-ubuntu-server-jammy", "22_04-lts-gen2", "latest"),
-        ["Ubuntu2004"] = ("Canonical", "0001-com-ubuntu-server-focal", "20_04-lts-gen2", "latest"),
-        ["Debian11"] = ("Debian", "debian-11", "11-gen2", "latest"),
-        ["Debian12"] = ("Debian", "debian-12", "12-gen2", "latest"),
-        ["RHEL9"] = ("RedHat", "RHEL", "9_0", "latest"),
-        ["CentOS8"] = ("OpenLogic", "CentOS", "8_5-gen2", "latest"),
-        ["Win2022Datacenter"] = ("MicrosoftWindowsServer", "WindowsServer", "2022-datacenter-g2", "latest"),
-        ["Win2019Datacenter"] = ("MicrosoftWindowsServer", "WindowsServer", "2019-datacenter-gensecond", "latest"),
-        ["Win11Pro"] = ("MicrosoftWindowsDesktop", "windows-11", "win11-22h2-pro", "latest"),
-        ["Win10Pro"] = ("MicrosoftWindowsDesktop", "Windows-10", "win10-22h2-pro-g2", "latest")
+        public string? Publisher { get; init; }
+        public string? Offer { get; init; }
+        public string? Sku { get; init; }
+        public string? Version { get; init; }
+        public string? SharedGalleryImageUniqueId { get; init; }
+
+        public bool IsSharedGallery => SharedGalleryImageUniqueId != null;
+
+        public static ImageSource FromMarketplace(string publisher, string offer, string sku, string version) =>
+            new() { Publisher = publisher, Offer = offer, Sku = sku, Version = version };
+
+        public static ImageSource FromSharedGallery(string sharedGalleryImageUniqueId) =>
+            new() { SharedGalleryImageUniqueId = sharedGalleryImageUniqueId };
+    }
+
+    private static readonly Dictionary<string, ImageSource> s_imageAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Ubuntu2604"] = ImageSource.FromMarketplace("Canonical", "ubuntu-26_04-lts", "server", "latest"),
+        ["Ubuntu2404"] = ImageSource.FromMarketplace("Canonical", "ubuntu-24_04-lts", "server", "latest"),
+        ["Ubuntu2204"] = ImageSource.FromMarketplace("Canonical", "0001-com-ubuntu-server-jammy", "22_04-lts-gen2", "latest"),
+        ["Debian11"] = ImageSource.FromMarketplace("Debian", "debian-11", "11-gen2", "latest"),
+        ["Debian12"] = ImageSource.FromMarketplace("Debian", "debian-12", "12-gen2", "latest"),
+        ["RHEL9"] = ImageSource.FromMarketplace("RedHat", "RHEL", "9_0", "latest"),
+        ["CentOS8"] = ImageSource.FromMarketplace("OpenLogic", "CentOS", "8_5-gen2", "latest"),
+        ["Win2022Datacenter"] = ImageSource.FromMarketplace("MicrosoftWindowsServer", "WindowsServer2022", "2022-datacenter-azure-edition", "latest"),
+        ["Win2022Datacenter1P"] = ImageSource.FromSharedGallery("/sharedGalleries/WINDOWSSERVER.1P/images/2022-DATACENTER-AZURE-EDITION/versions/latest"),
+        ["Win11Pro"] = ImageSource.FromMarketplace("MicrosoftWindowsDesktop", "windows-11", "win11-22h2-pro", "latest"),
+        ["Win10Pro"] = ImageSource.FromMarketplace("MicrosoftWindowsDesktop", "Windows-10", "win10-22h2-pro-g2", "latest")
     };
 
     public async Task<VmCreateResult> CreateVmAsync(
@@ -65,10 +83,9 @@ public class ComputeService(
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -78,7 +95,7 @@ public class ComputeService(
         // Determine OS type
         var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
-        // Use Azure CLI default VM size (Standard_DS1_v2) when not specified
+        // Use default VM size (Standard_D2s_v5) when not specified
         var effectiveVmSize = vmSize ?? DefaultVmSize;
 
         // Determine disk settings - let Azure choose disk type based on VM size when not specified
@@ -86,8 +103,8 @@ public class ComputeService(
         // Only use explicit disk size if provided; otherwise let Azure use image's default size
         var effectiveOsDiskSizeGb = osDiskSizeGb;
 
-        // Parse image
-        var (publisher, offer, sku, version) = ParseImage(image);
+        // Parse image (required for VM create)
+        var imageSource = ParseImage(image!);
 
         // Create or get network resources
         var nicId = await CreateOrGetNetworkResourcesAsync(
@@ -119,13 +136,7 @@ public class ComputeService(
                     ManagedDisk = new(),
                     DiskSizeGB = effectiveOsDiskSizeGb
                 },
-                ImageReference = new()
-                {
-                    Publisher = publisher,
-                    Offer = offer,
-                    Sku = sku,
-                    Version = version
-                }
+                ImageReference = CreateImageReference(imageSource)
             },
             OSProfile = new()
             {
@@ -172,10 +183,7 @@ public class ComputeService(
             // Only add SSH key if explicitly provided
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                // Check if it's a file path
-                var resolvedSshKey = File.Exists(sshPublicKey)
-                    ? File.ReadAllText(sshPublicKey).Trim()
-                    : sshPublicKey;
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
 
                 vmData.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -203,10 +211,11 @@ public class ComputeService(
         // Create the VM
         var vmCollection = resourceGroupResource.GetVirtualMachines();
         var vmOperation = await vmCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             vmName,
             vmData,
             cancellationToken);
+        await WaitForLroCompletionAsync(vmOperation, cancellationToken);
 
         var createdVm = vmOperation.Value;
 
@@ -229,12 +238,11 @@ public class ComputeService(
             Tags: createdVm.Data.Tags as IReadOnlyDictionary<string, string>);
     }
 
-    private static (string Publisher, string Offer, string Sku, string Version) ParseImage(string? image)
+    private static ImageSource ParseImage(string image)
     {
-        // Default to Ubuntu 24.04 LTS
         if (string.IsNullOrEmpty(image))
         {
-            return s_imageAliases["Ubuntu2404"];
+            throw new ArgumentException("An image must be specified. Provide an alias (e.g., 'Ubuntu2404', 'Win2022Datacenter'), a Marketplace URN ('publisher:offer:sku:version'), or a shared gallery image ID (starting with '/sharedGalleries/').", nameof(image));
         }
 
         // Check if it's an alias
@@ -243,15 +251,36 @@ public class ComputeService(
             return aliasConfig;
         }
 
+        // Check if it's a shared gallery image URI
+        if (image.StartsWith("/sharedGalleries/", StringComparison.OrdinalIgnoreCase))
+        {
+            return ImageSource.FromSharedGallery(image);
+        }
+
         // Try to parse as URN (publisher:offer:sku:version)
         var parts = image.Split(':');
         if (parts.Length == 4)
         {
-            return (parts[0], parts[1], parts[2], parts[3]);
+            return ImageSource.FromMarketplace(parts[0], parts[1], parts[2], parts[3]);
         }
 
-        // Default fallback
-        return s_imageAliases["Ubuntu2404"];
+        throw new ArgumentException($"Unrecognized image '{image}'. Provide a known alias, a Marketplace URN ('publisher:offer:sku:version'), or a shared gallery image ID (starting with '/sharedGalleries/').", nameof(image));
+    }
+
+    private static ImageReference CreateImageReference(ImageSource source)
+    {
+        if (source.IsSharedGallery)
+        {
+            return new() { SharedGalleryImageUniqueId = source.SharedGalleryImageUniqueId };
+        }
+
+        return new()
+        {
+            Publisher = source.Publisher,
+            Offer = source.Offer,
+            Sku = source.Sku,
+            Version = source.Version
+        };
     }
 
     private async Task<ResourceIdentifier> CreateOrGetNetworkResourcesAsync(
@@ -336,10 +365,11 @@ public class ComputeService(
             }
 
             var nsgOperation = await nsgCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 nsgName,
                 nsgData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(nsgOperation, cancellationToken);
             nsgResource = nsgOperation.Value;
         }
 
@@ -367,10 +397,11 @@ public class ComputeService(
             });
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 vnetName,
                 vnetData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
             vnetResource = vnetOperation.Value;
         }
 
@@ -403,10 +434,11 @@ public class ComputeService(
                 };
 
                 var pipOperation = await pipCollection.CreateOrUpdateAsync(
-                    WaitUntil.Completed,
+                    WaitUntil.Started,
                     pipName,
                     pipData,
                     cancellationToken);
+                await WaitForLroCompletionAsync(pipOperation, cancellationToken);
                 publicIpResource = pipOperation.Value;
             }
         }
@@ -434,10 +466,11 @@ public class ComputeService(
         nicData.IPConfigurations.Add(ipConfig);
 
         var nicOperation = await nicCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             nicName,
             nicData,
             cancellationToken);
+        await WaitForLroCompletionAsync(nicOperation, cancellationToken);
 
         return nicOperation.Value.Id;
     }
@@ -477,10 +510,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -497,10 +529,9 @@ public class ComputeService(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -530,10 +561,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -553,10 +583,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -578,10 +607,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -598,10 +626,9 @@ public class ComputeService(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -631,10 +658,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -659,10 +685,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -698,10 +723,9 @@ public class ComputeService(
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -711,7 +735,7 @@ public class ComputeService(
         // Determine OS type
         var effectiveOsType = ComputeUtilities.DetermineOsType(osType, image);
 
-        // Use Azure CLI default VM size (Standard_DS1_v2) when not specified
+        // Use default VM size (Standard_D2s_v5) when not specified
         var effectiveVmSize = vmSize ?? DefaultVmSize;
 
         // Determine disk settings - let Azure choose disk type based on VM size when not specified
@@ -720,8 +744,8 @@ public class ComputeService(
         var effectiveInstanceCount = instanceCount ?? 2;
         var effectiveUpgradePolicy = ParseUpgradePolicy(upgradePolicy);
 
-        // Parse image
-        var (publisher, offer, sku, version) = ParseImage(image);
+        // Parse image - required, no default
+        var imageSource = ParseImage(image!);
 
         // Create or get network resources for VMSS
         var subnetId = await CreateOrGetVmssNetworkResourcesAsync(
@@ -756,13 +780,7 @@ public class ComputeService(
                         ManagedDisk = new(),
                         DiskSizeGB = effectiveOsDiskSizeGb
                     },
-                    ImageReference = new()
-                    {
-                        Publisher = publisher,
-                        Offer = offer,
-                        Sku = sku,
-                        Version = version
-                    }
+                    ImageReference = CreateImageReference(imageSource)
                 },
                 OSProfile = new()
                 {
@@ -816,9 +834,7 @@ public class ComputeService(
 
             if (!string.IsNullOrEmpty(sshPublicKey))
             {
-                var resolvedSshKey = File.Exists(sshPublicKey)
-                    ? File.ReadAllText(sshPublicKey).Trim()
-                    : sshPublicKey;
+                var resolvedSshKey = ResolveSshPublicKey(sshPublicKey);
 
                 vmssData.VirtualMachineProfile.OSProfile.LinuxConfiguration.SshPublicKeys.Add(new()
                 {
@@ -843,10 +859,11 @@ public class ComputeService(
         // Create the VMSS
         var vmssCollection = resourceGroupResource.GetVirtualMachineScaleSets();
         var vmssOperation = await vmssCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+            WaitUntil.Started,
             vmssName,
             vmssData,
             cancellationToken);
+        await WaitForLroCompletionAsync(vmssOperation, cancellationToken);
 
         var createdVmss = vmssOperation.Value;
 
@@ -875,10 +892,9 @@ public class ComputeService(
         string? scaleInPolicy = null,
         string? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -938,14 +954,22 @@ public class ComputeService(
 
         if (tags != null)
         {
-            // Parse tags in key=value,key2=value2 format
-            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var pair in tagPairs)
+            if (string.IsNullOrEmpty(tags))
             {
-                var keyValue = pair.Split('=', 2);
-                if (keyValue.Length == 2)
+                // Empty string explicitly clears all existing tags
+                patch.Tags.Clear();
+            }
+            else
+            {
+                // Parse tags in key=value,key2=value2 format
+                var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var pair in tagPairs)
                 {
-                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    var keyValue = pair.Split('=', 2);
+                    if (keyValue.Length == 2)
+                    {
+                        patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    }
                 }
             }
             needsUpdate = true;
@@ -954,9 +978,10 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmssResource.UpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 patch,
                 cancellationToken: cancellationToken);
+            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
             vmssResource = updateOperation.Value;
         }
 
@@ -982,10 +1007,9 @@ public class ComputeService(
         string? bootDiagnostics = null,
         string? userData = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1015,9 +1039,11 @@ public class ComputeService(
 
         if (bootDiagnostics != null)
         {
-            var enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
-                          bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase);
-            patch.BootDiagnostics = new() { Enabled = enabled };
+            patch.BootDiagnostics = new()
+            {
+                Enabled = bootDiagnostics.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                    bootDiagnostics.Equals("enable", StringComparison.OrdinalIgnoreCase)
+            };
             needsUpdate = true;
         }
 
@@ -1029,14 +1055,22 @@ public class ComputeService(
 
         if (tags != null)
         {
-            // Parse tags in key=value,key2=value2 format
-            var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var pair in tagPairs)
+            if (string.IsNullOrEmpty(tags))
             {
-                var keyValue = pair.Split('=', 2);
-                if (keyValue.Length == 2)
+                // Empty string explicitly clears all existing tags
+                patch.Tags.Clear();
+            }
+            else
+            {
+                // Parse tags in key=value,key2=value2 format
+                var tagPairs = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var pair in tagPairs)
                 {
-                    patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    var keyValue = pair.Split('=', 2);
+                    if (keyValue.Length == 2)
+                    {
+                        patch.Tags[keyValue[0].Trim()] = keyValue[1].Trim();
+                    }
                 }
             }
             needsUpdate = true;
@@ -1045,9 +1079,10 @@ public class ComputeService(
         if (needsUpdate)
         {
             var updateOperation = await vmResource.UpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 patch,
                 cancellationToken: cancellationToken);
+            await WaitForLroCompletionAsync(updateOperation, cancellationToken);
             vmResource = updateOperation.Value;
         }
 
@@ -1086,10 +1121,9 @@ public class ComputeService(
         string subscription,
         bool? forceDeletion = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1102,7 +1136,8 @@ public class ComputeService(
         {
             var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
             var vmResource = vmResponse.Value;
-            await vmResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
+            var deleteOperation = await vmResource.DeleteAsync(WaitUntil.Started, forceDeletion, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -1112,16 +1147,75 @@ public class ComputeService(
         }
     }
 
+    public async Task<VmPowerStateResult> ChangeVmPowerStateAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string powerAction,
+        bool noWait = false,
+        bool skipShutdown = false,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var subscriptionResource = armClient.GetSubscriptionResource(
+            SubscriptionResource.CreateResourceIdentifier(subscription));
+
+        var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var resourceGroupResource = rgResource.Value;
+
+        var vmCollection = resourceGroupResource.GetVirtualMachines();
+        var vmResponse = await vmCollection.GetAsync(vmName, cancellationToken: cancellationToken);
+        var vmResource = vmResponse.Value;
+
+        ArmOperation operation = powerAction.ToLowerInvariant() switch
+        {
+            "start" => await vmResource.PowerOnAsync(WaitUntil.Started, cancellationToken),
+            "stop" => await vmResource.PowerOffAsync(WaitUntil.Started, skipShutdown, cancellationToken),
+            "deallocate" => await vmResource.DeallocateAsync(WaitUntil.Started, cancellationToken: cancellationToken),
+            "restart" => await vmResource.RestartAsync(WaitUntil.Started, cancellationToken),
+            _ => throw new ArgumentException($"Invalid power action '{powerAction}'. Accepted values: start, stop, deallocate, restart.", nameof(powerAction))
+        };
+
+        if (!noWait)
+        {
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+
+        var completed = !noWait;
+
+        // When --no-wait is used, surface the ARM long-running-operation tracking URL so callers
+        // can poll the status of the specific power-state request. Prefer Azure-AsyncOperation
+        // (returns a status document with InProgress/Succeeded/Failed) and fall back to Location.
+        string? statusUri = null;
+        if (noWait)
+        {
+            var rawResponse = operation.GetRawResponse();
+            if (rawResponse?.Headers != null &&
+                !rawResponse.Headers.TryGetValue("Azure-AsyncOperation", out statusUri))
+            {
+                rawResponse.Headers.TryGetValue("Location", out statusUri);
+            }
+        }
+
+        var message = completed
+            ? $"Virtual machine '{vmName}' {powerAction} operation completed successfully."
+            : statusUri is not null
+                ? $"Virtual machine '{vmName}' {powerAction} operation initiated. Poll 'statusUri' to track completion."
+                : $"Virtual machine '{vmName}' {powerAction} operation initiated. Use instance view to check status.";
+
+        return new VmPowerStateResult(vmName, vmResource.Id.ToString(), resourceGroup, powerAction, message, completed, statusUri);
+    }
+
     public async Task<bool> DeleteVmssAsync(
         string vmssName,
         string resourceGroup,
         string subscription,
         bool? forceDeletion = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
 
@@ -1134,7 +1228,8 @@ public class ComputeService(
         {
             var vmssResponse = await vmssCollection.GetAsync(vmssName, cancellationToken: cancellationToken);
             var vmssResource = vmssResponse.Value;
-            await vmssResource.DeleteAsync(WaitUntil.Completed, forceDeletion, cancellationToken);
+            var deleteOperation = await vmssResource.DeleteAsync(WaitUntil.Started, forceDeletion, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
             return true;
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
@@ -1207,10 +1302,11 @@ public class ComputeService(
             };
 
             var vnetOperation = await vnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 vnetName,
                 vnetData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(vnetOperation, cancellationToken);
             vnetResource = vnetOperation.Value;
         }
 
@@ -1231,10 +1327,11 @@ public class ComputeService(
             };
 
             var subnetOperation = await subnetCollection.CreateOrUpdateAsync(
-                WaitUntil.Completed,
+                WaitUntil.Started,
                 subnetName,
                 subnetData,
                 cancellationToken);
+            await WaitForLroCompletionAsync(subnetOperation, cancellationToken);
             subnetResource = subnetOperation.Value;
         }
 
@@ -1937,10 +2034,9 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
@@ -1953,12 +2049,11 @@ public class ComputeService(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 SubscriptionResource.CreateResourceIdentifier(subscription));
             var disks = new List<DiskInfo>();
@@ -2037,7 +2132,7 @@ public class ComputeService(
         string? hyperVGeneration = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
@@ -2051,10 +2146,9 @@ public class ComputeService(
         long? uploadSizeBytes = null,
         string? securityType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
         var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
@@ -2062,21 +2156,21 @@ public class ComputeService(
         // Default to the resource group's location if not specified
         var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
 
-        var creationData = CreateDiskCreationData(source, TenantService.CloudConfiguration.ArmEnvironment, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
+        var creationData = CreateDiskCreationData(source, AzureService.CloudConfiguration.ArmEnvironment, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
 
-        var diskData = new ManagedDiskData(new Azure.Core.AzureLocation(resolvedLocation))
+        var diskData = new ManagedDiskData(new(resolvedLocation))
         {
-            CreationData = creationData
+            CreationData = creationData,
+            DiskSizeGB = sizeGb,
+            MaxShares = maxShares,
+            BurstingEnabled = enableBursting,
+            DiskIopsReadWrite = diskIopsReadWrite,
+            DiskMBpsReadWrite = diskMbpsReadWrite
         };
-
-        if (sizeGb.HasValue)
-        {
-            diskData.DiskSizeGB = sizeGb.Value;
-        }
 
         if (!string.IsNullOrEmpty(sku))
         {
-            diskData.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
+            diskData.Sku = new() { Name = new(sku) };
         }
 
         if (!string.IsNullOrEmpty(osType))
@@ -2102,22 +2196,12 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(hyperVGeneration))
         {
-            diskData.HyperVGeneration = new HyperVGeneration(hyperVGeneration);
-        }
-
-        if (maxShares.HasValue)
-        {
-            diskData.MaxShares = maxShares.Value;
+            diskData.HyperVGeneration = new(hyperVGeneration);
         }
 
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
-            diskData.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
-        }
-
-        if (!string.IsNullOrEmpty(enableBursting))
-        {
-            diskData.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
+            diskData.NetworkAccessPolicy = new(networkAccessPolicy);
         }
 
         if (tags is not null)
@@ -2138,21 +2222,21 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
         {
-            diskData.Encryption ??= new DiskEncryption();
+            diskData.Encryption ??= new();
             if (!string.IsNullOrEmpty(diskEncryptionSet))
             {
-                diskData.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+                diskData.Encryption.DiskEncryptionSetId = new(diskEncryptionSet);
             }
 
             if (!string.IsNullOrEmpty(encryptionType))
             {
-                diskData.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+                diskData.Encryption.EncryptionType = new(encryptionType);
             }
         }
 
         if (!string.IsNullOrEmpty(diskAccessId))
         {
-            diskData.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+            diskData.DiskAccessId = new(diskAccessId);
         }
 
         if (!string.IsNullOrEmpty(tier))
@@ -2160,30 +2244,21 @@ public class ComputeService(
             diskData.Tier = tier;
         }
 
-        if (diskIopsReadWrite.HasValue)
-        {
-            diskData.DiskIopsReadWrite = diskIopsReadWrite.Value;
-        }
-
-        if (diskMbpsReadWrite.HasValue)
-        {
-            diskData.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
-        }
-
         if (!string.IsNullOrEmpty(securityType))
         {
-            diskData.SecurityProfile = new DiskSecurityProfile
+            diskData.SecurityProfile = new()
             {
-                SecurityType = new DiskSecurityType(securityType)
+                SecurityType = new(securityType)
             };
         }
 
         _logger.LogInformation("Creating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
 
-        var result = await rgResource.Value.GetManagedDisks()
-            .CreateOrUpdateAsync(Azure.WaitUntil.Completed, diskName, diskData, cancellationToken);
+        var createOperation = await rgResource.Value.GetManagedDisks()
+            .CreateOrUpdateAsync(WaitUntil.Started, diskName, diskData, cancellationToken);
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
-        return ConvertToDiskModel(result.Value, resourceGroup);
+        return ConvertToDiskModel(createOperation.Value, resourceGroup);
     }
 
     public async Task<DiskInfo> UpdateDiskAsync(
@@ -2196,57 +2271,38 @@ public class ComputeService(
         long? diskMbpsReadWrite = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
         string? diskAccessId = null,
         string? tier = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(subscription));
         var rgResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
         var diskResource = await rgResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
 
-        var diskPatch = new ManagedDiskPatch();
-
-        if (sizeGb.HasValue)
+        var diskPatch = new ManagedDiskPatch
         {
-            diskPatch.DiskSizeGB = sizeGb.Value;
-        }
+            DiskSizeGB = sizeGb,
+            DiskIopsReadWrite = diskIopsReadWrite,
+            DiskMBpsReadWrite = diskMbpsReadWrite,
+            MaxShares = maxShares,
+            BurstingEnabled = enableBursting
+        };
 
         if (!string.IsNullOrEmpty(sku))
         {
-            diskPatch.Sku = new DiskSku { Name = new DiskStorageAccountType(sku) };
-        }
-
-        if (diskIopsReadWrite.HasValue)
-        {
-            diskPatch.DiskIopsReadWrite = diskIopsReadWrite.Value;
-        }
-
-        if (diskMbpsReadWrite.HasValue)
-        {
-            diskPatch.DiskMBpsReadWrite = diskMbpsReadWrite.Value;
-        }
-
-        if (maxShares.HasValue)
-        {
-            diskPatch.MaxShares = maxShares.Value;
+            diskPatch.Sku = new() { Name = new(sku) };
         }
 
         if (!string.IsNullOrEmpty(networkAccessPolicy))
         {
-            diskPatch.NetworkAccessPolicy = new Azure.ResourceManager.Compute.Models.NetworkAccessPolicy(networkAccessPolicy);
-        }
-
-        if (!string.IsNullOrEmpty(enableBursting))
-        {
-            diskPatch.BurstingEnabled = enableBursting.Equals("true", StringComparison.OrdinalIgnoreCase);
+            diskPatch.NetworkAccessPolicy = new(networkAccessPolicy);
         }
 
         if (tags is not null)
@@ -2267,21 +2323,21 @@ public class ComputeService(
 
         if (!string.IsNullOrEmpty(diskEncryptionSet) || !string.IsNullOrEmpty(encryptionType))
         {
-            diskPatch.Encryption ??= new DiskEncryption();
+            diskPatch.Encryption ??= new();
             if (!string.IsNullOrEmpty(diskEncryptionSet))
             {
-                diskPatch.Encryption.DiskEncryptionSetId = new Azure.Core.ResourceIdentifier(diskEncryptionSet);
+                diskPatch.Encryption.DiskEncryptionSetId = new(diskEncryptionSet);
             }
 
             if (!string.IsNullOrEmpty(encryptionType))
             {
-                diskPatch.Encryption.EncryptionType = new Azure.ResourceManager.Compute.Models.ComputeEncryptionType(encryptionType);
+                diskPatch.Encryption.EncryptionType = new(encryptionType);
             }
         }
 
         if (!string.IsNullOrEmpty(diskAccessId))
         {
-            diskPatch.DiskAccessId = new Azure.Core.ResourceIdentifier(diskAccessId);
+            diskPatch.DiskAccessId = new(diskAccessId);
         }
 
         if (!string.IsNullOrEmpty(tier))
@@ -2291,9 +2347,10 @@ public class ComputeService(
 
         _logger.LogInformation("Updating disk {DiskName} in resource group {ResourceGroup}", diskName, resourceGroup);
 
-        var result = await diskResource.Value.UpdateAsync(Azure.WaitUntil.Completed, diskPatch, cancellationToken);
+        var updateOperation = await diskResource.Value.UpdateAsync(WaitUntil.Started, diskPatch, cancellationToken);
+        await WaitForLroCompletionAsync(updateOperation, cancellationToken);
 
-        return ConvertToDiskModel(result.Value, resourceGroup);
+        return ConvertToDiskModel(updateOperation.Value, resourceGroup);
     }
 
     private static DiskCreationData CreateDiskCreationData(string? source, ArmEnvironment armEnvironment, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
@@ -2304,7 +2361,7 @@ public class ComputeService(
                 ? DiskCreateOption.UploadPreparedSecure
                 : DiskCreateOption.Upload;
 
-            return new DiskCreationData(createOption)
+            return new(createOption)
             {
                 UploadSizeBytes = uploadSizeBytes
             };
@@ -2314,9 +2371,9 @@ public class ComputeService(
         {
             var creationData = new DiskCreationData(DiskCreateOption.FromImage)
             {
-                GalleryImageReference = new ImageDiskReference
+                GalleryImageReference = new()
                 {
-                    Id = new Azure.Core.ResourceIdentifier(galleryImageReference)
+                    Id = new(galleryImageReference)
                 }
             };
 
@@ -2330,24 +2387,28 @@ public class ComputeService(
 
         if (string.IsNullOrEmpty(source))
         {
-            return new DiskCreationData(DiskCreateOption.Empty);
+            return new(DiskCreateOption.Empty);
         }
 
         // Blob URIs start with http:// or https:// - validate via EndpointValidator
         if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
             source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", armEnvironment);
-            return new DiskCreationData(DiskCreateOption.Import)
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: armEnvironment,
+                executingToolNamespaceName: "compute");
+            return new(DiskCreateOption.Import)
             {
-                SourceUri = new Uri(source)
+                SourceUri = new(source)
             };
         }
 
         // Otherwise treat as a resource ID (snapshot or managed disk)
-        return new DiskCreationData(DiskCreateOption.Copy)
+        return new(DiskCreateOption.Copy)
         {
-            SourceResourceId = new Azure.Core.ResourceIdentifier(source)
+            SourceResourceId = new(source)
         };
     }
 
@@ -2356,18 +2417,18 @@ public class ComputeService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroup, cancellationToken);
             var diskResource = await resourceGroupResource.Value.GetManagedDisks().GetAsync(diskName, cancellationToken);
 
-            await diskResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+            var deleteOperation = await diskResource.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+            await WaitForLroCompletionAsync(deleteOperation, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted disk. Disk: {Disk}, ResourceGroup: {ResourceGroup}",
@@ -2384,5 +2445,58 @@ public class ComputeService(
             // Return false to indicate the disk was not found (idempotent delete)
             return false;
         }
+    }
+
+    internal static readonly string[] s_validSshKeyPrefixes =
+    [
+        "ssh-rsa ",
+        "ssh-ed25519 ",
+        "ssh-dss ",
+        "ecdsa-sha2-nistp256 ",
+        "ecdsa-sha2-nistp384 ",
+        "ecdsa-sha2-nistp521 ",
+        "sk-ssh-ed25519@openssh.com ",
+        "sk-ecdsa-sha2-nistp256@openssh.com ",
+    ];
+
+    private string ResolveSshPublicKey(string sshPublicKey)
+    {
+        if (!_configuration.Value.IsHttpMode)
+        {
+            // In stdio mode, allow resolving file paths for convenience
+            if (File.Exists(sshPublicKey))
+            {
+                return File.ReadAllText(sshPublicKey).Trim();
+            }
+        }
+        else
+        {
+            // In HTTP mode, file path resolution is not allowed for security
+            if (!IsValidSshPublicKeyContent(sshPublicKey))
+            {
+                var message = LooksLikeFilePath(sshPublicKey)
+                    ? "The provided SSH public key appears to be a file path. " +
+                      "In remote HTTP mode, file paths cannot be resolved on the server. " +
+                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...')."
+                    : "The provided SSH public key does not appear to be valid key content. " +
+                      "Please provide the SSH public key content directly (e.g., 'ssh-rsa AAAA...', 'ssh-ed25519 AAAA...').";
+
+                throw new ArgumentException(message);
+            }
+        }
+
+        return sshPublicKey.Trim();
+    }
+
+    internal static bool LooksLikeFilePath(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Contains('/') || trimmed.Contains('\\') || trimmed.EndsWith(".pub", StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static bool IsValidSshPublicKeyContent(string value)
+    {
+        var trimmed = value.Trim();
+        return Array.Exists(s_validSshKeyPrefixes, prefix => trimmed.StartsWith(prefix, StringComparison.Ordinal));
     }
 }

@@ -16,6 +16,4 @@ namespace Azure.Mcp.Tools.Deploy.Commands;
 [JsonSerializable(typeof(MermaidData))]
 [JsonSerializable(typeof(MermaidConfig))]
 [JsonSerializable(typeof(List<string>))]
-internal sealed partial class DeployJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class DeployJsonContext : JsonSerializerContext;

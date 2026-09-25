@@ -3,69 +3,43 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Tools.Monitor.Models;
-using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Options.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.Monitor.Commands;
+namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 
-public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger)
-    : BaseCommand<SendBrownfieldAnalysisOptions>
+[CommandMetadata(
+    Id = "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e",
+    Name = "send-brownfield-analysis",
+    Title = "Send Brownfield Analysis",
+    Description = """
+        Send brownfield code analysis findings after orchestrator-start returned status 'analysis_needed'.
+        You must have scanned the workspace source files and filled in the analysis template.
+        For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
+        After this call succeeds, continue with orchestrator-next as usual.
+        """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = true)]
+public sealed class SendBrownfieldAnalysisCommand(ILogger<SendBrownfieldAnalysisCommand> logger, SendBrownfieldAnalysisTool sendBrownfieldAnalysisTool)
+    : BaseCommand<SendBrownfieldAnalysisOptions, SendBrownfieldAnalysisCommand.SendBrownfieldAnalysisCommandResult>
 {
     private readonly ILogger<SendBrownfieldAnalysisCommand> _logger = logger;
+    private readonly SendBrownfieldAnalysisTool _sendBrownfieldAnalysisTool = sendBrownfieldAnalysisTool;
 
-    public override string Id => "8f69c45b-7e4f-4ea7-9a7d-58fa7fc0897e";
-
-    public override string Name => "send-brownfield-analysis";
-
-    public override string Description => @"Send brownfield code analysis findings after orchestrator-start returned status 'analysis_needed'.
-You must have scanned the workspace source files and filled in the analysis template.
-For sections that do not exist in the codebase, pass an empty/default object (e.g. found: false, hasCustomSampling: false) rather than null.
-After this call succeeds, continue with orchestrator-next as usual.";
-
-    public override string Title => "Send Brownfield Analysis";
-
-    public override ToolMetadata Metadata => new()
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, SendBrownfieldAnalysisOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = false,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = true,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.SessionId);
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.FindingsJson);
-    }
-
-    protected override SendBrownfieldAnalysisOptions BindOptions(ParseResult parseResult)
-    {
-        return new SendBrownfieldAnalysisOptions
-        {
-            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
-            FindingsJson = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.FindingsJson.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var findings = JsonSerializer.Deserialize(options.FindingsJson!, OnboardingJsonContext.Default.BrownfieldFindings);
+            var findings = JsonSerializer.Deserialize(options.FindingsJson, OnboardingJsonContext.Default.BrownfieldFindings);
             if (findings == null)
             {
                 context.Response.Status = HttpStatusCode.BadRequest;
@@ -73,9 +47,8 @@ After this call succeeds, continue with orchestrator-next as usual.";
                 return Task.FromResult(context.Response);
             }
 
-            var tool = context.GetService<SendBrownfieldAnalysisTool>();
-            var result = tool.Submit(
-                options.SessionId!,
+            var result = _sendBrownfieldAnalysisTool.Submit(
+                options.SessionId,
                 findings.ServiceOptions,
                 findings.Initializers,
                 findings.Processors,
@@ -85,7 +58,9 @@ After this call succeeds, continue with orchestrator-next as usual.";
                 findings.Logging);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                MonitorJsonContext.Default.SendBrownfieldAnalysisCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (JsonException ex)
@@ -102,4 +77,6 @@ After this call succeeds, continue with orchestrator-next as usual.";
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record SendBrownfieldAnalysisCommandResult(string Result);
 }

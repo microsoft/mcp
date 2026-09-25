@@ -210,18 +210,17 @@
                 },
                 "environmentId": {
                     "description": "The environment ID that will be used for the Spark job definition. Can be used to specify Spark settings.",
-                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
                 },
                 "defaultLakehouseId": {
                     "description": "The lakehouse ID that will be used as the default lakehouse of the Spark job definition.",
-                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                    "$ref": "../common/definitions.json#/definitions/ItemReferenceById"
                 }
             }
         },
         "libraryuris": {
             "description": "The fully qualified path of libraries.",
-            "type": "string",
-            "readOnly": false
+            "type": "string"
         },
         "SparkJobDefinitionFormat": {
             "type": "string",

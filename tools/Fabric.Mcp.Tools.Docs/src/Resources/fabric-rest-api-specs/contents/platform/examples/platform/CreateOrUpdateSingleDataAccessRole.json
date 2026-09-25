@@ -5,34 +5,31 @@
     "dataAccessRoleConflictPolicy": "Overwrite",
     "preview": true,
     "createOrUpdateSingleDataAccessRoleRequest": {
-      "value": [
+      "name": "DefaultReader",
+      "kind": "Policy",
+      "decisionRules": [
         {
-          "name": "DefaultReader",
-          "decisionRules": [
+          "effect": "Permit",
+          "permission": [
             {
-              "effect": "Permit",
-              "permission": [
-                {
-                  "attributeName": "Path",
-                  "attributeValueIncludedIn": ["*"]
-                },
-                {
-                  "attributeName": "Action",
-                  "attributeValueIncludedIn": ["Read"]
-                }
-              ]
+              "attributeName": "Path",
+              "attributeValueIncludedIn": ["*"]
+            },
+            {
+              "attributeName": "Action",
+              "attributeValueIncludedIn": ["Read"]
             }
-          ],
-          "members": {
-            "fabricItemMembers": [
-              {
-                "itemAccess": ["ReadAll"],
-                "sourcePath": "cfafbeb1-8037-4d0c-896e-a46fb27ff222/25bac802-080d-4f73-8a42-1b406eb1fceb"
-              }
-            ]
-          }
+          ]
         }
-      ]
+      ],
+      "members": {
+        "fabricItemMembers": [
+          {
+            "itemAccess": ["ReadAll"],
+            "sourcePath": "cfafbeb1-8037-4d0c-896e-a46fb27ff222/25bac802-080d-4f73-8a42-1b406eb1fceb"
+          }
+        ]
+      }
     }
   },
   "responses": {

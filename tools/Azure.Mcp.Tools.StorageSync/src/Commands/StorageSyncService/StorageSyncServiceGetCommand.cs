@@ -2,87 +2,60 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.StorageSync.Models;
-using Azure.Mcp.Tools.StorageSync.Options;
+using Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 
-public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCommand> logger, IStorageSyncService service) : BaseStorageSyncCommand<StorageSyncServiceGetOptions>
+[CommandMetadata(
+    Id = "77734a55-8290-4c16-8b37-cf37277f018f",
+    Name = "get",
+    Title = "Get Storage Sync Service",
+    Description = "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use --name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCommand> logger, IStorageSyncService service, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<StorageSyncServiceGetOptions, StorageSyncServiceGetCommand.StorageSyncServiceGetCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get Storage Sync Service";
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceGetCommand> _logger = logger;
 
-    public override string Id => "77734a55-8290-4c16-8b37-cf37277f018f";
-
-    public override string Name => "get";
-
-    public override string Description => "Retrieve Azure Storage Sync service details or list all Storage Sync services. Use --name to get a specific service, or omit it to list all services in the subscription or resource group. Shows service properties, location, provisioning state, and configuration.";
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(StorageSyncServiceGetOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(StorageSyncOptionDefinitions.StorageSyncService.Name.AsOptional());
-    }
-
-    protected override StorageSyncServiceGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(StorageSyncOptionDefinitions.StorageSyncService.Name.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        if (string.IsNullOrEmpty(options.ResourceGroup) && !string.IsNullOrEmpty(options.Name))
         {
-            return context.Response;
+            validationResult.Errors.Add("Missing Required options: --resource-group is required when --name is specified");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, StorageSyncServiceGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             // If name is provided, get specific service
             if (!string.IsNullOrEmpty(options.Name))
             {
-                if (string.IsNullOrEmpty(options.ResourceGroup))
-                {
-                    context.Response.Status = HttpStatusCode.BadRequest;
-                    context.Response.Message = "Resource group is required when getting a specific storage sync service by name";
-                    return context.Response;
-                }
-
                 _logger.LogInformation("Getting storage sync service. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceName: {ServiceName}",
                     options.Subscription, options.ResourceGroup, options.Name);
 
                 var service = await _service.GetStorageSyncServiceAsync(
                     options.Subscription!,
                     options.ResourceGroup!,
-                    options.Name!,
+                    options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (service == null)
@@ -104,7 +77,6 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(services ?? []), StorageSyncJsonContext.Default.StorageSyncServiceGetCommandResult);
@@ -119,6 +91,5 @@ public sealed class StorageSyncServiceGetCommand(ILogger<StorageSyncServiceGetCo
         return context.Response;
     }
 
-    [JsonSerializable(typeof(StorageSyncServiceGetCommandResult))]
-    internal record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
+    public sealed record StorageSyncServiceGetCommandResult(List<StorageSyncServiceDataSchema> Results);
 }

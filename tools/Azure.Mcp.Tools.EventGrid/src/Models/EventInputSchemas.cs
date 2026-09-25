@@ -11,32 +11,15 @@ namespace Azure.Mcp.Tools.EventGrid.Models;
 /// Represents the standard CloudEvent format defined at https://cloudevents.io/
 /// This gets converted to EventGridEvent for internal processing.
 /// </summary>
-public sealed class CloudEvent
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    [JsonPropertyName("type")]
-    public string? Type { get; set; }
-
-    [JsonPropertyName("source")]
-    public string? Source { get; set; }
-
-    [JsonPropertyName("subject")]
-    public string? Subject { get; set; }
-
-    [JsonPropertyName("specversion")]
-    public string? SpecVersion { get; set; }
-
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; set; }
-
-    [JsonPropertyName("datacontenttype")]
-    public string? DataContentType { get; set; }
-
-    [JsonPropertyName("data")]
-    public JsonElement? Data { get; set; }
-}
+public sealed record CloudEvent(
+    string? Id,
+    string? Type,
+    string? Source,
+    string? Subject,
+    string? SpecVersion,
+    DateTimeOffset? Time,
+    [property: JsonPropertyName("datacontenttype")] string? DataContentType,
+    JsonElement? Data);
 
 /// <summary>
 /// EventGrid Event schema POJO for JSON deserialization.
@@ -44,68 +27,32 @@ public sealed class CloudEvent
 /// Note: We still use this POJO even though EventGridEvent exists because
 /// the input may have optional fields that need defaults applied.
 /// </summary>
-public sealed class EventGridEventInput
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    [JsonPropertyName("eventType")]
-    public string? EventType { get; set; }
-
-    [JsonPropertyName("subject")]
-    public string? Subject { get; set; }
-
-    [JsonPropertyName("dataVersion")]
-    public string? DataVersion { get; set; }
-
-    [JsonPropertyName("eventTime")]
-    public DateTimeOffset? EventTime { get; set; }
-
-    [JsonPropertyName("data")]
-    public JsonElement? Data { get; set; }
-}
+public sealed record EventGridEventInput(
+    string? Id,
+    string? EventType,
+    string? Subject,
+    string? DataVersion,
+    DateTimeOffset? EventTime,
+    JsonElement? Data);
 
 /// <summary>
 /// Flexible/custom event schema POJO that supports both CloudEvents and EventGrid field names.
 /// Used when the schema type is "Custom" or unknown.
 /// This gets converted to EventGridEvent for internal processing.
 /// </summary>
-public sealed class CustomEvent
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
+public sealed record CustomEvent(
+    string? Id,
     // CloudEvents uses "type", EventGrid uses "eventType"
-    [JsonPropertyName("type")]
-    public string? Type { get; set; }
-
-    [JsonPropertyName("eventType")]
-    public string? EventType { get; set; }
-
+    string? Type,
+    string? EventType,
     // CloudEvents uses "source", EventGrid uses "subject"
-    [JsonPropertyName("source")]
-    public string? Source { get; set; }
-
-    [JsonPropertyName("subject")]
-    public string? Subject { get; set; }
-
+    string? Source,
+    string? Subject,
     // CloudEvents uses "specversion", EventGrid uses "dataVersion"
-    [JsonPropertyName("specversion")]
-    public string? SpecVersion { get; set; }
-
-    [JsonPropertyName("dataVersion")]
-    public string? DataVersion { get; set; }
-
+    string? SpecVersion,
+    string? DataVersion,
     // CloudEvents uses "time", EventGrid uses "eventTime"
-    [JsonPropertyName("time")]
-    public DateTimeOffset? Time { get; set; }
-
-    [JsonPropertyName("eventTime")]
-    public DateTimeOffset? EventTime { get; set; }
-
-    [JsonPropertyName("datacontenttype")]
-    public string? DataContentType { get; set; }
-
-    [JsonPropertyName("data")]
-    public JsonElement? Data { get; set; }
-}
+    DateTimeOffset? Time,
+    DateTimeOffset? EventTime,
+    [property: JsonPropertyName("datacontenttype")] string? DataContentType,
+    JsonElement? Data);

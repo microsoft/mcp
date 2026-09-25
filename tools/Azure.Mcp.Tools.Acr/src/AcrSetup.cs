@@ -25,20 +25,21 @@ public class AcrSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var acr = new CommandGroup(Name, "Azure Container Registry operations - Commands for managing Azure Container Registry resources. Includes operations for listing container registries and managing registry configurations.", Title);
+        var acr = new CommandGroup(Name,
+            "Azure Container Registry operations - Commands for managing Azure Container Registry resources. " +
+            "Includes operations for listing container registries and managing registry configurations.",
+            Title);
 
         var registry = new CommandGroup("registry", "Container Registry resource operations - Commands for listing and managing Container Registry resources in your Azure subscription.");
         acr.AddSubGroup(registry);
 
-        var registryList = serviceProvider.GetRequiredService<RegistryListCommand>();
-        registry.AddCommand(registryList.Name, registryList);
+        registry.AddCommand<RegistryListCommand>(serviceProvider);
 
         var repository = new CommandGroup("repository", "Container Registry repository operations - Commands for listing and managing repositories within a Container Registry.");
 
         registry.AddSubGroup(repository);
 
-        var repositoryList = serviceProvider.GetRequiredService<RegistryRepositoryListCommand>();
-        repository.AddCommand(repositoryList.Name, repositoryList);
+        repository.AddCommand<RegistryRepositoryListCommand>(serviceProvider);
 
         return acr;
     }

@@ -23,7 +23,13 @@ internal static class ComputeUtilities
         if (!string.IsNullOrEmpty(image))
         {
             var lowerImage = image.ToLowerInvariant();
-            if (lowerImage.Contains("win") || lowerImage.Contains("windows"))
+            // StartsWith("win"): alias-style names like "Win2022Datacenter", "Win11Pro"
+            // Contains("windows"): URN offer/publisher names like "MicrosoftWindowsServer:WindowsServer2022:..."
+            // Token StartsWith("win"): SKU components like "vs-2022-comm-latest-win11-n-gen2"
+            //   (split on URN/name separators so "twin-ubuntu" token "twin" does NOT match)
+            if (lowerImage.StartsWith("win") ||
+                lowerImage.Contains("windows") ||
+                lowerImage.Split(':', '-', '_', ' ').Any(t => t.StartsWith("win")))
             {
                 return "windows";
             }

@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options;
-using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
+using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.Sku;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -10,58 +12,31 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Models.Option;
 
+namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.Sku;
 
-namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
-
-public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetCommand> logger)
-    : BaseManagedLustreCommand<SkuGetOptions>(logger)
+[CommandMetadata(
+    Id = "43f679ba-1b6e-4851-9315-f8ad16b789e5",
+    Name = "get",
+    Title = "Get AMLFS SKU information",
+    Description = "Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<SkuGetOptions, SkuGetCommand.SkuGetResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Get AMLFS SKU information";
-
     private readonly IManagedLustreService _service = service;
+    private readonly ILogger<SkuGetCommand> _logger = logger;
 
-    public override string Id => "43f679ba-1b6e-4851-9315-f8ad16b789e5";
-    public override string Name => "get";
-
-    public override string Description =>
-        """
-        Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
-    {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(ManagedLustreOptionDefinitions.LocationOption.AsOptional());
-    }
-
-    protected override SkuGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.LocationOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SkuGetOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                return context.Response;
-
-            var options = BindOptions(parseResult);
-            var skus = await _service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy, cancellationToken);
+            var skus = await _service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(skus ?? []), ManagedLustreJsonContext.Default.SkuGetResult);
         }
@@ -73,5 +48,5 @@ public sealed class SkuGetCommand(IManagedLustreService service, ILogger<SkuGetC
         return context.Response;
     }
 
-    internal record SkuGetResult(List<Models.ManagedLustreSkuInfo> Skus);
+    public sealed record SkuGetResult(List<Models.ManagedLustreSkuInfo> Skus);
 }

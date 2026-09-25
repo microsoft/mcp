@@ -1,0 +1,32 @@
+{
+  "parameters": {},
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "46c90afa-1f07-4c85-822e-7da41987a0cc",
+            "type": "Capacity",
+            "workloadId": "Fabric.SampleWorkloadV2",
+            "capacityId": "a7b12741-80ce-444a-a493-ecf92fed4ffd",
+            "capacityName": "F4 Capacity"
+          },
+          {
+            "id": "007b57fd-126b-423c-9cfb-f5ec51e2de4d",
+            "type": "Workspace",
+            "workloadId": "Fabric.SampleWorkloadV2",
+            "workspaceId": "67605640-97d3-47ab-8600-010d482f4c54",
+            "workspaceName": "My workspace"
+          },
+          {
+            "id": "5e9ad558-a1f3-416c-9c4c-363846b2b670",
+            "type": "Tenant",
+            "workloadId": "Fabric.TestWorkload"
+          }
+        ],
+        "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workloads/assignments?continuationToken=MSwxMDAwMCww",
+        "continuationToken": "MSwxMDAwMCww"
+      }
+    }
+  }
+}

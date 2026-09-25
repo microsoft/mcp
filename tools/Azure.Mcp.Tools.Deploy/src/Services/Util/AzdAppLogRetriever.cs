@@ -1,9 +1,13 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure.Monitor.Query.Logs;
 using Azure.Monitor.Query.Logs.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Deploy.Services.Util;
 
@@ -11,9 +15,8 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
 {
     private readonly string _subscriptionId = subscriptionId;
     private readonly string _azdEnvName = azdEnvName;
-    private readonly Dictionary<string, string> _apps = new();
-    private readonly Dictionary<string, string> _logs = new();
-    private readonly List<string> _logAnalyticsWorkspaceIds = new();
+    private readonly Dictionary<string, string> _logs = [];
+    private readonly List<string> _logAnalyticsWorkspaceIds = [];
     private string _resourceGroupName = string.Empty;
 
     private readonly ArmClient _armClient = armClient ?? throw new ArgumentNullException(nameof(armClient));
@@ -78,13 +81,13 @@ public class AzdAppLogRetriever(ArmClient armClient, LogsQueryClient logsQueryCl
     }
 
     private static string GetContainerAppLogsQuery(string containerAppName, int limit) =>
-        $"ContainerAppConsoleLogs_CL | where ContainerAppName_s == '{containerAppName}' | order by _timestamp_d desc | project TimeGenerated, Log_s | take {limit}";
+        $"ContainerAppConsoleLogs_CL | where ContainerAppName_s == '{KqlSanitizer.EscapeStringValue(containerAppName)}' | order by _timestamp_d desc | project TimeGenerated, Log_s | take {limit}";
 
     private static string GetAppServiceLogsQuery(string appServiceResourceId, int limit) =>
-        $"AppServiceConsoleLogs | where _ResourceId == '{appServiceResourceId.ToLowerInvariant()}' | order by TimeGenerated desc | project TimeGenerated, ResultDescription | take {limit}";
+        $"AppServiceConsoleLogs | where _ResourceId == '{KqlSanitizer.EscapeStringValue(appServiceResourceId.ToLowerInvariant())}' | order by TimeGenerated desc | project TimeGenerated, ResultDescription | take {limit}";
 
     private static string GetFunctionAppLogsQuery(string functionAppName, int limit) =>
-        $"AppTraces | where AppRoleName == '{functionAppName}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
+        $"AppTraces | where AppRoleName == '{KqlSanitizer.EscapeStringValue(functionAppName)}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
 
     public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string serviceName, int? limit = null, CancellationToken cancellationToken = default)
     {
@@ -221,15 +224,10 @@ public static class ResourceTypeExtensions
         { ResourceType.FunctionApp, "Microsoft.Web/sites|functionapp" }
     };
 
-    public static ResourceType GetResourceTypeFromHost(string host)
-    {
-        return HostToResourceType.TryGetValue(host, out var resourceType)
+    public static ResourceType GetResourceTypeFromHost(string host) =>
+        HostToResourceType.TryGetValue(host, out var resourceType)
             ? resourceType
             : throw new ArgumentException($"Unknown host type: {host}");
-    }
 
-    public static string GetResourceTypeString(this ResourceType resourceType)
-    {
-        return ResourceTypeToString[resourceType];
-    }
+    public static string GetResourceTypeString(this ResourceType resourceType) => ResourceTypeToString[resourceType];
 }

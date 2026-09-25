@@ -56,14 +56,14 @@ Describes the structure of node data mapping definition.
 
 Describes the structure of edge data mapping definition.
 
-| Name                 | Type                                  | Description                                      |
-| -------------------- | ------------------------------------- | ------------------------------------------------ |
-| id                   | String                                | ID of the edge data mapping definition           |
-| edgeTypeAlias        | String                                | Alias of the edge as defined in graph            |
-| dataSourceName       | String                                | The name of the data source                      |
-| sourceNodeKeyColumns | String[]                              | The array of columns that map to the source node |
-| targetNodeKeyColumns | String[]                              | The array of columns that map to the target node |
-| propertyMappings     | [PropertyMapping](#propertymapping)[] | The array of property data mapping definitions   |
+| Name                      | Type                                  | Description                                      |
+| ------------------------- | ------------------------------------- | ------------------------------------------------ |
+| id                        | String                                | ID of the edge data mapping definition           |
+| edgeTypeAlias             | String                                | Alias of the edge as defined in graph            |
+| dataSourceName            | String                                | The name of the data source                      |
+| sourceNodeKeyColumns      | String[]                              | The array of columns that map to the source node |
+| destinationNodeKeyColumns | String[]                              | The array of columns that map to the destination node |
+| propertyMappings          | [PropertyMapping](#propertymapping)[] | The array of property data mapping definitions   |
 
 ### PropertyMapping
 
@@ -185,6 +185,7 @@ Describes the style of a model element.
 
 ```json
 {
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/dataSources/1.1.0/schema.json",
   "dataSources": [
     {
       "name": "Customer_Table",
@@ -222,7 +223,7 @@ Describes the style of a model element.
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/graphDefinition/1.0.0/schema.json",
   "nodeTables": [
     {
       "id": "Customer_5b6cb156-c778-4fce-8606-f0f712c04818",
@@ -452,7 +453,7 @@ Describes the style of a model element.
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/graphType/1.0.0/schema.json",
   "nodeTypes": [
     {
       "alias": "Customer_nodeType",
@@ -632,7 +633,7 @@ Describes the style of a model element.
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/graphIndex/definition/stylingConfiguration/1.0.0/schema.json",
   "modelLayout": {
     "positions": {
       "Customer_nodeType": {

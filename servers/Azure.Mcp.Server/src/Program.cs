@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
@@ -15,6 +15,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
@@ -30,9 +31,14 @@ namespace Azure.Mcp.Server;
 
 internal class Program
 {
-    private static IAreaSetup[] Areas = RegisterAreas();
+    private static readonly IAreaSetup[] Areas = RegisterAreas();
 
-    private static async Task<int> Main(string[] args)
+    // Derived from the registered ServerSetup instance so the name stays in sync
+    // with the actual area registration — no magic string duplication.
+    private static readonly string ServerAreaName =
+        Array.Find(Areas, static a => a is Microsoft.Mcp.Core.Areas.Server.ServerSetup)?.Name ?? "server";
+
+    internal static async Task<int> Main(string[] args)
     {
         try
         {
@@ -44,29 +50,105 @@ internal class Program
                 return fastPathResult.Value;
             }
 
-            ServiceStartCommand.ConfigureServices = ConfigureServices;
-            ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+            // The server start and plugin-telemetry containers always need full area registration.
+            ServerStartCommand.ConfigureServices = services => ConfigureServices(services);
+            ServerStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            PluginTelemetryCommand.ConfigureServices = ConfigureServices;
+            PluginTelemetryCommand.ConfigureServices = services => ConfigureServices(services);
             PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
+
+            // Optimization: detect the target service area early so we can skip registering the
+            // other 60+ areas in the DI container.
+            var targetAreaName = GetTargetAreaName(args);
 
             ServiceCollection services = new();
 
-            ConfigureServices(services);
+            ConfigureServices(services, targetAreaName);
 
             services.AddLogging(builder =>
             {
-                builder.AddConsole();
+                // Send console logs to stderr so stdout carries only the command's JSON
+                // response. Keeps CLI output parseable and avoids corrupting stdio MCP output.
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
             var serviceProvider = services.BuildServiceProvider();
-            await InitializeServicesAsync(serviceProvider);
 
-            var commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+            // Optimization: run telemetry initialization concurrently with CommandFactory resolution.
+            // Telemetry init reads the MAC address (NetworkInterface) and device ID (registry on Windows)
+            // from the thread pool. CommandFactory resolves command singletons for the target area.
+            // Both complete in parallel so neither adds to the other's latency on the hot path.
+            //
+            // If GetRequiredService throws before we reach the await, telemetryInitTask would become
+            // an unobserved faulted task. Observe it (suppressing its exception) in that path so the
+            // DI failure is what surfaces to the user — not a TaskScheduler.UnobservedTaskException.
+            var telemetryInitTask = InitializeServicesAsync(serviceProvider);
+            ICommandFactory commandFactory;
+            try
+            {
+                commandFactory = serviceProvider.GetRequiredService<ICommandFactory>();
+            }
+            catch
+            {
+                await telemetryInitTask.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+                throw;
+            }
+            await telemetryInitTask;
+
+            // Short-circuit for --learn: return command metadata without executing.
+            // This MUST happen before Parse/InvokeAsync so that System.CommandLine's
+            // required-option validation cannot block the discovery response, and to
+            // avoid wastefully parsing 250+ commands and options only to discard the result.
+            if (Array.Exists(args, a => string.Equals(a, ICommandFactory.LearnOptionName, StringComparison.OrdinalIgnoreCase)))
+            {
+                var learnJson = commandFactory.GetLearnResponse(args);
+                Console.WriteLine(learnJson);
+                using var learnDoc = JsonDocument.Parse(learnJson);
+                var learnStatus = learnDoc.RootElement.TryGetProperty("status", out var statusEl)
+                    ? statusEl.GetInt32()
+                    : (int)HttpStatusCode.InternalServerError;
+                return (learnStatus >= (int)HttpStatusCode.OK && learnStatus < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
+            }
+
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            var status = await parseResult.InvokeAsync();
+            var command = parseResult.CommandResult.Command;
+            int status = 0;
+
+            if (command is ExtendedCommand extendedCommand &&
+                (extendedCommand.BaseCommand is ServerStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+            {
+                // One of the special commands that need to be handled differently.
+                status = await parseResult.InvokeAsync();
+            }
+            else
+            {
+                // Command wasn't one of the registered ServerSetup commands, so bind up a Host of all the services
+                // to run the command.
+                var builder = Host.CreateApplicationBuilder();
+                builder.Logging.ClearProviders();
+                builder.Logging.AddEventSourceLogger();
+                ConfigureServices(builder.Services);
+                builder.Services.AddAzureMcpServer(new()
+                {
+                    Transport = TransportTypes.StdIo
+                });
+
+                using var host = builder.Build();
+
+                await InitializeServicesAsync(host.Services);
+                await host.StartAsync();
+
+                commandFactory = host.Services.GetRequiredService<ICommandFactory>();
+                rootCommand = commandFactory.RootCommand;
+                parseResult = rootCommand.Parse(args);
+
+                status = await parseResult.InvokeAsync();
+
+                await host.StopAsync();
+                await host.WaitForShutdownAsync();
+            }
 
             if (status == 0)
             {
@@ -87,7 +169,7 @@ internal class Program
         }
     }
 
-    private static IAreaSetup[] RegisterAreas()
+    internal static IAreaSetup[] RegisterAreas()
     {
 
         return [
@@ -99,14 +181,17 @@ internal class Program
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
+            new Azure.Mcp.Tools.Adme.AdmeSetup(),
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),
             new Azure.Mcp.Tools.AppService.AppServiceSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
+            new Azure.Mcp.Tools.AzureBackup.AzureBackupSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
             new Azure.Mcp.Tools.ManagedLustre.ManagedLustreSetup(),
             new Azure.Mcp.Tools.AzureMigrate.AzureMigrateSetup(),
+            new Azure.Mcp.Tools.AzureTerraform.AzureTerraformSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
             new Azure.Mcp.Tools.DeviceRegistry.DeviceRegistrySetup(),
@@ -126,6 +211,9 @@ internal class Program
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Functions.FunctionsSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
+            new Azure.Mcp.Tools.Insights.InsightsSetup(),
+            new Azure.Mcp.Tools.IoTHub.IoTHubSetup(),
+            new Azure.Mcp.Tools.IoTOperations.IoTOperationsSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),
             new Azure.Mcp.Tools.LoadTesting.LoadTestingSetup(),
@@ -134,16 +222,19 @@ internal class Program
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
             new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
+            new Azure.Mcp.Tools.Optimization.OptimizationSetup(),
             new Azure.Mcp.Tools.Policy.PolicySetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Pricing.PricingSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
+            new Azure.Mcp.Tools.ResilienceManagement.ResilienceManagementSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.Speech.SpeechSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
             new Azure.Mcp.Tools.ServiceFabric.ServiceFabricSetup(),
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
+            new Azure.Mcp.Tools.SreAgent.SreAgentSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
@@ -162,9 +253,7 @@ internal class Program
     }
 
     private static void WriteResponse(CommandResponse response)
-    {
-        Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
-    }
+        => Console.WriteLine(JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
 
     /// <summary>
     /// <para>
@@ -183,12 +272,12 @@ internal class Program
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
     /// </item>
     /// <item>
-    /// <see cref="ServiceStartCommand"/>'s execution: The container is created by some
+    /// <see cref="ServerStartCommand"/>'s execution: The container is created by some
     /// dynamically created <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) or
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http). While the
-    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServiceStartCommand"/>
+    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServerStartCommand"/>
     /// is created by the first container, this second container it creates and runs is
-    /// built separately during <see cref="ServiceStartCommand.ExecuteAsync"/>. Thus, this
+    /// built separately during <see cref="ServerStartCommand.ExecuteAsync"/>. Thus, this
     /// container is built and this <see cref="ConfigureServices"/> method is called sometime
     /// during that method execution.
     /// </item>
@@ -200,11 +289,11 @@ internal class Program
     /// </para>
     /// <para>
     /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
-    /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
+    /// on <see cref="IAzureService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
     /// but such transport-specific registrations must be overridden within
-    /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
+    /// <see cref="ServerStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
     /// <para>
@@ -213,56 +302,91 @@ internal class Program
     /// project if needed. Below is the list of known differences:
     /// </para>
     /// <list type="bullet">
-    /// <item>No differences. This is also copy/pasta as a placeholder for this project.</item>
+    /// <item>
+    /// This project's <see cref="ConfigureServices"/> accepts an optional <paramref name="areaFilter"/>.
+    /// When set (single-command CLI invocations), only infrastructure areas and the named
+    /// Azure service area register their services. Server-mode resource providers
+    /// (registry, instructions, allowlists) are replaced with null-stubs when an area filter
+    /// is active, since those providers are only needed by the MCP server transport.
+    /// </item>
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>
-    internal static void ConfigureServices(IServiceCollection services)
+    /// <param name="areaFilter">
+    /// When non-<see langword="null"/>, only the named Azure service area and infrastructure areas
+    /// (those with <see cref="CommandCategory"/> other than <see cref="CommandCategory.AzureServices"/>)
+    /// have their services registered. Pass <see langword="null"/> for full initialization.
+    /// </param>
+    internal static void ConfigureServices(IServiceCollection services, string? areaFilter = null)
     {
         var thisAssembly = typeof(Program).Assembly;
 
-        services.InitializeConfigurationAndOptions();
+        services.InitializeConfigurationAndOptions(thisAssembly);
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<IResourceGroupService, ResourceGroupService>();
-        services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
+        services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
 
         // !!! WARNING !!!
-        // stdio-transport-specific implementations of ITenantService and ICacheService.
+        // stdio-transport-specific implementations of IAzureService and ICacheService.
         // The http-transport-specific implementations and configurations must be registered
-        // within ServiceStartCommand.ExecuteAsync().
+        // within ServerStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
-        services.AddAzureTenantService();
-        services.AddSingleUserCliCacheService();
+        services.AddAzureService();
+        services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
         {
+            // When areaFilter is set (CLI path), skip Azure service areas that don't match the target.
+            // Non-Azure-service areas (Category != AzureServices) provide shared infrastructure
+            // (command routing, server start, subscription listing, etc.) and must always be registered.
+            // Any area whose Category is AzureServices and whose name doesn't match the filter is skipped;
+            // this avoids registering services (HTTP clients, SDKs, etc.) for 60+ irrelevant services.
+            if (areaFilter != null &&
+                area.Category == CommandCategory.AzureServices &&
+                !string.Equals(area.Name, areaFilter, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
 
-        services.AddRegistryRoot(thisAssembly, $"registry.json");
+        // Optimization: server-mode providers (registry, instructions, plugin allowlists) are only
+        // used when running as an MCP server. For CLI area invocations they are never resolved, so
+        // register lightweight stubs to avoid reading embedded resources on every CLI call.
+        if (areaFilter == null || string.Equals(areaFilter, ServerAreaName, StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddRegistryRoot(thisAssembly, $"registry.json");
 
-        services.AddSingleton<IServerInstructionsProvider>(
-            new ResourceServerInstructionsProvider(thisAssembly, $"azure-rules.txt"));
+            services.AddSingleton<IServerInstructionsProvider>(
+                new ResourceServerInstructionsProvider(thisAssembly, $"azure-rules.txt"));
 
-        services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
-            ActivatorUtilities.CreateInstance<ResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"consolidated-tools.json"));
+            services.AddSingleton<IConsolidatedToolDefinitionProvider>(sp =>
+                ActivatorUtilities.CreateInstance<ResourceConsolidatedToolDefinitionProvider>(sp, thisAssembly, $"consolidated-tools.json"));
 
-        services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
-            ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
+            services.AddSingleton<IPluginFileReferenceAllowlistProvider>(sp =>
+                ActivatorUtilities.CreateInstance<ResourcePluginFileReferenceAllowlistProvider>(sp, thisAssembly, $"allowed-plugin-file-references.json"));
 
-        services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
-            ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
+            services.AddSingleton<IPluginSkillNameAllowlistProvider>(sp =>
+                ActivatorUtilities.CreateInstance<ResourcePluginSkillNameAllowlistProvider>(sp, thisAssembly, $"allowed-skill-names.json"));
+        }
+        else
+        {
+            services.AddSingleton<IRegistryRoot>(new RegistryRoot());
+            services.AddSingleton<IServerInstructionsProvider>(new NullServerInstructionsProvider());
+            services.AddSingleton<IConsolidatedToolDefinitionProvider>(new NullConsolidatedToolDefinitionProvider());
+            services.AddSingleton<IPluginFileReferenceAllowlistProvider>(new NullPluginFileReferenceAllowlistProvider());
+            services.AddSingleton<IPluginSkillNameAllowlistProvider>(new NullPluginSkillNameAllowlistProvider());
+        }
     }
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
     {
-        ServiceStartOptions? options = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value;
+        ServerStartOptions? options = serviceProvider.GetService<IOptions<ServerStartOptions>>()?.Value;
 
         if (options != null)
         {
@@ -284,13 +408,61 @@ internal class Program
     }
 
     /// <summary>
+    /// Extracts the target service area name from the first non-option CLI token.
+    /// Returns <see langword="null"/> when no area can be determined (e.g. bare <c>--help</c>,
+    /// <c>--learn</c>, <c>--version</c>, or no arguments), which causes <see cref="CommandFactory"/>
+    /// to fall back to full initialization of all areas.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
+    /// <returns>The area name (e.g. "storage"), or <see langword="null"/>.</returns>
+    internal static string? GetTargetAreaName(string[] args)
+    {
+        // Scan for the first token that is not an option flag (does not start with '-').
+        // '--' is the POSIX end-of-options marker: everything after it is a positional argument,
+        // but for our purposes we stop scanning at '--' and treat it as "no area found".
+        string? firstToken = null;
+        foreach (var arg in args)
+        {
+            if (arg == "--")
+                break;
+            if (arg.Length > 0 && !arg.StartsWith('-'))
+            {
+                firstToken = arg;
+                break;
+            }
+        }
+
+        if (firstToken is null)
+        {
+            return null;
+        }
+
+        // The "tools" area introspects factory.AllCommands to enumerate every registered command.
+        // Filtering to only the tools area would return an empty result set, so skip optimization.
+        if (string.Equals(firstToken, "tools", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        // Only apply the optimization when the first token is a known registered area.
+        // If the token doesn't match any area (e.g. a typo), fall through to full initialization
+        // so System.CommandLine can produce helpful "Did you mean..." suggestions.
+        if (!Array.Exists(Areas, a => string.Equals(a.Name, firstToken, StringComparison.OrdinalIgnoreCase)))
+        {
+            return null;
+        }
+
+        return firstToken;
+    }
+
+    /// <summary>
     /// Attempts to handle the --version flag without requiring full service initialization.
     /// </summary>
     /// <param name="args">Command-line arguments.</param>
     /// <returns>Exit code if request was handled, null otherwise.</returns>
     private static int? TryHandleFastPathRequest(string[] args)
     {
-        // Handle --version flag
+        // Handle --version / -v flags before DI initialization
         if (args.Length == 1 && (args[0] == "--version" || args[0] == "-v"))
         {
             var version = AssemblyHelper.GetFullAssemblyVersion(typeof(Program).Assembly);

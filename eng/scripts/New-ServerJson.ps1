@@ -43,6 +43,25 @@ function ReplacePropertyValue {
     }
 }
 
+function ConvertTo-PythonPackageVersion {
+    param ([string] $Version)
+
+    $parsedVersion = [AzureEngSemanticVersion]::ParseVersionString($Version)
+    if (!$parsedVersion) {
+        return $null
+    }
+
+    $parsedVersion.SetupPythonConventions()
+    if ($parsedVersion.PrereleaseLabel -eq 'beta') {
+        $parsedVersion.PrereleaseLabel = 'b'
+    }
+    elseif ($parsedVersion.PrereleaseLabel -eq 'alpha') {
+        $parsedVersion.PrereleaseLabel = 'a'
+    }
+
+    return $parsedVersion.ToString()
+}
+
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 $server = $buildInfo.servers | Where-Object { $_.name -ieq $ServerName }
 
@@ -65,7 +84,16 @@ ReplacePropertyValue -HashTable $jsonHashTable -PropertyName 'version' -NewValue
 
 foreach ($package in $jsonHashTable.packages) {
     if ($package.ContainsKey('version')) {
-        ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $server.version
+        $packageVersion = $server.version
+        if ($package.registryType -eq 'pypi') {
+            $pythonVersion = ConvertTo-PythonPackageVersion $server.version
+            if (!$pythonVersion) {
+                LogError "Server version '$($server.version)' is not a valid semantic version for PyPI packaging."
+                exit 1
+            }
+            $packageVersion = $pythonVersion.ToString()
+        }
+        ReplacePropertyValue -HashTable $package -PropertyName 'version' -NewValue $packageVersion
     }
 
     switch ($package.registryType) {

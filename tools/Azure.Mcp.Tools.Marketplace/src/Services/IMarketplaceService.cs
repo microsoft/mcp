@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Marketplace.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
@@ -13,14 +12,11 @@ public interface IMarketplaceService
         string subscription,
         bool? includeStopSoldPlans = null,
         string? language = null,
-        string? market = null,
         bool? lookupOfferInTenantLevel = null,
         string? planId = null,
         string? skuId = null,
         bool? includeServiceInstructionTemplates = null,
-        string? pricingAudience = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<ProductListResponseWithNextCursor> ListProducts(
@@ -33,6 +29,5 @@ public interface IMarketplaceService
         string? nextCursor = null,
         string? expand = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

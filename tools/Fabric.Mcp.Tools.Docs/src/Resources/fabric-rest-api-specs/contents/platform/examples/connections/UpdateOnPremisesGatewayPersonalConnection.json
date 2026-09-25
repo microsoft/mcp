@@ -17,7 +17,7 @@
                 "id": "ef8f408d-2ab7-4a18-b662-9251febda49c",
                 "gatewayId": "429a773e-5633-45ee-8584-a192bd79c16a",
                 "connectivityType": "OnPremisesGatewayPersonal",
-                "connectionDetails":{
+                "connectionDetails": {
                     "type": "SQL",
                     "path": "contoso.database.windows.net;reporting"
                 },
@@ -27,6 +27,13 @@
                     "singleSignOnType": "None",
                     "connectionEncryption": "NotEncrypted",
                     "skipTestConnection": false
+                },
+                "connectionRecency": {
+                    "createdDateTime": "2023-05-23T16:22:20Z",
+                    "lastBoundDateTime": "2023-05-26T16:22:20Z",
+                    "lastCredentialUsedDateTime": "2023-05-27T16:22:20Z",
+                    "myLastBoundDateTime": "2023-05-24T16:22:20Z",
+                    "myLastCredentialUsedDateTime": "2023-05-25T16:22:20Z"
                 }
             }
         }

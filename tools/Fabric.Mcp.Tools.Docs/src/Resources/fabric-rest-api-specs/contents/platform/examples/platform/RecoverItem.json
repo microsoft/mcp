@@ -1,0 +1,35 @@
+{
+  "parameters": {
+    "workspaceId": "52984ceb-fd5b-4da9-a0c5-2fe9887b509f",
+    "itemId": "3546052c-ae64-4526-b1a8-52af7761426f"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+            "displayName": "Lakehouse",
+            "description": "A lakehouse used by the analytics team.",
+            "type": "Lakehouse",
+            "workspaceId": "52984ceb-fd5b-4da9-a0c5-2fe9887b509f"
+          },
+          {
+            "id": "58fa1eac-9694-4a6b-ba25-3520288e8fea",
+            "displayName": "SQLEndpoint",
+            "description": "A SQL endpoint for refining medical data analysis through machine learning algorithms.",
+            "type": "SQLEndpoint",
+            "workspaceId": "52984ceb-fd5b-4da9-a0c5-2fe9887b509f"
+          }
+        ]
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 5
+      }
+    }
+  }
+}

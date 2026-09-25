@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -11,14 +10,12 @@ public interface IMonitorWebTestService
     Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<WebTestDetailedInfo> GetWebTest(
@@ -26,7 +23,6 @@ public interface IMonitorWebTestService
         string resourceGroup,
         string name,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<WebTestDetailedInfo> CreateWebTest(
@@ -53,7 +49,6 @@ public interface IMonitorWebTestService
         int? sslLifetimeCheckInDays = null,
         int? timeoutInSeconds = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<WebTestDetailedInfo> UpdateWebTest(
@@ -80,6 +75,5 @@ public interface IMonitorWebTestService
         int? sslLifetimeCheckInDays = null,
         int? timeoutInSeconds = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

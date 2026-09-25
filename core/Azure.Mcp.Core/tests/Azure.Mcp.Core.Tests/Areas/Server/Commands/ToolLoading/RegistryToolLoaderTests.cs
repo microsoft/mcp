@@ -1,0 +1,1019 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Diagnostics;
+using System.Text.Json;
+using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
+using NSubstitute;
+using Xunit;
+
+namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
+
+public class RegistryToolLoaderTests
+{
+    private static (RegistryToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoaderAndDiscoveryStrategy()
+    {
+        var mockDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
+
+        var toolLoader = CreateToolLoader(mockDiscoveryStrategy);
+        return (toolLoader, mockDiscoveryStrategy);
+    }
+
+    private static RegistryToolLoader CreateToolLoader(
+        IMcpDiscoveryStrategy discoveryStrategy,
+        ServerRuntimeConfiguration? configuration = null)
+    {
+        var logger = Substitute.For<ILogger<RegistryToolLoader>>();
+        var serverConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
+
+        return new RegistryToolLoader(discoveryStrategy, serverConfiguration, logger);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithNoServers_ReturnsEmptyToolList()
+    {
+        // Arrange
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoaderAndDiscoveryStrategy();
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
+            .Returns([]);
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Empty(result.Tools);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMockServerProvider_ReturnsExpectedStructure()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("test-tool-1", "Test Tool 1 Description", "Test response 1")
+            .AddTool("test-tool-2", "Test Tool 2 Description", "Test response 2");
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "test-tool-1");
+        Assert.Contains(result.Tools, t => t.Name == "test-tool-2");
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_FiltersProperly()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "readonly-tool",
+            Description = "Read-only tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var writeTool = new Tool
+        {
+            Name = "write-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Read-only result" }], IsError = false })
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Write result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When ReadOnly is enabled, only tools with ReadOnlyHint = true should be returned
+        Assert.Single(result.Tools);
+        var returnedTool = result.Tools.First();
+        Assert.Equal("readonly-tool", returnedTool.Name);
+        Assert.True(returnedTool.Annotations?.ReadOnlyHint == true, "Returned tool should have ReadOnlyHint = true");
+
+        // Verify that the write tool was filtered out
+        Assert.DoesNotContain(result.Tools, t => t.Name == "write-tool");
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithReadOnlyDisabled_ReturnsAllTools()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "readonly-tool",
+            Description = "Read-only tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var writeTool = new Tool
+        {
+            Name = "write-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Read-only result" }], IsError = false })
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Write result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = false };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When ReadOnly is disabled, all tools should be returned regardless of ReadOnlyHint
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "readonly-tool");
+        Assert.Contains(result.Tools, t => t.Name == "write-tool");
+
+        // Verify annotations are preserved
+        var readOnlyToolResult = result.Tools.First(t => t.Name == "readonly-tool");
+        var writeToolResult = result.Tools.First(t => t.Name == "write-tool");
+        Assert.True(readOnlyToolResult.Annotations?.ReadOnlyHint == true);
+        Assert.True(writeToolResult.Annotations?.ReadOnlyHint == false);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpOption_FiltersProperly()
+    {
+        // Arrange
+        var localRequiredTool = new Tool
+        {
+            Name = "localrequired-tool",
+            Description = "Local required tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            // Simulate a tool that requires local access (not suitable for HTTP mode)
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
+        };
+
+        var notLocalRequiredTool = new Tool
+        {
+            Name = "not-localrequired-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(localRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Local required result" }], IsError = false })
+            .AddTool(notLocalRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Not local required result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { Transport = TransportTypes.Http };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When IsHttpMode is enabled, only tools with LocalRequiredHint = false should be returned
+        Assert.Single(result.Tools);
+        var returnedTool = result.Tools.First();
+        Assert.Equal(notLocalRequiredTool.Name, returnedTool.Name);
+        Assert.NotNull(returnedTool.Meta);
+        Assert.False(McpHelper.HasHint(returnedTool, McpHelper.LocalRequiredHintMetaKey));
+
+        // Verify that the write tool was filtered out
+        Assert.DoesNotContain(result.Tools, t => t.Name == localRequiredTool.Name);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithIsHttpDisabled_ReturnsAllTools()
+    {
+        // Arrange
+        var localRequiredTool = new Tool
+        {
+            Name = "localrequired-tool",
+            Description = "Local required tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            // Simulate a tool that requires local access (not suitable for HTTP mode)
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
+        };
+
+        var notLocalRequiredTool = new Tool
+        {
+            Name = "not-localrequired-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(localRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Local required result" }], IsError = false })
+            .AddTool(notLocalRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Not local required result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { Transport = TransportTypes.StdIo };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When IsHttpMode is disabled, all tools should be returned regardless of LocalRequiredHint
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == localRequiredTool.Name);
+        Assert.Contains(result.Tools, t => t.Name == notLocalRequiredTool.Name);
+
+        // Verify annotations are preserved
+        var localRequiredToolResult = result.Tools.First(t => t.Name == localRequiredTool.Name);
+        var notLocalRequiredToolResult = result.Tools.First(t => t.Name == notLocalRequiredTool.Name);
+        Assert.NotNull(localRequiredToolResult.Meta);
+        Assert.True(McpHelper.HasHint(localRequiredToolResult, McpHelper.LocalRequiredHintMetaKey));
+        Assert.NotNull(notLocalRequiredToolResult.Meta);
+        Assert.False(McpHelper.HasHint(notLocalRequiredToolResult, McpHelper.LocalRequiredHintMetaKey));
+    }
+
+    [Theory]
+    [InlineData("unknown-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult(string toolName)
+    {
+        // Arrange
+        var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
+        var request = McpTestUtilities.CreateToolCallRequest(toolName);
+        using var activity = new Activity("test-activity").Start();
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // Verify the error message
+        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(textContent);
+        Assert.Contains(toolName, textContent.Text);
+        Assert.Contains("was not found", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+    }
+
+    [Theory]
+    [InlineData("blocked-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithToolFilter_RejectsToolOutsideAllowList(string toolName)
+    {
+        var executions = 0;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("blocked-tool", "Blocked tool", () =>
+            {
+                executions++;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy,
+            new ServerRuntimeConfiguration { Tool = ["allowed-tool"] });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(toolName), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Equal(0, executions);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+    }
+
+    [Fact]
+    public async Task RegistryToolLoader_WithDifferentOptions_BehavesConsistently()
+    {
+        // Arrange - Test with different service options
+        var defaultOptions = new ServerRuntimeConfiguration();
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
+
+        // Create empty discovery strategies for both tests
+        var defaultDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
+        var readOnlyDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
+
+        // Create tool loaders with different options
+        var defaultToolLoader = CreateToolLoader(defaultDiscoveryStrategy, defaultOptions);
+        var readOnlyToolLoader = CreateToolLoader(readOnlyDiscoveryStrategy, readOnlyOptions);
+
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var defaultResult = await defaultToolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        var readOnlyResult = await readOnlyToolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Both should return empty but valid results
+        Assert.NotNull(defaultResult);
+        Assert.NotNull(defaultResult.Tools);
+        Assert.Empty(defaultResult.Tools);
+
+        Assert.NotNull(readOnlyResult);
+        Assert.NotNull(readOnlyResult.Tools);
+        Assert.Empty(readOnlyResult.Tools);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithoutListToolsFirst_ShouldSucceed()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("microsoft_docs_search", "Search Microsoft documentation", args =>
+            {
+                var question = args?.GetValueOrDefault("question")?.ToString() ?? "";
+                return new CallToolResult
+                {
+                    Content = new List<ContentBlock> { new TextContentBlock { Text = "Tool executed successfully" } },
+                    IsError = false
+                };
+            });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+        var request = McpTestUtilities.CreateToolCallRequest("microsoft_docs_search", new Dictionary<string, object?>
+        {
+            { "question", "how to implement mcp server in azure" }
+        });
+        using var activity = new Activity("test-activity").Start();
+
+        // Act - Call CallToolHandler, which should initialize tools first
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - The tool call should succeed
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // Verify the content
+        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(textContent);
+        Assert.Equal("Tool executed successfully", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "microsoft_docs_search");
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, true);
+    }
+
+    [Fact]
+    public async Task MockMcpClient_WithExtensionMethods_WorksCorrectly()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("docs-search", "Azure documentation", args =>
+            {
+                var query = args?.GetValueOrDefault("query")?.ToString() ?? "";
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = $"Azure documentation: here is some content about {query}" }],
+                    IsError = false
+                };
+            })
+            .AddTool("echo", "Echo tool", args =>
+            {
+                var message = args?.GetValueOrDefault("message")?.ToString() ?? "No message";
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = $"Echo: {message}" }],
+                    IsError = false
+                };
+            });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        // Act & Assert - List tools
+        var listRequest = McpTestUtilities.CreateToolListRequest();
+        var listResult = await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
+        Assert.NotNull(listResult);
+        Assert.Equal(2, listResult.Tools.Count);
+        Assert.Contains(listResult.Tools, t => t.Name == "docs-search");
+        Assert.Contains(listResult.Tools, t => t.Name == "echo");
+
+        // Act & Assert - Call search tool
+        var searchRequest = McpTestUtilities.CreateToolCallRequest("docs-search", new Dictionary<string, object?>
+        {
+            { "query", "MCP implementation" }
+        });
+
+        var searchResult = await toolLoader.CallToolHandler(searchRequest, TestContext.Current.CancellationToken);
+        Assert.NotNull(searchResult);
+        Assert.False(searchResult.IsError);
+
+        var searchContent = searchResult.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(searchContent);
+        Assert.Contains("MCP implementation", searchContent.Text);
+        Assert.Contains("Azure documentation", searchContent.Text);
+
+        // Act & Assert - Call echo tool
+        var echoRequest = McpTestUtilities.CreateToolCallRequest("echo", new Dictionary<string, object?>
+        {
+            { "message", "Hello MCP!" }
+        });
+        var echoResult = await toolLoader.CallToolHandler(echoRequest, TestContext.Current.CancellationToken);
+        Assert.NotNull(echoResult);
+        Assert.False(echoResult.IsError);
+        var echoContent = echoResult.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(echoContent);
+        Assert.Equal("Echo: Hello MCP!", echoContent.Text);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithReadOnlyOption_FilterToolsWithNullAnnotations()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "readonly-tool",
+            Description = "Read-only tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var toolWithoutAnnotations = new Tool
+        {
+            Name = "tool-no-annotations",
+            Description = "Tool without annotations",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = null  // No annotations
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Read-only result" }], IsError = false })
+            .AddTool(toolWithoutAnnotations, _ => new CallToolResult { Content = [new TextContentBlock { Text = "No annotations result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // When ReadOnly is enabled, only tools with ReadOnlyHint = true should be returned
+        // Tools with null annotations should be filtered out
+        Assert.Single(result.Tools);
+        var returnedTool = result.Tools.First();
+        Assert.Equal("readonly-tool", returnedTool.Name);
+        Assert.True(returnedTool.Annotations?.ReadOnlyHint == true);
+
+        // Verify that the tool without annotations was filtered out
+        Assert.DoesNotContain(result.Tools, t => t.Name == "tool-no-annotations");
+    }
+
+    [Fact]
+    public async Task DisposeAsync_ShouldDisposeOwnedResourcesOnly()
+    {
+        // Arrange
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoaderAndDiscoveryStrategy();
+
+        // Act
+        await toolLoader.DisposeAsync();
+
+        // Assert - Discovery strategy should NOT be disposed (it's owned by DI container)
+        await mockDiscoveryStrategy.DidNotReceive().DisposeAsync();
+    }
+
+    [Fact]
+    public async Task DisposeAsync_ShouldClearInternalCollections()
+    {
+        // Arrange
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoaderAndDiscoveryStrategy();
+
+        // Initialize tool loader by calling ListToolsHandler
+        var request = McpTestUtilities.CreateToolListRequest();
+        await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Act
+        await toolLoader.DisposeAsync();
+
+        // Assert - After disposal, calling operations should work but with empty state
+        // (This tests that collections were cleared)
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        Assert.NotNull(result.Tools);
+        // Tools might be re-populated from discovery strategy, but internal state was cleared
+    }
+
+    [Fact]
+    public async Task DisposeAsync_ShouldBeIdempotent()
+    {
+        // Arrange
+        var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
+
+        // Act - dispose multiple times
+        await toolLoader.DisposeAsync();
+        await toolLoader.DisposeAsync();
+        await toolLoader.DisposeAsync();
+
+        // Assert - should not throw
+        // (Idempotency is verified by not throwing exceptions)
+    }
+
+    [Fact]
+    public async Task DisposeAsync_ShouldDisposeInitializationSemaphore()
+    {
+        // Arrange
+        var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
+
+        // Act
+        await toolLoader.DisposeAsync();
+
+        // Assert - This tests that the semaphore is disposed
+        // If the semaphore wasn't disposed properly, subsequent operations might have issues
+        // but this is mainly for coverage and resource cleanup verification
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMultipleServers_InitializesConcurrently()
+    {
+        // Arrange - Create multiple servers with controlled async initialization
+        var tcs1 = new TaskCompletionSource<bool>();
+        var tcs2 = new TaskCompletionSource<bool>();
+        var tcs3 = new TaskCompletionSource<bool>();
+
+        var client1Builder = new MockMcpClientBuilder()
+            .AddTool("tool-1", "Tool from server 1", "Response 1");
+        var client2Builder = new MockMcpClientBuilder()
+            .AddTool("tool-2", "Tool from server 2", "Response 2");
+        var client3Builder = new MockMcpClientBuilder()
+            .AddTool("tool-3", "Tool from server 3", "Response 3");
+
+        // Create a mock discovery strategy that delays client creation
+        var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+
+        var server1 = Substitute.For<IMcpServerProvider>();
+        server1.CreateMetadata().Returns(new McpServerMetadata("server-1", "server-1", "Server 1"));
+        var server2 = Substitute.For<IMcpServerProvider>();
+        server2.CreateMetadata().Returns(new McpServerMetadata("server-2", "server-2", "Server 2"));
+        var server3 = Substitute.For<IMcpServerProvider>();
+        server3.CreateMetadata().Returns(new McpServerMetadata("server-3", "server-3", "Server 3"));
+
+        mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
+            .Returns([server1, server2, server3]);
+
+        // Set up GetOrCreateClientAsync to wait on TaskCompletionSource to simulate concurrent operations
+        var client1 = client1Builder.Build();
+        var client2 = client2Builder.Build();
+        var client3 = client3Builder.Build();
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs1.Task; // Wait for signal
+                return client1;
+            });
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs2.Task; // Wait for signal
+                return client2;
+            });
+
+        mockDiscoveryStrategy.GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(async _ =>
+            {
+                await tcs3.Task; // Wait for signal
+                return client3;
+            });
+
+        var toolLoader = CreateToolLoader(mockDiscoveryStrategy);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act - Start initialization (it will block on TaskCompletionSources)
+        var listToolsTask = toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        // Give time for all GetOrCreateClientAsync calls to be invoked concurrently
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+
+        // Verify all three GetOrCreateClientAsync were called (proving concurrent execution)
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+
+        // Release all servers concurrently in reverse order to test proper synchronization
+        tcs3.SetResult(true);
+        tcs1.SetResult(true);
+        tcs2.SetResult(true);
+
+        // Wait for initialization to complete
+        var result = await listToolsTask;
+
+        // Assert - All tools should be loaded successfully
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Equal(3, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "tool-1");
+        Assert.Contains(result.Tools, t => t.Name == "tool-2");
+        Assert.Contains(result.Tools, t => t.Name == "tool-3");
+
+        // Verify no race conditions - calling again should use cached results without re-initialization
+        var cachedRequest = McpTestUtilities.CreateToolListRequest();
+        var cachedResult = await toolLoader.ListToolsHandler(cachedRequest, TestContext.Current.CancellationToken);
+        Assert.Equal(3, cachedResult.Tools.Count);
+
+        // Verify GetOrCreateClientAsync was NOT called again (proves caching works)
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-1", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-2", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        _ = mockDiscoveryStrategy.Received(1).GetOrCreateClientAsync("server-3", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WhenCancellationOccursDuringInitialization_AllowsRetry()
+    {
+        // Arrange - Create a server with controlled cancellation
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("test-tool", "Test Tool", "Response");
+
+        var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        var server = Substitute.For<IMcpServerProvider>();
+        server.CreateMetadata().Returns(new McpServerMetadata("test-server", "test-server", "Test Server"));
+
+        mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
+            .Returns([server]);
+
+        // First call: throw OperationCanceledException
+        var firstCall = true;
+        mockDiscoveryStrategy.GetOrCreateClientAsync("test-server", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                if (firstCall)
+                {
+                    firstCall = false;
+                    throw new OperationCanceledException("Initialization canceled");
+                }
+                return clientBuilder.Build();
+            });
+
+        var toolLoader = CreateToolLoader(mockDiscoveryStrategy);
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        // Act & Assert - First call should throw OperationCanceledException
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken));
+
+        // Act & Assert - Second call should succeed (proving initialization wasn't marked complete)
+        var retryRequest = McpTestUtilities.CreateToolListRequest();
+        var result = await toolLoader.ListToolsHandler(retryRequest, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Single(result.Tools);
+        Assert.Equal("test-tool", result.Tools.First().Name);
+
+        // Verify GetOrCreateClientAsync was called twice (once failed, once succeeded)
+        _ = mockDiscoveryStrategy.Received(2).GetOrCreateClientAsync("test-server", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithToolPrefix_ExposesToolsWithPrefix()
+    {
+        // Arrange
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("create_agent", "Create an agent", "Created")
+            .AddTool("list_agents", "List agents", "Agents");
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        // Assert — exposed names have the prefix
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == "foundry_create_agent");
+        Assert.Contains(result.Tools, t => t.Name == "foundry_list_agents");
+        // Original names must NOT appear
+        Assert.DoesNotContain(result.Tools, t => t.Name == "create_agent");
+        Assert.DoesNotContain(result.Tools, t => t.Name == "list_agents");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithToolPrefix_RoutesUsingOriginalName()
+    {
+        // Arrange — the upstream tool is "create_agent"; the client gets exposed as "foundry_create_agent"
+        const string upstreamToolName = "create_agent";
+        const string prefixedToolName = "foundry_create_agent";
+        const string expectedResponse = "Agent created successfully";
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(upstreamToolName, "Create an agent", _ => new CallToolResult
+            {
+                Content = [new TextContentBlock { Text = expectedResponse }],
+                IsError = false
+            });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        // Act — call using the prefixed name
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(prefixedToolName),
+            TestContext.Current.CancellationToken);
+
+        // Assert — response comes back correctly
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var text = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(text);
+        Assert.Equal(expectedResponse, text.Text);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithNoToolPrefix_ExposesToolsUnchanged()
+    {
+        // Arrange — server with no toolPrefix configured
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("search_docs", "Search documentation", "Results");
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("docs", "docs", "Docs server", clientBuilder)
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        // Assert — tool name is unchanged
+        Assert.Single(result.Tools);
+        Assert.Equal("search_docs", result.Tools[0].Name);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool(bool filterReadOnlyTool)
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "readonly-tool",
+            Description = "Read-only tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var writeTool = new Tool
+        {
+            Name = "write-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Read-only result" }], IsError = false })
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Write result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+        if (filterReadOnlyTool)
+        {
+            configuration.Tool = ["write-tool"];
+        }
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+
+        // Act - Try to call the non-read-only tool directly
+        var request = McpTestUtilities.CreateToolCallRequest("write-tool");
+        using var activity = new Activity("test-activity").Start();
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to read-only mode
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "write-tool");
+        var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(errorText);
+        Assert.Contains("read-only mode", errorText.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyMode_AllowsReadOnlyTool()
+    {
+        // Arrange
+        var readOnlyTool = new Tool
+        {
+            Name = "readonly-tool",
+            Description = "Read-only tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = true }
+        };
+
+        var writeTool = new Tool
+        {
+            Name = "write-tool",
+            Description = "Write tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new ToolAnnotations { ReadOnlyHint = false }
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(readOnlyTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Read-only result" }], IsError = false })
+            .AddTool(writeTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Write result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+
+        // Act - Call the read-only tool
+        var request = McpTestUtilities.CreateToolCallRequest("readonly-tool");
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should allow execution of read-only tool
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(textContent);
+        Assert.Equal("Read-only result", textContent.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithHttpMode_RejectsLocalRequiredTool()
+    {
+        // Arrange
+        var localRequiredTool = new Tool
+        {
+            Name = "local-tool",
+            Description = "Local required tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, true)]
+        };
+
+        var remoteTool = new Tool
+        {
+            Name = "remote-tool",
+            Description = "Remote tool",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = new(),
+            Meta = [new(McpHelper.LocalRequiredHintMetaKey, false)]
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(localRequiredTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Local result" }], IsError = false })
+            .AddTool(remoteTool, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Remote result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { Transport = TransportTypes.Http };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+
+        // Act - Try to call the local-required tool in HTTP mode
+        var request = McpTestUtilities.CreateToolCallRequest("local-tool");
+        using var activity = new Activity("test-activity").Start();
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject the tool call due to HTTP mode
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "local-tool");
+        var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(errorText);
+        Assert.Contains("HTTP mode", errorText.Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithReadOnlyToolWithNullAnnotations_RejectsInReadOnlyMode()
+    {
+        // Arrange - tool with null annotations should be rejected in read-only mode
+        var toolWithoutAnnotations = new Tool
+        {
+            Name = "no-annotations-tool",
+            Description = "Tool without annotations",
+            InputSchema = JsonDocument.Parse("""{"type": "object", "properties": {}}""").RootElement,
+            Annotations = null
+        };
+
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(toolWithoutAnnotations, _ => new CallToolResult { Content = [new TextContentBlock { Text = "Result" }], IsError = false });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
+            .Build();
+
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+
+        // Act - Try to call a tool with null annotations in read-only mode
+        var request = McpTestUtilities.CreateToolCallRequest("no-annotations-tool");
+        using var activity = new Activity("test-activity").Start();
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert - Should reject since null annotations means ReadOnlyHint is not true
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "no-annotations-tool");
+        var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(errorText);
+        Assert.Contains("read-only mode", errorText.Text);
+    }
+}

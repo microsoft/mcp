@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.WellArchitectedFramework.Options.ServiceGuide;
 
-public class ServiceGuideGetOptions : GlobalOptions
+public sealed class ServiceGuideGetOptions
 {
-    [JsonPropertyName(WellArchitectedFrameworkOptionDefinitions.ServiceName)]
+    [Option(Description = WellArchitectedFrameworkOptionDescriptions.Service)]
     public string? Service { get; set; }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
@@ -31,7 +32,7 @@ public class NullPluginFileReferenceAllowlistProvider : IPluginFileReferenceAllo
 
 /// <summary>
 /// Provides file reference validation using an embedded JSON resource allowlist.
-/// The resource should contain a JSON array of plugin-relative file references.
+/// The schema of the JSON resource can be found in https://github.com/microsoft/GitHub-Copilot-for-Azure/blob/main/scripts/src/generate-mcp-allowlists.ts
 /// </summary>
 public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileReferenceAllowlistProvider
 {
@@ -74,16 +75,7 @@ public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileRe
         {
             var resourceName = EmbeddedResourceHelper.FindEmbeddedResource(_sourceAssembly, _resourcePattern);
             var json = EmbeddedResourceHelper.ReadEmbeddedResource(_sourceAssembly, resourceName);
-            using var jsonDocument = JsonDocument.Parse(json);
-            var paths = new List<string>();
-
-            foreach (var element in jsonDocument.RootElement.EnumerateArray())
-            {
-                if (element.GetString() is string path)
-                {
-                    paths.Add(path);
-                }
-            }
+            var paths = ParseAllowedPaths(json);
 
             _logger.LogInformation("Loaded {Count} allowed plugin file references from {ResourceName}", paths.Count, resourceName);
             return new HashSet<string>(paths, StringComparer.Ordinal);
@@ -97,5 +89,24 @@ public sealed class ResourcePluginFileReferenceAllowlistProvider : IPluginFileRe
             _logger.LogError(ex, errorMessage);
             return new HashSet<string>(StringComparer.Ordinal);
         }
+    }
+
+    internal static List<string> ParseAllowedPaths(string json)
+    {
+        using var jsonDocument = JsonDocument.Parse(json);
+        var paths = new List<string>();
+
+        foreach (var property in jsonDocument.RootElement.GetProperty("references").EnumerateObject())
+        {
+            foreach (var element in property.Value.EnumerateArray())
+            {
+                if (element.GetString() is string path)
+                {
+                    paths.Add(path);
+                }
+            }
+        }
+
+        return paths;
     }
 }

@@ -1,0 +1,33 @@
+{
+    "parameters": {
+        "connectionId": "6b571614-2e98-4bfd-b9ed-1cb8d3ffc396",
+        "updateConnectionRequest": {
+            "connectivityType": "StreamingVirtualNetworkGateway",
+            "displayName": "ContosoMarketingStreamingVirtualNetworkGatewayConnection",
+            "credentialDetails": {
+                "singleSignOnType": "None"
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "6b571614-2e98-4bfd-b9ed-1cb8d3ffc396",
+                "displayName": "ContosoMarketingStreamingVirtualNetworkGatewayConnection",
+                "gatewayId": "befccff4-3ee6-40d7-b8f1-a0a9fd684a85",
+                "connectivityType": "StreamingVirtualNetworkGateway",
+                "connectionDetails": {
+                    "type": "SQL",
+                    "path": "contoso.database.windows.net;marketing"
+                },
+                "privacyLevel": "Organizational",
+                "credentialDetails": {
+                    "credentialType": "Basic",
+                    "singleSignOnType": "None",
+                    "connectionEncryption": "Encrypted",
+                    "skipTestConnection": false
+                }
+            }
+        }
+    }
+}

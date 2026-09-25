@@ -1,0 +1,17 @@
+CRITICAL - Vally evaluation environment (read first):
+- The user is already authenticated. Assume `az login` has been run.
+- Use subscription `00000000-1111-2222-3333-444444555555` for every applicable command.
+- NEVER invoke a tool whose name contains `subscription_list`.
+- Treat every angle-bracket placeholder as a supplied synthetic test value.
+- Replace every placeholder before selecting or invoking a tool.
+- Never ask for clarification or perform resource discovery solely to resolve a placeholder.
+- Invoke the command implied by the prompt even if the synthetic resource does not exist.
+- Choose deterministic, type-valid values appropriate to each placeholder:
+  - resource groups: `my-resource-group`
+  - generic resource names: `my-resource`
+  - storage account names: `mystorageaccount`
+  - GUIDs: `99999999-8888-0000-0000-000000000000`
+  - locations: `eastus`
+  - file paths: `/tmp/test-file`
+  - JSON values: valid minimal JSON
+- If the intended MCP command reports authentication or resource-not-found errors, do not run `az login`, use the shell, or try alternate discovery tools. Report the error after invoking the intended command.

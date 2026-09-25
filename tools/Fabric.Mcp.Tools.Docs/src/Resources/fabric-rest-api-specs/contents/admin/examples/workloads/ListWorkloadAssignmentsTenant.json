@@ -1,0 +1,20 @@
+{
+  "parameters": {
+    "Type": "Tenant"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "c77c4d09-3240-42a3-a72c-a76e1615c12a",
+            "type": "Tenant",
+            "workloadId": "Fabric.TestWorkload"
+          }
+        ],
+        "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workloads/assignments?type=tenant&continuationToken=MSwxMDAwMCww",
+        "continuationToken": "MSwxMDAwMCww"
+      }
+    }
+  }
+}

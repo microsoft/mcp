@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
 
@@ -12,14 +11,12 @@ public interface IFoundryExtensionsService
     Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(
         string endpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
         string endpoint,
         string indexName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<CompletionResult> CreateCompletionAsync(
@@ -32,7 +29,6 @@ public interface IFoundryExtensionsService
         double? temperature = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default
     );
 
@@ -42,12 +38,8 @@ public interface IFoundryExtensionsService
         string inputText,
         string subscription,
         string resourceGroup,
-        string? user = null,
-        string encodingFormat = "float",
-        int? dimensions = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default
     );
 
@@ -56,8 +48,6 @@ public interface IFoundryExtensionsService
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default
     );
 
@@ -73,12 +63,10 @@ public interface IFoundryExtensionsService
         double? frequencyPenalty = null,
         double? presencePenalty = null,
         string? stop = null,
-        bool? stream = null,
         int? seed = null,
         string? user = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default
     );
 
@@ -86,7 +74,6 @@ public interface IFoundryExtensionsService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default
     );
 
@@ -95,7 +82,6 @@ public interface IFoundryExtensionsService
         string resourceGroup,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default
     );
 }

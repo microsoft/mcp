@@ -1,78 +1,58 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Storage.Options;
+using System.Net;
+using Azure;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
-public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService) : BaseStorageCommand<ContainerGetOptions>()
+[CommandMetadata(
+    Id = "e96eb850-abb8-431d-bdc6-7ccd0a24838e",
+    Name = "get",
+    Title = "Get Storage Container Details",
+    Description = """
+        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or
+        show details for a specific Storage container. If no container specified, shows all containers in the storage
+        account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
+
+        Required: --account
+        Optional: --container, --tenant, --prefix
+
+        Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
+        Do not use this tool to list blobs in a container.
+        """,
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<ContainerGetOptions, ContainerGetCommand.ContainerGetCommandResult>
 {
-    private const string CommandTitle = "Get Storage Container Details";
     private readonly ILogger<ContainerGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
-    public override string Id => "e96eb850-abb8-431d-bdc6-7ccd0a24838e";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        $"""
-        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or show details for a specific Storage container. Displays container properties including access policies, lease status, and metadata. If no container specified, shows all containers in the storage account. Required: account <account>, subscription <subscription>. Optional: container <container>, tenant <tenant>. Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties. Do not use this tool to list blobs in a container.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerGetOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(StorageOptionDefinitions.Container.AsOptional());
-    }
-
-    protected override ContainerGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Container.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var containers = await _storageService.GetContainerDetails(
-                options.Account!,
+                options.Account,
                 options.Container,
-                options.Subscription!,
+                options.Prefix,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new ContainerGetCommandResult(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)
@@ -90,5 +70,19 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
         }
     }
 
-    internal record ContainerGetCommandResult(List<ContainerInfo> Containers);
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
+            $"Access denied reading container details. This commonly happens when the caller has a management-plane role (e.g., Contributor/Owner) but lacks a data-plane role such as 'Storage Blob Data Reader' or 'Storage Blob Data Contributor' on this storage account. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied reading container details. This can result from a missing data-plane RBAC role, storage account network/firewall restrictions, or an invalid/expired credential. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "ContainerNotFound" =>
+            $"Container not found. Verify the container exists in the specified storage account. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            $"Storage account or container not found. Verify the account and container names. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
+
+    public record ContainerGetCommandResult(List<ContainerInfo> Containers);
 }

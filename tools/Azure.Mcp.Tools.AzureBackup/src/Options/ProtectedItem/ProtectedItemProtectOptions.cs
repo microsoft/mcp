@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Microsoft.Mcp.Core.Options;
+
+namespace Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
+
+public sealed class ProtectedItemProtectOptions : BaseProtectedItemOptions
+{
+    [Option(Description = AzureBackupOptionDefinitions.Policy)]
+    public required string Policy { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.DatasourceId)]
+    public required string DatasourceId { get; set; }
+
+    [Option(Description = "The workload type hint: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.")]
+    public string? DatasourceType { get; set; }
+
+    [Option(Description = "Resource group used to store AKS volume snapshots created by Backup. DPP AKS only.")]
+    public string? AksSnapshotResourceGroup { get; set; }
+
+    [Option(Description = "Comma-separated label selectors (e.g. 'app=frontend,tier=web') applied to the AKS backup policy default scope. DPP AKS only.")]
+    public string? AksLabelSelectors { get; set; }
+
+    [Option(Description = "Include cluster-scoped resources in the AKS backup policy. DPP AKS only.")]
+    public bool AksIncludeClusterScopeResources { get; set; }
+
+    // Selective Disk Backup (RSV IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
+    [Option(Description = AzureBackupOptionDefinitions.DiskListSetting)]
+    public string? DiskListSetting { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.DisksList)]
+    public string? DisksList { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.ExcludeAllDataDisks)]
+    public bool ExcludeAllDataDisks { get; set; }
+}

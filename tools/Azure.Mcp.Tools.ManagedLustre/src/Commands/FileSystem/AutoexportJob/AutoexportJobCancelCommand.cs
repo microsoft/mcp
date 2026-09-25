@@ -1,87 +1,51 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 
-public sealed class AutoexportJobCancelCommand(IManagedLustreService service, ILogger<AutoexportJobCancelCommand> logger)
-    : BaseManagedLustreCommand<AutoexportJobCancelOptions>(logger)
-{
-    private const string CommandTitle = "Cancel Azure Managed Lustre Autoexport Job";
-
-    private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<AutoexportJobCancelCommand> _logger = logger;
-
-    public override string Id => "8e2f6d1b-3c9a-4f7e-b2d5-7a8c3e4f5b6d";
-
-    public override string Name => "cancel";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "8e2f6d1b-3c9a-4f7e-b2d5-7a8c3e4f5b6d",
+    Name = "cancel",
+    Title = "Cancel Azure Managed Lustre Autoexport Job",
+    Description = """
         Cancels a running auto export job for an Azure Managed Lustre filesystem. This stops the ongoing sync operation from the Lustre filesystem to the linked blob storage container. Use this to terminate an autoexport job that is in progress.
         Required options:
         - filesystem-name: The name of the AMLFS filesystem
         - job-name: The name of the autoexport job to cancel
         - resource-group: The resource group containing the filesystem
         - subscription: The subscription containing the filesystem
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class AutoexportJobCancelCommand(IManagedLustreService service, ILogger<AutoexportJobCancelCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<AutoexportJobCancelOptions, AutoexportJobCancelCommand.AutoexportJobCancelResult>(subscriptionResolver)
+{
+    private readonly IManagedLustreService _service = service;
+    private readonly ILogger<AutoexportJobCancelCommand> _logger = logger;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AutoexportJobCancelOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.JobNameOption);
-    }
-
-    protected override AutoexportJobCancelOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
-        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.JobNameOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             await _service.CancelAutoexportJobAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileSystemName!,
-                options.JobName!,
+                options.ResourceGroup,
+                options.FilesystemName,
+                options.JobName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(options.JobName!, "Cancelled"), ManagedLustreJsonContext.Default.AutoexportJobCancelResult);
@@ -89,12 +53,12 @@ public sealed class AutoexportJobCancelCommand(IManagedLustreService service, IL
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error cancelling autoexport job {JobName} for AMLFS filesystem {FileSystem}.",
-                options.JobName, options.FileSystemName);
+                options.JobName, options.FilesystemName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record AutoexportJobCancelResult(string JobName, string Status);
+    public sealed record AutoexportJobCancelResult(string JobName, string Status);
 }

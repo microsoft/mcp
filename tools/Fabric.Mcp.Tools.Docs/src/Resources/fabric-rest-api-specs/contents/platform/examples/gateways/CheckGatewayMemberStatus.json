@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2",
+        "gatewayMemberId": "f921ee6b-8feb-4595-8aa7-3ed34338e8b6"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "status": "Online",
+                "gatewayVersion": "1.2.3",
+                "gatewayUpgradeState": "UpToDate"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "Retry-After": "30"
+            }
+        }
+    }
+}

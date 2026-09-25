@@ -1,0 +1,174 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Sql.Commands.Server;
+using Azure.Mcp.Tools.Sql.Services;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using Xunit;
+
+namespace Azure.Mcp.Tools.Sql.Tests.Server;
+
+public class ServerDeleteCommandTests : SubscriptionCommandUnitTestsBase<ServerDeleteCommand, ISqlService>
+{
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        var command = Command.GetCommand();
+        Assert.Equal("delete", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.NotEmpty(command.Description);
+        Assert.DoesNotContain(command.Options, option => option.Name == "--force");
+    }
+
+    [Theory]
+    [InlineData("--subscription sub --resource-group rg --server testserver", true)]
+    [InlineData("--subscription sub --resource-group rg --server testserver --force", false)]
+    [InlineData("--subscription sub --resource-group rg", false)] // Missing server
+    [InlineData("--subscription sub --server testserver", false)] // Missing resource group
+    [InlineData("--resource-group rg --server testserver", false)] // Missing subscription
+    [InlineData("", false)] // Missing all required parameters
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        // Arrange
+        if (shouldSucceed)
+        {
+            Service.DeleteServerAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<CancellationToken>())
+                .Returns(true);
+        }
+
+        // Act
+        var response = await ExecuteCommandAsync(args);
+
+        // Assert
+        if (shouldSucceed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenServerDeletedSuccessfully_ReturnsSuccess()
+    {
+        // Arrange
+        Service.DeleteServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        await Service.Received(1).DeleteServerAsync("testserver", "rg", "sub", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenServerNotFound_Returns404()
+    {
+        // Arrange
+        Service.DeleteServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenServiceThrowsException_ReturnsErrorResponse()
+    {
+        // Arrange
+        Service.DeleteServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver");
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains("error", response.Message.ToLower());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenServerNotFoundFromAzure_Returns404StatusCode()
+    {
+        // Arrange
+        var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not Found: Server not found");
+
+        Service.DeleteServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(requestException);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not found", response.Message.ToLower());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenUnauthorized_Returns403StatusCode()
+    {
+        // Arrange
+        var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden: Insufficient permissions");
+
+        Service.DeleteServerAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(requestException);
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "testserver");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("authorization failed", response.Message.ToLower());
+    }
+}

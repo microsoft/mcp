@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Options;
 using Azure.Mcp.Tools.Redis.Services;
@@ -14,49 +15,31 @@ namespace Azure.Mcp.Tools.Redis.Commands;
 /// <summary>
 /// Lists Redis resources in a subscription. Returns details for all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources.
 /// </summary>
-public sealed class ResourceListCommand(IRedisService redisService, ILogger<ResourceListCommand> logger)
-    : SubscriptionCommand<ResourceListOptions>()
+[CommandMetadata(
+    Id = "eded7479-4187-4742-957f-d7778e03a69d",
+    Name = "list",
+    Title = "List Redis Resources",
+    Description = "List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ResourceListCommand(IRedisService redisService, ILogger<ResourceListCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ResourceListOptions, ResourceListCommand.ResourceListCommandResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "List Redis Resources";
     private readonly IRedisService _redisService = redisService;
     private readonly ILogger<ResourceListCommand> _logger = logger;
 
-    public override string Id => "eded7479-4187-4742-957f-d7778e03a69d";
-
-    public override string Name => "list";
-
-    public override string Description =>
-        $"""
-        List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ResourceListOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var resources = await _redisService.ListResourcesAsync(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(resources ?? []), RedisJsonContext.Default.ResourceListCommandResult);
@@ -71,5 +54,5 @@ public sealed class ResourceListCommand(IRedisService redisService, ILogger<Reso
         return context.Response;
     }
 
-    internal record ResourceListCommandResult(IEnumerable<Resource> Resources);
+    public sealed record ResourceListCommandResult(IEnumerable<Resource> Resources);
 }

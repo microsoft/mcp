@@ -3,24 +3,19 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class ResourceResolverService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IResourceResolverService
+public class ResourceResolverService(IAzureService azureService)
+    : BaseAzureService(azureService), IResourceResolverService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
     public async Task<ResourceIdentifier> ResolveResourceIdAsync(
         string subscription,
         string? resourceGroup,
         string? resourceType,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
@@ -38,11 +33,11 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         }
 
         // Need to discover the resource - get subscription resource
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         // Get all resources matching the name
         var allMatchingResources = await subscriptionResource.GetGenericResourcesAsync(cancellationToken: cancellationToken)
-            .Where(r => r.Data.Name?.Equals(resourceName, StringComparison.OrdinalIgnoreCase) == true)
+            .Where(r => r.Data.Name?.Equals(resourceName, StringComparisons.ResourceName) == true)
             .ToListAsync(cancellationToken: cancellationToken);
 
         if (allMatchingResources.Count == 0)
@@ -57,7 +52,7 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             filteredResources = filteredResources.Where(r =>
-                r.Data.Id?.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true);
+                r.Data.Id?.ResourceGroupName?.Equals(resourceGroup, StringComparisons.ResourceGroup) == true);
         }
 
         // Filter by resource type if provided

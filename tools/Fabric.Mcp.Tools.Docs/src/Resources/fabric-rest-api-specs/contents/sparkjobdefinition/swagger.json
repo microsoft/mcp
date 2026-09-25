@@ -632,17 +632,7 @@
         ],
         "responses": {
           "202": {
-            "description": "Request accepted, job execution is in progress.",
-            "headers": {
-              "Location": {
-                "type": "string",
-                "description": "The URL to the job instance resource."
-              },
-              "Retry-After": {
-                "type": "integer",
-                "description": "The number of seconds to wait before retrying the request."
-              }
-            }
+            "description": "Request accepted, job execution is in progress.\n\n---\n**Headers:**\n\n**Location** `string` - The URL to the job instance resource.\n\n**Retry-After** `integer` - The number of seconds the client should wait before polling the job status for the first time. Clients must use this value to determine when to check the job status and should wait at least this many seconds before the first status poll."
           },
           "429": {
             "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",

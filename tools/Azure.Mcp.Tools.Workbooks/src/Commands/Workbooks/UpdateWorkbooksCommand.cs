@@ -2,75 +2,40 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Workbooks.Models;
-using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logger) : BaseWorkbooksCommand<UpdateWorkbooksOptions>
+[CommandMetadata(
+    Id = "9efdc32c-22bc-4b85-8b5c-2fbefc0e927e",
+    Name = "update",
+    Title = "Update Workbook",
+    Description = "Updates properties of an existing Azure Workbook by adding new steps, modifying content, or changing the display name. Returns the updated workbook details.  Requires the workbook resource ID and either new serialized content or a new display name.",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logger, IWorkbooksService workbooksService)
+    : AuthenticatedCommand<UpdateWorkbooksOptions, UpdateWorkbooksCommand.UpdateWorkbooksCommandResult>
 {
-    private const string CommandTitle = "Update Workbook";
     private readonly ILogger<UpdateWorkbooksCommand> _logger = logger;
-    public override string Id => "9efdc32c-22bc-4b85-8b5c-2fbefc0e927e";
+    private readonly IWorkbooksService _workbooksService = workbooksService;
 
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Updates properties of an existing Azure Workbook by adding new steps, modifying content, or changing the display name. Returns the updated workbook details.  Requires the workbook resource ID and either new serialized content or a new display name.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, UpdateWorkbooksOptions options, CancellationToken cancellationToken)
     {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(WorkbooksOptionDefinitions.WorkbookId);
-        command.Options.Add(WorkbooksOptionDefinitions.DisplayName);
-        command.Options.Add(WorkbooksOptionDefinitions.SerializedContent);
-    }
-
-    protected override UpdateWorkbooksOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.WorkbookId.Name);
-        options.DisplayName = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.DisplayName.Name);
-        options.SerializedContent = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SerializedContent.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var workbooksService = context.GetService<IWorkbooksService>();
-            var updatedWorkbook = await workbooksService.UpdateWorkbookAsync(
-                options.WorkbookId!,
+            var updatedWorkbook = await _workbooksService.UpdateWorkbookAsync(
+                options.WorkbookId,
                 options.DisplayName,
                 options.SerializedContent,
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken) ?? throw new InvalidOperationException("Failed to update workbook");
 
@@ -85,5 +50,5 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         return context.Response;
     }
 
-    internal record UpdateWorkbooksCommandResult(WorkbookInfo Workbook);
+    public sealed record UpdateWorkbooksCommandResult(WorkbookInfo Workbook);
 }

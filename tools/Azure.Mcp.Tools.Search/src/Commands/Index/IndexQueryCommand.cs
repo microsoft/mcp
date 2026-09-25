@@ -1,81 +1,51 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Search.Options;
+using System.Text.Json;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : GlobalCommand<IndexQueryOptions>()
-{
-    private const string CommandTitle = "Query an Azure AI Search (formerly known as \"Azure Cognitive Search\") Index";
-    private readonly ILogger<IndexQueryCommand> _logger = logger;
-
-    public override string Id => "f1938a77-8d6c-49c7-b592-71b4f26508e7";
-
-    public override string Name => "query";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "f1938a77-8d6c-49c7-b592-71b4f26508e7",
+    Name = "query",
+    Title = "Query an Azure AI Search (formerly known as \"Azure Cognitive Search\") Index",
+    Description = """
         Queries/searches documents in an Azure AI Search index with a given query, returning the results of the
         query/search.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger, ISearchService searchService)
+    : AuthenticatedCommand<IndexQueryOptions, IndexQueryCommand.IndexQueryCommandResult>
+{
+    private readonly ILogger<IndexQueryCommand> _logger = logger;
+    private readonly ISearchService _searchService = searchService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, IndexQueryOptions options, CancellationToken cancellationToken)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(SearchOptionDefinitions.Service);
-        command.Options.Add(SearchOptionDefinitions.Index);
-        command.Options.Add(SearchOptionDefinitions.Query);
-    }
-
-    protected override IndexQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Service.Name);
-        options.Index = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Index.Name);
-        options.Query = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Query.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var searchService = context.GetService<ISearchService>();
-
-            var results = await searchService.QueryIndex(
-                options.Service!,
-                options.Index!,
-                options.Query!,
-                options.RetryPolicy,
+            var results = await _searchService.QueryIndex(
+                options.Service,
+                options.Index,
+                options.Query,
+                options.QueryType,
+                options.SemanticConfiguration,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);
+            context.Response.Results = ResponseResult.Create(
+                new(results),
+                SearchJsonContext.Default.IndexQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -85,4 +55,6 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
 
         return context.Response;
     }
+
+    public sealed record IndexQueryCommandResult(List<JsonElement> Results);
 }

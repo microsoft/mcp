@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager.HDInsight;
 using Azure.ResourceManager.HDInsight.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class HDInsightUsageChecker(TokenCredential credential, string subscriptionId, ILogger<HDInsightUsageChecker> logger, ITenantService tenantService) : AzureUsageChecker(credential, subscriptionId, logger, tenantService)
+public class HDInsightUsageChecker(TokenCredential credential, string subscriptionId, ILogger<HDInsightUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {

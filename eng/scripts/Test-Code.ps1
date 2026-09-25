@@ -4,7 +4,6 @@
 [CmdletBinding()]
 param(
     [string[]] $Paths,
-    [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
     [string] $TestResultsPath,
@@ -43,18 +42,28 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
 # Finds all test projects, then filters them based on the specified path filters.
 function FilterTestProjects {
-    $fileNameFilters = switch ($testType) {
-        'Live' { '*.LiveTests.csproj' }
-        'Unit' { '*.UnitTests.csproj' }
-        'Recorded' { '*.LiveTests.csproj' }
-        'All'  { '*.LiveTests.csproj', '*.UnitTests.csproj' }
+    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File
+    | Where-Object {
+        $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
+        # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
+        $result = $false
+        return ([bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result -and $TestType -in @('Live', 'Recorded', 'All')) -or
+                ([bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result -and $TestType -in @('Unit', 'All'))
     }
-
-    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*.csproj" -Include $fileNameFilters -File
     | ForEach-Object { @{
         FullName = $_.FullName
         Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
     }}
+
+    # if provided a buildinfo, further scope the tests to only those impacted by changes
+    if ($BuildInfo){
+        $changedPaths = $BuildInfo.pathsToTest | ForEach-Object { $_.path }
+
+        $testProjects = $testProjects | Where-Object {
+            $testProjectPath = $_.Relative
+            ($changedPaths | Where-Object { $testProjectPath.StartsWith($_) }).Count -gt 0
+        }
+    }
 
     if ($testType -eq 'Recorded') {
         # until all LiveTest projects are migrated to recorded tests, we _must_ complete
@@ -62,16 +71,6 @@ function FilterTestProjects {
         $testProjects = $testProjects | Where-Object {
             $projectDirectory = Split-Path -Path $_.FullName -Parent
             Test-Path -Path (Join-Path -Path $projectDirectory -ChildPath 'assets.json')
-        }
-
-        # if provided a buildinfo, further scope the recorded tests to only those impacted by changes
-        if ($BuildInfo){
-            $changedPaths = $BuildInfo.pathsToTest | ForEach-Object { $_.path }
-
-            $testProjects = $testProjects | Where-Object {
-                $testProjectPath = $_.Relative
-                ($changedPaths | Where-Object { $testProjectPath.StartsWith($_) }).Count -gt 0
-            }
         }
     }
 
@@ -127,19 +126,29 @@ function CreateTestSolution {
 }
 
 function Create-CoverageReport {
-    # Find the coverage file
-    $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.xml"
-    | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
-    | Select-Object -First 1
+    # Find the coverage files
+    $coverageFiles = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.*.xml"
+        | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
 
-    if (-not $coverageFile) {
+    if (-not $coverageFiles -or $coverageFiles.Count -eq 0) {
         Write-Error "No coverage file found!"
         exit 1
     }
 
+    if (-not (Get-Command dotnet-coverage -ErrorAction SilentlyContinue)) {
+        Write-Host "Installing dotnet-coverage tool..."
+        dotnet tool install -g dotnet-coverage
+    }
+
+    $mergedFile = "$TestResultsPath/coverage.merged.cobertura.xml"
+    Write-Host "Merging coverage files into $mergedFile..."
+    Invoke-LoggedCommand ("dotnet-coverage merge $TestResultsPath/coverage.cobertura.*.xml" +
+        " --output '$mergedFile'" +
+        " --output-format cobertura")
+
     if ($env:TF_BUILD) {
         # Write the path to the cover file to a pipeline variable
-        Write-Host "##vso[task.setvariable variable=CoverageFile]$($coverageFile.FullName)"
+        Write-Host "##vso[task.setvariable variable=CoverageFile]$($mergedFile)"
     } else {
         # Ensure reportgenerator tool is installed
         if (-not (Get-Command reportgenerator -ErrorAction SilentlyContinue)) {
@@ -152,7 +161,7 @@ function Create-CoverageReport {
 
         $reportDirectory = "$TestResultsPath/coverageReport"
         Invoke-LoggedCommand ("reportgenerator" +
-        " -reports:'$coverageFile'" +
+        " -reports:'$mergedFile'" +
         " -targetdir:'$reportDirectory'" +
         " -reporttypes:'Html;HtmlSummary;Cobertura'" +
         " -assemblyfilters:'+azmcp'" +
@@ -188,7 +197,7 @@ function Create-CoverageReport {
     try{
         $CommandCoverageSummaryFile = "$TestResultsPath/Coverage.md"
 
-        $xml = [xml](Get-Content $coverageFile.FullName)
+        $xml = [xml](Get-Content $mergedFile)
 
         $classes = $xml.coverage.packages.package.classes.class |
             Where-Object { $_.name -match 'AzureMcp\.(.*\.)?Commands\.' -and $_.filename -notlike '*System.Text.Json.SourceGeneration*' }
@@ -298,16 +307,17 @@ try {
         exit $LastExitCode
     }
 
-    $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
+    $coverageArg = $CollectCoverage ? "--coverlet --coverlet-output-format cobertura" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
-    $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
-
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
-
-    if($Members.Count -gt 0) {
-        $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
-        $command += " --filter '$memberFilterString'"
+    $loggerArg = "--report-xunit-trx --output 'Detailed'"
+    $filterArg = switch ($TestType) {
+        'Live' { "--filter-trait 'TestType=Live'" }
+        'Unit' { "--filter-not-trait 'TestType=Live'" }
+        'Recorded' { "--filter-trait 'TestType=Live'" }
+        default { "" }
     }
+
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg $filterArg"
 
     Invoke-LoggedMsBuildCommand -Command $command -AllowedExitCodes @(0, 1)
 }

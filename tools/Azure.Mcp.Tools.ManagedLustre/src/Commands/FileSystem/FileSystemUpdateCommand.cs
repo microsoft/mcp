@@ -1,100 +1,69 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogger<FileSystemUpdateCommand> logger)
-    : BaseManagedLustreCommand<FileSystemUpdateOptions>(logger)
+[CommandMetadata(
+    Id = "db1bdf99-ac8a-4920-ab2e-15048623b2dc",
+    Name = "update",
+    Title = "Update Azure Managed Lustre FileSystem",
+    Description = "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = true,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = false,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogger<FileSystemUpdateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<FileSystemUpdateOptions, FileSystemUpdateCommand.FileSystemUpdateResult>(subscriptionResolver)
 {
-    private const string CommandTitle = "Update Azure Managed Lustre FileSystem";
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<FileSystemUpdateCommand> _logger = logger;
+    private readonly ILogger<FileSystemUpdateCommand> _logger = logger;
 
-    public override string Id => "db1bdf99-ac8a-4920-ab2e-15048623b2dc";
-
-    public override string Name => "update";
-
-    public override string Description =>
-        """
-        Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.
-        """;
-
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(FileSystemUpdateOptions options, ValidationResult validationResult)
     {
-        Destructive = true,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = false,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
+        if (string.IsNullOrWhiteSpace(options.MaintenanceDay) &&
+            string.IsNullOrWhiteSpace(options.MaintenanceTime) &&
+            string.IsNullOrWhiteSpace(options.RootSquashMode))
+        {
+            validationResult.Errors.Add("At least one of maintenance-day/time or root-squash fields must be provided.");
+        }
 
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.NameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.OptionalMaintenanceDayOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.OptionalMaintenanceTimeOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.NoSquashNidListsOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SquashUidOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.SquashGidOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.RootSquashModeOption);
-        command.Validators.Add(ValidateRootSquashOptions);
-        command.Validators.Add(ValidateMaintanenceOptionsUpdate);
-        command.Validators.Add(ValidateEncryptionOptions);
-        command.Validators.Add(ValidateHSMOptions);
-        command.Validators.Add(ValidateHasUpdateOptions);
+        ManagedLustreCommonValidators.ValidateRootSquashOptions(validationResult, options.RootSquashMode, options.NoSquashNidList, options.SquashUid, options.SquashGid);
+
+        var updateWithMaintenance = !string.IsNullOrWhiteSpace(options.MaintenanceDay) || !string.IsNullOrWhiteSpace(options.MaintenanceTime);
+        if ((string.IsNullOrWhiteSpace(options.MaintenanceDay) || string.IsNullOrWhiteSpace(options.MaintenanceTime)) && updateWithMaintenance)
+        {
+            validationResult.Errors.Add("When updating maintenance window, both --maintenance-day and --maintenance-time must be specified.");
+        }
     }
 
-    protected override FileSystemUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Name = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.NameOption.Name);
-        options.MaintenanceDay = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.OptionalMaintenanceDayOption.Name);
-        options.MaintenanceTime = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.OptionalMaintenanceTimeOption.Name);
-        options.RootSquashMode = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.RootSquashModeOption.Name);
-        options.NoSquashNidLists = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.NoSquashNidListsOption.Name);
-        options.SquashUid = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.SquashUidOption.Name);
-        options.SquashGid = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.SquashGidOption.Name);
-        return options;
-    }
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileSystemUpdateOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-            var options = BindOptions(parseResult);
-
             var fs = await _service.UpdateFileSystemAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Name!,
+                options.ResourceGroup,
+                options.Name,
                 options.MaintenanceDay,
                 options.MaintenanceTime,
                 options.RootSquashMode,
-                options.NoSquashNidLists,
+                options.NoSquashNidList,
                 options.SquashUid,
                 options.SquashGid,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemUpdateResult);
@@ -108,5 +77,5 @@ public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogg
         return context.Response;
     }
 
-    internal record FileSystemUpdateResult(Models.LustreFileSystem FileSystem);
+    public sealed record FileSystemUpdateResult(Models.LustreFileSystem FileSystem);
 }

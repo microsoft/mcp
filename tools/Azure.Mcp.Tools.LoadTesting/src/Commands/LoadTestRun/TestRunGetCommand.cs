@@ -1,98 +1,66 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
-using Azure.Mcp.Tools.LoadTesting.Options;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 
-public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService)
-    : BaseLoadTestingCommand<TestRunGetOptions>
-{
-    private const string _commandTitle = "Test Run Get";
-    private readonly ILogger<TestRunGetCommand> _logger = logger;
-    private readonly ILoadTestingService _loadTestingService = loadTestingService;
-    public override string Id => "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b";
-    public override string Name => "get";
-    public override string Description =>
-        $"""
+[CommandMetadata(
+    Id = "713313ec-b9a5-4a71-9953-5b2d4a7b5d7b",
+    Name = "get",
+    Title = "Test Run Get",
+    Description = """
         Get load test run details by testrun ID, or list all test runs by test ID.
         Returns execution details including status, start/end times, progress, metrics, and artifacts.
         Does not return test configuration or resource details.
-        """;
-    public override string Title => _commandTitle;
+        """,
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTestingService loadTestingService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TestRunGetOptions, TestRunGetCommand.TestRunGetCommandResult>(subscriptionResolver)
+{
+    private readonly ILogger<TestRunGetCommand> _logger = logger;
+    private readonly ILoadTestingService _loadTestingService = loadTestingService;
 
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(TestRunGetOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
+        base.ValidateOptions(options, validationResult);
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(LoadTestingOptionDefinitions.TestResource.AsRequired());
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(LoadTestingOptionDefinitions.TestRun.AsOptional());
-        command.Options.Add(LoadTestingOptionDefinitions.Test.AsOptional());
-
-        command.Validators.Add(commandResult =>
+        if (string.IsNullOrEmpty(options.TestrunId) && string.IsNullOrEmpty(options.TestId))
         {
-            var testRunId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
-            var testId = commandResult.GetValueWithoutDefault<string>(LoadTestingOptionDefinitions.Test.Name);
-
-            if (string.IsNullOrEmpty(testRunId) && string.IsNullOrEmpty(testId))
-            {
-                commandResult.AddError("Either --testrun or --test must be provided.");
-                commandResult.AddError("Either --testrun or --test must be provided. Pass --testrun to get details about a specific run or pass --test to list all test runs for the test.");
-            }
-            else if (!string.IsNullOrEmpty(testRunId) && !string.IsNullOrEmpty(testId))
-            {
-                commandResult.AddError("Cannot specify both --testrun and --test. Use one or the other.");
-            }
-        });
-    }
-
-    protected override TestRunGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.TestRun.Name);
-        options.TestId = parseResult.GetValueOrDefault<string>(LoadTestingOptionDefinitions.Test.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Either --testrun-id or --test-id must be provided. Pass --testrun-id to get details about a specific run or pass --test-id to list all test runs for the test.");
         }
+        else if (!string.IsNullOrEmpty(options.TestrunId) && !string.IsNullOrEmpty(options.TestId))
+        {
+            validationResult.Errors.Add("Cannot specify both --testrun-id and --test-id. Use one or the other.");
+        }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TestRunGetOptions options, CancellationToken cancellationToken)
+    {
         try
         {
             // If TestRunId is provided, get a single test run
-            if (!string.IsNullOrEmpty(options.TestRunId))
+            if (!string.IsNullOrEmpty(options.TestrunId))
             {
                 var result = await _loadTestingService.GetLoadTestRunAsync(
                     options.Subscription!,
-                    options.TestResourceName!,
-                    options.TestRunId!,
+                    options.TestResourceName,
+                    options.TestrunId,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 // Set results if any were returned
                 context.Response.Results = result != null
@@ -104,11 +72,10 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
             {
                 var results = await _loadTestingService.GetLoadTestRunsFromTestIdAsync(
                     options.Subscription!,
-                    options.TestResourceName!,
-                    options.TestId!,
+                    options.TestResourceName,
+                    options.TestId,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunGetCommandResult);
             }
@@ -117,11 +84,13 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger, ILoadTe
         catch (Exception ex)
         {
             // Log error with context information
-            _logger.LogError(ex, "Error in {Operation}. Options: {Options}", Name, options);
+            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}, TestResourceName: {TestResourceName}, TestId: {TestId}, TestrunId: {TestrunId}",
+                Name, options.Subscription, options.TestResourceName, options.TestId, options.TestrunId);
             // Let base class handle standard error processing
             HandleException(context, ex);
         }
         return context.Response;
     }
-    internal record TestRunGetCommandResult(List<TestRun> TestRuns);
+
+    public sealed record TestRunGetCommandResult(List<TestRun> TestRuns);
 }

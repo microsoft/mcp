@@ -1,107 +1,71 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [HiddenCommand]
+[CommandMetadata(
+    Id = "b70e5f70-d616-4a54-9879-6aa0a80345d9",
+    Name = "read",
+    Title = "Read OneLake File",
+    Description = "Read the contents of a file from OneLake storage.",
+    OperationPlane = ToolOperationPlane.Data,
+    Destructive = false,
+    Idempotent = true,
+    LocalRequired = false,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false)]
 public sealed class FileReadCommand(
     ILogger<FileReadCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileReadOptions>()
+    IOneLakeService oneLakeService,
+    IOptions<ServerRuntimeConfiguration> configuration) : AuthenticatedCommand<FileReadOptions, FileReadCommand.FileReadCommandResult>
 {
     private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     private const long InlineContentLimitBytes = 1 * 1024 * 1024; // 1 MiB inline payload limit
 
-    public override string Id => "b70e5f70-d616-4a54-9879-6aa0a80345d9";
-    public override string Name => "read";
-    public override string Title => "Read OneLake File";
-    public override string Description => "Read the contents of a file from OneLake storage.";
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(FileReadOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        LocalRequired = false,
-        OpenWorld = false,
-        ReadOnly = true,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
-        command.Options.Add(FabricOptionDefinitions.FilePath);
-        command.Options.Add(FabricOptionDefinitions.DownloadFilePath.AsOptional());
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (string.IsNullOrWhiteSpace(options.WorkspaceId) && string.IsNullOrWhiteSpace(options.Workspace))
         {
-            var workspaceId = result.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-            var itemId = result.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-            var item = result.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-
-            if (string.IsNullOrWhiteSpace(item) && string.IsNullOrWhiteSpace(itemId))
-            {
-                result.AddError("Item identifier is required. Provide --item or --item-id.");
-            }
-        });
-    }
-
-    protected override FileReadOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-
-        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
-        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
-        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
-            ? itemId!
-            : itemName ?? string.Empty;
-
-        options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
-        options.DownloadFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DownloadFilePath.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Workspace identifier is required. Provide --workspace or --workspace-id.");
         }
 
-        var options = BindOptions(parseResult);
+        if (string.IsNullOrWhiteSpace(options.ItemId) && string.IsNullOrWhiteSpace(options.Item))
+        {
+            validationResult.Errors.Add("Item identifier is required. Provide --item or --item-id.");
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, FileReadOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var serviceStartOptions = context.GetService<IOptions<ServiceStartOptions>>();
-            var transport = serviceStartOptions.Value.Transport ?? "stdio";
+            var workspaceIdentifier = !string.IsNullOrWhiteSpace(options.WorkspaceId)
+                ? options.WorkspaceId
+                : options.Workspace!;
+
+            var itemIdentifier = !string.IsNullOrWhiteSpace(options.ItemId)
+                ? options.ItemId
+                : options.Item!;
+
+            var transport = _configuration.Value.Transport ?? "stdio";
             var isLocalTransport = string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
 
             string? downloadPath = null;
@@ -137,8 +101,8 @@ public sealed class FileReadCommand(
             };
 
             var blobResult = await _oneLakeService.ReadFileAsync(
-                options.WorkspaceId,
-                options.ItemId,
+                workspaceIdentifier,
+                itemIdentifier,
                 options.FilePath,
                 downloadOptions,
                 cancellationToken);
@@ -207,18 +171,25 @@ public sealed class FileReadCommand(
         long? ContentLength,
         string? ContentType,
         string? Charset);
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        _ => base.GetStatusCode(ex)
-    };
 }
 
-public sealed class FileReadOptions : GlobalOptions
+public sealed class FileReadOptions
 {
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemId { get; set; } = string.Empty;
-    public string FilePath { get; set; } = string.Empty;
+    [Option(Description = OneLakeOptionDescriptions.WorkspaceId)]
+    public string? WorkspaceId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Workspace)]
+    public string? Workspace { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.ItemId)]
+    public string? ItemId { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.Item)]
+    public string? Item { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.FilePath)]
+    public required string FilePath { get; set; }
+
+    [Option(Description = OneLakeOptionDescriptions.DownloadFilePath)]
     public string? DownloadFilePath { get; set; }
 }

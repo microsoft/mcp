@@ -1,0 +1,169 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Tools.AzureBackup.Commands.Backup;
+using Azure.Mcp.Tools.AzureBackup.Commands.Container;
+using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
+using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
+using Azure.Mcp.Tools.AzureBackup.Commands.Job;
+using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
+using Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
+using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
+using Azure.Mcp.Tools.AzureBackup.Commands.RecoveryPoint;
+using Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
+using Azure.Mcp.Tools.AzureBackup.Commands.Security;
+using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
+using Azure.Mcp.Tools.AzureBackup.Commands.Vault.PrivateEndpoint;
+using Azure.Mcp.Tools.AzureBackup.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
+
+namespace Azure.Mcp.Tools.AzureBackup;
+
+public sealed class AzureBackupSetup : IAreaSetup
+{
+    public string Name => "azurebackup";
+
+    public string Title => "Manage Azure Backup";
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<IRsvBackupOperations, RsvBackupOperations>();
+        services.AddSingleton<IDppBackupOperations, DppBackupOperations>();
+        services.AddSingleton<IAzureBackupService, AzureBackupService>();
+
+        services.AddSingleton<VaultGetCommand>();
+        services.AddSingleton<VaultCreateCommand>();
+        services.AddSingleton<VaultUpdateCommand>();
+
+        services.AddSingleton<PolicyGetCommand>();
+        services.AddSingleton<PolicyCreateCommand>();
+        services.AddSingleton<PolicyUpdateCommand>();
+
+        services.AddSingleton<ProtectedItemGetCommand>();
+        services.AddSingleton<ProtectedItemProtectCommand>();
+        services.AddSingleton<ProtectedItemUndeleteCommand>();
+        services.AddSingleton<ProtectedItemUpdateProtectionCommand>();
+
+        services.AddSingleton<ProtectableItemListCommand>();
+        services.AddSingleton<ProtectableItemInquireCommand>();
+        services.AddSingleton<ContainerListAvailableCommand>();
+
+        services.AddSingleton<ContainerRefreshCommand>();
+        services.AddSingleton<ContainerRegisterCommand>();
+
+        services.AddSingleton<BackupStatusCommand>();
+
+        services.AddSingleton<ContainerGetCommand>();
+
+        services.AddSingleton<JobGetCommand>();
+
+        services.AddSingleton<RecoveryPointGetCommand>();
+
+        services.AddSingleton<GovernanceFindUnprotectedCommand>();
+        services.AddSingleton<GovernanceImmutabilityCommand>();
+        services.AddSingleton<GovernanceSoftDeleteCommand>();
+
+        services.AddSingleton<DisasterRecoveryEnableCrrCommand>();
+
+        services.AddSingleton<SecurityEnableMuaCommand>();
+        services.AddSingleton<SecurityDisableMuaCommand>();
+        services.AddSingleton<SecurityConfigureEncryptionCommand>();
+
+        services.AddSingleton<ResourceGuardCreateCommand>();
+        services.AddSingleton<ResourceGuardGetCommand>();
+        services.AddSingleton<ResourceGuardDeleteCommand>();
+
+        services.AddSingleton<PrivateEndpointCreateCommand>();
+        services.AddSingleton<PrivateEndpointGetCommand>();
+        services.AddSingleton<PrivateEndpointDeleteCommand>();
+        services.AddSingleton<PrivateEndpointApproveRejectCommand>();
+    }
+
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
+    {
+        var azureBackup = new CommandGroup(Name,
+            "Azure Backup operations - Unified commands to manage backup across Recovery Services vaults (RSV) " +
+            "and Backup vaults (DPP/Data Protection). Supports vault management, protected item operations, " +
+            "policy management, job monitoring, recovery point browsing, governance, and disaster recovery. " +
+            "Use --vault-type to specify vault type or let the system auto-detect.",
+            Title);
+
+        var vault = new CommandGroup("vault", "Backup vault operations - Get vault details or list all vaults, create, and update vaults.");
+        azureBackup.AddSubGroup(vault);
+        vault.AddCommand<VaultGetCommand>(serviceProvider);
+        vault.AddCommand<VaultCreateCommand>(serviceProvider);
+        vault.AddCommand<VaultUpdateCommand>(serviceProvider);
+
+        var privateEndpoint = new CommandGroup("privateendpoint",
+            "Private Endpoint operations - Manage Private Endpoints (v2) on Recovery Services vaults: create, list/get, delete, approve, and reject Private Endpoint Connections. Backup vaults (DPP) are not supported.");
+        vault.AddSubGroup(privateEndpoint);
+        privateEndpoint.AddCommand<PrivateEndpointCreateCommand>(serviceProvider);
+        privateEndpoint.AddCommand<PrivateEndpointGetCommand>(serviceProvider);
+        privateEndpoint.AddCommand<PrivateEndpointDeleteCommand>(serviceProvider);
+        privateEndpoint.AddCommand<PrivateEndpointApproveRejectCommand>(serviceProvider);
+
+        var policy = new CommandGroup("policy", "Backup policy operations - Get policy details or list all policies, create, and update policies.");
+        azureBackup.AddSubGroup(policy);
+        policy.AddCommand<PolicyGetCommand>(serviceProvider);
+        policy.AddCommand<PolicyCreateCommand>(serviceProvider);
+        policy.AddCommand<PolicyUpdateCommand>(serviceProvider);
+
+        var protectedItem = new CommandGroup("protecteditem", "Protected item operations - Get protected item details or list all, enable backup protection, update protection configuration (policy/selective disk backup), and undelete soft-deleted items.");
+        azureBackup.AddSubGroup(protectedItem);
+        protectedItem.AddCommand<ProtectedItemGetCommand>(serviceProvider);
+        protectedItem.AddCommand<ProtectedItemProtectCommand>(serviceProvider);
+        protectedItem.AddCommand<ProtectedItemUndeleteCommand>(serviceProvider);
+        protectedItem.AddCommand<ProtectedItemUpdateProtectionCommand>(serviceProvider);
+
+        var protectableItem = new CommandGroup("protectableitem", "Protectable item operations - List discovered databases and file shares available for protection, and inquire registered containers to trigger discovery.");
+        azureBackup.AddSubGroup(protectableItem);
+        protectableItem.AddCommand<ProtectableItemListCommand>(serviceProvider);
+        protectableItem.AddCommand<ProtectableItemInquireCommand>(serviceProvider);
+
+        var container = new CommandGroup("container",
+            "Container operations - Manage RSV protection containers: look up an existing container to check whether a storage account, VM, or workload server has been registered (get); trigger discovery (refresh); list storage accounts available for Azure File share backup registration; and register a storage account as a backup container. Only supported for Recovery Services vaults (RSV); Backup vaults (DPP) do not use protection containers.");
+        azureBackup.AddSubGroup(container);
+        container.AddCommand<ContainerGetCommand>(serviceProvider);
+        container.AddCommand<ContainerListAvailableCommand>(serviceProvider);
+        container.AddCommand<ContainerRefreshCommand>(serviceProvider);
+        container.AddCommand<ContainerRegisterCommand>(serviceProvider);
+
+        var backup = new CommandGroup("backup", "Backup operations - Check backup status for a datasource.");
+        azureBackup.AddSubGroup(backup);
+        backup.AddCommand<BackupStatusCommand>(serviceProvider);
+
+        var job = new CommandGroup("job", "Backup job operations - Get job details or list all jobs in a vault.");
+        azureBackup.AddSubGroup(job);
+        job.AddCommand<JobGetCommand>(serviceProvider);
+
+        var recoveryPoint = new CommandGroup("recoverypoint", "Recovery point operations - Get recovery point details or list all for a protected item.");
+        azureBackup.AddSubGroup(recoveryPoint);
+        recoveryPoint.AddCommand<RecoveryPointGetCommand>(serviceProvider);
+
+        var governance = new CommandGroup("governance", "Governance operations - Find unprotected resources, configure immutability and soft delete.");
+        azureBackup.AddSubGroup(governance);
+        governance.AddCommand<GovernanceFindUnprotectedCommand>(serviceProvider);
+        governance.AddCommand<GovernanceImmutabilityCommand>(serviceProvider);
+        governance.AddCommand<GovernanceSoftDeleteCommand>(serviceProvider);
+
+        var disasterrecovery = new CommandGroup("disasterrecovery", "Disaster recovery operations - Enable Cross-Region Restore on a GRS vault.");
+        azureBackup.AddSubGroup(disasterrecovery);
+        disasterrecovery.AddCommand<DisasterRecoveryEnableCrrCommand>(serviceProvider);
+
+        var security = new CommandGroup("security", "Security operations - Configure Multi-User Authorization (MUA) and Customer-Managed Key (CMK) encryption for backup vaults.");
+        azureBackup.AddSubGroup(security);
+        security.AddCommand<SecurityEnableMuaCommand>(serviceProvider);
+        security.AddCommand<SecurityDisableMuaCommand>(serviceProvider);
+        security.AddCommand<SecurityConfigureEncryptionCommand>(serviceProvider);
+
+        var resourceGuard = new CommandGroup("resourceguard", "Resource Guard operations - Create, get, list, and delete Microsoft.DataProtection Resource Guards used to protect vaults via Multi-User Authorization (MUA).");
+        azureBackup.AddSubGroup(resourceGuard);
+        resourceGuard.AddCommand<ResourceGuardCreateCommand>(serviceProvider);
+        resourceGuard.AddCommand<ResourceGuardGetCommand>(serviceProvider);
+        resourceGuard.AddCommand<ResourceGuardDeleteCommand>(serviceProvider);
+
+        return azureBackup;
+    }
+}

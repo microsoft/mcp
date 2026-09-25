@@ -2,26 +2,19 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Workbooks.Models;
-using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
-public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) : BaseWorkbooksCommand<ShowWorkbooksOptions>
-{
-    private const string CommandTitle = "Get Workbook";
-    private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
-    public override string Id => "a7a882cd-1729-49ed-b349-2a79f8c7de56";
-
-    public override string Name => "show";
-
-    public override string Description =>
-        """
+[CommandMetadata(
+    Id = "a7a882cd-1729-49ed-b349-2a79f8c7de56",
+    Name = "show",
+    Title = "Get Workbook",
+    Description = """
         Retrieve full workbook details via ARM API (includes serializedData content).
 
         USE FOR: Getting complete workbook definition including visualization JSON.
@@ -29,56 +22,35 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 
         BATCH: Accepts multiple --workbook-ids values. Partial failures reported per-workbook.
         PERFORMANCE: Use 'list' first for discovery, then 'show' for specific workbooks.
-        """;
+        """,
+    OperationPlane = ToolOperationPlane.Control,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, IWorkbooksService workbooksService)
+    : AuthenticatedCommand<ShowWorkbooksOptions, ShowWorkbooksCommand.ShowWorkbooksCommandResult>
+{
+    private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
+    private readonly IWorkbooksService _workbooksService = workbooksService;
 
-    public override string Title => CommandTitle;
-
-    public override ToolMetadata Metadata => new()
+    public override void ValidateOptions(ShowWorkbooksOptions options, ValidationResult validationResult)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(WorkbooksOptionDefinitions.WorkbookIds);
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (options.WorkbookIds == null || options.WorkbookIds.Length == 0)
         {
-            var workbookIds = result.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
-            if (workbookIds == null || workbookIds.Length == 0)
-            {
-                result.AddError("At least one workbook ID is required");
-            }
-        });
-    }
-
-    protected override ShowWorkbooksOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.WorkbookIds = parseResult.GetValueOrDefault<string[]>(WorkbooksOptionDefinitions.WorkbookIds.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("At least one workbook ID is required");
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ShowWorkbooksOptions options, CancellationToken cancellationToken)
+    {
         try
         {
-            var workbooksService = context.GetService<IWorkbooksService>();
-            var result = await workbooksService.GetWorkbooksAsync(
-                options.WorkbookIds!,
-                options.RetryPolicy,
+            var result = await _workbooksService.GetWorkbooksAsync(
+                options.WorkbookIds,
                 options.Tenant,
                 cancellationToken);
 
@@ -95,5 +67,5 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
         return context.Response;
     }
 
-    internal record ShowWorkbooksCommandResult(List<WorkbookInfo> Workbooks, List<WorkbookError> Errors);
+    public sealed record ShowWorkbooksCommandResult(List<WorkbookInfo> Workbooks, List<WorkbookError> Errors);
 }

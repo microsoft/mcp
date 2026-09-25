@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
@@ -16,6 +18,14 @@ public class CommandResponse
     [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets a sanitized message to include in failure telemetry.
+    /// This value must not contain secrets, PII, or other sensitive information.
+    /// Ideally, use a static string so telemetry values are easier to group and analyze.
+    /// </summary>
+    [JsonIgnore]
+    public string? TelemetryFailureMessage { get; set; }
+
     [JsonPropertyName("results")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ResponseResult? Results { get; set; }
@@ -25,26 +35,16 @@ public class CommandResponse
 }
 
 [JsonConverter(typeof(ResultConverter))]
-public sealed class ResponseResult
+public sealed class ResponseResult(object? result, JsonTypeInfo typeInfo)
 {
-    private readonly object? _result;
-    private readonly JsonTypeInfo _typeInfo;
+    private readonly object? _result = result;
+    private readonly JsonTypeInfo _typeInfo = typeInfo;
 
-    private ResponseResult(object? result, JsonTypeInfo typeInfo)
-    {
-        _result = result;
-        _typeInfo = typeInfo;
-    }
+    public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo) => new(result, typeInfo);
 
-    public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo)
-    {
-        return new ResponseResult(result, typeInfo);
-    }
+    public void Write(Utf8JsonWriter writer) => JsonSerializer.Serialize(writer, _result, _typeInfo);
 
-    public void Write(Utf8JsonWriter writer)
-    {
-        JsonSerializer.Serialize(writer, _result, _typeInfo);
-    }
+    internal JsonNode? ToJsonNode() => JsonSerializer.SerializeToNode(_result, _typeInfo);
 }
 
 public class ResultConverter : JsonConverter<ResponseResult>

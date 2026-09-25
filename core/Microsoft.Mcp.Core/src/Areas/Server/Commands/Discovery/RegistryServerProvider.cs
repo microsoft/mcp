@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Client;
@@ -9,17 +11,34 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Provides an MCP server implementation based on registry configuration.
-/// Supports stdio transport mechanism.
+/// 
+/// For HTTP transport, this provider supports OAuth authentication against registry servers
+/// that comply with the MCP 2026-07-28 specification. When a registry server is configured
+/// with OAuthScopes, the provider uses AccessTokenHandler to obtain and cache bearer tokens
+/// for use in MCP protocol requests.
+///
+/// MCP 2026-07-28 Authorization Hardening (application-layer checks performed here):
+/// - HTTPS required when OAuthScopes are configured
+/// - OAuthScopes entries must be non-empty
+///
+/// Other checks (issuer validation, application type, protected-resource metadata) are
+/// delegated to Azure Identity and the downstream resource, not performed here.
+/// 
+/// Known gap: MCP protocol requires a 'resource' parameter on token endpoint requests, but
+/// some OAuth providers (e.g., Entra ID) do not support it. This is documented in issue #939.
+/// Workaround: Access tokens are obtained without the resource parameter; registry servers
+/// should configure their OAuth provider to accept token requests without this parameter.
 /// </summary>
 /// <param name="id">The unique identifier for the server.</param>
 /// <param name="serverInfo">Configuration information for the server.</param>
 /// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
-/// <param name="tokenCredentialProvider">The token credential provider for OAuth authentication.</param>
 public sealed class RegistryServerProvider(string id, RegistryServerInfo serverInfo, IHttpClientFactory httpClientFactory) : IMcpServerProvider
 {
     private readonly string _id = id;
     private readonly RegistryServerInfo _serverInfo = serverInfo;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+
+    private const string DefaultVersionPattern = @"(\d+\.\d+\.\d+)";
 
     /// <summary>
     /// Creates metadata that describes this registry-based server.
@@ -33,6 +52,50 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         Description = _serverInfo.Description ?? string.Empty,
         ToolPrefix = _serverInfo.ToolPrefix
     };
+
+    /// <summary>
+    /// Validates OAuth configuration for MCP 2026-07-28 compliance.
+    /// </summary>
+    /// <remarks>
+    /// This method checks that the registry server's OAuth configuration meets MCP 2026-07-28
+    /// protocol requirements. If validation warnings occur but do not prevent operation, they
+    /// are logged for administrator awareness. Critical configuration issues throw exceptions.
+    /// </remarks>
+    private void ValidateOAuthConfiguration()
+    {
+        if (string.IsNullOrWhiteSpace(_serverInfo.Url))
+        {
+            return; // No OAuth validation for non-HTTP servers
+        }
+
+        if (_serverInfo.OAuthScopes is null || _serverInfo.OAuthScopes.Length == 0)
+        {
+            return; // No OAuth configured for this server
+        }
+
+        // MCP 2026-07-28 Compliance Checks:
+        // 1. Server URL must be an HTTPS URI (required for OAuth security)
+        if (!_serverInfo.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Registry server '{_id}' has OAuthScopes configured but does not use HTTPS. " +
+                "MCP 2026-07-28 requires all OAuth-protected endpoints to use HTTPS.");
+        }
+
+        // 2. OAuthScopes must be non-empty when OAuth is configured
+        if (_serverInfo.OAuthScopes.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new InvalidOperationException(
+                $"Registry server '{_id}' has empty OAuth scope entries. All scopes must be non-empty strings.");
+        }
+
+        // Note: Registry servers authenticate using Azure Identity bearer tokens via
+        // AccessTokenHandler, not the SDK's ClientOAuthProvider OAuth-discovery flow, so
+        // client-side issuer binding/validation (SEP-2352/2468) is not performed here.
+        // Issuer/audience validation of the Azure-issued token is handled by Azure Identity
+        // and the downstream resource. HTTPS and non-empty scope checks above are the
+        // application-layer guarantees this provider enforces.
+    }
 
     /// <inheritdoc/>
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
@@ -51,6 +114,37 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         if (clientFactory == null)
         {
             throw new ArgumentException($"Registry server '{_id}' does not have a valid transport type. Either 'url' for HTTP transport or 'type=stdio' with 'command' must be specified.");
+        }
+
+        // Pre-flight version check for stdio servers with version requirements
+        if (clientFactory == CreateStdioClientAsync &&
+            !string.IsNullOrWhiteSpace(_serverInfo.MinVersion) &&
+            !string.IsNullOrWhiteSpace(_serverInfo.Command))
+        {
+            if (_serverInfo.VersionArgs == null || _serverInfo.VersionArgs.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Registry server '{_id}' specifies 'minVersion' but is missing 'versionArgs'. Both are required for version checking.");
+            }
+
+            var versionError = await CheckCommandVersionAsync(
+                _serverInfo.Command, _serverInfo.VersionArgs, _serverInfo.MinVersion,
+                _serverInfo.VersionPattern, cancellationToken);
+
+            if (versionError != null)
+            {
+                var message = string.IsNullOrWhiteSpace(_serverInfo.InstallInstructions)
+                    ? $"Failed to initialize the '{_id}' MCP tool. {versionError}"
+                    : $"""
+                        Failed to initialize the '{_id}' MCP tool.
+                        {versionError}
+
+                        Installation Instructions:
+                        {_serverInfo.InstallInstructions}
+                        """;
+
+                throw new InvalidOperationException(message.Trim());
+            }
         }
 
         try
@@ -77,13 +171,130 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     }
 
     /// <summary>
+    /// Checks whether the specified command is installed and meets the minimum version requirement.
+    /// </summary>
+    /// <param name="command">The command to check (e.g., "azd").</param>
+    /// <param name="versionArgs">Arguments to pass to get version output.</param>
+    /// <param name="minVersion">The minimum required version string (e.g., "1.20.0").</param>
+    /// <param name="versionPattern">Regex pattern with a capture group for the version. Defaults to semver pattern.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>An error message if the check fails, or null if the command meets requirements.</returns>
+    internal static async Task<string?> CheckCommandVersionAsync(
+        string command, IList<string> versionArgs, string minVersion,
+        string? versionPattern, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = command,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            foreach (var arg in versionArgs)
+            {
+                process.StartInfo.ArgumentList.Add(arg);
+            }
+
+            if (!process.Start())
+            {
+                return $"'{command}' failed to start.";
+            }
+
+            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+
+            // Apply a hard timeout so a hung command cannot block indefinitely
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(30));
+
+            try
+            {
+                await process.WaitForExitAsync(timeoutCts.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Timeout fired, not caller cancellation - kill and fail-open
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+                catch
+                {
+                    // Best-effort cleanup
+                }
+
+                // Observe stream task to prevent unobserved task exceptions
+                try
+                {
+                    await outputTask;
+                }
+                catch
+                {
+                    // Process killed - stream disposed
+                }
+
+                return null;
+            }
+
+            var output = await outputTask;
+
+            var installedVersion = ParseVersionFromOutput(output, versionPattern);
+            if (installedVersion != null && Version.TryParse(minVersion, out var requiredVersion))
+            {
+                if (installedVersion < requiredVersion)
+                {
+                    return $"'{command}' version {installedVersion} is installed, but version {requiredVersion} or later is required.";
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or FileNotFoundException)
+        {
+            return $"'{command}' is not installed or not found in the system PATH.";
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // Unknown error checking version - let the normal connection attempt proceed
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Extracts a version from command output text using the specified pattern.
+    /// </summary>
+    /// <param name="output">The stdout text from a version command.</param>
+    /// <param name="versionPattern">Regex with a capture group for the version, or null for default semver pattern.</param>
+    /// <returns>The parsed <see cref="Version"/>, or null if no version was found.</returns>
+    internal static Version? ParseVersionFromOutput(string output, string? versionPattern = null)
+    {
+        var match = Regex.Match(output, versionPattern ?? DefaultVersionPattern);
+        return match.Success && match.Groups.Count > 1 && Version.TryParse(match.Groups[1].Value, out var version) ? version : null;
+    }
+
+    /// <summary>
     /// Creates an MCP client that communicates with the server using Server-Sent Events (SSE).
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A configured MCP client using SSE transport.</returns>
+    /// <remarks>
+    /// For servers configured with OAuth scopes, this method validates MCP 2026-07-28
+    /// OAuth compliance before creating the transport. The access token is obtained
+    /// by the pre-configured HttpClient registered in RegistryServerServiceCollectionExtensions.
+    /// </remarks>
     private async Task<McpClient> CreateHttpClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
+        // Validate OAuth configuration (MCP 2026-07-28 compliance)
+        ValidateOAuthConfiguration();
+
         var transportOptions = new HttpClientTransportOptions
         {
             Name = _id,

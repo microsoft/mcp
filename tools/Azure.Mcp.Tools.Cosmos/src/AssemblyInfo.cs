@@ -3,5 +3,4 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Azure.Mcp.Tools.Cosmos.UnitTests")]
-[assembly: InternalsVisibleTo("Azure.Mcp.Tools.Cosmos.LiveTests")]
+[assembly: InternalsVisibleTo("Azure.Mcp.Tools.Cosmos.Tests")]

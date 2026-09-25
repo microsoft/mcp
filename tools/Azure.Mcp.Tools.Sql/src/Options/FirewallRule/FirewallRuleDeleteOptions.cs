@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Options.FirewallRule;
 
-public class FirewallRuleDeleteOptions : BaseSqlOptions
+public sealed class FirewallRuleDeleteOptions : BaseSqlOptions
 {
-    [JsonPropertyName(SqlOptionDefinitions.FirewallRuleName)]
-    public string? FirewallRuleName { get; set; }
+    [Option(Description = SqlOptionDescriptions.FirewallRuleName)]
+    public required string FirewallRuleName { get; set; }
+
+    [Option(Description = SqlOptionDescriptions.Server)]
+    public required string Server { get; set; }
 }

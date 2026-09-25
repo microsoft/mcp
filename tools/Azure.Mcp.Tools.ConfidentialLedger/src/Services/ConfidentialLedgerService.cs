@@ -5,19 +5,16 @@ using System.Buffers;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
 
-public class ConfidentialLedgerService(ITenantService tenantService)
-    : BaseAzureService(tenantService), IConfidentialLedgerService
+public class ConfidentialLedgerService(IAzureService azureService)
+    : BaseAzureService(azureService), IConfidentialLedgerService
 {
-    // NOTE: We construct the data-plane endpoint from the ledger name.
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-
     private static RequestContent CreateAppendEntryContent(string entryData)
     {
         // We must always send an object with a 'contents' property. If the caller provided JSON, embed it as JSON;
@@ -41,22 +38,19 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             (nameof(ledgerName), ledgerName),
             (nameof(entryData), entryData));
 
-        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
-        var credential = await GetCredential(cancellationToken);
+        var ledgerUri = GetValidatedLedgerUri(ledgerName);
+        var credential = await GetCredential(null, cancellationToken);
 
         // Configure client (retry etc. could be extended later)
         ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         // Build RequestContent manually to avoid trimming issues from reflection-based serialization.
         using var content = CreateAppendEntryContent(entryData);
-        var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId);
+        var operation = await client.PostLedgerEntryAsync(WaitUntil.Started, content, collectionId, new RequestContext() { CancellationToken = cancellationToken });
+        await WaitForLroCompletionAsync(operation, cancellationToken);
         var response = operation.GetRawResponse();
 
-        return new()
-        {
-            TransactionId = operation.Id,
-            State = operation.HasCompleted ? "Committed" : "Pending"
-        };
+        return new(TransactionId: operation.Id, State: operation.HasCompleted ? "Committed" : "Pending");
     }
 
     public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null, CancellationToken cancellationToken = default)
@@ -75,8 +69,8 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
-        var ledgerUri = new Uri(GetLedgerUri(ledgerName));
-        var credential = await GetCredential(cancellationToken);
+        var ledgerUri = GetValidatedLedgerUri(ledgerName);
+        var credential = await GetCredential(null, cancellationToken);
         ConfidentialLedgerClient client = new(ledgerUri, credential);
 
         bool loaded = false;
@@ -110,19 +104,28 @@ public class ConfidentialLedgerService(ITenantService tenantService)
             }
         }
 
-        return new()
-        {
-            LedgerName = ledgerName,
-            TransactionId = actualTransactionId ?? transactionId,
-            Contents = contents ?? string.Empty,
-        };
+        return new(
+            LedgerName: ledgerName,
+            TransactionId: actualTransactionId ?? transactionId,
+            Contents: contents ?? string.Empty);
     }
 
-    private string GetLedgerUri(string ledgerName)
+    /// <summary>
+    /// Builds the Confidential Ledger data-plane endpoint for the caller-supplied ledger name and the target
+    /// cloud, and validates it against the endpoint allow-list before returning. Creation and validation are
+    /// intentionally joined in a single method so that no caller can obtain an unvalidated endpoint.
+    /// </summary>
+    /// <param name="ledgerName">The caller-supplied ledger name used to build the data-plane host.</param>
+    /// <returns>The validated data-plane endpoint for the ledger.</returns>
+    /// <remarks>
+    /// This method is <see langword="internal"/> only to enable unit testing. Use within the class is
+    /// expected; do not call it from anything else.
+    /// </remarks>
+    internal Uri GetValidatedLedgerUri(string ledgerName)
     {
         ValidateLedgerName(ledgerName);
 
-        return _tenantService.CloudConfiguration.CloudType switch
+        var ledgerUri = new Uri(AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
                 $"https://{ledgerName}.confidential-ledger.azure.com",
@@ -132,7 +135,15 @@ public class ConfidentialLedgerService(ITenantService tenantService)
                 $"https://{ledgerName}.confidential-ledger.azure.us",
             _ =>
                 $"https://{ledgerName}.confidential-ledger.azure.com"
-        };
+        });
+
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: ledgerUri.AbsoluteUri,
+            serviceType: "confidential-ledger",
+            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
+            executingToolNamespaceName: "confidentialledger");
+
+        return ledgerUri;
     }
 
     /// <summary>

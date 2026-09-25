@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+<title>Azure Backup MCP — Weekly Telemetry Report ({{DATE}})</title>
+</head>
+<body style="font-family:'Segoe UI',Calibri,Arial,sans-serif;background-color:#f4f6f9;color:#1b1b1b;line-height:1.6;margin:0;padding:0;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:20px;">
+<table width="760" cellpadding="0" cellspacing="0" border="0" style="max-width:760px;">
+
+<!-- ============================================================ -->
+<!-- HEADER                                                       -->
+<!-- ============================================================ -->
+<tr><td style="background-color:#0078d4;color:#ffffff;padding:20px 24px;">
+  <div style="font-size:20px;font-weight:600;margin:0;">Azure Backup MCP &mdash; Weekly Telemetry Report</div>
+  <div style="font-size:13px;opacity:.85;margin-top:4px;">{{SUBTITLE}}</div>
+  <div style="font-size:12px;opacity:.7;margin-top:8px;">
+    &#8226; Source: Kusto ddazureclients / AzureDevExp &nbsp;&nbsp;
+    &#8226; Period: {{PERIOD}} &nbsp;&nbsp;
+    &#8226; Report Date: {{DATE}} &nbsp;&nbsp;
+    &#8226; <a href="{{POWERBI_DASHBOARD_URL}}" style="color:#ffffff;text-decoration:underline;">Power BI Dashboard</a>
+  </div>
+</td></tr>
+
+<!-- ============================================================ -->
+<!-- BODY                                                         -->
+<!-- ============================================================ -->
+<tr><td style="background-color:#ffffff;border:1px solid #dee2e6;border-top:none;padding:24px;">
+
+<!-- ~~~~~ SECTION: KEY METRICS ~~~~~ -->
+<!-- Replace {{METRIC_*}} placeholders with actual values -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-bottom:12px;">Key Metrics (This Week vs Last Week)</div>
+
+<table width="100%" cellpadding="0" cellspacing="8" border="0" style="margin-bottom:16px;">
+<tr>
+  <td width="16%" align="center" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:10px 8px;">
+    <div style="font-size:22px;font-weight:700;color:#0078d4;">{{METRIC_TOTAL_CALLS}}</div>
+    <div style="font-size:11px;color:#5f6368;">Total Calls</div>
+    <div style="font-size:10px;color:#107c10;">{{METRIC_TOTAL_CALLS_DELTA}}</div>
+  </td>
+  <td width="16%" align="center" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:10px 8px;">
+    <div style="font-size:22px;font-weight:700;color:#107c10;">{{METRIC_MCP_SUCCESS}}</div>
+    <div style="font-size:11px;color:#5f6368;">MCP Tool Success</div>
+    <div style="font-size:10px;color:#107c10;">{{METRIC_MCP_SUCCESS_DELTA}}</div>
+  </td>
+  <td width="16%" align="center" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:10px 8px;">
+    <div style="font-size:22px;font-weight:700;color:#ff8c00;">{{METRIC_CUSTOMER_ERRORS}}</div>
+    <div style="font-size:11px;color:#5f6368;">Customer Errors (4xx)</div>
+    <div style="font-size:10px;color:#5f6368;">{{METRIC_CUSTOMER_ERRORS_DELTA}}</div>
+  </td>
+  <td width="16%" align="center" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:10px 8px;">
+    <div style="font-size:22px;font-weight:700;color:#5f6368;">{{METRIC_AZURE_ERRORS}}</div>
+    <div style="font-size:11px;color:#5f6368;">Azure Service Errors</div>
+    <div style="font-size:10px;color:#d13438;">{{METRIC_AZURE_ERRORS_DELTA}}</div>
+  </td>
+  <td width="16%" align="center" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:10px 8px;">
+    <div style="font-size:22px;font-weight:700;color:#d13438;">{{METRIC_MCP_BUGS}}</div>
+    <div style="font-size:11px;color:#5f6368;">MCP Tool Bugs</div>
+    <div style="font-size:10px;color:#107c10;">{{METRIC_MCP_BUGS_DELTA}}</div>
+  </td>
+  <td width="16%" align="center" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:10px 8px;">
+    <div style="font-size:22px;font-weight:700;color:#0078d4;">{{METRIC_USERS}}</div>
+    <div style="font-size:11px;color:#5f6368;">Distinct Users</div>
+    <div style="font-size:10px;color:#107c10;">{{METRIC_USERS_DELTA}}</div>
+  </td>
+</tr>
+</table>
+
+<!-- Summary callout -->
+<table width="100%" cellpadding="8" cellspacing="0" border="0" style="margin-bottom:16px;"><tr>
+<td style="background-color:#e8f0fe;border-left:3px solid #0078d4;font-size:13px;">
+  {{SUMMARY_TEXT}}
+</td>
+</tr></table>
+
+<!-- ~~~~~ SECTION: RELEASES ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:12px;">Releases Shipped This Week</div>
+<!-- Insert release rows here -->
+
+<!-- ~~~~~ SECTION: PER-TOOL TABLE ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:8px;">Per-Tool Health (7-day) &mdash; 3-Way Error Classification</div>
+
+<table width="100%" cellpadding="8" cellspacing="0" border="0" style="margin-bottom:8px;"><tr>
+<td style="background-color:#e8f0fe;border-left:3px solid #0078d4;font-size:12px;">
+  <strong style="color:#ff8c00;">Customer (4xx)</strong> = user sent wrong input, lacks permissions, or resource doesn't exist.
+  <strong style="color:#5f6368;">Azure Svc</strong> = Azure Backup API / SDK / auth layer failed.
+  <strong style="color:#d13438;">MCP Bug</strong> = our tool code is wrong.
+  <strong>MCP %</strong> = calls without MCP bugs / total calls.
+</td>
+</tr></table>
+
+<!-- Insert per-tool rows here using this column structure: -->
+<!-- Tool | Calls | OK | 4xx | Azure | MCP | MCP% | Users | P50 | P95 | Status -->
+
+<!-- ~~~~~ SECTION: ERROR DEEP DIVE ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:12px;">Error Deep Dive</div>
+<!-- Insert error analysis callout boxes here -->
+
+<!-- ~~~~~ SECTION: ERROR HOTSPOTS ~~~~~ -->
+<!-- Insert error hotspots table here: Tool | Status | Class | Exception Type | Count -->
+
+<!-- ~~~~~ SECTION: MERGED PRS ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:12px;">Merged PRs (This Week)</div>
+<!-- Insert PR cards using border-left:4px solid #107c10 pattern -->
+
+<!-- ~~~~~ SECTION: OPEN PRS ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:12px;">Open PRs (Pending)</div>
+<!-- Insert open PR cards -->
+
+<!-- ~~~~~ SECTION: BUG TRACKER ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:12px;">Bug &harr; Fix Status</div>
+<!-- Insert bug tracker table: Bug | Tool | Severity | PR | Release | Status -->
+
+<!-- ~~~~~ SECTION: CODEBASE SNAPSHOT ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:12px;">Codebase Snapshot (main)</div>
+<!-- Insert KPI boxes: Registered Tools, Unit Tests, Live Tests, Files Changed, Lines -->
+
+<!-- ~~~~~ SECTION: ACTION ITEMS ~~~~~ -->
+<div style="font-size:16px;font-weight:600;color:#005a9e;border-bottom:2px solid #e8f0fe;padding-bottom:5px;margin-top:20px;margin-bottom:12px;">Action Items</div>
+<!-- Insert callout boxes for action items -->
+
+<!-- FOOTER -->
+<div style="text-align:center;font-size:12px;color:#5f6368;margin-top:20px;padding-top:12px;border-top:1px solid #dee2e6;">
+  Azure Backup MCP Telemetry &mdash; {{DATE}} &mdash;
+  <a href="{{POWERBI_DASHBOARD_URL}}" style="color:#0078d4;">Live Dashboard</a>
+</div>
+
+</td></tr><!-- end BODY -->
+</table>
+</td></tr></table>
+</body>
+</html>

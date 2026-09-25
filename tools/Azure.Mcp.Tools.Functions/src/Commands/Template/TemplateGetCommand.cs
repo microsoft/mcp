@@ -7,112 +7,61 @@ using Azure.Mcp.Tools.Functions.Options;
 using Azure.Mcp.Tools.Functions.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Functions.Commands.Template;
 
-internal record TemplateGetCommandResult(TemplateListResult? TemplateList, FunctionTemplateResult? FunctionTemplate);
-
-public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : BaseCommand<TemplateGetOptions>
+[CommandMetadata(
+    Id = "c3d4e5f6-a7b8-9012-cdef-234567890123",
+    Name = "get",
+    Title = "Get Function Template",
+    Description = "Lists available Azure Functions templates or generates function code for Timer (cron schedules), HTTP, Blob, Queue, Event Hub, Cosmos DB, Service Bus, Durable, event-driven, and MCP tool triggers with input and output bindings, orchestrations, and serverless infrastructure. " +
+        "Create trigger functions, activity functions, or MCP server functions in C#, Python, JavaScript, TypeScript, Java, or PowerShell. " +
+        "Without --template, lists all available triggers, bindings, and templates for the selected language. With --template, generates function code files with azd infrastructure support (Bicep, Terraform, ARM). " +
+        "Select one trigger (required) and zero or more input or output bindings.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
+    Destructive = false,
+    Idempotent = true,
+    OpenWorld = false,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger, IFunctionsService functionsService)
+    : BaseCommand<TemplateGetOptions, TemplateGetCommand.TemplateGetCommandResult>
 {
     private readonly ILogger<TemplateGetCommand> _logger = logger;
+    private readonly IFunctionsService _functionsService = functionsService;
 
-    public override string Id => "c3d4e5f6-a7b8-9012-cdef-234567890123";
-
-    public override string Name => "get";
-
-    public override string Description =>
-        "List available Azure Functions templates or generate function code. " +
-        "Shows triggers (HTTP, Timer, Blob, EventHub, Durable, MCP triggers, and more), bindings, and serverless function options. " +
-        "Create durable functions, orchestrations, activity functions, or MCP server functions. " +
-        "Supports azd infrastructure with Bicep, Terraform, ARM templates. " +
-        "Without --template, lists all templates. With --template, generates code files. " +
-        "Select one trigger (required) and zero or more bindings.";
-
-    public override string Title => "Get Function Template";
-
-    public override ToolMetadata Metadata => new()
+    public override void PostBindOptions(TemplateGetOptions options)
     {
-        Destructive = false,
-        Idempotent = true,
-        OpenWorld = false,
-        ReadOnly = true,
-        LocalRequired = false,
-        Secret = false
-    };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(FunctionsOptionDefinitions.Language);
-        command.Options.Add(FunctionsOptionDefinitions.Template.AsOptional());
-        command.Options.Add(FunctionsOptionDefinitions.RuntimeVersion);
-        command.Options.Add(FunctionsOptionDefinitions.Output);
-
-        command.Validators.Add(commandResult =>
-        {
-            var language = commandResult.GetValueWithoutDefault<string>(FunctionsOptionDefinitions.Language.Name);
-            if (string.IsNullOrWhiteSpace(language))
-            {
-                commandResult.AddError("The --language parameter is required.");
-            }
-            else if (!FunctionsOptionDefinitions.SupportedLanguages.Contains(language))
-            {
-                commandResult.AddError($"Invalid language '{language}'. Supported languages: {string.Join(", ", FunctionsOptionDefinitions.SupportedLanguages)}.");
-            }
-        });
-    }
-
-    protected override TemplateGetOptions BindOptions(ParseResult parseResult)
-    {
-        return new TemplateGetOptions
-        {
-            Language = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Language.Name),
-            Template = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.Template.Name),
-            RuntimeVersion = parseResult.GetValueOrDefault<string>(FunctionsOptionDefinitions.RuntimeVersion.Name),
-            Output = parseResult.GetValueOrDefault<TemplateOutput>(FunctionsOptionDefinitions.Output.Name)
-        };
+        base.PostBindOptions(options);
+        options.Output ??= TemplateOutput.New;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        TemplateGetOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var service = context.GetService<IFunctionsService>();
-
             if (string.IsNullOrEmpty(options.Template))
             {
                 // List mode: return all templates grouped by binding type
-                var templateList = await service.GetTemplateListAsync(options.Language!, cancellationToken);
+                var templateList = await _functionsService.GetTemplateListAsync(options.Language, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new(TemplateList: templateList, FunctionTemplate: null),
-                    FunctionsJsonContext.Default.TemplateGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(templateList, null), FunctionsJsonContext.Default.TemplateGetCommandResult);
                 context.Response.Message = string.Empty;
             }
             else
             {
                 // Get mode: fetch specific template files
-                var functionTemplate = await service.GetFunctionTemplateAsync(
-                    options.Language!, options.Template, options.RuntimeVersion, options.Output, cancellationToken);
+                var functionTemplate = await _functionsService.GetFunctionTemplateAsync(
+                    options.Language, options.Template, options.RuntimeVersion, options.Output ?? TemplateOutput.New, cancellationToken);
 
                 context.Response.Status = HttpStatusCode.OK;
-                context.Response.Results = ResponseResult.Create(
-                    new(TemplateList: null, FunctionTemplate: functionTemplate),
-                    FunctionsJsonContext.Default.TemplateGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(null, functionTemplate), FunctionsJsonContext.Default.TemplateGetCommandResult);
                 context.Response.Message = string.Empty;
             }
         }
@@ -132,4 +81,6 @@ public sealed class TemplateGetCommand(ILogger<TemplateGetCommand> logger) : Bas
 
         return context.Response;
     }
+
+    public sealed record TemplateGetCommandResult(TemplateListResult? TemplateList, FunctionTemplateResult? FunctionTemplate);
 }

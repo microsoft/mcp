@@ -92,7 +92,7 @@
             "required": ["parts"],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition. Supported format: `json`.",
+                    "description": "The format of the reflex definition. Supported format: `json`.",
                     "type": "string",
                     "readOnly": false
                 },

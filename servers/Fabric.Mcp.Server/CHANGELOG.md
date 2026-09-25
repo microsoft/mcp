@@ -5,7 +5,7 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.0.0-beta.11 (Unreleased)
+## 1.5.0 (Unreleased)
 
 ### Features Added
 
@@ -14,6 +14,132 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bugs Fixed
 
 ### Other Changes
+
+## 1.4.0 (2026-08-27)
+
+### Features Added
+
+### Breaking Changes
+
+- Tool calls with unknown parameters are now explicitly rejected. [[#3282](https://github.com/microsoft/mcp/pull/3282)]
+- Renamed the `docs` toolset's `--workload-type` parameter to `--item-type`, aligning it with `core_create-item`'s existing `--item-type` and with official Fabric terminology. The accepted values are almost all Fabric item types (`notebook`, `lakehouse`, `dataPipeline`, `report`, ...); the description now also enumerates the four non-item API areas (`platform`, `admin`, `spark`, `realTimeIntelligence`). [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+- Renamed the `docs_workloads` tool to `docs_list-item-types` and the `docs_workload-api-spec` tool to `docs_item-api-spec`. [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+- The `docs_list-item-types` response property changed from `workloads` to `itemTypes`. [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+- Renamed all `onelake` tools to use kebab-case, matching the `<namespace>_<tool-name>` convention already used by the `core`, `docs`, and `datafactory` namespaces. For example, `onelake_list_workspaces` is now `onelake_list-workspaces` and `onelake_create_shortcut_adls_gen2` is now `onelake_create-shortcut-adls-gen2`. The `onelake_confirm_delete` prompt is now `onelake_confirm-delete`. [[#3325](https://github.com/microsoft/mcp/pull/3325)]
+
+### Bugs Fixed
+
+- Fixed `docs_item-api-spec` error messages referencing a non-existent `list_workloads` command; they now point to the `list-item-types` tool. [[#3327](https://github.com/microsoft/mcp/pull/3327)]
+
+### Other Changes
+
+- Updated Fabric REST API specifications and item definition documentation. [[#3397](https://github.com/microsoft/mcp/pull/3397)]
+
+## 1.3.0 (2026-08-10)
+
+### Features Added
+
+### Breaking Changes
+
+- Removed unused parameters from Fabric tools. [[#3097](https://github.com/microsoft/mcp/pull/3097)]
+- Removed legacy tool design creation. [[#3137](https://github.com/microsoft/mcp/pull/3137)]
+
+### Bugs Fixed
+
+### Other Changes
+
+- Updated Fabric REST API specifications and item definition documentation. [[#3234](https://github.com/microsoft/mcp/pull/3234)]
+
+#### Dependency Updates
+
+- Updated `@microsoft/vscode-azext-utils` from ~2 to ~4 (4.1.1) and `@vscode/vsce` from 3.7.1 to 3.9.2 in the VS Code extension. [[#3001](https://github.com/microsoft/mcp/pull/3001)]
+
+## 1.2.0 (2026-07-08)
+
+### Features Added
+
+- Added 12 new OneLake tools: Data Access Security (list, get, create-or-update, delete roles), Shortcuts (list, get, create-or-update, delete, reset-cache), and Settings (get, modify-diagnostics, modify-immutability-policy) [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Added 9 per-target shortcut creation tools (OneLake, ADLS Gen2, Amazon S3, Azure Blob, GCS, S3-compatible, Dataverse, OneDrive/SharePoint, External Data Share) with flat typed options for better LLM ergonomics. [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Flattened JSON-string options into discrete typed parameters for diagnostics, immutability policy, and data access role commands. [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Added the `core_search-catalog` tool to search the Microsoft Fabric OneLake catalog for items across workspaces by display name, description, or workspace name, with optional filtering by item type. Calls the Catalog Search API (POST /v1/catalog/search). [[#2963](https://github.com/microsoft/mcp/pull/2963)]
+
+### Bugs Fixed
+
+- Refactored OneLake DFS ListPath methods to follow ADLS Gen2 Path List API specification (directory as query parameter) [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+- Fixed OneLake diagnostics and immutability settings models to match the Fabric REST API contract. [[#2625](https://github.com/microsoft/mcp/pull/2625)]
+
+### Other Changes
+
+- Updated Fabric REST API specifications and item definition documentation. [[#3006](https://github.com/microsoft/mcp/pull/3006)]
+
+## 1.1.0 (2026-06-15)
+
+### Features Added
+
+- **Data Factory Tools**: Added 7 new commands for managing Microsoft Fabric Data Factory resources through MCP. Includes pipeline operations (list, create, get, run) and Dataflow Gen2 operations (list, create, execute query). Powered by the [Microsoft.DataFactory.MCP.Core](https://www.nuget.org/packages/Microsoft.DataFactory.MCP.Core) NuGet package.
+
+### Bugs Fixed
+
+- Fixed console logging polluting stdout which caused smoke test failures on macOS. Console logs are now redirected to stderr via `LogToStandardErrorThreshold`.
+
+### Other Changes
+
+- Add better handling for MsalClientException and MsalServiceException. [[#2587](https://github.com/microsoft/mcp/pull/2587)]
+- Updated Fabric REST API specifications and item definition documentation. [[#2797](https://github.com/microsoft/mcp/pull/2797)]
+
+## 1.0.0 (2026-04-14)
+
+**First Stable Release**
+
+We're excited to announce the first stable release of the Microsoft Fabric MCP Server! After months of development across 10 beta releases, extensive testing, and valuable community feedback, the Fabric MCP Server is now generally available. It provides AI agents with comprehensive context about Microsoft Fabric through the Model Context Protocol (MCP) specification — enabling intelligent code generation, API guidance, and data platform operations.
+
+### What's Included in 1.0.0
+
+The Microsoft Fabric MCP Server now offers:
+
+- **Complete Fabric API Context**: Full OpenAPI specifications for all supported Fabric workloads including Lakehouse, Warehouse, KQL Database, Eventhouse, Data Pipeline, Dataflow, Notebook, Report, Semantic Model, and many more
+- **OneLake Data Operations**: Full support for OneLake file and directory operations, item management, workspace listing, and table metadata retrieval
+- **Item Definition Knowledge**: JSON schemas for every Fabric item type — enabling AI agents to generate correct item definitions out of the box
+- **Built-in Best Practices**: Embedded guidance for pagination, long-running operations, error handling, retry logic, API throttling, and authentication patterns
+- **Multiple Installation Methods**: Available through NuGet, npm, and Docker
+- **Flexible Server Modes**: Namespace mode, consolidated mode, single mode, and all mode for different tool organization preferences
+- **Production Ready**: Comprehensive error handling, telemetry, caching controls, and extensive test coverage
+- **Local-First Security**: Runs entirely on your machine with optional remote HTTP deployment for shared scenarios
+
+### Key Features
+
+- **OneLake Tools**: File read/write/delete/list, directory create/delete, item create/list, workspace list, table config/namespace/metadata retrieval
+- **Public API Tools**: Workload API specifications, best practices, item definitions, platform APIs, and example request/response files
+- **Enterprise Support**: Proxy configuration, managed identity authentication, on-behalf-of flow for multi-user remote scenarios, and caching controls
+- **Performance**: Selective caching for expensive operations, `--disable-caching` option for real-time data needs
+
+### Getting Started
+
+Install the Microsoft Fabric MCP Server from your preferred platform:
+
+- **NuGet**: `dotnet tool install -g Microsoft.Fabric.Mcp --version 1.0.0`
+- **npm**: `npx @microsoft/fabric-mcp@1.0.0`
+- **Docker**: `docker pull mcr.microsoft.com/fabric/fabric-mcp:1.0.0`
+
+### Thank You
+
+This release wouldn't have been possible without the contributions from our community, extensive testing from early adopters, and collaboration across the MCP ecosystem. Thank you for your feedback, bug reports, and feature requests that helped shape this stable release.
+
+For a complete history of pre-release changes, see versions [0.0.0-beta.10](#000-beta10-2026-03-24) through [0.0.0-beta.2](#000-beta2-2025-11-21) below.
+
+### Features Added
+
+- Add `--disable-caching` to server start options to disable caching. [[#2330](https://github.com/microsoft/mcp/pull/2330)]
+
+### Bugs Fixed
+
+- Update HttpRequestException to attempt to return a more specific status code for better troubleshooting. [[#2172](https://github.com/microsoft/mcp/pull/2172)]
+
+### Other Changes
+
+#### Dependency Updates
+
+- Updated ModelContextProtocol and ModelContextProtocol.AspNetCore dependencies to version 1.1.0. [[#1963](https://github.com/microsoft/mcp/pull/1963)]
 
 ## 0.0.0-beta.10 (2026-03-24)
 

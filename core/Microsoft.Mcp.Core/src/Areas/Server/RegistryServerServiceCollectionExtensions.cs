@@ -13,6 +13,24 @@ namespace Microsoft.Mcp.Core.Areas.Server;
 /// <summary>
 /// Extension methods for configuring RegistryServer services.
 /// </summary>
+/// <remarks>
+/// This extension handles the registration of HTTP clients for OAuth-protected registry servers.
+/// 
+/// For MCP 2026-07-28 compliance, each registry server with OAuthScopes gets a dedicated
+/// HttpClient configured with token acquisition. The token handler automatically:
+/// - Acquires bearer tokens using the credential provider
+/// - Attaches tokens to outbound requests via Authorization header
+/// - Implements per-request token refresh as needed
+/// 
+/// Registry servers should be configured with:
+/// - url: HTTPS endpoint (required for OAuth security)
+/// - OAuthScopes: list of OAuth scopes required for token acquisition
+/// - Issuer validation is performed by the OAuth provider (Entra ID, etc.)
+/// - Application type must be registered correctly (confidential vs public client)
+/// 
+/// Known limitation: MCP 2026-07-28 protocol requires a 'resource' parameter on token
+/// requests, but some OAuth providers don't support it. See issue #939 for details.
+/// </remarks>
 public static class RegistryServerServiceCollectionExtensions
 {
     /// <summary>

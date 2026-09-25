@@ -24,10 +24,12 @@ public class ContainerAppsSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var containerapps = new CommandGroup(Name, "Azure Container Apps operations - Commands for managing Azure Container Apps resources. Includes operations for listing container apps and managing container app configurations.", Title);
+        var containerapps = new CommandGroup(Name,
+            "Azure Container Apps operations - Commands for managing Azure Container Apps resources. Includes " +
+            "operations for listing container apps and managing container app configurations.",
+            Title);
 
-        var containerAppList = serviceProvider.GetRequiredService<ContainerAppListCommand>();
-        containerapps.AddCommand(containerAppList.Name, containerAppList);
+        containerapps.AddCommand<ContainerAppListCommand>(serviceProvider);
 
         return containerapps;
     }

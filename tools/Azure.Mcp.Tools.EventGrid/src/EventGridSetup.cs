@@ -28,7 +28,10 @@ public class EventGridSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Event Grid top-level group
-        var eventGrid = new CommandGroup(Name, "Event Grid operations - Commands for managing and accessing Event Grid topics, domains, and event subscriptions.", Title);
+        var eventGrid = new CommandGroup(Name,
+            "Event Grid operations - Commands for managing and accessing Event Grid topics, domains, and " +
+            "event subscriptions.",
+            Title);
 
         // Events subgroup
         var events = new CommandGroup("events", "Event Grid event operations - Commands for publishing and managing events sent to Event Grid topics.");
@@ -43,16 +46,13 @@ public class EventGridSetup : IAreaSetup
         eventGrid.AddSubGroup(subscriptions);
 
         // Register Events commands
-        var eventsPublish = serviceProvider.GetRequiredService<EventGridPublishCommand>();
-        events.AddCommand(eventsPublish.Name, eventsPublish);
+        events.AddCommand<EventGridPublishCommand>(serviceProvider);
 
         // Register Topic commands
-        var topicList = serviceProvider.GetRequiredService<TopicListCommand>();
-        topics.AddCommand(topicList.Name, topicList);
+        topics.AddCommand<TopicListCommand>(serviceProvider);
 
         // Register Subscription commands
-        var subscriptionList = serviceProvider.GetRequiredService<SubscriptionListCommand>();
-        subscriptions.AddCommand(subscriptionList.Name, subscriptionList);
+        subscriptions.AddCommand<SubscriptionListCommand>(serviceProvider);
 
         return eventGrid;
     }

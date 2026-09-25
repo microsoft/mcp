@@ -21,6 +21,7 @@
                             }
                         },
                         "recipient": {
+                            "type": "User",
                             "userPrincipalName": "lisa@fabrikam.com"
                         },
                         "status": "Pending",
@@ -43,6 +44,7 @@
                             }
                         },
                         "recipient": {
+                            "type": "User",
                             "userPrincipalName": "lisa@fabrikam.com"
                         },
                         "status": "Active",
@@ -66,6 +68,7 @@
                             }
                         },
                         "recipient": {
+                            "type": "User",
                             "userPrincipalName": "lisa@fabrikam.com"
                         },
                         "status": "InvitationExpired",
@@ -87,8 +90,10 @@
                                 "userPrincipalName": "eric@contoso.com"
                             }
                         },
-                        "recipient": {
-                            "userPrincipalName": "lisa@fabrikam.com"
+                       "recipient": {
+                            "type": "ServicePrincipal",
+                            "principalId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                            "tenantId": "c51dc03f-268a-4da0-a879-25f24947ab8b"
                         },
                         "status": "Revoked",
                         "expirationTimeUtc": "2024-12-01T00:00:00.000Z",

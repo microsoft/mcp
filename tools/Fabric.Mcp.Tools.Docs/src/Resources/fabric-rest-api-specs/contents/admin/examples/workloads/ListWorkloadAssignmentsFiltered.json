@@ -1,0 +1,30 @@
+{
+  "parameters": {
+    "Type": "Capacity",
+    "workloadId": "Fabric.SampleWorkloadV2"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "489eef53-adca-4191-9437-a665e8ada1e7",
+            "type": "Capacity",
+            "workloadId": "Fabric.SampleWorkloadV2",
+            "capacityId": "a7b12741-80ce-444a-a493-ecf92fed4ffd",
+            "capacityName": "F4 Capacity"
+          },
+          {
+            "id": "0c76b9d4-0ddc-4ff2-8b6e-23eded9b92cd",
+            "type": "Capacity",
+            "workloadId": "Fabric.SampleWorkloadV2",
+            "capacityId": "67605640-97d3-47ab-8600-010d482f4c54",
+            "capacityName": "F8 Capacity"
+          }
+        ],
+        "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workloads/assignments?type=capacity&workloadId=Fabric.SampleWorkloadV2&continuationToken=MSwxMDAwMCww",
+        "continuationToken": "MSwxMDAwMCww"
+      }
+    }
+  }
+}
