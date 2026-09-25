@@ -169,10 +169,16 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         return queryFilter + $" | limit {limit}";
     }
 
-    private async Task<ResourceQueryResults<T>> ExecuteResourceGraphQueryAsync<T>(
+    /// <summary>
+    /// Executes a Resource Graph query and returns the parsed query result.
+    /// </summary>
+    /// <param name="queryContent">The Resource Graph query content.</param>
+    /// <param name="tenantId">The target tenant ID to scope authentication to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="ResourceGraphQueryResult"/> containing the parsed response.</returns>
+    protected async Task<ResourceGraphQueryResult> ExecuteResourceGraphQueryAsync(
         ResourceQueryContent queryContent,
         string tenantId,
-        Func<JsonElement, T> converter,
         CancellationToken cancellationToken)
     {
         var token = await GetArmAccessTokenAsync(tenantId, cancellationToken);
@@ -203,29 +209,33 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         }
 
         await using var responseStream = response.Content.ToStream();
-        using var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
-        var root = document.RootElement;
+        var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+        return new ResourceGraphQueryResult(document);
+    }
+
+    protected async Task<ResourceQueryResults<T>> ExecuteResourceGraphQueryAsync<T>(
+        ResourceQueryContent queryContent,
+        string tenantId,
+        Func<JsonElement, T> converter,
+        CancellationToken cancellationToken)
+    {
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
         var results = new List<T>();
-        if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+        if (result.Data.ValueKind == JsonValueKind.Array)
         {
-            foreach (var item in data.EnumerateArray())
+            foreach (var item in result.Data.EnumerateArray())
             {
                 results.Add(converter(item));
             }
         }
 
-        var isTruncated = root.TryGetProperty("resultTruncated", out var resultTruncated)
-            && (resultTruncated.ValueKind == JsonValueKind.True
-                || resultTruncated.ValueKind == JsonValueKind.String
-                && string.Equals(resultTruncated.GetString(), "true", StringComparison.OrdinalIgnoreCase));
-
-        return new ResourceQueryResults<T>(results, isTruncated);
+        return new ResourceQueryResults<T>(results, result.IsTruncated);
     }
 
     /// <summary>
     /// Resolves the tenant ID to run a query against when no subscription is available to derive it from.
     /// </summary>
-    private async Task<string> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
+    protected async Task<string> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
         var tenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken);
         if (!string.IsNullOrEmpty(tenantId))
@@ -250,7 +260,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             nameof(tenant));
     }
 
-    private static RequestContent CreateResourceGraphRequestContent(ResourceQueryContent queryContent)
+    internal static RequestContent CreateResourceGraphRequestContent(ResourceQueryContent queryContent)
     {
         using var stream = new MemoryStream();
         using (var writer = new Utf8JsonWriter(stream))
@@ -259,6 +269,33 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             writer.WriteString("query", queryContent.Query);
             WriteStringArray(writer, "subscriptions", queryContent.Subscriptions);
             WriteStringArray(writer, "managementGroups", queryContent.ManagementGroups);
+
+            if (queryContent.Options is not null)
+            {
+                writer.WriteStartObject("options");
+                if (queryContent.Options.Top.HasValue)
+                {
+                    writer.WriteNumber("$top", queryContent.Options.Top.Value);
+                }
+                if (queryContent.Options.Skip.HasValue)
+                {
+                    writer.WriteNumber("$skip", queryContent.Options.Skip.Value);
+                }
+                if (!string.IsNullOrEmpty(queryContent.Options.SkipToken))
+                {
+                    writer.WriteString("$skipToken", queryContent.Options.SkipToken);
+                }
+                if (queryContent.Options.ResultFormat.HasValue)
+                {
+                    writer.WriteString("resultFormat", queryContent.Options.ResultFormat.Value.ToString());
+                }
+                if (queryContent.Options.AllowPartialScopes.HasValue)
+                {
+                    writer.WriteBoolean("allowPartialScopes", queryContent.Options.AllowPartialScopes.Value);
+                }
+                writer.WriteEndObject();
+            }
+
             writer.WriteEndObject();
         }
 
@@ -391,3 +428,87 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
 }
 
 public sealed record ResourceQueryResults<T>(List<T> Results, bool AreResultsTruncated);
+
+/// <summary>
+/// Wraps the parsed JSON response of an Azure Resource Graph query.
+/// Implements <see cref="IDisposable"/> to ensure the underlying <see cref="JsonDocument"/> is disposed.
+/// </summary>
+public sealed class ResourceGraphQueryResult : IDisposable
+{
+    private readonly JsonDocument _document;
+
+    public ResourceGraphQueryResult(JsonDocument document)
+    {
+        _document = document ?? throw new ArgumentNullException(nameof(document));
+        var root = document.RootElement;
+
+        Data = root.TryGetProperty("data", out var data) ? data : default;
+
+        if (root.TryGetProperty("count", out var countProp) && countProp.TryGetInt32(out var count))
+        {
+            Count = count;
+        }
+        else if (Data.ValueKind == JsonValueKind.Array)
+        {
+            Count = Data.GetArrayLength();
+        }
+
+        if (root.TryGetProperty("totalRecords", out var totalRecordsProp) && totalRecordsProp.TryGetInt64(out var totalRecords))
+        {
+            TotalRecords = totalRecords;
+        }
+
+        if (root.TryGetProperty("$skipToken", out var skipTokenProp) && skipTokenProp.ValueKind == JsonValueKind.String)
+        {
+            SkipToken = skipTokenProp.GetString();
+        }
+
+        if (root.TryGetProperty("facets", out var facetsProp))
+        {
+            Facets = facetsProp;
+        }
+
+        IsTruncated = root.TryGetProperty("resultTruncated", out var resultTruncated)
+            && (resultTruncated.ValueKind == JsonValueKind.True
+                || (resultTruncated.ValueKind == JsonValueKind.String
+                    && string.Equals(resultTruncated.GetString(), "true", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <summary>
+    /// Gets the underlying <see cref="JsonDocument"/>.
+    /// </summary>
+    public JsonDocument Document => _document;
+
+    /// <summary>
+    /// Gets the data element containing the query results.
+    /// </summary>
+    public JsonElement Data { get; }
+
+    /// <summary>
+    /// Gets the number of records returned in this page.
+    /// </summary>
+    public int Count { get; }
+
+    /// <summary>
+    /// Gets the total number of records matching the query, if provided by the response.
+    /// </summary>
+    public long? TotalRecords { get; }
+
+    /// <summary>
+    /// Gets the continuation token for pagination, if any.
+    /// </summary>
+    public string? SkipToken { get; }
+
+    /// <summary>
+    /// Gets the facets element, if facets were requested.
+    /// </summary>
+    public JsonElement Facets { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the results were truncated.
+    /// </summary>
+    public bool IsTruncated { get; }
+
+    /// <inheritdoc />
+    public void Dispose() => _document.Dispose();
+}
