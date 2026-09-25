@@ -32,6 +32,8 @@ public class OptionTypeNameHelperTests
     [InlineData(typeof(int[]), "array")]
     [InlineData(typeof(List<string>), "array")]
     [InlineData(typeof(IEnumerable<int>), "array")]
+    [InlineData(typeof(HashSet<int>), "array")]
+    [InlineData(typeof(Queue<string>), "array")]
     public void GetJsonSchemaType_MapsClrTypeToKeyword(Type valueType, string expected)
     {
         var result = OptionTypeNameHelper.GetJsonSchemaType(valueType);
@@ -55,6 +57,9 @@ public class OptionTypeNameHelperTests
     [InlineData(typeof(List<string>), "string")]
     [InlineData(typeof(IEnumerable<int>), "integer")]
     [InlineData(typeof(IList<bool>), "boolean")]
+    [InlineData(typeof(HashSet<int>), "integer")]
+    [InlineData(typeof(Queue<string>), "string")]
+    [InlineData(typeof(ICollection<double>), "number")]
     public void GetElementJsonSchemaType_ReturnsElementKeyword_ForCollections(Type valueType, string expected)
     {
         var result = OptionTypeNameHelper.GetElementJsonSchemaType(valueType);

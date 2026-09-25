@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.Mcp.Core.Helpers;
 
 /// <summary>
@@ -82,6 +84,8 @@ public static class OptionTypeNameHelper
         return elementType is null ? null : GetJsonSchemaType(elementType);
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",
+        Justification = "Option value types are arrays and generic collections of primitives, enums, and Guid. Arrays are handled before the interface walk, and the concrete collection types in use are statically instantiated so their IEnumerable<T> interface is preserved. If an interface were trimmed, the method degrades gracefully by returning null (no element type).")]
     private static Type? GetCollectionElementType(Type type)
     {
         if (type.IsArray)
@@ -89,17 +93,19 @@ public static class OptionTypeNameHelper
             return type.GetElementType();
         }
 
-        if (type.IsGenericType)
+        // Mirror the breadth of CollectionTypeHelper.IsArrayType by resolving the IEnumerable<T>
+        // interface, so any generic collection (List<T>, HashSet<T>, Queue<T>, etc.) reports its
+        // element type rather than only a fixed set of collection definitions.
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
         {
-            var genericDefinition = type.GetGenericTypeDefinition();
-            if (genericDefinition == typeof(IEnumerable<>)
-                || genericDefinition == typeof(ICollection<>)
-                || genericDefinition == typeof(IList<>)
-                || genericDefinition == typeof(IReadOnlyList<>)
-                || genericDefinition == typeof(IReadOnlyCollection<>)
-                || genericDefinition == typeof(List<>))
+            return type.GetGenericArguments()[0];
+        }
+
+        foreach (var interfaceType in type.GetInterfaces())
+        {
+            if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
             {
-                return type.GetGenericArguments()[0];
+                return interfaceType.GetGenericArguments()[0];
             }
         }
 
