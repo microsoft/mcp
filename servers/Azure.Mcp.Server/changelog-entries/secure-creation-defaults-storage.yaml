@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: New Storage accounts now disable public networking and Shared Key authentication by default while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access. Explicit options remain available to enable public networking or Shared Key authentication independently.
