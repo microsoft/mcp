@@ -29,7 +29,9 @@
     "**/bin/**",
     "**/eng/common/**",
     "**/obj/**",
-    "**/tools/**/tests/test-resources-post.ps1"
+    "**/tools/**/tests/test-resources-post.ps1",
+    "**/allowed-plugin-file-references.json",
+    "**/allowed-skill-names.json"
   ],
   "overrides": [
     {
@@ -82,6 +84,7 @@
         "buildid",
         "centralus",
         "classfilters",
+        "clis",
         "cloudevents",
         "codesign",
         "coldstart",
@@ -198,6 +201,7 @@
     "appservice",
     "appsettings",
     "aprl",
+    "asciicharts",
     "aspnetcore",
     "asyncio",
     "australiacentral",
@@ -237,6 +241,7 @@
     "azuremcp",
     "azuremigrate",
     "azureopenai",
+    "azurepipelinescredential",
     "azurepowershellcredential",
     "azureresources",
     "azuresdk",
@@ -244,6 +249,7 @@
     "azuresql",
     "azuresqldatabase",
     "azurestorage",
+    "azuresubscription",
     "azureterraform",
     "azureterraformbestpractices",
     "azurevirtualnetwork",
@@ -374,6 +380,7 @@
     "linuxvmimage",
     "livetest",
     "livetests",
+    "llms",
     "loadtesting",
     "localrequired",
     "loganalytics",
@@ -389,6 +396,7 @@
     "mbps",
     "mcpb",
     "mcpexp",
+    "mcpg",
     "mcpsrv",
     "mcptest",
     "mcpteststorage",

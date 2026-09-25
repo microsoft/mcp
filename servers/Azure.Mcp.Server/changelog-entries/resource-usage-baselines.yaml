@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Added CPU, memory, and handle resource baselines for the Azure MCP Server (eng/scripts/Measure-ResourceUsage.ps1 and a new --mcp-resource harness) that sample process resource counters across the idle, startup, discovery, steady-state, and sustained soak phases under configurable concurrency. Soak leak detection fits a least-squares trend (with a warmup exclusion) to flag unbounded memory or handle growth. Results are gated against a baseline with the tiered budgets from issue #3121 (steady-state CPU and memory within 10%, peak memory within 15%, no unbounded soak growth), and wired into the AzDO perf pipeline."

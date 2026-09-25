@@ -20,10 +20,16 @@ if: github.event_name != 'issues' || !startsWith(github.event.issue.title, '[inc
 permissions:
   contents: read
   issues: read
+  copilot-requests: write
 
-engine: copilot
+engine:
+  id: copilot
+  model: gpt-5.4
 
 tools:
+  bash: false
+  edit: false
+  cli-proxy: false
   github:
     toolsets: [issues, labels]
     min-integrity: none
@@ -37,6 +43,11 @@ network:
 timeout-minutes: 15
 
 safe-outputs:
+  threat-detection:
+    engine:
+      id: copilot
+      model: gpt-5.4
+      args: ["--reasoning-effort", "high"]
   add-comment:
     max: 1
   add-labels:

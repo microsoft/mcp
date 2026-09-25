@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Added a versioned, machine-readable performance workload catalog (eng/perf-workloads.json) and controlled-environment definition for the Azure MCP Server (issue #3120). The catalog defines every perf workload (startup, discovery scaling, dispatch, resource, concurrency) with its harness, transport, server mode, warm-up, repetitions, and metrics, plus shared environment requirements, statistical rules, and baseline-qualification governance. Every measurement harness now embeds a self-describing environment block (commit, runtime, OS, CPU, machine memory, and workload catalog version) in its results, and the default measured repetitions were raised to at least 10."

@@ -1,9 +1,6 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
-<!-- remove-section: start nuget;vsix;npm;pypi remove_managed_hosting_survey -->
-[![Help shape Azure MCP Server's Managed Remote Hosting — take our 1-minute survey](images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
-<!-- remove-section: end remove_managed_hosting_survey -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
@@ -1148,6 +1145,14 @@ Example prompts that generate Azure CLI commands:
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
+### ⚡ Azure Event Hubs
+
+* "Get details for Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Update tags on Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Get details for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Get consumer group 'my-consumergroup' for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Delete consumer group 'my-consumergroup' from Event Hub 'my-eventhub' in namespace 'my-namespace' and resource group 'my-rg'"
+
 ### 📂 Azure File Shares
 
 * "Get details about a specific file share in my resource group"
@@ -1213,6 +1218,11 @@ Example prompts that generate Azure CLI commands:
 * "List the node pools for my AKS cluster"
 * "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
+### 🚀 Azure Managed Grafana
+
+* "List all Managed Grafana workspaces in my subscription"
+* "Find Azure Managed Grafana workspaces available in subscription 'my-subscription'"
+
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
@@ -1239,11 +1249,33 @@ Example prompts that generate Azure CLI commands:
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### 📊 Azure Quota
+
+* "Check resource usage and quota for 'Microsoft.App/containerApps' in region 'eastus'"
+* "Check current quota and usage for 'Microsoft.Compute/virtualMachines,Microsoft.Storage/storageAccounts' in 'westeurope'"
+* "List available regions for resource type 'Microsoft.Web/sites'"
+* "Find available regions for cognitive service model 'gpt-4o' of type 'Microsoft.CognitiveServices/accounts'"
+
 ### 🔧 Azure Resource Management
 
 * "List my resource groups"
 * "List my Azure CDN endpoints"
 * "Help me build an Azure application using Node.js"
+
+### 🩺 Azure Resource Health
+
+* "Get availability status for resource '/subscriptions/my-sub/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm'"
+* "Check current health and availability of my Azure resource 'my-vm'"
+* "List active service health issues in my subscription"
+* "List planned maintenance events affecting my Azure resources"
+* "Find service health event details for tracking ID 'ABC1-XYZ'"
+
+### 💲 Azure Retail Pricing
+
+* "Get retail pricing for SKU 'Standard_D2s_v5' in region 'eastus'"
+* "Check pricing for Virtual Machines SKU 'Standard_E4s_v5' in region 'westeurope' with currency 'EUR'"
+* "Get one-year and three-year reservation pricing for SKU 'Standard_B2s'"
+* "Find retail prices for Azure App Service in region 'centralus'"
 
 ### 🗄️ Azure SQL Database
 
@@ -1261,6 +1293,12 @@ Example prompts that generate Azure CLI commands:
 * "Create a new Azure SQL server in my resource group 'my-resource-group'"
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
+
+### 📶 Azure SignalR Service
+
+* "List all SignalR services in my subscription"
+* "List SignalR services in resource group 'my-resource-group'"
+* "Get details for SignalR service 'my-signalr' in resource group 'my-resource-group'"
 
 ### 🤖 Azure SRE Agent
 
@@ -1314,6 +1352,13 @@ Example prompts that generate Azure CLI commands:
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Check whether recovery plan 'my-recovery-plan' and its protected resources are ready for recovery operations in service group 'my-service-group'"
+* "Validate which resources in recovery plan 'my-recovery-plan' in service group 'my-service-group' can fail over from 'eastus'"
+* "Fail over recovery plan 'my-recovery-plan' in service group 'my-service-group' from source location 'eastus'"
+* "Reprotect resources for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Finalize recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Resume paused recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Retry failed recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "List all runs of drill 'my-drill' in service group 'my-service-group'"
 * "Get drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "List all resources of drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
@@ -1321,6 +1366,13 @@ Example prompts that generate Azure CLI commands:
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "List all resilience drills in service group 'my-service-group'"
+* "List all resources targeted by drill 'my-drill' in service group 'my-service-group'"
+* "Get drill resource 'my-resource' for drill 'my-drill' in service group 'my-service-group'"
+* "Start resilience drill 'my-drill' in service group 'my-service-group' in Failover mode"
+* "Run a TestFailover for resilience drill 'my-drill' in service group 'my-service-group'"
+* "End resilience drill 'my-drill' in service group 'my-service-group' and attest it as Success with notes 'Validation completed'"
+* "Stop the running resilience drill 'my-drill' in service group 'my-service-group' and attest it as Failed"
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
@@ -1355,6 +1407,14 @@ Example prompts that generate Azure CLI commands:
 * "Get Well-Architected Framework guidance for App Service"
 * "What's the architectural guidance for Azure Cosmos DB?"
 
+### 📊 Azure Workbooks
+
+* "List all workbooks in resource group 'my-resource-group'"
+* "Show details and content of workbook with resource ID '<workbook_resource_id>'"
+* "Create a new workbook named 'Cost Analysis' in resource group 'my-resource-group'"
+* "Update workbook 'my-workbook-id' with new dashboard visualization content"
+* "Delete workbook 'my-workbook-id' from resource group 'my-resource-group'"
+
 ## Complete List of Supported Azure Services
 
 The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
@@ -1380,6 +1440,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
+- ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
@@ -1397,13 +1458,15 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
+- 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, drills, drill resources, drill runs, and drill run resources
+- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
 - 🏥 **Azure Service Health** - Resource health status and availability
+- 📶 **Azure SignalR Service** - SignalR service runtime management, network ACLs, and configuration
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration

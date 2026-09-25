@@ -30,7 +30,6 @@ public interface IStorageService
         string account,
         string container,
         string? blob,
-        string subscription,
         string? prefix = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
@@ -38,7 +37,6 @@ public interface IStorageService
     Task<List<ContainerInfo>> GetContainerDetails(
         string account,
         string? container,
-        string subscription,
         string? prefix = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
@@ -46,7 +44,6 @@ public interface IStorageService
     Task<ContainerInfo> CreateContainer(
         string account,
         string container,
-        string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -55,13 +52,11 @@ public interface IStorageService
         string container,
         string blob,
         string localFilePath,
-        string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<List<string>> ListTables(
         string account,
-        string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 }

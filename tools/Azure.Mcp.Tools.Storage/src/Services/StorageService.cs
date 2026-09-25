@@ -81,6 +81,10 @@ public sealed class StorageService(IAzureService azureService)
             (nameof(location), location),
             (nameof(subscription), subscription));
 
+        // Fail fast on invalid account names (3-24 lowercase letters/numbers) instead of relying on the
+        // ARM service to reject the request, which surfaces a less specific error.
+        ValidateStorageAccountName(account);
+
         // Create ArmClient for deployments
         ArmClient armClient = await CreateArmClientWithApiVersionAsync(
             "Microsoft.Storage/storageAccounts",
@@ -154,15 +158,13 @@ public sealed class StorageService(IAzureService azureService)
         string account,
         string container,
         string? blob,
-        string subscription,
         string? prefix = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
-            (nameof(container), container),
-            (nameof(subscription), subscription));
+            (nameof(container), container));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
@@ -233,12 +235,11 @@ public sealed class StorageService(IAzureService azureService)
     public async Task<List<ContainerInfo>> GetContainerDetails(
         string account,
         string? container,
-        string subscription,
         string? prefix = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(account), account));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containers = new List<ContainerInfo>();
@@ -292,14 +293,12 @@ public sealed class StorageService(IAzureService azureService)
     public async Task<ContainerInfo> CreateContainer(
         string account,
         string container,
-        string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
-            (nameof(container), container),
-            (nameof(subscription), subscription));
+            (nameof(container), container));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
@@ -364,7 +363,6 @@ public sealed class StorageService(IAzureService azureService)
         string container,
         string blob,
         string localFilePath,
-        string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -372,8 +370,7 @@ public sealed class StorageService(IAzureService azureService)
             (nameof(account), account),
             (nameof(container), container),
             (nameof(blob), blob),
-            (nameof(localFilePath), localFilePath),
-            (nameof(subscription), subscription));
+            (nameof(localFilePath), localFilePath));
 
         if (!File.Exists(localFilePath))
         {
@@ -418,7 +415,6 @@ public sealed class StorageService(IAzureService azureService)
 
     private async Task<TableServiceClient> CreateTableServiceClient(
         string account,
-        string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -430,18 +426,16 @@ public sealed class StorageService(IAzureService azureService)
 
     public async Task<List<string>> ListTables(
         string account,
-        string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(account), account));
 
         var tables = new List<string>();
 
         // First attempt with requested auth method
         var tableServiceClient = await CreateTableServiceClient(
             account,
-            subscription,
             tenant,
             cancellationToken);
 
