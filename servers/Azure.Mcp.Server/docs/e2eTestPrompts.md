@@ -876,9 +876,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| aks_cluster_get | Get the configuration of AKS cluster \<cluster-name> | none |
+| aks_cluster_get | Get the configuration of AKS cluster \<cluster-name> in resource group \<resource-group> | none |
 | aks_cluster_get | Show me the details of AKS cluster \<cluster-name> in resource group \<resource-group> | none |
-| aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> | none |
+| aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> in resource group \<resource-group> | none |
 | aks_cluster_get | What are the details of my AKS cluster \<cluster-name> in \<resource-group>? | none |
 | aks_cluster_get | List all AKS clusters in my subscription | none |
 | aks_cluster_get | Show me my Azure Kubernetes Service clusters | none |
