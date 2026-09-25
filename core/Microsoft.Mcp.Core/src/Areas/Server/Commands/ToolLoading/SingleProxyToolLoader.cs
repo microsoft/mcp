@@ -285,6 +285,11 @@ public sealed class SingleProxyToolLoader(
     private async Task<(List<ToolCommandInfo> Commands, string Json)> GetToolCommandsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         var listTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
+        if (listTools.Count == 0)
+        {
+            return ([], "[]");
+        }
+
         if (_cachedToolCommands.TryGetValue(tool, out var cached))
         {
             return cached;
