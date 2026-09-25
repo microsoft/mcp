@@ -126,8 +126,159 @@ public class BaseAzureResourceServiceTests
         Assert.Equal(50, options.GetProperty("$top").GetInt32());
         Assert.Equal(10, options.GetProperty("$skip").GetInt32());
         Assert.Equal("token-xyz", options.GetProperty("$skipToken").GetString());
-        Assert.Equal("ObjectArray", options.GetProperty("resultFormat").GetString());
+        Assert.Equal("objectArray", options.GetProperty("resultFormat").GetString());
         Assert.True(options.GetProperty("allowPartialScopes").GetBoolean());
+    }
+
+    [Fact]
+    public void CreateResourceGraphRequestContent_SerializesTableFormat()
+    {
+        var queryContent = new ResourceQueryContent("resources")
+        {
+            Options = new ResourceQueryRequestOptions
+            {
+                ResultFormat = ResultFormat.Table,
+            },
+        };
+
+        var requestContent = TestAzureResourceService.CreateContent(queryContent);
+        using var stream = new MemoryStream();
+        requestContent.WriteTo(stream, TestContext.Current.CancellationToken);
+        stream.Position = 0;
+
+        using var doc = JsonDocument.Parse(stream);
+        var root = doc.RootElement;
+
+        var options = root.GetProperty("options");
+        Assert.Equal("table", options.GetProperty("resultFormat").GetString());
+    }
+
+    [Fact]
+    public async Task ExecuteResourceGraphQueryAsync_UsesRequestedTenant_DoesNotEnumerateTenants()
+    {
+        // Arrange
+        var targetTenantId = Guid.NewGuid().ToString();
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("fake-arm-token", DateTimeOffset.UtcNow.AddHours(1))));
+
+        var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+
+        var armHandler = new CapturingHttpMessageHandler((_, _) => Task.FromResult(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                        "totalRecords": 1,
+                        "count": 1,
+                        "resultTruncated": "false",
+                        "data": [
+                            { "id": "/subscriptions/sub-123/resourceGroups/rg-1", "name": "rg-1" }
+                        ]
+                    }
+                    """,
+                    Encoding.UTF8,
+                    "application/json")
+            }));
+
+        var azureService = Substitute.For<IAzureService>();
+        azureService.CloudConfiguration.Returns(cloudConfig);
+        azureService.GetClient().Returns(_ => new HttpClient(armHandler, disposeHandler: false));
+        azureService.ResolveTenantIdAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<string>(0));
+        azureService.GetTokenCredentialAsync(targetTenantId, Arg.Any<CancellationToken>())
+            .Returns(credential);
+
+        var service = new TestAzureResourceService(azureService);
+        var queryContent = new ResourceQueryContent("resources | limit 1")
+        {
+            Options = new ResourceQueryRequestOptions
+            {
+                ResultFormat = ResultFormat.ObjectArray,
+            },
+        };
+
+        // Act
+        using var result = await service.ExecuteQueryPublicAsync(
+            queryContent,
+            targetTenantId,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(1, armHandler.CallCount);
+        Assert.Single(armHandler.RequestUris);
+        Assert.Equal("management.azure.com", armHandler.RequestUris[0].Host);
+        Assert.Equal("/providers/Microsoft.ResourceGraph/resources", armHandler.RequestUris[0].AbsolutePath);
+        Assert.DoesNotContain(armHandler.RequestUris, uri => uri.AbsolutePath.Contains("/tenants", StringComparison.OrdinalIgnoreCase));
+
+        await azureService.DidNotReceive().GetTenants(Arg.Any<CancellationToken>());
+        await azureService.Received(1).GetTokenCredentialAsync(targetTenantId, Arg.Any<CancellationToken>());
+        await credential.Received(1).GetTokenAsync(
+            Arg.Any<TokenRequestContext>(),
+            Arg.Any<CancellationToken>());
+
+        using var requestDoc = JsonDocument.Parse(Assert.IsType<string>(armHandler.LastRequestBody));
+        Assert.Equal("objectArray", requestDoc.RootElement.GetProperty("options").GetProperty("resultFormat").GetString());
+
+        Assert.Equal(1, result.Count);
+        Assert.Equal(JsonValueKind.Array, result.Data.ValueKind);
+        Assert.Equal("rg-1", result.Data[0].GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task ExecuteResourceGraphQueryAsync_WithConverter_ReturnsMappedResults()
+    {
+        // Arrange
+        var targetTenantId = Guid.NewGuid().ToString();
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("fake-arm-token", DateTimeOffset.UtcNow.AddHours(1))));
+
+        var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+
+        var armHandler = new CapturingHttpMessageHandler((_, _) => Task.FromResult(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                        "totalRecords": 1,
+                        "count": 1,
+                        "resultTruncated": "false",
+                        "data": [
+                            { "id": "/subscriptions/sub-123/resourceGroups/rg-1", "name": "rg-1" }
+                        ]
+                    }
+                    """,
+                    Encoding.UTF8,
+                    "application/json")
+            }));
+
+        var azureService = Substitute.For<IAzureService>();
+        azureService.CloudConfiguration.Returns(cloudConfig);
+        azureService.GetClient().Returns(_ => new HttpClient(armHandler, disposeHandler: false));
+        azureService.ResolveTenantIdAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<string>(0));
+        azureService.GetTokenCredentialAsync(targetTenantId, Arg.Any<CancellationToken>())
+            .Returns(credential);
+
+        var service = new TestAzureResourceService(azureService);
+        var queryContent = new ResourceQueryContent("resources | limit 1");
+
+        // Act
+        var result = await service.ExecuteQueryWithConverterPublicAsync(
+            queryContent,
+            targetTenantId,
+            elem => elem.GetProperty("name").GetString()!,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.AreResultsTruncated);
+        Assert.Single(result.Results);
+        Assert.Equal("rg-1", result.Results[0]);
     }
 
     [Fact]
@@ -198,10 +349,21 @@ public class BaseAzureResourceServiceTests
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responseFactory)
         : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(
+        public int CallCount { get; private set; }
+        public string? LastRequestBody { get; private set; }
+        public List<Uri> RequestUris { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken) =>
-            responseFactory(request, cancellationToken);
+            CancellationToken cancellationToken)
+        {
+            CallCount++;
+            RequestUris.Add(request.RequestUri!);
+            LastRequestBody = request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync(cancellationToken);
+            return await responseFactory(request, cancellationToken);
+        }
     }
 
     private sealed class TestAzureResourceService(IAzureService azureService)
@@ -212,5 +374,18 @@ public class BaseAzureResourceServiceTests
 
         public Task<string> ResolveTenantIdPublicAsync(string? tenant, CancellationToken cancellationToken) =>
             ResolveTenantIdAsync(tenant, cancellationToken);
+
+        public Task<ResourceGraphQueryResult> ExecuteQueryPublicAsync(
+            ResourceQueryContent queryContent,
+            string tenantId,
+            CancellationToken cancellationToken) =>
+            ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
+
+        public Task<ResourceQueryResults<T>> ExecuteQueryWithConverterPublicAsync<T>(
+            ResourceQueryContent queryContent,
+            string tenantId,
+            Func<JsonElement, T> converter,
+            CancellationToken cancellationToken) =>
+            ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
     }
 }

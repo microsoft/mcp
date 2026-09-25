@@ -355,7 +355,7 @@ public class AdvisorService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
         var query = BuildMetadataListQuery(language, filters);
-        var tenantId = await ResolveTenantIdAsync(null, cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(null, cancellationToken);
         var result = await ExecuteMetadataPageAsync(tenantId, query, null, cancellationToken);
 
         return new(
@@ -370,7 +370,7 @@ public class AdvisorService(IAzureService azureService)
         CancellationToken cancellationToken)
     {
         var query = BuildMetadataListQuery(language, filters);
-        var tenantId = await ResolveTenantIdAsync(tenant, cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(tenant, cancellationToken);
         var results = new List<RecommendationMetadata>();
         results.AddRange(await CollectMetadataPagesAsync(
             (skipToken, token) => ExecuteMetadataPageAsync(
@@ -470,7 +470,7 @@ public class AdvisorService(IAzureService azureService)
         string? tenant,
         CancellationToken cancellationToken)
     {
-        var tenantId = await ResolveTenantIdAsync(tenant, cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(tenant, cancellationToken);
 
         using var result = await ExecuteResourceGraphQueryAsync(
             new ResourceQueryContent(query),
@@ -665,7 +665,7 @@ public class AdvisorService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
-        var tenantId = await ResolveTenantIdAsync(null, cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(null, cancellationToken);
 
         var query =
             "advisorresources " +
@@ -856,5 +856,28 @@ public class AdvisorService(IAzureService azureService)
             message,
             errorCode,
             null);
+    }
+
+    private async Task<string> ResolveMetadataTenantIdAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(tenant))
+        {
+            return await ResolveTenantIdAsync(tenant, cancellationToken);
+        }
+
+        var tenantId = await AzureService.ResolveTenantIdAsync(null, cancellationToken);
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            return tenantId;
+        }
+
+        var tenants = await AzureService.GetTenants(cancellationToken);
+        if (tenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible tenants found");
+        }
+
+        return tenants[0].Data.TenantId?.ToString()
+            ?? throw new InvalidOperationException("First accessible tenant does not have a valid tenant ID.");
     }
 }
