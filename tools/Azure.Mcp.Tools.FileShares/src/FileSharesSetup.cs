@@ -43,7 +43,9 @@ public class FileSharesSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var fileShares = new CommandGroup(Name, "File Shares operations - Commands for managing Azure File Shares.", Title);
+        var fileShares = new CommandGroup(Name,
+            "File Shares operations - Commands for managing Azure File Shares.",
+            Title);
 
         var fileShare = new CommandGroup("fileshare", "File share operations - Commands for managing file shares.");
         fileShares.AddSubGroup(fileShare);

@@ -35,7 +35,7 @@ internal sealed class EventGridEndpointValidationPolicy(ArmEnvironment armEnviro
     /// Thrown when the generated pipeline does not provide a request URI.
     /// </exception>
     /// <exception cref="ArgumentException">
-    /// Thrown if the pricing endpoint allow-list is not configured.
+    /// Thrown if the Event Grid endpoint allow-list is not configured.
     /// </exception>
     /// <exception cref="System.Security.SecurityException">
     /// Thrown when the request URI is not an allowed Azure EventGrid endpoint for the configured cloud.

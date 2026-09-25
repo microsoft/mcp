@@ -124,6 +124,12 @@ public static partial class EndpointValidator
             UsGov: [".communication.azure.us"],
             Germany: [".communication.azure.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["confidential-ledger"] = new AllowedSuffixManager(
+            Public: [".confidential-ledger.azure.com"],
+            China: [".confidential-ledger.azure.cn"],
+            UsGov: [".confidential-ledger.azure.us"],
+            Germany: [], // Confidential Ledger is not offered in the Germany cloud; leave empty so validation fails rather than implicitly accepting a public-cloud host.
+            UseLegacyCheck: false),
         ["eventgrid"] = new AllowedSuffixManager(
             Public: [".eventgrid.azure.net"],
             China: [".eventgrid.azure.cn"],
