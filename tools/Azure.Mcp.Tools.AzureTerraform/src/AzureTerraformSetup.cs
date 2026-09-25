@@ -43,7 +43,7 @@ public sealed class AzureTerraformSetup : IAreaSetup
     {
         var group = new CommandGroup(
             Name,
-            "Azure Terraform tools - Retrieves AzureRM, AzAPI, and AVM (Azure Verified Modules) Terraform provider documentation including resource schemas, arguments, attributes, module versions, usage examples, aztfexport command generation, and conftest policy validation.",
+            "Azure Terraform tools - Retrieves AzureRM, AzAPI, and AVM (Azure Verified Modules) Terraform provider documentation including resource schemas, arguments, attributes, module versions, usage examples, aztfexport command generation to export existing Azure resources, entire resource groups, or Resource Graph query results to Terraform using the AzureRM or AzAPI provider, and conftest policy validation.",
             Title
         );
 

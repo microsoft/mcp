@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Clarified Azure Terraform tool descriptions to improve tool selection: the aztfexport resource and resource group tools now make exporting existing resources with AzureRM or AzAPI discoverable while preserving command-generation-only behavior, the azurerm and azapi documentation tools distinguish reference lookups from live resource queries, and the conftest workspace and plan tools distinguish Terraform source folders from generated plan files."

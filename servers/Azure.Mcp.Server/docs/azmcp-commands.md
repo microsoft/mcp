@@ -5351,7 +5351,8 @@ azmcp azureterraformbestpractices get
 #### AzureRM Provider Documentation
 
 ```bash
-# Retrieve comprehensive AzureRM Terraform provider documentation for a specified resource type
+# Retrieve AzureRM Terraform provider documentation for a Terraform resource or data source named with the azurerm_ prefix
+# Reads reference documentation only; does not query or modify live Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform azurerm get --resource-type <resource-type> \
                                  [--doc-type <doc-type>] \
@@ -5362,7 +5363,8 @@ azmcp azureterraform azurerm get --resource-type <resource-type> \
 #### AzAPI Provider Documentation
 
 ```bash
-# Retrieve AzAPI Terraform provider documentation and schema for a specified Azure resource type
+# Retrieve AzAPI Terraform provider documentation and schema for an Azure resource type in ARM namespace format
+# Reads reference documentation only; does not query or modify live Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform azapi get --resource-type <resource-type> \
                                [--api-version <api-version>]
@@ -5389,7 +5391,10 @@ azmcp azureterraform avm get --module-name <module-name> \
 #### Azure Export for Terraform (aztfexport)
 
 ```bash
-# Generate an aztfexport command to export a single Azure resource to Terraform configuration
+# Generate an aztfexport command to export a single existing Azure resource to Terraform configuration
+# Use when the resource is identified by its full Azure resource ID; exports only that resource, not its resource group
+# Use --provider azapi for AzAPI instead of the default AzureRM provider
+# Returns a command for local execution or installation instructions; does not execute the export or modify Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform aztfexport resource --resource-id <resource-id> \
                                          [--output-folder <output-folder>] \
@@ -5399,7 +5404,10 @@ azmcp azureterraform aztfexport resource --resource-id <resource-id> \
                                          [--parallelism <parallelism>] \
                                          [--continue-on-error]
 
-# Generate an aztfexport command to export an Azure resource group to Terraform configuration
+# Generate an aztfexport command to export an existing Azure resource group and all its resources to Terraform configuration
+# Use when the request names a resource group rather than a single Azure resource ID
+# Use --provider azapi for AzAPI instead of the default AzureRM provider
+# Returns a command for local execution or installation instructions; does not execute the export or modify Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform aztfexport resourcegroup --resource-group <resource-group> \
                                               [--output-folder <output-folder>] \
@@ -5423,14 +5431,16 @@ azmcp azureterraform aztfexport query --query <query> \
 #### Conftest Policy Validation
 
 ```bash
-# Generate a conftest command to validate Terraform .tf files in a workspace against Azure policies
+# Generate a conftest command to validate the Terraform .tf source files in a workspace folder against Azure policies
+# Use for a folder of Terraform configuration; to validate a tfplan.json plan file, use conftest plan
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform conftest workspace --workspace-folder <workspace-folder> \
                                         [--policy-set <policy-set>] \
                                         [--severity-filter <severity-filter>] \
                                         [--custom-policies <custom-policies>]
 
-# Generate a conftest command to validate a Terraform plan JSON file against Azure policies
+# Generate a conftest command to validate an already generated Terraform plan JSON file (tfplan.json) against Azure policies
+# Use for a plan file; to validate Terraform .tf source files, use conftest workspace
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform conftest plan --plan-folder <plan-folder> \
                                    [--policy-set <policy-set>] \
