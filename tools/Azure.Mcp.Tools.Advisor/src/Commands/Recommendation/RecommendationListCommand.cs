@@ -35,7 +35,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "--prioritized is an orthogonal modifier that applies to whichever scope is selected. Set --prioritized true whenever " +
         "the user asks for a prioritized, ranked, or 'what should I fix/address first' view, or for the most critical, " +
         "highest-impact, or top recommendations: it returns only the recommendations that have contextual criticality scoring " +
-        "and orders them by criticality score (highest first). --prioritized defaults to false, which returns every matching " +
+        "and prioritizes at two levels: first it ranks recommendation types by metadata priority score (highest first) and metadata " +
+        "impact (High, Medium, Low), with recommendation type ID as a tie-breaker; then, within each type, it ranks recommendation " +
+        "instances by contextual criticality score (highest first). --prioritized defaults to false, which returns every matching " +
         "recommendation in the default order. " +
         "Each result uses the standard ARM resource shape; its name is the stable recommendation ID accepted by tools that operate on a recommendation. " +
         "--top caps the number of returned items (default 50, max 100).",

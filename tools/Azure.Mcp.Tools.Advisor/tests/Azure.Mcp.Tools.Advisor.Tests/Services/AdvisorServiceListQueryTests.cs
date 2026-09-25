@@ -48,7 +48,7 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("on joinTypeId", query);
 
         // Properties are rewritten in place with the metadata overrides.
-        Assert.Contains("extend properties = bag_merge(properties, metadataOverrides)", query);
+        Assert.Contains("extend properties = bag_merge(metadataOverrides, properties)", query);
         Assert.Contains("| project id, name, type, properties", query);
         Assert.EndsWith("| limit 25", query);
 
@@ -78,6 +78,10 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("pack('recommendationSubCategory', metadataSubCategory)", query);
         Assert.Contains("pack('retirementDate', metadataRetirementDate)", query);
         Assert.Contains("pack('retirementFeatureName', metadataRetirementFeatureName)", query);
+        Assert.Contains(
+            "pack('retirementFeatureName', metadataRetirementFeatureName), dynamic({})), coalesce(properties.extendedProperties, dynamic({})))",
+            query);
+        Assert.Contains("bag_merge(metadataOverrides, properties)", query);
     }
 
     [Fact]
@@ -123,7 +127,7 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("isnotempty(tostring(properties.criticality))", query);
         Assert.Contains("isnotnull(properties.criticalityScore)", query);
 
-        // Ranked by the type's metadata priority, then business impact, kept contiguous per type, then criticality, then id.
+        // Ranked by the type's metadata priority score, then business impact, kept contiguous per type, then criticality, then id.
         Assert.Contains(
             "metadataImpactRank = case(tolower(metadataImpact) == 'high', 0, tolower(metadataImpact) == 'medium', 1, tolower(metadataImpact) == 'low', 2, 3)",
             query);
@@ -138,6 +142,7 @@ public class AdvisorServiceListQueryTests
         // Ordering runs before the projection (so join-only sort keys survive) and before the limit.
         Assert.True(orderIndex < projectIndex, "Ordering must precede the projection so join-only sort keys remain available.");
         Assert.True(projectIndex < limitIndex, "Projection must precede the limit.");
+        Assert.EndsWith("| limit 10", query);
     }
 
     [Fact]
@@ -180,4 +185,44 @@ public class AdvisorServiceListQueryTests
         Assert.DoesNotContain("resourceGroup =~", query);
         Assert.Contains("join kind=leftouter", query);
     }
+
+    [Fact]
+    public void ParseRecommendationListResult_NoTruncationSignals_IsNotTruncated()
+    {
+        var result = AdvisorService.ParseRecommendationListResult(
+            BinaryData.FromString(CreateRecommendationPayload("first")),
+            isTruncated: false,
+            skipToken: null);
+
+        Assert.False(result.AreResultsTruncated);
+        Assert.Equal("first", Assert.Single(result.Results).Name);
+    }
+
+    [Theory]
+    [InlineData(true, null)]
+    [InlineData(false, "next-page")]
+    public void ParseRecommendationListResult_TruncationSignal_IsTruncated(
+        bool isTruncated,
+        string? skipToken)
+    {
+        var result = AdvisorService.ParseRecommendationListResult(
+            BinaryData.FromString(CreateRecommendationPayload("first")),
+            isTruncated,
+            skipToken);
+
+        Assert.True(result.AreResultsTruncated);
+        Assert.Equal("first", Assert.Single(result.Results).Name);
+    }
+
+    private static string CreateRecommendationPayload(string name) => $"[{CreateRecommendation(name)}]";
+
+    private static string CreateRecommendation(string name) =>
+        $$"""
+        {
+          "id": "/subscriptions/sub-123/providers/Microsoft.Advisor/recommendations/{{name}}",
+          "name": "{{name}}",
+          "type": "Microsoft.Advisor/recommendations",
+          "properties": {}
+        }
+        """;
 }

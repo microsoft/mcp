@@ -121,7 +121,7 @@ public class AdvisorService(IAzureService azureService)
         return recommendations;
     }
 
-    // Prioritized mode surfaces only criticality-scored recommendations, ranked by criticality score.
+    // Prioritized mode surfaces only criticality-scored recommendations, ranked by metadata priority score.
     internal static bool IsPrioritized(RecommendationFilters? filters) =>
         filters?.Prioritized == true;
 
@@ -207,10 +207,10 @@ public class AdvisorService(IAzureService azureService)
         " iff(isnotempty(instanceLabel), instanceLabel, metadataLabel))" +
         " | extend hasExtendedAdditions = isnotempty(metadataSubCategory) or isnotempty(metadataRetirementDate) or isnotempty(metadataRetirementFeatureName)" +
         " | extend mergedExtendedProperties = bag_merge(" +
-        " coalesce(properties.extendedProperties, dynamic({}))," +
         " iff(isnotempty(metadataSubCategory), pack('recommendationSubCategory', metadataSubCategory), dynamic({}))," +
         " iff(isnotempty(metadataRetirementDate), pack('retirementDate', metadataRetirementDate), dynamic({}))," +
-        " iff(isnotempty(metadataRetirementFeatureName), pack('retirementFeatureName', metadataRetirementFeatureName), dynamic({})))" +
+        " iff(isnotempty(metadataRetirementFeatureName), pack('retirementFeatureName', metadataRetirementFeatureName), dynamic({}))," +
+        " coalesce(properties.extendedProperties, dynamic({})))" +
         " | extend metadataOverrides = bag_merge(" +
         " iff(isnotempty(metadataCategory), pack('category', metadataCategory), dynamic({}))," +
         " iff(isnotempty(metadataImpact), pack('impact', metadataImpact), dynamic({}))," +
@@ -221,7 +221,7 @@ public class AdvisorService(IAzureService azureService)
         " iff(isnull(properties.shortDescription) and isnotempty(metadataDisplayName)," +
         " pack('shortDescription', pack('problem', metadataDisplayName, 'solution', metadataDisplayName)), dynamic({}))," +
         " iff(hasExtendedAdditions, pack('extendedProperties', mergedExtendedProperties), dynamic({})))" +
-        " | extend properties = bag_merge(properties, metadataOverrides)";
+        " | extend properties = bag_merge(metadataOverrides, properties)";
 
     private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueryAsync(
         string query,
@@ -239,10 +239,21 @@ public class AdvisorService(IAzureService azureService)
 
         ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
 
+        return ParseRecommendationListResult(
+            result?.Data,
+            result?.ResultTruncated == ResultTruncated.True,
+            result?.SkipToken);
+    }
+
+    internal static ResourceQueryResults<Recommendation> ParseRecommendationListResult(
+        BinaryData? data,
+        bool isTruncated,
+        string? skipToken)
+    {
         var results = new List<Recommendation>();
-        if (result is { Count: > 0 })
+        if (data is not null)
         {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
+            using var jsonDocument = JsonDocument.Parse(data);
             if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
             {
                 foreach (var item in jsonDocument.RootElement.EnumerateArray())
@@ -252,8 +263,7 @@ public class AdvisorService(IAzureService azureService)
             }
         }
 
-        // ARG's '| limit' does not set ResultTruncated, so flag truncation when the cap is reached.
-        return new(results, result?.ResultTruncated == ResultTruncated.True || results.Count >= limit);
+        return new(results, isTruncated || !string.IsNullOrEmpty(skipToken));
     }
 
     private async Task<TenantResource> GetTenantResourceForSubscriptionAsync(

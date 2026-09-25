@@ -62,7 +62,9 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     public string? ServiceGroup { get; set; }
 
     [Option(Description = "Set to true to prioritize recommendations for 'what should I fix first', ranked, top, or " +
-        "most-critical requests: it returns only recommendations that have contextual criticality scoring, ordered by " +
+        "most-critical requests: it returns only recommendations that have contextual criticality scoring and prioritizes at two " +
+        "levels. First, it ranks recommendation types by metadata priority score (highest first) and metadata impact (High, Medium, Low), " +
+        "using recommendation type ID as a tie-breaker. Then, within each type, it ranks recommendation instances by contextual " +
         "criticality score (highest first). Defaults to false, which returns all matching recommendations without " +
         "prioritized ordering. Applies to both the subscription and Service Group scopes.")]
     public bool? Prioritized { get; set; }
