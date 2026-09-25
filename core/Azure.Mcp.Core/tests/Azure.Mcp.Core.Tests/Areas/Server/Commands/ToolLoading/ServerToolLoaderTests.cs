@@ -305,6 +305,49 @@ public class ServerToolLoaderTests
         return McpTestUtilities.CreateToolCallRequest(serverName, arguments);
     }
 
+    [Theory]
+    [InlineData("user@example.com", "account_list", TagConstants.Unknown, TagConstants.Unknown)]
+    [InlineData("storage", "user@example.com", TagConstants.Unknown, "storage")]
+    [InlineData("storage", "account_list", "account_list", "storage")]
+    [InlineData("storage", "ACCOUNT_LIST", "account_list", "storage")]
+    [InlineData("STORAGE", "account_list", "account_list", "storage")]
+    [InlineData("STORAGE", "user@example.com", TagConstants.Unknown, "storage")]
+    public async Task CallToolHandler_OnlyCapturesAllowedToolIdentity(
+        string serverName, string command, string expectedName, string expectedArea)
+    {
+        var executed = false;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(CreateRoutingTool("account_list"), _ =>
+            {
+                executed = true;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        await using var loader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "storage");
+        var request = CreateCallToolRequestWithCommand(serverName, command);
+        using var activity = new Activity("test-activity").Start();
+
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(expectedName == "account_list", executed);
+        activity.AssertTagEquals(TagName.ToolName, expectedName);
+        activity.AssertTagEquals(TagName.ToolArea, expectedArea);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithUppercaseProvider_LearnsCanonicalArea()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool(CreateRoutingTool("account_list"), _ => new CallToolResult { Content = [], IsError = false });
+        await using var loader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "storage");
+        var request = McpTestUtilities.CreateToolCallRequest("STORAGE", new Dictionary<string, object?> { ["learn"] = true });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(result.Content);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
+    }
+
     [Fact]
     public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyCommand()
     {
@@ -337,6 +380,7 @@ public class ServerToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "account_create");
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -344,6 +388,8 @@ public class ServerToolLoaderTests
         // Assert - The non-read-only tool must NOT be executed
         Assert.False(writeToolExecuted, "Non-read-only tool should not be executed in read-only mode");
         BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "account_create", "account_list");
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
     }
 
     [Fact]
@@ -419,6 +465,7 @@ public class ServerToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { Transport = TransportTypes.Http }, clientBuilder, "storage");
 
         var request = CreateCallToolRequestWithCommand("storage", "local_command");
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -426,6 +473,8 @@ public class ServerToolLoaderTests
         // Assert - The local-required tool must NOT be executed in HTTP mode
         Assert.False(localToolExecuted, "Local-required tool should not be executed in HTTP mode");
         BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "local_command", "remote_command");
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
     }
 
     [Fact]
@@ -644,6 +693,7 @@ public class ServerToolLoaderTests
             Transport = isHttpMode ? TransportTypes.Http : TransportTypes.StdIo
         }, clientBuilder, "storage");
         var server = BaseToolLoaderTests.CreateSamplingServer(false);
+        using var activity = new Activity("test-activity").Start();
 
         var result = await loader.CallToolHandler(
             BaseToolLoaderTests.CreateCommandRequest(server, command: "storage_blocked"),
@@ -652,6 +702,8 @@ public class ServerToolLoaderTests
         BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "storage_blocked",
             emptyCatalog ? [] : ["storage_allowed"]);
         Assert.Equal(0, executions);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, emptyCatalog ? TagConstants.Unknown : "storage");
         await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
     }
 
@@ -663,11 +715,15 @@ public class ServerToolLoaderTests
         await using var loader = CreateToolLoaderWithMockClient(
             new ServerRuntimeConfiguration(), new MockMcpClientBuilder(), "storage");
         var server = BaseToolLoaderTests.CreateSamplingServer(supportsSampling);
+        using var activity = new Activity("test-activity").Start();
 
         var result = await loader.CallToolHandler(
             BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
 
         BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "invalid_command");
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
         await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
     }
 
@@ -688,6 +744,9 @@ public class ServerToolLoaderTests
         await using var loader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "storage");
         var server = BaseToolLoaderTests.CreateSamplingServer(true,
             $$$"""{"command":"{{{sampledName}}}","parameters":{"subscription":"sampled-subscription","limit":3}}""");
+        using var activity = new Activity("test-activity").Start();
+        server.When(samplingServer => samplingServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>()))
+            .Do(_ => activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown));
 
         var result = await loader.CallToolHandler(
             BaseToolLoaderTests.CreateCommandRequest(server,
@@ -695,6 +754,8 @@ public class ServerToolLoaderTests
             TestContext.Current.CancellationToken);
 
         Assert.False(result.IsError);
+        activity.AssertTagEquals(TagName.ToolName, "storage_alpha");
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         Assert.Equal("Corrected execution", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
         Assert.Equal(1, executions);
         Assert.NotNull(executedParameters);
@@ -732,11 +793,14 @@ public class ServerToolLoaderTests
             });
         await using var loader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration(), clientBuilder, "storage");
         var server = BaseToolLoaderTests.CreateSamplingServer(true, samplingText, failSampling);
+        using var activity = new Activity("test-activity").Start();
 
         var result = await loader.CallToolHandler(
             BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
 
         BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", "invalid_command", "storage_alpha");
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         Assert.Equal(0, executions);
         await server.Received(1).SendRequestAsync(
             Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());
