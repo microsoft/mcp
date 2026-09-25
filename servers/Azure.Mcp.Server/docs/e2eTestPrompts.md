@@ -424,11 +424,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | compute_vm_create | Create a new Linux VM named \<vm-name> in resource group \<resource-group-name> | clarification-required |
 | compute_vm_create | Create a virtual machine with Standard_D2s_v5 size in \<resource-group-name> | clarification-required |
-| compute_vm_create | Create a Windows VM with password authentication in resource group \<resource-group-name> | clarification-required |
-| compute_vm_create | Create VM \<vm-name> in \<location> with SSH key authentication | clarification-required |
-| compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group \<resource-group-name> | clarification-required |
-| compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in \<resource-group-name> | clarification-required |
+| compute_vm_create | Create a Windows VM with password authentication in resource group <resource-group-name> | clarification-required |
+| compute_vm_create | Create VM <vm-name> in <location> with SSH key authentication | clarification-required |
+| compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name> | clarification-required |
+| compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name> | clarification-required |
 | compute_vm_create | Create Linux VM \<vm-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in \<resource-group-name> | none |
+| compute_vm_create | Create Linux VM <vm-name> in <resource-group> in \<location> using image Ubuntu2404, admin \<admin-username>, and SSH public key \<ssh-public-key>, with no public IP and no inbound access | none |
+| compute_vm_create | Create Linux VM <vm-name> in <resource-group> in \<location> using Ubuntu2404, admin \<admin-username>, and SSH key \<ssh-public-key>; explicitly enable a public IP and allow SSH from any source for this isolated test | none |
 | compute_vm_get | List all virtual machines in my subscription | none |
 | compute_vm_get | Show me all VMs in my subscription | none |
 | compute_vm_get | What virtual machines do I have? | none |
@@ -465,6 +467,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_create | Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances | clarification-required |
 | compute_vmss_create | Create Linux VMSS with SSH authentication in \<resource-group-name> | none |
 | compute_vmss_create | Create scale set \<vmss-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in \<resource-group-name> | none |
+| compute_vmss_create | Create scale set <vmss-name> in \<resource-group> in \<location> using Ubuntu2404, admin \<admin-username>, and SSH key \<ssh-public-key> with the default deny-inbound NSG | none |
+| compute_vmss_create | Create scale set <vmss-name> in \<resource-group> in \<location> using Ubuntu2404, admin \<admin-username>, and SSH key \<ssh-public-key>; explicitly disable the instance NIC NSG for this isolated test | none |
 | compute_vmss_get | List all virtual machine scale sets in my subscription | none |
 | compute_vmss_get | List virtual machine scale sets in resource group \<resource-group-name> | none |
 | compute_vmss_get | What scale sets are in resource group <resource-group-name>? | none |
@@ -488,18 +492,20 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_disk_get | What managed disks are available? | none |
 | compute_disk_get | Get information about disk \<disk-name> | none |
 | compute_disk_create | Create a 128 GB managed disk named \<disk-name> in resource group \<resource-group> | none |
+| compute_disk_create | Create a 128 GB disk \<disk-name> in \<resource-group> with network import and export denied | none |
+| compute_disk_create | Create a 128 GB disk \<disk-name> in \<resource-group> and explicitly allow authorized network exports from any network | none |
 | compute_disk_create | Create a new Premium_LRS disk called \<disk-name> in resource group \<resource-group> with 256 GB | none |
 | compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> in eastus | none |
 | compute_disk_create | Create a disk from snapshot \<snapshot-resource-id> in resource group \<resource-group> | none |
-| compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> from blob \<blob-uri> | none |
+| compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> from blob \<blob-uri>; explicitly use AllowAll network access for this isolated test | none |
 | compute_disk_create | Create a 64 GB Standard_LRS Linux disk named \<disk-name> in resource group \<resource-group> in zone 1 | none |
 | compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> with tags env=prod team=infra | none |
 | compute_disk_create | Create a 128 GB Premium_LRS disk named \<disk-name> in resource group \<resource-group> with performance tier P30 | none |
 | compute_disk_create | Create a disk \<disk-name> in resource group \<resource-group> with customer-managed encryption using disk encryption set \<disk-encryption-set-id> | none |
 | compute_disk_create | Create a managed disk from gallery image version \<image-version-resource-id> in resource group \<resource-group> | none |
 | compute_disk_create | Create a data disk from LUN 0 of gallery image version \<image-version-resource-id> in resource group \<resource-group> | none |
-| compute_disk_create | Create a disk ready for upload named \<disk-name> in resource group \<resource-group> with upload size 20972032 bytes | none |
-| compute_disk_create | Create an Azure managed disk named \<disk-name> in resource group \<resource-group> as a Trusted Launch upload disk with UploadWithSecurityData type and TrustedLaunch security type | none |
+| compute_disk_create | Create a disk ready for upload named \<disk-name> in resource group \<resource-group> with upload size 20972032 bytes; explicitly use AllowAll network access for this isolated test | none |
+| compute_disk_create | Create an Azure managed disk named \<disk-name> in resource group \<resource-group> as a Trusted Launch upload disk with UploadWithSecurityData type, TrustedLaunch security type, and explicit AllowAll network access for this isolated test | none |
 | compute_disk_create | Create an UltraSSD_LRS disk named \<disk-name> in resource group \<resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput | none |
 | compute_disk_create | Create a shared managed disk named \<disk-name> in resource group \<resource-group> with 512 GB and max shares set to 3 | none |
 | compute_disk_create | Create a managed disk \<disk-name> in resource group \<resource-group> with network access policy DenyAll and disk access \<disk-access-resource-id> | none |

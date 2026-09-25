@@ -106,6 +106,8 @@ public interface IComputeService
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
+        string? networkSecurityGroup = null,
+        bool disableNetworkSecurityGroup = false,
         CancellationToken cancellationToken = default);
 
     Task<VmssUpdateResult> UpdateVmssAsync(

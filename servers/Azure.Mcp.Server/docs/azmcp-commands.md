@@ -1707,12 +1707,12 @@ azmcp compute vm create --subscription <subscription> \
                         [--public-ip-address <public-ip-address>] \
                         [--network-security-group <network-security-group>] \
                         [--source-address-prefix <source-address-prefix>] \
-                        [--no-public-ip] \
+                        [--no-public-ip <true|false>] \
                         [--zone <zone>] \
                         [--os-disk-size-gb <os-disk-size-gb>] \
                         [--os-disk-type <os-disk-type>]
 
-Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When new NSG rules are created, SSH/RDP access is allowed from any source unless `--source-address-prefix` is provided. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
+Defaults to Standard_D2s_v5 size when `--vm-size` is not specified. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). No public IP is assigned and new NSGs deny all inbound access by default. Set `--no-public-ip false` to enable a public IP and `--source-address-prefix` to explicitly allow SSH/RDP from a source range; `"*"` allows any source. When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted; file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -1833,8 +1833,8 @@ azmcp compute vm create --subscription "my-sub" \
 | `--subnet` | No | Subnet name |
 | `--public-ip-address` | No | Public IP address name |
 | `--network-security-group` | No | Network security group name |
-| `--source-address-prefix` | No | Source IP/CIDR for created NSG inbound rules (default: `*`) |
-| `--no-public-ip` | No | Do not create a public IP address |
+| `--source-address-prefix` | No | Source IP/CIDR for created SSH/RDP rules. No inbound access is allowed by default; `*` explicitly allows any source. |
+| `--no-public-ip` | No | Do not create a public IP address (default: `true`). Set `false` to enable a public IP, including when specifying `--public-ip-address`. |
 | `--zone` | No | Availability zone |
 | `--os-disk-size-gb` | No | OS disk size in GB |
 | `--os-disk-type` | No | OS disk type: 'Premium_LRS', 'StandardSSD_LRS', 'Standard_LRS' |
@@ -2070,13 +2070,15 @@ azmcp compute vmss create --subscription <subscription> \
                           [--os-type <os-type>] \
                           [--virtual-network <virtual-network>] \
                           [--subnet <subnet>] \
+                          [--network-security-group <name>] \
+                          [--disable-network-security-group <true|false>] \
                           [--instance-count <instance-count>] \
                           [--upgrade-policy <upgrade-policy>] \
                           [--zone <zone>] \
                           [--os-disk-size-gb <os-disk-size-gb>] \
                           [--os-disk-type <os-disk-type>]
 
-Defaults to two Standard_D2s_v5 instances when size or instance count are not provided. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
+Defaults to two Standard_D2s_v5 instances when size or instance count are not provided. New scale sets attach a deny-inbound network security group (NSG) to instance NICs. Specify `--network-security-group` to reuse an existing NSG, or `--disable-network-security-group true` to explicitly omit NIC-level NSG protection. `--image` is required and has no default; specify an alias (e.g., `Ubuntu2404`, `Win2022Datacenter`), a Marketplace URN (`publisher:offer:sku:version`), or a shared gallery image ID (starting with `/sharedGalleries/`). When providing `--ssh-public-key`, supply the key content directly (e.g., `ssh-rsa AAAA...`, `ssh-ed25519 AAAA...`). In stdio mode, a file path to a `.pub` file (e.g., `~/.ssh/id_rsa.pub`) is also accepted and resolved locally. In HTTP/remote mode, only key content is accepted — file paths are rejected for security and return an error asking for the key content directly.
 
 # Examples:
 
@@ -2118,6 +2120,8 @@ azmcp compute vmss create --subscription "my-subscription" \
 | `--os-type` | No | OS type: 'linux' or 'windows' |
 | `--virtual-network` | No | Virtual network name |
 | `--subnet` | No | Subnet name |
+| `--network-security-group` | No | Existing NSG to attach to scale set NICs. By default, a deny-inbound NSG is created. |
+| `--disable-network-security-group` | No | Set `true` to explicitly omit NIC-level NSG protection (default: `false`). |
 | `--instance-count` | No | Number of VM instances (default: 2) |
 | `--upgrade-policy` | No | Upgrade policy: 'Automatic', 'Manual', 'Rolling' (default: 'Manual') |
 | `--zone` | No | Availability zone |
@@ -2257,7 +2261,8 @@ azmcp compute disk create --subscription <subscription> \
 azmcp compute disk create --subscription <subscription> \
                           --resource-group <resource-group> \
                           --disk-name <disk-name> \
-                          --source <blob-uri>
+                          --source <blob-uri> \
+                          --network-access-policy AllowAll
 
 # Create a managed disk from a Shared Image Gallery image version (OS disk)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2280,7 +2285,8 @@ azmcp compute disk create --subscription <subscription> \
                           --resource-group <resource-group> \
                           --disk-name <disk-name> \
                           --upload-type Upload \
-                          --upload-size-bytes <size-in-bytes>
+                          --upload-size-bytes <size-in-bytes> \
+                          --network-access-policy AllowAll
 
 # Create a managed disk ready for upload with security data (Trusted Launch)
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2290,7 +2296,8 @@ azmcp compute disk create --subscription <subscription> \
                           --upload-type UploadWithSecurityData \
                           --upload-size-bytes <size-in-bytes> \
                           --security-type TrustedLaunch \
-                          --hyper-v-generation V2
+                          --hyper-v-generation V2 \
+                          --network-access-policy AllowAll
 
 # Create a managed disk with a specific location, SKU, and all options
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2326,6 +2333,7 @@ azmcp compute disk create --subscription <subscription> \
 - When `--source` is a resource ID (snapshot or managed disk), the disk is created as a copy. When `--source` is a blob URI, the disk is imported from the VHD.
 - When `--gallery-image-reference` is specified, the disk is created from a Shared Image Gallery image version. Use `--gallery-image-reference-lun` to select a specific data disk from the image; if omitted, the OS disk is used.
 - When `--upload-type` is specified with `--upload-size-bytes`, creates a disk in a ready-to-upload state. Use `UploadWithSecurityData` with `--security-type` and `--hyper-v-generation V2` for Trusted Launch or Confidential VM scenarios.
+- `--network-access-policy` defaults to `DenyAll`, which blocks network import and export. Blob imports and either upload type require an explicit `AllowAll`, or `AllowPrivate` with `--disk-access` and configured private connectivity. SAS authorization is still required for transfers.
 - If `--location` is not specified, defaults to the resource group's location.
 - Supports configuring disk size, storage SKU, OS type, availability zone, hypervisor generation, tags, encryption settings, performance tier, shared disk, network access, on-demand bursting, IOPS and throughput limits (UltraSSD only), upload type, and security type.
 
@@ -2348,10 +2356,10 @@ azmcp compute disk create --subscription <subscription> \
 | `--tags` | No | Space-separated tags in key=value format (e.g., env=prod team=infra) |
 | `--disk-encryption-set` | No | Resource ID of the disk encryption set for customer-managed key encryption |
 | `--encryption-type` | No | Encryption type (e.g., EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys) |
-| `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
+| `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections. Required with `AllowPrivate` for blob imports and uploads. |
 | `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
 | `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
-| `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
+| `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll). Defaults to `DenyAll`; blob imports and uploads require explicit `AllowAll` or `AllowPrivate` with `--disk-access`. |
 | `--enable-bursting` | No | Enable on-demand bursting (true or false) |
 | `--disk-iops-read-write` | No | IOPS limit for the disk (UltraSSD only) |
 | `--disk-mbps-read-write` | No | Throughput limit in MBps for the disk (UltraSSD only) |

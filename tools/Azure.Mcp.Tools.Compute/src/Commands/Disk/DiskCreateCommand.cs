@@ -58,6 +58,17 @@ public sealed class DiskCreateCommand(ILogger<DiskCreateCommand> logger, IComput
         {
             validationResult.Errors.Add("--security-type is required when --upload-type is 'UploadWithSecurityData'.");
         }
+
+        var isNetworkTransfer = !string.IsNullOrEmpty(options.UploadType) ||
+            options.Source?.StartsWith("https://", StringComparison.OrdinalIgnoreCase) == true ||
+            options.Source?.StartsWith("http://", StringComparison.OrdinalIgnoreCase) == true;
+        if (isNetworkTransfer &&
+            !string.Equals(options.NetworkAccessPolicy, "AllowAll", StringComparison.OrdinalIgnoreCase) &&
+            !(string.Equals(options.NetworkAccessPolicy, "AllowPrivate", StringComparison.OrdinalIgnoreCase) &&
+              !string.IsNullOrWhiteSpace(options.DiskAccess)))
+        {
+            validationResult.Errors.Add("Blob imports and uploads require --network-access-policy AllowAll, or AllowPrivate with --disk-access for private transfers.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DiskCreateOptions options, CancellationToken cancellationToken)

@@ -86,8 +86,8 @@ public sealed class DiskCreateOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets the network access policy.
     /// </summary>
-    [Option(Description = ComputeOptionDescriptions.NetworkAccessPolicy)]
-    public string? NetworkAccessPolicy { get; set; }
+    [Option(Description = ComputeOptionDescriptions.NetworkAccessPolicy + " Defaults to DenyAll. Blob imports and uploads require AllowAll (transfers from any network, insecure) or AllowPrivate with --disk-access for private transfers.", DefaultValue = "DenyAll")]
+    public string? NetworkAccessPolicy { get; set; } = "DenyAll";
 
     /// <summary>
     /// Gets or sets the Operating System type (Linux or Windows).
