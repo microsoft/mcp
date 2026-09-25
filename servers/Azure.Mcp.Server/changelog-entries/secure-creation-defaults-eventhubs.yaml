@@ -1,0 +1,5 @@
+changes:
+  - section: Breaking Changes
+    description: New Event Hubs namespaces now disable public networking and SAS authentication by default. Explicit options remain available to enable either setting, while omitted security options preserve existing namespaces during updates.
+  - section: Bugs Fixed
+    description: Updating an existing Event Hubs namespace now replaces supplied tag values and preserves unrelated tags without duplicate-key errors.
