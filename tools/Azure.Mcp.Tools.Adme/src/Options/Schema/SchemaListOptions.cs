@@ -36,7 +36,7 @@ public sealed class SchemaListOptions
     [Option(Description = "Filter by schema patch version, for example 0. When --latest-version is true, requires --schema-version-major and --schema-version-minor.")]
     public int? SchemaVersionPatch { get; set; }
 
-    [Option(Description = "Return only the newest version of each schema entity, collapsing duplicates across scopes. When filtering by version, supply components in order: major, then minor, then patch.")]
+    [Option(Description = "Return only the newest version of each schema entity per authority. When filtering by version, supply components in order: major, then minor, then patch.")]
     public bool LatestVersion { get; set; }
 
     [Option(Description = "The starting offset for paging; compare with the response's totalCount to decide whether to fetch further pages.")]

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using Azure;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Options.Table;
 using Azure.Mcp.Tools.Storage.Services;
@@ -47,6 +49,18 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
+            $"Access denied listing tables. This commonly happens when the caller has a management-plane role (e.g., Contributor/Owner) but lacks a data-plane role such as 'Storage Table Data Reader' or 'Storage Table Data Contributor' on this storage account. See https://learn.microsoft.com/rest/api/storageservices/table-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied listing tables. This can result from a missing data-plane RBAC role, storage account network/firewall restrictions, or an invalid/expired credential. See https://learn.microsoft.com/rest/api/storageservices/table-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            $"Storage account not found, or this account's SKU/kind does not support the Table service. Verify the account name. See https://learn.microsoft.com/rest/api/storageservices/table-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 
     public record TableListCommandResult(List<string> Tables);
 }

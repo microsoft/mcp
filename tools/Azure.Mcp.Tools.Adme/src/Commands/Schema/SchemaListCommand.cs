@@ -49,14 +49,29 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
             validationResult.Errors.Add("--schema-version-patch requires --schema-version-minor when --latest-version is true.");
         }
 
+        if (options.SchemaVersionMajor < 0)
+        {
+            validationResult.Errors.Add("--schema-version-major must not be negative.");
+        }
+
+        if (options.SchemaVersionMinor < 0)
+        {
+            validationResult.Errors.Add("--schema-version-minor must not be negative.");
+        }
+
+        if (options.SchemaVersionPatch < 0)
+        {
+            validationResult.Errors.Add("--schema-version-patch must not be negative.");
+        }
+
         if (options.Offset < 0)
         {
             validationResult.Errors.Add("--offset must not be negative.");
         }
 
-        if (options.Limit < 0)
+        if (options.Limit <= 0)
         {
-            validationResult.Errors.Add("--limit must not be negative.");
+            validationResult.Errors.Add("--limit must be greater than zero.");
         }
     }
 
