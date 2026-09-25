@@ -542,16 +542,16 @@ public sealed class NamespaceToolLoader(
         string namespaceName,
         CancellationToken cancellationToken)
     {
-        var actitivy = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
         var availableTools = GetChildToolList(request, namespaceName);
         if (availableTools.Count > 0)
         {
-            actitivy?.SetTag(TagName.ToolArea, namespaceName);
+            activity?.SetTag(TagName.ToolArea, namespaceName);
         }
         else
         {
-            actitivy?.SetTag(TagName.ToolArea, TagConstants.Unknown);
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown);
         }
 
         var learnTools = availableTools.Select(t => new ToolCommandInfo(t));

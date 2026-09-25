@@ -102,7 +102,7 @@ public sealed class RegistryToolLoader(
             };
         }
 
-        var actitivy = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         // Initialize the tool client map if not already done
@@ -113,7 +113,7 @@ public sealed class RegistryToolLoader(
         {
             if (!_configuration.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
             {
-                actitivy?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                     .SetTag(TagName.ToolName, TagConstants.Unknown);
                 var content = new TextContentBlock
                 {
@@ -130,7 +130,7 @@ public sealed class RegistryToolLoader(
 
         if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp.Client is null)
         {
-            actitivy?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
@@ -146,7 +146,7 @@ public sealed class RegistryToolLoader(
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
         var toolId = McpHelper.GetToolIdFromMeta(kvp.Tool.Meta);
-        actitivy?.SetTag(TagName.ToolArea, kvp.ServerName)
+        activity?.SetTag(TagName.ToolArea, kvp.ServerName)
             .SetTag(TagName.ToolName, kvp.Tool.Name)
             .SetTag(TagName.ToolSource, "external." + kvp.Client.ServerInfo.Name)
             .SetTag(TagName.ToolId, toolId)
@@ -182,7 +182,7 @@ public sealed class RegistryToolLoader(
             }, toolId);
         }
 
-        actitivy?.SetTag(TagName.IsServerCommandInvoked, true);
+        activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
 
