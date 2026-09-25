@@ -20,12 +20,16 @@ if: github.event_name != 'issues' || !startsWith(github.event.issue.title, '[inc
 permissions:
   contents: read
   issues: read
+  copilot-requests: write
 
 engine:
   id: copilot
   model: gpt-5.4
 
 tools:
+  bash: false
+  edit: false
+  cli-proxy: false
   github:
     toolsets: [issues, labels]
     min-integrity: none
