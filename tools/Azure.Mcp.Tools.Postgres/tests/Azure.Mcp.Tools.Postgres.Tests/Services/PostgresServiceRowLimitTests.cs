@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Npgsql;
 using NSubstitute;
 using Xunit;
@@ -30,6 +31,8 @@ public class PostgresServiceRowLimitTests
 
     public PostgresServiceRowLimitTests()
     {
+        _azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
+
         _entraTokenAuth.GetEntraToken(Arg.Any<Azure.Core.TokenCredential>(), Arg.Any<CancellationToken>())
             .Returns(new Azure.Core.AccessToken("fake-token", DateTime.UtcNow.AddHours(1)));
 

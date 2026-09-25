@@ -90,6 +90,8 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]
     [InlineData("https://my-resource.openai.azure.com", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.com", "azure-openai")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
     [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
@@ -117,6 +119,13 @@ public class EndpointValidatorTests
     [InlineData("https://evil.com", "azure-openai", "not a valid azure-openai domain")]
     [InlineData("http://my-resource.openai.azure.com", "azure-openai", "must use HTTPS")]
     [InlineData("https://my-resource.openai.azure.com.evil.com", "azure-openai", "not a valid azure-openai domain")]
+    [InlineData("https://evil.com", "postgres", "not a valid postgres domain")]
+    [InlineData("http://myserver.postgres.database.azure.com", "postgres", "must use HTTPS")]
+    [InlineData("https://myserver.postgres.database.azure.com.evil.com", "postgres", "not a valid postgres domain")]
+    [InlineData("https://evil.com", "pricing", "not a valid pricing domain")]
+    [InlineData("http://prices.azure.com", "pricing", "must use HTTPS")]
+    [InlineData("https://prices.azure.com.evil.com", "pricing", "not a valid pricing domain")]
+    [InlineData("https://sub.prices.azure.com", "pricing", "not a valid pricing domain")]
     [InlineData("https://attacker.dssldrf.net", "servicebus", "not a valid servicebus domain")]
     [InlineData("http://mynamespace.servicebus.windows.net", "servicebus", "must use HTTPS")]
     [InlineData("https://mynamespace.servicebus.windows.net.evil.com", "servicebus", "not a valid servicebus domain")]
@@ -209,6 +218,8 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.cn", "foundry")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
+    [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
+    [InlineData("https://prices.azure.cn", "pricing")]
     [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
@@ -230,6 +241,8 @@ public class EndpointValidatorTests
     [InlineData("https://my-foundry.services.ai.azure.us", "foundry")]
     [InlineData("https://my-resource.openai.azure.us", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.us", "azure-openai")]
+    [InlineData("https://myserver.postgres.database.usgovcloudapi.net", "postgres")]
+    [InlineData("https://prices.azure.us", "pricing")]
     [InlineData("https://mynamespace.servicebus.usgovcloudapi.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
@@ -247,6 +260,8 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in China cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InChinaCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -264,6 +279,8 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in Gov cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InGovCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -281,6 +298,8 @@ public class EndpointValidatorTests
     // China cloud endpoint should fail in public cloud
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
+    [InlineData("https://prices.azure.cn", "pricing")]
     public void ValidateAzureServiceEndpoint_ChinaCloudEndpoint_InPublicCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
