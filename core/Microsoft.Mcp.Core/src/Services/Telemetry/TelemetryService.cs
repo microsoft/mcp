@@ -114,14 +114,22 @@ internal class TelemetryService : ITelemetryService
 
     // In 2025-11-25, clientInfo comes from the initialize handshake (set once per session).
     // In 2026-07-28 stateless mode there is no handshake, so clientInfo is null; instead each
-    // request embeds client identity in _meta["io.modelcontextprotocol/clientInfo"]. We check
-    // requestParams._meta first (per-request wins) then fall back to the session-level clientInfo.
+    // request embeds client identity in _meta["io.modelcontextprotocol/clientInfo"]. Request-scoped
+    // identity overrides session-level clientInfo when both are available.
     internal static void SetClientNameAndVersion(Activity activity, Implementation? clientInfo, RequestParams? requestParams)
     {
+        activity.SetTag(TagName.ClientName, TagConstants.Unknown);
+
         if (clientInfo != null)
         {
-            activity.SetTag(TagName.ClientName, clientInfo.Name)
-                .SetTag(TagName.ClientVersion, clientInfo.Version);
+            if (!string.IsNullOrWhiteSpace(clientInfo.Name))
+            {
+                activity.SetTag(TagName.ClientName, clientInfo.Name);
+            }
+            if (!string.IsNullOrWhiteSpace(clientInfo.Version))
+            {
+                activity.SetTag(TagName.ClientVersion, clientInfo.Version);
+            }
         }
 
         if (requestParams?.Meta != null &&
@@ -130,13 +138,15 @@ internal class TelemetryService : ITelemetryService
         {
             if (requestClientInfo.TryGetPropertyValue(McpHelper.ClientInfoNameKey, out var nameNode) &&
                 nameNode is JsonValue nameValue &&
-                nameValue.TryGetValue<string>(out var nameString))
+                nameValue.TryGetValue<string>(out var nameString) &&
+                !string.IsNullOrWhiteSpace(nameString))
             {
                 activity.SetTag(TagName.ClientName, nameString);
             }
             if (requestClientInfo.TryGetPropertyValue(McpHelper.ClientInfoVersionKey, out var versionNode) &&
                 versionNode is JsonValue versionValue &&
-                versionValue.TryGetValue<string>(out var versionString))
+                versionValue.TryGetValue<string>(out var versionString) &&
+                !string.IsNullOrWhiteSpace(versionString))
             {
                 activity.SetTag(TagName.ClientVersion, versionString);
             }

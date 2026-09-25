@@ -19,7 +19,7 @@ public class TagName
     public const string McpServerVersion = "Version";
 
     /// <summary>
-    /// Name of the MCP client.
+    /// Name of the MCP client, or <see cref="TagConstants.Unknown"/> if the client name is unavailable.
     /// </summary>
     public const string ClientName = "ClientName";
 

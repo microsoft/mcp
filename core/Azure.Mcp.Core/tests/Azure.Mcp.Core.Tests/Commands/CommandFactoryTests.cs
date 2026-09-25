@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Tests.Areas.Server;
 using Azure.Mcp.Tools.Compute.Commands.Vmss;
@@ -13,6 +16,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests;
 using NSubstitute;
@@ -96,6 +100,47 @@ public class CommandFactoryTests
 
         // Assert
         Assert.Equal('_', separator);
+    }
+
+    [Fact]
+    public async Task RootCommand_InvokeCliCommand_SetsUnknownClientName()
+    {
+        using var activity = new Activity("test").Start();
+        _telemetryService.StartActivity(ActivityName.ToolExecuted).Returns(activity);
+
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns("00000000-0000-0000-0000-000000000001");
+        command.Name.Returns("directCommand");
+        command.GetCommand().Returns(new Command("directCommand"));
+        command.Validate(Arg.Any<CommandResult>(), Arg.Any<CommandResponse?>()).Returns(new ValidationResult());
+        command.ExecuteAsync(
+            Arg.Any<CommandContext>(),
+            Arg.Any<ParseResult>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new CommandResponse { Status = HttpStatusCode.OK });
+
+        var area = Substitute.For<IAreaSetup>();
+        area.Name.Returns("name1");
+        area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(_ =>
+        {
+            var group = new CommandGroup("name1", "Test root");
+            group.Commands.Add("directCommand", command);
+            return group;
+        });
+
+        var factory = new CommandFactory(
+            _serviceProvider,
+            [area],
+            _telemetryService,
+            _configurationOptions,
+            _logger);
+
+        var exitCode = await factory.RootCommand.Parse(["name1", "directCommand"])
+            .InvokeAsync(null, TestContext.Current.CancellationToken);
+
+        Assert.Equal((int)HttpStatusCode.OK, exitCode);
+        Assert.Equal(TagConstants.Unknown, activity.GetTagItem(TagName.ClientName));
+        Assert.Equal("cli", activity.GetTagItem(TagName.ServerMode));
     }
 
     [Theory]

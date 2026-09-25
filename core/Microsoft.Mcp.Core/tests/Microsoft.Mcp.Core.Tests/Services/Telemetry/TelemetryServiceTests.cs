@@ -548,11 +548,11 @@ public class TelemetryServiceTests
     // ── SetClientNameAndVersion tests ──────────────────────────────────────────
 
     [Fact]
-    public void SetClientNameAndVersion_NullBoth_SetsNoTags()
+    public void SetClientNameAndVersion_NullBoth_SetsUnknownClientName()
     {
         var activity = new Activity("test").Start();
         TelemetryService.SetClientNameAndVersion(activity, null, null);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
         Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
         activity.Stop();
     }
@@ -624,19 +624,50 @@ public class TelemetryServiceTests
         };
         var requestParams = new ListToolsRequestParams { Meta = meta };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
         Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
         activity.Stop();
     }
 
     [Fact]
-    public void SetClientNameAndVersion_RequestMetaMissingClientInfoKey_SetsNoTags()
+    public void SetClientNameAndVersion_RequestMetaMissingClientInfoKey_SetsUnknownClientName()
     {
         var activity = new Activity("test").Start();
         var requestParams = new ListToolsRequestParams { Meta = new JsonObject() };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
         Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_WhitespaceSessionClientInfo_SetsUnknownClientName()
+    {
+        var activity = new Activity("test").Start();
+        var clientInfo = new Implementation { Name = " ", Version = " " };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, null);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestMetaWhitespaceValues_DoNotOverrideSessionClientInfo()
+    {
+        var activity = new Activity("test").Start();
+        var clientInfo = new Implementation { Name = "LegacyClient", Version = "1.0.0" };
+        var meta = new JsonObject
+        {
+            [McpHelper.ClientInfoMetaKey] = new JsonObject
+            {
+                [McpHelper.ClientInfoNameKey] = " ",
+                [McpHelper.ClientInfoVersionKey] = " "
+            }
+        };
+        var requestParams = new ListToolsRequestParams { Meta = meta };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, requestParams);
+        Assert.Equal("LegacyClient", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal("1.0.0", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
         activity.Stop();
     }
 }
