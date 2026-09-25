@@ -834,9 +834,9 @@ public class RegistryToolLoaderTests
     }
 
     [Theory]
-    [InlineData(false, "test-server")]
-    [InlineData(true, TagConstants.Unknown)]
-    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool(bool filterReadOnlyTool, string expectedArea)
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool(bool filterReadOnlyTool)
     {
         // Arrange
         var readOnlyTool = new Tool
@@ -879,8 +879,8 @@ public class RegistryToolLoaderTests
         // Assert - Should reject the tool call due to read-only mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
-        activity.AssertTagEquals(TagName.ToolArea, expectedArea);
-        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "write-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);
@@ -973,7 +973,7 @@ public class RegistryToolLoaderTests
         Assert.NotNull(result);
         Assert.True(result.IsError);
         activity.AssertTagEquals(TagName.ToolArea, "test-server");
-        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolName, "local-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("HTTP mode", errorText.Text);
@@ -1010,8 +1010,8 @@ public class RegistryToolLoaderTests
         // Assert - Should reject since null annotations means ReadOnlyHint is not true
         Assert.NotNull(result);
         Assert.True(result.IsError);
-        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
-        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "no-annotations-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);

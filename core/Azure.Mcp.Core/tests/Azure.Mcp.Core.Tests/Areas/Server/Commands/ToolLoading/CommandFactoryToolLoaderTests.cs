@@ -1568,7 +1568,7 @@ public class CommandFactoryToolLoaderTests
         // Validate telemetry
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
-        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
         activity.AssertTagEquals(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(fakeCommand));
@@ -1649,7 +1649,7 @@ public class CommandFactoryToolLoaderTests
         // Validate telemetry
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
-        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
         activity.AssertTagEquals(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(fakeCommand));

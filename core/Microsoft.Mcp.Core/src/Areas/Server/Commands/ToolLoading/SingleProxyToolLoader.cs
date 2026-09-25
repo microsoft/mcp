@@ -284,6 +284,10 @@ public sealed class SingleProxyToolLoader(
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<(List<ToolCommandInfo> Commands, string Json)> GetToolCommandsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
+        if (!IsNamespaceAllowed(tool))
+        {
+            return ([], "[]");
+        }
         if (_cachedToolCommands.TryGetValue(tool, out var cached))
         {
             return cached;
@@ -299,6 +303,11 @@ public sealed class SingleProxyToolLoader(
 
     internal async Task<IList<Tool>> GetToolsInGroupAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
+        if (!IsNamespaceAllowed(tool))
+        {
+            return [];
+        }
+
         if (_cachedCommandFactoryTools.TryGetValue(tool, out var cachedCommandFactoryTools))
         {
             return cachedCommandFactoryTools;
@@ -310,7 +319,8 @@ public sealed class SingleProxyToolLoader(
 
         // Check ICommandFactory first, then call the external discovery strategy if the tool is not found in the local command factory.
         var group = _commandFactory.RootGroup.SubGroup
-            .FirstOrDefault(g => string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(g => !DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase) &&
+                string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
         if (group != null)
         {
             var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([group.Name]))
