@@ -19,11 +19,14 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, ILogger<CompositeToolLoader> logger) : BaseToolLoader(logger)
 {
     internal readonly IEnumerable<IToolLoader> _toolLoaders = InitializeToolLoaders(toolLoaders);
-    private readonly Dictionary<string, IToolLoader> _toolLoaderMap = [];
+    private Dictionary<string, IToolLoader> _toolLoaderMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
-    // Server-side performance cache only. This should not be treated as protocol freshness metadata.
     private List<Tool>? _cachedTools;
+    private TimeSpan? _cachedTimeToLive;
+    private long _cacheStartedAt;
+
+    private bool IsCacheValid() => _isInitialized && ToolListCache.IsFresh(_cacheStartedAt, _cachedTimeToLive);
 
     /// <summary>
     /// Initializes the list of tool loaders, validating that at least one is provided.
@@ -72,7 +75,8 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
         // Return cached result after initialization
         return new ListToolsResult
         {
-            Tools = _cachedTools!
+            Tools = _cachedTools!,
+            TimeToLive = _cachedTimeToLive
         };
     }
 
@@ -154,7 +158,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task InitializeAsync(McpServer server, CancellationToken cancellationToken)
     {
-        if (_isInitialized)
+        if (IsCacheValid())
         {
             return;
         }
@@ -163,13 +167,18 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
         try
         {
             // Double-check pattern: verify we're still not initialized after acquiring the lock
-            if (_isInitialized)
+            if (IsCacheValid())
             {
                 return;
             }
 
+            _isInitialized = false;
+            var cacheStartedAt = Stopwatch.GetTimestamp();
+
             // Populate the tool loader map and cache the combined tools
             var allTools = new List<Tool>();
+            var toolLoaderMap = new Dictionary<string, IToolLoader>();
+            TimeSpan? timeToLive = null;
 
             // Create a request for listing tools to populate the tool loader map
             var listToolsParams = new ListToolsRequestParams();
@@ -186,14 +195,22 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
                     throw new InvalidOperationException("Tool loader returned null response during initialization.");
                 }
 
+                if (toolsResponse.TimeToLive is { } loaderTimeToLive && (timeToLive is null || loaderTimeToLive < timeToLive))
+                {
+                    timeToLive = loaderTimeToLive;
+                }
+
                 foreach (var tool in toolsResponse.Tools)
                 {
-                    _toolLoaderMap[tool.Name] = loader;
+                    toolLoaderMap[tool.Name] = loader;
                     allTools.Add(tool);
                 }
             }
 
+            _toolLoaderMap = toolLoaderMap;
             _cachedTools = allTools;
+            _cachedTimeToLive = timeToLive;
+            _cacheStartedAt = cacheStartedAt;
             _isInitialized = true;
         }
         finally

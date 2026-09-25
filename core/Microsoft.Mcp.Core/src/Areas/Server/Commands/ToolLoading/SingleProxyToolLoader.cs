@@ -42,7 +42,7 @@ public sealed class SingleProxyToolLoader(
     private (List<Tool> Tools, string Json)? _cachedTools;
     private readonly ConcurrentDictionary<string, (List<ToolCommandInfo> Commands, string Json)> _cachedToolCommands = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<Tool>> _cachedCommandFactoryTools = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, IList<Tool>> _cachedDiscoveryTools = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, (IList<Tool> Tools, long CachedAt, TimeSpan? TimeToLive)> _cachedDiscoveryTools = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
         {
@@ -284,16 +284,17 @@ public sealed class SingleProxyToolLoader(
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<(List<ToolCommandInfo> Commands, string Json)> GetToolCommandsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (!IsNamespaceAllowed(tool))
+        var listTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
+        if (listTools.Count == 0)
         {
             return ([], "[]");
         }
+
         if (_cachedToolCommands.TryGetValue(tool, out var cached))
         {
             return cached;
         }
 
-        var listTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
         var commands = listTools.Select(t => new ToolCommandInfo(t, true)).ToList();
         var json = JsonSerializer.Serialize(commands, ServerJsonContext.Default.IEnumerableToolCommandInfo);
         _cachedToolCommands[tool] = (commands, json);
@@ -312,9 +313,10 @@ public sealed class SingleProxyToolLoader(
         {
             return cachedCommandFactoryTools;
         }
-        if (_cachedDiscoveryTools.TryGetValue(tool, out var cachedDiscoveryTools))
+        if (_cachedDiscoveryTools.TryGetValue(tool, out var cachedDiscoveryTools) &&
+            ToolListCache.IsFresh(cachedDiscoveryTools.CachedAt, cachedDiscoveryTools.TimeToLive))
         {
-            return cachedDiscoveryTools;
+            return cachedDiscoveryTools.Tools;
         }
 
         // Check ICommandFactory first, then call the external discovery strategy if the tool is not found in the local command factory.
@@ -346,12 +348,14 @@ public sealed class SingleProxyToolLoader(
                 throw;
             }
 
-            var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-            var remoteTools = listTools.Select(t => t.ProtocolTool)
+            var toolsResponse = await ToolListCache.ListRemoteToolsAsync(client, cancellationToken);
+            var cachedAt = Stopwatch.GetTimestamp();
+            var remoteTools = toolsResponse.Tools
                 .Where(tool => ShouldKeepTool(tool, _configuration.Value))
                 .ToArray();
 
-            _cachedDiscoveryTools[tool] = remoteTools;
+            _cachedDiscoveryTools[tool] = (remoteTools, cachedAt, toolsResponse.TimeToLive);
+            _cachedToolCommands.TryRemove(tool, out _);
             return remoteTools;
         }
 
