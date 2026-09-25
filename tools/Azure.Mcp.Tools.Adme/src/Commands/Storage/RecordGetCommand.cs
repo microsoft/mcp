@@ -37,7 +37,7 @@ public sealed class RecordGetCommand(IStorageService storageService)
     public override void ValidateOptions(RecordGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateRecordId(options.Id, "--id", validationResult);
 
         if (options.Attributes is not null
@@ -59,7 +59,7 @@ public sealed class RecordGetCommand(IStorageService storageService)
         {
             var result = await _storageService.GetRecordAsync(
                 options.Endpoint, options.DataPartition, options.Id, options.Version,
-                options.Attributes, options.Tenant, cancellationToken);
+                options.Attributes, options.Tenant, cancellationToken, options.AuthAppId);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseStorageRecord);
         }

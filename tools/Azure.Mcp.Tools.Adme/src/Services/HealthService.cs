@@ -23,7 +23,8 @@ public sealed class HealthService(
         string endpoint,
         string dataPartition,
         string? tenant,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? authAppId = null)
     {
         return await AdmeServiceHelper.SendAsync(
             _credentialProvider,
@@ -33,6 +34,7 @@ public sealed class HealthService(
             tenant,
             "/api/storage/v2/info",
             static statusCode => new HealthCheckResult((int)statusCode),
+            authAppId,
             cancellationToken);
     }
 }

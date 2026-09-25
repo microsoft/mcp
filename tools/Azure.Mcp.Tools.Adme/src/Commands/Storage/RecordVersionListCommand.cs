@@ -35,7 +35,7 @@ public sealed class RecordVersionListCommand(IStorageService storageService)
     public override void ValidateOptions(RecordVersionListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateRecordId(options.Id, "--id", validationResult);
     }
 
@@ -52,7 +52,8 @@ public sealed class RecordVersionListCommand(IStorageService storageService)
                 options.DataPartition,
                 options.Id,
                 options.Tenant,
-                cancellationToken);
+                cancellationToken,
+                options.AuthAppId);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseRecordVersionsResponse);
         }

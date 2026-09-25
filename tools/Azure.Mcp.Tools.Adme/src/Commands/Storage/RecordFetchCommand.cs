@@ -40,7 +40,7 @@ public sealed class RecordFetchCommand(IStorageService storageService)
     public override void ValidateOptions(RecordFetchOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
 
         if (options.Attributes is not null
             && (options.Attributes.Length == 0 || options.Attributes.Any(string.IsNullOrWhiteSpace)))
@@ -81,7 +81,7 @@ public sealed class RecordFetchCommand(IStorageService storageService)
         {
             var result = await _storageService.FetchRecordsAsync(
                 options.Endpoint, options.DataPartition, options.Ids, options.Attributes,
-                options.FrameOfReference, options.Tenant, cancellationToken);
+                options.FrameOfReference, options.Tenant, cancellationToken, options.AuthAppId);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseFetchRecordsResponse);
         }
