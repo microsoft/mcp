@@ -112,6 +112,7 @@ internal static class AdmeServiceHelper
         string? tenant,
         string path,
         Func<HttpStatusCode, T> statusCodeResultFactory,
+        string? authAppId,
         CancellationToken cancellationToken) =>
         SendAsync(
             credentialProvider,
@@ -119,6 +120,7 @@ internal static class AdmeServiceHelper
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Get,
             path,
             content: null,

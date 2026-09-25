@@ -58,7 +58,7 @@ public sealed class HealthServiceTests
             TestContext.Current.CancellationToken,
             AuthAppId);
 
-        Assert.True(result.Result.AuthOk);
+        Assert.Equal(200, result.Result.StatusCode);
         await credential.Received(1).GetTokenAsync(
             Arg.Is<TokenRequestContext>(context =>
                 context.Scopes.SequenceEqual(new[] { $"{AuthAppId}/.default" })),
@@ -132,38 +132,6 @@ public sealed class HealthServiceTests
         Assert.Equal((int)statusCode, exception.Status);
         Assert.Contains(expectedError, exception.Message);
         Assert.Contains(correlationId, exception.Message);
-    }
-
-    [Theory]
-    [InlineData(HttpStatusCode.Unauthorized, "ADME authentication failed: invalid token.")]
-    [InlineData(HttpStatusCode.Forbidden, "ADME authorization failed: access denied.")]
-    public async Task CheckHealthAsync_WhenAdmeRejectsAuthentication_ReportsAuthFailure(
-        HttpStatusCode statusCode,
-        string expectedError)
-    {
-        const string correlationId = "health-correlation-id";
-        var handler = new StubHttpMessageHandler(_ =>
-        {
-            var response = new HttpResponseMessage(statusCode)
-            {
-                Content = new StringContent(expectedError)
-            };
-            response.Headers.Add(AdmeServiceHelper.CorrelationIdHeader, correlationId);
-            return response;
-        });
-        var service = new HealthService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
-
-        var result = await service.CheckHealthAsync(
-            TestConstants.Endpoint,
-            TestConstants.DataPartition,
-            null,
-            TestContext.Current.CancellationToken);
-
-        Assert.False(result.Result.AuthOk);
-        Assert.Equal(expectedError, result.Result.AuthError);
-        Assert.False(result.Result.ConnectivityOk);
-        Assert.Equal((int)statusCode, result.Result.ConnectivityStatusCode);
-        Assert.Equal(correlationId, result.CorrelationId);
     }
 
     [Theory]

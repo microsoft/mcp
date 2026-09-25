@@ -34,7 +34,7 @@ public sealed class HealthService(
             tenant,
             "/api/storage/v2/info",
             static statusCode => new HealthCheckResult((int)statusCode),
-            cancellationToken,
-            authAppId);
+            authAppId,
+            cancellationToken);
     }
 }
