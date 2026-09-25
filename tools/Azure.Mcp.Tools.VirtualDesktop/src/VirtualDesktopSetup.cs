@@ -27,7 +27,10 @@ public class VirtualDesktopSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var desktop = new CommandGroup(Name, "Azure Virtual Desktop operations - Commands for managing and accessing Azure Virtual Desktop resources. Includes operations for hostpools, session hosts, and user sessions.", Title);
+        var desktop = new CommandGroup(Name,
+            "Azure Virtual Desktop operations - Commands for managing and accessing Azure Virtual Desktop " +
+            "resources. Includes operations for hostpools, session hosts, and user sessions.",
+            Title);
 
         // Create AVD subgroups
         var hostpool = new CommandGroup("hostpool", "Hostpool operations - Commands for listing and managing Hostpools, including listing and changing settings on hostpools.");

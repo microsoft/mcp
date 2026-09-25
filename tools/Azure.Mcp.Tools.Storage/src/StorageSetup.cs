@@ -37,14 +37,12 @@ public class StorageSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var storage = new CommandGroup(Name,
-            """
-            Storage operations - Commands for creating, listing, getting, and managing Azure Storage accounts,
-            blob containers, blobs, and tables. Use this tool to create storage accounts, list and get storage
-            account details (SKU, location, HNS, HTTPS-only settings), create and list blob containers, list
-            and get blob properties, upload files to blob storage, and list tables. Covers Azure Blob Storage,
-            Azure Table Storage, and storage account management. Do not use for Azure Cosmos DB containers,
-            Azure Container Registry, or Azure Managed Lustre file systems.
-            """,
+            "Storage operations - Commands for creating, listing, getting, and managing Azure Storage accounts, " +
+            "blob containers, blobs, and tables. Use this tool to create storage accounts, list and get storage " +
+            "account details (SKU, location, HNS, HTTPS-only settings), create and list blob containers, list " +
+            "and get blob properties, upload files to blob storage, and list tables. Covers Azure Blob Storage, " +
+            "Azure Table Storage, and storage account management. Do not use for Azure Cosmos DB containers, " +
+            "Azure Container Registry, or Azure Managed Lustre file systems.",
             Title);
 
         // Create Storage subgroups

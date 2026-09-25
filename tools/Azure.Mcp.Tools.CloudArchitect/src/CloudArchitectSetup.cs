@@ -22,7 +22,10 @@ public class CloudArchitectSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create CloudArchitect command group
-        var cloudArchitect = new CommandGroup(Name, "Cloud Architecture operations - Commands for generating Azure architecture designs and recommendations based on requirements.", Title);
+        var cloudArchitect = new CommandGroup(Name,
+            "Cloud Architecture operations - Commands for generating Azure architecture designs and " +
+            "recommendations based on requirements.",
+            Title);
 
         // Register CloudArchitect commands
         cloudArchitect.AddCommand<DesignCommand>(serviceProvider);
