@@ -22,7 +22,7 @@
 # Eng Sys
 ##################
 /eng/                                  @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
-/eng/common/                           @microsoft/azure-sdk-eng
+/eng/common/                           @microsoft/azure-sdk-eng @microsoft/azure-sdk-sync-approvers
 /.github/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 /.config/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 
