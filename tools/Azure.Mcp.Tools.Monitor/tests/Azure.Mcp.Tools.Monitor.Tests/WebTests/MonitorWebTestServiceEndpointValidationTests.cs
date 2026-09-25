@@ -16,7 +16,7 @@ public class MonitorWebTestServiceEndpointValidationTests
     {
         Assert.Equal(
             endpoint,
-            MonitorWebTestService.CreateValidatedRequestUri(endpoint, logger: null).AbsoluteUri);
+            MonitorWebTestService.MonitorWebTestValidateRequestUri(new Uri(endpoint, UriKind.Absolute), logger: null).AbsoluteUri);
     }
 
     [Theory]
@@ -27,7 +27,7 @@ public class MonitorWebTestServiceEndpointValidationTests
     public void CreateValidatedRequestUri_PrivateOrUnsupportedTarget_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            MonitorWebTestService.CreateValidatedRequestUri(endpoint, logger: null));
+            MonitorWebTestService.MonitorWebTestValidateRequestUri(new Uri(endpoint, UriKind.Absolute), logger: null));
     }
 
     [Fact]

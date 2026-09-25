@@ -162,7 +162,7 @@ public class MonitorWebTestService(
             (nameof(appInsightsComponentId), appInsightsComponentId),
             (nameof(location), location),
             (nameof(requestUrl), requestUrl));
-        var requestUri = CreateValidatedRequestUri(requestUrl, _logger);
+        var requestUri = MonitorWebTestValidateRequestUri(new Uri(requestUrl, UriKind.Absolute), _logger);
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
@@ -440,9 +440,8 @@ public class MonitorWebTestService(
         };
     }
 
-    internal static Uri CreateValidatedRequestUri(string requestUrl, ILogger? logger)
+    internal static Uri MonitorWebTestValidateRequestUri(Uri uri, ILogger? logger)
     {
-        var uri = new Uri(requestUrl, UriKind.Absolute);
         EndpointValidator.ValidatePublicTargetUrl(
             url: uri.AbsoluteUri,
             logger: logger,
@@ -457,7 +456,8 @@ public class MonitorWebTestService(
     {
         if (requestUrl is not null)
         {
-            return CreateValidatedRequestUri(requestUrl, logger);
+            var uri = new Uri(requestUrl, UriKind.Absolute);
+            return MonitorWebTestValidateRequestUri(uri, logger);
         }
 
         if (existingRequestUri is null)
@@ -465,11 +465,7 @@ public class MonitorWebTestService(
             return null;
         }
 
-        EndpointValidator.ValidatePublicTargetUrl(
-            url: existingRequestUri.AbsoluteUri,
-            logger: logger,
-            executingToolNamespaceName: "monitor");
-        return existingRequestUri;
+        return MonitorWebTestValidateRequestUri(existingRequestUri, logger);
     }
 
     private List<WebTestRequestHeaderField> ParseHeadersFromRawResponse(Response response)
