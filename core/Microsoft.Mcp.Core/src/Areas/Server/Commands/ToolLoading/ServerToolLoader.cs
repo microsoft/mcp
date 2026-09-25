@@ -118,7 +118,7 @@ public sealed class ServerToolLoader(
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             // At this point the tool parameters is the server tool schema
             .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
@@ -167,7 +167,7 @@ public sealed class ServerToolLoader(
         }
         catch (KeyNotFoundException ex)
         {
-            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
             _logger.LogError(ex, "Key not found while calling tool: {Tool}", tool);
 
@@ -204,6 +204,7 @@ public sealed class ServerToolLoader(
 
     private async Task<CallToolResult> InvokeChildToolAsync(RequestContext<CallToolRequestParams> request, string? intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
     {
+        var activity = Activity.Current;
         if (request.Params == null)
         {
             var content = new TextContentBlock
@@ -239,15 +240,15 @@ public sealed class ServerToolLoader(
 
         try
         {
-            Activity.Current?.SetTag(TagName.ToolSource, "external." + client.ServerInfo.Name);
+            activity?.SetTag(TagName.ToolSource, "external." + client.ServerInfo.Name);
             var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
             if (availableTools.Count > 0)
             {
-                Activity.Current?.SetTag(TagName.ToolArea, await GetProviderNameAsync(tool, cancellationToken));
+                activity?.SetTag(TagName.ToolArea, await GetProviderNameAsync(tool, cancellationToken));
             }
             else
             {
-                Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown);
+                activity?.SetTag(TagName.ToolArea, TagConstants.Unknown);
             }
 
             var resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
@@ -255,7 +256,7 @@ public sealed class ServerToolLoader(
             // Try one supported sampling correction without falling back to the full learn response.
             if (resolvedTool == null)
             {
-                Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
+                activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
                 _logger.LogWarning("Tool {Tool} does not have a command {Command}.", tool, command);
                 if (availableTools.Count == 0 || !SupportsSampling(request.Server) || string.IsNullOrWhiteSpace(intent))
                 {
@@ -277,7 +278,7 @@ public sealed class ServerToolLoader(
             var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
 
             // Here the parameters are now those for the tool call, instead of being the server parameters.
-            Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys))
+            activity?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys))
                 .SetTag(TagName.ToolName, command)
                 .SetTag(TagName.ToolId, toolId)
                 .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
@@ -313,7 +314,7 @@ public sealed class ServerToolLoader(
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
-            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
+            activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
@@ -393,16 +394,16 @@ public sealed class ServerToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
         var tools = await GetChildToolListAsync(request, tool, cancellationToken);
         if (tools.Count > 0)
         {
-            Activity.Current?.SetTag(TagName.ToolArea, await GetProviderNameAsync(tool, cancellationToken));
+            activity?.SetTag(TagName.ToolArea, await GetProviderNameAsync(tool, cancellationToken));
         }
         else
         {
-            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown);
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown);
         }
 
         var toolsJson = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t)), ServerJsonContext.Default.IEnumerableToolCommandInfo);

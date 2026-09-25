@@ -125,7 +125,7 @@ public sealed class SingleProxyToolLoader(
     /// <returns>A <see cref="CallToolResult"/> representing the result of the operation.</returns>
     public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken = default)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
             // At this point the tool parameters is the single tool schema
             .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params?.Arguments?.Keys));
 
@@ -162,16 +162,16 @@ public sealed class SingleProxyToolLoader(
 
         if (learn && string.IsNullOrEmpty(tool))
         {
-            return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
+            return await RootLearnModeAsync(request, intent ?? "", activity, cancellationToken);
         }
         else if (learn && !string.IsNullOrEmpty(tool))
         {
-            return await ToolLearnModeAsync(request, intent ?? "", tool, cancellationToken);
+            return await ToolLearnModeAsync(request, intent ?? "", tool, activity, cancellationToken);
         }
         else if (!learn && !string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
         {
             var toolParams = GetParametersDictionary(request);
-            return await CommandModeAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
+            return await CommandModeAsync(request, intent ?? "", tool, command, toolParams, activity, cancellationToken);
         }
 
         const string helpMessage = """
@@ -218,7 +218,8 @@ public sealed class SingleProxyToolLoader(
 
         foreach (var group in _commandFactory.RootGroup.SubGroup)
         {
-            if (!IsNamespaceEnabled(group.Name))
+            if (DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase) ||
+                !IsNamespaceAllowed(group.Name))
             {
                 continue;
             }
@@ -247,18 +248,20 @@ public sealed class SingleProxyToolLoader(
         return;
     }
 
-    private bool IsNamespaceAllowed(string tool) =>
+    /// <summary>
+    /// A namespace is allowed if we don't have any namespace filters applied or the passed tool matches one of the
+    /// allowed namespaces configured.
+    /// </summary>
+    /// <param name="namespace">The namespace, also known as the tool as we're in a hierarchical tool loader.</param>
+    /// <returns>Whether the namespace is allowed.</returns>
+    private bool IsNamespaceAllowed(string @namespace) =>
         _configuration.Value.Namespace is not { Length: > 0 } namespaces ||
-            namespaces.Contains(tool, StringComparer.OrdinalIgnoreCase);
-
-    private bool IsNamespaceEnabled(string tool) =>
-        !DiscoveryConstants.IgnoredCommandGroups.Contains(tool, StringComparer.OrdinalIgnoreCase) &&
-        IsNamespaceAllowed(tool);
+            namespaces.Contains(@namespace, StringComparer.OrdinalIgnoreCase);
 
     private async Task<string> GetCanonicalToolAreaAsync(string tool, CancellationToken cancellationToken)
     {
         var group = _commandFactory.RootGroup.SubGroup
-            .FirstOrDefault(group => IsNamespaceEnabled(group.Name) && string.Equals(group.Name, tool, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(group => string.Equals(group.Name, tool, StringComparison.OrdinalIgnoreCase));
         if (group != null)
         {
             return group.Name;
@@ -281,11 +284,6 @@ public sealed class SingleProxyToolLoader(
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<(List<ToolCommandInfo> Commands, string Json)> GetToolCommandsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (!IsNamespaceAllowed(tool))
-        {
-            return ([], "[]");
-        }
-
         if (_cachedToolCommands.TryGetValue(tool, out var cached))
         {
             return cached;
@@ -301,11 +299,6 @@ public sealed class SingleProxyToolLoader(
 
     internal async Task<IList<Tool>> GetToolsInGroupAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (!IsNamespaceAllowed(tool))
-        {
-            return [];
-        }
-
         if (_cachedCommandFactoryTools.TryGetValue(tool, out var cachedCommandFactoryTools))
         {
             return cachedCommandFactoryTools;
@@ -317,7 +310,7 @@ public sealed class SingleProxyToolLoader(
 
         // Check ICommandFactory first, then call the external discovery strategy if the tool is not found in the local command factory.
         var group = _commandFactory.RootGroup.SubGroup
-            .FirstOrDefault(g => IsNamespaceEnabled(g.Name) && string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(g => string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
         if (group != null)
         {
             var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([group.Name]))
@@ -357,9 +350,13 @@ public sealed class SingleProxyToolLoader(
         throw new KeyNotFoundException("No tool found with the specified name.");
     }
 
-    private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
+    private async Task<CallToolResult> RootLearnModeAsync(
+        RequestContext<CallToolRequestParams> request,
+        string intent,
+        Activity? activity,
+        CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        activity?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
         await InitializeRootToolsCacheAsync(cancellationToken);
         var contentText = $"""
@@ -378,29 +375,34 @@ public sealed class SingleProxyToolLoader(
             var toolName = await GetToolNameFromIntentAsync(request, intent, cancellationToken);
             var availableTool = _cachedTools!.Value.Tools.FirstOrDefault(candidate =>
                 string.Equals(candidate.Name, toolName, StringComparison.OrdinalIgnoreCase));
-            if (availableTool != null && IsNamespaceAllowed(availableTool.Name))
+            if (availableTool != null)
             {
-                response = await ToolLearnModeAsync(request, intent, availableTool.Name, cancellationToken);
+                response = await ToolLearnModeAsync(request, intent, availableTool.Name, activity, cancellationToken);
             }
         }
 
         return response;
     }
 
-    private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
+    private async Task<CallToolResult> ToolLearnModeAsync(
+        RequestContext<CallToolRequestParams> request,
+        string intent,
+        string tool,
+        Activity? activity,
+        CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+        activity?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
 
         var result = await GetToolCommandsAsync(request, tool, cancellationToken);
         if (result.Commands == null || result.Commands.Count == 0)
         {
-            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
-            return await RootLearnModeAsync(request, intent, cancellationToken);
+            return await RootLearnModeAsync(request, intent, activity, cancellationToken);
         }
 
-        Activity.Current?.SetTag(TagName.ToolArea, await GetCanonicalToolAreaAsync(tool, cancellationToken));
+        activity?.SetTag(TagName.ToolArea, await GetCanonicalToolAreaAsync(tool, cancellationToken));
 
         var contentText = $"""
             Here are the available commands and their input schema for '{tool}' tool.
@@ -420,7 +422,7 @@ public sealed class SingleProxyToolLoader(
             var (commandName, parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, tool, result.Json, cancellationToken);
             if (commandName != null)
             {
-                response = await CommandModeAsync(request, intent, tool, commandName, parameters, cancellationToken);
+                response = await CommandModeAsync(request, intent, tool, commandName, parameters, activity, cancellationToken);
             }
         }
         return response;
@@ -432,46 +434,47 @@ public sealed class SingleProxyToolLoader(
         string tool,
         string command,
         Dictionary<string, object?> parameters,
+        Activity? activity,
         CancellationToken cancellationToken)
     {
         // Here the parameters are now those for the tool call, instead of being the single parameters.
-        Activity.Current?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
+        activity?.SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(parameters.Keys));
 
         var tools = await GetToolsInGroupAsync(request, tool, cancellationToken);
         if (tools == null || tools.Count == 0)
         {
-            Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
-            return await RootLearnModeAsync(request, intent, cancellationToken);
+            return await RootLearnModeAsync(request, intent, activity, cancellationToken);
         }
 
-        Activity.Current?.SetTag(TagName.ToolArea, await GetCanonicalToolAreaAsync(tool, cancellationToken));
+        activity?.SetTag(TagName.ToolArea, await GetCanonicalToolAreaAsync(tool, cancellationToken));
 
         var resolvedTool = tools.FirstOrDefault(tool => tool.Name.Equals(command, StringComparison.OrdinalIgnoreCase));
         if (resolvedTool == null)
         {
-            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
-            return await ToolLearnModeAsync(request, intent, tool, cancellationToken);
+            activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
+            return await ToolLearnModeAsync(request, intent, tool, activity, cancellationToken);
         }
 
         command = resolvedTool.Name;
 
         if (_commandFactory.AllCommands.TryGetValue(command, out var baseCommand))
         {
-            return await LocalCommandModeAsync(request, baseCommand, tool, command, parameters, cancellationToken);
+            return await LocalCommandModeAsync(request, baseCommand, tool, command, parameters, activity, cancellationToken);
         }
         else if (_discoveryStrategy != null)
         {
-            return await RemoteCommandModeAsync(request, intent, tool, command, parameters, cancellationToken);
+            return await RemoteCommandModeAsync(request, intent, tool, command, parameters, activity, cancellationToken);
         }
         else
         {
-            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
+            activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
             var isKnownGroup = _commandFactory.RootGroup.SubGroup
                 .Any(g => string.Equals(g.Name, tool, StringComparison.OrdinalIgnoreCase));
             return isKnownGroup
-                ? await ToolLearnModeAsync(request, intent, tool, cancellationToken)
-                : await RootLearnModeAsync(request, intent, cancellationToken);
+                ? await ToolLearnModeAsync(request, intent, tool, activity, cancellationToken)
+                : await RootLearnModeAsync(request, intent, activity, cancellationToken);
         }
     }
 
@@ -481,11 +484,12 @@ public sealed class SingleProxyToolLoader(
         string tool,
         string command,
         IDictionary<string, object?> parameters,
+        Activity? activity,
         CancellationToken cancellationToken)
     {
         try
         {
-            Activity.Current?.SetTag(TagName.ToolName, command)
+            activity?.SetTag(TagName.ToolName, command)
                 .SetTag(TagName.ToolId, baseCommand.Id)
                 .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(baseCommand))
                 .SetTag(TagName.ToolSource, "internal");
@@ -538,8 +542,7 @@ public sealed class SingleProxyToolLoader(
                 return elicitationResult;
             }
 
-            var currentActivity = Activity.Current;
-            var commandContext = new CommandContext(currentActivity)
+            var commandContext = new CommandContext(activity)
             {
                 McpServer = request.Server,
                 ProgressToken = request.Params?.ProgressToken
@@ -580,7 +583,7 @@ public sealed class SingleProxyToolLoader(
             // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
             // The logic above performs sampling to try and get a correct command name.  "blob_get" in
             // this case, which will be executed.
-            currentActivity?.SetTag(TagName.IsServerCommandInvoked, true);
+            activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
             var commandResponse = await baseCommand.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
@@ -657,7 +660,14 @@ public sealed class SingleProxyToolLoader(
         }
     }
 
-    private async Task<CallToolResult> RemoteCommandModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
+    private async Task<CallToolResult> RemoteCommandModeAsync(
+        RequestContext<CallToolRequestParams> request,
+        string intent,
+        string tool,
+        string command,
+        Dictionary<string, object?> parameters,
+        Activity? activity,
+        CancellationToken cancellationToken)
     {
         McpClient? client;
 
@@ -668,16 +678,16 @@ public sealed class SingleProxyToolLoader(
             client = await _discoveryStrategy!.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
             if (client == null)
             {
-                Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
+                activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
                 _logger.LogError("Failed to get provider client for tool: {Tool}", tool);
-                return await RootLearnModeAsync(request, intent, cancellationToken);
+                return await RootLearnModeAsync(request, intent, activity, cancellationToken);
             }
         }
         catch (Exception ex)
         {
-            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
+            activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
             _logger.LogError(ex, "Exception thrown while getting provider client for tool: {Tool}", tool);
-            return await RootLearnModeAsync(request, intent, cancellationToken);
+            return await RootLearnModeAsync(request, intent, activity, cancellationToken);
         }
 
         var allTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
@@ -685,20 +695,20 @@ public sealed class SingleProxyToolLoader(
 
         if (resolvedTool == null)
         {
-            Activity.Current?.SetTag(TagName.ToolName, TagConstants.Unknown);
+            activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
             _logger.LogError("Failed to resolve tool: {Tool}, command: {Command}", tool, command);
-            return await ToolLearnModeAsync(request, intent, tool, cancellationToken);
+            return await ToolLearnModeAsync(request, intent, tool, activity, cancellationToken);
         }
 
         command = resolvedTool.Name;
 
-        Activity.Current?.SetTag(TagName.ToolName, command);
+        activity?.SetTag(TagName.ToolName, command);
 
         // Enforce mode restrictions at execution time: look up the actual tool and check its properties.
         if (_configuration.Value.ReadOnly || _configuration.Value.IsHttpMode)
         {
             var toolId = McpHelper.GetToolIdFromMeta(resolvedTool.Meta);
-            Activity.Current?.SetTag(TagName.ToolId, toolId)
+            activity?.SetTag(TagName.ToolId, toolId)
                 .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(resolvedTool));
 
             if (_configuration.Value.ReadOnly && resolvedTool.Annotations?.ReadOnlyHint != true)
@@ -732,7 +742,7 @@ public sealed class SingleProxyToolLoader(
             }
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
+        activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
         try
         {
