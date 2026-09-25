@@ -562,6 +562,12 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
+    /// <summary>
+    /// Validates that the given EventGrid endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="requestUri">The URI of the EventGrid endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the EventGrid endpoint.</returns>
     internal static Uri ValidateEventGridEndpoint(Uri? requestUri, ArmEnvironment armEnvironment)
     {
         ArgumentNullException.ThrowIfNull(requestUri);

@@ -458,6 +458,12 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         return Map(fileSystemResource);
     }
 
+    /// <summary>
+    /// Validates that the given Key Vault endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="keyUrl">The URI of the Key Vault endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the Key Vault endpoint.</returns>
     internal static Uri CreateValidatedKeyUri(string keyUrl, ArmEnvironment armEnvironment)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(keyUrl);

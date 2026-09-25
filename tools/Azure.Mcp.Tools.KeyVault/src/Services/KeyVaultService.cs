@@ -323,6 +323,12 @@ public sealed class KeyVaultService(IAzureService azureService)
         return hsmResponse.Value;
     }
 
+    /// <summary>
+    /// Validates that the given Key Vault endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="requestUri">The URI of the Key Vault endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the Key Vault endpoint.</returns>
     internal static Uri ValidateVaultEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
@@ -334,6 +340,12 @@ public sealed class KeyVaultService(IAzureService azureService)
         return endpoint;
     }
 
+    /// <summary>
+    /// Validates that the given Managed HSM endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="requestUri">The URI of the Managed HSM endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the Managed HSM endpoint.</returns>
     internal static Uri ValidateManagedHsmEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
     {
         ArgumentNullException.ThrowIfNull(endpoint);

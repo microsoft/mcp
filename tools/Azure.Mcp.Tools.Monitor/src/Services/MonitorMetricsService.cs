@@ -484,6 +484,12 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         return compactResult;
     }
 
+    /// <summary>
+    /// Validates that the given Monitor Metrics endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="endpoint">The URI of the Monitor Metrics endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the Monitor Metrics endpoint.</returns>
     internal static Uri ValidateMetricsEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
     {
         ArgumentNullException.ThrowIfNull(endpoint);

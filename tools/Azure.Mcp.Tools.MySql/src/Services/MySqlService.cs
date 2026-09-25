@@ -54,7 +54,7 @@ public sealed class MySqlService(IAzureService azureService)
     /// Gets the appropriate DNS suffix for a MySql endpoint in the given Azure cloud.
     /// </summary>
     /// <param name="armEnvironment">The Azure cloud of interest.</param>
-    /// <returns></returns>
+    /// <returns>The DNS suffix for the MySql endpoint in the specified Azure cloud.</returns>
     /// <exception cref="ArgumentException">
     /// Given cloud is not valid or supported.
     /// </exception>
@@ -116,7 +116,7 @@ public sealed class MySqlService(IAzureService azureService)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(hostname);
 
-        // EndpointValidator authorizes the parsed URI host, while Npgsql receives this raw host string.
+        // EndpointValidator authorizes the parsed URI host, while MySql receives this raw host string.
         // Require DNS-only syntax so user-info, ports, paths, or multi-host values cannot make those differ.
         if (Uri.CheckHostName(hostname) != UriHostNameType.Dns)
         {

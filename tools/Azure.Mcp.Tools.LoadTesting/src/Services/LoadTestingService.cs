@@ -347,6 +347,12 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         return new LoadTestAdministrationClient(uri, credential, CreateLoadTestingClientOptions());
     }
 
+    /// <summary>
+    /// Validates that the given Load Test endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="endpoint">The endpoint of the Load Test to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the Load Test endpoint.</returns>
     internal static Uri CreateValidatedDataPlaneUri(string endpoint, ArmEnvironment armEnvironment)
     {
         var uri = new Uri($"https://{endpoint}", UriKind.Absolute);

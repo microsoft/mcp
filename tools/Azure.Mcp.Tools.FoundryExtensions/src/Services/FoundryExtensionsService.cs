@@ -37,6 +37,9 @@ public class FoundryExtensionsService(IAzureService azureService)
                 armEnvironment: GetArmEnvironment(),
                 executingToolNamespaceName: "foundryextensions");
 
+            // Additional validation after anti-SSRF validation based on the requirements outlined by
+            // FoundryExtensionsOptionDescriptions.Endpoint's description where the endpoint must be in the format
+            // "https://<foundry-resource-name>.services.ai.azure.com/api/projects/<project-name>"
             var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (pathSegments.Length != 3 ||
                 !pathSegments[0].Equals("api", StringComparison.Ordinal) ||
@@ -81,6 +84,7 @@ public class FoundryExtensionsService(IAzureService azureService)
             }
 
             // Validate the resource name portion of the host
+            // This set of values must be kept in sync with the allowed 'azure-openai' suffixes defined in EndpointValidator.AllowLists.
             string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com",
                 ".openai.azure.cn", ".cognitiveservices.azure.cn",
                 ".openai.azure.us", ".cognitiveservices.azure.us",
@@ -89,6 +93,7 @@ public class FoundryExtensionsService(IAzureService azureService)
             var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
             if (matchedSuffix != null)
             {
+                // Naming requirements are based on https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules#microsoftcognitiveservices
                 var resourceName = host[..^matchedSuffix.Length];
                 if (resourceName.Length < 2 || resourceName.Length > 64)
                 {
@@ -105,18 +110,19 @@ public class FoundryExtensionsService(IAzureService azureService)
                     throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
                 }
             }
+            else
+            {
+                throw new ArgumentException("Azure OpenAI endpoint must use one of the known suffixes: " + string.Join(", ", knownSuffixes));
+            }
 
             return uri;
         }
-        catch (SecurityException ex)
+        catch (Exception ex) when (ex is SecurityException or UriFormatException)
         {
-            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
-                nameof(endpoint), ex);
-        }
-        catch (UriFormatException ex)
-        {
-            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
-                nameof(endpoint), ex);
+            throw new ArgumentException(
+                $"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint),
+                ex);
         }
         catch (ArgumentException ex) when (!ex.Message.StartsWith("Invalid Azure OpenAI endpoint", StringComparison.Ordinal))
         {

@@ -82,6 +82,13 @@ public class IoTHubDeviceService(
         return HttpPipelineBuilder.Build(clientOptions);
     }
 
+    /// <summary>
+    /// Validates that the given IoT Hub data-plane host name, path, and query satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="hostname">The host name of the Iot Hub to validate.</param>
+    /// <param name="pathAndQuery">The path and query portion of the IoT Hub endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the IoT Hub endpoint.</returns>
     internal static Uri CreateValidatedDataPlaneUri(
         string hostname,
         string pathAndQuery,
