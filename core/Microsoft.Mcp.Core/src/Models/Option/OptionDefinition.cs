@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.Mcp.Core.Models.Option;
 
-public class OptionDefinition<T>(string name, string description, string? value = "", T? defaultValue = default, bool required = false, bool hidden = false, string? type = null)
+public class OptionDefinition<T>(string name, string description, string? value = "", T? defaultValue = default, bool required = false, bool hidden = false, string? type = null, string? elementType = null)
     where T : notnull
 {
     [JsonPropertyName("name")]
@@ -25,6 +25,10 @@ public class OptionDefinition<T>(string name, string description, string? value 
     [JsonPropertyName("type")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Type { get; set; } = string.IsNullOrWhiteSpace(type) ? typeof(T).Name.ToLowerInvariant() : type;
+
+    [JsonPropertyName("elementType")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ElementType { get; set; } = elementType;
 
     [JsonPropertyName("required")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]

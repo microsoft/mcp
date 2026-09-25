@@ -1,4 +1,4 @@
 changes:
   - section: "Bugs Fixed"
     description: |
-      Fixed the `tools list` and `--learn` CLI metadata reporting every option's `type` as `string`. Option types now reflect the underlying value type (`string`, `integer`, `number`, `boolean`, or `array`), consistent with the MCP tool `inputSchema`.
+      Fixed the `tools list` and `--learn` CLI metadata reporting every option's `type` as `string`. Option types now reflect the underlying value type (`string`, `integer`, `number`, `boolean`, or `array`), consistent with the MCP tool `inputSchema`. Array options additionally report an `elementType` describing the array's element type (for example, `string` for a string array).

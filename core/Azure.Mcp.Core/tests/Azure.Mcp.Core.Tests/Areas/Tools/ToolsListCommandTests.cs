@@ -166,7 +166,8 @@ public class ToolsListCommandTests
     /// <summary>
     /// Regression test for https://github.com/microsoft/mcp/issues/3768: option types in the CLI
     /// tools list output must reflect each option's actual value type instead of always reporting
-    /// "string". Verifies that non-string JSON Schema keywords (e.g. boolean, array) are emitted.
+    /// "string". Verifies that non-string JSON Schema keywords (e.g. boolean, array) are emitted,
+    /// and that array options additionally carry their element type.
     /// </summary>
     [Fact]
     public async Task ExecuteAsync_PopulatesOptionTypesFromValueType()
@@ -178,9 +179,12 @@ public class ToolsListCommandTests
         var result = DeserializeCommandsResults(response);
         Assert.NotNull(result.Commands);
 
-        var optionTypes = result.Commands
+        var options = result.Commands
             .Where(cmd => cmd.Options is not null)
             .SelectMany(cmd => cmd.Options!)
+            .ToList();
+
+        var optionTypes = options
             .Select(option => option.Type)
             .Distinct(StringComparer.Ordinal)
             .ToList();
@@ -192,6 +196,16 @@ public class ToolsListCommandTests
             $"Expected multiple option types but found only: {string.Join(", ", optionTypes)}");
         Assert.Contains("boolean", optionTypes);
         Assert.Contains("array", optionTypes);
+
+        // Array options must carry a non-empty element type, and scalar options must not.
+        var arrayOptions = options.Where(option => option.Type == "array").ToList();
+        Assert.NotEmpty(arrayOptions);
+        Assert.All(arrayOptions, option => Assert.False(string.IsNullOrEmpty(option.ElementType)));
+        Assert.Contains(arrayOptions, option => option.ElementType == "string");
+
+        var scalarOption = options.FirstOrDefault(option => option.Type == "string");
+        Assert.NotNull(scalarOption);
+        Assert.Null(scalarOption.ElementType);
     }
 
     /// <summary>

@@ -45,6 +45,43 @@ public class OptionTypeNameHelperTests
         Assert.Throws<ArgumentNullException>(() => OptionTypeNameHelper.GetJsonSchemaType(null!));
     }
 
+    [Theory]
+    [InlineData(typeof(string[]), "string")]
+    [InlineData(typeof(int[]), "integer")]
+    [InlineData(typeof(long[]), "integer")]
+    [InlineData(typeof(bool[]), "boolean")]
+    [InlineData(typeof(double[]), "number")]
+    [InlineData(typeof(SampleEnum[]), "string")]
+    [InlineData(typeof(List<string>), "string")]
+    [InlineData(typeof(IEnumerable<int>), "integer")]
+    [InlineData(typeof(IList<bool>), "boolean")]
+    public void GetElementJsonSchemaType_ReturnsElementKeyword_ForCollections(Type valueType, string expected)
+    {
+        var result = OptionTypeNameHelper.GetElementJsonSchemaType(valueType);
+
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData(typeof(string))]
+    [InlineData(typeof(int))]
+    [InlineData(typeof(int?))]
+    [InlineData(typeof(bool))]
+    [InlineData(typeof(SampleEnum))]
+    [InlineData(typeof(SampleEnum?))]
+    public void GetElementJsonSchemaType_ReturnsNull_ForScalars(Type valueType)
+    {
+        var result = OptionTypeNameHelper.GetElementJsonSchemaType(valueType);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetElementJsonSchemaType_WithNullType_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => OptionTypeNameHelper.GetElementJsonSchemaType(null!));
+    }
+
     private enum SampleEnum
     {
         First,

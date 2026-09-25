@@ -59,4 +59,50 @@ public static class OptionTypeNameHelper
             _ => StringType,
         };
     }
+
+    /// <summary>
+    /// Returns the JSON Schema type keyword for the elements of a collection option, or
+    /// <see langword="null"/> when the value type is not a collection.
+    /// </summary>
+    /// <param name="valueType">The CLR value type of the option.</param>
+    /// <returns>
+    /// The element type keyword (for example, <c>string</c> for <c>string[]</c>), or
+    /// <see langword="null"/> for scalar options or collections whose element type cannot be resolved.
+    /// </returns>
+    public static string? GetElementJsonSchemaType(Type valueType)
+    {
+        ArgumentNullException.ThrowIfNull(valueType);
+
+        if (!CollectionTypeHelper.IsArrayType(valueType))
+        {
+            return null;
+        }
+
+        var elementType = GetCollectionElementType(valueType);
+        return elementType is null ? null : GetJsonSchemaType(elementType);
+    }
+
+    private static Type? GetCollectionElementType(Type type)
+    {
+        if (type.IsArray)
+        {
+            return type.GetElementType();
+        }
+
+        if (type.IsGenericType)
+        {
+            var genericDefinition = type.GetGenericTypeDefinition();
+            if (genericDefinition == typeof(IEnumerable<>)
+                || genericDefinition == typeof(ICollection<>)
+                || genericDefinition == typeof(IList<>)
+                || genericDefinition == typeof(IReadOnlyList<>)
+                || genericDefinition == typeof(IReadOnlyCollection<>)
+                || genericDefinition == typeof(List<>))
+            {
+                return type.GetGenericArguments()[0];
+            }
+        }
+
+        return null;
+    }
 }

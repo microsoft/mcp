@@ -27,6 +27,7 @@ internal static class OptionExtensions
             name: option.Name,
             description: option.Description ?? string.Empty,
             type: OptionTypeNameHelper.GetJsonSchemaType(option.ValueType),
+            elementType: OptionTypeNameHelper.GetElementJsonSchemaType(option.ValueType),
             required: option.Required);
     }
 }
