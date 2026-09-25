@@ -41,6 +41,11 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
     {
         base.ValidateOptions(options, validationResult);
 
+        if (options.EnablePublicNetworkAccess && !string.Equals(options.VaultType, "rsv", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--enable-public-network-access is only supported with --vault-type rsv.");
+        }
+
         if (string.IsNullOrEmpty(options.VaultType) ||
             (!options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
             !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase)))
@@ -73,6 +78,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 options.Sku,
                 options.StorageType,
                 options.Tenant,
+                options.EnablePublicNetworkAccess,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

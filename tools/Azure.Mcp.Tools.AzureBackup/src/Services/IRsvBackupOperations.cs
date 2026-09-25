@@ -16,7 +16,8 @@ public interface IRsvBackupOperations
         string? sku,
         string? storageType,
         string? tenant,
-        CancellationToken cancellationToken);
+        bool enablePublicNetworkAccess = false,
+        CancellationToken cancellationToken = default);
 
     Task<BackupVaultInfo> GetVaultAsync(
         string vaultName,
