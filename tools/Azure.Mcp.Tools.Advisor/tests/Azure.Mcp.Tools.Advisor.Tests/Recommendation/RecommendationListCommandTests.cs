@@ -691,4 +691,165 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("Migrate off the retiring feature", recommendation.Properties.ShortDescription!.Problem);
         Assert.Equal("Move to the replacement SKU", recommendation.Properties.ShortDescription.Solution);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScope_SucceedsWithoutSubscription()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "  sg1  ");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("sg1", captured!.ServiceGroup);
+
+        // Service Group scope must not pass a subscription.
+        await Service.Received(1).ListRecommendationsAsync(
+            Arg.Is<string?>(s => s == null),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithSubscription_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--subscription", "sub123");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Specify either --subscription or --service-group, not both", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithResourceGroup_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--resource-group", "rg1");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-group can only be used with subscription scope", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidServiceGroup_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync("--service-group", "bad/name");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("service group ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoScopeProvided_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync("--prioritized", "true");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("subscription", response.Message.ToLower());
+    }
+
+    [Theory]
+    [InlineData("true", true)]
+    [InlineData("false", false)]
+    public async Task ExecuteAsync_ForwardsPrioritizedToService(string prioritized, bool expected)
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--prioritized", prioritized);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(expected, captured!.Prioritized);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedPrioritized_IsNull()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.Prioritized);
+        Assert.Null(captured.ServiceGroup);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithPrioritized_ForwardsBoth()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--prioritized", "true",
+            "--category", "Cost");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("sg1", captured!.ServiceGroup);
+        Assert.True(captured.Prioritized);
+        Assert.Equal("Cost", captured.Category);
+    }
 }

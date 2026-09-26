@@ -463,9 +463,18 @@ azmcp adme storage record version list --endpoint <endpoint> \
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
+# Scope is either a subscription (--subscription, optionally narrowed by --resource-group) or an Azure Service Group
+# (--service-group, provided as the name segment of its ARM resource ID); specify either --subscription or --service-group,
+# not both, and the configured default subscription is used when neither is supplied. --resource-group applies only to subscription scope
+# --prioritized true returns only recommendations with contextual criticality scoring and prioritizes at two levels for both scopes:
+# first it ranks recommendation types by metadata priority score and metadata impact (High, Medium, Low), using type ID as a tie-breaker;
+# then, within each type, it ranks recommendation instances by contextual criticality score; defaults to false
 # Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation list --subscription <subscription> \
+azmcp advisor recommendation list [--subscription <subscription>] \
+                                  [--resource-group <resource-group>] \
+                                  [--service-group <service-group>] \
+                                  [--prioritized <true|false>] \
                                   [--top <top>] \
                                   [--category <category>] \
                                   [--impact <impact>] \

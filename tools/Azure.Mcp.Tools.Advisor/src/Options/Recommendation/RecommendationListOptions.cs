@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 /// <summary> Options for filtering and limiting Advisor recommendation list results. </summary>
-public class RecommendationListOptions : ISubscriptionOption
+public class RecommendationListOptions : IRecommendationScopeOptions
 {
     [Option(Description = "Filter recommendations by category (e.g., 'Security', 'Cost', 'Performance', 'HighAvailability', 'OperationalExcellence'). Case-insensitive exact match.")]
     public string? Category { get; set; }
@@ -53,6 +53,21 @@ public class RecommendationListOptions : ISubscriptionOption
 
     [Option(Description = "Maximum number of recommendation records to return. Defaults to 50 and is clamped to the server-side range of 1 through 100.")]
     public int? Top { get; set; }
+
+    [Option(Description = "List recommendations for an Azure Service Group instead of a subscription, " +
+        "provided as the name segment of its ARM resource ID (the '{serviceGroupName}' in " +
+        "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'). " +
+        "Specify either --service-group or --subscription, not both; --resource-group applies only to subscription scope. " +
+        "Other filters (category, impact, status, search, etc.) and --prioritized still apply.")]
+    public string? ServiceGroup { get; set; }
+
+    [Option(Description = "Set to true to prioritize recommendations for 'what should I fix first', ranked, top, or " +
+        "most-critical requests: it returns only recommendations that have contextual criticality scoring and prioritizes at two " +
+        "levels. First, it ranks recommendation types by metadata priority score (highest first) and metadata impact (High, Medium, Low), " +
+        "using recommendation type ID as a tie-breaker. Then, within each type, it ranks recommendation instances by contextual " +
+        "criticality score (highest first). Defaults to false, which returns all matching recommendations without " +
+        "prioritized ordering. Applies to both the subscription and Service Group scopes.")]
+    public bool? Prioritized { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
