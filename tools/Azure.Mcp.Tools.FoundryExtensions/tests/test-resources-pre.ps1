@@ -78,6 +78,15 @@ foreach ($region in $regionsToCheck) {
 
     if ($null -eq $gpt4oAvailable -or $null -eq $gpt4oMiniAvailable -or $null -eq $embeddingAvailable) {
         Write-Host "  Skipping '$region': one or more required models/SKUs were not found in the quota usage report."
+        # TEMPORARY DEBUG: the exact quota dimension Name format returned by
+        # Get-AzCognitiveServicesUsage for this subscription hasn't been confirmed, so
+        # every region is falling through to this branch. Dump every entry's raw Name
+        # (plus Limit/CurrentValue) so the next CI run's log reveals the real format and
+        # the regexes in Get-ModelQuotaAvailable can be corrected. Remove once fixed.
+        Write-Host "  DEBUG: raw quota usage entries for '$region' ($($usage.Count) total):"
+        foreach ($entry in $usage) {
+            Write-Host "    DEBUG: Name='$($entry.Name)' Limit=$($entry.Limit) CurrentValue=$($entry.CurrentValue) Unit=$($entry.Unit)"
+        }
         continue
     }
 
