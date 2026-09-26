@@ -70,11 +70,8 @@ public class RecommendationSummaryService(IAzureService azureService)
             }
         }
 
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = tenants.FirstOrDefault(
-            candidate => candidate.Data.TenantId == subscriptionResource.Data.TenantId)
-            ?? throw new InvalidOperationException(
-                $"No accessible tenant was found for subscription '{subscription}'.");
+        var tenantId = subscriptionResource.Data.TenantId?.ToString()
+            ?? await ResolveTenantIdAsync(tenant, cancellationToken);
 
         var usesMetadata = RequiresMetadata(normalizedGroupBy, filters);
         var query = BuildSummaryQuery(
@@ -89,10 +86,9 @@ public class RecommendationSummaryService(IAzureService azureService)
             queryContent.Subscriptions.Add(subscriptionId);
         }
 
-        var response = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        var result = response.Value;
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
         EnsureCompleteResult(
-            result.ResultTruncated == ResultTruncated.True,
+            result.IsTruncated,
             result.SkipToken);
 
         if (result.Count == 0)
@@ -100,8 +96,7 @@ public class RecommendationSummaryService(IAzureService azureService)
             return new(normalizedGroupBy, 0, []);
         }
 
-        using var document = JsonDocument.Parse(result.Data);
-        return ParseSummary(normalizedGroupBy, document.RootElement);
+        return ParseSummary(normalizedGroupBy, result.Data);
     }
 
     internal static bool RequiresMetadata(string groupBy, RecommendationFilters? filters) =>
