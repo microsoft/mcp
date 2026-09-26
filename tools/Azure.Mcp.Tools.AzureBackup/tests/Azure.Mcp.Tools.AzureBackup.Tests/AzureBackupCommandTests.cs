@@ -783,7 +783,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var policyName = RegisterOrRetrieveVariable("updateSqlBothPolicyName", $"test-upd-sqlb-{Random.Shared.NextInt64()}");
 
         // Create a SQL (VmWorkload) policy first
-        await CallToolAsync(
+        var creationResponse = await CallToolAsync(
             "azurebackup_policy_create",
             new()
             {
@@ -791,8 +791,11 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "SQL" }
+                { "workload-type", "SQL" },
+                { "daily-retention-days", "30" }
             });
+        var creationResult = creationResponse.AssertProperty("result");
+        Assert.Equal("Succeeded", creationResult.AssertProperty("status").GetString());
 
         // Update both schedule time and retention on the Full sub-policy
         var result = await CallToolAsync(

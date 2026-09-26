@@ -234,7 +234,7 @@ resource keyVaultKey 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
 resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   name: baseName
   location: location
-  zones: ['1']
+  // AMLFS availability-zone support varies by region; omitting zones allows regional deployment in westus.
   sku: {
     name: amlfsSku
   }

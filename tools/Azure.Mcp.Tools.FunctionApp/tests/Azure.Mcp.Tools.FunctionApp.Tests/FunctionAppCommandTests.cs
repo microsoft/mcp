@@ -75,14 +75,20 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [LiveTestOnly]
     public async Task Should_handle_empty_subscription_gracefully()
     {
+        // Function app is provided without a resource group, so the service requires
+        // resource-group alongside function-app, which fails validation before the
+        // (empty) subscription is even resolved.
         var result = await CallToolAsync(
             "functionapp_get",
             new()
             {
-                { "subscription", "" }
-            });
+                { "subscription", "" },
+                { "function-app", Settings.ResourceBaseName }
+            },
+            resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
 
         Assert.True(result.HasValue);
+        Assert.Equal(400, result.Value.GetInt32());
     }
 
     [Fact]
@@ -104,11 +110,21 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
 
     [Fact]
     [LiveTestOnly]
-    public async Task Should_validate_required_subscription_parameter()
+    public async Task Should_validate_required_resource_group_parameter()
     {
-        var result = await CallToolAsync("functionapp_get", []);
+        // When function-app is provided without a resource group, the service requires
+        // resource-group alongside function-app, so this should fail validation.
+        var result = await CallToolAsync(
+            "functionapp_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "function-app", Settings.ResourceBaseName }
+            },
+            resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
 
         Assert.True(result.HasValue);
+        Assert.Equal(400, result.Value.GetInt32());
     }
 
     [Fact]
@@ -200,10 +216,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
             {
                 { "resource-group", "rg-test" },
                 { "function-app", "name-test" }
-            });
+            },
+        resultProcessor: e => e.TryGetProperty("status", out var property) ? property : null);
         Assert.True(missingSub.HasValue);
-        missingSub.Value.AssertProperty("message");
-        var missingSubType = missingSub.Value.AssertProperty("type");
-        Assert.Equal("RequestFailedException", missingSubType.GetString());
+        Assert.Equal(400, missingSub.Value.GetInt32());
     }
 }

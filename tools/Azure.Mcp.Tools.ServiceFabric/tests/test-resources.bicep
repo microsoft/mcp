@@ -8,8 +8,11 @@ param baseName string = resourceGroup().name
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = deployer().objectId
 
-@description('The location of the resource. By default, this is the same as the resource group.')
-param location string = resourceGroup().location
+@description('The location of the resources. Defaults to westus2 because some test subscriptions have no VM SKUs enabled in westus.')
+param location string = 'westus2'
+
+@description('The VM SKU to use for the primary node type.')
+param vmSku string = 'Standard_D2s_v3'
 
 @description('The admin username for the cluster.')
 param adminUsername string = 'sfadmin'
@@ -40,7 +43,7 @@ resource primaryNodeType 'Microsoft.ServiceFabric/managedClusters/nodeTypes@2024
   name: 'primary'
   properties: {
     isPrimary: true
-    vmSize: 'Standard_D2s_v3'
+    vmSize: vmSku
     vmInstanceCount: 3
     dataDiskSizeGB: 128
     vmImagePublisher: 'MicrosoftWindowsServer'

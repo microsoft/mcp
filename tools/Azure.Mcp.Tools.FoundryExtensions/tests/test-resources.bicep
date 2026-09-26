@@ -14,6 +14,10 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+@minValue(1)
+@description('The Tokens-Per-Minute (in thousands) capacity to request for the gpt-4o, gpt-4o-mini, and embedding model deployments. Set by test-resources-pre.ps1 based on available quota in the selected region.')
+param modelCapacity int = 1
+
 var cognitiveServicesContributorRoleId = '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68' // Cognitive Services Contributor role
 var azureAiDeveloperRoleId = '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer role
 var azureAiUserRoleId = '53ca6127-db72-4b80-b1b0-d745d6d5456d' // Azure AI User role (includes CognitiveServices/* data actions for agents)
@@ -106,7 +110,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   name: 'gpt-4o'
   sku: {
     name: 'Standard'
-    capacity: 30
+    capacity: modelCapacity
   }
   properties: {
     model: {
@@ -122,7 +126,7 @@ resource gpt4oMiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   name: 'gpt-4o-mini'
   sku: {
     name: 'GlobalStandard'
-    capacity: 30
+    capacity: modelCapacity
   }
   properties: {
     model: {
@@ -138,7 +142,7 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   name: 'embedding-model'
   sku: {
     name: 'GlobalStandard'
-    capacity: 30
+    capacity: modelCapacity
   }
   properties: {
     model: {
