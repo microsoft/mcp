@@ -142,25 +142,6 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_get_goal_template()
-    {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var goalTemplate = RegisterOrRetrieveDeploymentOutputVariable("goalTemplateName", "GOALTEMPLATENAME");
-
-        var result = await CallToolAsync(
-            "resiliency_goal_template_get",
-            new()
-            {
-                { "tenant", Settings.TenantId },
-                { "service-group", serviceGroup },
-                { "name", goalTemplate }
-            });
-
-        var template = result.AssertProperty("goalTemplate");
-        Assert.False(string.IsNullOrEmpty(template.AssertProperty("name").GetString()));
-    }
-
-    [Fact]
     public async Task Should_get_goal_assignment()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");

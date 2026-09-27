@@ -1335,8 +1335,6 @@ Example prompts that generate Azure CLI commands:
 
 ### 🛡️ Azure Resilience Management
 
-* "List all resilience goal templates in service group 'my-service-group'"
-* "Get the details of goal template 'my-template' in service group 'my-service-group'"
 * "List all resilience goal assignments in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
@@ -1459,7 +1457,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

@@ -4201,11 +4201,6 @@ azmcp redis list --subscription <subscription>
 ### Azure Resilience Management Operations
 
 ```bash
-# Get a resilience goal template, or list all goal templates in a service group (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resiliency goal template get --service-group <service-group> \
-                                   [--name <name>]
-
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal assignment get --service-group <service-group> \
