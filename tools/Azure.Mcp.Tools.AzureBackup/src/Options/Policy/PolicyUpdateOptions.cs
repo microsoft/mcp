@@ -19,19 +19,15 @@ public sealed class PolicyUpdateOptions : BaseAzureBackupOptions
     public string? DailyRetentionDays { get; set; }
 
     // ===== IaasVM policy update parity (RSV Azure VM only) =====
-    // Every field below is optional. Setting any one of them opts into the extended
-    // update path that reshapes the existing IaasVmProtectionPolicy schedule and/or
-    // retention using the same builder rules as `azurebackup policy create`. Other
-    // workload types (VmWorkload SQL/HANA/ASE, FileShare) ignore these fields and
-    // continue to honour --schedule-time and --daily-retention-days only.
+    // Omitted fields preserve existing settings. Other workloads reject VM-only fields.
 
     [Option(Description = "Windows time-zone identifier for the backup schedule (e.g., 'UTC', 'Pacific Standard Time'). RSV Azure VM only.")]
     public string? TimeZone { get; set; }
 
-    [Option(Description = "Backup schedule frequency: 'Daily' or 'Weekly'. Hourly, PolicySubType, and V2 schedules are not supported by update. RSV Azure VM only.")]
+    [Option(Description = "Backup schedule frequency: 'Daily', 'Weekly', or 'Hourly'. Hourly requires an existing Enhanced policy. Changing the policy subtype is not supported. RSV Azure VM only.")]
     public string? ScheduleFrequency { get; set; }
 
-    [Option(Description = "Comma-separated list of backup times in 24h HH:mm format (e.g., '02:00' or '02:00,14:00'). Interpreted in --time-zone. RSV Azure VM only.")]
+    [Option(Description = "One backup time in 24h HH:mm format (e.g., '02:00') for Daily or Weekly schedules. Interpreted in --time-zone. Mutually exclusive with --schedule-time. RSV Azure VM only.")]
     public string? ScheduleTimes { get; set; }
 
     [Option(Description = "Comma-separated days of the week the backup should run (e.g., 'Monday,Wednesday,Friday'). Required for Weekly schedules. RSV Azure VM only.")]
@@ -69,4 +65,37 @@ public sealed class PolicyUpdateOptions : BaseAzureBackupOptions
 
     [Option(Description = "Comma-separated days of the month for yearly retention (1-28 or 'Last'). Mutually exclusive with --yearly-retention-week-of-month. RSV Azure VM only.")]
     public string? YearlyRetentionDaysOfMonth { get; set; }
+
+    [Option(Description = "Interval between hourly backups: 4, 6, 8, or 12 hours. Existing Enhanced VM policies only.")]
+    public int? HourlyIntervalHours { get; set; }
+
+    [Option(Description = "Hourly window start as local HH:mm, converted to UTC using supplied --time-zone, otherwise the existing policy time zone, otherwise UTC. Uses 2000-01-01 time-zone rules, not today's DST offset; invalid or ambiguous local times are rejected. Omission preserves the stored timestamp, even when changing time zone. Required with interval and duration when switching to Hourly.")]
+    public string? HourlyWindowStartTime { get; set; }
+
+    [Option(Description = "Hourly backup window duration in hours (4-24), at least the interval. Existing Enhanced VM policies only.")]
+    public int? HourlyWindowDurationHours { get; set; }
+
+    [Option(Description = "Assert the existing VM policy subtype: Standard or Enhanced. Changing subtype requires a separate migration and is rejected.")]
+    public string? PolicySubType { get; set; }
+
+    [Option(Description = "Instant recovery point retention in days (1-30). Azure enforces schedule-specific limits for Standard and Enhanced policies. Omission preserves existing retention. RSV Azure VM only.")]
+    public string? InstantRpRetentionDays { get; set; }
+
+    [Option(Description = "Instant recovery point resource group name prefix. Preserves the existing suffix. RSV Azure VM only.")]
+    public string? InstantRpResourceGroup { get; set; }
+
+    [Option(Description = "VM snapshot consistency: ApplicationConsistent restores the default application-consistent backup behavior; CrashConsistent requests ARM OnlyCrashConsistent mode.")]
+    public string? SnapshotConsistency { get; set; }
+
+    [Option(Description = "Days before moving VM recovery points to archive (at least 45). Use TierAfter mode.")]
+    public string? ArchiveTierAfterDays { get; set; }
+
+    [Option(Description = "VM archive mode: TierAfter or TierRecommended. CopyOnExpiry is not supported for RSV VM policies.")]
+    public string? ArchiveTierMode { get; set; }
+
+    [Option(Description = "Enable recommended VM archive tiering; false explicitly disables archive tiering. Omission preserves existing tiering. Cannot be combined with archive flags.")]
+    public bool? SmartTier { get; set; }
+
+    [Option(Description = "Merge VM policy resource tags as k1=v1,k2=v2, preserving unmentioned tags.")]
+    public string? PolicyTags { get; set; }
 }

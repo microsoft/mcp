@@ -62,7 +62,6 @@ public class PolicyUpdateValidatorTests
     }
 
     [Theory]
-    [InlineData("Hourly")]
     [InlineData("Monthly")]
     [InlineData("Bogus")]
     public void Validate_UnsupportedFrequency_Fails(string freq)
@@ -74,6 +73,19 @@ public class PolicyUpdateValidatorTests
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Issues, i => i.Flag == "--schedule-frequency");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("Hourly")]
+    [InlineData("hourly")]
+    public void Validate_HourlyPartialUpdate_DefersMissingFieldsToExistingPolicy(string? frequency)
+    {
+        var options = BaseOptions();
+        options.ScheduleFrequency = frequency;
+        options.HourlyIntervalHours = 6;
+
+        Assert.True(PolicyUpdateValidator.Validate(options).IsValid);
     }
 
     [Theory]
