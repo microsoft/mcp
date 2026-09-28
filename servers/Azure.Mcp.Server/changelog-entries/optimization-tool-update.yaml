@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated Azure optimization tool descriptions to refer to results as cost optimization recommendations instead of Azure Advisor."
