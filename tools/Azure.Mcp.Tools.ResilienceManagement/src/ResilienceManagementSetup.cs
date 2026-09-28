@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement;
 
 public class ResilienceManagementSetup : IAreaSetup
 {
-    public string Name => "resilience";
+    public string Name => "resiliency";
 
     public string Title => "Azure Resilience Management";
 

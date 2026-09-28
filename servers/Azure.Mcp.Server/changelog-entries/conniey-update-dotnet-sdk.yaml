@@ -1,0 +1,5 @@
+pr: 3751
+changes:
+  - section: "Other Changes"
+    subsection: "Dependency Updates"
+    description: "Updated the .NET SDK to version 10.0.401"
