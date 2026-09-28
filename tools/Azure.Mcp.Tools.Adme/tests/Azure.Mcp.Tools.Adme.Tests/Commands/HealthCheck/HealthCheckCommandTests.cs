@@ -23,8 +23,8 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             TestConstants.Tenant,
-            Arg.Any<CancellationToken>(),
-            AuthAppId)
+            AuthAppId,
+            Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<HealthCheckResult>(
                 new HealthCheckResult(200),
                 "test-correlation-id"));
@@ -48,6 +48,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         Service.CheckHealthAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .Returns<AdmeResponse<HealthCheckResult>>(_ => throw new InvalidOperationException("boom"));
@@ -73,6 +74,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
@@ -97,7 +99,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -115,7 +117,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -128,6 +130,6 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 }

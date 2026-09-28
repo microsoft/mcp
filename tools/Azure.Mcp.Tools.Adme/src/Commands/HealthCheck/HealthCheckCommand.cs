@@ -51,8 +51,8 @@ public sealed class HealthCheckCommand(IHealthService healthService)
                 options.Endpoint,
                 options.DataPartition,
                 options.Tenant,
-                cancellationToken,
-                options.AuthAppId);
+                options.AuthAppId,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 result,

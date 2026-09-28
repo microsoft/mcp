@@ -52,8 +52,8 @@ public sealed class RecordVersionListCommand(IStorageService storageService)
                 options.DataPartition,
                 options.Id,
                 options.Tenant,
-                cancellationToken,
-                options.AuthAppId);
+                options.AuthAppId,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseRecordVersionsResponse);
         }

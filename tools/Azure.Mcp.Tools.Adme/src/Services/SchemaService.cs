@@ -28,8 +28,8 @@ public sealed class SchemaService(
         string dataPartition,
         string kind,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
         return AdmeServiceHelper.SendAsync(
@@ -40,8 +40,8 @@ public sealed class SchemaService(
             tenant,
             $"{BasePath}/{Uri.EscapeDataString(kind)}",
             AdmeJsonContext.Default.JsonElement,
-            cancellationToken,
-            authAppId);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -62,8 +62,8 @@ public sealed class SchemaService(
         bool latestVersion,
         int? offset,
         int? limit,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         var query = new List<KeyValuePair<string, string>>();
         AdmeServiceHelper.Add(query, "authority", authority);
@@ -89,7 +89,7 @@ public sealed class SchemaService(
             tenant,
             AdmeServiceHelper.AppendQuery(BasePath, query),
             AdmeJsonContext.Default.SchemaListResponse,
-            cancellationToken,
-            authAppId);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 }

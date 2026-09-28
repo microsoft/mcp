@@ -39,9 +39,9 @@ internal static class AdmeServiceHelper
         var resource = value.EndsWith("/.default", StringComparison.OrdinalIgnoreCase)
             ? value[..^"/.default".Length]
             : value;
-        if (Guid.TryParse(resource, out _))
+        if (Guid.TryParse(resource, out var applicationId))
         {
-            return $"{resource}/.default";
+            return $"{applicationId:D}/.default";
         }
 
         var isValidAppIdUri = Uri.TryCreate(resource, UriKind.Absolute, out var uri) &&
@@ -86,9 +86,9 @@ internal static class AdmeServiceHelper
         string? tenant,
         string path,
         JsonTypeInfo<T> typeInfo,
-        CancellationToken cancellationToken,
         string? authAppId = null,
-        bool sendJsonContentTypeHint = false) =>
+        bool sendJsonContentTypeHint = false,
+        CancellationToken cancellationToken = default) =>
         SendAsync(
             credentialProvider,
             httpClientFactory,
@@ -140,9 +140,9 @@ internal static class AdmeServiceHelper
         JsonTypeInfo<TRequest> requestTypeInfo,
         JsonTypeInfo<TResponse> responseTypeInfo,
         IReadOnlyCollection<KeyValuePair<string, string>>? extraHeaders,
-        CancellationToken cancellationToken,
         string? authAppId = null,
-        bool disableRetries = false) =>
+        bool disableRetries = false,
+        CancellationToken cancellationToken = default) =>
         SendAsync(
             credentialProvider,
             httpClientFactory,
@@ -169,8 +169,8 @@ internal static class AdmeServiceHelper
         TRequest body,
         JsonTypeInfo<TRequest> requestTypeInfo,
         JsonTypeInfo<TResponse> responseTypeInfo,
-        CancellationToken cancellationToken,
-        string? authAppId = null) =>
+        string? authAppId = null,
+        CancellationToken cancellationToken = default) =>
         SendAsync(
             credentialProvider,
             httpClientFactory,
@@ -193,8 +193,8 @@ internal static class AdmeServiceHelper
         string dataPartition,
         string? tenant,
         string path,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         await SendAsync<object?>(
             credentialProvider,

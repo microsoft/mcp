@@ -23,8 +23,8 @@ public sealed class HealthService(
         string endpoint,
         string dataPartition,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         return await AdmeServiceHelper.SendAsync(
             _credentialProvider,

@@ -93,8 +93,8 @@ public sealed class SearchCommand(ISearchService searchService)
                 HighlightedFields = AdmeServiceHelper.Normalize(options.HighlightedFields),
             },
             options.Tenant,
-            cancellationToken,
-            options.AuthAppId);
+            options.AuthAppId,
+            cancellationToken);
 
         return new(new SearchResponse
         {
@@ -128,8 +128,8 @@ public sealed class SearchCommand(ISearchService searchService)
             },
             options.SearchAfter,
             options.Tenant,
-            cancellationToken,
-            options.AuthAppId);
+            options.AuthAppId,
+            cancellationToken);
 
         return new(new SearchResponse
         {

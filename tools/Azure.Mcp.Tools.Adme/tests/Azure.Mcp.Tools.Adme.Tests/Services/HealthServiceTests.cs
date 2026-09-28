@@ -27,7 +27,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             TestConstants.Tenant,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(200, result.Result.StatusCode);
         Assert.Equal("/api/storage/v2/info", handler.LastRequest!.RequestUri!.AbsolutePath);
@@ -55,8 +55,8 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             TestConstants.Tenant,
-            TestContext.Current.CancellationToken,
-            AuthAppId);
+            AuthAppId,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(200, result.Result.StatusCode);
         await credential.Received(1).GetTokenAsync(
@@ -79,7 +79,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
@@ -98,7 +98,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal(503, exception.Status);
         Assert.Contains(errorResponse, exception.Message);
@@ -127,7 +127,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)statusCode, exception.Status);
         Assert.Contains(expectedError, exception.Message);
@@ -150,7 +150,7 @@ public sealed class HealthServiceTests
             endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 
     private static IAzureTokenCredentialProvider CreateCredentialProvider(string token = "fake-token")

@@ -52,8 +52,8 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
                 options.DataPartition,
                 options.Kind,
                 options.Tenant,
-                cancellationToken,
-                options.AuthAppId);
+                options.AuthAppId,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseJsonElement);
         }

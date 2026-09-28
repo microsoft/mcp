@@ -98,8 +98,8 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
                 options.LatestVersion,
                 options.Offset,
                 options.Limit,
-                cancellationToken,
-                options.AuthAppId);
+                options.AuthAppId,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseSchemaListResponse);
         }

@@ -18,6 +18,8 @@ public sealed class AdmeServiceHelperTests
     [InlineData(null, AdmeServiceHelper.AuthScope)]
     [InlineData(" ", AdmeServiceHelper.AuthScope)]
     [InlineData("e91be4a4-1111-2222-3333-444444444444", "e91be4a4-1111-2222-3333-444444444444/.default")]
+    [InlineData("{E91BE4A4-1111-2222-3333-444444444444}", "e91be4a4-1111-2222-3333-444444444444/.default")]
+    [InlineData("e91be4a4111122223333444444444444", "e91be4a4-1111-2222-3333-444444444444/.default")]
     [InlineData("api://e91be4a4-1111-2222-3333-444444444444", "api://e91be4a4-1111-2222-3333-444444444444/.default")]
     [InlineData("api://e91be4a4-1111-2222-3333-444444444444/.default", "api://e91be4a4-1111-2222-3333-444444444444/.default")]
     [InlineData("https://energy.contoso.com/", "https://energy.contoso.com/.default")]
@@ -52,7 +54,7 @@ public sealed class AdmeServiceHelperTests
             null,
             "/api/test",
             AdmeJsonContext.Default.JsonElement,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.BadRequest, exception.Status);
         Assert.Equal(responseContent, exception.Message);
@@ -75,7 +77,7 @@ public sealed class AdmeServiceHelperTests
             null,
             "/api/test",
             AdmeJsonContext.Default.JsonElement,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.Unauthorized, exception.Status);
         Assert.StartsWith(responseContent, exception.Message);
@@ -103,7 +105,7 @@ public sealed class AdmeServiceHelperTests
             null,
             "/api/test",
             AdmeJsonContext.Default.JsonElement,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)statusCode, exception.Status);
         Assert.StartsWith(expectedMessage, exception.Message);
@@ -125,7 +127,7 @@ public sealed class AdmeServiceHelperTests
             null,
             "/api/test",
             AdmeJsonContext.Default.JsonElement,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal(new string('a', 1024), exception.Message);
     }
@@ -146,7 +148,7 @@ public sealed class AdmeServiceHelperTests
             null,
             "/api/test",
             AdmeJsonContext.Default.SchemaListResponse,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.OK, exception.Status);
         Assert.Contains("empty response body", exception.Message);

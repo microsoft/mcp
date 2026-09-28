@@ -31,8 +31,8 @@ public sealed class StorageService(
         long? version,
         IReadOnlyList<string>? attributes,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
 
@@ -42,7 +42,8 @@ public sealed class StorageService(
 
         return AdmeServiceHelper.SendAsync(
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
-            AppendAttributes(path, attributes), AdmeJsonContext.Default.StorageRecord, cancellationToken, authAppId);
+            AppendAttributes(path, attributes), AdmeJsonContext.Default.StorageRecord, authAppId,
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -53,8 +54,8 @@ public sealed class StorageService(
         string dataPartition,
         string id,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         return AdmeServiceHelper.SendAsync(
@@ -65,8 +66,8 @@ public sealed class StorageService(
             tenant,
             $"{BasePath}/records/versions/{Uri.EscapeDataString(id)}",
             AdmeJsonContext.Default.RecordVersionsResponse,
-            cancellationToken,
-            authAppId);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 
     public Task<AdmeResponse<QueryRecordsResponse>> QueryRecordsByKindAsync(
@@ -76,8 +77,8 @@ public sealed class StorageService(
         int limit,
         string? cursor,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
         var query = new List<KeyValuePair<string, string>>();
@@ -88,9 +89,10 @@ public sealed class StorageService(
         return AdmeServiceHelper.SendAsync(
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
             AdmeServiceHelper.AppendQuery($"{BasePath}/query/records", query),
-            AdmeJsonContext.Default.QueryRecordsResponse, cancellationToken,
+            AdmeJsonContext.Default.QueryRecordsResponse,
             authAppId,
-            sendJsonContentTypeHint: true);
+            sendJsonContentTypeHint: true,
+            cancellationToken);
     }
 
     public Task<AdmeResponse<FetchRecordsResponse>> FetchRecordsAsync(
@@ -100,8 +102,8 @@ public sealed class StorageService(
         IReadOnlyList<string>? attributes,
         bool frameOfReference,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(ids);
         if (ids.Count == 0)
@@ -123,8 +125,8 @@ public sealed class StorageService(
             AdmeJsonContext.Default.FetchRecordsResponse,
             projecting ? null : [new(FrameOfReferenceHeader,
                 frameOfReference ? FrameOfReferenceNormalized : FrameOfReferenceNone)],
-            cancellationToken,
-            authAppId);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 
     public Task<AdmeResponse<UpsertRecordsResponse>> UpsertRecordsAsync(
@@ -132,8 +134,8 @@ public sealed class StorageService(
         string dataPartition,
         IReadOnlyList<StorageRecord> records,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(records);
         if (records.Count == 0)
@@ -144,7 +146,7 @@ public sealed class StorageService(
         return AdmeServiceHelper.PutAsync(
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/records", records.ToArray(), AdmeJsonContext.Default.StorageRecordArray,
-            AdmeJsonContext.Default.UpsertRecordsResponse, cancellationToken, authAppId);
+            AdmeJsonContext.Default.UpsertRecordsResponse, authAppId, cancellationToken);
     }
 
     public Task DeleteRecordAsync(
@@ -152,13 +154,13 @@ public sealed class StorageService(
         string dataPartition,
         string id,
         string? tenant,
-        CancellationToken cancellationToken,
-        string? authAppId = null)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         return AdmeServiceHelper.DeleteAsync(
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
-            $"{BasePath}/records/{Uri.EscapeDataString(id)}", cancellationToken, authAppId);
+            $"{BasePath}/records/{Uri.EscapeDataString(id)}", authAppId, cancellationToken);
     }
 
     private static string AppendAttributes(string path, IReadOnlyList<string>? attributes)

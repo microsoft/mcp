@@ -56,7 +56,7 @@ public sealed class RecordListCommand(IStorageService storageService)
         {
             var result = await _storageService.QueryRecordsByKindAsync(
                 options.Endpoint, options.DataPartition, options.Kind, options.Limit ?? DefaultLimit,
-                options.Cursor, options.Tenant, cancellationToken, options.AuthAppId);
+                options.Cursor, options.Tenant, options.AuthAppId, cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseQueryRecordsResponse);
         }
