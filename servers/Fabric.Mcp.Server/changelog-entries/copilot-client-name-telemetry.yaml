@@ -1,3 +1,3 @@
 changes:
   - section: "Bugs Fixed"
-    description: "Client name and version telemetry now record `<Unknown>` when client identity is unavailable, including direct CLI tool execution, instead of omitting the tags."
+    description: "Client telemetry now records canonical client name and version values, using `<Unknown>` when unavailable and mapping plugin client names with a client type fallback."
