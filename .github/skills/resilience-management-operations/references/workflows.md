@@ -36,7 +36,22 @@ The mention of a service group supplies context for resolving a usage plan; it d
 3. For an assignment, list members with `mcp_azure_mcp_ser_resiliency_goal_resource_get`.
 4. Get individual members when full HA/DR attestation, participation, or exclusion details are needed.
 
-These tools do not create or mutate goals.
+## Create or Update a Legacy Goal Assignment
+
+1. Resolve the service group and existing legacy goal template with `mcp_azure_mcp_ser_resiliency_goal_template_get`.
+2. Confirm the assignment name and that replacing an existing assignment's template is intended.
+3. Call `mcp_azure_mcp_ser_resiliency_goal_assignment_create` with the service group, assignment, and template names.
+4. Verify the returned provisioning state and template ID, then get the assignment when a later state check is needed.
+
+This workflow exists for the goal-template contract exposed by the current SDK. Migrate it to inline goal definitions when the SDK supports the replacement API.
+
+## Delete a Goal Assignment
+
+1. Get the assignment with `mcp_azure_mcp_ser_resiliency_goal_assignment_get` and confirm the exact service group and assignment name.
+2. Check the assignment members with `mcp_azure_mcp_ser_resiliency_goal_resource_get` when deletion impact must be understood.
+3. Call `mcp_azure_mcp_ser_resiliency_goal_assignment_delete` only for an explicit, unambiguous request; deletion permanently removes the assignment from the service group.
+4. Get the exact assignment again. Treat `ResourceNotFound` as confirmation that it is gone.
+5. Report `deleted: true` when the assignment was removed and `deleted: false` when it was already absent.
 
 ## Create and Configure a Drill
 

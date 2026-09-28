@@ -4211,6 +4211,11 @@ azmcp resiliency goal template get --service-group <service-group> \
 azmcp resiliency goal assignment get --service-group <service-group> \
                                      [--name <name>]
 
+# Delete a resilience goal assignment. Returns deleted=false when the assignment does not exist.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment delete --service-group <service-group> \
+                                        --goal-assignment <goal-assignment>
+
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal resource get --service-group <service-group> \

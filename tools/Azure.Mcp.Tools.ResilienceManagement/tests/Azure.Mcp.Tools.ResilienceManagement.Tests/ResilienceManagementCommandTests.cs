@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
+// cspell:ignore GOALASSIGNMENTDELETENAME GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -177,6 +177,41 @@ public class ResilienceManagementCommandTests(
 
         var assignment = result.AssertProperty("goalAssignment");
         Assert.False(string.IsNullOrEmpty(assignment.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_delete_goal_assignment()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable(
+            "goalAssignmentLifecycleServiceGroupName",
+            "GOALASSIGNMENTLIFECYCLESERVICEGROUPNAME");
+        var goalAssignment = RegisterOrRetrieveDeploymentOutputVariable(
+            "goalAssignmentDeleteName",
+            "GOALASSIGNMENTDELETENAME");
+
+        var firstResult = await CallToolAsync(
+            "resiliency_goal_assignment_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "goal-assignment", goalAssignment }
+            });
+
+        Assert.True(firstResult.AssertProperty("deleted").GetBoolean());
+        Assert.Equal(goalAssignment, firstResult.AssertProperty("goalAssignment").GetString());
+
+        var secondResult = await CallToolAsync(
+            "resiliency_goal_assignment_delete",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "goal-assignment", goalAssignment }
+            });
+
+        Assert.False(secondResult.AssertProperty("deleted").GetBoolean());
+        Assert.Equal(goalAssignment, secondResult.AssertProperty("goalAssignment").GetString());
     }
 
     [Fact]

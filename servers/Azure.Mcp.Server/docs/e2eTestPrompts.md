@@ -1135,6 +1135,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resiliency_goal_assignment_delete | Delete resilience goal assignment <goal_assignment_name> from service group <service_group> | none |
+| resiliency_goal_assignment_delete | Remove the goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
 | resiliency_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |

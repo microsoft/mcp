@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the resilience goal assignment create tool for creating or updating assignments from legacy goal templates supported by the current Azure SDK."
