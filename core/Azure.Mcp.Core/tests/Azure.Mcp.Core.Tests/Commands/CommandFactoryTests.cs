@@ -103,10 +103,10 @@ public class CommandFactoryTests
     }
 
     [Fact]
-    public async Task RootCommand_InvokeCliCommand_SetsUnknownClientName()
+    public async Task RootCommand_InvokeCliCommand_UsesClientAwareTelemetry()
     {
         using var activity = new Activity("test").Start();
-        _telemetryService.StartActivity(ActivityName.ToolExecuted).Returns(activity);
+        _telemetryService.StartActivity(ActivityName.ToolExecuted, null, null).Returns(activity);
 
         var command = Substitute.For<IBaseCommand>();
         command.Id.Returns("00000000-0000-0000-0000-000000000001");
@@ -139,7 +139,7 @@ public class CommandFactoryTests
             .InvokeAsync(null, TestContext.Current.CancellationToken);
 
         Assert.Equal((int)HttpStatusCode.OK, exitCode);
-        Assert.Equal(TagConstants.Unknown, activity.GetTagItem(TagName.ClientName));
+        _telemetryService.Received(1).StartActivity(ActivityName.ToolExecuted, null, null);
         Assert.Equal("cli", activity.GetTagItem(TagName.ServerMode));
     }
 

@@ -118,19 +118,8 @@ internal class TelemetryService : ITelemetryService
     // identity overrides session-level clientInfo when both are available.
     internal static void SetClientNameAndVersion(Activity activity, Implementation? clientInfo, RequestParams? requestParams)
     {
-        activity.SetTag(TagName.ClientName, TagConstants.Unknown);
-
-        if (clientInfo != null)
-        {
-            if (!string.IsNullOrWhiteSpace(clientInfo.Name))
-            {
-                activity.SetTag(TagName.ClientName, clientInfo.Name);
-            }
-            if (!string.IsNullOrWhiteSpace(clientInfo.Version))
-            {
-                activity.SetTag(TagName.ClientVersion, clientInfo.Version);
-            }
-        }
+        var clientName = !string.IsNullOrWhiteSpace(clientInfo?.Name) ? clientInfo.Name : null;
+        var clientVersion = !string.IsNullOrWhiteSpace(clientInfo?.Version) ? clientInfo.Version : null;
 
         if (requestParams?.Meta != null &&
             requestParams.Meta.TryGetPropertyValue(McpHelper.ClientInfoMetaKey, out var node) &&
@@ -141,16 +130,19 @@ internal class TelemetryService : ITelemetryService
                 nameValue.TryGetValue<string>(out var nameString) &&
                 !string.IsNullOrWhiteSpace(nameString))
             {
-                activity.SetTag(TagName.ClientName, nameString);
+                clientName = nameString;
             }
             if (requestClientInfo.TryGetPropertyValue(McpHelper.ClientInfoVersionKey, out var versionNode) &&
                 versionNode is JsonValue versionValue &&
                 versionValue.TryGetValue<string>(out var versionString) &&
                 !string.IsNullOrWhiteSpace(versionString))
             {
-                activity.SetTag(TagName.ClientVersion, versionString);
+                clientVersion = versionString;
             }
         }
+
+        activity.SetTag(TagName.ClientName, clientName ?? TagConstants.Unknown);
+        activity.SetTag(TagName.ClientVersion, clientVersion ?? TagConstants.Unknown);
     }
 
     public void Dispose()

@@ -1,3 +1,3 @@
 changes:
   - section: "Bugs Fixed"
-    description: "Client name telemetry now records `<Unknown>` when client identity is unavailable, including direct CLI tool execution, instead of omitting the tag."
+    description: "Client name and version telemetry now record `<Unknown>` when client identity is unavailable, including direct CLI tool execution, instead of omitting the tags."

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Plugin execution telemetry now records the canonical client name, falling back to the client type or `<Unknown>` when needed."
