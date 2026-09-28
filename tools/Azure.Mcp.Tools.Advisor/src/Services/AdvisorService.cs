@@ -162,7 +162,8 @@ public class AdvisorService(IAzureService azureService)
         if (prioritized)
         {
             // Rank by the recommendation type's metadata priority score; break ties on equal scores by business
-            // impact (High -> Medium -> Low), then keep each type's instances contiguous, then order by criticality
+            // impact (High -> Medium -> Low), then by type ID so each type's instances stay contiguous (priority
+            // scores are coarse and many types share the same score and impact), then order by criticality
             // within the type. Ordering runs before the projection so the metadata-only sort keys survive; missing
             // scores/impact sort last, and id is the final tiebreaker for a fully deterministic result.
             query += " | extend metadataImpactRank = case(" +
@@ -194,34 +195,28 @@ public class AdvisorService(IAzureService azureService)
         " metadataDescription = tostring(properties.detailedDescription)," +
         " metadataLearnMoreLink = tostring(properties.learnMoreLink)," +
         " metadataPotentialBenefits = tostring(properties.potentialBenefits)," +
-        " metadataRetirementDate = tostring(properties.sourceProperties.serviceRetirement.retirementDate)," +
-        " metadataRetirementFeatureName = tostring(properties.sourceProperties.serviceRetirement.retirementFeatureName)," +
         " metadataPriorityScore = todouble(properties.priorityScore)" +
         " ) on joinTypeId";
 
-    // Reapplies the field precedence the former client-side merge used, then rewrites properties in place.
+    // Metadata overrides type-level fields and then properties are rewritten in place (bag_merge keeps the
+    // left-most value for duplicate keys). extendedProperties never gains new keys: only an existing
+    // recommendationSubCategory is replaced. Personalized instances (those with a sourceSystem, e.g. Review or
+    // Assessment) carry instance-specific values, so they are returned unchanged without any metadata enrichment.
     private const string MetadataOverrideClause =
-        " | extend instanceLabel = tostring(properties.label), instanceSourceSystem = tostring(properties.sourceSystem)" +
-        " | extend mergedLabel = iff(isempty(instanceSourceSystem)," +
-        " iff(isnotempty(metadataLabel), metadataLabel, instanceLabel)," +
-        " iff(isnotempty(instanceLabel), instanceLabel, metadataLabel))" +
-        " | extend hasExtendedAdditions = isnotempty(metadataSubCategory) or isnotempty(metadataRetirementDate) or isnotempty(metadataRetirementFeatureName)" +
-        " | extend mergedExtendedProperties = bag_merge(" +
-        " iff(isnotempty(metadataSubCategory), pack('recommendationSubCategory', metadataSubCategory), dynamic({}))," +
-        " iff(isnotempty(metadataRetirementDate), pack('retirementDate', metadataRetirementDate), dynamic({}))," +
-        " iff(isnotempty(metadataRetirementFeatureName), pack('retirementFeatureName', metadataRetirementFeatureName), dynamic({}))," +
-        " coalesce(properties.extendedProperties, dynamic({})))" +
+        " | extend updateSubCategory = isnotempty(metadataSubCategory) and isnotnull(properties.extendedProperties.recommendationSubCategory)" +
         " | extend metadataOverrides = bag_merge(" +
         " iff(isnotempty(metadataCategory), pack('category', metadataCategory), dynamic({}))," +
         " iff(isnotempty(metadataImpact), pack('impact', metadataImpact), dynamic({}))," +
         " iff(isnotempty(metadataDescription), pack('description', metadataDescription), dynamic({}))," +
         " iff(isnotempty(metadataLearnMoreLink), pack('learnMoreLink', metadataLearnMoreLink), dynamic({}))," +
         " iff(isnotempty(metadataPotentialBenefits), pack('potentialBenefits', metadataPotentialBenefits), dynamic({}))," +
-        " iff(isnotempty(mergedLabel), pack('label', mergedLabel), dynamic({}))," +
+        " iff(isnotempty(metadataLabel), pack('label', metadataLabel), dynamic({}))," +
         " iff(isnull(properties.shortDescription) and isnotempty(metadataDisplayName)," +
         " pack('shortDescription', pack('problem', metadataDisplayName, 'solution', metadataDisplayName)), dynamic({}))," +
-        " iff(hasExtendedAdditions, pack('extendedProperties', mergedExtendedProperties), dynamic({})))" +
-        " | extend properties = bag_merge(metadataOverrides, properties)";
+        " iff(updateSubCategory, pack('extendedProperties'," +
+        " bag_merge(pack('recommendationSubCategory', metadataSubCategory), properties.extendedProperties)), dynamic({})))" +
+        " | extend properties = iff(isnotempty(tostring(properties.sourceSystem))," +
+        " properties, bag_merge(metadataOverrides, properties))";
 
     private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueryAsync(
         string query,

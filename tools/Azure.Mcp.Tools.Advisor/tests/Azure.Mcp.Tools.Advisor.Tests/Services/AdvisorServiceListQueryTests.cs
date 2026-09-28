@@ -47,8 +47,10 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("tostring(properties.language) =~ 'en'", query);
         Assert.Contains("on joinTypeId", query);
 
-        // Properties are rewritten in place with the metadata overrides.
-        Assert.Contains("extend properties = bag_merge(metadataOverrides, properties)", query);
+        // Properties are rewritten in place with the metadata overrides, except for personalized instances.
+        Assert.Contains(
+            "extend properties = iff(isnotempty(tostring(properties.sourceSystem)), properties, bag_merge(metadataOverrides, properties))",
+            query);
         Assert.Contains("| project id, name, type, properties", query);
         Assert.EndsWith("| limit 25", query);
 
@@ -72,20 +74,13 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("pack('description', metadataDescription)", query);
         Assert.Contains("pack('learnMoreLink', metadataLearnMoreLink)", query);
         Assert.Contains("pack('potentialBenefits', metadataPotentialBenefits)", query);
-        Assert.Contains("pack('label', mergedLabel)", query);
+        Assert.Contains("pack('label', metadataLabel)", query);
         Assert.Contains("pack('shortDescription', pack('problem', metadataDisplayName, 'solution', metadataDisplayName))", query);
-        Assert.Contains("pack('extendedProperties', mergedExtendedProperties)", query);
-        Assert.Contains("pack('recommendationSubCategory', metadataSubCategory)", query);
-        Assert.Contains("pack('retirementDate', metadataRetirementDate)", query);
-        Assert.Contains("pack('retirementFeatureName', metadataRetirementFeatureName)", query);
-        Assert.Contains(
-            "pack('retirementFeatureName', metadataRetirementFeatureName), dynamic({})), coalesce(properties.extendedProperties, dynamic({})))",
-            query);
         Assert.Contains("bag_merge(metadataOverrides, properties)", query);
     }
 
     [Fact]
-    public void BuildRecommendationListQuery_LabelPrefersInstanceWhenSourceSystemPresent()
+    public void BuildRecommendationListQuery_OnlyReplacesAnExistingSubCategoryInExtendedProperties()
     {
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
@@ -94,9 +89,35 @@ public class AdvisorServiceListQueryTests
             limit: 50,
             language: Language);
 
-        Assert.Contains("iff(isempty(instanceSourceSystem)", query);
-        Assert.Contains("iff(isnotempty(metadataLabel), metadataLabel, instanceLabel)", query);
-        Assert.Contains("iff(isnotempty(instanceLabel), instanceLabel, metadataLabel)", query);
+        // extendedProperties is only rewritten when the instance already has recommendationSubCategory,
+        // so no new keys are ever added to it.
+        Assert.Contains(
+            "| extend updateSubCategory = isnotempty(metadataSubCategory) and isnotnull(properties.extendedProperties.recommendationSubCategory)",
+            query);
+        Assert.Contains(
+            "iff(updateSubCategory, pack('extendedProperties', bag_merge(pack('recommendationSubCategory', metadataSubCategory), properties.extendedProperties)), dynamic({}))",
+            query);
+        Assert.DoesNotContain("retirementDate", query);
+        Assert.DoesNotContain("retirementFeatureName", query);
+        Assert.DoesNotContain("coalesce(properties.extendedProperties", query);
+    }
+
+    [Fact]
+    public void BuildRecommendationListQuery_PersonalizedInstancesAreReturnedUnchanged()
+    {
+        var query = AdvisorService.BuildRecommendationListQuery(
+            SubscriptionScope(),
+            predicates: "strlen(name) == 64",
+            prioritized: false,
+            limit: 50,
+            language: Language);
+
+        // Instances with a sourceSystem (e.g. Review, Assessment) keep their original properties with no metadata
+        // applied, including fields the instance leaves empty.
+        Assert.Contains(
+            "| extend properties = iff(isnotempty(tostring(properties.sourceSystem)), properties, bag_merge(metadataOverrides, properties))",
+            query);
+        Assert.DoesNotContain("preferInstanceValues", query);
     }
 
     [Fact]

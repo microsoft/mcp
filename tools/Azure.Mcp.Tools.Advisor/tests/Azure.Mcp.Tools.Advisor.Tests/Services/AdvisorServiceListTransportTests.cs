@@ -92,7 +92,9 @@ public sealed class AdvisorServiceListTransportTests
         Assert.Contains(
             "tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'",
             query);
-        Assert.Contains("extend properties = bag_merge(metadataOverrides, properties)", query);
+        Assert.Contains(
+            "extend properties = iff(isnotempty(tostring(properties.sourceSystem)), properties, bag_merge(metadataOverrides, properties))",
+            query);
         Assert.Contains(
             "order by metadataPriorityScore desc, metadataImpactRank asc, joinTypeId asc, todouble(properties.criticalityScore) desc, id asc",
             query);
