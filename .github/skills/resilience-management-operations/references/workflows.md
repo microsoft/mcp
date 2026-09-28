@@ -45,13 +45,6 @@ The mention of a service group supplies context for resolving a usage plan; it d
 
 This workflow exists for the goal-template contract exposed by the current SDK. Migrate it to inline goal definitions when the SDK supports the replacement API.
 
-## Update a Goal Assignment
-
-1. Get the assignment with `mcp_azure_mcp_ser_resilience_goal_assignment_get` and confirm the exact service group and assignment name.
-2. Confirm the full Azure resource IDs to use for the service-level indicator and service-level objective. The resources must belong to the assignment's service-group scope.
-3. Call `mcp_azure_mcp_ser_resilience_goal_assignment_update` with the existing assignment name and both resource IDs. This operation does not create a missing assignment or change its goal template.
-4. Get the exact assignment again and verify its goal template ID and provisioning state.
-
 ## Delete a Goal Assignment
 
 1. Get the assignment with `mcp_azure_mcp_ser_resilience_goal_assignment_get` and confirm the exact service group and assignment name.

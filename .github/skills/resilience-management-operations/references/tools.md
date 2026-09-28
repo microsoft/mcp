@@ -24,7 +24,6 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 | `mcp_azure_mcp_ser_resilience_goal_template_get` | List goal templates or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_assignment_create` | Create or update a goal assignment from a legacy goal template supported by the current SDK | **`service-group`**, **`goal-assignment`**, **`goal-template`**, `tenant?` |
-| `mcp_azure_mcp_ser_resilience_goal_assignment_update` | Update an existing goal assignment with a service-level indicator and objective resource mapping | **`service-group`**, **`goal-assignment`**, **`service-level-indicator-resource-id`**, **`service-level-objective-resource-id`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_assignment_delete` | Delete a goal assignment; returns whether the assignment existed | **`service-group`**, **`goal-assignment`**, `tenant?` |
 | `mcp_azure_mcp_ser_resilience_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
 

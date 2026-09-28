@@ -49,7 +49,6 @@ $workflowServiceGroupName = $DeploymentOutputs['WORKFLOWSERVICEGROUPNAME']
 $goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $goalAssignmentDeleteName = $DeploymentOutputs['GOALASSIGNMENTDELETENAME']
-$goalAssignmentUpdateName = $DeploymentOutputs['GOALASSIGNMENTUPDATENAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $workflowRecoveryPlanName = $DeploymentOutputs['WORKFLOWRECOVERYPLANNAME']
 $drillName = $DeploymentOutputs['DRILLNAME']
@@ -462,15 +461,6 @@ elseif ($existingGoalAssignment.StatusCode -eq 200) {
 else {
     throw "GET $goalAssignmentPath failed with status $($existingGoalAssignment.StatusCode): $($existingGoalAssignment.Content)"
 }
-
-$goalAssignmentUpdatePath = "$goalAssignmentLifecycleServiceGroupResilienceBase/goalAssignments/$goalAssignmentUpdateName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $goalAssignmentUpdatePath -Body @{
-    properties = @{
-        goalAssignmentType = 'Resiliency'
-        goalTemplateId     = $goalAssignmentLifecycleTemplateId
-    }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $goalAssignmentUpdatePath -WaitForAuthorization
 
 # 6) Create or validate the recoveryplan on the service group. Do not PUT an
 # existing plan because recovery group IDs are referenced by its recovery resources.
