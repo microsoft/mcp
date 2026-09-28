@@ -119,7 +119,12 @@ public class McpRuntimeTests
 
         var mockToolLoader = Substitute.For<IToolLoader>();
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
+            .Returns(_ =>
+            {
+                activity.AssertTagDoesNotExist(TagName.ToolName);
+                activity.AssertTagDoesNotExist(TagName.ToolArea);
+                return expectedResult;
+            });
 
         var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
@@ -132,7 +137,8 @@ public class McpRuntimeTests
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
-        activity.AssertTagEquals(TagName.ToolName, toolName);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolArea);
 
         // The runtime may or may not surface telemetry tags on the Activity depending on the
         // telemetry implementation. Assert the request and response contents instead.
@@ -245,7 +251,8 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>(), Arg.Any<RequestParams?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
-        activity.AssertTagEquals(TagName.ToolName, toolName);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolArea);
         activity.AssertTagEquals(TagName.ExceptionType, typeof(Exception).FullName!);
         activity.AssertTagDoesNotExist(AzureTagName.SubscriptionGuid);
     }
@@ -439,7 +446,12 @@ public class McpRuntimeTests
         });
         var mockToolLoader = Substitute.For<IToolLoader>();
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
+            .Returns(_ =>
+            {
+                activity.SetTag(TagName.ToolName, toolName)
+                    .SetTag(TagName.ToolArea, "test");
+                return expectedResult;
+            });
 
         var runtime = new McpRuntime(mockToolLoader, mockTelemetry);
 
@@ -450,6 +462,7 @@ public class McpRuntimeTests
         Assert.Equal(expectedResult, result);
         activity.AssertTagEquals(AzureTagName.SubscriptionGuid, testSubscriptionId);
         activity.AssertTagEquals(TagName.ToolName, toolName);
+        activity.AssertTagEquals(TagName.ToolArea, "test");
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
     }
 

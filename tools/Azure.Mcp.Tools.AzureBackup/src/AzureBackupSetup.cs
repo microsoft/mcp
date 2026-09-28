@@ -84,12 +84,10 @@ public sealed class AzureBackupSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var azureBackup = new CommandGroup(Name,
-            """
-            Azure Backup operations - Unified commands to manage backup across Recovery Services vaults (RSV)
-            and Backup vaults (DPP/Data Protection). Supports vault management, protected item operations,
-            policy management, job monitoring, recovery point browsing, governance, and disaster recovery.
-            Use --vault-type to specify vault type or let the system auto-detect.
-            """,
+            "Azure Backup operations - Unified commands to manage backup across Recovery Services vaults (RSV) " +
+            "and Backup vaults (DPP/Data Protection). Supports vault management, protected item operations, " +
+            "policy management, job monitoring, recovery point browsing, governance, and disaster recovery. " +
+            "Use --vault-type to specify vault type or let the system auto-detect.",
             Title);
 
         var vault = new CommandGroup("vault", "Backup vault operations - Get vault details or list all vaults, create, and update vaults.");

@@ -1,6 +1,14 @@
 # Release History
 
 
+
+## 3.0.47 (2026-09-24) (pre-release)
+
+### Changed
+
+#### Dependency Updates
+- Updated the .NET SDK to version 10.0.401. [[#3751](https://github.com/microsoft/mcp/pull/3751)]
+
 ## 3.0.46 (2026-09-22) (pre-release)
 
 ### Added
