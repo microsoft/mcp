@@ -1,6 +1,6 @@
 ---
 name: resilience-management-operations
-description: 'Operate all Azure Resilience Management MCP tools for usage plans, enrollments, goals, drills, drill resources and runs, recovery plans, recovery resources, recovery jobs, failover, reprotect, readiness, validation, retry, resume, and finalize. Use when: list/get/create/update/delete resilience resources; configure, validate, run, resync, or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs; implement, add, test, or record a Resilience Management tool.'
+description: 'Operate all Azure Resilience Management MCP tools and automate new tool delivery from API selection through implementation, live testing, recording, PR creation, review fixes, and merge-conflict resolution. Use when: list/get/create/update/delete resilience resources; configure, validate, run, resync, or end drills; include/exclude recovery resources; check readiness; validate or execute recovery operations; monitor, retry, or resume recovery jobs; implement, add, test, record, or deliver a Resilience Management tool.'
 argument-hint: 'Describe the resilience operation and provide known service group, plan, drill, job, subscription, or resource identifiers'
 user-invocable: true
 disable-model-invocation: false
@@ -37,6 +37,7 @@ For operational Azure Resilience Management requests, use the Azure Resilience M
 
 - Usage plan or enrollment → `mcp_azure_mcp_ser_resiliency_usageplan_*`
 - Goal template, assignment, or member → `mcp_azure_mcp_ser_resiliency_goal_*`
+- Goal capacity recommendations, resource rediscovery, or goal participation/attestation updates → `mcp_azure_mcp_ser_resiliency_goal_assignment_recommend-capacity`, `refresh-resources`, or `update-resources`, respectively. These are asynchronous actions, not assignment definition updates.
 - Drill definition, execution, run, or target → `mcp_azure_mcp_ser_resiliency_drill_*`
 - Recovery plan lifecycle or recovery operation → `mcp_azure_mcp_ser_resiliency_recoveryplan_*`
 - Recovery plan membership/protection → `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_*`
@@ -105,6 +106,14 @@ For the generic authoring lifecycle, follow [add-azure-mcp-tools](../add-azure-m
 Every new or behaviorally changed Resilience Management tool must have at least two distinct E2E evaluation prompts. For every prompt, the expected tool must rank `#1` with a score of at least `0.6`. This is an intentional Resilience-specific override of the repository-wide top-three and `0.4` baseline.
 
 Tests for every new or behaviorally changed Resilience Management tool must always cover both positive and negative scenarios.
+
+### Automated delivery workflow
+
+When the user asks to create or deliver a Resilience Management tool, own the workflow through human merge. The developer should need to name the API, provide the approved test subscription and reusable resources, clarify genuinely ambiguous contracts, approve publication, review human-requested changes, and merge the approved PR. Follow the resumable state machine in [development.md](./references/development.md#automated-delivery-state-machine).
+
+At every invocation or resume, and before every push, fetch the PR target branch and inspect mergeability. Resolve unambiguous conflicts, rerun affected validation, and update the existing PR branch. Never discard either side merely to make the conflict disappear. If preserving both changes requires a product or API decision, present the conflicting intents and ask the developer.
+
+The skill cannot run independently after the agent session ends. In resume-on-request mode, persist progress in the PR and re-check conflicts, checks, and comments whenever the workflow is invoked again. Add the required delivery manifest marker to the PR body so `.github/workflows/resilience-merge-conflict-monitor.yml` can detect conflicts every three hours; resume the skill to resolve any conflict it reports.
 
 ## Result Format
 

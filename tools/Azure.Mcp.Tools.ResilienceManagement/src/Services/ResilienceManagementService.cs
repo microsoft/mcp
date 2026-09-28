@@ -21,6 +21,72 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan UsagePlanOperationTimeout = TimeSpan.FromMinutes(10);
 
+    public async Task<GoalAssignmentOperationResult> RecommendGoalAssignmentCapacityAsync(string serviceGroup, string goalAssignment, IReadOnlyList<string>? resourceIds = null, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var client = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        var resource = client.GetGoalAssignmentResource(GoalAssignmentResource.CreateResourceIdentifier(serviceGroup, goalAssignment));
+        var content = new RecommendCapacityContent(resourceIds?.Select(id => new ResourceIdentifier(id)) ?? []);
+        var operation = await resource.RecommendCapacityAsync(WaitUntil.Started, content, cancellationToken);
+        return MapGoalAssignmentOperation(operation.GetRawResponse(), operation.HasCompleted);
+    }
+
+    public async Task<GoalAssignmentOperationResult> RefreshGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        var client = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        var resource = client.GetGoalAssignmentResource(GoalAssignmentResource.CreateResourceIdentifier(serviceGroup, goalAssignment));
+        var operation = await resource.RefreshGoalResourcesAsync(WaitUntil.Started, cancellationToken);
+        return MapGoalAssignmentOperation(operation.GetRawResponse(), operation.HasCompleted);
+    }
+
+    public async Task<GoalAssignmentOperationResult> UpdateGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string resources, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        using var document = JsonDocument.Parse(resources);
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("resources");
+            document.RootElement.WriteTo(writer);
+            writer.WriteEndObject();
+        }
+        var payload = BinaryData.FromBytes(stream.ToArray());
+        var content = ModelReaderWriter.Read<UpdateGoalResourceContent>(payload, ModelReaderWriterOptions.Json, AzureResourceManagerResilienceManagementContext.Default)!;
+        var options = new ArmClientOptions();
+        options.AddPolicy(new GoalResourceUpdateRequestPolicy(payload), HttpPipelinePosition.PerCall);
+        var client = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: options, cancellationToken: cancellationToken);
+        var resource = client.GetGoalAssignmentResource(GoalAssignmentResource.CreateResourceIdentifier(serviceGroup, goalAssignment));
+        var operation = await resource.UpdateGoalResourcesAsync(WaitUntil.Started, content, cancellationToken);
+        return MapGoalAssignmentOperation(operation.GetRawResponse(), operation.HasCompleted);
+    }
+
+    internal static GoalAssignmentOperationResult MapGoalAssignmentOperation(Response response, bool hasCompleted)
+    {
+        // Unlike Drills, Goals has no caller operation-id SDK argument. ARM supplies its LRO identifier.
+        // Never expose ArmOperation.Id or a signed polling URL, and never invent a correlation ID.
+        string? operationId = null;
+        foreach (var header in new[] { "operation-id", "Azure-AsyncOperation", "Location" })
+        {
+            if (!response.Headers.TryGetValue(header, out var value))
+            {
+                continue;
+            }
+            if (Uri.TryCreate(value, UriKind.Absolute, out var uri))
+            {
+                value = uri.AbsolutePath.TrimEnd('/').Split('/')[^1];
+                // ProviderHub appends a routing hash to its operation GUID, separated by '*'.
+                value = value.Split('*')[0];
+            }
+            if (Guid.TryParse(value, out _))
+            {
+                operationId = value;
+                break;
+            }
+        }
+        // A 202 without usable LRO headers can look completed to the SDK; that is still only acceptance.
+        var completed = response.Status != 202 && hasCompleted;
+        return new(operationId, completed ? "Completed" : "Accepted", completed);
+    }
+
     // The Drills backend reads the per-operation id from the operationId query parameter, but the generated SDK only
     // emits the operation-id header. Install a policy that mirrors the header into the query for long-running operations.
     private static ArmClientOptions CreateArmClientOptionsWithOperationIdPolicy()

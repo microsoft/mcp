@@ -28,6 +28,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(GoalAssignmentInfo))]
 [JsonSerializable(typeof(GoalAssignmentInfoProperties))]
 [JsonSerializable(typeof(GoalAssignmentInfoSystemData))]
+[JsonSerializable(typeof(GoalAssignmentOperationResult))]
 [JsonSerializable(typeof(GoalResourceGetCommand.GoalResourceGetCommandResult))]
 [JsonSerializable(typeof(GoalResourceInfo))]
 [JsonSerializable(typeof(GoalResourceInfoProperties))]

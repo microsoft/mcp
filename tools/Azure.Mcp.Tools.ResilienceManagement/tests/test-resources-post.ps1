@@ -375,6 +375,29 @@ Invoke-ResilienceRestPut -Path $workflowEnrollmentPath -Body @{
 Wait-ResilienceProvisioning -Path $workflowEnrollmentPath
 
 # 4) Create a goal template on the service group.
+# Resource-action tests use a separate assignment so participation updates cannot affect read-only fixtures.
+$goalResourceTemplateName = $DeploymentOutputs['GOALRESOURCETEMPLATENAME']
+$goalResourceAssignmentName = $DeploymentOutputs['GOALRESOURCEASSIGNMENTNAME']
+$goalResourceTemplateId = "$serviceGroupResilienceBase/goalTemplates/$goalResourceTemplateName"
+Invoke-ResilienceRestPut -Path "$goalResourceTemplateId`?api-version=$resilienceApiVersion" -Body @{
+    properties = @{
+        goalType = 'Resiliency'
+        requireHighAvailability = 'Required'
+        requireDisasterRecovery = 'NotRequired'
+        regionalRecoveryPointObjective = 'PT15M'
+        regionalRecoveryTimeObjective = 'PT30M'
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path "$goalResourceTemplateId`?api-version=$resilienceApiVersion" -WaitForAuthorization
+$goalResourceAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalResourceAssignmentName`?api-version=$resilienceApiVersion"
+Invoke-ResilienceRestPut -Path $goalResourceAssignmentPath -Body @{
+    properties = @{
+        goalAssignmentType = 'Resiliency'
+        goalTemplateId = $goalResourceTemplateId
+    }
+} | Out-Null
+Wait-ResilienceProvisioning -Path $goalResourceAssignmentPath -WaitForAuthorization
+
 $goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
 Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
     properties = @{

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // cspell:ignore LIFECYCLESERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME MARKCOMPLETESERVICEGROUP MARKCOMPLETEDRILLRUN MARKCOMPLETEDRILL WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
+// cspell:ignore GOALRESOURCEASSIGNMENTNAME
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -117,6 +118,162 @@ public class ResilienceManagementCommandTests(
 
         var usagePlan = result.AssertProperty("usagePlan");
         Assert.False(string.IsNullOrEmpty(usagePlan.AssertProperty("name").GetString()));
+    }
+
+    [Fact]
+    public async Task Should_run_goal_assignment_resource_lifecycle()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalResourceServiceGroup", "SERVICEGROUPNAME");
+        var assignment = RegisterOrRetrieveDeploymentOutputVariable("goalResourceAssignment", "GOALRESOURCEASSIGNMENTNAME");
+        var arguments = new Dictionary<string, object?>
+        {
+            ["service-group"] = serviceGroup,
+            ["goal-assignment"] = assignment,
+            ["tenant"] = Settings.TenantId
+        };
+        var refresh = await CallToolAsync("resiliency_goal_assignment_refresh-resources", new(arguments));
+        AssertGoalOperationAccepted(refresh);
+
+        JsonElement members = default;
+        for (var attempt = 0; attempt < 40; attempt++)
+        {
+            var listed = await CallToolAsync("resiliency_goal_resource_get", new(arguments));
+            members = listed.AssertProperty("goalResources");
+            if (members.GetArrayLength() > 0)
+            {
+                break;
+            }
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+        Assert.NotEmpty(members.EnumerateArray());
+        JsonElement resource = default;
+        Dictionary<string, object?> getArguments = new(arguments);
+        foreach (var member in members.EnumerateArray())
+        {
+            // The generic name sanitizer changes "name", while the ARM id retains the request-matching GUID.
+            getArguments["name"] = member.AssertProperty("id").GetString()!.Split('/')[^1];
+            var candidate = (await CallToolAsync("resiliency_goal_resource_get", new(getArguments))).AssertProperty("goalResource");
+            if (candidate.AssertProperty("properties").AssertProperty("resourceArmId").GetString()!
+                .Contains("/Microsoft.Storage/storageAccounts/", StringComparison.OrdinalIgnoreCase))
+            {
+                resource = candidate;
+                break;
+            }
+        }
+        Assert.Equal(JsonValueKind.Object, resource.ValueKind);
+        var properties = resource.AssertProperty("properties");
+        // Derive IDs from the recorded GET so playback uses sanitized ARM paths, not raw IDs in Variables.
+        var id = resource.AssertProperty("id").GetString()!;
+        var armId = properties.AssertProperty("resourceArmId").GetString()!;
+        var originalParticipation = properties.AssertProperty("highAvailabilityGoalParticipation").GetString()!;
+        var originalAttestation = properties.AssertProperty("highAvailabilityAttestationStatus").GetString()!;
+        var changedParticipation = originalParticipation == "Included" ? "Excluded" : "Included";
+
+        string Payload(string participation)
+        {
+            var updateProperties = new JsonObject
+            {
+                ["resourceArmId"] = armId,
+                ["highAvailabilityGoalParticipation"] = participation,
+                ["highAvailabilityAttestationStatus"] = originalAttestation
+            };
+            foreach (var property in new[] { "disasterRecoveryGoalParticipation", "disasterRecoveryAttestationStatus" })
+            {
+                if (properties.TryGetProperty(property, out var value) && !string.IsNullOrEmpty(value.GetString()))
+                {
+                    updateProperties[property] = value.GetString();
+                }
+            }
+            return new JsonArray(new JsonObject { ["id"] = id, ["properties"] = updateProperties }).ToJsonString();
+        }
+
+        try
+        {
+            var updateArguments = new Dictionary<string, object?>(arguments) { ["resources"] = Payload(changedParticipation) };
+            AssertGoalOperationAccepted(await CallGoalActionAfterConflictAsync("resiliency_goal_assignment_update-resources", updateArguments));
+            await WaitForGoalParticipationAsync(getArguments, changedParticipation);
+        }
+        finally
+        {
+            var restoreArguments = new Dictionary<string, object?>(arguments) { ["resources"] = Payload(originalParticipation) };
+            AssertGoalOperationAccepted(await CallGoalActionAfterConflictAsync("resiliency_goal_assignment_update-resources", restoreArguments));
+            await WaitForGoalParticipationAsync(getArguments, originalParticipation);
+        }
+
+        var capacityArguments = new Dictionary<string, object?>(arguments) { ["resource-ids"] = new[] { armId } };
+        AssertGoalOperationAccepted(await CallGoalActionAfterConflictAsync("resiliency_goal_assignment_recommend-capacity", capacityArguments));
+    }
+
+    [Theory]
+    [InlineData("resiliency_goal_assignment_recommend-capacity")]
+    [InlineData("resiliency_goal_assignment_refresh-resources")]
+    [InlineData("resiliency_goal_assignment_update-resources")]
+    public async Task Should_reject_missing_goal_assignment_resource_action(string tool)
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalResourceServiceGroup", "SERVICEGROUPNAME");
+        var missing = RegisterOrRetrieveVariable("missingGoalAssignment", "missing-" + Guid.NewGuid().ToString("N")[..12]);
+        var arguments = new Dictionary<string, object?>
+        {
+            ["service-group"] = serviceGroup,
+            ["goal-assignment"] = missing,
+            ["tenant"] = Settings.TenantId
+        };
+        if (tool.EndsWith("update-resources", StringComparison.Ordinal))
+        {
+            var resource = new JsonObject
+            {
+                ["id"] = $"/providers/Microsoft.Management/serviceGroups/{serviceGroup}/providers/Microsoft.AzureResilienceManagement/goalAssignments/{missing}/goalResources/11111111-1111-1111-1111-111111111111",
+                ["properties"] = new JsonObject
+                {
+                    ["resourceArmId"] = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/missing/providers/Microsoft.Storage/storageAccounts/missing",
+                    ["highAvailabilityGoalParticipation"] = "Excluded",
+                    ["highAvailabilityAttestationStatus"] = "NotAttested"
+                }
+            };
+            arguments["resources"] = new JsonArray(resource).ToJsonString();
+        }
+        var result = await CallToolAsync(tool, new(arguments), resultProcessor: response => response);
+        Assert.Equal(404, result.AssertProperty("status").GetInt32());
+        Assert.NotNull(result);
+        Assert.DoesNotContain("stackTrace", result.Value.GetRawText(), StringComparison.Ordinal);
+    }
+
+    private static void AssertGoalOperationAccepted(JsonElement? result)
+    {
+        Assert.Equal("Accepted", result.AssertProperty("status").GetString());
+        Assert.False(result.AssertProperty("hasCompleted").GetBoolean());
+        Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+    }
+
+    private async Task<JsonElement> CallGoalActionAfterConflictAsync(string tool, Dictionary<string, object?> arguments)
+    {
+        for (var attempt = 0; attempt < 40; attempt++)
+        {
+            var result = await CallToolAsync(tool, new(arguments), resultProcessor: response => response);
+            Assert.NotNull(result);
+            var status = result.Value.GetProperty("status").GetInt32();
+            if (status != 409)
+            {
+                Assert.Equal(200, status);
+                return result.Value.GetProperty("results");
+            }
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+        throw new InvalidOperationException("Goal assignment remained busy for ten minutes.");
+    }
+
+    private async Task WaitForGoalParticipationAsync(Dictionary<string, object?> arguments, string participation)
+    {
+        for (var attempt = 0; attempt < 40; attempt++)
+        {
+            var result = await CallToolAsync("resiliency_goal_resource_get", new(arguments));
+            if (result.AssertProperty("goalResource").AssertProperty("properties").AssertProperty("highAvailabilityGoalParticipation").GetString() == participation)
+            {
+                return;
+            }
+            await Task.Delay(PollInterval(15000), TestContext.Current.CancellationToken);
+        }
+        throw new InvalidOperationException("Goal participation did not persist within ten minutes.");
     }
 
     [Fact]

@@ -1,5 +1,32 @@
 # Resilience Payload Reference
 
+## Goal assignment resource updates
+
+`resiliency_goal_assignment_update-resources` accepts `resources` as a non-empty JSON **array**, limited to 1 MiB. It targets already discovered resources, not arbitrary additions or service group membership.
+
+```json
+[
+  {
+    "id": "/providers/Microsoft.Management/serviceGroups/my-group/providers/Microsoft.AzureResilienceManagement/goalAssignments/my-assignment/goalResources/11111111-1111-1111-1111-111111111111",
+    "properties": {
+      "resourceArmId": "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm",
+      "highAvailabilityGoalParticipation": "Excluded",
+      "highAvailabilityAttestationStatus": "NotAttested"
+    }
+  }
+]
+```
+
+Each entry requires `id`, `properties.resourceArmId`, `highAvailabilityGoalParticipation` (`Included` or `Excluded`), and `highAvailabilityAttestationStatus` (`NotAttested` or `ManuallyAttested`). IDs must be unique; goal resource IDs must belong to the selected assignment and have a GUID leaf. Copy both IDs from goal resource get; do not calculate them or substitute one for the other.
+
+Optional properties:
+
+- `disasterRecoveryGoalParticipation`: `Included` or `Excluded`.
+- `disasterRecoveryAttestationStatus`: `NotAttested` or `ManuallyAttested`.
+- `userConfirmationForHighAvailability`: array of objects requiring `solutionDisplayName` (`ZonePinnedVmWithZrsDisk` or `VmInMultiZoneVmss`) and `confirmationStatus` (`ApprovedByUser`, `ApprovalPending`, `ApprovalNotNeeded`, `RejectedByUser`); optional `reasonForRequestingConfirmation` is `ZonePinnedZrsDataDisksConditional` or `VmInMultiZoneScaleSetStatelessOnly`. An empty array clears confirmations; omission preserves them.
+
+This is **per-resource replacement, not PATCH**. Read current properties first and include all desired disaster recovery fields; omitted DR fields can be cleared. High-availability participation and attestation are explicit required choices. Only the listed writable fields are accepted, with exact casing. Exclusion reasons and memberships are system-managed by the Goals workflow, even though the older SDK exposes reason setters. Do not send them, or read-only `name`, `type`, `systemData`, and `provisioningState`. This tool uses the installed `2026-04-01-preview` SDK's flat HA/DR contract, not the newer nested `zonalResiliency` contract. Do not send `includeResources`/`excludeResources` or boolean exclusion flags from other resource APIs.
+
 <!-- cspell:words reprotect reprotection runbook -->
 
 Use JSON strings only for parameters whose tool schema requires JSON. Do not serialize ordinary scalar or array parameters manually.
