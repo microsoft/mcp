@@ -1,5 +1,11 @@
 {
   "skills": {
+    "azure-cost": [
+      "cost-analysis",
+      "cost-estimation",
+      "cost-governance",
+      "cost-optimization"
+    ],
     "azure-kusto-graph-skills": [
       "azure-kusto-graph",
       "azure-kusto-irql",
@@ -19,7 +25,6 @@
       "azure-cloud-migrate",
       "azure-compliance",
       "azure-compute",
-      "azure-cost",
       "azure-deploy",
       "azure-diagnostics",
       "azure-enterprise-infra-planner",
@@ -34,6 +39,7 @@
       "azure-storage",
       "azure-upgrade",
       "azure-validate",
+      "discover-azure-skills",
       "entra-agent-id",
       "entra-app-registration",
       "microsoft-foundry",

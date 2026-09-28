@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement;
 
 public class ResilienceManagementSetup : IAreaSetup
 {
-    public string Name => "resilience";
+    public string Name => "resiliency";
 
     public string Title => "Azure Resilience Management";
 
@@ -78,12 +78,10 @@ public class ResilienceManagementSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var resilienceManagement = new CommandGroup(Name,
-            """
-            Azure Resilience Management operations - Commands for working with resilience goals and goal
-            templates for Azure service groups. Use this tool to list the resilience goal templates available
-            for a service group, including goal type, provisioning state, recovery point and time objectives,
-            and high availability and disaster recovery requirements.
-            """,
+            "Azure Resilience Management operations - Commands for working with resilience goals and goal " +
+            "templates for Azure service groups. Use this tool to list the resilience goal templates available " +
+            "for a service group, including goal type, provisioning state, recovery point and time objectives, " +
+            "and high availability and disaster recovery requirements.",
             Title);
 
         // Create goal subgroup

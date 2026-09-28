@@ -11,10 +11,10 @@ namespace Azure.Mcp.Tools.Adme.Options.Storage;
 /// </summary>
 public sealed class RecordGetOptions
 {
-    [Option(Description = "The fully-qualified record id '{partition}:{object-type}:{unique-id}', for example 'opendes:well:W-99'. Pass it verbatim as returned by 'azmcp adme storage record list'.")]
+    [Option(Description = "The fully-qualified record id '{partition}:{object-type}:{unique-id}', for example 'opendes:well:W-99'. Pass it verbatim as returned by the record list operation.")]
     public required string Id { get; set; }
 
-    [Option(Description = "The numeric record version to retrieve, for example 1704779151123456. Omit to get the latest version; use 'azmcp adme storage record version list' to discover valid versions.")]
+    [Option(Description = "The numeric record version to retrieve, for example 1704779151123456. Omit to get the latest version; use the record version list operation to discover valid versions.")]
     public long? Version { get; set; }
 
     [Option(Description = "Dotted-path fields to return from the requested record instead of the whole record, for example 'data.WellID' and 'data.Name'. Omit to return the full record.")]

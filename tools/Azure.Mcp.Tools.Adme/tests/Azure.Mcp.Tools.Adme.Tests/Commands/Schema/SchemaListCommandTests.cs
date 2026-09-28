@@ -213,8 +213,12 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
     [Theory]
     [InlineData("--latest-version --schema-version-minor 0")]
     [InlineData("--latest-version --schema-version-major 1 --schema-version-patch 0")]
+    [InlineData("--schema-version-major -1")]
+    [InlineData("--schema-version-minor -1")]
+    [InlineData("--schema-version-patch -1")]
     [InlineData("--offset -1")]
     [InlineData("--limit -1")]
+    [InlineData("--limit 0")]
     public async Task Execute_WithApiRejectedOptions_DoesNotCallService(string invalidArguments)
     {
         var response = await ExecuteCommandAsync(

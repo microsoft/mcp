@@ -1,0 +1,3 @@
+changes:
+  - section: Other Changes
+    description: Added endpoint validation for Confidential Ledger data-plane requests to confirm the ledger endpoint matches the expected service domain for the target cloud.
