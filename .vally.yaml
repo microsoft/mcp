@@ -3,8 +3,8 @@ paths:
   evals: ["tools/Azure.Mcp.Tools.*/tests/", ".work/vally/evals/*/"]
   results: ".work/vally/vally-results/"
 
-environments:
-  linux:
+agent_environment:
+  azmcp_linux:
     mcpServers:
       azmcp:
         type: stdio
@@ -13,7 +13,7 @@ environments:
         timeout: "2m"
         env:
           AZURE_MCP_COLLECT_TELEMETRY: 'false'
-  windows:
+  azmcp_windows:
     mcpServers:
       azmcp:
         type: stdio

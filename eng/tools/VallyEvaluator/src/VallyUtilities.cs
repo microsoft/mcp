@@ -10,7 +10,10 @@ namespace VallyEvaluator;
 
 internal class VallyUtilities
 {
-    private const string EnvironmentPlaceholder = "${ENVIRONMENT}";
+    /// <summary>
+    /// Parameter value is replaced during invocation.
+    /// </summary>
+    private const string EnvironmentPlaceholder = "${AGENT_ENVIRONMENT}";
 
     internal static readonly ISerializer Serializer =
         new StaticSerializerBuilder(new VallyYamlStaticContext())
