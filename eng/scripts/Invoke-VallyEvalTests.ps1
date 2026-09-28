@@ -28,7 +28,7 @@
     Optional path for Vally output. Defaults to `<repo-root>/.work/vally/vally-results`.
 
 .PARAMETER NumberOfRuns
-    The number of times to run each eval spec. Defaults to 1.
+    The number of times to run each eval spec. Defaults to 3.
 
 .PARAMETER IsDebug
     When specified, adds `--verbose` to the `vally eval` invocation for
@@ -50,7 +50,7 @@ param(
     [string]$BuildInfoPath,
     [string]$EvalsDirectory,
     [string]$OutputPath,
-    [int]$NumberOfRuns = 1,
+    [int]$NumberOfRuns = 3,
     [switch]$IsDebug
 )
 
@@ -100,9 +100,9 @@ if (!(Test-Path $BuildInfoPath)) {
 
 $environment = "";
 if ($IsWindows) {
-    $environment = "windows"
+    $environment = "azmcp_windows"
 } elseif ($IsLinux) {
-    $environment = "linux"
+    $environment = "azmcp_linux"
 } else {
     Write-Error "Unsupported platform. This script only supports Windows, Linux, and macOS."
     exit 1
@@ -134,7 +134,7 @@ if ([string]::IsNullOrEmpty($commandArg)) {
     exit 0
 }
 
-$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns --param ENVIRONMENT=$environment"
+$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns --param AGENT_ENVIRONMENT=$environment"
 
 if ($IsDebug) {
     $expression += " --verbose"
