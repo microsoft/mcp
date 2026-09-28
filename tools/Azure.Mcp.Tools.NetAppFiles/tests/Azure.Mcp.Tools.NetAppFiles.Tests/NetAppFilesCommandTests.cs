@@ -18,7 +18,7 @@ public class NetAppFilesCommandTests(
     [Fact]
     public async Task AccountGet_ReturnsAccount()
     {
-        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
+        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         await CallToolAsync(
@@ -53,7 +53,7 @@ public class NetAppFilesCommandTests(
     [Fact]
     public async Task AccountCreate_ReturnsCreatedAccount()
     {
-        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
+        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         var result = await CallToolAsync(
@@ -78,7 +78,7 @@ public class NetAppFilesCommandTests(
     [Fact]
     public async Task AccountUpdate_ReturnsUpdatedAccount()
     {
-        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"testacct{DateTime.UtcNow:MMddHHmmss}");
+        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
 
         await CallToolAsync(
