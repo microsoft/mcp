@@ -21,7 +21,6 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
 
 namespace Microsoft.Mcp.Core.Commands;
@@ -286,10 +285,7 @@ public class CommandFactory : ICommandFactory
         // Command.Options is never null in System.CommandLine — the null-conditional is not needed.
         var optionInfos = commandDetails.Options
             .Where(opt => opt is not HelpOption && !IsLearnOption(opt))
-            .Select(opt => new OptionInfo(
-                name: opt.Name,
-                description: opt.Description ?? string.Empty,
-                required: opt.Required))
+            .Select(opt => opt.ToOptionInfo())
             .ToList();
 
         return new CommandInfo
