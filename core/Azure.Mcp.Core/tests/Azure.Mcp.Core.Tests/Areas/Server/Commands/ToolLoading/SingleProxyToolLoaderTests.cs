@@ -216,23 +216,188 @@ public class SingleProxyToolLoaderTests
             text);
     }
 
+    [Theory]
+    [InlineData("storage", true)]
+    [InlineData("registry-server", false)]
+    public async Task CallToolHandler_WithNamespaceFilter_OnlyLearnsEnabledDiscoveredServers(string serverName, bool shouldBeListed)
+    {
+        await using var toolLoader = CreateToolLoaderWithMockClient(
+            new ServerRuntimeConfiguration { Namespace = ["storage"], StructuredOutputMode = StructuredOutputMode.Compact },
+            new MockMcpClientBuilder(),
+            serverName);
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?> { ["learn"] = true });
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.True(result.StructuredContent.HasValue);
+        var tools = result.StructuredContent.Value.GetProperty("tools");
+        Assert.Equal(shouldBeListed, tools.EnumerateArray().Any(tool => tool.GetProperty("tool").GetString() == serverName));
+    }
+
+    [Theory]
+    [InlineData("extension", false)]
+    [InlineData("server", false)]
+    [InlineData("tools", false)]
+    [InlineData("subscription", false)]
+    [InlineData("group", false)]
+    [InlineData("extension", true)]
+    public async Task CallToolHandler_WithIgnoredGroupName_AllowsDiscoveredServer(string serverName, bool filterNamespace)
+    {
+        var executions = 0;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("account_list", "List accounts", () =>
+            {
+                executions++;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        await using var toolLoader = CreateToolLoaderWithMockClient(
+            new ServerRuntimeConfiguration
+            {
+                Namespace = filterNamespace ? [serverName] : null,
+                StructuredOutputMode = StructuredOutputMode.Compact
+            }, clientBuilder, serverName, includeIgnoredLocalGroup: true);
+
+        var rootResult = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?> { ["learn"] = true }),
+            TestContext.Current.CancellationToken);
+        Assert.True(rootResult.StructuredContent.HasValue);
+        Assert.Equal(serverName, Assert.Single(rootResult.StructuredContent.Value.GetProperty("tools").EnumerateArray()).GetProperty("tool").GetString());
+
+        using var activity = new Activity("test-activity").Start();
+        var learnResult = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+            {
+                ["tool"] = serverName,
+                ["learn"] = true
+            }),
+            TestContext.Current.CancellationToken);
+        Assert.True(learnResult.StructuredContent.HasValue);
+        Assert.Contains("account_list", learnResult.StructuredContent.Value.GetRawText());
+        activity.AssertTagEquals(TagName.ToolArea, serverName);
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallToolRequestWithToolAndCommand(serverName, "account_list"),
+            TestContext.Current.CancellationToken);
+        Assert.False(result.IsError ?? false);
+        Assert.Equal(1, executions);
+        activity.AssertTagEquals(TagName.ToolArea, serverName);
+    }
+
     [Fact]
-    public async Task CallToolHandler_WithToolLearnMode_ThrowsExceptionForUnknownTool()
+    public async Task CallToolHandler_WithUppercaseDiscoveredServer_LearnsCanonicalArea()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("account_list", "List storage accounts", () => new CallToolResult { Content = [], IsError = false });
+        await using var toolLoader = CreateToolLoaderWithMockClient(
+            new ServerRuntimeConfiguration { Namespace = ["registry-server"] }, clientBuilder, "registry-server");
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+        {
+            ["tool"] = "REGISTRY-SERVER",
+            ["learn"] = true
+        });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError ?? false);
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task CallToolHandler_WithUnknownTool_RecordsUnknownIdentity(bool learn)
     {
         // Arrange
         var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
         var arguments = new Dictionary<string, object?>
         {
-            ["learn"] = true,
-            ["tool"] = "nonexistent", // Use a tool that doesn't exist
+            ["learn"] = learn,
+            ["tool"] = "user@example.com",
+            ["command"] = "user@example.com",
             ["intent"] = "Learn about nonexistent tool"
         };
         var request = McpTestUtilities.CreateToolCallRequest("azure", arguments);
+        using var activity = new Activity("test-activity").Start();
 
         // Act & Assert
         // The current implementation throws KeyNotFoundException for unknown tools
         await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
             await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken));
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+    }
+
+    [Theory]
+    [InlineData(true, false, false)]
+    [InlineData(false, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(false, false, true)]
+    public async Task CallToolHandler_WithDisabledNamespace_DoesNotLearnOrExecute(bool learn, bool warmCache, bool supportsSampling)
+    {
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns("keyvault_secret_list");
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new Command("secret_list", "List secrets"));
+        command.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
+            .Returns(new CommandResponse { Status = System.Net.HttpStatusCode.OK });
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("azure", "Azure Server");
+        rootGroup.AddSubGroup(new CommandGroup("storage", "Storage tools"));
+        rootGroup.AddSubGroup(new CommandGroup("keyvault", "Key Vault tools"));
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "keyvault"))
+            .Returns(new Dictionary<string, IBaseCommand> { ["secret_list"] = command });
+        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand> { ["secret_list"] = command });
+        var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
+        discoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>()).Returns([]);
+        var configuration = new ServerRuntimeConfiguration();
+        await using var toolLoader = new SingleProxyToolLoader(
+            commandFactory,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            Microsoft.Extensions.Options.Options.Create(configuration),
+            CreateServerConfigurationOptions(),
+            discoveryStrategy);
+        if (warmCache)
+        {
+            await toolLoader.CallToolHandler(McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+            {
+                ["tool"] = "keyvault",
+                ["learn"] = true
+            }), TestContext.Current.CancellationToken);
+            commandFactory.ClearReceivedCalls();
+        }
+        configuration.Namespace = ["storage"];
+
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+        {
+            ["intent"] = "List secrets",
+            ["tool"] = "keyvault",
+            ["command"] = "secret_list",
+            ["learn"] = learn
+        });
+        var server = BaseToolLoaderTests.CreateSamplingServer(supportsSampling, "keyvault");
+        request = McpTestUtilities.CreateToolCallRequest(request.Params!, server);
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains("storage", text);
+        Assert.DoesNotContain("keyvault", text);
+        commandFactory.DidNotReceive().GroupCommands(Arg.Any<string[]>());
+        await command.DidNotReceive().ExecuteAsync(
+            Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>());
+        await discoveryStrategy.DidNotReceive().GetOrCreateClientAsync(
+            Arg.Any<string>(), Arg.Any<McpClientOptions?>(), Arg.Any<CancellationToken>());
+        await server.Received(supportsSampling ? 1 : 0).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(rpc => rpc.Method == "sampling/createMessage"), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -327,15 +492,16 @@ public class SingleProxyToolLoaderTests
         var toolLoader = new SingleProxyToolLoader(
             commandFactory,
             Substitute.For<ILogger<SingleProxyToolLoader>>(),
-            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["storage"] }),
             CreateServerConfigurationOptions(),
             discoveryStrategy);
         var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
         {
             ["intent"] = "List storage commands",
-            ["tool"] = "storage",
+            ["tool"] = "STORAGE",
             ["learn"] = true
         });
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -343,13 +509,17 @@ public class SingleProxyToolLoaderTests
         // Assert
         var textContent = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
         Assert.Contains("account_list", textContent.Text);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         commandFactory.Received(1).GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"));
         await discoveryStrategy.DidNotReceive().GetOrCreateClientAsync(
             Arg.Any<string>(), Arg.Any<McpClientOptions?>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithExecutionRequestForCommandFactoryManagedTool_ExecutesCommand()
+    [Theory]
+    [InlineData("account_list")]
+    [InlineData("ACCOUNT_LIST")]
+    public async Task CallToolHandler_WithExecutionRequestForCommandFactoryManagedTool_ExecutesCommand(string commandName)
     {
         // Arrange
         var command = Substitute.For<IBaseCommand>();
@@ -374,10 +544,11 @@ public class SingleProxyToolLoaderTests
         var toolLoader = new SingleProxyToolLoader(
             commandFactory,
             Substitute.For<ILogger<SingleProxyToolLoader>>(),
-            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["storage"] }),
             CreateServerConfigurationOptions(),
             discoveryStrategy);
-        var request = CreateCallToolRequestWithToolAndCommand("storage", "account_list");
+        var request = CreateCallToolRequestWithToolAndCommand("STORAGE", commandName);
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -386,6 +557,8 @@ public class SingleProxyToolLoaderTests
         Assert.False(result.IsError ?? false);
         var textContent = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
         Assert.Contains("Managed command executed", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "account_list");
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
         await command.Received(1).ExecuteAsync(
             Arg.Is<CommandContext>(context => context.McpServer == request.Server),
             Arg.Any<ParseResult>(),
@@ -659,10 +832,15 @@ public class SingleProxyToolLoaderTests
     private static SingleProxyToolLoader CreateToolLoaderWithMockClient(
         ServerRuntimeConfiguration configuration,
         MockMcpClientBuilder clientBuilder,
-        string serverName)
+        string serverName,
+        bool includeIgnoredLocalGroup = false)
     {
         var commandFactory = Substitute.For<ICommandFactory>();
         var rootGroup = new CommandGroup("azmcp", "Azure MCP");
+        if (includeIgnoredLocalGroup)
+        {
+            rootGroup.AddSubGroup(new CommandGroup(serverName, "Ignored local group"));
+        }
         commandFactory.RootGroup.Returns(rootGroup);
         commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
         var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
@@ -688,8 +866,41 @@ public class SingleProxyToolLoaderTests
         return McpTestUtilities.CreateToolCallRequest("azure", arguments);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyCommand()
+    [Theory]
+    [InlineData("account_list")]
+    [InlineData("ACCOUNT_LIST")]
+    public async Task CallToolHandler_WithRemoteCommand_ExecutesCanonicalName(string commandName)
+    {
+        var executions = 0;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("account_list", "List storage accounts", () =>
+            {
+                executions++;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        await using var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration
+        {
+            Namespace = ["storage"],
+            StructuredOutputMode = StructuredOutputMode.Duplicated
+        }, clientBuilder, "storage");
+        var request = CreateCallToolRequestWithToolAndCommand("STORAGE", commandName);
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(1, executions);
+        activity.AssertTagEquals(TagName.ToolName, "account_list");
+        activity.AssertTagEquals(TagName.ToolArea, "storage");
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, true);
+        Assert.True(result.StructuredContent.HasValue);
+        Assert.Equal("account_list", result.StructuredContent.Value.GetProperty("command").GetString());
+    }
+
+    [Theory]
+    [InlineData("account_create")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyCommand(string commandName)
     {
         // Arrange
         var readOnlyTool = new Tool
@@ -719,7 +930,8 @@ public class SingleProxyToolLoaderTests
 
         var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
-        var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_create");
+        var request = CreateCallToolRequestWithToolAndCommand("registry-server", commandName);
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -729,6 +941,8 @@ public class SingleProxyToolLoaderTests
         Assert.Null(result.IsError); // No error should happen. Instead learning should be called.
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Contains("Here are the available commands and their input schema", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
     }
 
     [Fact]
@@ -749,6 +963,7 @@ public class SingleProxyToolLoaderTests
         var toolLoader = CreateToolLoaderWithMockClient(new ServerRuntimeConfiguration { ReadOnly = true }, clientBuilder, "registry-server");
 
         var request = CreateCallToolRequestWithToolAndCommand("registry-server", "account_list");
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -757,6 +972,8 @@ public class SingleProxyToolLoaderTests
         Assert.False(result.IsError ?? false);
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Equal("Listed accounts", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "account_list");
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
     }
 
     [Fact]
@@ -795,6 +1012,7 @@ public class SingleProxyToolLoaderTests
             "registry-server");
 
         var request = CreateCallToolRequestWithToolAndCommand("registry-server", "local_command");
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -804,6 +1022,8 @@ public class SingleProxyToolLoaderTests
         Assert.Null(result.IsError); // No error should happen. Instead learning should be called.
         var textContent = result.Content.OfType<TextContentBlock>().First();
         Assert.Contains("Here are the available commands and their input schema", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, "registry-server");
     }
 
     [Fact]

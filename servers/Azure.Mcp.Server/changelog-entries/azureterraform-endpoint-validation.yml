@@ -1,0 +1,3 @@
+changes:
+  - section: Other Changes
+    description: Added validation of outbound documentation URLs in the Azure Terraform tools to confirm requests target the expected GitHub hosts.
