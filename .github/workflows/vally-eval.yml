@@ -12,11 +12,11 @@ on:
       - 'tools/Azure.Mcp.*/**/eval.yaml'
   workflow_dispatch:
     inputs:
-      runAllTests:
-        description: 'Run all evaluation tests'
-        required: false
-        default: false
-        type: boolean
+      serverName:
+        description: 'Server name to run all evaluation tests for'
+        required: true
+        default: 'Azure.Mcp.Server'
+        type: string
       logLevel:
         description: 'Is verbose'
         required: false
@@ -68,7 +68,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
-          RUN_ALL_TESTS: ${{ inputs.runAllTests }}
+          SERVER_NAME: ${{ inputs.serverName }}
         run: |
           if ($env:EVENT_NAME -eq 'pull_request') {
             $baseCommit = $env:PR_BASE_SHA
@@ -83,21 +83,39 @@ jobs:
             Write-Host "Manual run. Base: ${baseCommit}, Head: ${headCommit}"
           }
 
-          $buildReason = if ($env:RUN_ALL_TESTS -eq 'true') { '' } else { 'PullRequest' }
+          $buildReason = 'PullRequest'
 
-          "BUILD_REASON=$buildReason" >> $env:GITHUB_ENV
+          "BUILD_REASON='$buildReason'" >> $env:GITHUB_ENV
           "DIFF_HEAD_COMMIT=$headCommit" >> $env:GITHUB_ENV
           "DIFF_BASE_COMMIT=$baseCommit" >> $env:GITHUB_ENV
+
+      - name: Verify server exists
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: pwsh
+        env:
+          SERVER_NAME: ${{ inputs.serverName }}
+        run: |
+          $serversPath = Join-Path $env:GITHUB_WORKSPACE 'servers'
+          $serverPath = Join-Path $serversPath $env:SERVER_NAME
+          if (-not (Test-Path -LiteralPath $serverPath -PathType Container)) {
+            $availableServers = Get-ChildItem -LiteralPath $serversPath -Directory |
+              Sort-Object Name |
+              ForEach-Object Name
+            $availableServerList = $availableServers -join ', '
+
+            throw "Server '$env:SERVER_NAME' does not exist. Available servers: $availableServerList."
+          }
 
       - name: Create build_info.json
         shell: pwsh
         env:
-          RUN_ALL_TESTS: ${{ inputs.runAllTests }}
+          EVENT_NAME: ${{ github.event_name }}
+          SERVER_NAME: ${{ inputs.serverName }}
         run: |
-          if ($env:RUN_ALL_TESTS -eq 'true') {
-            Write-Host "Running all evals."
+          if ($env:EVENT_NAME -eq 'workflow_dispatch') {
+            Write-Host "Running all evals for $env:SERVER_NAME"
 
-            ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server
+            ./eng/scripts/New-BuildInfo.ps1 -ServerName $env:SERVER_NAME
           }
           else {
             Write-Host "Running evals based on changed files."
@@ -106,10 +124,10 @@ jobs:
               Write-Host "Run type: Pull request merged into main."
             }
             else {
-              Write-Host "Run type: manual run."
+              Write-Error "Should not hit this path because the run type is unexpected: $env:BUILD_REASON."
             }
 
-            ./eng/scripts/New-BuildInfo.ps1 -ServerName Azure.Mcp.Server `
+            ./eng/scripts/New-BuildInfo.ps1 `
               -CommonCodeBuildsAll $false `
               -SourceCommittish $env:DIFF_HEAD_COMMIT `
               -TargetCommittish $env:DIFF_BASE_COMMIT
@@ -136,7 +154,7 @@ jobs:
           ./eng/scripts/Build-Code.ps1 -BuildInfoPath "$env:BUILD_INFO_PATH" -PlatformName $platformName -ReleaseBuild
 
       - name: Create vally evaluations
-        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ env.BUILD_INFO_PATH }}' --serverName Azure.Mcp.Server
+        run: dotnet run --project '${{ github.workspace }}/eng/tools/VallyEvaluator/src/VallyEvaluator.csproj' -- --buildInfo '${{ env.BUILD_INFO_PATH }}' --serverName ${{ inputs.serverName }}
 
       - name: Run vally
         id: vally
@@ -150,13 +168,12 @@ jobs:
 
           $workingDirectory = "${{ github.workspace }}"
 
-          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug
+          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug -ServerName ${{ inputs.serverName }}
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
 
       - name: Upload vally results
-        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: results-${{ github.run_id }}
