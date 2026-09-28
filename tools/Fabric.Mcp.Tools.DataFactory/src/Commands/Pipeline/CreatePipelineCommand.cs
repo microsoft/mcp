@@ -53,7 +53,7 @@ public sealed class CreatePipelineCommand(ILogger<CreatePipelineCommand> logger,
         {
             _logger.LogError("Error creating pipeline '{DisplayName}' in workspace {WorkspaceId}: {Error}",
                 options.DisplayName, options.WorkspaceId, result.Error);
-            HandleException(context, new Exception(result.Error));
+            HandleException(context, new InvalidOperationException(result.Error));
         }
 
         return context.Response;

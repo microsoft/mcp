@@ -3,10 +3,10 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Core;
+using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -81,7 +81,7 @@ public abstract class BaseAzureService(IAzureService azureService)
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get credential: {ex.Message}", ex);
+            throw new AuthenticationFailedException($"Failed to get credential: {ex.Message}", ex);
         }
     }
 

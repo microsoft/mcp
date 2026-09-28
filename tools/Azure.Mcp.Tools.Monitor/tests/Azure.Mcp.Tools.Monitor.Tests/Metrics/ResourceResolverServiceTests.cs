@@ -107,7 +107,7 @@ public class ResourceResolverServiceTests
         _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(emptyAsyncPageable);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() =>
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _service.ResolveResourceIdAsync(subscription, null, null, resourceName, cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains($"Resource '{resourceName}' not found in subscription '{subscription}'", exception.Message);
@@ -128,7 +128,7 @@ public class ResourceResolverServiceTests
         _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() =>
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.ResolveResourceIdAsync(subscription, null, null, resourceName, cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains($"Multiple resources named '{resourceName}' found", exception.Message);

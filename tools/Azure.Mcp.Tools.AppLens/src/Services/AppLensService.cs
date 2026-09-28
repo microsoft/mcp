@@ -470,27 +470,27 @@ public class AppLensService(IAzureService azureService)
             {
                 IEnumerable<string> propertyNames = jsonDoc.RootElement.EnumerateObject().Select(property => property.Name);
                 string joinedPropertyNames = string.Join(", ", propertyNames);
-                throw new Exception($"The top-level property named 'properties' not found. The actual top-level properties are: {joinedPropertyNames}.");
+                throw new KeyNotFoundException($"The top-level property named 'properties' not found. The actual top-level properties are: {joinedPropertyNames}.");
             }
 
-            throw new Exception("'properties' not found. Root element is not a JSON object.");
+            throw new KeyNotFoundException("'properties' not found. Root element is not a JSON object.");
         }
 
         if (!propertiesElement.TryGetProperty("dataset", out JsonElement datasetElement))
         {
-            throw new Exception("'properties.dataset' not found.");
+            throw new KeyNotFoundException("'properties.dataset' not found.");
         }
 
         foreach (JsonElement datasetItem in datasetElement.EnumerateArray())
         {
             if (!datasetItem.TryGetProperty("table", out JsonElement tableElement))
             {
-                throw new Exception("'properties.dataset.table' not found.");
+                throw new KeyNotFoundException("'properties.dataset.table' not found.");
             }
 
             if (!tableElement.TryGetProperty("rows", out JsonElement rowsElement))
             {
-                throw new Exception("'properties.dataset.table.rows' not found.");
+                throw new KeyNotFoundException("'properties.dataset.table.rows' not found.");
             }
 
             foreach (JsonElement rowJsonElement in rowsElement.EnumerateArray())
@@ -510,7 +510,7 @@ public class AppLensService(IAzureService azureService)
 
         if (session is null)
         {
-            throw new Exception("session is null.");
+            throw new InvalidOperationException("session is null.");
         }
 
         return session;

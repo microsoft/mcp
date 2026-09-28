@@ -164,12 +164,8 @@ public class FoundryExtensionsService(IAzureService azureService)
         // Find the index by name using async enumerable
         var index = await projectClient.Indexes.GetIndexesAsync(cancellationToken: cancellationToken)
             .Where(i => string.Equals(i.Name, indexName, StringComparisons.ResourceName))
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
-
-        if (index == null)
-        {
-            throw new Exception($"Knowledge index '{indexName}' not found.");
-        }
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken)
+            ?? throw new KeyNotFoundException($"Knowledge index '{indexName}' not found.");
 
         // Map the SDK index to our AOT-safe schema type
         string indexType = index switch
@@ -655,13 +651,13 @@ public class FoundryExtensionsService(IAzureService azureService)
 
         if (rgResource?.Value == null)
         {
-            throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+            throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
         }
 
         var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName, cancellationToken: cancellationToken);
         if (account?.Value == null)
         {
-            throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
+            throw new KeyNotFoundException($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
         }
 
         return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName, cancellationToken);
