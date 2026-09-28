@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Optimization.Services;
 
 /// <summary>
 /// Azure Resource Graph (KQL) queries used by the optimization tools. The curated cost-savings
-/// query filters active, non-suppressed Advisor cost recommendations, normalizes savings across
+/// query filters active, non-suppressed cost recommendations, normalizes savings across
 /// currencies, and ranks by impact then annual savings.
 /// </summary>
 internal static class OptimizationKqlQueries
@@ -30,12 +30,13 @@ internal static class OptimizationKqlQueries
         "| extend alternatives = parse_json(properties.extendedProperties.alternatives) " +
         "| project alternatives";
 
-    /// <summary>ARG query returning a single Advisor recommendation for a resource and type.</summary>
+    /// <summary>ARG query returning a single cost optimization recommendation for a resource and type.</summary>
     public static string BuildAdvisorRecommendationQuery(string resourceId) =>
         "advisorresources " +
         "| where type =~ 'microsoft.advisor/recommendations' " +
         $"| where properties.resourceMetadata.resourceId == '{EscapeKql(resourceId)}' " +
-        $"| where properties.category == 'Cost'";
+        $"| where properties.category == 'Cost'"+
+        "| project id, resourceGroup, subscriptionId,properties = bag_remove_keys(properties, dynamic(['impact']))";
 
     /// <summary>Curated top cost-savings ARG query. Subscription scoping is applied via the query content.</summary>
     public const string TopCostSavingsQuery = """
@@ -164,7 +165,6 @@ advisorresources
     solution,
     impactedField,
     impactedValue,
-    impact,
     resourceId
 """;
 }

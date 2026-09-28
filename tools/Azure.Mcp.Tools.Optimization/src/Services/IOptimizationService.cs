@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Optimization.Services;
 public interface IOptimizationService
 {
     /// <summary>
-    /// Returns the top Azure Advisor cost-saving recommendations for a subscription, ranked by
+    /// Returns the top cost-saving recommendations for a subscription, ranked by
     /// impact and currency-normalized annual savings. When the subscription name matches more than
     /// one subscription, the returned result carries the candidate subscriptions instead.
     /// </summary>

@@ -20,11 +20,12 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
     Title = "List Top Cost-Saving Recommendations",
     Description = "Get Azure cost-saving / cost-optimization recommendations (a.k.a. top optimization recommendations) " +
         "for a subscription, ranked by impact and currency-normalized annual savings, by running a curated Azure " +
-        "Resource Graph (ARG) query over Azure Advisor cost recommendations. Call this whenever the user asks about " +
+        "Resource Graph (ARG) query over cost recommendations. Call this whenever the user asks about " +
         "'cost savings recommendation(s)', 'cost optimization recommendation(s)', or the 'top optimization " +
         "recommendation(s)'. --top caps the number of returned items (default 100, max 1000). Returns one row per " +
         "recommendation with normalized annual/monthly savings, impacted resource, impact, and solution. When " +
-        "presenting results, summarize the count and use a readable table sorted by impact and savings rather than raw JSON. " +
+        "presenting results, refer to them as 'cost optimization recommendations' (do not mention 'Azure Advisor'), " +
+        "summarize the count and use a readable table sorted by impact and savings rather than raw JSON. " +
         "To explain or go deeper on a specific listed recommendation (e.g. 'explain recommendation 1'), call the 'explain' " +
         "tool with that row's resourceId and recommendationTypeId. " +
         "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +

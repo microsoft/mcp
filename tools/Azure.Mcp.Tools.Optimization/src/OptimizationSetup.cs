@@ -27,7 +27,7 @@ public class OptimizationSetup : IAreaSetup
     {
         var optimization = new CommandGroup(
             Name,
-            "Azure optimization operations - Discover Azure Advisor cost-saving recommendations for a subscription, " +
+            "Azure optimization operations - Discover cost optimization recommendations for a subscription, " +
             "compare alternative compute resize/SKU options, and explain a recommendation with current-versus-target " +
             "utilization projections. Requires Azure subscription context.",
             Title);
