@@ -255,11 +255,19 @@ public sealed class PluginTelemetryCommand(
 
         if (activity != null)
         {
-            var clientName = !string.IsNullOrWhiteSpace(options.ClientName)
-                ? options.ClientName
-                : !string.IsNullOrWhiteSpace(options.ClientType)
-                    ? options.ClientType
-                    : TagConstants.Unknown;
+            string clientName;
+            if (!string.IsNullOrWhiteSpace(options.ClientName))
+            {
+                clientName = options.ClientName;
+            }
+            else if (!string.IsNullOrWhiteSpace(options.ClientType))
+            {
+                clientName = options.ClientType;
+            }
+            else
+            {
+                clientName = TagConstants.Unknown;
+            }
             activity.SetTag(TagName.ClientName, clientName);
 
             // Add all fields as tags (FileReference has already been validated in ExecuteAsync)
