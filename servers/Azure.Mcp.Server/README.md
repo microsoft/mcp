@@ -1013,6 +1013,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
 * "Update backup policy schedule time to 04:00 in vault 'myvault'"
+* "Update existing Enhanced Hourly VM policy 'myEnhancedPolicy' in Recovery Services vault 'myvault', resource group 'myRG', subscription 'my-subscription': set time zone to 'India Standard Time' and hourly window start to 08:00 local (converted to 02:30 UTC), preserving the interval and duration"
 * "List protectable items in my backup vault"
 * "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"

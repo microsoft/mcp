@@ -1,0 +1,32 @@
+changes:
+  - section: "Features Added"
+    description: >-
+      Extended `azurebackup policy update` with 11 RSV Azure VM options for hourly
+      schedules on existing Enhanced (V2) policies, subtype assertions, instant
+      recovery retention and resource-group prefixes, snapshot consistency,
+      archive tiering, and resource tags. Existing Hourly schedules support partial
+      updates; switching an Enhanced policy to Hourly requires all hourly fields.
+      Standard/Enhanced subtype assertions do not migrate policies. Archive modes
+      are `TierAfter` and `TierRecommended`, not `CopyOnExpiry`; `--smart-tier false`
+      explicitly disables archive tiering.
+  - section: "Bugs Fixed"
+    description: >-
+      Merge RSV VM policy updates into the existing policy, preserving unmentioned
+      settings modeled by the SDK, including unmodified retention tiers, unmentioned
+      tags, and instant recovery resource-group suffixes, subject to schedule
+      reconciliation. Unknown wire field preservation is not guaranteed. Preserve retention times
+      on unrelated updates and reconcile them on explicit schedule changes.
+      Validate Daily/Hourly daily-retention and Weekly weekly-retention prerequisites,
+      requiring explicit weekly retention before removing positive daily retention
+      when switching to Weekly. Require effective instant recovery retention of
+      5 days for Standard Weekly schedule, retention, or instant recovery updates,
+      preserving omission and allowing unrelated tags-only or time-zone-only updates.
+      Convert explicitly supplied hourly window starts from the effective local
+      time zone (request, existing policy, then UTC) to UTC using the deterministic
+      2000-01-01 baseline. Reject unknown zones and invalid or ambiguous baseline
+      local times. Preserve omitted hourly timestamps and existing UTC behavior;
+      Daily/Weekly time parsing is unchanged. Future seasonal DST adjustments are
+      not calculated.
+      Preserve comma-separated Daily/Weekly schedule times and reconcile every
+      retention time on explicit schedule updates. Retain exception diagnostics
+      in policy-update logs while preserving sanitized top-level Azure error messages.

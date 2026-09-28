@@ -1210,7 +1210,10 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--pitr-retention-days <int>] \
                                 [--policy-tags <key=value[,key=value...]>]
 
-# Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
+# Updates an existing RSV backup policy, preserving omitted settings. VM policies support Daily/Weekly
+# schedules, Hourly on existing Enhanced (V2) policies, retention, instant recovery, snapshot consistency,
+# archive tiering, and tags. Subtype assertions do not migrate policies. Other RSV workloads support only
+# --schedule-time and --daily-retention-days. DPP policy update is not supported. The policy must exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy update --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -1220,8 +1223,8 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--schedule-time <schedule-time>] \
                                 [--daily-retention-days <daily-retention-days>] \
                                 [--time-zone <time-zone>] \
-                                [--schedule-frequency <Daily|Weekly>] \
-                                [--schedule-times <HH:mm[,HH:mm...]>] \
+                                [--schedule-frequency <Daily|Weekly|Hourly>] \
+                                [--schedule-times <HH:mm>] \
                                 [--schedule-days-of-week <day[,day...]>] \
                                 [--weekly-retention-weeks <int>] \
                                 [--weekly-retention-days-of-week <day[,day...]>] \
@@ -1233,7 +1236,18 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--yearly-retention-months <month[,month...]>] \
                                 [--yearly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
                                 [--yearly-retention-days-of-week <day[,day...]>] \
-                                [--yearly-retention-days-of-month <int[,int...]>]
+                                [--yearly-retention-days-of-month <1-28|Last[,1-28|Last...]>] \
+                                [--hourly-interval-hours <4|6|8|12>] \
+                                [--hourly-window-start-time <HH:mm>] \
+                                [--hourly-window-duration-hours <4-24>] \
+                                [--policy-sub-type <Standard|Enhanced>] \
+                                [--instant-rp-retention-days <1-30>] \
+                                [--instant-rp-resource-group <name-prefix>] \
+                                [--snapshot-consistency <ApplicationConsistent|CrashConsistent>] \
+                                [--archive-tier-after-days <int-at-least-45>] \
+                                [--archive-tier-mode <TierAfter|TierRecommended>] \
+                                [--smart-tier <true|false>] \
+                                [--policy-tags <key=value[,key=value...]>]
 
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types, protected items count, schedule and retention details, tiering policies, sub-protection policies, and workload-specific properties (time zone, instant restore settings, compression). RSV policy details are returned under 'details' and Backup vault (DPP) policy details under 'dppDetails', each mirroring the current Azure Backup SDK surface. When --policy is omitted, lists all backup policies configured in the vault. The returned contract reflects the currently supported SDK properties and may be revisited when the underlying Azure.ResourceManager SDK packages are upgraded.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1243,6 +1257,22 @@ azmcp azurebackup policy get --subscription <subscription> \
                              [--vault-type <vault-type>] \
                              [--policy <policy>]
 ```
+
+**Policy update semantics (RSV Azure VM):**
+
+- The 11 added VM-only options are the three hourly window/interval options, `--policy-sub-type`, the two instant recovery options, `--snapshot-consistency`, the two archive options, `--smart-tier`, and `--policy-tags`. These update settings are not a promise of identical support in policy create or other workloads.
+- Updates merge into the fetched policy, preserving unmentioned settings modeled by the SDK, including unmodified retention tiers, subject to the schedule reconciliation rules below rather than applying create defaults. Preservation of unknown wire fields is not guaranteed. No supplied update settings means no change. Tags merge case-insensitively by key, preserve unmentioned tags, and cannot exceed 50 after merging. Instant recovery resource-group prefix updates preserve the existing suffix.
+- `--policy-sub-type` only asserts that the existing policy is `Standard` (V1) or `Enhanced` (V2). A mismatch is rejected; update does **not** migrate between subtypes. Hourly requires an existing Enhanced policy.
+- Existing Enhanced **Hourly** schedules accept partial updates: omit frequency and supply just an interval, start, or duration to retain the other hourly fields. The assembled schedule must have interval `4`, `6`, `8`, or `12`, a start time, and duration `4`–`24` hours that is at least the interval. Switching an Enhanced Daily/Weekly schedule to Hourly requires explicit Hourly frequency and all three hourly fields.
+- An explicitly supplied `--hourly-window-start-time` is local `HH:mm` converted to UTC, as required by the [Enhanced-policy documentation](https://learn.microsoft.com/azure/backup/backup-azure-vms-enhanced-policy#tab/powershell). The effective time zone is supplied `--time-zone`, otherwise the existing policy time zone, otherwise UTC. For example, `08:00` in `India Standard Time` becomes `2000-01-01T02:30:00Z`. Conversion uses local `2000-01-01` time-zone rules, not today's DST offset, and may cross a UTC date boundary. Unknown time zones and invalid or ambiguous local times on that baseline are rejected; future seasonal DST adjustments are not calculated. An omitted hourly start retains its exact timestamp even when the time zone changes; resupply it to reinterpret a local time.
+- Daily/Weekly schedules accept comma-separated `HH:mm` values with `--schedule-times`, or one time with legacy `--schedule-time`. Omission retains all existing times (including the window start when leaving Hourly); explicit schedule changes reconcile all retention times. Azure enforces schedule-specific limits. These two flags are mutually exclusive and cannot be used for Hourly; use `--hourly-window-start-time` instead. Daily/Weekly parsing retains its existing clock-value encoding without the hourly UTC conversion: the [REST example](https://learn.microsoft.com/azure/backup/backup-azure-arm-userestapi-createorupdatepolicy#tab/azure-vm) encodes Standard Weekly 10:00 Pacific as `10:00:00Z` with `timeZone: Pacific Standard Time`. This fix does not establish new Enhanced Daily/Weekly semantics. When leaving Hourly, supply an explicit local schedule time if reusing the unchanged UTC window timestamp would be inappropriate.
+- Explicit `--schedule-frequency Weekly` always requires `--schedule-days-of-week`; an existing Weekly schedule can retain its days when frequency is omitted. Schedule days are not valid for Daily/Hourly. On schedule or retention updates, Weekly requires positive weekly retention whose days are a subset of backup schedule days. Setting weekly retention requires both `--weekly-retention-weeks` and `--weekly-retention-days-of-week`.
+- Removing positive daily retention when switching to Weekly requires that explicit weekly retention pair, even when a weekly tier already exists. Daily retention is then removed; Weekly cannot accept `--daily-retention-days`. Daily/Hourly schedule or retention updates require positive daily retention: supply `--daily-retention-days` (`1`–`9999`) if absent, such as when leaving Weekly.
+- Schedule, retention, or instant recovery updates resulting in a **Standard Weekly** policy require effective instant recovery retention of **5 days**. Specify `--instant-rp-retention-days 5` unless the existing value is already 5. Omission preserves the existing value; it is never automatically changed. Tags-only and time-zone-only updates are not blocked by this precondition, which does not apply to Enhanced policies.
+- Monthly retention requires a count plus either absolute day-of-month selectors (`1`–`28` or `Last`) or both relative week-of-month and day-of-week selectors. Yearly retention additionally requires months of the year. Do not mix absolute and relative selectors. Retention-only updates preserve existing retention times; explicit schedule updates reconcile retention times and remove incompatible schedule branches.
+- `--instant-rp-retention-days` accepts `1`–`30`, subject to Azure's schedule- and subtype-specific limits. `--instant-rp-resource-group` is a name prefix (1–50 letters, digits, underscores, or hyphens), not a resource ID. `ApplicationConsistent` restores default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`.
+- Archive modes are **`TierAfter` or `TierRecommended`, not `CopyOnExpiry`**. `TierAfter` requires at least 45 days, supplied via `--archive-tier-after-days` or retained from an existing `TierAfter` duration in days. Archive days alone select `TierAfter`. `TierRecommended` cannot be combined with archive days.
+- `--smart-tier true` selects `TierRecommended`; **`--smart-tier false` disables archive tiering** (`DoNotTier`). Either value is mutually exclusive with both archive flags. Omission preserves existing tiering. Azure enforces remaining service-side limits and vault security restrictions.
 
 #### Protected Item
 
