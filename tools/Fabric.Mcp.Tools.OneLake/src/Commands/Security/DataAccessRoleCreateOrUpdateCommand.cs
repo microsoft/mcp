@@ -21,6 +21,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         of granting Read access. For advanced scenarios (multiple decision rules,
         column/row constraints), pass the full JSON via --role-definition instead.
         When flat options are provided, --role-definition is ignored.
+        A path scope is required by default. Explicitly set --allow-full-item-access true
+        to grant access to the entire item without a path restriction.
         Members can be specified by Entra object ID (GUID), email address, or UPN —
         non-GUID values are automatically resolved via Microsoft Graph.
         Caller must be a workspace Admin or Member. Requires OneLake.ReadWrite.All and
@@ -65,6 +67,11 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
 
         if (hasFlat)
         {
+            if (string.IsNullOrWhiteSpace(options.PermittedPaths) && !options.AllowFullItemAccess)
+            {
+                validationResult.Errors.Add("Provide --permitted-paths or explicitly enable --allow-full-item-access to grant access to the entire item.");
+            }
+
             if (string.IsNullOrWhiteSpace(options.RoleName))
             {
                 validationResult.Errors.Add("--role-name is required when using flat options.");
@@ -99,6 +106,28 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
         }
     }
 
+    internal static void ValidateRoleScope(string roleDefinitionJson, bool allowFullItemAccess)
+    {
+        DataAccessRole role;
+        try
+        {
+            role = JsonSerializer.Deserialize(roleDefinitionJson, OneLakeJsonContext.Default.DataAccessRole)
+                ?? throw new ArgumentException("A role definition is required.");
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException("The role definition must be valid JSON.", nameof(roleDefinitionJson), ex);
+        }
+        if (!allowFullItemAccess && role.DecisionRules?.Any(rule =>
+            string.Equals(rule.Effect, "Permit", StringComparison.OrdinalIgnoreCase) &&
+            !(rule.Permission?.Any(permission =>
+                string.Equals(permission.AttributeName, "Path", StringComparison.OrdinalIgnoreCase) &&
+                permission.AttributeValueIncludedIn is { Count: > 0 }) ?? false)) == true)
+        {
+            throw new ArgumentException("A Permit rule requires a Path restriction. Explicitly enable --allow-full-item-access to grant access to the entire item.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DataAccessRoleCreateOrUpdateOptions options, CancellationToken cancellationToken)
     {
         var workspaceId = string.IsNullOrWhiteSpace(options.WorkspaceId) ? options.Workspace : options.WorkspaceId;
@@ -109,11 +138,13 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
             {
                 // Build role from flat options
                 var roleDefinitionJson = BuildRoleDefinitionJson(options);
+                ValidateRoleScope(roleDefinitionJson, options.AllowFullItemAccess);
                 result = await _oneLakeService.CreateOrUpdateDataAccessRoleAsync(workspaceId!, options.ItemId, roleDefinitionJson, cancellationToken);
             }
             else
             {
                 // Use raw JSON escape hatch
+                ValidateRoleScope(options.RoleDefinition!, options.AllowFullItemAccess);
                 result = await _oneLakeService.CreateOrUpdateDataAccessRoleAsync(workspaceId!, options.ItemId, options.RoleDefinition!, cancellationToken);
             }
 
