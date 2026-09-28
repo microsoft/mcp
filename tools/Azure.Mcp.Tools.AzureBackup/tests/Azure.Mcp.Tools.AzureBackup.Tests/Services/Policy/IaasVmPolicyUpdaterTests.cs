@@ -33,7 +33,8 @@ public class IaasVmPolicyUpdaterTests
             {
                 RetentionDuration = new RetentionDuration { Count = 14, DurationType = RetentionDurationType.Days }
             };
-            if (frequency != "Hourly") { retention.DailySchedule.RetentionTimes.Add(At(2)); }
+            if (frequency != "Hourly")
+            { retention.DailySchedule.RetentionTimes.Add(At(2)); }
         }
 
         BackupSchedulePolicy schedule;
@@ -60,7 +61,8 @@ public class IaasVmPolicyUpdaterTests
         {
             var v1 = new SimpleSchedulePolicy { ScheduleRunFrequency = new ScheduleRunType(frequency), ScheduleWeeklyFrequency = 1 };
             v1.ScheduleRunTimes.Add(At(2));
-            if (frequency == "Weekly") { v1.ScheduleRunDays.Add(BackupDayOfWeek.Sunday); }
+            if (frequency == "Weekly")
+            { v1.ScheduleRunDays.Add(BackupDayOfWeek.Sunday); }
             schedule = v1;
         }
 
@@ -86,13 +88,19 @@ public class IaasVmPolicyUpdaterTests
 
     private static PolicyUpdateRequest WeeklyTransition() => new()
     {
-        ScheduleFrequency = "Weekly", ScheduleDaysOfWeek = "Sunday,Wednesday", ScheduleTimes = "03:30",
-        WeeklyRetentionWeeks = 8, WeeklyRetentionDaysOfWeek = "Sunday"
+        ScheduleFrequency = "Weekly",
+        ScheduleDaysOfWeek = "Sunday,Wednesday",
+        ScheduleTimes = "03:30",
+        WeeklyRetentionWeeks = 8,
+        WeeklyRetentionDaysOfWeek = "Sunday"
     };
 
     private static PolicyUpdateRequest HourlyTransition() => new()
     {
-        ScheduleFrequency = "Hourly", HourlyIntervalHours = 6, HourlyWindowStartTime = "09:30", HourlyWindowDurationHours = 18
+        ScheduleFrequency = "Hourly",
+        HourlyIntervalHours = 6,
+        HourlyWindowStartTime = "09:30",
+        HourlyWindowDurationHours = 18
     };
 
     [Theory]
@@ -169,7 +177,8 @@ public class IaasVmPolicyUpdaterTests
             Assert.Equal(8, Retention(policy).WeeklySchedule.RetentionDuration.Count);
             Assert.Equal(BackupDayOfWeek.Sunday, Assert.Single(Retention(policy).WeeklySchedule.DaysOfTheWeek));
         }
-        else { Assert.Equal(30, Retention(policy).DailySchedule.RetentionDuration.Count); }
+        else
+        { Assert.Equal(30, Retention(policy).DailySchedule.RetentionDuration.Count); }
     }
 
     [Fact]
@@ -231,7 +240,8 @@ public class IaasVmPolicyUpdaterTests
 
         Assert.Same(retention, policy.RetentionPolicy);
         Assert.Equal(enhanced ? 2 : 5, policy.InstantRPRetentionRangeInDays);
-        if (!enhanced) { Assert.Same(schedule, policy.SchedulePolicy); }
+        if (!enhanced)
+        { Assert.Same(schedule, policy.SchedulePolicy); }
         var days = enhanced ? Assert.IsType<SimpleSchedulePolicyV2>(policy.SchedulePolicy).WeeklySchedule.ScheduleRunDays : Assert.IsType<SimpleSchedulePolicy>(policy.SchedulePolicy).ScheduleRunDays;
         Assert.Equal(new[] { BackupDayOfWeek.Sunday, BackupDayOfWeek.Wednesday }, days);
         Assert.Null(Retention(policy).DailySchedule);
@@ -614,9 +624,12 @@ public class IaasVmPolicyUpdaterTests
     {
         var policy = Policy(true);
         var request = HourlyTransition();
-        if (missing == "interval") { request.HourlyIntervalHours = null; }
-        if (missing == "start") { request.HourlyWindowStartTime = null; }
-        if (missing == "duration") { request.HourlyWindowDurationHours = null; }
+        if (missing == "interval")
+        { request.HourlyIntervalHours = null; }
+        if (missing == "start")
+        { request.HourlyWindowStartTime = null; }
+        if (missing == "duration")
+        { request.HourlyWindowDurationHours = null; }
         request.TimeZone = "Pacific Standard Time";
 
         Assert.Throws<ArgumentException>(() => IaasVmPolicyUpdater.Apply(policy, request));
@@ -659,8 +672,11 @@ public class IaasVmPolicyUpdaterTests
 
         IaasVmPolicyUpdater.Apply(policy, new()
         {
-            PolicySubType = enhanced ? "Enhanced" : "Standard", InstantRpRetentionDays = instantDays,
-            InstantRpResourceGroup = "updated-rg", SnapshotConsistency = "CrashConsistent", TimeZone = "Pacific Standard Time"
+            PolicySubType = enhanced ? "Enhanced" : "Standard",
+            InstantRpRetentionDays = instantDays,
+            InstantRpResourceGroup = "updated-rg",
+            SnapshotConsistency = "CrashConsistent",
+            TimeZone = "Pacific Standard Time"
         });
 
         Assert.Same(schedule, policy.SchedulePolicy);
@@ -807,7 +823,7 @@ public class IaasVmPolicyUpdaterTests
     }
 
     [Theory]
-    [InlineData("multiple-times")]
+    [InlineData("empty-time-entry")]
     [InlineData("bad-time")]
     [InlineData("both-times")]
     [InlineData("negative-retention")]
@@ -836,7 +852,7 @@ public class IaasVmPolicyUpdaterTests
     {
         var request = scenario switch
         {
-            "multiple-times" => new PolicyUpdateRequest { ScheduleTimes = "02:00,14:00" },
+            "empty-time-entry" => new PolicyUpdateRequest { ScheduleTimes = "02:00,,14:00" },
             "bad-time" => new PolicyUpdateRequest { ScheduleTime = "25:00" },
             "both-times" => new PolicyUpdateRequest { ScheduleTime = "02:00", ScheduleTimes = "03:00" },
             "negative-retention" => new PolicyUpdateRequest { DailyRetentionDays = "-1" },
@@ -908,6 +924,91 @@ public class IaasVmPolicyUpdaterTests
         Assert.Null(policy.SnapshotConsistencyType);
     }
 
+    [Theory]
+    [InlineData(false, "Daily")]
+    [InlineData(false, "Weekly")]
+    [InlineData(true, "Daily")]
+    [InlineData(true, "Weekly")]
+    public void Apply_MultipleScheduleTimes_ReconcilesEveryRetentionTier(bool enhanced, string frequency)
+    {
+        var policy = Policy(enhanced, frequency);
+        var retention = Retention(policy);
+        retention.WeeklySchedule ??= new WeeklyRetentionSchedule
+        {
+            RetentionDuration = new RetentionDuration { Count = 4, DurationType = RetentionDurationType.Weeks }
+        };
+        if (retention.WeeklySchedule.DaysOfTheWeek.Count == 0)
+        {
+            retention.WeeklySchedule.DaysOfTheWeek.Add(BackupDayOfWeek.Sunday);
+        }
+        retention.MonthlySchedule = new MonthlyRetentionSchedule();
+        retention.YearlySchedule = new YearlyRetentionSchedule();
+
+        IaasVmPolicyUpdater.Apply(policy, new() { ScheduleTimes = "02:00, 14:30" });
+
+        var expected = PolicyUpdateValidator.ParseTimes("02:00,14:30");
+        var actual = policy.SchedulePolicy is SimpleSchedulePolicy v1 ? v1.ScheduleRunTimes
+            : frequency == "Daily" ? ((SimpleSchedulePolicyV2)policy.SchedulePolicy).ScheduleRunTimes
+            : ((SimpleSchedulePolicyV2)policy.SchedulePolicy).WeeklySchedule.ScheduleRunTimes;
+        Assert.Equal(expected, actual);
+        if (frequency == "Daily")
+        { Assert.Equal(expected, retention.DailySchedule.RetentionTimes); }
+        Assert.Equal(expected, retention.WeeklySchedule.RetentionTimes);
+        Assert.Equal(expected, retention.MonthlySchedule.RetentionTimes);
+        Assert.Equal(expected, retention.YearlySchedule.RetentionTimes);
+
+        var model = (IPersistableModel<IaasVmProtectionPolicy>)policy;
+        var before = model.Write(ModelReaderWriterOptions.Json).ToString();
+        IaasVmPolicyUpdater.Apply(policy, frequency == "Daily"
+            ? new() { DailyRetentionDays = "30" }
+            : new() { WeeklyRetentionWeeks = 8, WeeklyRetentionDaysOfWeek = "Sunday" });
+        Assert.Equal(expected, actual);
+        Assert.Equal(expected, retention.WeeklySchedule.RetentionTimes);
+        Assert.Equal(expected, retention.MonthlySchedule.RetentionTimes);
+        Assert.Equal(expected, retention.YearlySchedule.RetentionTimes);
+        Assert.NotEqual(before, model.Write(ModelReaderWriterOptions.Json).ToString());
+    }
+
+    [Theory]
+    [InlineData("Daily", "Weekly")]
+    [InlineData("Daily", "Hourly")]
+    [InlineData("Weekly", "Daily")]
+    [InlineData("Weekly", "Hourly")]
+    [InlineData("Hourly", "Daily")]
+    [InlineData("Hourly", "Weekly")]
+    public void Apply_V2Transition_SerializesOnlyActiveScheduleBranch(string from, string to)
+    {
+        var policy = Policy(true, from);
+        var request = to == "Hourly" ? HourlyTransition()
+            : to == "Weekly" ? WeeklyTransition()
+            : new PolicyUpdateRequest { ScheduleFrequency = "Daily", ScheduleTimes = "04:00" };
+        if (from == "Weekly")
+        { request.DailyRetentionDays = "30"; }
+
+        IaasVmPolicyUpdater.Apply(policy, request);
+
+        var model = (IPersistableModel<SimpleSchedulePolicyV2>)Assert.IsType<SimpleSchedulePolicyV2>(policy.SchedulePolicy);
+        using var json = JsonDocument.Parse(model.Write(ModelReaderWriterOptions.Json).ToString());
+        foreach (var frequency in new[] { "Daily", "Weekly", "Hourly" })
+        {
+            var present = json.RootElement.TryGetProperty($"{frequency.ToLowerInvariant()}Schedule", out var branch)
+                && branch.ValueKind != JsonValueKind.Null;
+            Assert.Equal(frequency == to, present);
+        }
+    }
+
+    [Fact]
+    public void Apply_HourlyInterval24_RejectsWithoutMutation()
+    {
+        var policy = Policy(true, "Hourly");
+        // A live probe with a 24-hour interval and window returned BMSUserErrorInvalidPolicyInput.
+        Assert.Throws<ArgumentException>(() => IaasVmPolicyUpdater.Apply(policy, new() { HourlyIntervalHours = 24, HourlyWindowDurationHours = 24 }));
+        var hourly = ((SimpleSchedulePolicyV2)policy.SchedulePolicy).HourlySchedule;
+        Assert.Equal(4, hourly.Interval);
+        Assert.Equal(12, hourly.ScheduleWindowDuration);
+        Assert.Equal(At(8), hourly.ScheduleWindowStartOn);
+    }
+
     [Fact]
     public void Apply_NullArguments_Rejects()
     {
@@ -923,11 +1024,20 @@ public class IaasVmPolicyUpdaterTests
     {
         var options = new PolicyUpdateOptions
         {
-            Vault = "test-vault", ResourceGroup = "test-rg",
-            Policy = "isolated", HourlyIntervalHours = 6, HourlyWindowStartTime = "08:00", HourlyWindowDurationHours = 18,
-            PolicySubType = "Enhanced", InstantRpRetentionDays = "4", InstantRpResourceGroup = "snapshot-rg",
-            SnapshotConsistency = "CrashConsistent", ArchiveTierAfterDays = "90", ArchiveTierMode = "TierAfter",
-            SmartTier = smartTier, PolicyTags = "key=value"
+            Vault = "test-vault",
+            ResourceGroup = "test-rg",
+            Policy = "isolated",
+            HourlyIntervalHours = 6,
+            HourlyWindowStartTime = "08:00",
+            HourlyWindowDurationHours = 18,
+            PolicySubType = "Enhanced",
+            InstantRpRetentionDays = "4",
+            InstantRpResourceGroup = "snapshot-rg",
+            SnapshotConsistency = "CrashConsistent",
+            ArchiveTierAfterDays = "90",
+            ArchiveTierMode = "TierAfter",
+            SmartTier = smartTier,
+            PolicyTags = "key=value"
         };
 
         var request = PolicyUpdateRequest.FromOptions(options);

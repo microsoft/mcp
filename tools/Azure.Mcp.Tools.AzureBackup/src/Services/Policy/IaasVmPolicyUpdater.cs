@@ -84,14 +84,17 @@ internal static class IaasVmPolicyUpdater
         }
 
         var times = ExistingTimes(v1, v2, currentFrequency);
-        var suppliedTime = request.ScheduleTimes ?? request.ScheduleTime;
-        if (suppliedTime is not null)
+        if (request.ScheduleTimes is not null)
         {
-            times = [PolicyUpdateValidator.ParseTime(suppliedTime)];
+            times = PolicyUpdateValidator.ParseTimes(request.ScheduleTimes);
         }
-        if (scheduleOrRetentionChanged && !hourly && times.Count != 1)
+        else if (request.ScheduleTime is not null)
         {
-            throw new ArgumentException("Daily/Weekly VM schedules require exactly one schedule time. Supply --schedule-times when no unambiguous existing time is available.");
+            times = [PolicyUpdateValidator.ParseTime(request.ScheduleTime)];
+        }
+        if (scheduleOrRetentionChanged && !hourly && times.Count == 0)
+        {
+            throw new ArgumentException("Daily/Weekly VM schedules require schedule times. Supply --schedule-times when no existing times are available.");
         }
 
         var days = request.ScheduleDaysOfWeek is not null ? RsvPolicyBuilder.ParseDaysOfWeek(request.ScheduleDaysOfWeek)
@@ -168,7 +171,8 @@ internal static class IaasVmPolicyUpdater
         }
 
         // All preconditions are checked before changing the fetched SDK model.
-        if (request.TimeZone is not null) { policy.TimeZone = request.TimeZone; }
+        if (request.TimeZone is not null)
+        { policy.TimeZone = request.TimeZone; }
         if (scheduleChanged)
         {
             if (v1 is not null)
@@ -243,12 +247,17 @@ internal static class IaasVmPolicyUpdater
         if (scheduleChanged)
         {
             // Reconcile retained times only when the backup schedule was explicitly updated.
-            if (retention.DailySchedule is not null) { Replace(retention.DailySchedule.RetentionTimes, retentionTimes); }
-            if (retention.WeeklySchedule is not null) { Replace(retention.WeeklySchedule.RetentionTimes, retentionTimes); }
-            if (retention.MonthlySchedule is not null) { Replace(retention.MonthlySchedule.RetentionTimes, retentionTimes); }
-            if (retention.YearlySchedule is not null) { Replace(retention.YearlySchedule.RetentionTimes, retentionTimes); }
+            if (retention.DailySchedule is not null)
+            { Replace(retention.DailySchedule.RetentionTimes, retentionTimes); }
+            if (retention.WeeklySchedule is not null)
+            { Replace(retention.WeeklySchedule.RetentionTimes, retentionTimes); }
+            if (retention.MonthlySchedule is not null)
+            { Replace(retention.MonthlySchedule.RetentionTimes, retentionTimes); }
+            if (retention.YearlySchedule is not null)
+            { Replace(retention.YearlySchedule.RetentionTimes, retentionTimes); }
         }
-        if (request.InstantRpRetentionDays is not null) { policy.InstantRPRetentionRangeInDays = instantDays; }
+        if (request.InstantRpRetentionDays is not null)
+        { policy.InstantRPRetentionRangeInDays = instantDays; }
         if (request.InstantRpResourceGroup is not null)
         {
             policy.InstantRPDetails ??= new InstantRPAdditionalDetails();
@@ -291,12 +300,14 @@ internal static class IaasVmPolicyUpdater
 
     private static List<DateTimeOffset> ExistingTimes(SimpleSchedulePolicy? v1, SimpleSchedulePolicyV2? v2, ScheduleRunType? frequency)
     {
-        if (v1 is not null) { return v1.ScheduleRunTimes.ToList(); }
+        if (v1 is not null)
+        { return v1.ScheduleRunTimes.ToList(); }
         if (frequency == ScheduleRunType.Hourly)
         {
             return v2?.HourlySchedule?.ScheduleWindowStartOn is { } start ? [start] : [];
         }
-        if (frequency == ScheduleRunType.Weekly) { return v2?.WeeklySchedule?.ScheduleRunTimes.ToList() ?? []; }
+        if (frequency == ScheduleRunType.Weekly)
+        { return v2?.WeeklySchedule?.ScheduleRunTimes.ToList() ?? []; }
         // ScheduleRunTimes is the SDK's flattened dailySchedule.scheduleRunTimes property.
         return v2?.ScheduleRunTimes.ToList() ?? [];
     }
@@ -304,7 +315,8 @@ internal static class IaasVmPolicyUpdater
     private static void Replace<T>(IList<T> destination, IEnumerable<T> values)
     {
         destination.Clear();
-        foreach (var value in values) { destination.Add(value); }
+        foreach (var value in values)
+        { destination.Add(value); }
     }
 
     internal static Dictionary<string, string> ParseTags(string csv)
@@ -333,7 +345,8 @@ internal static class IaasVmPolicyUpdater
 
     internal static void MergeTags(IDictionary<string, string> destination, string? csv)
     {
-        if (csv is null) { return; }
+        if (csv is null)
+        { return; }
         var tags = ParseTags(csv);
         if (destination.Keys.Concat(tags.Keys).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 50)
         {

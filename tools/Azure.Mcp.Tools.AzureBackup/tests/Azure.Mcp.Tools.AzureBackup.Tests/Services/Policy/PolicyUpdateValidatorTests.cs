@@ -29,6 +29,23 @@ public class PolicyUpdateValidatorTests
         Assert.True(result.IsValid);
     }
 
+    [Theory]
+    [InlineData("02:00,14:00", true)]
+    [InlineData("02:00, 14:00", true)]
+    [InlineData("02:00,", false)]
+    [InlineData(",02:00", false)]
+    [InlineData("02:00,,14:00", false)]
+    [InlineData("02:00,25:00", false)]
+    public void Validate_ScheduleTimes_ValidatesEachCsvEntry(string times, bool valid)
+    {
+        var options = BaseOptions();
+        options.ScheduleTimes = times;
+        Assert.Equal(valid, PolicyUpdateValidator.Validate(options).IsValid);
+        options.ScheduleTimes = null;
+        options.ScheduleTime = times;
+        Assert.False(PolicyUpdateValidator.Validate(options).IsValid);
+    }
+
     [Fact]
     public void Validate_EmptyOptions_Passes()
     {

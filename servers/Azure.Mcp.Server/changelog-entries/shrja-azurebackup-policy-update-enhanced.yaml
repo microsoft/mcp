@@ -27,3 +27,6 @@ changes:
       local times. Preserve omitted hourly timestamps and existing UTC behavior;
       Daily/Weekly time parsing is unchanged. Future seasonal DST adjustments are
       not calculated.
+      Preserve comma-separated Daily/Weekly schedule times and reconcile every
+      retention time on explicit schedule updates. Retain exception diagnostics
+      in policy-update logs while preserving sanitized top-level Azure error messages.

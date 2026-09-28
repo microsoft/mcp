@@ -181,10 +181,13 @@ public static class PolicyUpdateValidator
     {
         if (!TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
         {
-            throw new ArgumentException("Invalid schedule time. Specify exactly one HH:mm time.");
+            throw new ArgumentException("Invalid schedule time. Each time must use HH:mm format.");
         }
         return new DateTimeOffset(2000, 1, 1, time.Hour, time.Minute, 0, TimeSpan.Zero);
     }
+
+    internal static List<DateTimeOffset> ParseTimes(string value) =>
+        value.Split(',').Select(time => ParseTime(time.Trim())).ToList();
 
     internal static int ParsePositive(string value)
     {
@@ -242,7 +245,7 @@ public static class PolicyUpdateValidator
         });
 
         Text("--schedule-time", o.ScheduleTime, v => ParseTime(v));
-        Text("--schedule-times", o.ScheduleTimes, v => ParseTime(v));
+        Csv("--schedule-times", o.ScheduleTimes, v => ParseTimes(v));
         Text("--hourly-window-start-time", o.HourlyWindowStartTime, v => ParseTime(v));
         Text("--daily-retention-days", o.DailyRetentionDays, v =>
         {
@@ -253,15 +256,18 @@ public static class PolicyUpdateValidator
         });
         Text("--instant-rp-retention-days", o.InstantRpRetentionDays, v =>
         {
-            if (ParsePositive(v) > 30) { throw new ArgumentException("Instant retention must be 1-30 days; Azure enforces schedule-specific limits."); }
+            if (ParsePositive(v) > 30)
+            { throw new ArgumentException("Instant retention must be 1-30 days; Azure enforces schedule-specific limits."); }
         });
         Text("--archive-tier-after-days", o.ArchiveTierAfterDays, v =>
         {
-            if (ParsePositive(v) < 45) { throw new ArgumentException("VM archive tiering requires at least 45 days."); }
+            if (ParsePositive(v) < 45)
+            { throw new ArgumentException("VM archive tiering requires at least 45 days."); }
         });
         Text("--time-zone", o.TimeZone, v =>
         {
-            if (!TimeZoneInfo.TryFindSystemTimeZoneById(v, out _)) { throw new ArgumentException("Unknown time-zone identifier."); }
+            if (!TimeZoneInfo.TryFindSystemTimeZoneById(v, out _))
+            { throw new ArgumentException("Unknown time-zone identifier."); }
         });
         Text("--instant-rp-resource-group", o.InstantRpResourceGroup, v =>
         {
@@ -294,7 +300,8 @@ public static class PolicyUpdateValidator
 
         void Require(bool valid, string flag, string message)
         {
-            if (!valid) { issues.Add(new PolicyValidationIssue(flag, message)); }
+            if (!valid)
+            { issues.Add(new PolicyValidationIssue(flag, message)); }
         }
         Require(o.WeeklyRetentionWeeks is >= 0 and <= 5163, "--weekly-retention-weeks", "Weekly retention must be 1-5163 weeks when supplied.");
         Require(o.MonthlyRetentionMonths is >= 0 and <= 1188, "--monthly-retention-months", "Monthly retention must be 1-1188 months when supplied.");

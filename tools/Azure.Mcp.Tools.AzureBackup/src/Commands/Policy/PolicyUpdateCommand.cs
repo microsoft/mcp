@@ -62,7 +62,7 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error updating policy. Policy: {Policy}, Vault: {Vault}",
+            _logger.LogError(ex, "Error updating policy. Policy: {Policy}, Vault: {Vault}",
                 options.Policy, options.Vault);
             HandleException(context, ex);
         }

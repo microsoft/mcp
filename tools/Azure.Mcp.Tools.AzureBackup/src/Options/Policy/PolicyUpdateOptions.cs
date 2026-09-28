@@ -27,7 +27,7 @@ public sealed class PolicyUpdateOptions : BaseAzureBackupOptions
     [Option(Description = "Backup schedule frequency: 'Daily', 'Weekly', or 'Hourly'. Hourly requires an existing Enhanced policy. Changing the policy subtype is not supported. RSV Azure VM only.")]
     public string? ScheduleFrequency { get; set; }
 
-    [Option(Description = "One backup time in 24h HH:mm format (e.g., '02:00') for Daily or Weekly schedules. Interpreted in --time-zone. Mutually exclusive with --schedule-time. RSV Azure VM only.")]
+    [Option(Description = "Comma-separated backup times in 24h HH:mm format (e.g., '02:00,14:00') for Daily or Weekly schedules. Interpreted in --time-zone. Azure enforces schedule-specific limits. Mutually exclusive with --schedule-time. RSV Azure VM only.")]
     public string? ScheduleTimes { get; set; }
 
     [Option(Description = "Comma-separated days of the week the backup should run (e.g., 'Monday,Wednesday,Friday'). Required for Weekly schedules. RSV Azure VM only.")]

@@ -803,7 +803,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             if (replaceTimes)
             {
                 weekly.RetentionTimes.Clear();
-                foreach (var time in scheduleTimes) { weekly.RetentionTimes.Add(time); }
+                foreach (var time in scheduleTimes)
+                { weekly.RetentionTimes.Add(time); }
             }
             retention.WeeklySchedule = weekly;
         }
@@ -843,7 +844,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             if (replaceTimes)
             {
                 monthly.RetentionTimes.Clear();
-                foreach (var time in scheduleTimes) { monthly.RetentionTimes.Add(time); }
+                foreach (var time in scheduleTimes)
+                { monthly.RetentionTimes.Add(time); }
             }
             retention.MonthlySchedule = monthly;
         }
@@ -888,7 +890,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             if (replaceTimes)
             {
                 yearly.RetentionTimes.Clear();
-                foreach (var time in scheduleTimes) { yearly.RetentionTimes.Add(time); }
+                foreach (var time in scheduleTimes)
+                { yearly.RetentionTimes.Add(time); }
             }
             retention.YearlySchedule = yearly;
         }

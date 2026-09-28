@@ -81,15 +81,19 @@ public class AzureBackupPolicyUpdateEnhancedCommandTests(
     {
         var name = await CreatePolicyAsync("daily-hourly", new()
         {
-            ["policy-sub-type"] = "Enhanced", ["schedule-frequency"] = "Daily", ["schedule-times"] = "02:00"
+            ["policy-sub-type"] = "Enhanced",
+            ["schedule-frequency"] = "Daily",
+            ["schedule-times"] = "02:00"
         });
         var before = await GetPolicyAsync(name);
         AssertSchedule(before, "V2", "Daily", "02:00");
 
         await UpdatePolicyAsync(name, new()
         {
-            ["schedule-frequency"] = "Hourly", ["hourly-interval-hours"] = 6,
-            ["hourly-window-start-time"] = "08:00", ["hourly-window-duration-hours"] = 18
+            ["schedule-frequency"] = "Hourly",
+            ["hourly-interval-hours"] = 6,
+            ["hourly-window-start-time"] = "08:00",
+            ["hourly-window-duration-hours"] = 18
         });
 
         var after = await GetPolicyAsync(name);
@@ -119,7 +123,9 @@ public class AzureBackupPolicyUpdateEnhancedCommandTests(
     {
         var name = await CreatePolicyAsync("daily-retention", new()
         {
-            ["policy-sub-type"] = "Enhanced", ["schedule-frequency"] = "Daily", ["schedule-times"] = "03:30"
+            ["policy-sub-type"] = "Enhanced",
+            ["schedule-frequency"] = "Daily",
+            ["schedule-times"] = "03:30"
         });
         var before = await GetPolicyAsync(name);
 
@@ -136,16 +142,21 @@ public class AzureBackupPolicyUpdateEnhancedCommandTests(
     {
         var name = await CreatePolicyAsync("standard-weekly", new()
         {
-            ["policy-sub-type"] = "Standard", ["schedule-frequency"] = "Daily", ["schedule-times"] = "02:00"
+            ["policy-sub-type"] = "Standard",
+            ["schedule-frequency"] = "Daily",
+            ["schedule-times"] = "02:00"
         });
         var before = await GetPolicyAsync(name);
         AssertSchedule(before, "V1", "Daily", "02:00");
 
         await UpdatePolicyAsync(name, new()
         {
-            ["schedule-frequency"] = "Weekly", ["schedule-times"] = "03:30", ["schedule-days-of-week"] = "Sunday",
+            ["schedule-frequency"] = "Weekly",
+            ["schedule-times"] = "03:30",
+            ["schedule-days-of-week"] = "Sunday",
             ["instant-rp-retention-days"] = "5",
-            ["weekly-retention-weeks"] = 8, ["weekly-retention-days-of-week"] = "Sunday"
+            ["weekly-retention-weeks"] = 8,
+            ["weekly-retention-days-of-week"] = "Sunday"
         });
 
         var after = await GetPolicyAsync(name);
@@ -171,8 +182,10 @@ public class AzureBackupPolicyUpdateEnhancedCommandTests(
 
         await UpdatePolicyAsync(name, new()
         {
-            ["instant-rp-retention-days"] = "4", ["instant-rp-resource-group"] = prefix,
-            ["snapshot-consistency"] = "CrashConsistent", ["policy-tags"] = "replace=new,added=enhanced"
+            ["instant-rp-retention-days"] = "4",
+            ["instant-rp-resource-group"] = prefix,
+            ["snapshot-consistency"] = "CrashConsistent",
+            ["policy-tags"] = "replace=new,added=enhanced"
         });
 
         var after = await GetPolicyAsync(name);
@@ -248,7 +261,8 @@ public class AzureBackupPolicyUpdateEnhancedCommandTests(
         parameters["workload-type"] = "AzureVM";
         parameters["daily-retention-days"] = "14";
         parameters["time-zone"] = "UTC";
-        foreach (var (key, value) in seed) { parameters[key] = value; }
+        foreach (var (key, value) in seed)
+        { parameters[key] = value; }
         var result = await CallToolAsync("azurebackup_policy_create", parameters);
         Assert.Equal("Succeeded", result.AssertProperty("result").AssertProperty("status").GetString());
         return name;
@@ -257,7 +271,8 @@ public class AzureBackupPolicyUpdateEnhancedCommandTests(
     private async Task UpdatePolicyAsync(string name, Dictionary<string, object?> changes)
     {
         var parameters = Parameters(name);
-        foreach (var (key, value) in changes) { parameters[key] = value; }
+        foreach (var (key, value) in changes)
+        { parameters[key] = value; }
         var result = await CallToolAsync("azurebackup_policy_update", parameters);
         Assert.Equal("Succeeded", result.AssertProperty("result").AssertProperty("status").GetString());
     }
@@ -275,16 +290,26 @@ public class AzureBackupPolicyUpdateEnhancedCommandTests(
 
     private static Dictionary<string, object?> HourlySeed() => new()
     {
-        ["policy-sub-type"] = "Enhanced", ["schedule-frequency"] = "Hourly",
-        ["hourly-interval-hours"] = 4, ["hourly-window-start-time"] = "08:00", ["hourly-window-duration-hours"] = 12
+        ["policy-sub-type"] = "Enhanced",
+        ["schedule-frequency"] = "Hourly",
+        ["hourly-interval-hours"] = 4,
+        ["hourly-window-start-time"] = "08:00",
+        ["hourly-window-duration-hours"] = 12
     };
 
     private static Dictionary<string, object?> ArchiveSeed() => new()
     {
-        ["policy-sub-type"] = "Standard", ["daily-retention-days"] = "30",
-        ["weekly-retention-weeks"] = 12, ["weekly-retention-days-of-week"] = "Sunday",
-        ["monthly-retention-months"] = 24, ["monthly-retention-week-of-month"] = "First", ["monthly-retention-days-of-week"] = "Sunday",
-        ["yearly-retention-years"] = 5, ["yearly-retention-months"] = "January", ["yearly-retention-week-of-month"] = "First", ["yearly-retention-days-of-week"] = "Sunday"
+        ["policy-sub-type"] = "Standard",
+        ["daily-retention-days"] = "30",
+        ["weekly-retention-weeks"] = 12,
+        ["weekly-retention-days-of-week"] = "Sunday",
+        ["monthly-retention-months"] = 24,
+        ["monthly-retention-week-of-month"] = "First",
+        ["monthly-retention-days-of-week"] = "Sunday",
+        ["yearly-retention-years"] = 5,
+        ["yearly-retention-months"] = "January",
+        ["yearly-retention-week-of-month"] = "First",
+        ["yearly-retention-days-of-week"] = "Sunday"
     };
 
     private static JsonElement Schedule(JsonElement policy) => policy.AssertProperty("details").AssertProperty("schedulePolicy");
