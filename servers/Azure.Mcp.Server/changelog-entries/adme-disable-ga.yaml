@@ -1,0 +1,4 @@
+changes:
+  - section: "Other"
+    description: "Disabled the Adme setup for the GA release."
+
