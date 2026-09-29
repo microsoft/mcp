@@ -283,7 +283,10 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
 
         if (!string.IsNullOrEmpty(endpointUrl))
         {
-            EndpointValidator.ValidatePublicTargetUrl(endpointUrl, logger);
+            EndpointValidator.ValidatePublicTargetUrl(
+                url: endpointUrl,
+                logger: logger,
+                executingToolNamespaceName: "loadtesting");
         }
 
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;

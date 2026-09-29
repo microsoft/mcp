@@ -68,7 +68,6 @@ public sealed class OpenAiChatCompletionsCreateCommand(IFoundryExtensionsService
                 options.FrequencyPenalty,
                 options.PresencePenalty,
                 options.Stop,
-                options.Stream,
                 options.Seed,
                 options.User,
                 options.Tenant,

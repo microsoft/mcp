@@ -21,4 +21,10 @@ public sealed class PrivateEndpointCreateOptions : BaseAzureBackupOptions
 
     [Option(Description = AzureBackupOptionDefinitions.PrivateEndpointAutoApprove)]
     public bool? AutoApprove { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.PrivateEndpointDnsZoneIds)]
+    public string? PrivateDnsZoneIds { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.PrivateEndpointDnsZoneGroupName)]
+    public string? PrivateDnsZoneGroupName { get; set; }
 }

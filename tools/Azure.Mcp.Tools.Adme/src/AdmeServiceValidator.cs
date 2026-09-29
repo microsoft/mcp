@@ -162,7 +162,11 @@ internal static class AdmeServiceValidator
 
     public static Uri ValidateEndpoint(Uri endpoint)
     {
-        EndpointValidator.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, "adme", ArmEnvironment.AzurePublicCloud);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint.AbsoluteUri,
+            serviceType: "adme",
+            ArmEnvironment.AzurePublicCloud,
+            executingToolNamespaceName: "adme");
         return endpoint;
     }
 }

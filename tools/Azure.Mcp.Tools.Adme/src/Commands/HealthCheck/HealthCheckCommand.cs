@@ -17,7 +17,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
     Name = "check",
     Title = "Check ADME/OSDU Health",
     Description = """
-        Check an ADME/OSDU endpoint's health, authentication and connectivity.
+        Check an ADME/OSDU endpoint's health and connectivity.
+        This verifies the authentication, not entitlements(data-access). 
         Returns health status with error details and the service HTTP status code.
         """,
     OperationPlane = ToolOperationPlane.Data,

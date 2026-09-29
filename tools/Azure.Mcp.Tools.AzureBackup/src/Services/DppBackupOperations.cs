@@ -783,7 +783,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
-        string? immutabilityState, string? identityType, string? tags,
+        string? immutabilityState, string? identityType, string? userAssignedIdentity,
+        string? publicNetworkAccess, string? tags,
         string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -798,6 +799,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                 "Set --storage-type during vault creation instead.");
         }
 
+        if (!string.IsNullOrEmpty(publicNetworkAccess))
+        {
+            throw new ArgumentException(
+                "--public-network-access is only supported for Recovery Services vaults (RSV) via this tool. Configure public network access on a Backup vault (DPP) through the Azure portal or ARM.");
+        }
+
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
@@ -807,8 +814,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         if (!string.IsNullOrEmpty(identityType))
         {
-            patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                ParseIdentityType(identityType));
+            patchData.Identity = VaultIdentityHelper.BuildManagedServiceIdentity(identityType, userAssignedIdentity);
+        }
+        else if (!string.IsNullOrEmpty(userAssignedIdentity))
+        {
+            throw new ArgumentException(
+                "--user-assigned-identity was provided but --identity-type is not set. Set --identity-type to 'UserAssigned' or 'SystemAssigned,UserAssigned' to associate user-assigned identities.");
         }
 
         var securitySettings = new BackupVaultSecuritySettings();
@@ -951,18 +962,6 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
     }
-
-    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
-        identityType.ToUpperInvariant() switch
-        {
-            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
-            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
-            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
-                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
-            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
-            _ => throw new ArgumentException(
-                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
-        };
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -1390,15 +1389,17 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
     private static BackupPolicyInfo MapToPolicyInfo(DataProtectionBackupPolicyData data)
     {
-        var datasourceTypes = data.Properties is DataProtectionBackupPolicyPropertiesBase props
+        var properties = data.Properties;
+        var datasourceTypes = properties is DataProtectionBackupPolicyPropertiesBase props
             ? props.DataSourceTypes?.ToList() as IReadOnlyList<string>
             : null;
 
         string? scheduleFrequency = null;
         string? scheduleTime = null;
         int? dailyRetentionDays = null;
+        BackupPolicyDppDetails? dppDetails = null;
 
-        if (data.Properties is RuleBasedBackupPolicy ruleBasedPolicy)
+        if (properties is RuleBasedBackupPolicy ruleBasedPolicy)
         {
             foreach (var rule in ruleBasedPolicy.PolicyRules)
             {
@@ -1430,6 +1431,18 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
                     }
                 }
             }
+
+            dppDetails = new BackupPolicyDppDetails(
+                DataSourceTypes: datasourceTypes,
+                ObjectType: ruleBasedPolicy.GetType().Name,
+                Rules: MapDppPolicyRules(ruleBasedPolicy.PolicyRules));
+        }
+        else if (properties is not null)
+        {
+            dppDetails = new BackupPolicyDppDetails(
+                DataSourceTypes: datasourceTypes,
+                ObjectType: properties.GetType().Name,
+                Rules: null);
         }
 
         return new BackupPolicyInfo(
@@ -1440,7 +1453,99 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             null,
             scheduleFrequency,
             scheduleTime,
-            dailyRetentionDays);
+            dailyRetentionDays,
+            Details: null,
+            DppDetails: dppDetails);
+    }
+
+    private static IReadOnlyList<BackupPolicyDppRule>? MapDppPolicyRules(IEnumerable<DataProtectionBasePolicyRule>? rules)
+    {
+        if (rules is null)
+        {
+            return null;
+        }
+
+        var mapped = new List<BackupPolicyDppRule>();
+        foreach (var rule in rules)
+        {
+            switch (rule)
+            {
+                case DataProtectionBackupRule backupRule:
+                    var scheduleTrigger = backupRule.Trigger as ScheduleBasedBackupTriggerContext;
+                    mapped.Add(new BackupPolicyDppRule(
+                        Name: backupRule.Name,
+                        ObjectType: backupRule.GetType().Name,
+                        IsDefault: null,
+                        BackupType: (backupRule.BackupParameters as DataProtectionBackupSettings)?.BackupType,
+                        DataStoreType: backupRule.DataStore?.DataStoreType.ToString(),
+                        ScheduleTimeZone: scheduleTrigger?.Schedule?.TimeZone,
+                        RepeatingTimeIntervals: scheduleTrigger?.Schedule?.RepeatingTimeIntervals?.ToList(),
+                        TaggingCriteria: MapDppTaggingCriteria(scheduleTrigger?.TaggingCriteriaList),
+                        Lifecycles: null));
+                    break;
+                case DataProtectionRetentionRule retentionRule:
+                    mapped.Add(new BackupPolicyDppRule(
+                        Name: retentionRule.Name,
+                        ObjectType: retentionRule.GetType().Name,
+                        IsDefault: retentionRule.IsDefault,
+                        BackupType: null,
+                        DataStoreType: null,
+                        ScheduleTimeZone: null,
+                        RepeatingTimeIntervals: null,
+                        TaggingCriteria: null,
+                        Lifecycles: MapDppLifecycles(retentionRule.Lifecycles)));
+                    break;
+            }
+        }
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppTaggingCriteria>? MapDppTaggingCriteria(
+        IEnumerable<DataProtectionBackupTaggingCriteria>? taggingCriteria)
+    {
+        if (taggingCriteria is null)
+        {
+            return null;
+        }
+
+        var mapped = taggingCriteria.Select(static criteria => new BackupPolicyDppTaggingCriteria(
+            criteria.TagInfo?.TagName,
+            criteria.IsDefault,
+            criteria.TaggingPriority,
+            criteria.Criteria?.Select(static c => c.GetType().Name).ToList())).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppLifecycle>? MapDppLifecycles(IEnumerable<SourceLifeCycle>? lifecycles)
+    {
+        if (lifecycles is null)
+        {
+            return null;
+        }
+
+        var mapped = lifecycles.Select(static lifecycle => new BackupPolicyDppLifecycle(
+            SourceDataStoreType: lifecycle.SourceDataStore?.DataStoreType.ToString(),
+            DeleteAfterDuration: lifecycle.DeleteAfter?.Duration.ToString(),
+            DeleteAfterType: lifecycle.DeleteAfter?.GetType().Name,
+            TargetCopySettings: MapDppCopySettings(lifecycle.TargetDataStoreCopySettings))).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static IReadOnlyList<BackupPolicyDppCopySetting>? MapDppCopySettings(IEnumerable<TargetCopySetting>? copySettings)
+    {
+        if (copySettings is null)
+        {
+            return null;
+        }
+
+        var mapped = copySettings.Select(static copySetting => new BackupPolicyDppCopySetting(
+            copySetting.DataStore?.DataStoreType.ToString(),
+            copySetting.CopyAfter?.GetType().Name)).ToList();
+
+        return mapped.Count > 0 ? mapped : null;
     }
 
     private static BackupJobInfo MapToJobInfo(DataProtectionBackupJobData data)

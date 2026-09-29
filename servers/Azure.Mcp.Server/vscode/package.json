@@ -107,7 +107,7 @@
                             "pricing",
                             "quota",
                             "redis",
-                            "resilience",
+                            "resiliency",
                             "resourcehealth",
                             "role",
                             "search",

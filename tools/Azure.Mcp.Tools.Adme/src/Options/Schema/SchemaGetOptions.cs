@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Schema;
 /// </summary>
 public sealed class SchemaGetOptions
 {
-    [Option(Description = "The fully-qualified kind 'authority:source:type:version', for example 'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use 'azmcp adme schema list' to discover valid kinds and versions.")]
+    [Option(Description = "The fully-qualified kind 'authority:source:type:version', for example 'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use the schema list operation to discover valid kinds and versions.")]
     public required string Kind { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]

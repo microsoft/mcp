@@ -20,6 +20,9 @@ namespace Azure.Mcp.Tools.Storage.Commands.Account;
     Description = """
         Creates an Azure Storage account in the specified resource group and location and returns the created storage account
         information including name, location, SKU, access settings, and configuration details.
+
+        Storage account name rules: 3-24 characters, lowercase letters and numbers only, and must be globally unique
+        across all of Azure (not just within your subscription) - choose a distinctive name to avoid a name-conflict error.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,

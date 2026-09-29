@@ -266,6 +266,68 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
+    public async Task VaultUpdate_RsvVault_TogglesPublicNetworkAccess_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv-pe";
+
+        var disableResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "public-network-access", "Disabled" }
+            });
+
+        Assert.Equal("Succeeded", disableResult.AssertProperty("result").AssertProperty("status").GetString());
+
+        var enableResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "public-network-access", "Enabled" }
+            });
+
+        Assert.Equal("Succeeded", enableResult.AssertProperty("result").AssertProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task VaultUpdate_RsvVault_AttachesUserAssignedIdentity_Successfully()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-rsv-pe";
+        var userAssignedIdentityId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{Settings.ResourceBaseName}-uami";
+
+        var attachResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "identity-type", "SystemAssigned,UserAssigned" },
+                { "user-assigned-identity", userAssignedIdentityId }
+            });
+
+        Assert.Equal("Succeeded", attachResult.AssertProperty("result").AssertProperty("status").GetString());
+
+        var restoreResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "identity-type", "SystemAssigned" }
+            });
+
+        Assert.Equal("Succeeded", restoreResult.AssertProperty("result").AssertProperty("status").GetString());
+    }
+
+    [Fact]
     public async Task VaultGet_FiltersByVaultType_Successfully()
     {
         var result = await CallToolAsync(
@@ -597,6 +659,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         policy.AssertProperty("name");
         Assert.Equal("rsv", policy.AssertProperty("vaultType").GetString());
         policy.AssertProperty("datasourceTypes");
+
+        // Full RSV policy representation (details) should be populated for the built-in VM policy
+        var details = policy.AssertProperty("details");
+        Assert.Equal("AzureIaasVM", details.AssertProperty("workloadType").GetString());
+        Assert.Equal("AzureIaasVM", details.AssertProperty("backupManagementType").GetString());
+        details.AssertProperty("schedulePolicy");
+        details.AssertProperty("retentionPolicy");
     }
 
     [Fact]
@@ -1303,7 +1372,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "policy", policyName },
-                { "workload-type", "AzureDisk" }
+                { "workload-type", "AzureDisk" },
+                { "daily-retention-days", "30" }
             });
 
         var result = await CallToolAsync(
@@ -1321,6 +1391,14 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var policy = policies.EnumerateArray().First();
         Assert.Equal("dpp", policy.AssertProperty("vaultType").GetString());
+
+        // Full DPP policy representation (dppDetails) should be populated with rules
+        var dppDetails = policy.AssertProperty("dppDetails");
+        dppDetails.AssertProperty("dataSourceTypes");
+        Assert.Equal("RuleBasedBackupPolicy", dppDetails.AssertProperty("objectType").GetString());
+        var rules = dppDetails.AssertProperty("rules");
+        Assert.Equal(JsonValueKind.Array, rules.ValueKind);
+        Assert.True(rules.GetArrayLength() > 0);
     }
 
     #endregion
