@@ -53,6 +53,19 @@ jobs:
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
             MainPublisher: 'ESRPRELPACMANTEST'
+        
+        - task: TwineAuthenticate@0
+          displayName: 'Authenticate to feed: public/azure-sdk-for-python
+          inputs:
+            artifactFeeds: public/azure-sdk-for-python
+
+        - script: |
+            set -e
+            twine upload --repository public/azure-sdk-for-python --config-file $(PYPIRC_PATH) $(Pipeline.Workspace)/esrp-release/${{ parameters.ServerName }}/*.whl
+            echo "Uploaded whl to devops feed"
+            twine upload --repository public/azure-sdk-for-python --config-file $(PYPIRC_PATH) $(Pipeline.Workspace)/esrp-release/${{ parameters.ServerName }}/*.tar.gz
+            echo "Uploaded sdist to devops feed"
+          displayName: 'Publish package to feed: public/azure-sdk-for-python'
 
         - ${{ if eq(parameters.IncludeNative, true) }}:
           - pwsh: |
@@ -80,3 +93,11 @@ jobs:
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
               MainPublisher: 'ESRPRELPACMANTEST'
+
+          - script: |
+              set -e
+              twine upload --repository public/azure-sdk-for-python --config-file $(PYPIRC_PATH) $(Pipeline.Workspace)/esrp-release/${{ parameters.ServerName }}/*.whl
+              echo "Uploaded whl to devops feed"
+              twine upload --repository public/azure-sdk-for-python --config-file $(PYPIRC_PATH) $(Pipeline.Workspace)/esrp-release/${{ parameters.ServerName }}/*.tar.gz
+              echo "Uploaded sdist to devops feed"
+            displayName: 'Publish native package to feed: public/azure-sdk-for-python'
