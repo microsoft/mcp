@@ -227,6 +227,28 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("SystemAssigned", identityType, ignoreCase: true);
     }
 
+    [Theory]
+    [InlineData("rsv")]
+    [InlineData("dpp")]
+    public async Task VaultCreate_ExistingVault_ReturnsConflict(string vaultType)
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-{vaultType}";
+        var result = await CallToolAsync(
+            "azurebackup_vault_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", vaultType },
+                { "location", "eastus" }
+            },
+            resultProcessor: static root => root);
+
+        Assert.Equal(409, result.AssertProperty("status").GetInt32());
+        Assert.Contains("azurebackup_vault_update", result.AssertProperty("message").GetString());
+    }
+
     [Fact]
     public async Task VaultUpdate_UpdatesTags_Successfully()
     {

@@ -1009,6 +1009,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 🛡️ Azure Backup
 
+Vault creation checks whether the requested Recovery Services vault or Backup vault already exists and rejects existing vaults. Use `azurebackup_vault_update` to modify an existing vault. Creation requires read permission on the target vault in addition to write permission. The existence check and creation are separate ARM requests, so this check is not an atomic guarantee against concurrent creation by another caller.
+
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
