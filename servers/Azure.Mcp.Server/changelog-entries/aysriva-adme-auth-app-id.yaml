@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added support for customer-specific resource application IDs when authenticating ADME requests."
