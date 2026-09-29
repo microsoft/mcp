@@ -36,7 +36,7 @@ For operational Azure Resilience Management requests, use the Azure Resilience M
 ## Route the Request
 
 - Usage plan or enrollment → `mcp_azure_mcp_ser_resiliency_usageplan_*`
-- Goal template, assignment, or member → `mcp_azure_mcp_ser_resiliency_goal_*`
+- Goal assignment or member → `mcp_azure_mcp_ser_resiliency_goal_*`
 - Drill definition, execution, run, or target → `mcp_azure_mcp_ser_resiliency_drill_*`
 - Recovery plan lifecycle or recovery operation → `mcp_azure_mcp_ser_resiliency_recoveryplan_*`
 - Recovery plan membership/protection → `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_*`
