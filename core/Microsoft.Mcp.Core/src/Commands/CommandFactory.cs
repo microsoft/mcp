@@ -314,7 +314,7 @@ public class CommandFactory : ICommandFactory
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
-            using var activity = _telemetryService.StartActivity(ActivityName.ToolExecuted);
+            using var activity = _telemetryService.StartActivity(ActivityName.ToolExecuted, null, null);
             activity?.SetTag(TagName.ToolId, implementation.Id)
                 .SetTag(TagName.ToolSource, "internal")
                 .SetTag(TagName.ServerMode, "cli");
