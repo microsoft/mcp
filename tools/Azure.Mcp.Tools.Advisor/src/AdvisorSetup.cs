@@ -34,16 +34,18 @@ public class AdvisorSetup : IAreaSetup
     {
         // Create Advisor command group
         var advisor = new CommandGroup(Name,
-            "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions OR Apply Azure " +
-            "Advisor recommendations to your IaaC files (ARM, Terraform). Use when you need subscription-scoped " +
-            "visibility into Advisor recommendations OR want to apply Advisor recommendations to your IaaC files. " +
-            "Requires Azure subscription context for querying Advisor recommendations.",
+            "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions, update recommendation " +
+            "state in a subscription or service group, or apply Azure Advisor recommendations to your IaaC files " +
+            "(ARM, Terraform). Use when you need visibility into Advisor recommendations, want to manage their " +
+            "customer-provided state, or want to apply Advisor recommendations to your IaaC files. Requires Azure " +
+            "subscription context for querying recommendations and subscription-scoped updates; service-group updates " +
+            "use service-group context.",
             Title);
 
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; update customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
+            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; update subscription- or service-group-scoped customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(
