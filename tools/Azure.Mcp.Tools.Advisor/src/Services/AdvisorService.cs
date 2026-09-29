@@ -29,6 +29,10 @@ public class AdvisorService(IAzureService azureService)
     // invariant English metadata to keep the enriched fields deterministic.
     internal const string MetadataJoinLanguage = "en";
 
+    // Recommendation type shared by all personalized (Review) recommendations; its metadata holds placeholder text,
+    // so instances of this type keep their own values.
+    private const string PersonalizedRecommendationTypeId = "6d732ac5-82e0-4a66-887e-eccee79a2063";
+
     private static readonly Dictionary<string, int> ImpactRank = new(StringComparer.OrdinalIgnoreCase)
     {
         ["High"] = 0,
@@ -98,11 +102,13 @@ public class AdvisorService(IAzureService azureService)
 
         // A single tenant-scoped query joins recommendations with the metadata catalog and overrides the
         // type-level fields server-side, so no follow-up metadata call or client-side merge is needed.
+        // One extra row is fetched because ARG's '| limit' never reports truncation; its presence means more
+        // results exist beyond top, and it is trimmed before returning.
         var query = BuildRecommendationListQuery(
             scope,
             predicates,
             prioritized,
-            top,
+            top + 1,
             MetadataJoinLanguage);
 
         var recommendations = await ExecuteRecommendationListQueryAsync(
@@ -161,17 +167,12 @@ public class AdvisorService(IAzureService azureService)
 
         if (prioritized)
         {
-            // Rank by the recommendation type's metadata priority score; break ties on equal scores by business
-            // impact (High -> Medium -> Low), then by type ID so each type's instances stay contiguous (priority
-            // scores are coarse and many types share the same score and impact), then order by criticality
-            // within the type. Ordering runs before the projection so the metadata-only sort keys survive; missing
-            // scores/impact sort last, and id is the final tiebreaker for a fully deterministic result.
-            query += " | extend metadataImpactRank = case(" +
-                "tolower(metadataImpact) == 'high', 0, " +
-                "tolower(metadataImpact) == 'medium', 1, " +
-                "tolower(metadataImpact) == 'low', 2, 3)";
-            query += " | order by metadataPriorityScore desc, metadataImpactRank asc, joinTypeId asc," +
-                " todouble(properties.criticalityScore) desc, id asc";
+            // Rank by the recommendation type's metadata priority score; break ties on equal scores by the instance's
+            // contextual criticality score, then by the type's metadata display name. Ordering runs before the
+            // projection so the metadata-only sort keys survive; missing priority scores sort last, and id is the
+            // final tiebreaker for a fully deterministic result.
+            query += " | order by metadataPriorityScore desc, todouble(properties.criticalityScore) desc," +
+                " metadataDisplayName asc, id asc";
         }
 
         query += " | project id, name, type, properties";
@@ -200,8 +201,9 @@ public class AdvisorService(IAzureService azureService)
 
     // Metadata overrides type-level fields and then properties are rewritten in place (bag_merge keeps the
     // left-most value for duplicate keys). extendedProperties never gains new keys: only an existing
-    // recommendationSubCategory is replaced. Personalized instances (those with a sourceSystem, e.g. Review or
-    // Assessment) carry instance-specific values, so they are returned unchanged without any metadata enrichment.
+    // recommendationSubCategory is replaced. Assessment instances and personalized instances (the Personalized
+    // recommendation type, whose metadata holds placeholder text) carry instance-specific values, so they are
+    // returned unchanged. Review instances that reuse an automated recommendation type are enriched from metadata.
     private const string MetadataOverrideClause =
         " | extend updateSubCategory = isnotempty(metadataSubCategory) and isnotnull(properties.extendedProperties.recommendationSubCategory)" +
         " | extend metadataOverrides = bag_merge(" +
@@ -215,8 +217,8 @@ public class AdvisorService(IAzureService azureService)
         " pack('shortDescription', pack('problem', metadataDisplayName, 'solution', metadataDisplayName)), dynamic({}))," +
         " iff(updateSubCategory, pack('extendedProperties'," +
         " bag_merge(pack('recommendationSubCategory', metadataSubCategory), properties.extendedProperties)), dynamic({})))" +
-        " | extend properties = iff(isnotempty(tostring(properties.sourceSystem))," +
-        " properties, bag_merge(metadataOverrides, properties))";
+        $" | extend keepInstanceProperties = tostring(properties.sourceSystem) =~ 'Assessment' or joinTypeId == '{PersonalizedRecommendationTypeId}'" +
+        " | extend properties = iff(keepInstanceProperties, properties, bag_merge(metadataOverrides, properties))";
 
     private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueryAsync(
         string query,
@@ -236,16 +238,21 @@ public class AdvisorService(IAzureService azureService)
 
         return ParseRecommendationListResult(
             result?.Data,
+            limit,
             result?.ResultTruncated == ResultTruncated.True,
             result?.SkipToken);
     }
 
+    // The query fetches limit + 1 rows; a row beyond limit proves more results exist, so it is dropped and the
+    // response is flagged as truncated.
     internal static ResourceQueryResults<Recommendation> ParseRecommendationListResult(
         BinaryData? data,
+        int limit,
         bool isTruncated,
         string? skipToken)
     {
         var results = new List<Recommendation>();
+        var hasMoreResults = false;
         if (data is not null)
         {
             using var jsonDocument = JsonDocument.Parse(data);
@@ -253,12 +260,18 @@ public class AdvisorService(IAzureService azureService)
             {
                 foreach (var item in jsonDocument.RootElement.EnumerateArray())
                 {
+                    if (results.Count == limit)
+                    {
+                        hasMoreResults = true;
+                        break;
+                    }
+
                     results.Add(ConvertToAdvisorRecommendationModel(item));
                 }
             }
         }
 
-        return new(results, isTruncated || !string.IsNullOrEmpty(skipToken));
+        return new(results, hasMoreResults || isTruncated || !string.IsNullOrEmpty(skipToken));
     }
 
     private async Task<TenantResource> GetTenantResourceForSubscriptionAsync(

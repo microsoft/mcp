@@ -57,8 +57,46 @@ public sealed class AdvisorServiceListTransportTests
         var query = GetResourceGraphQuery(handler.LastRequestBody);
         Assert.Contains($"subscriptionId =~ '{subscriptionId}'", query);
         Assert.Contains("join kind=leftouter", query);
-        Assert.EndsWith("| limit 1", query);
+        Assert.EndsWith("| limit 2", query);
         await azureService.Received(1).GetTenants(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ListRecommendationsAsync_SubscriptionScope_ExtraRowIsTrimmedAndMarkedTruncated()
+    {
+        var tenantId = Guid.NewGuid();
+        var subscriptionId = Guid.NewGuid().ToString();
+        var handler = new CapturingHttpMessageHandler(request =>
+            request.Method != HttpMethod.Get
+                ? CreateResourceGraphResponse(CreateRecommendation("first"), CreateRecommendation("second"))
+                : request.RequestUri!.AbsolutePath.Contains("/tenants", StringComparison.OrdinalIgnoreCase)
+                    ? CreateTenantListResponse(tenantId)
+                    : CreateSubscriptionResponse(tenantId, subscriptionId));
+        var credential = CreateCredential();
+        var armClient = CreateArmClient(credential, handler);
+        var subscription = (await armClient
+            .GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId))
+            .GetAsync(TestContext.Current.CancellationToken)).Value;
+        var tenant = await CreateTenantResourceAsync(tenantId, credential, handler);
+        handler.Reset();
+
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetSubscription(
+            subscriptionId,
+            null,
+            Arg.Any<CancellationToken>()).Returns(subscription);
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+
+        var service = new AdvisorService(azureService);
+        var result = await service.ListRecommendationsAsync(
+            subscriptionId,
+            resourceGroup: null,
+            top: 1,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("first", Assert.Single(result.Results).Name);
+        Assert.True(result.AreResultsTruncated);
+        Assert.EndsWith("| limit 2", GetResourceGraphQuery(handler.LastRequestBody));
     }
 
     [Fact]
@@ -93,12 +131,12 @@ public sealed class AdvisorServiceListTransportTests
             "tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'",
             query);
         Assert.Contains(
-            "extend properties = iff(isnotempty(tostring(properties.sourceSystem)), properties, bag_merge(metadataOverrides, properties))",
+            "extend properties = iff(keepInstanceProperties, properties, bag_merge(metadataOverrides, properties))",
             query);
         Assert.Contains(
-            "order by metadataPriorityScore desc, metadataImpactRank asc, joinTypeId asc, todouble(properties.criticalityScore) desc, id asc",
+            "order by metadataPriorityScore desc, todouble(properties.criticalityScore) desc, metadataDisplayName asc, id asc",
             query);
-        Assert.EndsWith("| limit 1", query);
+        Assert.EndsWith("| limit 2", query);
     }
 
     private static async Task<TenantResource> CreateTenantResourceAsync(

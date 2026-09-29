@@ -47,9 +47,9 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("tostring(properties.language) =~ 'en'", query);
         Assert.Contains("on joinTypeId", query);
 
-        // Properties are rewritten in place with the metadata overrides, except for personalized instances.
+        // Properties are rewritten in place with the metadata overrides, except for Assessment and personalized instances.
         Assert.Contains(
-            "extend properties = iff(isnotempty(tostring(properties.sourceSystem)), properties, bag_merge(metadataOverrides, properties))",
+            "extend properties = iff(keepInstanceProperties, properties, bag_merge(metadataOverrides, properties))",
             query);
         Assert.Contains("| project id, name, type, properties", query);
         Assert.EndsWith("| limit 25", query);
@@ -103,7 +103,7 @@ public class AdvisorServiceListQueryTests
     }
 
     [Fact]
-    public void BuildRecommendationListQuery_PersonalizedInstancesAreReturnedUnchanged()
+    public void BuildRecommendationListQuery_AssessmentAndPersonalizedInstancesAreReturnedUnchanged()
     {
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
@@ -112,11 +112,16 @@ public class AdvisorServiceListQueryTests
             limit: 50,
             language: Language);
 
-        // Instances with a sourceSystem (e.g. Review, Assessment) keep their original properties with no metadata
-        // applied, including fields the instance leaves empty.
+        // Assessment instances and personalized instances (the Personalized recommendation type) keep their original
+        // properties with no metadata applied. Review instances of automated types are still enriched from metadata,
+        // so a non-empty sourceSystem alone does not skip enrichment.
         Assert.Contains(
-            "| extend properties = iff(isnotempty(tostring(properties.sourceSystem)), properties, bag_merge(metadataOverrides, properties))",
+            "| extend keepInstanceProperties = tostring(properties.sourceSystem) =~ 'Assessment' or joinTypeId == '6d732ac5-82e0-4a66-887e-eccee79a2063'",
             query);
+        Assert.Contains(
+            "| extend properties = iff(keepInstanceProperties, properties, bag_merge(metadataOverrides, properties))",
+            query);
+        Assert.DoesNotContain("isnotempty(tostring(properties.sourceSystem))", query);
         Assert.DoesNotContain("preferInstanceValues", query);
     }
 
@@ -148,13 +153,11 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("isnotempty(tostring(properties.criticality))", query);
         Assert.Contains("isnotnull(properties.criticalityScore)", query);
 
-        // Ranked by the type's metadata priority score, then business impact, kept contiguous per type, then criticality, then id.
+        // Ranked by the type's metadata priority score, then criticality, then the type's display name, then id.
         Assert.Contains(
-            "metadataImpactRank = case(tolower(metadataImpact) == 'high', 0, tolower(metadataImpact) == 'medium', 1, tolower(metadataImpact) == 'low', 2, 3)",
+            "| order by metadataPriorityScore desc, todouble(properties.criticalityScore) desc, metadataDisplayName asc, id asc",
             query);
-        Assert.Contains(
-            "| order by metadataPriorityScore desc, metadataImpactRank asc, joinTypeId asc, todouble(properties.criticalityScore) desc, id asc",
-            query);
+        Assert.DoesNotContain("metadataImpactRank", query);
 
         var orderIndex = query.IndexOf("order by", StringComparison.Ordinal);
         var projectIndex = query.IndexOf("| project id, name, type, properties", StringComparison.Ordinal);
@@ -212,10 +215,37 @@ public class AdvisorServiceListQueryTests
     {
         var result = AdvisorService.ParseRecommendationListResult(
             BinaryData.FromString(CreateRecommendationPayload("first")),
+            limit: 1,
             isTruncated: false,
             skipToken: null);
 
         Assert.False(result.AreResultsTruncated);
+        Assert.Equal("first", Assert.Single(result.Results).Name);
+    }
+
+    [Fact]
+    public void ParseRecommendationListResult_FewerRowsThanLimit_IsNotTruncated()
+    {
+        var result = AdvisorService.ParseRecommendationListResult(
+            BinaryData.FromString(CreateRecommendationPayload("first")),
+            limit: 2,
+            isTruncated: false,
+            skipToken: null);
+
+        Assert.False(result.AreResultsTruncated);
+        Assert.Equal("first", Assert.Single(result.Results).Name);
+    }
+
+    [Fact]
+    public void ParseRecommendationListResult_ExtraRowBeyondLimit_IsTrimmedAndTruncated()
+    {
+        var result = AdvisorService.ParseRecommendationListResult(
+            BinaryData.FromString($"[{CreateRecommendation("first")},{CreateRecommendation("second")}]"),
+            limit: 1,
+            isTruncated: false,
+            skipToken: null);
+
+        Assert.True(result.AreResultsTruncated);
         Assert.Equal("first", Assert.Single(result.Results).Name);
     }
 
@@ -228,6 +258,7 @@ public class AdvisorServiceListQueryTests
     {
         var result = AdvisorService.ParseRecommendationListResult(
             BinaryData.FromString(CreateRecommendationPayload("first")),
+            limit: 1,
             isTruncated,
             skipToken);
 
