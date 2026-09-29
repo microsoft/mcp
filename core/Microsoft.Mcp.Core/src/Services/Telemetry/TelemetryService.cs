@@ -82,12 +82,7 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName) => StartActivity(activityName, null, null);
-
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    public Activity? StartActivity(string activityName, Implementation? clientInfo, RequestParams? requestParams)
+    public Activity? StartActivity(string activityName)
     {
         if (!_isEnabled)
         {
@@ -103,11 +98,24 @@ internal class TelemetryService : ITelemetryService
             return activity;
         }
 
-        SetClientNameAndVersion(activity, clientInfo, requestParams);
-
         activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
+
+        return activity;
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public Activity? StartActivity(string activityName, Implementation? clientInfo, RequestParams? requestParams)
+    {
+        var activity = StartActivity(activityName);
+
+        if (activity != null)
+        {
+            SetClientNameAndVersion(activity, clientInfo, requestParams);
+        }
 
         return activity;
     }

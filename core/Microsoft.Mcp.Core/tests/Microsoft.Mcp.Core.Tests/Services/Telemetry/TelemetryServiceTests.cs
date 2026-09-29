@@ -94,7 +94,7 @@ public class TelemetryServiceTests
     }
 
     [Fact]
-    public async Task StartActivity_WithoutClientContext_SetsUnknownClientTags()
+    public async Task StartActivity_WithoutClientContext_DoesNotSetClientTags()
     {
         using var listener = CreateActivityListener();
         using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockConfiguration, _logger, _mockCloudConfiguration);
@@ -103,8 +103,8 @@ public class TelemetryServiceTests
         using var activity = service.StartActivity(ActivityName.ServerStarted);
 
         Assert.NotNull(activity);
-        Assert.Equal(TagConstants.Unknown, activity.GetTagItem(TagName.ClientName));
-        Assert.Equal(TagConstants.Unknown, activity.GetTagItem(TagName.ClientVersion));
+        Assert.Null(activity.GetTagItem(TagName.ClientName));
+        Assert.Null(activity.GetTagItem(TagName.ClientVersion));
     }
 
     [Fact]
