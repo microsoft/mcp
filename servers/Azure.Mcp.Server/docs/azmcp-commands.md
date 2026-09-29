@@ -2446,6 +2446,144 @@ azmcp compute disk update --subscription <subscription> \
 | `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
 | `--tier` | No | Performance tier for the disk (e.g., P30, P40, P50) |
 
+#### Gallery Applications
+
+```bash
+# Create a gallery application
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute galleryapplication create --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --gallery <gallery> \
+                                        --gallery-application <gallery-application> \
+                                        --location <location> \
+                                        [--tags <space-separated-tags>]
+
+# Get a gallery application
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute galleryapplication get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --gallery <gallery> \
+                                     --gallery-application <gallery-application>
+
+# List all applications in a gallery
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute galleryapplication get --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --gallery <gallery>
+
+# Update a gallery application
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute galleryapplication update --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --gallery <gallery> \
+                                        --gallery-application <gallery-application> \
+                                        [--location <location>] \
+                                        [--tags <space-separated-tags>]
+
+# Delete a gallery application
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute galleryapplication delete --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --gallery <gallery> \
+                                        --gallery-application <gallery-application>
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group containing the Azure Compute Gallery |
+| `--gallery` | Yes | Name of the Azure Compute Gallery |
+| `--gallery-application` | Yes for create, update, and delete; no for get | Name of the gallery application. Omit from `get` to list all applications in the gallery |
+| `--location` | Yes for create; no for update | Azure region for the gallery application |
+| `--tags` | No | Space-separated tags in key=value format |
+
+#### Gallery Application Versions
+
+```bash
+# Create a gallery application version
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute galleryapplicationversion create --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --gallery <gallery> \
+                                               --gallery-application <gallery-application> \
+                                               --gallery-application-version <version> \
+                                               --location <location> \
+                                               --source-media-link <package-uri> \
+                                               [--default-configuration-link <configuration-uri>] \
+                                               [--replica-count <count>] \
+                                               [--exclude-from-latest <true|false>] \
+                                               [--manage-action-install <command>] \
+                                               [--manage-action-remove <command>] \
+                                               [--manage-action-update <command>] \
+                                               [--package-file-name <file-name>] \
+                                               [--config-file-name <file-name>] \
+                                               [--script-behavior-after-reboot <behavior>] \
+                                               [--end-of-life-on <iso-8601-date>] \
+                                               [--target-regions <comma-separated-regions>] \
+                                               [--tags <space-separated-tags>]
+
+# Get a gallery application version
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute galleryapplicationversion get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --gallery <gallery> \
+                                            --gallery-application <gallery-application> \
+                                            --gallery-application-version <version>
+
+# List all versions of a gallery application
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp compute galleryapplicationversion get --subscription <subscription> \
+                                            --resource-group <resource-group> \
+                                            --gallery <gallery> \
+                                            --gallery-application <gallery-application>
+
+# Update a gallery application version
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute galleryapplicationversion update --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --gallery <gallery> \
+                                               --gallery-application <gallery-application> \
+                                               --gallery-application-version <version> \
+                                               [--location <location>] \
+                                               [--source-media-link <package-uri>] \
+                                               [--exclude-from-latest <true|false>] \
+                                               [--end-of-life-on <iso-8601-date>] \
+                                               [--target-regions <comma-separated-regions>] \
+                                               [--tags <space-separated-tags>]
+
+# Delete a gallery application version
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp compute galleryapplicationversion delete --subscription <subscription> \
+                                               --resource-group <resource-group> \
+                                               --gallery <gallery> \
+                                               --gallery-application <gallery-application> \
+                                               --gallery-application-version <version>
+```
+
+**Parameters:**
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--subscription` | Yes | Azure subscription ID or name |
+| `--resource-group`, `-g` | Yes | Resource group containing the Azure Compute Gallery |
+| `--gallery` | Yes | Name of the Azure Compute Gallery |
+| `--gallery-application` | Yes | Name of the gallery application |
+| `--gallery-application-version` | Yes for create, update, and delete; no for get | Version name. Omit from `get` to list all versions |
+| `--location` | Yes for create; no for update | Azure region for the gallery application version |
+| `--source-media-link` | Yes for create; no for update | URI of the application package or source artifact |
+| `--default-configuration-link` | No | URI of the default configuration file |
+| `--replica-count` | No | Replica count for the publishing profile |
+| `--exclude-from-latest` | No | Whether to exclude the version from latest-version selection |
+| `--manage-action-install` | No | Install command or script |
+| `--manage-action-remove` | No | Remove command or script |
+| `--manage-action-update` | No | Update command or script |
+| `--package-file-name` | No | Package file name to use on the VM |
+| `--config-file-name` | No | Configuration file name to use on the VM |
+| `--script-behavior-after-reboot` | No | Script behavior after a reboot |
+| `--end-of-life-on` | No | End-of-life date in ISO 8601 format |
+| `--target-regions` | No | Comma-separated Azure regions for replication |
+| `--tags` | No | Space-separated tags in key=value format |
+
 ### Azure Confidential Ledger Operations
 
 ```bash

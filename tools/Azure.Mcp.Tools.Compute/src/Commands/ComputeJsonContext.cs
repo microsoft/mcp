@@ -17,9 +17,8 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(DiskDeleteCommand.DiskDeleteCommandResult))]
 [JsonSerializable(typeof(DiskGetCommand.DiskGetCommandResult))]
 [JsonSerializable(typeof(DiskUpdateCommand.DiskUpdateCommandResult))]
-<<<<<<< HEAD
-[JsonSerializable(typeof(Models.DiskInfo))]
-[JsonSerializable(typeof(List<Models.DiskInfo>))]
+[JsonSerializable(typeof(DiskInfo))]
+[JsonSerializable(typeof(List<DiskInfo>))]
 [JsonSerializable(typeof(GalleryApplicationCreateCommand.GalleryApplicationCreateCommandResult))]
 [JsonSerializable(typeof(GalleryApplicationDeleteCommand.GalleryApplicationDeleteCommandResult))]
 [JsonSerializable(typeof(GalleryApplicationGetCommand.GalleryApplicationGetCommandResult))]
@@ -34,10 +33,6 @@ namespace Azure.Mcp.Tools.Compute.Commands;
 [JsonSerializable(typeof(GalleryApplicationVersionInfo))]
 [JsonSerializable(typeof(List<GalleryApplicationInfo>))]
 [JsonSerializable(typeof(List<GalleryApplicationVersionInfo>))]
-=======
-[JsonSerializable(typeof(DiskInfo))]
-[JsonSerializable(typeof(List<DiskInfo>))]
->>>>>>> main
 [JsonSerializable(typeof(VmCreateCommand.VmCreateCommandResult))]
 [JsonSerializable(typeof(VmCreateResult))]
 [JsonSerializable(typeof(VmUpdateCommand.VmUpdateCommandResult))]
