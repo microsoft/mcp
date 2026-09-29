@@ -165,13 +165,61 @@ jobs:
           $baseVallyDirectory = '${{ github.workspace }}/.work/vally'
           $evalsDirectory = "$baseVallyDirectory/evals"
           $outputPath = "$baseVallyDirectory/vally-results"
+          $outcomePath = '${{ runner.temp }}/vally-exit-code'
 
           $workingDirectory = "${{ github.workspace }}"
 
-          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -IsDebug:$isDebug -ServerName ${{ inputs.serverName }}
+          ./eng/scripts/Invoke-VallyEvalTests.ps1 -BuildInfoPath $buildInfo -WorkDirectory $workingDirectory -EvalsDirectory $evalsDirectory -OutputPath $outputPath -OutcomePath $outcomePath -IsDebug:$isDebug -ServerName ${{ inputs.serverName }}
         shell: pwsh
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+
+      - name: Read vally outcome
+        id: vally_outcome
+        if: ${{ always() && steps.vally.outcome != 'skipped' }}
+        shell: pwsh
+        env:
+          OUTCOME_PATH: ${{ runner.temp }}/vally-exit-code
+        run: |
+          # The Run vally step can fail either because an evaluation failed or
+          # because its finally block could not restore the instruction files.
+          # Only a persisted nonzero Vally exit code should create an issue.
+          if (!(Test-Path -LiteralPath $env:OUTCOME_PATH)) {
+            Write-Warning 'Vally did not produce an exit code before the step failed.'
+            'evaluation_failed=false' >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          $exitCodeText = (Get-Content -LiteralPath $env:OUTCOME_PATH -Raw).Trim()
+          $exitCode = 0
+          if (![int]::TryParse($exitCodeText, [ref]$exitCode)) {
+            throw "Vally produced an invalid exit code: '$exitCodeText'."
+          }
+
+          $evaluationFailed = $exitCode -ne 0
+          "evaluation_failed=$($evaluationFailed.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+      - name: Create issue for vally failures
+        if: ${{ failure() && steps.vally_outcome.outputs.evaluation_failed == 'true' && github.event_name == 'pull_request' && github.event.pull_request.merged == true }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          $body = @"
+          Vally evaluation failures were detected for PR [#$env:PR_NUMBER]($env:PR_URL).
+
+          PR author: @$env:PR_AUTHOR
+
+          Workflow run: [View run]($env:RUN_URL)
+          "@
+
+          gh issue create `
+            --title "Vally failures for PR #$env:PR_NUMBER" `
+            --body $body
 
       - name: Upload vally results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
