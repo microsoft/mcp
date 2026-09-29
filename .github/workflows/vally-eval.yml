@@ -199,7 +199,7 @@ jobs:
           $evaluationFailed = $exitCode -ne 0
           "evaluation_failed=$($evaluationFailed.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
-      - name: Create issue for vally failures
+      - name: Create or update issue for vally failures
         if: ${{ failure() && steps.vally_outcome.outputs.evaluation_failed == 'true' && github.event_name == 'pull_request' && github.event.pull_request.merged == true }}
         shell: pwsh
         env:
@@ -207,19 +207,18 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_URL: ${{ github.event.pull_request.html_url }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          $body = @"
-          Vally evaluation failures were detected for PR [#$env:PR_NUMBER]($env:PR_URL).
-
-          PR author: @$env:PR_AUTHOR
-
-          Workflow run: [View run]($env:RUN_URL)
-          "@
-
-          gh issue create `
-            --title "Vally failures for PR #$env:PR_NUMBER" `
-            --body $body
+          ./eng/scripts/Update-VallyFailureIssue.ps1 `
+            -Repository $env:REPOSITORY `
+            -Workflow 'vally-eval.yml' `
+            -RunId $env:RUN_ID `
+            -RunUrl $env:RUN_URL `
+            -PullRequestNumber $env:PR_NUMBER `
+            -PullRequestUrl $env:PR_URL `
+            -PullRequestAuthor $env:PR_AUTHOR
 
       - name: Upload vally results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
