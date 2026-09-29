@@ -83,6 +83,7 @@ Create a changelog entry for:
 
 ```yaml
 pr: <number>              # Optional: PR number (auto-detected from git commit during compilation if omitted)
+contributor: <string>     # Optional: GitHub username for contributor attribution (e.g. "octocat")
 changes:                  # Required: Array of changes (minimum 1)
   - section: <string>     # Required
     description: <string> # Required
@@ -102,6 +103,7 @@ changes:                  # Required: Array of changes (minimum 1)
 #### Optional Fields
 
 - **pr**: Pull request number (positive integer). If not provided, it can be auto-detected from the git commit message during compilation. GitHub squash merges include the PR number in the format `... (#1234)` which the compiler extracts automatically.
+- **contributor**: GitHub username of the contributor (e.g. `octocat`). When provided, the contributor will be credited in the compiled release notes as `(contributed by [@username](https://github.com/username))`. This can be specified at the root level or on individual changes.
 - **subsection**: Optional subsection to group changes under. Currently, the only valid subsection is `Dependency Updates` under the `Other Changes` section.
 
 ### Using the Generator Script
@@ -123,7 +125,17 @@ The easiest way to create a changelog entry is using the generator script locate
   -Section "Features Added"
 ```
 
-> **Note:** The `-PR` parameter is optional. If omitted, the PR number will be auto-detected from the git commit during compilation.
+> **Note:** The `-PR` and `-Contributor` parameters are optional. If omitted, the PR number will be auto-detected from the git commit during compilation.
+
+##### With contributor attribution
+
+```powershell
+./eng/scripts/New-ChangelogEntry.ps1 `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
+  -Description "Added support for User-Assigned Managed Identity" `
+  -Section "Features Added" `
+  -Contributor "octocat"
+```
 
 ##### With a subsection
 
