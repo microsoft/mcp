@@ -14,6 +14,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | adme_health_check | Check health and authentication for ADME endpoint \<endpoint> and data partition \<data-partition> | none |
+| adme_health_check | Check health for customer-hosted ADME endpoint \<endpoint> in tenant \<tenant> and data partition \<data-partition>, using resource application ID \<application-id> as the token audience | none |
 | adme_schema_get | Get ADME schema for kind \<authority:source:entity-type:version> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_schema_get | Show the fields, types, and structure of OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_schema_get | Retrieve the full JSON definition for OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
