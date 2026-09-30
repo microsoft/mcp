@@ -27,6 +27,7 @@ public class RecommendationSummaryCommandTests
         Assert.Equal("summary", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
+        Assert.Contains("--service-group", command.Description);
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.ReadOnly);
     }
@@ -40,6 +41,8 @@ public class RecommendationSummaryCommandTests
     [InlineData("--subscription sub1 --category Security --impact High", true)]
     [InlineData("--subscription sub1 --recommendation-type-id 1d70919c-1a4a-4f79-8300-bb576c291e9d", true)]
     [InlineData("--subscription sub1 --retirement-date le:2026-12-31", true)]
+    [InlineData("--service-group sg1", true)]
+    [InlineData("--service-group sg1 --tenant tenant1 --group-by status", true)]
     [InlineData("--subscription sub1 --group-by nonsense", false)]
     [InlineData("--subscription sub1 --category nonsense", false)]
     [InlineData("--subscription sub1 --category \" \"", false)]
@@ -53,11 +56,22 @@ public class RecommendationSummaryCommandTests
     [InlineData("--subscription sub1 --sub-category \" \"", false)]
     [InlineData("--subscription sub1 --retirement-date le:2026-12-31 --sub-category ZoneResiliency", false)]
     [InlineData("--subscription sub1 --group-by retirement-date --sub-category ZoneResiliency", false)]
+    [InlineData("--subscription sub1 --service-group sg1", false)]
+    [InlineData("--service-group sg1 --resource-group rg1", false)]
+    [InlineData("--service-group bad/name", false)]
+    [InlineData("--service-group \" \"", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
+            Service.SummarizeServiceGroupRecommendationsAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RecommendationFilters?>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+                .Returns(EmptySummary());
             Service.SummarizeRecommendationsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
@@ -71,6 +85,106 @@ public class RecommendationSummaryCommandTests
         var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutScope_UsesDefaultSubscription()
+    {
+        SubscriptionResolver.ResolveSubscription(null).Returns("default-subscription");
+        Service.SummarizeRecommendationsAsync(
+            "default-subscription",
+            null,
+            "category",
+            Arg.Any<RecommendationFilters?>(),
+            null,
+            Arg.Any<CancellationToken>())
+            .Returns(EmptySummary());
+
+        var response = await ExecuteCommandAsync("");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).SummarizeRecommendationsAsync(
+            "default-subscription",
+            null,
+            "category",
+            Arg.Any<RecommendationFilters?>(),
+            null,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroup_ForwardsScopeWithoutResolvingSubscription()
+    {
+        Service.SummarizeServiceGroupRecommendationsAsync(
+            "service-group-test",
+            "impact",
+            Arg.Any<RecommendationFilters?>(),
+            "tenant1",
+            Arg.Any<CancellationToken>())
+            .Returns(EmptySummary("impact"));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", " service-group-test ",
+            "--tenant", "tenant1",
+            "--group-by", "Impact");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).SummarizeServiceGroupRecommendationsAsync(
+            "service-group-test",
+            "impact",
+            Arg.Any<RecommendationFilters?>(),
+            "tenant1",
+            Arg.Any<CancellationToken>());
+        SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
+        await Service.DidNotReceive().SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlankServiceGroup_DoesNotFallBackToDefaultSubscription()
+    {
+        SubscriptionResolver.ResolveSubscription(null).Returns("default-subscription");
+
+        var response = await ExecuteCommandAsync("--service-group", " ");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
+        await Service.DidNotReceive().SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+        await Service.DidNotReceive().SummarizeServiceGroupRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("sub1", "")]
+    [InlineData("sub1", " ")]
+    [InlineData("", "sg1")]
+    [InlineData(" ", "sg1")]
+    public async Task ExecuteAsync_BothScopesExplicitlyProvided_RejectsBlankValues(
+        string subscription,
+        string serviceGroup)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", subscription,
+            "--service-group", serviceGroup);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Specify either --subscription or --service-group, not both", response.Message);
+        SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
     }
 
     [Fact]

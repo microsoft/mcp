@@ -121,7 +121,8 @@ public class AdvisorServiceConversionTests
                     "review": { "name": "Review test", "id": "review1" },
                     "resourceWorkload": { "name": "Test workload", "id": "workload1" },
                     "sourceSystem": "Review",
-                    "notes": "Review the diagnostic settings"
+                    "notes": "Review the diagnostic settings",
+                    "serviceGroupId": "/providers/Microsoft.Management/serviceGroups/service-group-test"
                 }
             }
             """;
@@ -189,6 +190,9 @@ public class AdvisorServiceConversionTests
         Assert.Equal("Test workload", result.Properties.ResourceWorkload.Value.GetProperty("name").GetString());
         Assert.Equal("Review", result.Properties.SourceSystem);
         Assert.Equal("Review the diagnostic settings", result.Properties.Notes);
+        Assert.Equal(
+            "/providers/Microsoft.Management/serviceGroups/service-group-test",
+            result.Properties.ServiceGroupId);
 
         var serialized = JsonSerializer.Serialize(
             result,
@@ -196,6 +200,9 @@ public class AdvisorServiceConversionTests
         Assert.Contains("\"completionType\":\"Succeeded\"", serialized);
         Assert.Contains("\"recommendationDismissReason\":\"Other\"", serialized);
         Assert.Contains("\"postponedUntilDateTime\":\"2027-07-01T00:00:00+00:00\"", serialized);
+        Assert.Contains(
+            "\"serviceGroupId\":\"/providers/Microsoft.Management/serviceGroups/service-group-test\"",
+            serialized);
         Assert.DoesNotContain("suppressionId", serialized);
     }
 

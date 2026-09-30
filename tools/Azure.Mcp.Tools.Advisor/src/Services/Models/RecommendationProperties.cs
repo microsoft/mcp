@@ -70,7 +70,7 @@ internal sealed class RecommendationProperties
     public string? SourceSystem { get; set; }
     public string? Notes { get; set; }
 
-    /// <summary> The Service Group projection identifier, present only on SG-level recommendations. </summary>
+    /// <summary> The Azure service group that contains the recommendation. </summary>
     public string? ServiceGroupId { get; set; }
 
     /// <summary> The contextual criticality tier (e.g., Critical, High). Absent for unscored recommendations. </summary>
