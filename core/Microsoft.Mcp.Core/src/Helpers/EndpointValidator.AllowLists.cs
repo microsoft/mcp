@@ -200,12 +200,28 @@ public static partial class EndpointValidator
             UsGov: ["prices.azure.us"],
             Germany: [],
             UseLegacyCheck: true),
+        ["search"] = new AllowedSuffixManager(
+            // SearchService.CreateAndValidateSearchEndpoint constructs these suffixes for the Search SDK.
+            // Keep both copies and their tests in sync when Azure cloud endpoint domains change.
+            Public: [".search.windows.net"],
+            China: [".search.azure.cn"],
+            UsGov: [".search.azure.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["servicebus"] = new AllowedSuffixManager(
             Public: [".servicebus.windows.net"],
             China: [".servicebus.chinacloudapi.cn"],
             UsGov: [".servicebus.usgovcloudapi.net"],
             Germany: [".servicebus.cloudapi.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["speech"] = new AllowedSuffixManager(
+            // SpeechEndpointValidator authorizes user-supplied Speech SDK and REST endpoints with these suffixes.
+            // Keep its validation behavior and tests synchronized with this central endpoint policy.
+            Public: [".cognitiveservices.azure.com"],
+            China: [".cognitiveservices.azure.cn"],
+            UsGov: [".cognitiveservices.azure.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["storage-blob"] = new AllowedSuffixManager(
             Public: [".blob.core.windows.net"],
             China: [".blob.core.chinacloudapi.cn"],
