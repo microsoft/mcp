@@ -409,6 +409,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     public async Task Should_create_linux_vmss_with_custom_size_and_upgrade_policy()
     {
         var createVmssName = RegisterOrRetrieveVariable("createLinuxVmssName", $"lnxvmss{DateTime.UtcNow:MMddHHmmss}");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         var result = await CallToolAsync(
             "compute_vmss_create",
@@ -417,8 +419,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "LinuxTestP@ss321!" },
                 { "image", "Ubuntu2404" },
@@ -493,6 +495,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         // Create a dedicated VM to delete
         var deleteVmName = RegisterOrRetrieveVariable("deleteVmName", $"delvm{DateTime.UtcNow:MMddHHmmss}");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         await CallToolAsync(
             "compute_vm_create",
@@ -501,8 +505,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", deleteVmName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -536,6 +540,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         // Create a dedicated VMSS to delete
         var deleteVmssName = RegisterOrRetrieveVariable("deleteVmssName", $"delvms{DateTime.UtcNow:HHmmss}");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         await CallToolAsync(
             "compute_vmss_create",
@@ -544,8 +550,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", deleteVmssName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
