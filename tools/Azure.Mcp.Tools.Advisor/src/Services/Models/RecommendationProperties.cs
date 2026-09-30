@@ -72,4 +72,16 @@ internal sealed class RecommendationProperties
 
     /// <summary> The Azure service group that contains the recommendation. </summary>
     public string? ServiceGroupId { get; set; }
+
+    /// <summary> The contextual criticality tier (e.g., Critical, High). Absent for unscored recommendations. </summary>
+    public string? Criticality { get; set; }
+
+    /// <summary> The contextual criticality score. Absent for unscored recommendations. </summary>
+    public double? CriticalityScore { get; set; }
+
+    /// <summary> The time the criticality score last changed. </summary>
+    public DateTimeOffset? ScoreChangedAt { get; set; }
+
+    /// <summary> The savings enrichment payload. Omitted when no savings enrichment is available. </summary>
+    public JsonElement? Savings { get; set; }
 }

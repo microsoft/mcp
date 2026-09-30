@@ -35,7 +35,9 @@ words:
   - staticsites
   - subtag
   - todatetime
+  - todouble
   - tolower
   - undercount
+  - unscored
   - urity
   - virtualmachinescalesets

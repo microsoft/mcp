@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public interface IAdvisorService
 {
     Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
-        string subscription,
+        string? subscription,
         string? resourceGroup,
         RecommendationFilters? filters = null,
         int top = 50,
