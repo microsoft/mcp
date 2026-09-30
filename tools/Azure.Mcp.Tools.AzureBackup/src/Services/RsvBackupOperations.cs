@@ -35,6 +35,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetRecoveryServicesVaults();
 
+        // This MCP tool is create-only, although the underlying ARM operation is an upsert.
+        // Do not treat authorization or transport failures as proof that the vault is absent.
+        if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
+        {
+            throw new RequestFailedException(409,
+                "The vault already exists. Use 'azurebackup vault update' to modify it.");
+        }
+
         var vaultSku = new RecoveryServicesSku(RecoveryServicesSkuName.Standard);
         var vaultData = new RecoveryServicesVaultData(new AzureLocation(location))
         {
