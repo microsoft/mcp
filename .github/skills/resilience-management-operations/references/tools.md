@@ -2,7 +2,7 @@
 
 <!-- cspell:words reprotect reprotection -->
 
-This reference lists all 38 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
+This reference lists all 37 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
 
 ## Usage Plans
 
@@ -21,7 +21,6 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 
 | Tool | Purpose | Parameters |
 |---|---|---|
-| `mcp_azure_mcp_ser_resiliency_goal_template_get` | List goal templates or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
 

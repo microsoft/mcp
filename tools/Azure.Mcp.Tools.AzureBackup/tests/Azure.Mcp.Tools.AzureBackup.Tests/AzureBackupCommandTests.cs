@@ -71,6 +71,17 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
             Value = "00000000-0000-0000-0000-000000000000",
         }),
+        // ARM operation headers include the tenant and caller object identifiers.
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = "(?i)(?<=tenantId=)[0-9a-f-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+        {
+            Regex = "(?i)(?<=objectId=)[0-9a-f-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
         // Container discovery can return storage accounts registered from other resource groups.
         // These are not test resources, so sanitize their names in container identifiers and ARM IDs.
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
@@ -225,6 +236,28 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var fetchedVault = vaults.EnumerateArray().First();
         var identityType = fetchedVault.AssertProperty("identityType").GetString();
         Assert.Equal("SystemAssigned", identityType, ignoreCase: true);
+    }
+
+    [Theory]
+    [InlineData("rsv")]
+    [InlineData("dpp")]
+    public async Task VaultCreate_ExistingVault_ReturnsConflict(string vaultType)
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-{vaultType}";
+        var result = await CallToolAsync(
+            "azurebackup_vault_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", vaultType },
+                { "location", "eastus" }
+            },
+            resultProcessor: static root => root);
+
+        Assert.Equal(409, result.AssertProperty("status").GetInt32());
+        Assert.Contains("azurebackup_vault_update", result.AssertProperty("message").GetString());
     }
 
     [Fact]

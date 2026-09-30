@@ -369,20 +369,23 @@ azmcp server info
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme health check --endpoint <endpoint> \
                          --data-partition <data-partition> \
-                         [--tenant <tenant>]
+                         [--tenant <tenant>] \
+                         [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get a schema by its fully-qualified OSDU kind
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema get --endpoint <endpoint> \
                        --data-partition <data-partition> \
                        --kind <authority:source:entity-type:version> \
-                       [--tenant <tenant>]
+                       [--tenant <tenant>] \
+                       [--auth-app-id <application-id-or-app-id-uri>]
 
 # List schemas with optional identity, lifecycle, scope, version, and paging filters
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema list --endpoint <endpoint> \
                         --data-partition <data-partition> \
                         [--tenant <tenant>] \
+                        [--auth-app-id <application-id-or-app-id-uri>] \
                         [--authority <authority>] \
                         [--source <source>] \
                         [--entity-type <entity-type>] \
@@ -415,11 +418,13 @@ azmcp adme search --endpoint <endpoint> \
                   [--excluded-fields <path> [<path>...]] \
                   [--highlighted-fields <path> [<path>...]] \
                   [--suggest-phrase <phrase>] \
-                  [--tenant <tenant>]
+                  [--tenant <tenant>] \
+                  [--auth-app-id <application-id-or-app-id-uri>]
 
 Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
 Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
 Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
+For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -428,7 +433,8 @@ azmcp adme storage record fetch --endpoint <endpoint> \
                                   --ids <id> [<id>...] \
                                   [--attributes <path> [<path>...]] \
                                   [--frame-of-reference] \
-                                  [--tenant <tenant>]
+                                  [--tenant <tenant>] \
+                                  [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get the latest or a specific version of an OSDU record, optionally projecting attributes
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -437,7 +443,8 @@ azmcp adme storage record get --endpoint <endpoint> \
                                 --id <record-id> \
                                 [--version <version>] \
                                 [--attributes <path> [<path>...]] \
-                                [--tenant <tenant>]
+                                [--tenant <tenant>] \
+                                [--auth-app-id <application-id-or-app-id-uri>]
 
 # List record ids for a fully-qualified OSDU kind
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -446,14 +453,16 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  --kind <authority:source:entity-type:version> \
                                  [--limit <limit>] \
                                  [--cursor <cursor>] \
-                                 [--tenant <tenant>]
+                                 [--tenant <tenant>] \
+                                 [--auth-app-id <application-id-or-app-id-uri>]
 
 # List all numeric versions of an OSDU record
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record version list --endpoint <endpoint> \
                                          --data-partition <data-partition> \
                                          --id <record-id> \
-                                         [--tenant <tenant>]
+                                         [--tenant <tenant>] \
+                                         [--auth-app-id <application-id-or-app-id-uri>]
 ```
 
 ### Azure Advisor Operations
@@ -1053,7 +1062,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 #### Vault
 
 ```bash
-# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
+# Creates a new backup vault. Rejects vaults found to already exist; use 'azurebackup vault update' to modify an existing vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault create --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -3313,11 +3322,15 @@ azmcp keyvault secret get --vault <vault-name> \
 ### Azure Kubernetes Service (AKS) Operations
 
 ```bash
-# Gets Azure Kubernetes Service (AKS) cluster details
+# Lists Azure Kubernetes Service (AKS) clusters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp aks cluster get --subscription <subscription>
+
+# Gets details for a specific Azure Kubernetes Service (AKS) cluster
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp aks cluster get --subscription <subscription> \
-                      [--resource-group <resource-group>] \
-                      [--cluster <cluster>]
+                      --resource-group <resource-group> \
+                      --cluster <cluster>
 
 # Gets Azure Kubernetes Service (AKS) nodepool details
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4201,11 +4214,6 @@ azmcp redis list --subscription <subscription>
 ### Azure Resilience Management Operations
 
 ```bash
-# Get a resilience goal template, or list all goal templates in a service group (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resiliency goal template get --service-group <service-group> \
-                                   [--name <name>]
-
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal assignment get --service-group <service-group> \

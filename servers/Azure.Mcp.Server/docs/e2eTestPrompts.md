@@ -14,6 +14,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | adme_health_check | Check health and authentication for ADME endpoint \<endpoint> and data partition \<data-partition> | none |
+| adme_health_check | Check health for customer-hosted ADME endpoint \<endpoint> in tenant \<tenant> and data partition \<data-partition>, using resource application ID \<application-id> as the token audience | none |
 | adme_schema_get | Get ADME schema for kind \<authority:source:entity-type:version> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_schema_get | Show the fields, types, and structure of OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_schema_get | Retrieve the full JSON definition for OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
@@ -340,6 +341,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in resource group <resource_group> and disable MUA | investigation-required |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region \<location> with vault-type 'rsv' | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location>, but do not modify it if it already exists | investigation-required |
+| azurebackup_vault_create | Create Backup vault <vault_name> with vault-type 'dpp' in <resource_group> in \<location>, rejecting the request if the vault exists | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in \<location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -876,9 +879,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| aks_cluster_get | Get the configuration of AKS cluster \<cluster-name> | none |
+| aks_cluster_get | Get the configuration of AKS cluster \<cluster-name> in resource group \<resource-group> | none |
 | aks_cluster_get | Show me the details of AKS cluster \<cluster-name> in resource group \<resource-group> | none |
-| aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> | none |
+| aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> in resource group \<resource-group> | none |
 | aks_cluster_get | What are the details of my AKS cluster \<cluster-name> in \<resource-group>? | none |
 | aks_cluster_get | List all AKS clusters in my subscription | none |
 | aks_cluster_get | Show me my Azure Kubernetes Service clusters | none |
@@ -1139,8 +1142,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> | none |
-| resiliency_goal_template_get | List all resilience goal templates in service group <service_group> | none |
-| resiliency_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
