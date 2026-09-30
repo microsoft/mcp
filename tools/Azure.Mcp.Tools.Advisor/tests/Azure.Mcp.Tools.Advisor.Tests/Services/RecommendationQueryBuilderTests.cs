@@ -86,6 +86,27 @@ public class RecommendationQueryBuilderTests
             result);
     }
 
+    [Fact]
+    public void BuildInstancePredicates_ServiceGroup_UsesExactCanonicalScope()
+    {
+        var scope = RecommendationQueryScope.ForServiceGroup("service-group-test");
+
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            null,
+            includeStatus: true,
+            useRequestedStatus: false,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false,
+            scope: scope);
+
+        Assert.StartsWith(
+            $"{RecommendationQueryBuilder.CurrentRecommendationNameClause} and " +
+            "tostring(properties.serviceGroupId) =~ " +
+            $"'{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test' and ",
+            result);
+        Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
+    }
+
     [Theory]
     [InlineData(RecommendationStatus.New, "New")]
     [InlineData(RecommendationStatus.Postponed, "Postponed")]

@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
-public sealed class RecommendationUpdateOptions : ISubscriptionOption
+public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions
 {
     [Option(Description = "The ID of the Azure service group that contains the recommendation, provided as the name segment in its ARM resource ID. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
     public string? ServiceGroup { get; set; }
