@@ -13,7 +13,7 @@ Vally is the evaluation framework used to test the performance and accuracy of A
 * `.vally.yaml` at the repository root contains settings common to all Vally runs.
 * Store a checked-in `eval.yaml` under `./tools/Azure.Mcp.Tools.<ToolArea>/tests/` so the workflow can discover it.
 
-To be picked up by the Vally evaluations workflow, a specification must contain `environment: ${ENVIRONMENT}` as shown below. The environments in `.vally.yaml` tell Vally where to find Azure MCP Server for the current operating system.
+To be picked up by the Vally evaluations workflow, a specification must contain `agent_environment: ${AGENT_ENVIRONMENT}` as shown below. The environments in `.vally.yaml` tell Vally where to find Azure MCP Server for the current operating system.
 
 ```yaml
 name: Azure ACR evaluations
@@ -22,7 +22,7 @@ type: capability
 stimuli:
   - name: List stores
     prompt: What Azure Container Registries do I have? 
-    environment: ${ENVIRONMENT}
+    agent_environment: ${AGENT_ENVIRONMENT}
     tags: 
     graders:
       - type: tool-calls
@@ -41,10 +41,10 @@ In a terminal window, navigate to the repository root:
 
 1. Run `./eng/scripts/Build-Local.ps1 -ServerName Azure.Mcp.Server`.
 2. Run one of the following commands depending on machine's operating system:
-    * Windows: `vally eval --eval-spec ./tools/Azure.Mcp.Tools.AppConfig/tests/eval.yaml --param ENVIRONMENT=windows`
-    * Linux: `vally eval --eval-spec ./tools/Azure.Mcp.Tools.AppConfig/tests/eval.yaml --param ENVIRONMENT=linux`
+    * Windows: `vally eval --eval-spec ./tools/Azure.Mcp.Tools.AppConfig/tests/eval.yaml --param AGENT_ENVIRONMENT=azmcp_windows`
+    * Linux: `vally eval --eval-spec ./tools/Azure.Mcp.Tools.AppConfig/tests/eval.yaml --param AGENT_ENVIRONMENT=azmcp_linux`
 
-The repository's `.vally.yaml` currently defines environments only for Azure MCP Server on Windows and Linux. Running another MCP server requires adding an environment that launches that server and passing its environment name through `ENVIRONMENT`.
+The repository's `.vally.yaml` currently defines environments only for Azure MCP Server on Windows and Linux. Running another MCP server requires adding an environment that launches that server and passing its environment name through `AGENT_ENVIRONMENT`.
 
 ## Run generated end-to-end prompt evaluations
 
