@@ -36,7 +36,7 @@ concurrency:
 jobs:
   eval-job:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       BUILD_INFO_PATH: ${{ github.workspace }}/.work/build_info.json
 

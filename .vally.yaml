@@ -3,7 +3,7 @@ paths:
   evals: ["tools/Azure.Mcp.Tools.*/tests/", ".work/vally/evals/*/"]
   results: ".work/vally/vally-results/"
 
-agent_environment:
+environments:
   azmcp_linux:
     mcpServers:
       azmcp:

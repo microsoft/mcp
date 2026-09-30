@@ -34,6 +34,8 @@ public sealed class VallyUtilitiesTests
             await VallyUtilities.WritePromptsAsync(prompts, outputFile);
 
             var yaml = await File.ReadAllTextAsync(outputFile, TestContext.Current.CancellationToken);
+            Assert.Contains("agent_environment: ${AGENT_ENVIRONMENT}", yaml);
+            Assert.DoesNotContain("\nenvironment:", yaml);
             var evaluation = VallyUtilities.Deserializer.Deserialize<Models.Evaluation>(yaml);
 
             Assert.Equal("Storage evaluations", evaluation.Name);
@@ -160,7 +162,7 @@ public sealed class VallyUtilitiesTests
     {
         Assert.Equal(expectedName, stimulus.Name);
         Assert.Equal(expectedPrompt, stimulus.Prompt);
-        Assert.Equal("${ENVIRONMENT}", stimulus.Environment);
+        Assert.Equal("${AGENT_ENVIRONMENT}", stimulus.Environment);
 
         var grader = Assert.Single(stimulus.Graders!);
         var requiredEntry = Assert.Single(grader.Config.Required);
