@@ -811,45 +811,38 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // Create auto import job data with filesystem location
         var autoImportJobData = new AutoImportJobData(fs.Value.Data.Location);
 
-        // Set optional properties
-        if (!string.IsNullOrWhiteSpace(conflictResolutionMode))
+        // The StorageCache REST API omits the entire "properties" object from the request
+        // body when none of its fields are set (confirmed via ModelReaderWriter against the
+        // generated AutoImportJobData model), and ARM then rejects the PUT with
+        // "Required parameter 'properties' is missing". Apply the defaults documented on
+        // AutoimportJobCreateOptions (Skip / '/' / Enable / false) whenever the caller omits
+        // them, instead of leaving the fields - and therefore "properties" - unset.
+        autoImportJobData.ConflictResolutionMode = (conflictResolutionMode ?? "Skip") switch
         {
-            autoImportJobData.ConflictResolutionMode = conflictResolutionMode switch
-            {
-                "Fail" => ConflictResolutionMode.Fail,
-                "Skip" => ConflictResolutionMode.Skip,
-                "OverwriteIfDirty" => ConflictResolutionMode.OverwriteIfDirty,
-                "OverwriteAlways" => ConflictResolutionMode.OverwriteAlways,
-                _ => throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways")
-            };
+            "Fail" => ConflictResolutionMode.Fail,
+            "Skip" => ConflictResolutionMode.Skip,
+            "OverwriteIfDirty" => ConflictResolutionMode.OverwriteIfDirty,
+            "OverwriteAlways" => ConflictResolutionMode.OverwriteAlways,
+            _ => throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways")
+        };
+
+        if (autoimportPrefixes != null && autoimportPrefixes.Length > 100)
+        {
+            throw new ArgumentException("Maximum of 100 autoimport prefixes allowed");
+        }
+        foreach (var prefix in (autoimportPrefixes is { Length: > 0 } ? autoimportPrefixes : ["/"]))
+        {
+            autoImportJobData.AutoImportPrefixes.Add(prefix);
         }
 
-        if (autoimportPrefixes != null && autoimportPrefixes.Length > 0)
+        autoImportJobData.AdminStatus = (adminStatus ?? "Enable") switch
         {
-            if (autoimportPrefixes.Length > 100)
-            {
-                throw new ArgumentException("Maximum of 100 autoimport prefixes allowed");
-            }
-            foreach (var prefix in autoimportPrefixes!)
-            {
-                autoImportJobData.AutoImportPrefixes.Add(prefix);
-            }
-        }
+            "Enable" => AutoImportJobPropertiesAdminStatus.Enable,
+            "Disable" => AutoImportJobPropertiesAdminStatus.Disable,
+            _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
+        };
 
-        if (!string.IsNullOrWhiteSpace(adminStatus))
-        {
-            autoImportJobData.AdminStatus = adminStatus switch
-            {
-                "Enable" => AutoImportJobPropertiesAdminStatus.Enable,
-                "Disable" => AutoImportJobPropertiesAdminStatus.Disable,
-                _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
-            };
-        }
-
-        if (enableDeletions.HasValue)
-        {
-            autoImportJobData.EnableDeletions = enableDeletions.Value;
-        }
+        autoImportJobData.EnableDeletions = enableDeletions ?? false;
 
         if (maximumErrors.HasValue)
         {
