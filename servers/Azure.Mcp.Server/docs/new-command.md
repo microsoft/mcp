@@ -3,7 +3,7 @@
 
 # Implementing a New Command in Azure MCP
 
-This guide covers implementation patterns for new commands ("toolset commands") in Azure MCP. Follow the [Azure tool creation skill](../../../.github/skills/add-azure-mcp-tools/SKILL.md) for the gated workflow and checklist.
+This guide covers implementation patterns for new commands ("toolset commands") in Azure MCP. Follow the [Azure tool creation skill](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md) for the gated workflow and checklist.
 
 ## Toolset Pattern: Organizing code by toolset
 
