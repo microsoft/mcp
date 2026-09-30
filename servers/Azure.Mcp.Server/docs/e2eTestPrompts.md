@@ -105,7 +105,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show the top 5 Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show the prioritized Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | List prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | List the most critical Advisor recommendations in subscription \<subscription> ranked by criticality | none |
+| advisor_recommendation_list | List prioritized Advisor recommendations in subscription \<subscription> ranked by metadata priority score, then contextual criticality score | none |
 | advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
 | advisor_recommendation_list | Show active service-retirement Advisor recommendations for service group \<service-group> whose retirement date is before March 31, 2027 | none |
