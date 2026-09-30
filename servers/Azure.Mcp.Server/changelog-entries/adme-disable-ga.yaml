@@ -1,4 +1,4 @@
 changes:
-  - section: "Other"
+  - section: "Breaking Change"
     description: "Disabled the Adme setup for the GA release."
 
