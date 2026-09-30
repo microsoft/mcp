@@ -24,14 +24,12 @@ public class FabricCoreSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricCore = new CommandGroup(Name,
-            """
-            Microsoft Fabric Core Operations - Search, create, and manage Fabric items.
-            Use this tool when you need to:
-            - Search the OneLake catalog to discover Fabric items across workspaces
-            - Create new Fabric items (Lakehouse, Notebook, etc.)
-            - Manage core Fabric workspace items
-            This tool provides core operations for working with Fabric resources.
-            """);
+            "Microsoft Fabric Core Operations - Search, create, and manage Fabric items.\n" +
+            "Use this tool when you need to:\n" +
+            "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
+            "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
+            "- Manage core Fabric workspace items\n" +
+            "This tool provides core operations for working with Fabric resources.");
 
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
