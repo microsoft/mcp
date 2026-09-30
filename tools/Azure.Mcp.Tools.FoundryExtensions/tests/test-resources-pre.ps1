@@ -45,15 +45,17 @@ $explicitLocation = if ($templateFileParameters.ContainsKey('location')) {
 $regionsToCheck = if ($explicitLocation) { @($explicitLocation) } else { $candidateRegions }
 
 function Get-ModelQuotaAvailable([array] $usage, [string] $skuName, [string] $modelName) {
-    # The exact quota dimension name format hasn't been confirmed against a live
-    # subscription (it may be a machine name like 'OpenAI.Standard.gpt-4o' or a
-    # human-readable string). Require both the SKU tier and the model name to appear,
-    # anchoring the model name at the end so 'gpt-4o' doesn't also match 'gpt-4o-mini'.
-    # 'GlobalStandard' also contains the substring 'Standard', so a plain 'Standard'
-    # SKU match must specifically exclude it via a negative look-behind.
+    # Get-AzCognitiveServicesUsage returns each entry's Name as a MetricName object
+    # (Value + LocalizedValue), not a plain string - matching $_.Name directly always
+    # compared against the object's type name ('Microsoft.Azure.Management.
+    # CognitiveServices.Models.MetricName'), which is why every region/model lookup
+    # silently failed. Match against $_.Name.Value instead. The exact machine-readable
+    # format (e.g. 'OpenAI.Standard.gpt-4o' vs something else) still hasn't been
+    # confirmed against a live subscription, so debug logging below remains temporary
+    # until a CI run confirms these regexes actually match.
     $skuPattern = if ($skuName -eq 'Standard') { '(?<!Global)Standard' } else { [regex]::Escape($skuName) }
     $modelPattern = [regex]::Escape($modelName) + '$'
-    $entry = $usage | Where-Object { $_.Name -match $skuPattern -and $_.Name -match $modelPattern } | Select-Object -First 1
+    $entry = $usage | Where-Object { $_.Name.Value -match $skuPattern -and $_.Name.Value -match $modelPattern } | Select-Object -First 1
     if (!$entry) {
         return $null
     }
@@ -85,7 +87,7 @@ foreach ($region in $regionsToCheck) {
         # the regexes in Get-ModelQuotaAvailable can be corrected. Remove once fixed.
         Write-Host "  DEBUG: raw quota usage entries for '$region' ($($usage.Count) total):"
         foreach ($entry in $usage) {
-            Write-Host "    DEBUG: Name='$($entry.Name)' Limit=$($entry.Limit) CurrentValue=$($entry.CurrentValue) Unit=$($entry.Unit)"
+            Write-Host "    DEBUG: Name.Value='$($entry.Name.Value)' Name.LocalizedValue='$($entry.Name.LocalizedValue)' Limit=$($entry.Limit) CurrentValue=$($entry.CurrentValue) Unit=$($entry.Unit)"
         }
         continue
     }
