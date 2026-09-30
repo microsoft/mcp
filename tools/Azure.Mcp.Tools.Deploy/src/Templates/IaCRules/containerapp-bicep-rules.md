@@ -5,6 +5,5 @@
 - Enable CORS via properties.configuration.ingress.corsPolicy.
 - Define all used secrets; Use Key Vault if possible.
 - MANDATORY: You MUST add Key Vault secrets and their related role assignment in explicit dependencies to use these secrets.
-- IMPORTANT NOTES: If you meet deployment error: "Field 'configuration.secrets' is invalid with details: Invalid value: <secret-name>: unable to get value using managed identity". DO NOT use key vault references first, use connection string directly in container app environment variable and deploy.
-  After deployment is successful, get IP from the container app, switch to use key vault references in secrets, and 1) add the IP to key vault network rules 2) set defaultAction: 'Deny'. This is a workaround for the issue that managed identity cannot access key vault when key vault has network rules enabled.
+- If managed identity cannot resolve a secret, verify private endpoint connectivity, private DNS, and role propagation. Do not bypass network restrictions or put credentials directly in environment variables; use secret references.
 - Container App Environment must be connected to Log Analytics Workspace. Use logAnalyticsConfiguration -> customerId=logAnalytics.properties.customerId and sharedKey=logAnalytics.listKeys().primarySharedKey.
