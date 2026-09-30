@@ -14,6 +14,8 @@ namespace Azure.Mcp.Tools.Adme.Tests.Services;
 
 public sealed class HealthServiceTests
 {
+    private const string AuthAppId = "e91be4a4-1111-2222-3333-444444444444";
+
     [Fact]
     public async Task CheckHealthAsync_SucceedsAndSendsAuthenticationHeaders()
     {
@@ -25,7 +27,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             TestConstants.Tenant,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(200, result.Result.StatusCode);
         Assert.Equal("/api/storage/v2/info", handler.LastRequest!.RequestUri!.AbsolutePath);
@@ -36,7 +38,35 @@ public sealed class HealthServiceTests
     }
 
     [Fact]
-    public async Task CheckHealthAsync_WhenAuthenticationFails_ThrowsAndDoesNotCallAdme()
+    public async Task CheckHealthAsync_WithAuthAppId_RequestsInstanceScope()
+    {
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(
+                Arg.Is<TokenRequestContext>(context =>
+                context.Scopes.SequenceEqual(new[] { $"{AuthAppId}/.default" })),
+                Arg.Any<CancellationToken>())
+            .Returns(new AccessToken(TestConstants.AccessToken, DateTimeOffset.UtcNow.AddHours(1)));
+        var provider = Substitute.For<IAzureTokenCredentialProvider>();
+        provider.GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>()).Returns(credential);
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new HealthService(provider, new FakeHttpClientFactory(handler));
+
+        var result = await service.CheckHealthAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            TestConstants.Tenant,
+            AuthAppId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(200, result.Result.StatusCode);
+        await credential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context =>
+                context.Scopes.SequenceEqual(new[] { $"{AuthAppId}/.default" })),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WhenAuthenticationFails_DoesNotCallAdme()
     {
         var provider = Substitute.For<IAzureTokenCredentialProvider>();
         provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
@@ -49,7 +79,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
@@ -68,7 +98,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal(503, exception.Status);
         Assert.Contains(errorResponse, exception.Message);
@@ -97,7 +127,7 @@ public sealed class HealthServiceTests
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)statusCode, exception.Status);
         Assert.Contains(expectedError, exception.Message);
@@ -120,7 +150,7 @@ public sealed class HealthServiceTests
             endpoint,
             TestConstants.DataPartition,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 
     private static IAzureTokenCredentialProvider CreateCredentialProvider(string token = "fake-token")
