@@ -1,4 +1,4 @@
 changes:
   - section: "Breaking Change"
-    description: "Disabled the Adme setup for the GA release."
+    description: "Removed the ADME tools temporarily for GA release."
 
