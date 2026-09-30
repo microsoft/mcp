@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated Cosmos DB `item query` validation to structural checks only (rejecting empty, oversized, commented, and stacked statements). Removed SQL keyword, verb, and tautology blocklists because Cosmos SQL is inherently read-only."
