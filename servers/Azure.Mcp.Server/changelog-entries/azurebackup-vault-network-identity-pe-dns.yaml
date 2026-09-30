@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added `--public-network-access` and `--user-assigned-identity` parameters to the `azurebackup vault update` tool (RSV): `--public-network-access` toggles the Recovery Services vault networking Enabled/Disabled state, and `--user-assigned-identity` attaches user-assigned managed identities when `--identity-type` is `UserAssigned` or `SystemAssigned,UserAssigned`. Added `--private-dns-zone-ids` and `--private-dns-zone-group-name` parameters to the `azurebackup vault privateendpoint create` tool to create a Private DNS zone group linking the new Private Endpoint to one or more Private DNS zones."

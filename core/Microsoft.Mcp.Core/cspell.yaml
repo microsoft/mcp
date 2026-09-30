@@ -31,10 +31,13 @@ words:
   - libsecret
   - localho
   - localtest
+  - managedhsm
+  - microsoftazure
   - myconfig
   - newed
   - ntesttable
   - openworld
+  - opinsights
   - optout
   - parameterizes
   - rgname

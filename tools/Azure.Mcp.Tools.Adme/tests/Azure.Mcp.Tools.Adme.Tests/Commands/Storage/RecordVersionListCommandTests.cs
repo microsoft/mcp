@@ -21,6 +21,7 @@ public sealed class RecordVersionListCommandTests : CommandUnitTestsBase<RecordV
     {
         Service.ListRecordVersionsAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, RecordId, TestConstants.Tenant,
+            null,
                 Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<RecordVersionsResponse>(
                 new RecordVersionsResponse { RecordId = RecordId, Versions = [1L, 2L] },
@@ -51,6 +52,6 @@ public sealed class RecordVersionListCommandTests : CommandUnitTestsBase<RecordV
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListRecordVersionsAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 }

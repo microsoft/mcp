@@ -17,7 +17,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
     Name = "check",
     Title = "Check ADME/OSDU Health",
     Description = """
-        Check an ADME/OSDU endpoint's health, authentication and connectivity.
+        Check an ADME/OSDU endpoint's health and connectivity.
+        This verifies the authentication, not entitlements(data-access). 
         Returns health status with error details and the service HTTP status code.
         """,
     OperationPlane = ToolOperationPlane.Data,
@@ -35,7 +36,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
     public override void ValidateOptions(HealthCheckOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
     }
 
     /// <summary>
@@ -50,6 +51,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
                 options.Endpoint,
                 options.DataPartition,
                 options.Tenant,
+                options.AuthAppId,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

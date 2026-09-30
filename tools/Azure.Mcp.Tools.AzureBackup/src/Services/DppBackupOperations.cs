@@ -47,6 +47,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetDataProtectionBackupVaults();
 
+        // This MCP tool is create-only, although the underlying ARM operation is an upsert.
+        // Do not treat authorization or transport failures as proof that the vault is absent.
+        if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
+        {
+            throw new RequestFailedException(409,
+                "The vault already exists. Use 'azurebackup vault update' to modify it.");
+        }
+
         var storageSettings = new List<DataProtectionBackupStorageSetting>
         {
             new()

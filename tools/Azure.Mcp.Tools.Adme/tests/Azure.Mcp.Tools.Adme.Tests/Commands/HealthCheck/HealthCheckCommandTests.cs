@@ -14,6 +14,8 @@ namespace Azure.Mcp.Tools.Adme.Tests.Commands.HealthCheck;
 
 public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCommand, IHealthService>
 {
+    private const string AuthAppId = "e91be4a4-1111-2222-3333-444444444444";
+
     [Fact]
     public async Task Execute_ForwardsRequestAndReturnsHealth()
     {
@@ -21,22 +23,22 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             TestConstants.Tenant,
-                Arg.Any<CancellationToken>())
+            AuthAppId,
+            Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<HealthCheckResult>(
-                new HealthCheckResult(true, null, true, null, 200),
+                new HealthCheckResult(200),
                 "test-correlation-id"));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
             "--data-partition", TestConstants.DataPartition,
-            "--tenant", TestConstants.Tenant);
+            "--tenant", TestConstants.Tenant,
+            "--auth-app-id", AuthAppId);
 
         var result = ValidateAndDeserializeResponse(
             response,
             AdmeJsonContext.Default.AdmeResponseHealthCheckResult);
-        Assert.True(result.Result.AuthOk);
-        Assert.True(result.Result.ConnectivityOk);
-        Assert.Equal(200, result.Result.ConnectivityStatusCode);
+        Assert.Equal(200, result.Result.StatusCode);
         Assert.Equal("test-correlation-id", result.CorrelationId);
     }
 
@@ -46,6 +48,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
         Service.CheckHealthAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .Returns<AdmeResponse<HealthCheckResult>>(_ => throw new InvalidOperationException("boom"));
@@ -71,6 +74,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
@@ -95,7 +99,7 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -113,6 +117,19 @@ public sealed class HealthCheckCommandTests : CommandUnitTestsBase<HealthCheckCo
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
-            default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default, default, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Execute_WithInvalidAuthAppId_DoesNotCallService()
+    {
+        var response = await ExecuteCommandAsync(
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--auth-app-id", "not-an-app-id");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceiveWithAnyArgs().CheckHealthAsync(
+            default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 }

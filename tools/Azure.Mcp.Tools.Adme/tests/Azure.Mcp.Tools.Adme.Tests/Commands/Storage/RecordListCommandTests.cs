@@ -21,7 +21,7 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
     {
         Service.QueryRecordsByKindAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 25,
-                "prev-cursor", TestConstants.Tenant, Arg.Any<CancellationToken>())
+            "prev-cursor", TestConstants.Tenant, null, Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<QueryRecordsResponse>(
                 new QueryRecordsResponse { Cursor = "next-cursor", Results = [RecordId] },
                 "test-correlation-id"));
@@ -45,7 +45,7 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
     {
         Service.QueryRecordsByKindAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 10,
-                null, null, Arg.Any<CancellationToken>())
+            null, null, null, Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<QueryRecordsResponse>(new QueryRecordsResponse { Results = [] }, null));
 
         var response = await ExecuteCommandAsync(
@@ -80,7 +80,7 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().QueryRecordsByKindAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 }
