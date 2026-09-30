@@ -258,7 +258,7 @@ public class ResilienceManagementCommandTests(
     public async Task Should_create_drill_without_recovery_plan()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
         const string drillName = "mcp-drill-no-plan";
 
         var result = await CallToolAsync(
