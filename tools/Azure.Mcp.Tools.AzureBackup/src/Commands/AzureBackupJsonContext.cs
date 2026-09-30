@@ -60,6 +60,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands;
 [JsonSerializable(typeof(BackupVaultUserAssignedIdentity))]
 [JsonSerializable(typeof(ProtectedItemInfo))]
 [JsonSerializable(typeof(BackupPolicyInfo))]
+[JsonSerializable(typeof(BackupPolicyDetails))]
+[JsonSerializable(typeof(BackupPolicyDppDetails))]
 [JsonSerializable(typeof(BackupJobInfo))]
 [JsonSerializable(typeof(RecoveryPointInfo))]
 [JsonSerializable(typeof(ProtectableItemInfo))]

@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "Removed the unused `subscription` parameter from the `storage blob get`, `storage blob upload`, `storage blob container create`, `storage blob container get`, and `storage table list` tools."

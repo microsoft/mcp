@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using Azure;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -67,6 +69,20 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
             return context.Response;
         }
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
+            $"Access denied reading container details. This commonly happens when the caller has a management-plane role (e.g., Contributor/Owner) but lacks a data-plane role such as 'Storage Blob Data Reader' or 'Storage Blob Data Contributor' on this storage account. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied reading container details. This can result from a missing data-plane RBAC role, storage account network/firewall restrictions, or an invalid/expired credential. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "ContainerNotFound" =>
+            $"Container not found. Verify the container exists in the specified storage account. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            $"Storage account or container not found. Verify the account and container names. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 
     public record ContainerGetCommandResult(List<ContainerInfo> Containers);
 }
