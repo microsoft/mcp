@@ -26,7 +26,21 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "Azure IoT CLI extension is not installed. Installing the preview version..."
     az extension add --name azure-iot --allow-preview true --yes
     if ($LASTEXITCODE -ne 0) {
-        throw "Failed to install the Azure IoT CLI extension. Exit code: $LASTEXITCODE."
+        # `az extension add` swallows pip's real stdout/stderr and only prints a generic
+        # "Pip failed with status code 1. Use --debug for more information." unless
+        # --debug is passed. Retry once with --debug so the actual pip error (network
+        # timeout, version conflict, disk space, etc.) is captured in the pipeline log
+        # instead of only this uninformative wrapper message. If the retry happens to
+        # succeed (e.g. a transient network blip), treat the extension as installed.
+        $initialExitCode = $LASTEXITCODE
+        Write-Host "##[warning]Initial install attempt failed (exit code $initialExitCode). Retrying with --debug to capture the underlying pip error..."
+        Write-Host "##[group]az extension add --debug output"
+        az extension add --name azure-iot --allow-preview true --yes --debug
+        $retryExitCode = $LASTEXITCODE
+        Write-Host "##[endgroup]"
+        if ($retryExitCode -ne 0) {
+            throw "Failed to install the Azure IoT CLI extension. Exit code: $retryExitCode (initial attempt: $initialExitCode)."
+        }
     }
 }
 
