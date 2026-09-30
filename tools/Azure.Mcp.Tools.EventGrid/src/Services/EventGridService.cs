@@ -4,6 +4,8 @@
 using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Models;
@@ -110,6 +112,8 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
         }
 
+        var uri = ValidateEventGridEndpoint(topic.Data.Endpoint, AzureService.CloudConfiguration.ArmEnvironment);
+
         // Get credential using standardized method from base class for Azure AD authentication
         var credential = await GetCredential(tenant, cancellationToken);
 
@@ -120,8 +124,11 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         var httpClient = AzureService.GetClient(nameof(EventGridPublisherClient));
         var clientOptions = new EventGridPublisherClientOptions
         {
-            Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+            Transport = new HttpClientTransport(httpClient)
         };
+        clientOptions.AddPolicy(
+            new EventGridEndpointValidationPolicy(AzureService.CloudConfiguration.ArmEnvironment),
+            HttpPipelinePosition.BeforeTransport);
         var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
 
         // Serialize each event individually to JSON using source-generated context
@@ -236,7 +243,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
-    private async Task GetSubscriptionsForSpecificTopic(
+    private static async Task GetSubscriptionsForSpecificTopic(
         SubscriptionResource subscriptionResource,
         string? resourceGroup,
         string topicName,
@@ -338,7 +345,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
-    private async Task<EventGridTopicResource?> FindTopic(
+    private static async Task<EventGridTopicResource?> FindTopic(
         SubscriptionResource subscriptionResource,
         string? resourceGroup,
         string topicName,
@@ -376,7 +383,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             cancellationToken);
     }
 
-    private async Task<SystemTopicResource?> FindSystemTopic(
+    private static async Task<SystemTopicResource?> FindSystemTopic(
         SubscriptionResource subscriptionResource,
         string? resourceGroup,
         string topicName,
@@ -555,4 +562,20 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
+    /// <summary>
+    /// Validates that the given EventGrid endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="requestUri">The URI of the EventGrid endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the EventGrid endpoint.</returns>
+    internal static Uri ValidateEventGridEndpoint(Uri? requestUri, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(requestUri);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: requestUri.AbsoluteUri,
+            serviceType: "eventgrid",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "eventgrid");
+        return requestUri;
+    }
 }
