@@ -1722,14 +1722,20 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             DrillRbacSetupMode.Manual => new ResilienceManagementRbacSetupMode("Manual"),
             _ => throw new ArgumentOutOfRangeException(nameof(rbacSetupMode), rbacSetupMode, "Unsupported RBAC setup mode.")
         };
-        if (!string.IsNullOrWhiteSpace(recoveryPlan))
-        {
-            // The SDK model exposes no public constructor or setters for RecoveryPlanId, so the model factory is required.
-            properties.RecoveryPlanProperties = ArmResilienceManagementModelFactory.RecoveryPlanPropertiesOfDrill(
-                associatedIdentity,
-                RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan),
-                recoveryPlanResourceExcludedCount: null);
-        }
+
+        // The 2026-04-01-preview backend flow requires both identities even when resources do not exist yet.
+        properties.RecoveryPlanProperties = ArmResilienceManagementModelFactory.RecoveryPlanPropertiesOfDrill(
+            associatedIdentity,
+            string.IsNullOrWhiteSpace(recoveryPlan)
+                ? null
+                : RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan),
+            recoveryPlanResourceExcludedCount: null);
+        properties.MonitoringProperties = ArmResilienceManagementModelFactory.MonitoringPropertiesOfDrill(
+            associatedIdentity,
+            logAnalyticsWorkspaceId: null,
+            rawMetricsDataCollectionRuleId: null,
+            serviceGroupMetricsDataCollectionRuleId: null,
+            dataCollectionEndpointId: null);
 
         var drillData = new ResilienceManagementDrillData
         {
