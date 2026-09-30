@@ -9,10 +9,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 
 public interface IResilienceManagementService
 {
-    Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default);
-
-    Task<GoalTemplateInfo> GetGoalTemplateAsync(string serviceGroup, string goalTemplate, string? tenant = null, CancellationToken cancellationToken = default);
-
     Task<IEnumerable<ResourceSummary>> ListGoalAssignmentsAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<GoalAssignmentInfo> GetGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);

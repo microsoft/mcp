@@ -2,6 +2,10 @@ jobs:
 # cspell:ignore SOURCECOMMITID TARGETBRANCH
 - job: PackVSIXForPR
   displayName: "Pack VSIX"
+  variables:
+    # Matches the registryUrl default in
+    # eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml.
+    VsixNpmRegistry: "https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/"
   steps:
   - checkout: self
     fetchDepth: 0
@@ -30,6 +34,15 @@ jobs:
     condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
     inputs:
       version: "24.x"
+
+  # Resolve npm packages from the azure-sdk feed rather than the public registry.
+  # The feed serves anonymous reads, which is all VSIX packaging requires.
+  - pwsh: |
+      $npmrcPath = Join-Path $HOME '.npmrc'
+      Write-Host "Configuring npm registry at $npmrcPath"
+      'registry=$(VsixNpmRegistry)' | Out-File -FilePath $npmrcPath -Encoding ascii
+    displayName: "Configure npm registry"
+    condition: and(succeeded(), eq(variables['RunVsixPackaging'], 'true'))
 
   - task: Powershell@2
     displayName: "Prepare binaries for VSIX"

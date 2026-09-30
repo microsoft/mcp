@@ -26,6 +26,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
                 TestConstants.DataPartition,
                 TestConstants.WellKind,
                 TestConstants.Tenant,
+                null,
                 Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<JsonElement>(schema, "test-correlation-id"));
 
@@ -54,6 +55,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
@@ -79,6 +81,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)statusCode, expectedMessage));
 
@@ -98,6 +101,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("connection reset"));
@@ -125,6 +129,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -138,7 +143,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().GetSchemaAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -154,7 +159,7 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().GetSchemaAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -173,6 +178,6 @@ public sealed class SchemaGetCommandTests : CommandUnitTestsBase<SchemaGetComman
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().GetSchemaAsync(
-            default!, default!, default!, default, TestContext.Current.CancellationToken);
+            default!, default!, default!, default, cancellationToken: TestContext.Current.CancellationToken);
     }
 }

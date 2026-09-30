@@ -9,7 +9,6 @@ using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
 
@@ -149,10 +148,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
         var commandDetails = command.GetCommand();
 
         var optionInfos = commandDetails.Options?
-            .Select(arg => new OptionInfo(
-                name: arg.Name,
-                description: arg.Description!,
-                required: arg.Required))
+            .Select(arg => arg.ToOptionInfo())
             .ToList();
 
         var fullCommand = tokenizedName.Replace(CommandFactory.Separator, ' ');

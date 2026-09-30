@@ -48,7 +48,7 @@ public sealed class SearchServiceTests
                 ExcludedFields = ["data.Big"],
                 HighlightedFields = ["data.FieldID"],
             },
-            TestConstants.Tenant, TestContext.Current.CancellationToken);
+            TestConstants.Tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(2, response.Result.TotalCount);
         Assert.Equal(2, Assert.Single(response.Result.Aggregations!).Count);
@@ -68,7 +68,7 @@ public sealed class SearchServiceTests
         await service.QueryAsync(
             TestConstants.Endpoint, TestConstants.DataPartition,
             new SearchQueryRequest { Kind = ["*:*:*:*"] }, null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("""{"kind":["*:*:*:*"]}""", handler.LastRequestBody);
     }
@@ -91,7 +91,7 @@ public sealed class SearchServiceTests
                 ReturnedFields = ["id"],
             },
             false,
-            TestConstants.Tenant, TestContext.Current.CancellationToken);
+            TestConstants.Tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("NEXT", response.Result.Cursor);
         Assert.Equal(42, response.Result.TotalCount);
@@ -115,7 +115,7 @@ public sealed class SearchServiceTests
             new SearchCursorRequest { Kind = [TestConstants.WellKind] },
             true,
             null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(
             "/api/search/v2/query_with_cursor?search_after=true",
@@ -137,7 +137,7 @@ public sealed class SearchServiceTests
         await Assert.ThrowsAnyAsync<ArgumentException>(() => service.QueryAsync(
             TestConstants.Endpoint, TestConstants.DataPartition,
             new SearchQueryRequest { Kind = kinds! }, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }

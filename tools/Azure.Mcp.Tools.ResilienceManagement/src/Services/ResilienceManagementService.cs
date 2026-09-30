@@ -30,67 +30,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return options;
     }
 
-    public async Task<IEnumerable<ResourceSummary>> ListGoalTemplatesAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default)
-    {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
-
-        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
-        GoalTemplateCollection goalTemplates = armClient.GetGoalTemplates(serviceGroupId);
-
-        var result = new List<ResourceSummary>();
-        await foreach (var goalTemplate in goalTemplates.GetAllAsync(cancellationToken: cancellationToken))
-        {
-            result.Add(new ResourceSummary(
-                Id: goalTemplate.Data.Id?.ToString() ?? string.Empty,
-                Name: goalTemplate.Data.Name ?? string.Empty));
-        }
-
-        return result;
-    }
-
-    public async Task<GoalTemplateInfo> GetGoalTemplateAsync(string serviceGroup, string goalTemplate, string? tenant = null, CancellationToken cancellationToken = default)
-    {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
-
-        var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
-        GoalTemplateCollection goalTemplates = armClient.GetGoalTemplates(serviceGroupId);
-        GoalTemplateResource resource = await goalTemplates.GetAsync(goalTemplate, cancellationToken);
-
-        return MapGoalTemplate(resource.Data);
-    }
-
-    private static GoalTemplateInfo MapGoalTemplate(GoalTemplateData data)
-    {
-        var props = data.Properties;
-        var systemData = data.SystemData;
-
-        var mappedProperties = props is null
-            ? null
-            : new GoalTemplateInfoProperties(
-                GoalType: props.GoalType.ToString(),
-                ProvisioningState: props.ProvisioningState?.ToString() ?? string.Empty,
-                RegionalRecoveryPointObjective: props.RegionalRecoveryPointObjective ?? string.Empty,
-                RegionalRecoveryTimeObjective: props.RegionalRecoveryTimeObjective ?? string.Empty,
-                RequireDisasterRecovery: props.RequireDisasterRecovery?.ToString() ?? string.Empty,
-                RequireHighAvailability: props.RequireHighAvailability?.ToString() ?? string.Empty);
-
-        var mappedSystemData = systemData is null
-            ? null
-            : new GoalTemplateInfoSystemData(
-                CreatedAt: systemData.CreatedOn?.ToString("o") ?? string.Empty,
-                CreatedBy: systemData.CreatedBy ?? string.Empty,
-                CreatedByType: systemData.CreatedByType?.ToString() ?? string.Empty,
-                LastModifiedAt: systemData.LastModifiedOn?.ToString("o") ?? string.Empty,
-                LastModifiedBy: systemData.LastModifiedBy ?? string.Empty,
-                LastModifiedByType: systemData.LastModifiedByType?.ToString() ?? string.Empty);
-
-        return new GoalTemplateInfo(
-            Id: data.Id?.ToString() ?? string.Empty,
-            Name: data.Name ?? string.Empty,
-            Properties: mappedProperties,
-            SystemData: mappedSystemData);
-    }
-
     public async Task<IEnumerable<ResourceSummary>> ListGoalAssignmentsAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
@@ -1616,7 +1555,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new RecoveryJobRetryResult(
             operationId,
             "Accepted",
-            $"Recovery job retry was accepted. Use 'resilience recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
+            $"Recovery job retry was accepted. Use 'resiliency recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
     }
 
     public Task<RecoveryJobResumeResult> ResumeRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? description = null, string? tenant = null, CancellationToken cancellationToken = default)
@@ -1648,14 +1587,14 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new RecoveryJobResumeResult(
             operationId,
             "Accepted",
-            $"Recovery job resume was accepted. Use 'resilience recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
+            $"Recovery job resume was accepted. Use 'resiliency recoveryjob get --service-group {serviceGroup} --recoveryplan {recoveryPlan} --recoveryjob {recoveryJob}' to monitor progress.");
     }
 
     private static string CreateRecoveryPlanActionTrackingMessage(string action, string? jobId)
     {
         return jobId is null
-            ? $"{action} was accepted. Use 'resilience recoveryjob get' to list recovery jobs, then provide --recoveryjob to monitor the new job."
-            : $"{action} was accepted. Use 'resilience recoveryjob get --recoveryjob {jobId}' to monitor progress.";
+            ? $"{action} was accepted. Use 'resiliency recoveryjob get' to list recovery jobs, then provide --recoveryjob to monitor the new job."
+            : $"{action} was accepted. Use 'resiliency recoveryjob get --recoveryjob {jobId}' to monitor progress.";
     }
 
     internal static void ThrowIfProviderError(ArmResponseErrorResponseResult result, string operationDescription)
