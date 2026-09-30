@@ -35,7 +35,7 @@ public class MonitorWebTestServiceEndpointValidationTests
     {
         Assert.Throws<SecurityException>(() =>
             MonitorWebTestService.ResolveValidatedRequestUri(
-                requestUrl: null,
+                newWebTestUri: null,
                 existingRequestUri: new Uri("http://127.0.0.1/health"),
                 logger: null));
     }
@@ -48,7 +48,7 @@ public class MonitorWebTestServiceEndpointValidationTests
         Assert.Same(
             existingRequestUri,
             MonitorWebTestService.ResolveValidatedRequestUri(
-                requestUrl: null,
+                newWebTestUri: null,
                 existingRequestUri,
                 logger: null));
     }

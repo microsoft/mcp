@@ -317,7 +317,7 @@ public class MonitorWebTestService(
         }
         var requestUri = ResolveValidatedRequestUri(
             requestUrl,
-            currentData.Request?.RequestUri,
+            currentData.Request.RequestUri,
             _logger);
 
         // Create updated web test data using existing values as defaults
@@ -333,7 +333,7 @@ public class MonitorWebTestService(
             Description = description ?? currentData.Description,
             Request = new()
             {
-                RequestUri = requestUri ?? currentData.Request?.RequestUri,
+                RequestUri = requestUri,
                 HttpVerb = httpVerb?.ToUpperInvariant() ?? currentData.Request?.HttpVerb,
                 RequestBody = requestBody ?? currentData.Request?.RequestBody,
                 FollowRedirects = followRedirects ?? currentData.Request?.FollowRedirects,
@@ -440,6 +440,12 @@ public class MonitorWebTestService(
         };
     }
 
+    /// <summary>
+    /// Validates that the given URI points to a public target and returns the same URI if valid.
+    /// </summary>
+    /// <param name="uri">The URI to validate.</param>
+    /// <param name="logger">A logger instance for logging validation details.</param>
+    /// <returns>The validated URI if it points to a public target.</returns>
     internal static Uri MonitorWebTestValidateRequestUri(Uri uri, ILogger? logger)
     {
         EndpointValidator.ValidatePublicTargetUrl(
@@ -449,20 +455,23 @@ public class MonitorWebTestService(
         return uri;
     }
 
+    /// <summary>
+    /// Resolves the request URL to a validated public target URI. If a new request URL is provided, it validates and
+    /// returns it. If not, it falls back to the existing request URI and validates it.
+    /// </summary>
+    /// <param name="newWebTestUri">The new request URI to validate.</param>
+    /// <param name="existingRequestUri">The existing URI to fall back to if no new request URL is provided.</param>
+    /// <param name="logger">A logger instance for logging validation details.</param>
+    /// <returns>The validated URI if it points to a public target, or null if no request URL is provided and the existing URI is null.</returns>
     internal static Uri? ResolveValidatedRequestUri(
-        string? requestUrl,
-        Uri? existingRequestUri,
+        string? newWebTestUri,
+        Uri existingRequestUri,
         ILogger? logger)
     {
-        if (requestUrl is not null)
+        if (newWebTestUri is not null)
         {
-            var uri = new Uri(requestUrl, UriKind.Absolute);
+            var uri = new Uri(newWebTestUri, UriKind.Absolute);
             return MonitorWebTestValidateRequestUri(uri, logger);
-        }
-
-        if (existingRequestUri is null)
-        {
-            return null;
         }
 
         return MonitorWebTestValidateRequestUri(existingRequestUri, logger);
