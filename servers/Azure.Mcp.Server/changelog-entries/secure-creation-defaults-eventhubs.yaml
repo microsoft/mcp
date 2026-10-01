@@ -1,0 +1,5 @@
+changes:
+  - section: Breaking Changes
+    description: Creating EventHub Namespaces now disable local authentication by default. Explicit options remain available to enable it, while omitted security options preserve existing Namespaces during updates.
+  - section: Bugs Fixed
+    description: Updating an existing EventHub Namespace now replaces supplied tag values and preserves unrelated tags without duplicate-key errors.
