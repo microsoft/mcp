@@ -3946,8 +3946,8 @@
           "description": "This tool may interact with an unpredictable or dynamic set of external entities."
         },
         "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
         },
         "secret": {
           "value": false,
