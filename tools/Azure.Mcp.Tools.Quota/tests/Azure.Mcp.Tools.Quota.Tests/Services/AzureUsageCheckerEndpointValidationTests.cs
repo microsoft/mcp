@@ -81,7 +81,7 @@ public sealed class AzureUsageCheckerEndpointValidationTests
         Uri requestUri = Assert.Single(handler.RequestUris);
         Assert.Equal("management.azure.com", requestUri.Host);
         Assert.Contains(
-            "eastus%2F..%2F..%2F%3Fredirect%3Dhttps%3A%2F%2Fevil.example%2F%23fragment",
+            "eastus%2F..%2F..%2F%3Fredirect%3Dhttps%3A%2F%2Fevil.example%2F%23fragment", // cspell:disable-line
             requestUri.AbsolutePath,
             StringComparison.OrdinalIgnoreCase);
         Assert.Equal("?api-version=2023-08-01", requestUri.Query);
@@ -104,7 +104,7 @@ public sealed class AzureUsageCheckerEndpointValidationTests
         Uri requestUri = Assert.Single(handler.RequestUris);
         Assert.Equal("management.azure.com", requestUri.Host);
         Assert.Contains(
-            "eastus%2F..%2F..%2F%3Fredirect%3Dhttps%3A%2F%2Fevil.example%2F%23fragment",
+            "eastus%2F..%2F..%2F%3Fredirect%3Dhttps%3A%2F%2Fevil.example%2F%23fragment", // cspell:disable-line
             requestUri.AbsolutePath,
             StringComparison.OrdinalIgnoreCase);
         Assert.Equal("?api-version=2023-06-01-preview", requestUri.Query);

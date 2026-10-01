@@ -49,7 +49,7 @@ public class ResourceHealthServiceSsrfValidationTests
     [InlineData("http://management.azure.com/subscriptions/test")]
     [InlineData("https://management.azure.com.evil.example/subscriptions/test")]
     [InlineData("https://management.chinacloudapi.cn/subscriptions/test")]
-    public void CreateAndValidateRequestUri_RejectsUnallowedEndpoint(string requestPath)
+    public void CreateAndValidateRequestUri_RejectsDisallowedEndpoint(string requestPath)
     {
         Assert.Throws<SecurityException>(() =>
             ResourceHealthService.CreateAndValidateRequestUri(

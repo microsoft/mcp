@@ -98,7 +98,7 @@ EndpointValidator.ValidateAzureServiceEndpoint(
     endpoint: uri.AbsoluteUri,
     serviceType: "service-key",
     armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
-    executingToolNamespaceName: "toolnamespace");
+    executingToolNamespaceName: "toolNamespace");
 
 var client = new ServiceClient(uri, credential, options);
 ```
@@ -196,7 +196,7 @@ Arbitrary public target:
 EndpointValidator.ValidatePublicTargetUrl(
     url: targetUrl,
     logger: logger,
-    executingToolNamespaceName: "toolnamespace");
+    executingToolNamespaceName: "toolNamespace");
 ```
 
 Use this only when contacting user-selected public hosts is the feature. Preserve its DNS and private/reserved-address checks; do not add success-shaped fallbacks when validation or DNS resolution fails.

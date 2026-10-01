@@ -86,7 +86,7 @@ public sealed class PricingServiceEndpointValidationTests
         Uri requestUri = Assert.Single(handler.RequestUris);
         Assert.Equal("prices.azure.com", requestUri.Host);
         Assert.Contains(
-            "%26redirect%3Dhttps%3A%2F%2Fevil.example%2F%23fragment",
+            "%26redirect%3Dhttps%3A%2F%2Fevil.example%2F%23fragment", // cspell:disable-line
             requestUri.Query,
             StringComparison.OrdinalIgnoreCase);
     }
