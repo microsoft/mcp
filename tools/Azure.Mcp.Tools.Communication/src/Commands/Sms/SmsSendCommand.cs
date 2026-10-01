@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.Communication.Commands.Sms;
         Returns message IDs and delivery status for each sent message.
         """,
     OperationPlane = ToolOperationPlane.Data,
-    Destructive = true,
+    Destructive = false,
     Idempotent = false,
     OpenWorld = true,
     ReadOnly = false,
