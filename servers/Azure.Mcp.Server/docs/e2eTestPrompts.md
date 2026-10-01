@@ -19,15 +19,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type \<recommendation-type-id> | none |
 | advisor_metadata_get | Get the Advisor metadata catalog entry for recommendation type <recommendation-type-id> and return its impact and category; do not list active recommendation records | none |
 | advisor_metadata_get | When does Advisor recommendation type \<recommendation-type-id> retire? | none |
-| advisor_metadata_get | Explain what Advisor recommendation type \<recommendation-type-id> means and what actions it recommends | none |
+| advisor_metadata_get | Use Advisor recommendation metadata get to explain what recommendation type \<recommendation-type-id> means, including its description and recommended actions; do not query active recommendation records | none |
 | advisor_metadata_list | List the Advisor recommendation metadata catalog | none |
 | advisor_metadata_list | List Advisor recommendation metadata types applicable to virtual machines before deployment; use the metadata catalog, not active recommendation records | none |
 | advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases | none |
 | advisor_metadata_list | Show the German metadata catalog for Advisor recommendations | none |
 | advisor_metadata_list | List Advisor recommendation metadata types that include service-retirement details; search the metadata catalog, not active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory | none |
-| advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 | none |
-| advisor_metadata_list | Find global Azure Advisor recommendation metadata for Service Health tracking ID QNY1-HB8, not active recommendations | none |
+| advisor_metadata_list | Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records | none |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template | context-required |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account | context-required |
@@ -73,11 +72,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Show the distribution of my Advisor recommendations by business impact | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types | none |
 | advisor_recommendation_summary | Which Advisor recommendation type occurs most often for resources in my subscription? | none |
-| advisor_recommendation_summary | Rank impacted Azure resource types by the count of High-impact Advisor recommendations | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to rank impacted Azure resource types by the count of High-impact recommendations; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Rank the Azure resource types with the most critical Advisor recommendations | none |
-| advisor_recommendation_summary | Break down my Advisor recommendations by lifecycle status | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count recommendations grouped by lifecycle status; do not list individual recommendation records | none |
 | advisor_recommendation_summary | How many Advisor recommendations are new, completed, dismissed, or postponed? | none |
-| advisor_recommendation_summary | Group active Advisor recommendations by metadata subcategory | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations grouped by metadata subcategory; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active zone resiliency recommendations grouped by impacted resource type; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations grouped by retirement date; do not list individual records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count overdue active service-retirement recommendations; return a count rather than individual records | none |
@@ -91,8 +90,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Show me the remediation actions for recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Give me the CLI and PowerShell scripts to remediate recommendation type id \<recommendation-type-id> | none |
-| advisor_remediation_get | Get the ARM and Bicep artifacts to fix Advisor recommendation type id \<recommendation-type-id> | none |
-| advisor_remediation_get | Get the terraform to fix Advisor recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its ARM template and Bicep remediation artifacts; do not apply or list recommendations | none |
+| advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its Terraform remediation artifact; do not apply or list recommendations | none |
 | advisor_remediation_get | Resolve or remediate Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its step-by-step remediation instructions | none |
 | advisor_remediation_get | Give me a ready-to-run script to remediate recommendation type id \<recommendation-type-id> | none |
@@ -405,7 +404,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_get | List Azure Compute virtual machine resources across my subscription; use the Compute VM inventory rather than a generic Resource Graph query | none |
 | compute_vm_get | Show me all VMs in my subscription | none |
 | compute_vm_get | Get the Azure Compute virtual machine inventory for my subscription | none |
-| compute_vm_get | Get all virtual machines in resource group \<resource-group-name> | none |
+| compute_vm_get | Use Azure Compute VM get inventory to list all virtual machines in resource group \<resource-group-name>; the get operation lists VMs, so do not invent a VM list command or use generic resource listing | none |
 | compute_vm_get | Show me VMs in resource group \<resource-group-name> | none |
 | compute_vm_get | List the Azure virtual machines in resource group \<resource-group-name> | none |
 | compute_vm_get | Get details for virtual machine \<vm-name> in resource group \<resource-group-name> | none |
@@ -413,7 +412,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_get | What are the details of VM \<vm-name> in resource group <resource-group-name>? | none |
 | compute_vm_get | Get virtual machine \<vm-name> with instance view in resource group \<resource-group-name> | none |
 | compute_vm_get | Show me VM \<vm-name> with runtime status in resource group \<resource-group-name> | none |
-| compute_vm_get | What is the power state of virtual machine \<vm-name> in resource group <resource-group-name>? | none |
+| compute_vm_get | Use Azure Compute VM get with instance view to read the current power state of virtual machine \<vm-name> in resource group \<resource-group-name>; do not invoke a power-state mutation | none |
 | compute_vm_get | Get VM \<vm-name> status and provisioning state in resource group \<resource-group-name> | none |
 | compute_vm_get | Show me the current status of VM \<vm-name> | none |
 | compute_vm_update | Add tags to VM \<vm-name> in resource group \<resource-group-name> | clarification-required |
@@ -455,10 +454,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_delete | Force delete VMSS \<vmss-name> in resource group \<resource-group-name> using force-deletion | none |
 | compute_vmss_delete | Delete scale set \<vmss-name> that does not exist in resource group \<resource-group-name> | none |
 | compute_disk_get | List Azure Compute managed disk resources across my subscription; use the Compute disk inventory rather than a generic Resource Graph query | none |
-| compute_disk_get | Show me all disks in resource group \<resource-group> | none |
+| compute_disk_get | Use Azure Compute managed disk get inventory to list all managed disks in resource group \<resource-group>; the get operation lists disks, so do not invent a disk list command or use generic resource listing | none |
 | compute_disk_get | Get details of disk \<disk-name> in resource group \<resource-group> | none |
-| compute_disk_get | Show me the disk sizes in resource group \<resource-group> | none |
-| compute_disk_get | Get the Azure Compute managed disk inventory available in my subscription | none |
+| compute_disk_get | Use Azure Compute managed disk get inventory to list managed disk sizes in resource group \<resource-group>; do not invent a disk list command or use generic resource listing | none |
+| compute_disk_get | Use Azure Compute managed disk get inventory to list managed disks across my subscription; do not use Resource Graph or invent a disk list command | none |
 | compute_disk_get | Get information about disk \<disk-name> | none |
 | compute_disk_create | Create a 128 GB managed disk named \<disk-name> in resource group \<resource-group> | none |
 | compute_disk_create | Create a new Premium_LRS disk called \<disk-name> in resource group \<resource-group> with 256 GB | none |
@@ -676,7 +675,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? | none |
 | fileshares_limits | Get the file share limits for subscription \<subscription> in location \<location> | none |
 | fileshares_limits | Get the Azure Files share service limits in my subscription for location \<location> | none |
-| fileshares_limits | Show me the file share service limits in location \<location> | none |
+| fileshares_limits | Use Azure File Shares service limits to show provisioning constants for location \<location>; do not use Azure resource quota usage | none |
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in \<location> in subscription \<subscription> | none |
 | fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in \<location>? | none |
 | fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in \<location> | none |
@@ -706,9 +705,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_update | Enable NFS encryption in transit for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Disable NFS encryption in transit on file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
-| fileshares_usage | Get Azure Files usage data for subscription \<subscription>in location \<location> | none |
+| fileshares_usage | Use Azure File Shares usage data for subscription \<subscription> in location \<location>; do not use Azure resource-provider quota usage | none |
 | fileshares_usage | Show me Azure File Shares usage statistics in location \<location> | none |
-| fileshares_usage | Get the current Azure File Shares usage in location \<location> for subscription \<subscription>| none |
+| fileshares_usage | Use Azure File Shares usage statistics for subscription \<subscription> in location \<location>; do not use Azure resource-provider quota usage | none |
 
 ## Azure Function App
 
@@ -734,10 +733,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | functions_language_list | Check the available languages that Azure Functions supports. | none |
 | functions_language_list | Use Azure Functions language discovery to list the supported languages and compare them | none |
 | functions_language_list | Use Azure Functions runtime discovery to list the available runtime versions | none |
-| functions_project_get | Set up a new Azure Functions project in Python | none |
+| functions_project_get | Use Azure Functions project get to return the generated files for a new Python Functions project; do not install dependencies, build, or run the project | none |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app | none |
 | functions_project_get | Use an Azure Functions project template to create boilerplate for a Java app using JDK 21 | none |
-| functions_project_get | Set up a new Azure Functions project in Go | none |
+| functions_project_get | Use Azure Functions project get to return the generated files for a new Go Functions project; do not install dependencies, build, or run the project | none |
 | functions_template_get | Get the available triggers and bindings for C# Azure Functions. | none |
 | functions_template_get | Show me all the Python Azure Function templates | none |
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes | none |
@@ -941,8 +940,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | get_azure_bestpractices_ai_app | Get best practices for building AI applications in Azure | none |
 | get_azure_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation | none |
 | get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry | none |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. | none |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry | none |
+| get_azure_bestpractices_ai_app | Use the Azure MCP AI application best-practices tool to return guidance for building an app that manages travel queries; do not create files, install packages, or build the app | none |
+| get_azure_bestpractices_ai_app | Use the Azure MCP AI application best-practices tool to return Microsoft Foundry guidance for an app that manages travel queries; do not create files, install packages, or build the app | none |
 
 ## Azure Migrate
 
@@ -1003,7 +1002,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace \<namespace> | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
-| monitor_metrics_query | Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
+| monitor_metrics_query | Query Azure Monitor metric time-series data to analyze performance trends and response-time metrics for Application Insights resource <resource_name> over the last <time_period>; do not query logs or metric definitions | none |
 | monitor_metrics_query | Check the availability metrics for my Application Insights resource <resource_name> for the last <time_period> | none |
 | monitor_metrics_query | Get the <aggregation_type> <metric_name> metric for <resource_type> <resource_name> over the last <time_period> with intervals | none |
 | monitor_metrics_query | Investigate error rates and failed requests for Application Insights resource <resource_name> for the last <time_period> | investigation-required |
@@ -1312,7 +1311,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> | none |
 | sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> | none |
 | sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? | none |
-| sql_server_get | Get the Azure SQL server resource inventory for resource group <resource_group_name>; do not use a generic server-list operation | none |
+| sql_server_get | Use Azure SQL server get to list the Azure SQL server resources in resource group <resource_group_name>; the get operation lists servers, so do not use Resource Graph or generic resource listing | none |
 | sql_server_get | Get every Azure SQL server resource in resource group <resource_group_name> using Azure SQL server discovery | none |
 | sql_server_get | Show me the Azure SQL server <server_name> details | none |
 | sql_server_get | Get Azure SQL server <server_name> info | none |
