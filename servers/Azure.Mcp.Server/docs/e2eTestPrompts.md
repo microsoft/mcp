@@ -9,36 +9,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 - `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 - `investigation-required`: Tool ownership or command routing requires investigation before this prompt can be evaluated reliably. See https://github.com/microsoft/mcp/issues/3266.
 
-## Azure Data Manager for Energy
-
-| Tool Name | Test Prompt | Interaction |
-|:----------|:------------|:------------|
-| adme_health_check | Check health and authentication for ADME endpoint \<endpoint> and data partition \<data-partition> | none |
-| adme_schema_get | Get ADME schema for kind \<authority:source:entity-type:version> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_get | Show the fields, types, and structure of OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_get | Retrieve the full JSON definition for OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_list | List all shared Well schemas from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_list | List the latest published SHARED OSDU schemas for entity type master-data--Well from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_list | List DEVELOPMENT OSDU schemas from authority \<authority> and source \<source> in ADME endpoint \<endpoint> and data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch ADME records \<record-id-1> and \<record-id-2> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch the full content of ADME records <record-id-1>, <record-id-2>, and \<record-id-3> in one batch from endpoint \<endpoint> and data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch only attributes data.Name and data.Description for ADME records \<record-id-1> and \<record-id-2> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch ADME record \<record-id> with frame-of-reference conversion and report its conversion status and errors from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_get | Get a OSDU record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_get | Get version \<record-version> of OSDU record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record \<record-id> at endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor \<cursor> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_version_list | List all versions of ADME record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter \<lucene-query> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search ADME records matching \<lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint \<endpoint> in data partition \<data-partition> | none |
-
 ## Azure Advisor
 
 | Tool Name | Test Prompt | Interaction |
@@ -340,6 +310,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_security_disable-mua | Turn off MUA on backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_security_disable-mua | Unlink the Resource Guard from vault <vault_name> in resource group <resource_group> and disable MUA | investigation-required |
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region \<location> with vault-type 'rsv' | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location>, but do not modify it if it already exists | investigation-required |
+| azurebackup_vault_create | Create Backup vault <vault_name> with vault-type 'dpp' in <resource_group> in \<location>, rejecting the request if the vault exists | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in \<location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -876,9 +848,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| aks_cluster_get | Get the configuration of AKS cluster \<cluster-name> | none |
+| aks_cluster_get | Get the configuration of AKS cluster \<cluster-name> in resource group \<resource-group> | none |
 | aks_cluster_get | Show me the details of AKS cluster \<cluster-name> in resource group \<resource-group> | none |
-| aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> | none |
+| aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> in resource group \<resource-group> | none |
 | aks_cluster_get | What are the details of my AKS cluster \<cluster-name> in \<resource-group>? | none |
 | aks_cluster_get | List all AKS clusters in my subscription | none |
 | aks_cluster_get | Show me my Azure Kubernetes Service clusters | none |
@@ -1139,8 +1111,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> | none |
-| resiliency_goal_template_get | List all resilience goal templates in service group <service_group> | none |
-| resiliency_goal_template_get | Get the details of goal template <goal_template_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |

@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: "Azure Backup vault creation now checks for an existing Recovery Services or Backup vault and rejects it instead of updating it. Use azurebackup_vault_update to modify existing vaults. Creation also requires permission to read the target vault."

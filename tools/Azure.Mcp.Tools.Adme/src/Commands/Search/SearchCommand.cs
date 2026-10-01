@@ -39,7 +39,7 @@ public sealed class SearchCommand(ISearchService searchService)
     public override void ValidateOptions(SearchOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateSearch(
             options.Kind, options.Limit, options.Sort, options.SpatialFilter, validationResult, options.Offset);
 
@@ -93,6 +93,7 @@ public sealed class SearchCommand(ISearchService searchService)
                 HighlightedFields = AdmeServiceHelper.Normalize(options.HighlightedFields),
             },
             options.Tenant,
+            options.AuthAppId,
             cancellationToken);
 
         return new(new SearchResponse
@@ -127,6 +128,7 @@ public sealed class SearchCommand(ISearchService searchService)
             },
             options.SearchAfter,
             options.Tenant,
+            options.AuthAppId,
             cancellationToken);
 
         return new(new SearchResponse

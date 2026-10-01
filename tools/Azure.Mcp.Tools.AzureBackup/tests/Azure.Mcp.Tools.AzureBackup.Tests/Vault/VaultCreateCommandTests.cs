@@ -15,6 +15,23 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests.Vault;
 
 public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCreateCommand, IAzureBackupService>
 {
+    [Theory]
+    [InlineData("rsv")]
+    [InlineData("dpp")]
+    public async Task ExecuteAsync_ExistingVault_ReturnsConflictWithUpdateGuidance(string vaultType)
+    {
+        Service.CreateVaultAsync(
+            "v", "rg", "sub", vaultType, "eastus",
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(409, "The vault already exists."));
+
+        var response = await ExecuteCommandAsync(
+            $"--subscription sub --vault v --resource-group rg --vault-type {vaultType} --location eastus");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("azurebackup_vault_update", response.Message);
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
