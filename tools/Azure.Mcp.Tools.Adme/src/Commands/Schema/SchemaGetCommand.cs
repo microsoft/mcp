@@ -35,7 +35,7 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
     }
 
@@ -52,6 +52,7 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
                 options.DataPartition,
                 options.Kind,
                 options.Tenant,
+                options.AuthAppId,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseJsonElement);

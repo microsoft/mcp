@@ -366,23 +366,23 @@ azmcp server info
 
 ```bash
 # Check authentication and connectivity for an ADME endpoint and data partition
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme health check --endpoint <endpoint> \
                          --data-partition <data-partition> \
-                         [--tenant <tenant>]
+                         [--tenant <tenant>] \
+                         [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get a schema by its fully-qualified OSDU kind
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema get --endpoint <endpoint> \
                        --data-partition <data-partition> \
                        --kind <authority:source:entity-type:version> \
-                       [--tenant <tenant>]
+                       [--tenant <tenant>] \
+                       [--auth-app-id <application-id-or-app-id-uri>]
 
 # List schemas with optional identity, lifecycle, scope, version, and paging filters
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema list --endpoint <endpoint> \
                         --data-partition <data-partition> \
                         [--tenant <tenant>] \
+                        [--auth-app-id <application-id-or-app-id-uri>] \
                         [--authority <authority>] \
                         [--source <source>] \
                         [--entity-type <entity-type>] \
@@ -396,7 +396,6 @@ azmcp adme schema list --endpoint <endpoint> \
                         [--limit <limit>]
 
 # Search OSDU records by kind and Lucene criteria; query pagination is the default
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme search --endpoint <endpoint> \
                   --data-partition <data-partition> \
                   --kind <authority:source:entity-type:version> [<kind>...] \
@@ -415,45 +414,47 @@ azmcp adme search --endpoint <endpoint> \
                   [--excluded-fields <path> [<path>...]] \
                   [--highlighted-fields <path> [<path>...]] \
                   [--suggest-phrase <phrase>] \
-                  [--tenant <tenant>]
+                  [--tenant <tenant>] \
+                  [--auth-app-id <application-id-or-app-id-uri>]
 
 Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
 Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
 Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
+For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record fetch --endpoint <endpoint> \
                                   --data-partition <data-partition> \
                                   --ids <id> [<id>...] \
                                   [--attributes <path> [<path>...]] \
                                   [--frame-of-reference] \
-                                  [--tenant <tenant>]
+                                  [--tenant <tenant>] \
+                                  [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get the latest or a specific version of an OSDU record, optionally projecting attributes
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record get --endpoint <endpoint> \
                                 --data-partition <data-partition> \
                                 --id <record-id> \
                                 [--version <version>] \
                                 [--attributes <path> [<path>...]] \
-                                [--tenant <tenant>]
+                                [--tenant <tenant>] \
+                                [--auth-app-id <application-id-or-app-id-uri>]
 
 # List record ids for a fully-qualified OSDU kind
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record list --endpoint <endpoint> \
                                  --data-partition <data-partition> \
                                  --kind <authority:source:entity-type:version> \
                                  [--limit <limit>] \
                                  [--cursor <cursor>] \
-                                 [--tenant <tenant>]
+                                 [--tenant <tenant>] \
+                                 [--auth-app-id <application-id-or-app-id-uri>]
 
 # List all numeric versions of an OSDU record
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record version list --endpoint <endpoint> \
                                          --data-partition <data-partition> \
                                          --id <record-id> \
-                                         [--tenant <tenant>]
+                                         [--tenant <tenant>] \
+                                         [--auth-app-id <application-id-or-app-id-uri>]
 ```
 
 ### Azure Advisor Operations
@@ -1053,7 +1054,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 #### Vault
 
 ```bash
-# Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
+# Creates a new backup vault. Rejects vaults found to already exist; use 'azurebackup vault update' to modify an existing vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault create --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -1544,7 +1545,7 @@ azmcp extension cli install --cli-type <cli-type>
 
 ```bash
 # Send email using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint <endpoint> \
                                --from <sender-email> \
                                --to <recipient-email> \
@@ -1557,7 +1558,7 @@ azmcp communication email send --endpoint <endpoint> \
 
 # Examples:
 # Send plain text email
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
@@ -1565,7 +1566,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --message "Hello from Azure Communication Services!"
 
 # Send HTML-formatted email with CC
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
@@ -1575,7 +1576,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --is-html
 
 # Send to multiple recipients with BCC and reply-to
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "notifications@verified-domain.com" \
                                --to "recipient1@example.com,recipient2@example.com" \
@@ -1600,7 +1601,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 
 ```bash
 # SMS message using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint <endpoint> \
                              --from <sender-phone-number> \
                              --to <recipient-phone-number> \
@@ -1610,14 +1611,14 @@ azmcp communication sms send --endpoint <endpoint> \
 
 # Examples:
 # Send SMS to single recipient
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
                              --from "+1234567890" \
                              --to "+1234567891" \
                              --message "Hello from Azure Communication Services!"
 
 # Send SMS to multiple recipients with delivery reporting
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
                              --from "+1234567890" \
                              --to "+1234567891,+1234567892" \
@@ -2933,6 +2934,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--maximum-throughput-units <units>] \
                                  [--kafka-enabled <true/false>] \
                                  [--zone-redundant <true/false>] \
+                                 [--disable-local-auth <true|false>] \
                                  [--tags <json-tags>]
 ```
 
@@ -3313,11 +3315,15 @@ azmcp keyvault secret get --vault <vault-name> \
 ### Azure Kubernetes Service (AKS) Operations
 
 ```bash
-# Gets Azure Kubernetes Service (AKS) cluster details
+# Lists Azure Kubernetes Service (AKS) clusters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp aks cluster get --subscription <subscription>
+
+# Gets details for a specific Azure Kubernetes Service (AKS) cluster
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp aks cluster get --subscription <subscription> \
-                      [--resource-group <resource-group>] \
-                      [--cluster <cluster>]
+                      --resource-group <resource-group> \
+                      --cluster <cluster>
 
 # Gets Azure Kubernetes Service (AKS) nodepool details
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4201,11 +4207,6 @@ azmcp redis list --subscription <subscription>
 ### Azure Resilience Management Operations
 
 ```bash
-# Get a resilience goal template, or list all goal templates in a service group (omit --name)
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resiliency goal template get --service-group <service-group> \
-                                   [--name <name>]
-
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal assignment get --service-group <service-group> \
@@ -5086,6 +5087,7 @@ azmcp storage account create --subscription <subscription> \
                              [--sku <sku>] \
                              [--access-tier <access-tier>] \
                              [--enable-hierarchical-namespace <true|false>] \
+                             [--allow-shared-key-access <true|false>] \
                              [--tenant <tenant>]
 ```
 
@@ -5100,6 +5102,7 @@ azmcp storage account create --subscription <subscription> \
 | `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
 | `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
 | `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
+| `--allow-shared-key-access` | No | Allow Shared Key authentication. Defaults to `false`; use Microsoft Entra ID unless explicitly opting in. |
 | `--tenant` | No | Azure tenant ID or name. |
 
 ```bash

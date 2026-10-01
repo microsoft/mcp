@@ -36,7 +36,7 @@ public sealed class SchemaServiceTests
             TestConstants.DataPartition,
             TestConstants.WellKind,
             TestConstants.Tenant,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("Well", result.Result.GetProperty("title").GetString());
         Assert.Equal(correlationId, result.CorrelationId);
@@ -75,7 +75,7 @@ public sealed class SchemaServiceTests
             true,
             2,
             25,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(3, result.Result.TotalCount);
         var schemaInfo = Assert.Single(result.Result.SchemaInfos);
@@ -117,7 +117,7 @@ public sealed class SchemaServiceTests
             false,
             null,
             null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
         Assert.Single(query);
@@ -141,7 +141,7 @@ public sealed class SchemaServiceTests
             TestConstants.DataPartition,
             TestConstants.WellKind,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public sealed class SchemaServiceTests
             TestConstants.DataPartition,
             "osdu:wks:missing:1.0.0",
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.NotFound, exception.Status);
         Assert.Equal("sensitive backend details", exception.Message);

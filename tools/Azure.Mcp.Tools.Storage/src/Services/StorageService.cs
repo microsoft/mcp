@@ -73,6 +73,7 @@ public sealed class StorageService(IAzureService azureService)
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
+        bool allowSharedKeyAccess = false,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -114,6 +115,7 @@ public sealed class StorageService(IAzureService azureService)
                 AccessTier = string.IsNullOrEmpty(accessTier) ? "Hot" : ParseAccessTier(accessTier),
                 EnableHttpsTrafficOnly = true,
                 AllowBlobPublicAccess = false,
+                AllowSharedKeyAccess = allowSharedKeyAccess,
                 IsHnsEnabled = enableHierarchicalNamespace ?? false,
                 MinimumTlsVersion = "TLS1_2"
             }

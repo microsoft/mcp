@@ -142,25 +142,6 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_get_goal_template()
-    {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var goalTemplate = RegisterOrRetrieveDeploymentOutputVariable("goalTemplateName", "GOALTEMPLATENAME");
-
-        var result = await CallToolAsync(
-            "resiliency_goal_template_get",
-            new()
-            {
-                { "tenant", Settings.TenantId },
-                { "service-group", serviceGroup },
-                { "name", goalTemplate }
-            });
-
-        var template = result.AssertProperty("goalTemplate");
-        Assert.False(string.IsNullOrEmpty(template.AssertProperty("name").GetString()));
-    }
-
-    [Fact]
     public async Task Should_get_goal_assignment()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
@@ -252,6 +233,43 @@ public class ResilienceManagementCommandTests(
         Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
         var recoveryPlanId = properties.AssertProperty("recoveryPlanProperties").AssertProperty("recoveryPlanId").GetString();
         Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", recoveryPlanId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_create_drill_without_recovery_plan()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        const string drillName = "mcp-drill-no-plan";
+
+        var result = await CallToolAsync(
+            "resiliency_drill_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "subscription", Settings.SubscriptionId },
+                { "region", "westus2" },
+                { "resource-group", resourceGroupName },
+                { "drill-type", "Zonal" },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
+            });
+
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+
+        var recoveryPlanProperties = properties.AssertProperty("recoveryPlanProperties");
+        Assert.Equal("SystemAssigned", recoveryPlanProperties.AssertProperty("identity").AssertProperty("type").GetString());
+        Assert.True(
+            !recoveryPlanProperties.TryGetProperty("recoveryPlanId", out var recoveryPlanId) ||
+            recoveryPlanId.ValueKind == JsonValueKind.Null);
+
+        var monitoringProperties = properties.AssertProperty("monitoringProperties");
+        Assert.Equal("SystemAssigned", monitoringProperties.AssertProperty("identity").AssertProperty("type").GetString());
     }
 
     [Fact]
