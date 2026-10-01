@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Clarified the RemediationNotAvailableForTenant response and directs users to the Advisor recommendation for available guidance."
