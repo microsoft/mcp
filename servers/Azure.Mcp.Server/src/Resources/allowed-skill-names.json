@@ -39,6 +39,7 @@
       "azure-storage",
       "azure-upgrade",
       "azure-validate",
+      "discover-azure-skills",
       "entra-agent-id",
       "entra-app-registration",
       "microsoft-foundry",
