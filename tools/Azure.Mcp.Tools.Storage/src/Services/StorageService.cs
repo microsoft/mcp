@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.Storage.Services.Models;
 using Azure.ResourceManager;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
@@ -327,10 +328,12 @@ public sealed class StorageService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var uri = GetBlobEndpoint(account);
+        var uri = ValidateBlobEndpoint(
+            new Uri(GetBlobEndpoint(account)),
+            AzureService.CloudConfiguration.ArmEnvironment);
         var options = AddDefaultPolicies(new BlobClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
-        return new BlobServiceClient(new(uri), await GetCredential(tenant, cancellationToken), options);
+        return new BlobServiceClient(uri, await GetCredential(tenant, cancellationToken), options);
     }
 
     private static string ParseStorageSkuName(string sku)
@@ -420,8 +423,10 @@ public sealed class StorageService(IAzureService azureService)
     {
         var options = AddDefaultPolicies(new TableClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
-        var defaultUri = GetTableEndpoint(account);
-        return new TableServiceClient(new(defaultUri), await GetCredential(tenant, cancellationToken), options);
+        var defaultUri = ValidateTableEndpoint(
+            new Uri(GetTableEndpoint(account)),
+            AzureService.CloudConfiguration.ArmEnvironment);
+        return new TableServiceClient(defaultUri, await GetCredential(tenant, cancellationToken), options);
     }
 
     public async Task<List<string>> ListTables(
@@ -473,12 +478,16 @@ public sealed class StorageService(IAzureService azureService)
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
+        // These suffixes must stay in sync with the "storage-blob" allow-list in
+        // EndpointValidator.AllowLists.cs; otherwise ValidateBlobEndpoint rejects the constructed endpoint.
         return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.blob.core.chinacloudapi.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.blob.core.usgovcloudapi.net",
-            _ => $"https://{account}.blob.core.windows.net"
+            _ => throw new ArgumentException(
+                $"The configured Azure cloud is not supported for Azure Storage endpoints. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
+                nameof(AzureService.CloudConfiguration.CloudType))
         };
     }
 
@@ -486,12 +495,50 @@ public sealed class StorageService(IAzureService azureService)
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
+        // These suffixes must stay in sync with the "storage-table" allow-list in
+        // EndpointValidator.AllowLists.cs; otherwise ValidateTableEndpoint rejects the constructed endpoint.
         return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.table.core.chinacloudapi.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.table.core.usgovcloudapi.net",
-            _ => $"https://{account}.table.core.windows.net"
+            _ => throw new ArgumentException(
+                $"The configured Azure cloud is not supported for Azure Storage endpoints. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
+                nameof(AzureService.CloudConfiguration.CloudType))
         };
+    }
+
+    /// <summary>
+    /// Validates that the given Azure Storage blob endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="endpoint">The URI of the blob service endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the blob service endpoint.</returns>
+    internal static Uri ValidateBlobEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "storage-blob",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "storage");
+        return endpoint;
+    }
+
+    /// <summary>
+    /// Validates that the given Azure Storage table endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="endpoint">The URI of the table service endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the table service endpoint.</returns>
+    internal static Uri ValidateTableEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "storage-table",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "storage");
+        return endpoint;
     }
 }
