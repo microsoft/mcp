@@ -193,7 +193,7 @@ public static class AzureHelper
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to create ARM client: {ex.Message}", ex);
+            throw new InvalidOperationException($"Failed to create ARM client: {ex.Message}", ex);
         }
     }
 }

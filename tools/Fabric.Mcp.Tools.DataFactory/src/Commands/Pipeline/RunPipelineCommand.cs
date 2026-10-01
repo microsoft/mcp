@@ -42,7 +42,7 @@ public sealed class RunPipelineCommand(ILogger<RunPipelineCommand> logger, Pipel
         {
             _logger.LogError("Error running pipeline {PipelineId} in workspace {WorkspaceId}: {Error}",
                 options.PipelineId, options.WorkspaceId, result.Error);
-            HandleException(context, new Exception(result.Error));
+            HandleException(context, new InvalidOperationException(result.Error));
         }
 
         return context.Response;

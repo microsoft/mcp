@@ -149,13 +149,13 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
         var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
             .ConfigureAwait(false);
 
         if (workspaceResponse?.Value == null)
         {
-            throw new Exception($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
+            throw new KeyNotFoundException($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
         }
 
         var workspaceResource = workspaceResponse.Value;
@@ -182,7 +182,7 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             var rgResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
-                ?? throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+                ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
 
             return await rgResource
                 .GetOperationalInsightsWorkspaces()
@@ -313,13 +313,13 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
-            ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            ?? throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
         var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName, cancellationToken)
             .ConfigureAwait(false);
 
         if (workspaceResponse?.Value == null)
         {
-            throw new Exception($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
+            throw new KeyNotFoundException($"Workspace {resolvedWorkspaceName} not found in resource group {resourceGroup}");
         }
 
         var workspaceResource = workspaceResponse.Value;
@@ -473,7 +473,7 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
 
         if (matchingWorkspace == null)
         {
-            throw new Exception($"Could not find workspace with {(isId ? "ID" : "name")} {workspace}");
+            throw new KeyNotFoundException($"Could not find workspace with {(isId ? "ID" : "name")} {workspace}");
         }
 
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);

@@ -51,7 +51,8 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
                 options.Endpoint,
                 options.Index,
                 options.Tenant,
-                cancellationToken: cancellationToken) ?? throw new Exception("Failed to retrieve knowledge index schema - no data returned.");
+                cancellationToken: cancellationToken)
+                ?? throw new KeyNotFoundException("Failed to retrieve knowledge index schema - no data returned.");
 
             context.Response.Results = ResponseResult.Create(new(indexSchema), FoundryExtensionsJsonContext.Default.KnowledgeIndexSchemaCommandResult);
         }

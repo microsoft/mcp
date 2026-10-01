@@ -211,7 +211,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         if (string.IsNullOrWhiteSpace(content))
         {
             writeOutput($"response: {JsonSerializer.Serialize(result)}");
-            throw new Exception("No JSON content found in the response.");
+            throw new JsonException("No JSON content found in the response.");
         }
 
         JsonElement root;
@@ -220,7 +220,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
             root = JsonSerializer.Deserialize<JsonElement>(content!);
             if (root.ValueKind != JsonValueKind.Object)
             {
-                throw new Exception("Invalid JSON response.");
+                throw new JsonException("Invalid JSON response.");
             }
 
             // Remove the `args` property and log the content
@@ -232,7 +232,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         {
             // If we can't json parse the content as a JsonObject, log the content and throw an exception
             writeOutput($"response: {content}");
-            throw new Exception("Failed to deserialize JSON response.", ex);
+            throw new JsonException("Failed to deserialize JSON response.", ex);
         }
 
         return resultProcessor.Invoke(root);

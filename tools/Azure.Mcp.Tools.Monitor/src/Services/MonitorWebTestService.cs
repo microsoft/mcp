@@ -55,7 +55,7 @@ public class MonitorWebTestService(
             (nameof(resourceGroup), resourceGroup));
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         var webTests = await resourceGroupResource
             .GetApplicationInsightsWebTests()
@@ -86,12 +86,12 @@ public class MonitorWebTestService(
             (nameof(resourceName), resourceName));
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         var webTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
         if (webTest == null || !webTest.HasValue || !webTest.Value!.HasData)
         {
-            throw new Exception($"Error retrieving details for web test '{resourceName}'");
+            throw new InvalidOperationException($"Error retrieving details for web test '{resourceName}'");
         }
 
         if (webTest.Value.Data.WebTestKind == WebTestKind.Ping || webTest.Value.Data.WebTestKind == WebTestKind.MultiStep)
@@ -165,7 +165,7 @@ public class MonitorWebTestService(
         var requestUri = MonitorWebTestValidateRequestUri(new Uri(requestUrl, UriKind.Absolute), _logger);
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         // Check if web test already exists
         var existingWebTestResponse = await resourceGroupResource.GetApplicationInsightsWebTests()
@@ -237,7 +237,7 @@ public class MonitorWebTestService(
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
-            throw new Exception($"Error creating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
+            throw new InvalidOperationException($"Error creating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
         }
 
         var createdWebTest = webTestArmResource.Value.Data;
@@ -301,13 +301,13 @@ public class MonitorWebTestService(
             (nameof(resourceName), resourceName));
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         // Get existing web test
         var existingWebTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
         if (existingWebTest == null || !existingWebTest.HasValue || !existingWebTest.Value!.HasData)
         {
-            throw new Exception($"Web test '{resourceName}' not found in resource group '{resourceGroup}'. Use the create command to create a new web test.");
+            throw new KeyNotFoundException($"Web test '{resourceName}' not found in resource group '{resourceGroup}'. Use the create command to create a new web test.");
         }
 
         var currentData = existingWebTest.Value.Data;
@@ -408,7 +408,7 @@ public class MonitorWebTestService(
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
-            throw new Exception($"Error updating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
+            throw new InvalidOperationException($"Error updating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
         }
 
         var updatedWebTest = webTestArmResource.Value.Data;

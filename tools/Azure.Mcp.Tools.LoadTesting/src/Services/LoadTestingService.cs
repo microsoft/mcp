@@ -36,7 +36,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         {
             var resourceId = LoadTestingResource.CreateResourceIdentifier(subscriptionId, resourceGroup, testResourceName);
             var response = await client.GetLoadTestingResource(resourceId).GetAsync(cancellationToken)
-                ?? throw new Exception($"Failed to retrieve Azure Load Testing resources.");
+                ?? throw new KeyNotFoundException($"Failed to retrieve Azure Load Testing resources.");
             return
             [
                 new()
@@ -56,7 +56,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
 
             if (response == null || response.Count == 0)
             {
-                throw new Exception($"Failed to retrieve Azure Load Testing resources: {response}");
+                throw new KeyNotFoundException($"Failed to retrieve Azure Load Testing resources: {response}");
             }
             var loadTestResources = new List<TestResource>();
             foreach (var resource in response)
@@ -99,7 +99,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         await WaitForLroCompletionAsync(response, cancellationToken);
         if (response == null || response.Value == null)
         {
-            throw new Exception($"Failed to create or update Azure Load Testing resource: {response}");
+            throw new InvalidOperationException($"Failed to create or update Azure Load Testing resource: {response}");
         }
 
         return new()
@@ -124,11 +124,11 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
         var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
-            ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
+            ?? throw new KeyNotFoundException($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
         {
-            throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
+            throw new InvalidOperationException($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
         var loadTestClient = await CreateLoadTestRunClient(dataPlaneUri, cancellationToken, tenant);
@@ -136,7 +136,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId, new() { CancellationToken = cancellationToken });
         if (loadTestRunResponse == null || loadTestRunResponse.IsError)
         {
-            throw new Exception($"Failed to retrieve Azure Load Test Run: {loadTestRunResponse}");
+            throw new KeyNotFoundException($"Failed to retrieve Azure Load Test Run: {loadTestRunResponse}");
         }
 
         var loadTestRun = loadTestRunResponse.Content;
@@ -154,17 +154,17 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testId), testId));
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
         var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
-            ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
+            ?? throw new KeyNotFoundException($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
         {
-            throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
+            throw new InvalidOperationException($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
         var loadTestClient = await CreateLoadTestRunClient(dataPlaneUri, cancellationToken, tenant);
 
         var loadTestRunResponse = loadTestClient.GetTestRunsAsync(testId: testId)
-            ?? throw new Exception($"Failed to retrieve Azure Load Test Run.");
+            ?? throw new KeyNotFoundException($"Failed to retrieve Azure Load Test Run.");
 
         var testRuns = new List<TestRun>();
         await foreach (var binaryData in loadTestRunResponse.WithCancellation(cancellationToken))
@@ -178,7 +178,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
 
         if (testRuns.Count == 0)
         {
-            throw new Exception($"No test runs found for test ID '{testId}' in Load Test '{testResourceName}'.");
+            throw new KeyNotFoundException($"No test runs found for test ID '{testId}' in Load Test '{testResourceName}'.");
         }
         return testRuns;
     }
@@ -200,11 +200,11 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
         var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
-            ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
+            ?? throw new KeyNotFoundException($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
         {
-            throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
+            throw new InvalidOperationException($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
         var loadTestClient = await CreateLoadTestRunClient(dataPlaneUri, cancellationToken, tenant);
@@ -226,7 +226,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
             requestContent,
             oldTestRunId: oldTestRunId,
             context: new() { CancellationToken = cancellationToken })
-            ?? throw new Exception($"Failed to retrieve Azure Load Test Run.");
+            ?? throw new KeyNotFoundException($"Failed to retrieve Azure Load Test Run.");
 
         await WaitForLroCompletionAsync(loadTestRunResponse, cancellationToken);
         var loadTestRun = loadTestRunResponse.Value.ToString();
@@ -244,11 +244,11 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(testResourceName), testResourceName), (nameof(testId), testId));
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
         var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
-            ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
+            ?? throw new KeyNotFoundException($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
         {
-            throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
+            throw new InvalidOperationException($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
         var loadTestClient = await CreateLoadTestAdministrationClient(dataPlaneUri, cancellationToken, tenant);
@@ -256,7 +256,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         var loadTestResponse = await loadTestClient.GetTestAsync(testId, new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
         {
-            throw new Exception($"Failed to retrieve Azure Load Test: {loadTestResponse}");
+            throw new KeyNotFoundException($"Failed to retrieve Azure Load Test: {loadTestResponse}");
         }
 
         var loadTest = loadTestResponse.Content.ToString();
@@ -289,11 +289,11 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
         var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, cancellationToken)
-            ?? throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
+            ?? throw new KeyNotFoundException($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
         var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
         if (string.IsNullOrEmpty(dataPlaneUri))
         {
-            throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
+            throw new InvalidOperationException($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
         var loadTestClient = await CreateLoadTestAdministrationClient(dataPlaneUri, cancellationToken, tenant);
@@ -320,7 +320,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         var loadTestResponse = await loadTestClient.CreateOrUpdateTestAsync(testId, RequestContent.Create(JsonSerializer.Serialize(testRequestPayload, LoadTestJsonContext.Default.TestRequestPayload)), new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
         {
-            throw new Exception($"Failed to create Azure Load Test: {loadTestResponse}");
+            throw new InvalidOperationException($"Failed to create Azure Load Test: {loadTestResponse}");
         }
 
         var loadTest = loadTestResponse.Content.ToString();
