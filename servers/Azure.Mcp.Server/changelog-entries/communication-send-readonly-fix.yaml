@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: "Corrected the tool annotations for the Azure Communication Services email and SMS send tools (`communication_email_send`, `communication_sms_send`). They are now marked as write operations so they are correctly excluded when the server runs with `--read-only` and prompt for confirmation before sending."

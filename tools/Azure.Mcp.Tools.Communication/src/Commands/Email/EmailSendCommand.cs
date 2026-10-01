@@ -19,10 +19,10 @@ namespace Azure.Mcp.Tools.Communication.Commands.Email;
     Title = "Send Email",
     Description = "Send emails to one or multiple recipients to the given email-address. The emails can be plain text or HTML formatted. You can include a subject, CC and BCC recipients, and reply-to addresses.",
     OperationPlane = ToolOperationPlane.Data,
-    Destructive = false,
+    Destructive = true,
     Idempotent = false,
     OpenWorld = true,
-    ReadOnly = true,
+    ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
 public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService)
