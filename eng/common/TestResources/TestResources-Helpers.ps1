@@ -14,6 +14,73 @@ function LogVsoCommand([string]$message) {
 
 <#
 .SYNOPSIS
+Looks up a deployment by name, distinguishing "genuinely does not exist" from any other
+failure to query it (auth, throttling, transient network errors, etc).
+
+.DESCRIPTION
+Get-AzResourceGroupDeployment with -ErrorAction SilentlyContinue returns $null both when
+the deployment genuinely doesn't exist and when the call itself failed for an unrelated
+reason (expired auth, throttled request, transient network error). Treating all of those
+as "not found" is unsafe for callers like Resolve-DeploymentAfterFailure: if a deployment
+is actually still active server-side but this query merely failed transiently, the caller
+would wrongly conclude it's safe to submit a brand new concurrent deployment.
+
+This function retries transient-looking failures (bounded by MaxAttempts) and only
+returns $null once the error is confirmed to mean the deployment record doesn't exist.
+Any other failure that persists after retrying is re-thrown so the caller's problem is
+surfaced instead of silently masked.
+
+.PARAMETER ResourceGroupName
+The resource group to query.
+
+.PARAMETER DeploymentName
+The name of the deployment to look up.
+
+.PARAMETER MaxAttempts
+Maximum number of attempts before giving up and re-throwing a persistent non-"not found"
+error. Defaults to 3.
+
+.PARAMETER RetryDelaySeconds
+Delay between retry attempts for a non-"not found" error. Defaults to 5 seconds.
+
+.OUTPUTS
+The deployment object if found, or $null if the deployment is confirmed not to exist.
+
+.NOTES
+Throws if querying the deployment keeps failing for a reason other than "not found"
+after MaxAttempts attempts.
+#>
+function Get-ExistingDeploymentOrNull(
+    [string] $ResourceGroupName,
+    [string] $DeploymentName,
+    [int] $MaxAttempts = 3,
+    [int] $RetryDelaySeconds = 5
+) {
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            return Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $DeploymentName -ErrorAction Stop
+        }
+        catch {
+            $exception = $_.Exception
+            $isNotFound = ($exception.GetType().Name -eq 'PSDeploymentNotFoundException') `
+                -or ($exception.Message -match 'could not be found|NotFound|DeploymentNotFound')
+
+            if ($isNotFound) {
+                return $null
+            }
+
+            if ($attempt -ge $MaxAttempts) {
+                throw "Failed to query deployment '$DeploymentName' in resource group '$ResourceGroupName' after $MaxAttempts attempt(s); last error: $($exception.Message)"
+            }
+
+            Write-Warning "Transient error querying deployment '$DeploymentName' (attempt $attempt/$MaxAttempts): $($exception.Message). Retrying in $RetryDelaySeconds second(s)."
+            Start-Sleep -Seconds $RetryDelaySeconds
+        }
+    }
+}
+
+<#
+.SYNOPSIS
 Resolves the outcome of a deployment after New-AzResourceGroupDeployment threw or
 returned a non-'Succeeded' state, without starting a redundant concurrent deployment.
 
@@ -82,7 +149,7 @@ function Resolve-DeploymentAfterFailure(
     [int] $PollTimeoutMinutes = 60
 ) {
     $terminalStates = @('Succeeded', 'Failed', 'Canceled')
-    $existing = Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $DeploymentName -ErrorAction SilentlyContinue
+    $existing = Get-ExistingDeploymentOrNull -ResourceGroupName $ResourceGroupName -DeploymentName $DeploymentName
 
     if ($existing) {
         if ($existing.ProvisioningState -in $terminalStates) {
@@ -97,7 +164,7 @@ function Resolve-DeploymentAfterFailure(
         $nextHeartbeat = $start
 
         while ((Get-Date) -lt $deadline) {
-            $existing = Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $DeploymentName -ErrorAction SilentlyContinue
+            $existing = Get-ExistingDeploymentOrNull -ResourceGroupName $ResourceGroupName -DeploymentName $DeploymentName
             if (!$existing) {
                 # The deployment record disappeared between polls; fall through to submitting
                 # a new deployment below.
