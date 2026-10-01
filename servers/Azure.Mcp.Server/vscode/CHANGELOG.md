@@ -1,5 +1,23 @@
 # Release History
 
+## 3.0.49 (2026-10-01) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed the ADME tools temporarily for GA release. [[#3805](https://github.com/microsoft/mcp/pull/3805)]
+- **Breaking:** Azure Backup vault creation now checks for an existing Recovery Services or Backup vault and rejects it instead of updating it. Use azurebackup_vault_update to modify existing vaults. Creation also requires permission to read the target vault. [[#3800](https://github.com/microsoft/mcp/pull/3800)]
+- **Breaking:** Creating EventHub Namespaces now disable local authentication by default. Explicit options remain available to enable it, while omitted security options preserve existing Namespaces during updates. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+- **Breaking:** New Storage accounts now disable Shared Key authentication by default while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access. An explicit option remain available to enable Shared Key authentication. [[#3761](https://github.com/microsoft/mcp/pull/3761)]
+
+### Fixed
+
+- Fixed resilience drill create failing with a generic service error when no recovery plan was specified. The tool now sends SystemAssigned identity for RecoveryPlanProperties and the legacy MonitoringProperties required by the 2026-04-01-preview API flow. [[#3801](https://github.com/microsoft/mcp/pull/3801)]
+- Added namespace-aware endpoint validation for Event Grid, Foundry Extensions, IoT Hub, Key Vault, Load Testing, Managed HSM, Managed Lustre, Monitor metrics and web tests, and MySQL endpoints. [[#3694](https://github.com/microsoft/mcp/pull/3694)]
+- Corrected the read-only annotation on the Azure Communication Services email and SMS send tools (`communication_email_send`, `communication_sms_send`). They are now correctly marked as write operations so they are excluded when the server runs with `--read-only`. [[#3818](https://github.com/microsoft/mcp/pull/3818)]
+- Clarified the RemediationNotAvailableForTenant response and directs users to the Advisor recommendation for available guidance. [[#3816](https://github.com/microsoft/mcp/pull/3816)]
+- Client telemetry now records canonical client name and version values, using `<Unknown>` when unavailable and mapping plugin client names with a client type fallback. [[#3793](https://github.com/microsoft/mcp/pull/3793)]
+- Updating an existing EventHub Namespace now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+
 ## 3.0.48 (2026-09-29) (pre-release)
 
 ### Added

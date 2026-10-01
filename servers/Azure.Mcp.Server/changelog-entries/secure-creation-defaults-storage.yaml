@@ -1,3 +1,0 @@
-changes:
-  - section: Breaking Changes
-    description: New Storage accounts now disable Shared Key authentication by default while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access. An explicit option remain available to enable Shared Key authentication.
