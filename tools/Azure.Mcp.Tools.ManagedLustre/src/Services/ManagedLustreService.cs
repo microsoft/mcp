@@ -576,17 +576,15 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // Create auto export job data with filesystem location
         var autoExportJobData = new AutoExportJobData(fs.Value.Data.Location);
 
-        // Set admin status if provided (default is Enable per SDK docs)
-        if (!string.IsNullOrEmpty(adminStatus))
-        {
-            autoExportJobData.AdminStatus = Enum.Parse<AutoExportJobAdminStatus>(adminStatus, ignoreCase: true);
-        }
+        // The StorageCache REST API omits the entire "properties" object from the request
+        // body when none of its fields are set, and ARM then rejects the PUT with
+        // "Required parameter 'properties' is missing". Apply the defaults documented on
+        // AutoexportJobCreateOptions (Enable / '/') whenever the caller omits them, instead
+        // of leaving the fields - and therefore "properties" - unset.
+        autoExportJobData.AdminStatus = Enum.Parse<AutoExportJobAdminStatus>(adminStatus ?? "Enable", ignoreCase: true);
 
-        // Set autoexport prefix if provided (SDK allows only 1 prefix)
-        if (!string.IsNullOrEmpty(autoexportPrefix))
-        {
-            autoExportJobData.AutoExportPrefixes.Add(autoexportPrefix);
-        }
+        // Set autoexport prefix (SDK allows only 1 prefix)
+        autoExportJobData.AutoExportPrefixes.Add(string.IsNullOrEmpty(autoexportPrefix) ? "/" : autoexportPrefix);
 
         // Create the auto export job
         var createOperation = await fs.Value.GetAutoExportJobs().CreateOrUpdateAsync(
