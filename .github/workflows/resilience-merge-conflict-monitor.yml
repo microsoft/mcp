@@ -28,6 +28,7 @@ jobs:
             const deliveryMarker = '<!-- resilience-tool-delivery:v1 -->';
             const commentMarker = '<!-- resilience-merge-conflict-monitor -->';
             const conflictLabel = 'resilience-merge-conflict';
+            const toolsetLabel = 'tools-ResilienceManagement';
             const { owner, repo } = context.repo;
 
             try {
@@ -54,9 +55,11 @@ jobs:
             });
 
             const trackedPullRequests = pullRequests.filter(
-              pullRequest => pullRequest.body?.includes(deliveryMarker));
+              pullRequest => pullRequest.body?.includes(deliveryMarker) &&
+                pullRequest.labels.some(label => label.name === toolsetLabel));
 
             core.info(`Checking ${trackedPullRequests.length} skill-created pull request(s).`);
+            const failedPullRequests = [];
 
             for (const trackedPullRequest of trackedPullRequests) {
               try {
@@ -136,6 +139,11 @@ jobs:
 
                 core.info(`PR #${pullRequest.number} has no merge conflicts.`);
               } catch (error) {
+                failedPullRequests.push(trackedPullRequest.number);
                 core.warning(`Failed to check PR #${trackedPullRequest.number}: ${error.message}`);
               }
+            }
+
+            if (failedPullRequests.length > 0) {
+              core.setFailed(`Failed to check pull requests: ${failedPullRequests.map(number => `#${number}`).join(', ')}.`);
             }

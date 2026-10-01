@@ -45,20 +45,22 @@ Resolve names and inspect existing resources after the user supplies this contex
 1. Deploy or update the approved test fixture automatically.
 2. Run the successful live lifecycle, not only not-found invocation tests.
 3. Diagnose service and lifecycle failures from operation status and resource state; update implementation or fixture as required.
-4. Record the test, inspect sanitization, publish the complete recording asset set, return to Playback, and run the full Resilience Management test project.
+4. Record the test, inspect sanitization, keep the complete recording asset set local, return to Playback, and run the full Resilience Management test project. Do not push recording assets before the explicit publication approval in State 3; use a local-only recording workflow if a runner automatically publishes assets.
 5. Run required build, formatting, spelling, consolidated-mode, documentation, and ToolDescriptionEvaluator gates. Every Resilience prompt must rank `#1` with score at least `0.6`.
 
 ### State 3: Publication gate
 
-Prepare the branch, commit set, PR title, and PR body, including test evidence, recording evidence, evaluator scores, security notes, and the repository-required live-test invocation section. Show the final diff and validation summary and obtain explicit approval before the first push and PR creation.
+Prepare the branch, commit set, PR title, and PR body, including test evidence, recording evidence, evaluator scores, security notes, and the repository-required live-test invocation section. Show the final diff, sanitized recording changes, and validation summary and obtain explicit approval covering publication to the public assets repository, branch pushes, and PR creation. Approval to create test resources or run live tests is not publication approval.
 
-After approval, create or update the branch and open the PR. Include this machine-readable manifest marker exactly once in the PR body so the scheduled conflict monitor can identify it:
+After approval, publish the complete sanitized recording asset set, verify playback against the published tag, and include the updated `assets.json` in the commit before pushing the branch and opening the PR. If publication or playback fails, stop and report the failure instead of proceeding with a stale or unverified asset reference.
+
+Include this machine-readable manifest marker exactly once in the PR body and ensure the PR has the `tools-ResilienceManagement` label so the scheduled conflict monitor can identify it:
 
 ```html
 <!-- resilience-tool-delivery:v1 -->
 ```
 
-Do not remove the marker while the PR is open. Do not auto-merge.
+If you cannot apply the toolset label, ask a maintainer; monitoring requires both the label and marker. Keep both while the PR is open. Do not auto-merge.
 
 ### State 4: PR maintenance loop
 
@@ -76,7 +78,7 @@ Whenever the workflow remains active or is resumed:
 
 Do not use fixed-interval terminal polling or keep a sleeping process alive. During an active session, check at workflow transitions. After a session ends, resume when invoked again and begin with the mergeability/comment/check inspection above. True unattended periodic monitoring must be implemented separately with repository automation.
 
-The repository workflow `.github/workflows/resilience-merge-conflict-monitor.yml` provides that unattended detection every three hours. It scans only open PRs containing the delivery manifest marker, applies the `resilience-merge-conflict` label, maintains one status comment, and removes the label when the conflict clears. It detects conflicts but does not edit PR branches; resume this skill to perform semantic conflict resolution. Scheduled workflows run only from the repository default branch and must be enabled in the repository.
+The repository workflow `.github/workflows/resilience-merge-conflict-monitor.yml` provides that unattended detection every three hours. It scans only open PRs containing the delivery manifest marker and carrying the `tools-ResilienceManagement` label, applies the `resilience-merge-conflict` label, maintains one status comment, and removes the label when the conflict clears. A per-PR API failure does not stop the remaining checks, but the job fails after the scan if any PR check failed. It detects conflicts but does not edit PR branches; resume this skill to perform semantic conflict resolution. Scheduled workflows run only from the repository default branch and must be enabled in the repository.
 
 ### State 5: Completion
 
@@ -297,7 +299,7 @@ Before publishing, locate and inspect recordings:
 ./.proxy/Azure.Sdk.Tools.TestProxy.exe config locate -a tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/assets.json
 ```
 
-Return `TestMode` to `Playback`, rerun the tests, and publish only after playback passes:
+Return `TestMode` to `Playback` and rerun the tests against local recordings. Keep assets local until explicit State 3 publication approval. Only after that approval and successful playback, publish the complete sanitized asset set:
 
 ```powershell
 ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/assets.json

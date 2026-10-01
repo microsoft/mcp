@@ -112,7 +112,7 @@ When the user asks to create or deliver a Resilience Management tool, own the wo
 
 At every invocation or resume, and before every push, fetch the PR target branch and inspect mergeability. Resolve unambiguous conflicts, rerun affected validation, and update the existing PR branch. Never discard either side merely to make the conflict disappear. If preserving both changes requires a product or API decision, present the conflicting intents and ask the developer.
 
-The skill cannot run independently after the agent session ends. In resume-on-request mode, persist progress in the PR and re-check conflicts, checks, and comments whenever the workflow is invoked again. Add the required delivery manifest marker to the PR body so `.github/workflows/resilience-merge-conflict-monitor.yml` can detect conflicts every three hours; resume the skill to resolve any conflict it reports.
+The skill cannot run independently after the agent session ends. In resume-on-request mode, persist progress in the PR and re-check conflicts, checks, and comments whenever the workflow is invoked again. Add the required delivery manifest marker to the PR body and ensure the PR has the `tools-ResilienceManagement` label so `.github/workflows/resilience-merge-conflict-monitor.yml` can detect conflicts every three hours; both are required. Resume the skill to resolve any conflict it reports.
 
 ## Result Format
 
