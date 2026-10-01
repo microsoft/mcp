@@ -73,7 +73,6 @@ public sealed class StorageService(IAzureService azureService)
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        bool enablePublicNetworkAccess = false,
         bool allowSharedKeyAccess = false,
         CancellationToken cancellationToken = default)
     {
@@ -116,7 +115,6 @@ public sealed class StorageService(IAzureService azureService)
                 AccessTier = string.IsNullOrEmpty(accessTier) ? "Hot" : ParseAccessTier(accessTier),
                 EnableHttpsTrafficOnly = true,
                 AllowBlobPublicAccess = false,
-                PublicNetworkAccess = enablePublicNetworkAccess ? "Enabled" : "Disabled",
                 AllowSharedKeyAccess = allowSharedKeyAccess,
                 IsHnsEnabled = enableHierarchicalNamespace ?? false,
                 MinimumTlsVersion = "TLS1_2"

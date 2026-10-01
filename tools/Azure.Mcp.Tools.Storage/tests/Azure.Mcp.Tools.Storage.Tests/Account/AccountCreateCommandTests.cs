@@ -16,17 +16,15 @@ namespace Azure.Mcp.Tools.Storage.Tests.Account;
 public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<AccountCreateCommand, IStorageService>
 {
     [Theory]
-    [InlineData("", false, false)]
-    [InlineData("--enable-public-network-access true", true, false)]
-    [InlineData("--allow-shared-key-access true", false, true)]
-    [InlineData("--enable-public-network-access true --allow-shared-key-access true", true, true)]
-    public async Task ExecuteAsync_InsecureSettingsRequireOptIn(string options, bool publicAccess, bool sharedKey)
+    [InlineData("", false)]
+    [InlineData("--allow-shared-key-access true", true)]
+    [InlineData("--allow-shared-key-access false", false)]
+    public async Task ExecuteAsync_InsecureSettingsRequireOptIn(string options, bool sharedKey)
     {
         var response = await ExecuteCommandAsync($"--account testaccount --resource-group testrg --location eastus --subscription sub123 {options}");
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var call = Assert.Single(Service.ReceivedCalls());
-        Assert.Equal(publicAccess, call.GetArguments()[8]);
-        Assert.Equal(sharedKey, call.GetArguments()[9]);
+        Assert.Equal(sharedKey, call.GetArguments()[8]);
     }
 
     [Fact]

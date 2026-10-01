@@ -23,9 +23,6 @@ public class AccountCreateOptions : ISubscriptionOption
     [Option(Description = "Whether to enable hierarchical namespace (Data Lake Storage Gen2) for the storage account.")]
     public bool? EnableHierarchicalNamespace { get; set; }
 
-    [Option(Description = "Enable public network access from all networks (insecure). Defaults to false; configure a private endpoint for data access.")]
-    public bool EnablePublicNetworkAccess { get; set; }
-
     [Option(Description = "Enable Shared Key authentication (less secure than Microsoft Entra ID). Defaults to false.")]
     public bool AllowSharedKeyAccess { get; set; }
 
