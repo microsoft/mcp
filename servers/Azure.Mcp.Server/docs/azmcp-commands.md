@@ -460,7 +460,9 @@ azmcp adme storage record version list --endpoint <endpoint> \
 ### Azure Advisor Operations
 
 ```bash
-# List Advisor recommendations in a subscription, with optional filters
+# List actual Advisor recommendation records in a subscription, with optional filters.
+# For global recommendation metadata/catalog lookups, including service-retirement metadata by tracking ID,
+# use advisor metadata list instead; that command does not require a subscription.
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
@@ -529,9 +531,11 @@ azmcp advisor recommendation summary --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
-# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
-# Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
-# during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
+# List the global, subscription-independent Azure Advisor recommendation metadata catalog (also called recommendation types)
+# from Azure Resource Graph. Use it for metadata/catalog lookups, including service-retirement metadata by Service Health
+# tracking ID, even when no subscription or active recommendation instance is specified. Use recommendation list for actual
+# subscription-scoped recommendation records. Use metadata in greenfield environments with no generated recommendations,
+# or filter by supported resource type during brownfield onboarding. Supports service-retirement filtering by tracking ID and retirement
 # date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting
 # subcategory filters are rejected. Results are ordered High, Medium, Low.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

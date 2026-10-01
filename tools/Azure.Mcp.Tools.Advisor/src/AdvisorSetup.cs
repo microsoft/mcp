@@ -43,12 +43,12 @@ public class AdvisorSetup : IAreaSetup
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; update customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
+            "Advisor recommendation instances - List or summarize actual recommendations in a subscription, update recommendation state, or apply recommendation guidance to infrastructure-as-code files. For the global recommendation metadata catalog, recommendation types, or service-retirement metadata by tracking ID, use the metadata group instead.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(
             "metadata",
-            "Discover and retrieve the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. List localized guidance, impact, categories, subcategories, supported resource types, actions, and service-retirement details, or get a specific catalog entry by recommendation type ID. Use the list command in greenfield environments with no generated recommendations, filter by resource type during brownfield onboarding, or find service retirements by tracking ID and retirement date. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. List results are ordered High, Medium, then Low impact.");
+            "Discover and retrieve the global, subscription-independent Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use this group for metadata or catalog lookups, including service-retirement metadata by tracking ID, even when no subscription is specified. It returns localized guidance, impact, categories, subcategories, supported resource types, actions, and service-retirement details, or gets a specific catalog entry by recommendation type ID. Use the recommendation group for actual recommendation instances in a subscription. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. List results are ordered High, Medium, then Low impact.");
         advisor.AddSubGroup(metadata);
 
         var remediation = new CommandGroup(
