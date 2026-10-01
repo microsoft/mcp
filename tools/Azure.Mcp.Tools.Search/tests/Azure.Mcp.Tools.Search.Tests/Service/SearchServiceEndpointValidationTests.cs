@@ -53,6 +53,20 @@ public sealed class SearchServiceEndpointValidationTests
             service.CreateAndValidateSearchEndpoint("my-search"));
     }
 
+    [Fact]
+    public void CreateAndValidateSearchEndpoint_UnsupportedCloud_ThrowsInvalidConfigurationException()
+    {
+        AzureCloudConfiguration.AzureCloud unsupportedCloud = (AzureCloudConfiguration.AzureCloud)(-1);
+        SearchService service = CreateService(unsupportedCloud, ArmEnvironment.AzurePublicCloud);
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            service.CreateAndValidateSearchEndpoint("my-search"));
+
+        Assert.Equal(
+            $"The configured Azure cloud is not supported for Azure AI Search. Value given: '{unsupportedCloud}'.",
+            exception.Message);
+    }
+
     private static SearchService CreateService(
         AzureCloudConfiguration.AzureCloud cloudType,
         ArmEnvironment armEnvironment) =>

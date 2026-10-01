@@ -473,23 +473,29 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
     /// <exception cref="ArgumentException">
     /// Thrown when the service name is malformed or the Search endpoint allow-list is unavailable.
     /// </exception>
+    /// <exception cref="InvalidConfigurationException">
+    /// Thrown when the configured Azure cloud is not supported for Azure AI Search.
+    /// </exception>
     /// <exception cref="System.Security.SecurityException">
     /// Thrown when the completed endpoint is not authorized for the configured Azure cloud.
     /// </exception>
     internal Uri CreateAndValidateSearchEndpoint(string serviceName)
     {
         ValidateServiceName(serviceName);
+        AzureCloudConfiguration.AzureCloud cloud = AzureService.CloudConfiguration.CloudType;
+
         // EndpointValidator.AllowLists.cs contains the authorization copy of these DNS suffixes. This construction
         // copy selects the configured cloud, so changes to either location and their tests must stay synchronized.
-        string endpoint = AzureService.CloudConfiguration.CloudType switch
+        string endpoint = cloud switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
-            _ => $"https://{serviceName}.search.windows.net"
+            _ => throw GetUnsupportedCloudException(cloud)
         };
 
         Uri endpointUri = new(endpoint);
+
         // Service-name validation restricts the interpolated host label, while the shared validator independently
         // authorizes the completed SDK endpoint against the configured Azure cloud immediately before use.
         EndpointValidator.ValidateAzureServiceEndpoint(
@@ -503,12 +509,31 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
 
     private SearchAudience GetSearchAudience()
     {
-        return AzureService.CloudConfiguration.CloudType switch
+        AzureCloudConfiguration.AzureCloud cloud = AzureService.CloudConfiguration.CloudType;
+        return cloud switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => SearchAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => SearchAudience.AzureChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => SearchAudience.AzureGovernment,
-            _ => SearchAudience.AzurePublicCloud
+            _ => throw GetUnsupportedCloudException(cloud)
         };
+    }
+
+    /// <summary>
+    /// Gets a new exception to throw when the currently configured Azure cloud is not supported.
+    /// </summary>
+    /// <param name="cloud"></param>
+    /// <returns></returns>
+    /// <remarks>
+    /// The Azure Search SDK docs specify defaulting to the public cloud for a <see langword="null"/>
+    /// delegated permission audience, but the docs do not define an endpoint-domain fallback for an
+    /// unrecognized cloud. We'll reject unknown clouds rather than use that fallback for endpoint
+    /// creation or audience selection. This was a subjective choice that should be changed if required.
+    /// <seealso href="https://learn.microsoft.com/dotnet/api/azure.search.documents.searchclientoptions.audience"/>
+    /// </remarks>
+    private static InvalidOperationException GetUnsupportedCloudException(AzureCloudConfiguration.AzureCloud cloud)
+    {
+        return new InvalidOperationException(
+            $"The configured Azure cloud is not supported for Azure AI Search. Value given: '{cloud}'.");
     }
 }
