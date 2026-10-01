@@ -16,10 +16,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
     Id = "16c9c57e-8f14-43bd-91da-d1548b6af72e",
     Name = "list",
     Title = "List Advisor Recommendation Metadata",
-    Description = "List the global, subscription-independent Azure Advisor recommendation metadata catalog, also known as recommendation types, not active recommendation instances. " +
-                  "Use this whenever the user asks for Advisor metadata, the recommendation-type catalog, or service-retirement metadata by Service Health tracking ID (for example, QNY1-HB8), even when no subscription is specified. " +
-                  "Use it before deploying resources such as virtual machines to discover what recommendations Advisor could produce, even when there are no active recommendations. " +
-                  "Show Advisor service retirements on, before, or after a specified retirement date. For actual recommendation records or affected resources in a subscription, use advisor recommendation list instead. " +
+    Description = "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types. " +
+                  "Use this for metadata catalog lookups, including service-retirement metadata by Service Health tracking ID (for example, QNY1-HB8), or to discover what recommendations Advisor could produce before deploying resources, even when there are no active recommendations. " +
+                  "Show Advisor service retirements on, before, or after a specified retirement date. For current recommendation records or affected resources, use advisor recommendation list instead. " +
                   "The global Azure Resource Graph catalog supports greenfield discovery and resource-type filtering for brownfield onboarding. " +
                   "Optional filters include language, resource type, impact, category, subcategory, tracking ID, and retirement date. " +
                   "Returns localized type IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details, " +
