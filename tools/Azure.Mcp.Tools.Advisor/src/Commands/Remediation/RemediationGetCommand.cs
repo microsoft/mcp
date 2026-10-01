@@ -77,9 +77,10 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
         // generic "service unavailable or network connectivity issues" text, which is misleading
         // for normal HTTP error responses such as 404 RemediationNotFound.
         HttpRequestException httpEx when IsRemediationUnavailableForTenant(httpEx.Message) =>
-            "Azure Advisor reports that remediation is not available for this tenant. " +
-            "This is an availability response from Azure Advisor, not an MCP tool failure. " +
-            "Contact your Azure administrator or Microsoft support if remediation should be available.",
+            "Azure Advisor returned RemediationNotAvailableForTenant for this recommendation type. " +
+            "Review the recommendation in Azure Advisor for its available guidance. " +
+            "If you expected a remediation package to be available, contact Azure Support and provide this error " +
+            "and the request or correlation ID, if available.",
         HttpRequestException httpEx => httpEx.Message,
         _ => base.GetErrorMessage(ex)
     };

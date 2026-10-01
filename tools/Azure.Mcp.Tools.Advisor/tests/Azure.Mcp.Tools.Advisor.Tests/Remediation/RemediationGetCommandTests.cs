@@ -196,8 +196,9 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
         var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
-        Assert.Contains("not available for this tenant", response.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("not an MCP tool failure", response.Message);
+        Assert.Contains("RemediationNotAvailableForTenant", response.Message);
+        Assert.Contains("Review the recommendation in Azure Advisor", response.Message);
+        Assert.Contains("contact Azure Support", response.Message);
     }
 
     [Fact]
