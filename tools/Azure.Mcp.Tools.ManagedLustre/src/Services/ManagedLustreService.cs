@@ -1327,7 +1327,7 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
     }
 
     private static readonly TimeSpan s_expansionJobRetryInterval = TimeSpan.FromSeconds(15);
-    private static readonly TimeSpan s_expansionJobRetryTimeout = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan s_expansionJobRetryTimeout = TimeSpan.FromMinutes(15);
 
     private static bool IsCapacityReservationFinalizing(RequestFailedException ex) =>
         ex.Status == 400 && ex.Message.Contains("finalizing capacity reservations", StringComparison.OrdinalIgnoreCase);
