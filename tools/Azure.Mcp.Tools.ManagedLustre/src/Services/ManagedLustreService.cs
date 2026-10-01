@@ -589,16 +589,6 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // Generate job name from timestamp if not provided
         jobName ??= $"autoexport-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
-        // Validate admin status if provided
-        if (!string.IsNullOrEmpty(adminStatus))
-        {
-            var validStatuses = new[] { "Enable", "Disable" };
-            if (!validStatuses.Contains(adminStatus, StringComparer.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException($"Invalid admin status '{adminStatus}'. Valid values are: {string.Join(", ", validStatuses)}", nameof(adminStatus));
-            }
-        }
-
         // Create auto export job data with filesystem location
         var autoExportJobData = new AutoExportJobData(fs.Value.Data.Location);
 
@@ -607,7 +597,14 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // "Required parameter 'properties' is missing". Apply the defaults documented on
         // AutoexportJobCreateOptions (Enable / '/') whenever the caller omits them, instead
         // of leaving the fields - and therefore "properties" - unset.
-        autoExportJobData.AdminStatus = Enum.Parse<AutoExportJobAdminStatus>(adminStatus ?? "Enable", ignoreCase: true);
+        // AutoExportJobAdminStatus is an extensible enum (struct), not a true System.Enum, so
+        // Enum.Parse<T> throws "Type provided must be an Enum" at runtime - use a switch instead.
+        autoExportJobData.AdminStatus = (adminStatus ?? "Enable") switch
+        {
+            "Enable" => AutoExportJobAdminStatus.Enable,
+            "Disable" => AutoExportJobAdminStatus.Disable,
+            _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
+        };
 
         // Set autoexport prefix (SDK allows only 1 prefix)
         autoExportJobData.AutoExportPrefixes.Add(string.IsNullOrEmpty(autoexportPrefix) ? "/" : autoexportPrefix);
