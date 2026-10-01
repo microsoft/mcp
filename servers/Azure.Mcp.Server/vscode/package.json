@@ -204,10 +204,11 @@
                     "enum": [
                         "single",
                         "namespace",
+                        "consolidated",
                         "all"
                     ],
                     "default": "namespace",
-                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` (default) collapses all tools down into logical Azure service namespace grouping (about 30 tools), while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` (default) collapses all tools down into logical Azure service namespace grouping (about 30 tools), `consolidated` groups related Azure operations into curated tools based on common workflows and tasks, while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
                 },
                 "azureMcp.readOnly": {
                     "type": "boolean",
