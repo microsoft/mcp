@@ -1283,6 +1283,13 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
 
         jobName ??= $"expansion-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
+        // Immediately after a filesystem finishes its own create/update LRO, ARM can still be
+        // finalizing capacity reservations internally; submitting an expansion job during that
+        // window is rejected with "400 BadRequest: ExpansionJobs cannot be created while the
+        // amlfilesystem is still finalizing capacity reservations after initial deployment."
+        // Poll the filesystem's health state (bounded) until it reports Available before retrying.
+        fs = await WaitForFileSystemAvailableAsync(fs.Value, cancellationToken);
+
         var expansionJobData = new AmlFileSystemExpansionJobData(fs.Value.Data.Location)
         {
             NewStorageCapacityTiB = newSizeTiB
@@ -1296,6 +1303,45 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
         return createOperation.Value.Data.Name;
+    }
+
+    private static readonly TimeSpan s_fileSystemAvailablePollInterval = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan s_fileSystemAvailableTimeout = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Waits (bounded) for an AMLFS filesystem to report a healthy, non-transitioning state before
+    /// issuing operations - such as expansion job creation - that ARM rejects while the filesystem
+    /// is still finalizing capacity reservations after initial deployment.
+    /// </summary>
+    private async Task<Response<AmlFileSystemResource>> WaitForFileSystemAvailableAsync(
+        AmlFileSystemResource fs,
+        CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow + s_fileSystemAvailableTimeout;
+        var current = fs;
+        while (true)
+        {
+            var state = current.Data.Health?.State;
+            if (state == AmlFileSystemHealthStateType.Available)
+            {
+                return await current.GetAsync(cancellationToken: cancellationToken);
+            }
+
+            if (DateTime.UtcNow >= deadline)
+            {
+                throw new Exception(
+                    $"Filesystem '{current.Data.Name}' did not report a healthy state within {s_fileSystemAvailableTimeout} " +
+                    $"(last observed health state: '{state?.ToString() ?? "unknown"}'). " +
+                    "It may still be finalizing capacity reservations after initial deployment; retry shortly.");
+            }
+
+            _logger.LogDebug(
+                "Filesystem '{FileSystemName}' health state is '{HealthState}'; waiting before retrying.",
+                current.Data.Name,
+                state?.ToString() ?? "unknown");
+            await Task.Delay(s_fileSystemAvailablePollInterval, cancellationToken).ConfigureAwait(false);
+            current = (await current.GetAsync(cancellationToken: cancellationToken)).Value;
+        }
     }
 
     public async Task<Models.ExpansionJob> GetExpansionJobAsync(
