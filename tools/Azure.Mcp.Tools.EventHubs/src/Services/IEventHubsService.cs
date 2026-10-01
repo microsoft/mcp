@@ -34,8 +34,7 @@ public interface IEventHubsService
         bool? zoneRedundant = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        bool? enablePublicNetworkAccess = null,
-        bool? enableSasAuthentication = null,
+        bool? disableLocalAuth = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteNamespaceAsync(

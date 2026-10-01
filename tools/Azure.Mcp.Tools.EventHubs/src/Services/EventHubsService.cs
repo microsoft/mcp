@@ -165,8 +165,7 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         bool? zoneRedundant = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        bool? enablePublicNetworkAccess = null,
-        bool? enableSasAuthentication = null,
+        bool? disableLocalAuth = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
@@ -186,7 +185,7 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         var existing = await namespaceCollection.GetIfExistsAsync(namespaceName, cancellationToken: cancellationToken);
         var existingResource = existing.HasValue ? existing.Value : null;
         var namespaceData = new EventHubsNamespaceData(existingResource?.Data.Location.ToString() ?? namespaceLocation);
-        ConfigureNamespaceSecurity(namespaceData, existingResource is null, enablePublicNetworkAccess, enableSasAuthentication);
+        ConfigureNamespaceSecurity(namespaceData, existingResource is null, disableLocalAuth);
 
         // Set SKU if provided
         if (!string.IsNullOrEmpty(skuName))
@@ -273,16 +272,11 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         return ConvertToNamespace(operation.Value.Data, resourceGroup);
     }
 
-    internal static void ConfigureNamespaceSecurity(EventHubsNamespaceData data, bool isNew, bool? enablePublicNetworkAccess, bool? enableSasAuthentication)
+    internal static void ConfigureNamespaceSecurity(EventHubsNamespaceData data, bool isNew, bool? disableLocalAuth)
     {
-        if (isNew || enablePublicNetworkAccess.HasValue)
-        {
-            data.PublicNetworkAccess = new(enablePublicNetworkAccess == true ? "Enabled" : "Disabled");
-        }
-        if (isNew || enableSasAuthentication.HasValue)
-        {
-            data.DisableLocalAuth = enableSasAuthentication != true;
-        }
+        // Either set the value of DisableLocalAuth to what was supplied or determine it by whether this is a new
+        // Namespace being created. If new, default to true, otherwise retain existing setting for update.
+        data.DisableLocalAuth = disableLocalAuth ?? (isNew ? true : data.DisableLocalAuth);
     }
 
     public async Task<bool> DeleteNamespaceAsync(

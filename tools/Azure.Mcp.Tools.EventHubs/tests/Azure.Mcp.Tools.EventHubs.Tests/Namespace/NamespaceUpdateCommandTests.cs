@@ -21,17 +21,17 @@ namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
 public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<NamespaceUpdateCommand, IEventHubsService>
 {
     [Theory]
-    [InlineData(true, null, null, "Disabled", true)]
-    [InlineData(true, true, true, "Enabled", false)]
-    [InlineData(true, true, false, "Enabled", true)]
-    [InlineData(false, null, null, "Enabled", false)]
-    [InlineData(false, false, false, "Disabled", true)]
-    public void NamespaceSecurity_DefaultsAndUpdates(bool isNew, bool? publicAccess, bool? sasAuth, string networkAccess, bool disableLocalAuth)
+    [InlineData(true, null, true)]
+    [InlineData(true, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(false, null, false)]
+    [InlineData(false, false, false)]
+    [InlineData(false, true, true)]
+    public void NamespaceSecurity_DefaultsAndUpdates(bool isNew, bool? disableLocalAuth, bool expectedDisableLocalAuth)
     {
-        var data = new EventHubsNamespaceData("eastus") { PublicNetworkAccess = new("Enabled"), DisableLocalAuth = false };
-        EventHubsService.ConfigureNamespaceSecurity(data, isNew, publicAccess, sasAuth);
-        Assert.Equal(networkAccess, data.PublicNetworkAccess?.ToString());
-        Assert.Equal(disableLocalAuth, data.DisableLocalAuth);
+        var data = new EventHubsNamespaceData("eastus") { DisableLocalAuth = false };
+        EventHubsService.ConfigureNamespaceSecurity(data, isNew, disableLocalAuth);
+        Assert.Equal(expectedDisableLocalAuth, data.DisableLocalAuth);
     }
 
     [Fact]
@@ -109,7 +109,6 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
         updateMethod = null;
         await service.CreateOrUpdateNamespaceAsync(
             "test-namespace", "test-rg", subscription,
-            enablePublicNetworkAccess: false,
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpMethod.Patch, updateMethod);
@@ -117,22 +116,19 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
         Assert.False(body.TryGetProperty("tags", out _));
         Assert.False(body.TryGetProperty("sku", out _));
         properties = body.GetProperty("properties");
-        Assert.Equal("Disabled", properties.GetProperty("publicNetworkAccess").GetString());
         Assert.False(properties.TryGetProperty("disableLocalAuth", out _));
     }
 
     [Theory]
-    [InlineData("--location eastus", null, null)]
-    [InlineData("--enable-public-network-access true", true, null)]
-    [InlineData("--enable-sas-authentication true", null, true)]
-    [InlineData("--enable-public-network-access false --enable-sas-authentication false", false, false)]
-    public async Task ExecuteAsync_ForwardsExplicitSecuritySettings(string options, bool? publicAccess, bool? sasAuth)
+    [InlineData("--location eastus", null)]
+    [InlineData("--disable-local-auth true", true)]
+    [InlineData("--disable-local-auth false", false)]
+    public async Task ExecuteAsync_ForwardsExplicitSecuritySettings(string options, bool? disableLocalAuth)
     {
         var response = await ExecuteCommandAsync($"--subscription test-sub --resource-group test-rg --namespace test-ns {options}");
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var call = Assert.Single(Service.ReceivedCalls());
-        Assert.Equal(publicAccess, call.GetArguments()[13]);
-        Assert.Equal(sasAuth, call.GetArguments()[14]);
+        Assert.Equal(disableLocalAuth, call.GetArguments()[13]);
     }
 
     [Fact]
@@ -141,8 +137,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
         var response = await ExecuteCommandAsync("--subscription test-sub --resource-group test-rg --namespace test-ns");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("enable-public-network-access", response.Message);
-        Assert.Contains("enable-sas-authentication", response.Message);
+        Assert.Contains("disable-local-auth", response.Message);
         Assert.Empty(Service.ReceivedCalls());
     }
 
