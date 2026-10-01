@@ -3,7 +3,7 @@ targetScope = 'resourceGroup'
 @minLength(3)
 @maxLength(24)
 @description('The base resource name used by the live tests.')
-param baseName string = resourceGroup().name
+param baseName string = 'azurenetappfiles-test'
 
 @description('The client object ID to grant access to the test resource group.')
 param testApplicationOid string
@@ -38,18 +38,30 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   }
 }
 
-resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2024-09-01' = {
-  name: '${baseName}-volume'
+resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
+  name: '${baseName}-account'
   location: location
 }
 
-resource capacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@2024-09-01' = {
+resource capacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01' = {
   parent: netAppAccount
-  name: 'pool'
+  name: '${baseName}-pool'
   location: location
   properties: {
     serviceLevel: 'Standard'
-    size: 4398046511104
+    size: 1099511627776
+  }
+}
+
+resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2026-01-01' = {
+  parent: capacityPool
+  name: '${baseName}-volume'
+  location: location
+  properties: {
+    subnetId: virtualNetwork.properties.subnets[0].id
+    serviceLevel: 'Standard'
+    usageThreshold: 107374182400
+    creationToken: '${baseName}-volume'
   }
 }
 
@@ -70,4 +82,5 @@ resource netAppFilesContributorRoleAssignment 'Microsoft.Authorization/roleAssig
 output NETAPP_ACCOUNT_NAME string = netAppAccount.name
 output NETAPP_POOL_NAME string = capacityPool.name
 output NETAPP_SUBNET_ID string = virtualNetwork.properties.subnets[0].id
+output NETAPP_VOLUME_NAME string = volume.name
 output LOCATION string = location
