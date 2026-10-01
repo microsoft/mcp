@@ -25,9 +25,9 @@ namespace Azure.Mcp.Tools.FileShares.Tests.FileShare;
 public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<FileShareCreateCommand, IFileSharesService>
 {
     [Theory]
-    [InlineData(true, "Disabled", "RootSquash", "Enabled")]
-    [InlineData(false, "Enabled", "NoRootSquash", "Disabled")]
-    public void SecurityDefaults_OnlyApplyToNewShares(bool isNew, string networkAccess, string rootSquash, string encryption)
+    [InlineData(true, "RootSquash", "Enabled")]
+    [InlineData(false, "NoRootSquash", "Disabled")]
+    public void SecurityDefaults_OnlyApplyToNewShares(bool isNew, string rootSquash, string encryption)
     {
         var data = new FileShareData("eastus")
         {
@@ -38,7 +38,6 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
             }
         };
         FileSharesService.ConfigureFileShareSecurity(data, isNew, "NFS");
-        Assert.Equal(networkAccess, data.Properties.PublicNetworkAccess?.ToString());
         Assert.Equal(rootSquash, data.Properties.NfsProtocolProperties.RootSquash?.ToString());
         Assert.Equal(encryption, data.Properties.NfsProtocolProperties.EncryptionInTransitRequired?.ToString());
     }
@@ -50,7 +49,6 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
 
         FileSharesService.ConfigureFileShareSecurity(data, true, null);
 
-        Assert.Equal("Disabled", data.Properties.PublicNetworkAccess?.ToString());
         Assert.Null(data.Properties.NfsProtocolProperties);
     }
 

@@ -203,7 +203,6 @@ public sealed class FileSharesService(IAzureService azureService, ILogger<FileSh
             return;
         }
         data.Properties ??= new();
-        data.Properties.PublicNetworkAccess = new("Disabled");
         if (string.Equals(protocol, "NFS", StringComparison.OrdinalIgnoreCase))
         {
             data.Properties.NfsProtocolProperties = new()

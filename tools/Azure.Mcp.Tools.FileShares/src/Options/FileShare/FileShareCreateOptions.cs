@@ -68,7 +68,7 @@ public sealed class FileShareCreateOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets the public network access setting (e.g., "Enabled", "Disabled").
     /// </summary>
-    [Option(Description = FileSharesOptionDescriptions.PublicNetworkAccess + ". Defaults to Disabled on creation; explicitly select Enabled for public access. Omitted values preserve existing shares.")]
+    [Option(Description = FileSharesOptionDescriptions.PublicNetworkAccess)]
     public string? PublicNetworkAccess { get; set; }
 
     /// <summary>
