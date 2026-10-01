@@ -183,6 +183,24 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     }
 
     [Fact]
+    public async Task ExecuteAsync_ExplainsTenantAvailabilityError()
+    {
+        Service.GetRemediationAsync(
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException(
+                "{\"error\":{\"code\":\"RemediationNotAvailableForTenant\",\"message\":\"Remediation is not available for this tenant.\"}}",
+                null,
+                HttpStatusCode.NotFound));
+
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("not available for this tenant", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not an MCP tool failure", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Handles401Unauthorized()
     {
         Service.GetRemediationAsync(
