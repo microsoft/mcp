@@ -1457,7 +1457,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
-- 🛡️ **Azure Quick Review CLI** - Compliance scanning
+- 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
 - 📊 **Azure Quota** - Resource quota and usage management
 - 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
