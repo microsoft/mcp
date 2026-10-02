@@ -29,6 +29,9 @@ public sealed class StorageSyncServiceCreateOptions : ISubscriptionOption
     [Option(Description = StorageSyncOptionDescriptions.StorageSyncService.TagsDescription)]
     public string? Tags { get; set; }
 
+    [Option(Description = "Enable the public endpoint with AllowAllTraffic (insecure). Defaults to false, using AllowVirtualNetworksOnly; configure a private endpoint before connecting servers.")]
+    public bool EnablePublicNetworkAccess { get; set; }
+
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 

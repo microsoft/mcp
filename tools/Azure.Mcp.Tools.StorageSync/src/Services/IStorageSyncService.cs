@@ -42,6 +42,7 @@ public interface IStorageSyncService
         string location,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
+        bool enablePublicNetworkAccess = false,
         CancellationToken cancellationToken = default);
 
     /// <summary>
