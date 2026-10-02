@@ -38,6 +38,16 @@ public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fi
         {
             Regex = Settings.SubscriptionId,
             Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = @"(?i)(?<=tenantId=)[0-9a-f-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = @"(?i)(?<=objectId=)[0-9a-f-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000"
         })
     ];
 

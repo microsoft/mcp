@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.48 (Unreleased)
+## 3.0.0-beta.50 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,46 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0-beta.49 (2026-10-01)
+
+### Breaking Changes
+
+- Removed the ADME tools temporarily for GA release. [[#3805](https://github.com/microsoft/mcp/pull/3805)]
+- Azure Backup vault creation now checks for an existing Recovery Services or Backup vault and rejects it instead of updating it. Use azurebackup_vault_update to modify existing vaults. Creation also requires permission to read the target vault. [[#3800](https://github.com/microsoft/mcp/pull/3800)]
+- Creating EventHub Namespaces now disable local authentication by default. Explicit options remain available to enable it, while omitted security options preserve existing Namespaces during updates. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+- New Storage accounts now disable Shared Key authentication by default while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access. An explicit option remain available to enable Shared Key authentication. [[#3761](https://github.com/microsoft/mcp/pull/3761)]
+
+### Bugs Fixed
+
+- Fixed resilience drill create failing with a generic service error when no recovery plan was specified. The tool now sends SystemAssigned identity for RecoveryPlanProperties and the legacy MonitoringProperties required by the 2026-04-01-preview API flow. [[#3801](https://github.com/microsoft/mcp/pull/3801)]
+- Added namespace-aware endpoint validation for Event Grid, Foundry Extensions, IoT Hub, Key Vault, Load Testing, Managed HSM, Managed Lustre, Monitor metrics and web tests, and MySQL endpoints. [[#3694](https://github.com/microsoft/mcp/pull/3694)]
+- Corrected the read-only annotation on the Azure Communication Services email and SMS send tools (`communication_email_send`, `communication_sms_send`). They are now correctly marked as write operations so they are excluded when the server runs with `--read-only`. [[#3818](https://github.com/microsoft/mcp/pull/3818)]
+- Clarified the RemediationNotAvailableForTenant response and directs users to the Advisor recommendation for available guidance. [[#3816](https://github.com/microsoft/mcp/pull/3816)]
+- Client telemetry now records canonical client name and version values, using `<Unknown>` when unavailable and mapping plugin client names with a client type fallback. [[#3793](https://github.com/microsoft/mcp/pull/3793)]
+- Updating an existing EventHub Namespace now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+
+## 3.0.0-beta.48 (2026-09-29)
+
+### Features Added
+
+- Added support for customer-specific resource application IDs when authenticating ADME requests. [[#3789](https://github.com/microsoft/mcp/pull/3789)]
+
+### Breaking Changes
+
+- Removed the resiliency goal template get tool. [[#3790](https://github.com/microsoft/mcp/pull/3790)]
+
+### Bugs Fixed
+
+- Fix issue where validation for AKS resource group was removed. [[#3785](https://github.com/microsoft/mcp/pull/3785)]
+- Tool name and area telemetry now validates identities before recording them, uses `<Unknown>` for rejected identities, and normalizes command names. Single-proxy mode enforces namespace filters for learning and execution. [[#3749](https://github.com/microsoft/mcp/pull/3749)]
+- Fixed the `tools list` and `--learn` CLI metadata reporting every option's `type` as `string`. Option types now reflect the underlying value type (`string`, `integer`, `number`, `boolean`, or `array`), consistent with the MCP tool `inputSchema`. Array options additionally report an `elementType` describing the array's element type (for example, `string` for a string array). [[#3772](https://github.com/microsoft/mcp/pull/3772)]
+
+### Other Changes
+
+- Added validation of the platform landing zone download URL in the Azure Migrate tools before the file is retrieved. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+- Added validation of outbound documentation URLs in the Azure Terraform tools to confirm requests target the expected GitHub hosts. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+- Added endpoint validation for Confidential Ledger data-plane requests to confirm the ledger endpoint matches the expected service domain for the target cloud. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
 
 ## 3.0.0-beta.47 (2026-09-24)
 
