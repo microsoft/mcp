@@ -139,7 +139,7 @@ resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
 
 // Container with a full-text policy + index for exercising the
 // `cosmos_database_container_item_text-search` tool.
-resource cosmosTextContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-12-01-preview' = {
+resource cosmosTextContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2025-04-15' = {
   parent: cosmosDatabase
   name: 'TextItems'
   properties: {

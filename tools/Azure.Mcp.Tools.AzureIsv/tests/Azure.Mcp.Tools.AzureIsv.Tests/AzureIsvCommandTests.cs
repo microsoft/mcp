@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
@@ -33,5 +34,24 @@ public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fix
 
         var resources = result.AssertProperty("resources");
         Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+    }
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task Should_return_400_when_not_found()
+    {
+        var result = await CallToolAsync(
+            "datadog_monitoredresources_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "datadog-resource", $"{Settings.ResourceBaseName}-nonexistent" }
+            }, resultProcessor: elem => elem.TryGetProperty("status", out var property) ? property : null);
+
+        Assert.NotNull(result);
+
+        var statusCode = result.Value.GetInt32();
+        Assert.Equal(404, statusCode);
     }
 }

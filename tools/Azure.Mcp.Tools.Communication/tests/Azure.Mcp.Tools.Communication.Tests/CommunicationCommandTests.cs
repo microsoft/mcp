@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -108,6 +109,62 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
             Value = EmptyGuid
         })
     ];
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task Should_return_error_on_invalid_parameters()
+    {
+        var result = await CallToolAsync(
+            "communication_sms_send",
+            new()
+            {
+                { "endpoint", "" },
+                { "from", "204-111-1111" },
+                { "to", new[] { "204-222-2222" } },
+                { "message", "Test SMS from Azure MCP Live Test" },
+                { "enable-delivery-report", true },
+                { "tag", "live-test" }
+            },
+            resultProcessor: elem => elem.TryGetProperty("status", out var property) ? property : null);
+
+        // Assert that we have a result
+        Assert.NotNull(result);
+
+        var statusCode = result.Value.GetInt32();
+        Assert.Equal(400, statusCode);
+    }
+
+    [Fact]
+    [LiveTestOnly]
+    public async Task Should_Returns_Error_Cannot_Send()
+    {
+        if (TestMode != TestMode.Playback)
+        {
+            Assert.SkipWhen(string.IsNullOrEmpty(_endpointRecorded), "Communication Services endpoint not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(_fromSms), "From phone number not configured for live testing");
+            Assert.SkipWhen(string.IsNullOrEmpty(_toSms), "To phone number not configured for live testing");
+        }
+
+        var result = await CallToolAsync(
+            "communication_sms_send",
+            new()
+            {
+                { "endpoint", "https://foo-bar-endpoint.communication.azure.com" },
+                { "from", "204-111-1111" },
+                { "to", new[] { "204-222-2222" } },
+                { "message", "Test SMS from Azure MCP Live Test" },
+                { "enable-delivery-report", true },
+                { "tag", "live-test" }
+            });
+
+        // Assert that we have a result
+        Assert.NotNull(result);
+
+        Output.WriteLine($"Result: {JsonSerializer.Serialize(result)}");
+
+        var status = result.AssertProperty("status");
+        Assert.Equal(404, status.GetInt32());
+    }
 
     [Fact]
     public async Task Should_SendSms_WithValidParameters()

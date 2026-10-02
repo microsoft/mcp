@@ -26,6 +26,7 @@ $dppVaultName = "$BaseName-dpp"
 # DeploymentOutputs is a case-sensitive OrderedDictionary (from ConvertFrom-Json -AsHashtable)
 # and the test resources framework upper-cases all output keys before serializing.
 $diskId = $DeploymentOutputs["DISKID"]
+$diskLocation = $DeploymentOutputs["DISKLOCATION"]
 $storageAccountName = $DeploymentOutputs["STORAGEACCOUNTNAME"]
 $fileShareName = $DeploymentOutputs["FILESHARENAME"]
 $storageAccountId = $DeploymentOutputs["STORAGEACCOUNTID"]
@@ -63,7 +64,8 @@ try {
 }
 
 if (-not $existingInstance) {
-    $diskInstance = Initialize-AzDataProtectionBackupInstance -DatasourceType AzureDisk -DatasourceLocation (Get-AzResourceGroup -Name $ResourceGroupName).Location -PolicyId $dppPolicy.Id -DatasourceId $diskId -SnapshotResourceGroupId (Get-AzResourceGroup -Name $ResourceGroupName).ResourceId
+    $snapshotResourceGroupId = (Get-AzResourceGroup -Name $ResourceGroupName).ResourceId
+    $diskInstance = Initialize-AzDataProtectionBackupInstance -DatasourceType AzureDisk -DatasourceLocation $diskLocation -PolicyId $dppPolicy.Id -DatasourceId $diskId -SnapshotResourceGroupId $snapshotResourceGroupId
     $protectedDisk = New-AzDataProtectionBackupInstance -VaultName $dppVaultName -ResourceGroupName $ResourceGroupName -BackupInstance $diskInstance
     Write-Host "Disk protected in DPP vault: $($protectedDisk.Name)" -ForegroundColor Green
     

@@ -20,7 +20,35 @@ $iotHubName = $DeploymentOutputs['IOTHUB_NAME']
 Write-Host "IoT Hub Name: $iotHubName"
 
 # Ensure Azure IoT CLI extension is installed for `az iot` commands
-try { az extension show --name azure-iot | Out-Null } catch { az extension add --name azure-iot | Out-Null }
+Write-Host "Checking for the Azure IoT CLI extension..."
+az extension show --name azure-iot --output table
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Azure IoT CLI extension is not installed. Installing the preview version..."
+    az extension add --name azure-iot --allow-preview true --yes
+    if ($LASTEXITCODE -ne 0) {
+        # `az extension add` swallows pip's real stdout/stderr and only prints a generic
+        # "Pip failed with status code 1. Use --debug for more information." unless
+        # --debug is passed. Retry once with --debug so the actual pip error (network
+        # timeout, version conflict, disk space, etc.) is captured in the pipeline log
+        # instead of only this uninformative wrapper message. If the retry happens to
+        # succeed (e.g. a transient network blip), treat the extension as installed.
+        $initialExitCode = $LASTEXITCODE
+        Write-Host "##[warning]Initial install attempt failed (exit code $initialExitCode). Retrying with --debug to capture the underlying pip error..."
+        Write-Host "##[group]az extension add --debug output"
+        az extension add --name azure-iot --allow-preview true --yes --debug
+        $retryExitCode = $LASTEXITCODE
+        Write-Host "##[endgroup]"
+        if ($retryExitCode -ne 0) {
+            throw "Failed to install the Azure IoT CLI extension. Exit code: $retryExitCode (initial attempt: $initialExitCode)."
+        }
+    }
+}
+
+Write-Host "Verifying the Azure IoT CLI extension installation..."
+az extension show --name azure-iot --output table
+if ($LASTEXITCODE -ne 0) {
+    throw "The Azure IoT CLI extension is unavailable after installation. Exit code: $LASTEXITCODE."
+}
 
 # Create test devices for device registry tests
 $testDevices = @('test-device-1', 'test-device-2', 'test-device-3')
@@ -28,8 +56,11 @@ foreach ($deviceId in $testDevices) {
     try {
         # Create device identity
         az iot hub device-identity create --device-id $deviceId --hub-name $iotHubName --auth-type key
+        if ($LASTEXITCODE -ne 0) {
+            throw "az iot hub device-identity create failed with exit code $LASTEXITCODE."
+        }
         Write-Host "Created device: $deviceId"
-        
+
         # Update device twin with test properties
         $twinPatch = @{
             properties = @{
@@ -43,14 +74,23 @@ foreach ($deviceId in $testDevices) {
                 deviceType = "sensor"
             }
         } | ConvertTo-Json -Depth 10
-        
+
         az iot hub device-twin update --device-id $deviceId --hub-name $iotHubName --set "$twinPatch"
+        if ($LASTEXITCODE -ne 0) {
+            throw "az iot hub device-twin update failed with exit code $LASTEXITCODE."
+        }
         Write-Host "Updated device twin for: $deviceId"
     }
     catch {
         Write-Warning "Failed to create/update device ${deviceId}: $_"
     }
 }
+
+# Native az invocations above may leave a stale non-zero $LASTEXITCODE even when the
+# failures were already caught and logged as warnings. Reset it here so the Azure Pipelines
+# task doesn't report this script as failed based on a leftover exit code from a handled,
+# non-fatal az CLI error (e.g. a dynamic extension-install retry).
+$LASTEXITCODE = 0
 
 Write-Host "IoT Hub test setup complete"
 
