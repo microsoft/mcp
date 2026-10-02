@@ -67,7 +67,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
             }
             catch (ArgumentException ex)
             {
-                validationResult.Errors.Add(ex.Message);
+                validationResult.AddError(ex.Message, "Invalid backup vault expansion.");
             }
         }
     }
