@@ -100,6 +100,13 @@ public static partial class EndpointValidator
             UsGov: [".azconfig.azure.us"],
             Germany: [".azconfig.azure.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["arm"] = new AllowedSuffixManager(
+            // Raw ARM requests in Quota, Resource Health, and Service Fabric use ArmEnvironment.Endpoint to construct these hosts.
+            Public: ["management.azure.com"],
+            China: ["management.chinacloudapi.cn"],
+            UsGov: ["management.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: true),
         ["azure-openai"] = new AllowedSuffixManager(
             Public: [
                 ".openai.azure.com",
@@ -178,10 +185,41 @@ public static partial class EndpointValidator
             UsGov: [".mysql.database.usgovcloudapi.net"],
             Germany: [],
             UseLegacyCheck: false),
+        ["postgres"] = new AllowedSuffixManager(
+            // PostgresService.cs also has a copy of these. Keep them in sync.
+            Public: [".postgres.database.azure.com"],
+            China: [".postgres.database.chinacloudapi.cn"],
+            UsGov: [".postgres.database.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: false),
+        ["pricing"] = new AllowedSuffixManager(
+            // PricingService.GetPricingEndpoint constructs these exact hosts, while the endpoint policy uses
+            // this copy to authorize initial and paginated requests. Keep both copies and their tests in sync.
+            Public: ["prices.azure.com"],
+            China: ["prices.azure.cn"],
+            UsGov: ["prices.azure.us"],
+            Germany: [],
+            UseLegacyCheck: true),
+        ["search"] = new AllowedSuffixManager(
+            // SearchService.CreateAndValidateSearchEndpoint constructs these suffixes for the Search SDK.
+            // Keep both copies and their tests in sync when Azure cloud endpoint domains change.
+            Public: [".search.windows.net"],
+            China: [".search.azure.cn"],
+            UsGov: [".search.azure.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["servicebus"] = new AllowedSuffixManager(
             Public: [".servicebus.windows.net"],
             China: [".servicebus.chinacloudapi.cn"],
             UsGov: [".servicebus.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: false),
+        ["speech"] = new AllowedSuffixManager(
+            // SpeechEndpointValidator authorizes user-supplied Speech SDK and REST endpoints with these suffixes.
+            // Keep its validation behavior and tests synchronized with this central endpoint policy.
+            Public: [".cognitiveservices.azure.com"],
+            China: [".cognitiveservices.azure.cn"],
+            UsGov: [".cognitiveservices.azure.us"],
             Germany: [".servicebus.cloudapi.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
         ["sreagent"] = new AllowedSuffixManager(

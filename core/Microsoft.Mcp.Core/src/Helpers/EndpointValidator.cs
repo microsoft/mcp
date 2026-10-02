@@ -117,6 +117,16 @@ public static partial class EndpointValidator
     /// A <see langword="null"/>, empty, or whitespace value cannot match a configured namespace and leaves
     /// SSRF protections enabled, including when <see cref="AllNamespaces"/> is configured.
     /// </param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when SSRF protections are enabled and <paramref name="endpoint"/> is <see langword="null"/>,
+    /// empty, or whitespace, or when <paramref name="serviceType"/> does not identify a configured Azure
+    /// service allow-list.
+    /// </exception>
+    /// <exception cref="SecurityException">
+    /// Thrown when SSRF protections are enabled and <paramref name="endpoint"/> is not a valid absolute URI,
+    /// does not use HTTPS, or its host does not match an allowed domain for <paramref name="serviceType"/>
+    /// in the specified <paramref name="armEnvironment"/>.
+    /// </exception>
     public static void ValidateAzureServiceEndpoint(
         string endpoint,
         string serviceType,
