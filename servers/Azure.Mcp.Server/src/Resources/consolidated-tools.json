@@ -2458,7 +2458,7 @@
     },
     {
       "name": "get_azure_compute_details",
-      "description": "Get details about Azure compute resources including Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), and managed disks. List VMs across subscriptions or within resource groups, retrieve detailed VM information including size, OS type, provisioning state, power state (with instance view), and configuration. Get VMSS details including SKU, capacity, upgrade policy, and provisioning state. View disk properties, state, size, SKU, OS type, and provisioning status. Supports wildcard patterns for disk name filtering.",
+      "description": "Get details about Azure compute resources including Virtual Machines (VMs), Virtual Machine Scale Sets (VMSS), managed disks, Azure Compute Gallery applications, and gallery application versions. List VMs across subscriptions or within resource groups, retrieve detailed VM information including size, OS type, provisioning state, power state (with instance view), and configuration. Get VMSS details including SKU, capacity, upgrade policy, and provisioning state. View disk properties, state, size, SKU, OS type, and provisioning status. Get or list applications in an Azure Compute Gallery and versions under a gallery application. Supports wildcard patterns for disk name filtering.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2487,6 +2487,8 @@
       },
       "mappedToolList": [
         "compute_disk_get",
+        "compute_galleryapplication_get",
+        "compute_galleryapplicationversion_get",
         "compute_vm_get",
         "compute_vmss_get"
       ]
@@ -2657,6 +2659,108 @@
       },
       "mappedToolList": [
         "compute_disk_delete"
+      ]
+    },
+    {
+      "name": "create_azure_compute_gallery_application",
+      "description": "Create Azure Compute Gallery applications and gallery application versions. Configure application location and tags, or publish an application version from a source package with configuration, replication, lifecycle, and manage-action settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates or replaces Azure Compute Gallery resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times may replace an existing gallery application or application version."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Compute Gallery resources."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates or updates Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool may handle source package locations and application management commands."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_galleryapplication_create",
+        "compute_galleryapplicationversion_create"
+      ]
+    },
+    {
+      "name": "update_azure_compute_gallery_application",
+      "description": "Update Azure Compute Gallery applications and gallery application versions. Change application location or tags, and update version package, lifecycle, latest-version selection, replication regions, or tags.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool updates gallery application configuration without deleting the resource."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Compute Gallery resources."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool modifies Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool may handle source package locations for gallery application versions."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_galleryapplication_update",
+        "compute_galleryapplicationversion_update"
+      ]
+    },
+    {
+      "name": "delete_azure_compute_gallery_application",
+      "description": "Delete Azure Compute Gallery applications and gallery application versions. These operations are idempotent and report whether the requested application or version was deleted.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool permanently deletes Azure Compute Gallery resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Compute Gallery resources."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool deletes Azure resources."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles destructive operations requiring extra confirmation."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "compute_galleryapplication_delete",
+        "compute_galleryapplicationversion_delete"
       ]
     },
     {

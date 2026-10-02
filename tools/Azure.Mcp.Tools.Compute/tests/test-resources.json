@@ -60,7 +60,7 @@
   "resources": {
     "vnet": {
       "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2023-05-01",
+      "apiVersion": "2024-01-01",
       "name": "[format('{0}-vnet', parameters('baseName'))]",
       "location": "[variables('location')]",
       "properties": {
@@ -73,7 +73,8 @@
           {
             "name": "default",
             "properties": {
-              "addressPrefix": "10.0.0.0/24"
+              "addressPrefix": "10.0.0.0/24",
+              "defaultOutboundAccess": false
             }
           }
         ]
@@ -81,7 +82,7 @@
     },
     "nic": {
       "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2023-05-01",
+      "apiVersion": "2024-01-01",
       "name": "[format('{0}-nic', parameters('baseName'))]",
       "location": "[variables('location')]",
       "properties": {

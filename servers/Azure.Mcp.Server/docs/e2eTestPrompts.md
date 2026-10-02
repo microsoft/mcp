@@ -496,6 +496,22 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_disk_update | Change the encryption type of disk \<disk-name> in resource group \<resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys | investigation-required |
 | compute_disk_update | Set disk access on disk \<disk-name> in resource group \<resource-group> to \<disk-access-resource-id> with network access policy AllowPrivate | none |
 | compute_disk_update | Update disk \<disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev | none |
+| compute_galleryapplication_create | Create gallery application \<application-name> in compute gallery \<gallery-name> in resource group \<resource-group> | none |
+| compute_galleryapplication_create | Add an application named \<application-name> to Azure Compute Gallery \<gallery-name> in \<location> | none |
+| compute_galleryapplication_delete | Delete gallery application \<application-name> from compute gallery \<gallery-name> in resource group \<resource-group> | none |
+| compute_galleryapplication_delete | Remove Azure Compute Gallery application \<application-name> from gallery \<gallery-name> | none |
+| compute_galleryapplication_get | Get gallery application \<application-name> from compute gallery \<gallery-name> in resource group \<resource-group> | none |
+| compute_galleryapplication_get | List all applications in Azure Compute Gallery \<gallery-name> in resource group \<resource-group> | none |
+| compute_galleryapplication_update | Update tags on gallery application \<application-name> in compute gallery \<gallery-name> | none |
+| compute_galleryapplication_update | Change the location of Azure Compute Gallery application \<application-name> in gallery \<gallery-name> | none |
+| compute_galleryapplicationversion_create | Create version \<version> of gallery application \<application-name> in compute gallery \<gallery-name> from package \<source-media-link> | none |
+| compute_galleryapplicationversion_create | Publish a new Azure Compute Gallery application version \<version> to eastus and westus2 | clarification-required |
+| compute_galleryapplicationversion_delete | Delete version \<version> of gallery application \<application-name> from compute gallery \<gallery-name> | none |
+| compute_galleryapplicationversion_delete | Remove Azure Compute Gallery application version \<version> from application \<application-name> | none |
+| compute_galleryapplicationversion_get | Get version \<version> of gallery application \<application-name> in compute gallery \<gallery-name> | none |
+| compute_galleryapplicationversion_get | List all versions of gallery application \<application-name> in compute gallery \<gallery-name> | none |
+| compute_galleryapplicationversion_update | Exclude gallery application version \<version> from latest version selection | clarification-required |
+| compute_galleryapplicationversion_update | Update target regions for gallery application version \<version> to eastus and westus2 | clarification-required |
 
 ## Azure Confidential Ledger
 
