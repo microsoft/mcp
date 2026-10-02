@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added the `netappfiles volumegroup create`, `netappfiles volumegroup get`, and `netappfiles volumegroup update` commands for creating SAP HANA and Oracle application volume groups from validated JSON volume specifications, retrieving volume groups and their member volume names, and updating application metadata or replacing member volume specifications.
