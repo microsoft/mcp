@@ -97,6 +97,9 @@ public class EndpointValidatorTests
     [InlineData("https://hsm.managedhsm.azure.net/settings", "managedhsm")]
     [InlineData("https://eastus.metrics.monitor.azure.com", "monitor-metrics")]
     [InlineData("https://server.mysql.database.azure.com", "mysql")]
+    [InlineData("https://agent1.azuresre.ai", "sreagent")]
+    [InlineData("https://mystorage.blob.core.windows.net", "storage-blob")]
+    [InlineData("https://mystorage.table.core.windows.net", "storage-table")]
     [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
@@ -119,6 +122,8 @@ public class EndpointValidatorTests
     [InlineData("managedhsm")]
     [InlineData("monitor-metrics")]
     [InlineData("mysql")]
+    [InlineData("sreagent")]
+    [InlineData("storage-table")]
     public void ValidateAzureServiceEndpoint_ReviewedToolServices_AreRegistered(string serviceType)
     {
         Assert.Throws<SecurityException>(() =>
@@ -138,6 +143,8 @@ public class EndpointValidatorTests
     [InlineData("https://hsm.managedhsm.azure.net.evil.example", "managedhsm")]
     [InlineData("https://eastus.metrics.monitor.azure.com.evil.example", "monitor-metrics")]
     [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
+    [InlineData("https://agent1.azuresre.ai.evil.example", "sreagent")]
+    [InlineData("https://mystorage.table.core.windows.net.evil.example", "storage-table")]
     public void ValidateAzureServiceEndpoint_ReviewedServiceSuffixes_RejectSpoofedHosts(
         string endpoint,
         string serviceType)
@@ -263,6 +270,8 @@ public class EndpointValidatorTests
     [InlineData("https://hsm.managedhsm.azure.cn", "managedhsm")]
     [InlineData("https://chinanorth3.metrics.monitor.azure.cn", "monitor-metrics")]
     [InlineData("https://server.mysql.database.chinacloudapi.cn", "mysql")]
+    [InlineData("https://mystorage.blob.core.chinacloudapi.cn", "storage-blob")]
+    [InlineData("https://mystorage.table.core.chinacloudapi.cn", "storage-table")]
     [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
@@ -291,6 +300,8 @@ public class EndpointValidatorTests
     [InlineData("https://hsm.managedhsm.usgovcloudapi.net", "managedhsm")]
     [InlineData("https://usgovvirginia.metrics.monitor.azure.us", "monitor-metrics")]
     [InlineData("https://server.mysql.database.usgovcloudapi.net", "mysql")]
+    [InlineData("https://mystorage.blob.core.usgovcloudapi.net", "storage-blob")]
+    [InlineData("https://mystorage.table.core.usgovcloudapi.net", "storage-table")]
     [InlineData("https://mynamespace.servicebus.usgovcloudapi.net", "servicebus")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
