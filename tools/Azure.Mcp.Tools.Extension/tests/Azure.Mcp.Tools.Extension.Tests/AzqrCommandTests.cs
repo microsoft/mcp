@@ -25,7 +25,8 @@ public sealed class AzqrCommandTests : SubscriptionCommandUnitTestsBase<AzqrComm
         _azureService = Substitute.For<IAzureService>();
         _azqrCliService = Substitute.For<IAzqrCliService>();
         _dateTimeProvider = Substitute.For<IDateTimeProvider>();
-        _azqrCliService.GetSupportedExecutablePath().Returns("azqr");
+        var azqrExecutablePath = Path.Combine(Path.GetTempPath(), OperatingSystem.IsWindows() ? "azqr.exe" : "azqr");
+        _azqrCliService.GetSupportedExecutablePath().Returns(azqrExecutablePath);
 
         Services.AddSingleton(_azureService);
         Services.AddSingleton(_azqrCliService);
