@@ -599,12 +599,7 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // of leaving the fields - and therefore "properties" - unset.
         // AutoExportJobAdminStatus is an extensible enum (struct), not a true System.Enum, so
         // Enum.Parse<T> throws "Type provided must be an Enum" at runtime - use a switch instead.
-        autoExportJobData.AdminStatus = (adminStatus ?? "Enable") switch
-        {
-            "Enable" => AutoExportJobAdminStatus.Enable,
-            "Disable" => AutoExportJobAdminStatus.Disable,
-            _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
-        };
+        autoExportJobData.AdminStatus = ParseAdminStatusForExport(adminStatus);
 
         // Set autoexport prefix (SDK allows only 1 prefix)
         autoExportJobData.AutoExportPrefixes.Add(string.IsNullOrEmpty(autoexportPrefix) ? "/" : autoexportPrefix);
@@ -812,14 +807,7 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // "Required parameter 'properties' is missing". Apply the defaults documented on
         // AutoimportJobCreateOptions (Skip / '/' / Enable / false) whenever the caller omits
         // them, instead of leaving the fields - and therefore "properties" - unset.
-        autoImportJobData.ConflictResolutionMode = (conflictResolutionMode ?? "Skip") switch
-        {
-            "Fail" => ConflictResolutionMode.Fail,
-            "Skip" => ConflictResolutionMode.Skip,
-            "OverwriteIfDirty" => ConflictResolutionMode.OverwriteIfDirty,
-            "OverwriteAlways" => ConflictResolutionMode.OverwriteAlways,
-            _ => throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways")
-        };
+        autoImportJobData.ConflictResolutionMode = ParseConflictResolutionMode(conflictResolutionMode);
 
         if (autoimportPrefixes != null && autoimportPrefixes.Length > 100)
         {
@@ -830,13 +818,7 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             autoImportJobData.AutoImportPrefixes.Add(prefix);
         }
 
-        autoImportJobData.AdminStatus = (adminStatus ?? "Enable") switch
-        {
-            "Enable" => AutoImportJobPropertiesAdminStatus.Enable,
-            "Disable" => AutoImportJobPropertiesAdminStatus.Disable,
-            _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
-        };
-
+        autoImportJobData.AdminStatus = ParseAdminStatusForImport(adminStatus);
         autoImportJobData.EnableDeletions = enableDeletions ?? false;
 
         if (maximumErrors.HasValue)
@@ -1288,46 +1270,67 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             NewStorageCapacityTiB = newSizeTiB
         };
 
-        // Immediately after a filesystem finishes its own create/update LRO, ARM can still be
-        // finalizing capacity reservations internally and rejects expansion-job creation with
-        // "400 BadRequest: ExpansionJobs cannot be created while the amlfilesystem is still
-        // finalizing capacity reservations after initial deployment." This is not reflected by
-        // AmlFileSystemData.Health.State (observed as Available while the rejection still
-        // occurs), so retry on the specific error itself (bounded) rather than pre-checking state.
-        var deadline = DateTime.UtcNow + s_expansionJobRetryTimeout;
-        ArmOperation<AmlFileSystemExpansionJobResource> createOperation;
-        while (true)
-        {
-            try
-            {
-                createOperation = await fs.Value.GetAmlFileSystemExpansionJobs().CreateOrUpdateAsync(
-                    WaitUntil.Started,
-                    jobName,
-                    expansionJobData,
-                    cancellationToken);
-                break;
-            }
-            catch (RequestFailedException ex) when (IsCapacityReservationFinalizing(ex))
-            {
-                if (DateTime.UtcNow >= deadline)
-                {
-                    throw;
-                }
-
-                _logger.LogDebug(
-                    "Filesystem '{FileSystemName}' is still finalizing capacity reservations; retrying expansion job creation.",
-                    filesystemName);
-                await Task.Delay(s_expansionJobRetryInterval, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        await WaitForLroCompletionAsync(createOperation, cancellationToken);
+        var createOperation = await fs.Value.GetAmlFileSystemExpansionJobs().CreateOrUpdateAsync(
+            WaitUntil.Completed,
+            jobName,
+            expansionJobData,
+            cancellationToken);
 
         return createOperation.Value.Data.Name;
     }
 
     private static readonly TimeSpan s_expansionJobRetryInterval = TimeSpan.FromSeconds(15);
+
     private static readonly TimeSpan s_expansionJobRetryTimeout = TimeSpan.FromMinutes(15);
+
+    private static AutoExportJobAdminStatus ParseAdminStatusForExport(string? adminStatus)
+    {
+        var adminStatusUsed = adminStatus == null || string.IsNullOrWhiteSpace(adminStatus) ? "enable" : adminStatus;
+        switch (adminStatusUsed.ToLowerInvariant())
+        {
+            case "enable":
+                return AutoExportJobAdminStatus.Enable;
+            case "disable":
+                return AutoExportJobAdminStatus.Disable;
+            default:
+                throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable",
+                    nameof(adminStatus));
+        }
+    }
+
+    private static AutoImportJobPropertiesAdminStatus ParseAdminStatusForImport(string? adminStatus)
+    {
+        var adminStatusUsed = adminStatus == null || string.IsNullOrWhiteSpace(adminStatus) ? "enable" : adminStatus;
+        switch (adminStatusUsed.ToLowerInvariant())
+        {
+            case "enable":
+                return AutoImportJobPropertiesAdminStatus.Enable;
+            case "disable":
+                return AutoImportJobPropertiesAdminStatus.Disable;
+            default:
+                throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable",
+                    nameof(adminStatus));
+        }
+    }
+
+    private static ConflictResolutionMode ParseConflictResolutionMode(string? conflictResolutionMode)
+    {
+        var conflictResolutionModeUsed = conflictResolutionMode == null || string.IsNullOrWhiteSpace(conflictResolutionMode) ? "skip" : conflictResolutionMode;
+        switch (conflictResolutionModeUsed.ToLowerInvariant())
+        {
+            case "fail":
+                return ConflictResolutionMode.Fail;
+            case "skip":
+                return ConflictResolutionMode.Skip;
+            case "overwriteifdirty":
+                return ConflictResolutionMode.OverwriteIfDirty;
+            case "overwritealways":
+                return ConflictResolutionMode.OverwriteAlways;
+            default:
+                throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways",
+                    nameof(conflictResolutionMode));
+        }
+    }
 
     private static bool IsCapacityReservationFinalizing(RequestFailedException ex) =>
         ex.Status == 400 && ex.Message.Contains("finalizing capacity reservations", StringComparison.OrdinalIgnoreCase);
