@@ -197,6 +197,8 @@ function Split-PropertyGroup {
 }
 
 function Get-PathsToTest {
+    param([string[]] $ChangedFiles)
+
     Write-Host "Getting paths to test"
 
     # While there is a "core" directory at the repo root, we consider the "core" path to be all of the repo outside of the
@@ -256,11 +258,10 @@ function Get-PathsToTest {
         )
 
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
-        $changedFiles = Get-ChangedFiles
         # When common code builds all, track whether engineering, the Core libraries, or shared build changed. If so, build everything.
         $coreChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
-        $engChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
-        $sharedBuildChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
+        $engChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
+        $sharedBuildChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
         if ($coreChanged -or $engChanged -or $sharedBuildChanged) {
             Write-Host "Core, engineering, or shared build changes detected. Building everything." -ForegroundColor Yellow
             $pathsToTest = @()
@@ -328,7 +329,7 @@ function Get-PathsToTest {
         $rootedTestResourcesPath = "$($using:RepoRoot)/$testResourcesPath"
         $hasTestResources = Test-Path "$rootedTestResourcesPath/test-resources.bicep"
         $hasTestsProject = Test-Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj"
-        $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj") : $null
+        $testProjectDetails = $hasTestsProject ? (& "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path "$rootedTestResourcesPath/$projectName.Tests/$projectName.Tests.csproj" -Properties @('HasLiveTests', 'HasUnitTests')) : $null
         $result = $false
         # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
         $hasUnitTests = $hasTestsProject -and [bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result
@@ -343,7 +344,7 @@ function Get-PathsToTest {
             return @{ _error = $true }
         }
 
-        $sourceProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $sourceProject.FullName
+        $sourceProjectDetails = & "$($using:PSScriptRoot)/Get-ProjectProperties.ps1" -Path $sourceProject.FullName -Properties 'AzureSupportedClouds'
 
         $resolvedClouds = $sourceProjectDetails.AzureSupportedClouds `
             ? @($sourceProjectDetails.AzureSupportedClouds -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
@@ -763,8 +764,10 @@ function Get-ServerMatrix {
 
 Push-Location $RepoRoot
 try {
+    $changedFiles = $isPullRequestBuild ? @(Get-ChangedFiles -DiffFilterType '') : @()
     $serverDetails = @(Get-ServerDetails)
-    $pathsToTest = @(Get-PathsToTest)
+    $serversToBuild = @(Get-ServersToBuild -Servers $serverDetails -ChangedFiles $changedFiles -IsPullRequest:$isPullRequestBuild -RepositoryRoot $RepoRoot)
+    $pathsToTest = @(Get-PathsToTest -ChangedFiles $changedFiles)
     $matrices = Get-BuildMatrices $serverDetails $pathsToTest
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
     $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
@@ -809,6 +812,7 @@ try {
         branch                   = $branch
         commitSha                = $commitSha
         servers                  = $serverDetails
+        serversToBuild           = $serversToBuild
         pathsToTest              = $pathsToTest
         matrices                 = $matrices
     }

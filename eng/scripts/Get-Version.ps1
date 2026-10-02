@@ -13,7 +13,7 @@ param(
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 function GetVersion($server) {
-    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName "$server.csproj"
+    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName "$server.csproj" -Properties 'Version'
     $version = [AzureEngSemanticVersion]::new($properties.Version)
 
     if ($PrereleaseLabel) {
