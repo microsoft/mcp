@@ -9,37 +9,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 - `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 - `investigation-required`: Tool ownership or command routing requires investigation before this prompt can be evaluated reliably. See https://github.com/microsoft/mcp/issues/3266.
 
-## Azure Data Manager for Energy
-
-| Tool Name | Test Prompt | Interaction |
-|:----------|:------------|:------------|
-| adme_health_check | Check health and authentication for ADME endpoint \<endpoint> and data partition \<data-partition> | none |
-| adme_health_check | Check health for customer-hosted ADME endpoint \<endpoint> in tenant \<tenant> and data partition \<data-partition>, using resource application ID \<application-id> as the token audience | none |
-| adme_schema_get | Get ADME schema for kind \<authority:source:entity-type:version> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_get | Show the fields, types, and structure of OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_get | Retrieve the full JSON definition for OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_list | List all shared Well schemas from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_list | List the latest published SHARED OSDU schemas for entity type master-data--Well from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_schema_list | List DEVELOPMENT OSDU schemas from authority \<authority> and source \<source> in ADME endpoint \<endpoint> and data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch ADME records \<record-id-1> and \<record-id-2> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch the full content of ADME records <record-id-1>, <record-id-2>, and \<record-id-3> in one batch from endpoint \<endpoint> and data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch only attributes data.Name and data.Description for ADME records \<record-id-1> and \<record-id-2> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_fetch | Fetch ADME record \<record-id> with frame-of-reference conversion and report its conversion status and errors from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_get | Get a OSDU record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_get | Get version \<record-version> of OSDU record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record \<record-id> at endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor \<cursor> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_version_list | List all versions of ADME record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter \<lucene-query> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search ADME records matching \<lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint \<endpoint> in data partition \<data-partition> | none |
-
 ## Azure Advisor
 
 | Tool Name | Test Prompt | Interaction |
@@ -58,6 +27,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_list | Which Advisor recommendation types include service-retirement details? | none |
 | advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory | none |
 | advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 | none |
+| advisor_metadata_list | Find global Azure Advisor recommendation metadata for Service Health tracking ID QNY1-HB8, not active recommendations | none |
 | advisor_metadata_list | Show Advisor service retirements on or after March 31, 2026 | none |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template | context-required |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account | context-required |
@@ -683,6 +653,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> | investigation-required |
 | eventhubs_namespace_update | Create a new Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name> | none |
 | eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name> | clarification-required |
+| eventhubs_namespace_update | Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> with SAS authentication disabled | none |
+| eventhubs_namespace_update | Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> and explicitly enable SAS authentication | none |
 
 ## Azure File Shares
 
@@ -693,6 +665,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_create | Create a file share named <file_share_name> in location \<location> with resource group <resource_group_name> | none |
 | fileshares_fileshare_create | Set up a new file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_create | Create an NFS file share <file_share_name> in location \<location> in resource group <resource_group_name> with NFS encryption in transit enabled | none |
+| fileshares_fileshare_create | Create NFS share \<file_share_name> in \<resource_group_name> in \<location> with root squashing and encrypted transit | none |
+| fileshares_fileshare_create | Create NFS share \<file_share_name> in \<resource_group_name> in \<location>; explicitly enabled no root squashing and unencrypted transit for an isolated test | none |
 | fileshares_fileshare_delete | Delete the file share <file_share_name> from resource group <resource_group_name> | none |
 | fileshares_fileshare_delete | Remove file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | List all file shares in my subscription | none |
@@ -1411,6 +1385,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_account_create | Create a new storage account called testaccount123 in East US region | clarification-required |
 | storage_account_create | Create a storage account with premium performance and LRS replication | clarification-required |
 | storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled | clarification-required |
+| storage_account_create | Create Storage account \<account> in \<resource-group> in \<location> with Shared Key authentication disabled | none |
+| storage_account_create | Create Storage account \<account> in \<resource-group> in \<location> and explicitly enable Shared Key authentication for an isolated test | none |
 | storage_account_get | Show me the details for my storage account \<account> | none |
 | storage_account_get | Get details about the storage account \<account> | none |
 | storage_account_get | List all storage accounts in my subscription including their location and SKU | none |

@@ -220,13 +220,32 @@ public static partial class EndpointValidator
             Public: [".cognitiveservices.azure.com"],
             China: [".cognitiveservices.azure.cn"],
             UsGov: [".cognitiveservices.azure.us"],
+            Germany: [".servicebus.cloudapi.de"],
+            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["sreagent"] = new AllowedSuffixManager(
+            // SRE Agent is currently offered only in the public cloud and its data-plane endpoints use
+            // the global '.azuresre.ai' domain. Leave the sovereign clouds empty so validation fails
+            // closed rather than implicitly accepting a public-cloud host there.
+            Public: [".azuresre.ai"],
+            China: [],
+            UsGov: [],
             Germany: [],
             UseLegacyCheck: false),
         ["storage-blob"] = new AllowedSuffixManager(
             Public: [".blob.core.windows.net"],
             China: [".blob.core.chinacloudapi.cn"],
             UsGov: [".blob.core.usgovcloudapi.net"],
-            Germany: [".blob.core.cloudapi.de"],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            // Azure Germany (Microsoft Cloud Deutschland) is retired and unsupported by the runtime
+            // cloud configuration, so leave it empty to fail closed rather than trust a dead domain.
+            Germany: [],
+            UseLegacyCheck: false),
+        ["storage-table"] = new AllowedSuffixManager(
+            Public: [".table.core.windows.net"],
+            China: [".table.core.chinacloudapi.cn"],
+            UsGov: [".table.core.usgovcloudapi.net"],
+            // Azure Germany (Microsoft Cloud Deutschland) is retired and unsupported by the runtime
+            // cloud configuration, so leave it empty to fail closed rather than trust a dead domain.
+            Germany: [],
+            UseLegacyCheck: false),
     }.ToFrozenDictionary();
 }
