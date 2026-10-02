@@ -42,6 +42,10 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..encryptionSettings.keyEncryptionKey.keyUrl")
         {
             Value = "https://Sanitized.vault.azure.net/keys/Sanitized/Sanitized"
+        }),
+        new(new("$..displayName")
+        {
+            Value = "Sanitized"
         })
     ];
 
@@ -57,7 +61,18 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         {
             Regex = "https://[^./]+\\.vault\\.azure\\.net/keys/[^/\"?]+/[^/\"?]+",
             Value = "https://Sanitized.vault.azure.net/keys/Sanitized/Sanitized"
-        })
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = Settings.SubscriptionId,
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = "(/(?:virtualNetworks|storageAccounts|userAssignedIdentities|amlFilesystems|vaults)/)(?<resourceName>[^/\"]+)",
+            GroupForReplace = "resourceName",
+            Value = "Sanitized"
+        }),
     ];
 
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
@@ -80,7 +95,21 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         {
             Regex = "&s=[^&]+&h=[^&\\s]+",
             Value = "&s=sanitized&h=sanitized"
-        })
+        }),
+        // Subscription ID with trailing slash (e.g. /subscriptions/<id>/resourceGroups/...)
+        // or without trailing slash (e.g. /subscriptions/<id>?api-version=...)
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "/subscriptions/(?<sub>[^/?]+)(/|(?=[?]))",
+            GroupForReplace = "sub",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = @"Microsoft.StorageCache/amlFilesystems/(?<filesystem>[^/?]+)\?api-version",
+            GroupForReplace = "filesystem",
+            Value = "Sanitized"
+        }),
     ];
 
     public override CustomDefaultMatcher? TestMatcher => new()
