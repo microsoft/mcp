@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services;
 
-public class QuotaService: BaseAzureService, IQuotaService
+public class QuotaService : BaseAzureService, IQuotaService
 {
     private readonly ILogger<QuotaService> _logger;
     private readonly ILoggerFactory _loggerFactory;

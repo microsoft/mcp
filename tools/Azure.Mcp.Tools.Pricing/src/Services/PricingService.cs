@@ -3,8 +3,8 @@
 
 using System.ClientModel.Primitives;
 using Azure.Mcp.Tools.Pricing.Models;
-using AzureRetailPrices;
 using Azure.ResourceManager;
+using AzureRetailPrices;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Pricing.Services;
