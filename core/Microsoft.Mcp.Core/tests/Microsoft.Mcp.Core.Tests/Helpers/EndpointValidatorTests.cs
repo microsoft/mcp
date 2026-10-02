@@ -103,6 +103,7 @@ public class EndpointValidatorTests
     [InlineData("https://my-search.search.windows.net", "search")]
     [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
+    [InlineData("https://servicebus.windows.net", "servicebus")]
     [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
@@ -344,6 +345,7 @@ public class EndpointValidatorTests
     [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
     [InlineData("https://prices.azure.com", "pricing")]
     [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InChinaCloud_Throws(string endpoint, string serviceType)
     {
@@ -366,6 +368,7 @@ public class EndpointValidatorTests
     [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
     [InlineData("https://prices.azure.com", "pricing")]
     [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InGovCloud_Throws(string endpoint, string serviceType)
     {
@@ -388,6 +391,7 @@ public class EndpointValidatorTests
     [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
     [InlineData("https://prices.azure.cn", "pricing")]
     [InlineData("https://my-search.search.azure.cn", "search")]
+    [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
     [InlineData("https://my-speech.cognitiveservices.azure.cn", "speech")]
     public void ValidateAzureServiceEndpoint_ChinaCloudEndpoint_InPublicCloud_Throws(string endpoint, string serviceType)
     {

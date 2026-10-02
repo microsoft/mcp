@@ -101,7 +101,7 @@ public static partial class EndpointValidator
             Germany: [".azconfig.azure.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
         ["arm"] = new AllowedSuffixManager(
-            // Raw ARM requests in Quota and Resource Health use ArmEnvironment.Endpoint to construct these hosts.
+            // Raw ARM requests in Quota, Resource Health, and Service Fabric use ArmEnvironment.Endpoint to construct these hosts.
             Public: ["management.azure.com"],
             China: ["management.chinacloudapi.cn"],
             UsGov: ["management.usgovcloudapi.net"],
@@ -212,8 +212,8 @@ public static partial class EndpointValidator
             Public: [".servicebus.windows.net"],
             China: [".servicebus.chinacloudapi.cn"],
             UsGov: [".servicebus.usgovcloudapi.net"],
-            Germany: [".servicebus.cloudapi.de"],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            Germany: [],
+            UseLegacyCheck: false),
         ["speech"] = new AllowedSuffixManager(
             // SpeechEndpointValidator authorizes user-supplied Speech SDK and REST endpoints with these suffixes.
             // Keep its validation behavior and tests synchronized with this central endpoint policy.
