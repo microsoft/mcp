@@ -782,6 +782,40 @@ public class SingleProxyToolLoaderTests
     }
 
     [Fact]
+    public async Task CallToolHandler_AfterRemoteTimeToLiveExpires_RefreshesLearnedCommands()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("old-tool", "Old tool", "Old result")
+            .WithTimeToLive(TimeSpan.Zero);
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("storage", clientBuilder)
+            .Build();
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.RootGroup.Returns(new CommandGroup("azmcp", "Azure MCP"));
+        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
+        var toolLoader = new SingleProxyToolLoader(
+            commandFactory,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
+            CreateServerConfigurationOptions(),
+            discoveryStrategy);
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?>
+        {
+            ["learn"] = true,
+            ["tool"] = "storage"
+        });
+
+        var initial = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        clientBuilder.RemoveTool("old-tool").AddTool("new-tool", "New tool", "New result");
+        var refreshed = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.Contains("old-tool", Assert.Single(initial.Content.OfType<TextContentBlock>()).Text);
+        var refreshedText = Assert.Single(refreshed.Content.OfType<TextContentBlock>()).Text;
+        Assert.Contains("new-tool", refreshedText);
+        Assert.DoesNotContain("old-tool", refreshedText);
+    }
+
+    [Fact]
     public async Task SingleProxyToolLoader_CachesRootToolsJson()
     {
         // Arrange

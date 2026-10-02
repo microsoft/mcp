@@ -94,6 +94,22 @@ public class McpRuntimeTests
     }
 
     [Fact]
+    public async Task ListToolsHandler_WithToolLoaderTimeToLive_PreservesIt()
+    {
+        var mockToolLoader = Substitute.For<IToolLoader>();
+        var request = McpTestUtilities.CreateToolListRequest();
+        mockToolLoader.ListToolsHandler(request, Arg.Any<CancellationToken>())
+            .Returns(new ListToolsResult { Tools = [], TimeToLive = TimeSpan.FromMinutes(5) });
+
+        var runtime = new McpRuntime(mockToolLoader, CreateMockTelemetryService());
+
+        var result = await runtime.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(TimeSpan.FromMinutes(5), result.TimeToLive);
+        Assert.Equal(CacheScope.Public, result.CacheScope);
+    }
+
+    [Fact]
     public async Task CallToolHandler_DelegatesToToolLoader()
     {
         // Arrange

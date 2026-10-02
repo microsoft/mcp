@@ -23,7 +23,7 @@ public sealed class ServerToolLoader(
     ILogger<ServerToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = serverDiscoveryStrategy ?? throw new ArgumentNullException(nameof(serverDiscoveryStrategy));
-    private readonly ConcurrentDictionary<string, List<Tool>> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, (List<Tool> Tools, long CachedAt, TimeSpan? TimeToLive)> _cachedAllToolLists = new(StringComparer.OrdinalIgnoreCase);
 
     private const string CommandCallProxySchema = """
         {
@@ -450,9 +450,9 @@ public sealed class ServerToolLoader(
     /// <returns></returns>
     internal async Task<List<Tool>> GetAllChildToolsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (_cachedAllToolLists.TryGetValue(tool, out var cachedList))
+        if (_cachedAllToolLists.TryGetValue(tool, out var cachedList) && ToolListCache.IsFresh(cachedList.CachedAt, cachedList.TimeToLive))
         {
-            return cachedList;
+            return cachedList.Tools;
         }
 
         var clientOptions = CreateClientOptions(request.Server);
@@ -462,18 +462,11 @@ public sealed class ServerToolLoader(
             return [];
         }
 
-        var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-        if (listTools == null)
-        {
-            _logger.LogWarning("No tools found for tool: {Tool}", tool);
-            return [];
-        }
+        var toolsResponse = await ToolListCache.ListRemoteToolsAsync(client, cancellationToken);
+        var cachedAt = Stopwatch.GetTimestamp();
+        var list = toolsResponse.Tools.ToList();
 
-        var list = listTools
-            .Select(t => t.ProtocolTool)
-            .ToList();
-
-        _cachedAllToolLists[tool] = list;
+        _cachedAllToolLists[tool] = (list, cachedAt, toolsResponse.TimeToLive);
         return list;
     }
 
