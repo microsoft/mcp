@@ -123,7 +123,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
         {
             validationResult.AddError($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{options.DangerouslyWriteSupportLogsToDir}': {ex.Message}",
-                "Invalid support logging directory.");
+                "Invalid logging directory.");
         }
     }
 

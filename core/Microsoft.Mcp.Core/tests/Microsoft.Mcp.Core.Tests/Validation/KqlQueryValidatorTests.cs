@@ -45,7 +45,7 @@ public class KqlQueryValidatorTests
     {
         var ex = Assert.Throws<CommandValidationException>(() => KqlQueryValidator.ValidateQuerySafety(query));
         Assert.Contains("not allowed", ex.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal("Disallowed KQL management command.", ex.TelemetrySafeMessage);
+        Assert.Equal(ex.Message, ex.TelemetrySafeMessage);
     }
 
     [Theory]

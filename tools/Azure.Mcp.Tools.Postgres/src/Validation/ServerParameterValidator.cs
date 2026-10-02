@@ -84,9 +84,10 @@ internal static class ServerParameterValidator
     {
         if (string.IsNullOrWhiteSpace(parameterName))
         {
-            throw new CommandValidationException(
-                "Parameter name cannot be empty.",
-                HttpStatusCode.BadRequest);
+            throw new CommandValidationException("Parameter name cannot be empty.", HttpStatusCode.BadRequest)
+            {
+                TelemetrySafeMessage = "Parameter name cannot be empty."
+            };
         }
 
         var trimmed = parameterName.Trim();
@@ -98,7 +99,7 @@ internal static class ServerParameterValidator
                 "Use the Azure Portal or Azure CLI directly to modify this parameter with appropriate review.",
                 HttpStatusCode.Forbidden)
             {
-                TelemetrySafeMessage = "Blocked PostgreSQL parameter."
+                TelemetrySafeMessage = $"Blocked PostgreSQL parameter. {reason}"
             };
         }
     }
