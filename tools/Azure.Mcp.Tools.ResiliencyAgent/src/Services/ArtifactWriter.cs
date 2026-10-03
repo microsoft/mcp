@@ -20,10 +20,9 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
     public IReadOnlyList<WrittenArtifact> Write(IEnumerable<AgentArtifact> artifacts, string conversationId)
     {
         List<WrittenArtifact> written = [];
-
-        // Environment.CurrentDirectory is the directory the MCP client launched this server in, which
-        // for an editor is the user's workspace. The same assumption the Azure Migrate tool makes.
         string root = Path.Combine(Environment.CurrentDirectory, OutputFolderName);
+
+        HashSet<string> usedNames = new(StringComparer.OrdinalIgnoreCase);
 
         foreach (AgentArtifact artifact in artifacts)
         {
@@ -32,19 +31,26 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
                 continue;
             }
 
-            string? fileName = SafeFileName(artifact.Name);
+            string? fileName = SafeFileName(artifact);
             if (fileName is null)
             {
                 _logger.LogWarning("Skipped an artifact whose name could not be used as a file name.");
                 continue;
             }
 
+            fileName = MakeUniqueFileName(fileName, usedNames);
+
             try
             {
                 Directory.CreateDirectory(root);
                 string path = Path.Combine(root, fileName);
                 File.WriteAllText(path, artifact.Content);
-                written.Add(new WrittenArtifact(fileName, path, artifact.Format, artifact.Description));
+                written.Add(new WrittenArtifact(
+                    fileName,
+                    path,
+                    CreateMarkdownLink(fileName, path),
+                    artifact.Format,
+                    artifact.Description));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -64,6 +70,33 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
         return written;
     }
 
+    internal static string CreateMarkdownLink(string displayName, string path)
+    {
+        string fileUri = new Uri(Path.GetFullPath(path)).AbsoluteUri
+            .Replace("(", "%28", StringComparison.Ordinal)
+            .Replace(")", "%29", StringComparison.Ordinal)
+            .Replace("[", "%5B", StringComparison.Ordinal)
+            .Replace("]", "%5D", StringComparison.Ordinal);
+
+        return $"[{EscapeMarkdownLinkLabel(displayName)}]({fileUri})";
+    }
+
+    private static string EscapeMarkdownLinkLabel(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length);
+        foreach (char character in value)
+        {
+            if (character is '\\' or '`' or '*' or '_' or '[' or ']' or '(' or ')' or '<' or '>' or '#' or '!' or '|')
+            {
+                builder.Append('\\');
+            }
+
+            builder.Append(character);
+        }
+
+        return builder.ToString();
+    }
+
     /// <summary>
     /// Reduces an agent-supplied artifact name to a bare file name.
     /// </summary>
@@ -72,8 +105,9 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
     /// is stripped and any character that is invalid on this platform is replaced, which prevents a
     /// name such as <c>../../.ssh/authorized_keys</c> from escaping the output folder.
     /// </remarks>
-    private static string? SafeFileName(string? name)
+    private static string? SafeFileName(AgentArtifact artifact)
     {
+        string? name = artifact.Name;
         if (string.IsNullOrWhiteSpace(name))
         {
             return null;
@@ -85,12 +119,99 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
             return null;
         }
 
+        candidate = NormalizeWhitespace(candidate);
+
         foreach (char invalid in Path.GetInvalidFileNameChars())
         {
             candidate = candidate.Replace(invalid, '_');
         }
 
-        // Guard against a name that is only separators or dots once the above has run.
-        return candidate.Trim('.', ' ') is { Length: > 0 } cleaned ? cleaned : null;
+        string cleaned = candidate.Trim('-', '.', ' ');
+        if (cleaned.Length == 0)
+        {
+            return null;
+        }
+
+        return EnsureUsefulExtension(cleaned, artifact);
+    }
+
+    private static string NormalizeWhitespace(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length);
+        bool whitespaceRun = false;
+
+        foreach (char character in value)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                if (!whitespaceRun && builder.Length > 0)
+                {
+                    builder.Append('-');
+                }
+
+                whitespaceRun = true;
+                continue;
+            }
+
+            builder.Append(character);
+            whitespaceRun = false;
+        }
+
+        return builder.ToString().Trim('-', '.', ' ');
+    }
+
+    private static string EnsureUsefulExtension(string fileName, AgentArtifact artifact)
+    {
+        string extension = Path.GetExtension(fileName);
+
+        if (string.Equals(artifact.Format, "bicep", StringComparison.OrdinalIgnoreCase))
+        {
+            return ReplaceGenericExtension(fileName, extension, ".bicep");
+        }
+
+        if (string.Equals(artifact.MimeType, "text/markdown", StringComparison.OrdinalIgnoreCase))
+        {
+            return ReplaceGenericExtension(fileName, extension, ".md");
+        }
+
+        return fileName;
+    }
+
+    private static string ReplaceGenericExtension(string fileName, string extension, string usefulExtension)
+    {
+        if (string.Equals(extension, usefulExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return fileName;
+        }
+
+        if (extension.Length == 0
+            || extension.Equals(".txt", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".json", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".md", StringComparison.OrdinalIgnoreCase))
+        {
+            return Path.GetFileNameWithoutExtension(fileName) + usefulExtension;
+        }
+
+        return fileName;
+    }
+
+    private static string MakeUniqueFileName(string fileName, HashSet<string> usedNames)
+    {
+        if (usedNames.Add(fileName))
+        {
+            return fileName;
+        }
+
+        string extension = Path.GetExtension(fileName);
+        string stem = Path.GetFileNameWithoutExtension(fileName);
+
+        for (int suffix = 2; ; suffix++)
+        {
+            string candidate = $"{stem}-{suffix}{extension}";
+            if (usedNames.Add(candidate))
+            {
+                return candidate;
+            }
+        }
     }
 }

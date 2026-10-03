@@ -20,4 +20,9 @@ public static class ResiliencyAgentOptionDescriptions
     public const string ConversationId =
         "The conversationId returned by a previous call, to continue that conversation. Omit it to start " +
         "a new one. Pass it back whenever the user is following up on the same topic in this chat.";
+
+    public const string AttachmentIds =
+        "Opaque attachment IDs returned by resiliencyagent_file_attach. Include every file required for " +
+        "this request in one call. The request fails if any ID is unknown, expired, duplicated beyond the " +
+        "supported limits, or cannot be resolved; files are never silently omitted.";
 }

@@ -22,6 +22,7 @@ public interface IResiliencyAgentService
         string conversationId,
         string? taskId,
         string text,
+        IReadOnlyList<AgentAttachment> attachments,
         CancellationToken cancellationToken);
 
     /// <summary>

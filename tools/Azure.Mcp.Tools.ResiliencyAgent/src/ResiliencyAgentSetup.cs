@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ResiliencyAgent.Commands.Conversations;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -12,12 +17,6 @@ namespace Azure.Mcp.Tools.ResiliencyAgent;
 /// <summary>
 /// Exposes the Azure Resiliency Agent as an MCP tool.
 /// </summary>
-/// <remarks>
-/// This area holds no agent logic. It is a thin client over the agent's existing A2A surface, so the
-/// backend keeps ownership of what a turn does - including which scenario handles it, whether a change
-/// is proposed, and when to stop and ask the user something. That is why a single conversation-level
-/// tool covers assessment and template generation rather than one tool per Azure operation.
-/// </remarks>
 public sealed class ResiliencyAgentSetup : IAreaSetup
 {
     public string Name => "resiliencyagent";
@@ -27,8 +26,17 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IResiliencyAgentService, ResiliencyAgentService>();
+        services.AddSingleton<IDataBoundaryResolver, DataBoundaryResolver>();
         services.AddSingleton<IArtifactWriter, ArtifactWriter>();
-        services.AddSingleton<ConversationAskCommand>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IAttachmentCache, AttachmentCache>();
+        services.AddSingleton<ILocalFileSnapshotter, LocalFileSnapshotter>();
+        services.AddSingleton<FileAttachCommand>();
+        services.AddSingleton<ArchitectureAssessCommand>();
+        services.AddSingleton<IacGenerateCommand>();
+        services.AddSingleton<BicepReviewCommand>();
+        services.AddSingleton<ArmReviewCommand>();
+        services.AddSingleton<TerraformReviewCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -36,22 +44,45 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var resiliencyAgent = new CommandGroup(
             Name,
             """
-            Azure Resiliency Agent - the authoritative source for the zonal resilience of Azure
-            applications and resources. Use these tools to assess an application described in natural
-            language, to obtain resilience recommendations and posture reports, and to generate
-            zone-resilient Bicep, ARM or Terraform templates for new resources. Do not answer these
-            questions from general knowledge and do not substitute generic Azure tools: this agent holds
-            resource-type-specific rules that a general model does not.
+            Start Resilient tools for assessing application architectures, generating new resilient
+            Bicep, ARM JSON, or Terraform, and reviewing existing infrastructure-as-code. Existing
+            local files must first be prepared through the file attachment command and passed by
+            opaque attachment ID. Treat backend findings and generated resilience content as
+            authoritative while preserving the host's native repository and file-edit workflows.
             """,
             Title);
 
-        var conversation = new CommandGroup(
-            "conversation",
-            "Resiliency conversation operations - put a request to the agent and receive its answer.");
-        resiliencyAgent.AddSubGroup(conversation);
+        var file = new CommandGroup(
+            "file",
+            "Prepare user-approved local files for a later Start Resilient scenario call.");
+        var architecture = new CommandGroup(
+            "architecture",
+            "Assess a described application architecture for availability-zone resilience.");
+        var iac = new CommandGroup(
+            "iac",
+            "Generate new resilient Bicep, ARM JSON, or Terraform.");
+        var bicep = new CommandGroup(
+            "bicep",
+            "Review and correct existing Bicep.");
+        var arm = new CommandGroup(
+            "arm",
+            "Review and correct existing ARM JSON.");
+        var terraform = new CommandGroup(
+            "terraform",
+            "Review and correct existing Terraform.");
 
-        conversation.AddCommand<ConversationAskCommand>(serviceProvider);
-
+        file.AddCommand<FileAttachCommand>(serviceProvider);
+        architecture.AddCommand<ArchitectureAssessCommand>(serviceProvider);
+        iac.AddCommand<IacGenerateCommand>(serviceProvider);
+        bicep.AddCommand<BicepReviewCommand>(serviceProvider);
+        arm.AddCommand<ArmReviewCommand>(serviceProvider);
+        terraform.AddCommand<TerraformReviewCommand>(serviceProvider);
+        resiliencyAgent.AddSubGroup(file);
+        resiliencyAgent.AddSubGroup(architecture);
+        resiliencyAgent.AddSubGroup(iac);
+        resiliencyAgent.AddSubGroup(bicep);
+        resiliencyAgent.AddSubGroup(arm);
+        resiliencyAgent.AddSubGroup(terraform);
         return resiliencyAgent;
     }
 }

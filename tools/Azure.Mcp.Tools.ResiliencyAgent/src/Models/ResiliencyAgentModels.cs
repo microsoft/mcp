@@ -21,11 +21,45 @@ public sealed record AgentArtifact(
     string? Format = null);
 
 /// <summary>
+/// One immutable local file snapshot to send as an inline A2A <c>FilePart</c>.
+/// </summary>
+public sealed record AgentAttachment(
+    string AttachmentId,
+    string Name,
+    string MimeType,
+    byte[] Content,
+    string Sha256,
+    DateTimeOffset ExpiresAt);
+
+public sealed record ValidatedLocalFile(
+    string CanonicalPath,
+    string Name,
+    string MimeType,
+    long SizeBytes,
+    DateTime LastWriteTimeUtc);
+
+public sealed record FileAttachmentResult(
+    string AttachmentId,
+    string FileName,
+    string MimeType,
+    long SizeBytes,
+    string Sha256,
+    DateTimeOffset ExpiresAt);
+
+/// <summary>
 /// An artifact after it has been written to the caller's working directory.
 /// </summary>
+/// <param name="Name">Safe materialized file name with whitespace normalized to hyphens.</param>
+/// <param name="Path">Exact local filesystem path.</param>
+/// <param name="MarkdownLink">
+/// Safe clickable file link. Render this value verbatim rather than formatting <paramref name="Path"/>.
+/// </param>
+/// <param name="Format">Backend artifact format, when supplied.</param>
+/// <param name="Description">Backend artifact description, when supplied.</param>
 public sealed record WrittenArtifact(
     string Name,
     string Path,
+    string MarkdownLink,
     string? Format,
     string? Description);
 

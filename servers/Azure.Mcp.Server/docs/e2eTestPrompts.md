@@ -1202,10 +1202,20 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| resiliencyagent_conversation_ask | Is my application zone redundant? | clarification-required |
-| resiliencyagent_conversation_ask | My app uses an App Service plan, a SQL database and a storage account in East US 2. Assess its zonal resilience and tell me what to change. | none |
-| resiliencyagent_conversation_ask | Generate a zone-resilient Bicep template for a new Azure Container Registry in East US 2 | none |
-| resiliencyagent_conversation_ask | I am starting a new workload on Azure - where do I start with availability zones? | clarification-required |
+| resiliencyagent_file_attach | Prepare `C:\workspace\architecture.md` for an Azure Resiliency architecture assessment | confirmation-required |
+| resiliencyagent_file_attach | Prepare `C:\workspace\infra\main.bicep` for review | confirmation-required |
+| resiliencyagent_architecture_assess | Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency | none |
+| resiliencyagent_architecture_assess | Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment | attachment-required |
+| resiliencyagent_architecture_assess | Assess this application architecture for resiliency; the target region has not been selected yet | clarification-required |
+| resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | none |
+| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | none |
+| resiliencyagent_iac_generate | Generate resilient infrastructure-as-code for this architecture; ask me which format to use | clarification-required |
+| resiliencyagent_bicep_review | Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency | attachment-required |
+| resiliencyagent_bicep_review | Correct the attached Bicep without changing existing resource names, parameters, or module relationships | attachment-required |
+| resiliencyagent_arm_review | Review the attached ARM template and parameter file for resiliency gaps | attachment-required |
+| resiliencyagent_arm_review | Correct the attached ARM JSON while preserving resource names, API versions, and parameter names | attachment-required |
+| resiliencyagent_terraform_review | Review the attached Terraform root module and local child modules for zone resiliency | attachment-required |
+| resiliencyagent_terraform_review | Correct the attached Terraform while preserving resource addresses, variables, and provider constraints | attachment-required |
 
 ## Azure Resource Health
 

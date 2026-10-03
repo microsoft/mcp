@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using Azure.Identity;
 using Azure.Mcp.Core;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -36,7 +37,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
     /// <summary>
     /// The deployed Resiliency Agent endpoint.
     /// </summary>
-    private const string DefaultEndpoint = "https://agent.canary.resiliencemanagement.azure.com/a2a";
+    private const string DefaultEndpoint = "https://agent.public.resiliencemanagement.azure.com/a2a";
 
     /// <summary>
     /// Delegated scope for the Resiliency Agent application. The developer client signs the user in and
@@ -49,12 +50,19 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
 
     private readonly ILogger<ResiliencyAgentService> _logger;
     private readonly HttpClient _httpClient;
+    private readonly IDataBoundaryResolver _dataBoundaryResolver;
+    private readonly bool _sendDataBoundary;
+    private readonly string _endpoint;
 
+    [ActivatorUtilitiesConstructor]
     public ResiliencyAgentService(
         IAzureTokenCredentialProvider tokenCredentialProvider,
+        IDataBoundaryResolver dataBoundaryResolver,
         ILogger<ResiliencyAgentService> logger)
     {
         _logger = logger;
+        _dataBoundaryResolver = dataBoundaryResolver;
+        _endpoint = ReadSetting(EndpointEnvironmentVariable, DefaultEndpoint);
 
         // The token is attached per request by the shared handler rather than cached here, so a
         // refreshed or re-scoped credential is picked up without restarting the server. An explicitly
@@ -64,9 +72,10 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
 
         if (scope.Length > 0)
         {
-            _logger.LogInformation(
+            _sendDataBoundary = true;
+            _logger.LogDebug(
                 "Calling the Resiliency Agent at {Endpoint} with a delegated token for scope {Scope}.",
-                Endpoint,
+                _endpoint,
                 scope);
 
             var handler = new AccessTokenHandler(tokenCredentialProvider, [scope])
@@ -78,16 +87,29 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
         }
         else
         {
-            _logger.LogInformation(
+            _sendDataBoundary = false;
+            _logger.LogDebug(
                 "Calling the Resiliency Agent at {Endpoint} without a delegated token, because {Variable} is set to an empty value.",
-                Endpoint,
+                _endpoint,
                 ScopeEnvironmentVariable);
 
             _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
         }
     }
 
-    private static string Endpoint => ReadSetting(EndpointEnvironmentVariable, DefaultEndpoint);
+    public ResiliencyAgentService(
+        HttpClient httpClient,
+        IDataBoundaryResolver dataBoundaryResolver,
+        ILogger<ResiliencyAgentService> logger,
+        string endpoint,
+        bool sendDataBoundary)
+    {
+        _httpClient = httpClient;
+        _dataBoundaryResolver = dataBoundaryResolver;
+        _logger = logger;
+        _endpoint = endpoint;
+        _sendDataBoundary = sendDataBoundary;
+    }
 
     /// <summary>
     /// Resolves the delegated scope, distinguishing "not set" from "deliberately empty".
@@ -111,15 +133,37 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
         string conversationId,
         string? taskId,
         string text,
+        IReadOnlyList<AgentAttachment> attachments,
         CancellationToken cancellationToken)
     {
+        var parts = new JsonArray(
+            new JsonObject
+            {
+                ["kind"] = "text",
+                ["text"] = text,
+            });
+
+        foreach (AgentAttachment attachment in attachments)
+        {
+            parts.Add((JsonNode)new JsonObject
+            {
+                ["kind"] = "file",
+                ["file"] = new JsonObject
+                {
+                    ["name"] = attachment.Name,
+                    ["mimeType"] = attachment.MimeType,
+                    ["bytes"] = Convert.ToBase64String(attachment.Content),
+                },
+            });
+        }
+
         var message = new JsonObject
         {
             ["kind"] = "message",
             ["messageId"] = Guid.NewGuid().ToString(),
             ["role"] = "user",
             ["contextId"] = conversationId,
-            ["parts"] = new JsonArray(new JsonObject { ["kind"] = "text", ["text"] = text }),
+            ["parts"] = parts,
         };
 
         if (!string.IsNullOrWhiteSpace(taskId))
@@ -298,7 +342,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
     /// generated templates as a text envelope of several files, so reading <c>text</c> naively returns
     /// nothing useful. Both shapes are unpacked here.
     /// </summary>
-    private static IEnumerable<AgentArtifact> ReadArtifact(JsonElement artifact)
+    internal static IEnumerable<AgentArtifact> ReadArtifact(JsonElement artifact)
     {
         string name = ReadString(artifact, "name") ?? "artifact";
         string? description = ReadString(artifact, "description");
@@ -345,12 +389,272 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
                     }
 
                 case "data" when part.TryGetProperty("data", out JsonElement data):
-                    decoded.Add(new AgentArtifact(name, description, "application/json", data.GetRawText(), format));
+                    decoded.Add(new AgentArtifact(
+                        name,
+                        description,
+                        "text/markdown",
+                        TranscodeDataToMarkdown(data),
+                        format));
                     break;
             }
         }
 
         return decoded.Count > 0 ? decoded : [new AgentArtifact(name, description, null, null, format)];
+    }
+
+    /// <summary>
+    /// Renders a structured data part as readable Markdown without discarding unfamiliar JSON.
+    /// Uniform object arrays become tables; other structures remain inspectable as headings, bullets,
+    /// scalar values, or raw nested JSON.
+    /// </summary>
+    private static string TranscodeDataToMarkdown(JsonElement data)
+    {
+        if (TryRenderZonalPosture(data, out string zonalPosture))
+        {
+            return zonalPosture;
+        }
+
+        if (data.ValueKind != JsonValueKind.Object)
+        {
+            var single = new StringBuilder();
+            WriteElement(single, data, string.Empty);
+            return single.ToString().TrimEnd();
+        }
+
+        StringBuilder builder = new();
+        foreach (JsonProperty property in data.EnumerateObject())
+        {
+            builder.AppendLine($"## {property.Name}");
+            builder.AppendLine();
+            WriteElement(builder, property.Value, string.Empty);
+            builder.AppendLine();
+        }
+
+        string markdown = builder.ToString().TrimEnd();
+        return markdown.Length == 0 ? "_No data._" : markdown;
+    }
+
+    private static bool TryRenderZonalPosture(JsonElement data, out string markdown)
+    {
+        markdown = string.Empty;
+
+        if (data.ValueKind != JsonValueKind.Object
+            || !string.Equals(
+                ReadString(data, "resiliencyAgentArtifactType"),
+                "GetZonalPosture",
+                StringComparison.OrdinalIgnoreCase)
+            || !data.TryGetProperty("summary", out JsonElement summary)
+            || summary.ValueKind != JsonValueKind.Object
+            || !TryReadNumber(summary, "totalResources", out string totalResources)
+            || !TryReadNumber(summary, "resilientResources", out string resilientResources)
+            || !TryReadNumber(summary, "nonResilientResources", out string nonResilientResources)
+            || !data.TryGetProperty("resources", out JsonElement resources)
+            || resources.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        List<ZonalPostureResource> rows = [];
+        foreach (JsonProperty resourceType in resources.EnumerateObject())
+        {
+            if (string.IsNullOrWhiteSpace(resourceType.Name)
+                || resourceType.Value.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            foreach (JsonElement resource in resourceType.Value.EnumerateArray())
+            {
+                if (resource.ValueKind != JsonValueKind.Object
+                    || ReadString(resource, "resourceId") is not string resourceId
+                    || string.IsNullOrWhiteSpace(resourceId)
+                    || ReadString(resource, "status") is not string status
+                    || string.IsNullOrWhiteSpace(status)
+                    || !TryNormalizeArmResourceId(resourceId, out string normalizedId, out string label))
+                {
+                    return false;
+                }
+
+                rows.Add(new ZonalPostureResource(label, resourceType.Name, status, normalizedId));
+            }
+        }
+
+        StringBuilder builder = new();
+        builder.AppendLine("# Zonal Posture Report");
+        builder.AppendLine();
+        builder.AppendLine("## Summary");
+        builder.AppendLine();
+        builder.AppendLine("| Total Resources | Resilient Resources | Non-Resilient Resources |");
+        builder.AppendLine("|---|---|---|");
+        builder.AppendLine($"| {totalResources} | {resilientResources} | {nonResilientResources} |");
+        builder.AppendLine();
+        builder.AppendLine("## Resources");
+        builder.AppendLine();
+        builder.AppendLine("| Resource | Resource Type | Status |");
+        builder.AppendLine("|---|---|---|");
+
+        foreach (ZonalPostureResource row in rows)
+        {
+            string portalUrl = BuildPortalResourceUrl(row.ResourceId);
+            string resourceLink = $"[{EscapeMarkdownLinkLabel(row.Label)}]({portalUrl})";
+            builder.AppendLine(
+                $"| {resourceLink} | {EscapeMarkdownTableCell(row.ResourceType)} | " +
+                $"{EscapeMarkdownTableCell(row.Status)} |");
+        }
+
+        markdown = builder.ToString().TrimEnd();
+        return true;
+    }
+
+    private static bool TryReadNumber(JsonElement element, string propertyName, out string value)
+    {
+        value = string.Empty;
+        if (!element.TryGetProperty(propertyName, out JsonElement property)
+            || property.ValueKind != JsonValueKind.Number)
+        {
+            return false;
+        }
+
+        value = property.GetRawText();
+        return true;
+    }
+
+    private static bool TryNormalizeArmResourceId(
+        string resourceId,
+        out string normalizedId,
+        out string label)
+    {
+        normalizedId = string.Empty;
+        label = string.Empty;
+
+        string[] segments = resourceId
+            .Replace('\\', '/')
+            .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments.Length < 2)
+        {
+            return false;
+        }
+
+        normalizedId = "/" + string.Join("/", segments);
+        label = segments[^1];
+        return !string.IsNullOrWhiteSpace(label);
+    }
+
+    private static string BuildPortalResourceUrl(string normalizedResourceId)
+    {
+        IEnumerable<string> escapedSegments = normalizedResourceId
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .Select(Uri.EscapeDataString);
+
+        return "https://portal.azure.com/#@/resource/" + string.Join("/", escapedSegments);
+    }
+
+    private static string EscapeMarkdownTableCell(string value) =>
+        value
+            .Replace("\\", "\\\\")
+            .Replace("|", "\\|")
+            .Replace("`", "\\`")
+            .Replace("*", "\\*")
+            .Replace("_", "\\_")
+            .Replace("[", "\\[")
+            .Replace("]", "\\]")
+            .Replace("\r", string.Empty)
+            .Replace("\n", " ");
+
+    private static string EscapeMarkdownLinkLabel(string value) =>
+        EscapeMarkdownTableCell(value)
+            .Replace("(", "\\(")
+            .Replace(")", "\\)");
+
+    private sealed record ZonalPostureResource(
+        string Label,
+        string ResourceType,
+        string Status,
+        string ResourceId);
+
+    private static void WriteElement(StringBuilder builder, JsonElement element, string prefix)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                foreach (JsonProperty property in element.EnumerateObject())
+                {
+                    if (property.Value.ValueKind is JsonValueKind.Object or JsonValueKind.Array)
+                    {
+                        builder.AppendLine($"{prefix}**{property.Name}**");
+                        builder.AppendLine();
+                        WriteElement(builder, property.Value, prefix);
+                    }
+                    else
+                    {
+                        builder.AppendLine($"{prefix}- **{property.Name}**: {Scalar(property.Value)}");
+                    }
+                }
+
+                break;
+
+            case JsonValueKind.Array:
+                WriteArray(builder, element, prefix);
+                break;
+
+            default:
+                builder.AppendLine($"{prefix}{Scalar(element)}");
+                break;
+        }
+    }
+
+    private static void WriteArray(StringBuilder builder, JsonElement array, string prefix)
+    {
+        List<JsonElement> rows = [.. array.EnumerateArray()];
+        if (rows.Count == 0)
+        {
+            builder.AppendLine($"{prefix}_None._");
+            return;
+        }
+
+        if (rows.TrueForAll(row => row.ValueKind == JsonValueKind.Object))
+        {
+            List<string> columns = [.. rows
+                .SelectMany(row => row.EnumerateObject().Select(property => property.Name))
+                .Distinct()];
+
+            builder.AppendLine("| " + string.Join(" | ", columns) + " |");
+            builder.AppendLine("|" + string.Concat(columns.Select(_ => "---|")));
+
+            foreach (JsonElement row in rows)
+            {
+                IEnumerable<string> cells = columns.Select(column =>
+                    row.TryGetProperty(column, out JsonElement value) ? Scalar(value) : string.Empty);
+                builder.AppendLine("| " + string.Join(" | ", cells) + " |");
+            }
+
+            builder.AppendLine();
+            return;
+        }
+
+        foreach (JsonElement row in rows)
+        {
+            builder.AppendLine($"{prefix}- {Scalar(row)}");
+        }
+    }
+
+    private static string Scalar(JsonElement element)
+    {
+        string raw = element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? string.Empty,
+            JsonValueKind.Null or JsonValueKind.Undefined => string.Empty,
+            JsonValueKind.Object or JsonValueKind.Array => element.GetRawText(),
+            _ => element.ToString(),
+        };
+
+        string normalized = raw.Replace("|", "\\|").Replace("\r", string.Empty).Replace("\n", " ");
+        return Uri.TryCreate(raw, UriKind.Absolute, out Uri? uri)
+            && (string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                ? $"[{normalized}]({raw})"
+                : normalized;
     }
 
     private static string? DecodeFile(JsonElement file)
@@ -424,11 +728,21 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
         };
 
         using var content = new StringContent(envelope.ToJsonString(), Encoding.UTF8, "application/json");
+        using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint)
+        {
+            Content = content,
+        };
+
+        if (_sendDataBoundary)
+        {
+            string boundary = await _dataBoundaryResolver.ResolveAsync(cancellationToken);
+            request.Headers.TryAddWithoutValidation("DataBoundary", boundary);
+        }
 
         HttpResponseMessage httpResponse;
         try
         {
-            httpResponse = await _httpClient.PostAsync(Endpoint, content, cancellationToken);
+            httpResponse = await _httpClient.SendAsync(request, cancellationToken);
         }
         catch (AuthenticationFailedException ex)
         {
@@ -457,7 +771,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
                     _logger.LogError(
                         "The Resiliency Agent rejected the request with {StatusCode}. Endpoint: {Endpoint}. Body: {Body}",
                         (int)httpResponse.StatusCode,
-                        Endpoint,
+                        _endpoint,
                         Truncate(body));
 
                     throw new HttpRequestException(

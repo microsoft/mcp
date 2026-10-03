@@ -4517,14 +4517,37 @@ azmcp resiliency drill run resource get --service-group <service-group> \
 ### Azure Resiliency Agent Operations
 
 ```bash
-# Ask the Azure Resiliency Agent about the zonal resilience of an Azure application.
-# Assesses an application described in natural language and generates zone-resilient
-# Bicep, ARM or Terraform templates for new resources.
-# The agent asks its own clarifying questions through MCP elicitation, so one call
-# carries a whole multi-turn conversation and may run for several minutes.
-# Pass the returned conversationId back to continue the same conversation.
+# Prepare one user-approved local file and return an opaque attachment ID
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent file attach --file-path <file-path>
+
+# Assess an application architecture for availability-zone resilience
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp resiliencyagent conversation ask --request <request> \
+azmcp resiliencyagent architecture assess --request <request> \
+                                           [--attachment-ids <attachment-id>] \
+                                           [--conversation-id <conversation-id>]
+
+# Generate new resilient Bicep, ARM JSON, or Terraform
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent iac generate --request <request> \
+                                    [--conversation-id <conversation-id>]
+
+# Review and correct existing Bicep
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent bicep review --request <request> \
+                                    [--attachment-ids <attachment-id>] \
+                                    [--conversation-id <conversation-id>]
+
+# Review and correct existing ARM JSON
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent arm review --request <request> \
+                                  [--attachment-ids <attachment-id>] \
+                                  [--conversation-id <conversation-id>]
+
+# Review and correct existing Terraform
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent terraform review --request <request> \
+                                        [--attachment-ids <attachment-id>] \
                                         [--conversation-id <conversation-id>]
 ```
 

@@ -511,6 +511,15 @@ public sealed class NamespaceToolLoader(
                 () => JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse),
                 () => AggregateStructuredOutput.CreateToolResult(command, commandResponse),
                 isError);
+
+            if (commandResponse.McpContent is { Count: > 0 })
+            {
+                foreach (var contentBlock in commandResponse.McpContent)
+                {
+                    result.Content.Add(contentBlock);
+                }
+            }
+
             return McpHelper.InjectToolIdMetadata(result, cmd.Id);
         }
         catch (Exception ex)
