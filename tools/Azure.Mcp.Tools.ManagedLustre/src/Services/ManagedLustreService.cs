@@ -1270,11 +1270,40 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             NewStorageCapacityTiB = newSizeTiB
         };
 
-        var createOperation = await fs.Value.GetAmlFileSystemExpansionJobs().CreateOrUpdateAsync(
-            WaitUntil.Completed,
-            jobName,
-            expansionJobData,
-            cancellationToken);
+        // Immediately after a filesystem finishes its own create/update LRO, ARM can still be
+        // finalizing capacity reservations internally and rejects expansion-job creation with
+        // "400 BadRequest: ExpansionJobs cannot be created while the amlfilesystem is still
+        // finalizing capacity reservations after initial deployment." This is not reflected by
+        // AmlFileSystemData.Health.State (observed as Available while the rejection still
+        // occurs), so retry on the specific error itself (bounded) rather than pre-checking state.
+        var deadline = DateTime.UtcNow + s_expansionJobRetryTimeout;
+        ArmOperation<AmlFileSystemExpansionJobResource> createOperation;
+        while (true)
+        {
+            try
+            {
+                createOperation = await fs.Value.GetAmlFileSystemExpansionJobs().CreateOrUpdateAsync(
+                    WaitUntil.Completed,
+                    jobName,
+                    expansionJobData,
+                    cancellationToken);
+                break;
+            }
+            catch (RequestFailedException ex) when (IsCapacityReservationFinalizing(ex))
+            {
+                if (DateTime.UtcNow >= deadline)
+                {
+                    throw;
+                }
+
+                _logger.LogDebug(
+                    "Filesystem '{FileSystemName}' is still finalizing capacity reservations; retrying expansion job creation.",
+                    filesystemName);
+                await Task.Delay(s_expansionJobRetryInterval, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
         return createOperation.Value.Data.Name;
     }
