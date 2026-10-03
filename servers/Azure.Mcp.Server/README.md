@@ -1376,13 +1376,6 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Stop the running resilience drill 'my-drill' in service group 'my-service-group' and attest it as Failed"
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
-
-### 🧭 Azure Resiliency Agent
-
-* "Is my application zone redundant?"
-* "My app uses an App Service plan, a SQL database and a storage account in East US 2. Assess its zonal resilience and tell me what to change."
-* "Generate a zone-resilient Bicep template for a new Azure Container Registry in East US 2"
-* "I am starting a new workload on Azure - where do I start with availability zones?"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
 * "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
@@ -1470,7 +1463,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
-- 🧭 **Azure Resiliency Agent** - Start Resilient architecture assessment, infrastructure-as-code generation, and review of existing Bicep, ARM, and Terraform
+- 🧭 **Azure Resiliency Agent** - Azure application architecture assessment, resilient infrastructure-as-code generation, and review of existing Bicep, ARM JSON, and Terraform
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
