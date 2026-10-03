@@ -23,6 +23,27 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
     private readonly string _knownPassword = "TestPassword123!";
     private readonly string _knownSshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC...";
 
+    [Theory]
+    [InlineData("", null, false, true)]
+    [InlineData("--network-security-group workload-nsg", "workload-nsg", false, true)]
+    [InlineData("--disable-network-security-group true", null, true, true)]
+    [InlineData("--network-security-group workload-nsg --disable-network-security-group true", null, true, false)]
+    public async Task ExecuteAsync_NetworkSecurityRequiresExplicitOptOut(string options, string? group, bool disabled, bool succeeds)
+    {
+        var response = await ExecuteCommandAsync($"--vmss-name test-vmss --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123! {options}");
+        Assert.Equal(succeeds ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (succeeds)
+        {
+            var call = Assert.Single(Service.ReceivedCalls());
+            Assert.Equal(group, call.GetArguments()[18]);
+            Assert.Equal(disabled, call.GetArguments()[19]);
+        }
+        else
+        {
+            Assert.Empty(Service.ReceivedCalls());
+        }
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -78,7 +99,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(createResult);
         }
 
@@ -133,7 +154,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Arg.Is(40),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -198,7 +219,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
         // Act
@@ -251,7 +272,7 @@ public class VmssCreateCommandTests : SubscriptionCommandUnitTestsBase<VmssCreat
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act

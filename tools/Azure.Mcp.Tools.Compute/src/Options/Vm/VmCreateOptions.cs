@@ -44,8 +44,8 @@ public sealed class VmCreateOptions : ISubscriptionOption
     [Option(Description = "Name of the network security group to use or create.", Aliases = ["nsg"])]
     public string? NetworkSecurityGroup { get; set; }
 
-    [Option(Description = "Do not create or assign a public IP address")]
-    public bool? NoPublicIp { get; set; }
+    [Option(Description = "Do not create or assign a public IP address. Defaults to true; explicitly set false to allow a public IP.", DefaultValue = true)]
+    public bool? NoPublicIp { get; set; } = true;
 
     [Option(Description = ComputeOptionDescriptions.Zone)]
     public string? Zone { get; set; }
@@ -56,7 +56,7 @@ public sealed class VmCreateOptions : ISubscriptionOption
     [Option(Description = ComputeOptionDescriptions.OsDiskType)]
     public string? OsDiskType { get; set; }
 
-    [Option(Description = "Source IP address range for NSG inbound rules (e.g., '203.0.113.0/24' or a specific IP). Defaults to '*' (any source)")]
+    [Option(Description = "Source IP address range allowed to access SSH or RDP (e.g., '203.0.113.0/24'). No inbound access is allowed by default. Explicitly use '*' to allow any source (insecure).")]
     public string? SourceAddressPrefix { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]

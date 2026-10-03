@@ -21,7 +21,9 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Description = """
         Create, deploy, or provision a single Azure Virtual Machine (VM) with its OS disk.
         Use this to launch a new Linux or Windows VM with SSH key or password authentication.
-        Automatically creates networking resources (VNet, subnet, NSG, NIC, public IP) when not specified.
+        Automatically creates networking resources (VNet, subnet, NSG, NIC) when not specified.
+        Defaults to no public IP and denied inbound access. Public IPs require --no-public-ip false;
+        SSH or RDP access requires an explicit --source-address-prefix. Use '*' only for intentional broad access.
         Equivalent to 'az vm create'. Defaults to Standard_D2s_v5 VM size when not specified.
         The --image option is required and has no default; if the user does not specify an image, ask them which image to use
         (an alias such as 'Ubuntu2404' or 'Win2022Datacenter', a marketplace URN like 'publisher:offer:sku:version',
@@ -45,6 +47,11 @@ public sealed class VmCreateCommand(ILogger<VmCreateCommand> logger, IComputeSer
     public override void ValidateOptions(VmCreateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+
+        if (options.NoPublicIp != false && !string.IsNullOrWhiteSpace(options.PublicIpAddress))
+        {
+            validationResult.Errors.Add("--public-ip-address requires --no-public-ip false to explicitly enable public access.");
+        }
 
         // Determine OS type from image
         var effectiveOsType = ComputeUtilities.DetermineOsType(options.OsType, options.Image);

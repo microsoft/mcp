@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
+using Azure.ResourceManager.Network.Models;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -22,6 +23,62 @@ public class VmCreateCommandTests : SubscriptionCommandUnitTestsBase<VmCreateCom
     private readonly string _knownAdminUsername = "azureuser";
     private readonly string _knownPassword = "TestPassword123!";
     private readonly string _knownSshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC...";
+
+    [Theory]
+    [InlineData("", true)]
+    [InlineData("--no-public-ip false", false)]
+    [InlineData("--no-public-ip true", true)]
+    public async Task ExecuteAsync_PublicIpRequiresOptIn(string networkOptions, bool noPublicIp)
+    {
+        var response = await ExecuteCommandAsync($"--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123! {networkOptions}");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var call = Assert.Single(Service.ReceivedCalls());
+        Assert.Equal(noPublicIp, call.GetArguments()[14]);
+    }
+
+    [Theory]
+    [InlineData("--public-ip-address test-ip", false)]
+    [InlineData("--public-ip-address test-ip --no-public-ip false", true)]
+    public async Task ExecuteAsync_NamedPublicIpRequiresExplicitOptIn(string networkOptions, bool allowed)
+    {
+        var response = await ExecuteCommandAsync($"--vm-name test-vm --resource-group test-rg --subscription sub123 --location eastus --admin-username azureuser --image Ubuntu2404 --admin-password TestPassword123! {networkOptions}");
+
+        if (!allowed)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.Contains("--no-public-ip false", response.Message);
+            Assert.Empty(Service.ReceivedCalls());
+            return;
+        }
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var call = Assert.Single(Service.ReceivedCalls());
+        Assert.Equal("test-ip", call.GetArguments()[12]);
+        Assert.Equal(false, call.GetArguments()[14]);
+    }
+
+    [Theory]
+    [InlineData("Linux", null, null)]
+    [InlineData("Windows", null, null)]
+    [InlineData("Linux", "203.0.113.0/24", "22")]
+    [InlineData("Windows", "*", "3389")]
+    public void NetworkSecurityGroup_OnlyAllowsExplicitSources(string osType, string? source, string? port)
+    {
+        var data = ComputeService.CreateNetworkSecurityGroupData("eastus", osType, source);
+        Assert.Contains(data.SecurityRules, rule => rule.Access == SecurityRuleAccess.Deny && rule.DestinationPortRange == "*");
+        var allowRules = data.SecurityRules.Where(rule => rule.Access == SecurityRuleAccess.Allow);
+        if (source is null)
+        {
+            Assert.Empty(allowRules);
+        }
+        else
+        {
+            var rule = Assert.Single(allowRules);
+            Assert.Equal(source, rule.SourceAddressPrefix);
+            Assert.Equal(port, rule.DestinationPortRange);
+        }
+    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

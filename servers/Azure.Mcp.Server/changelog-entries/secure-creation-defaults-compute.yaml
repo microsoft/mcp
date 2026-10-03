@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: Virtual machines now omit public IPs and inbound NSG rules by default, scale sets attach a deny-inbound NSG by default, and managed disks default their network access policy to `DenyAll`. Explicit options remain available to select broader access.

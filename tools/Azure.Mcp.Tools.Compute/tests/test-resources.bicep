@@ -17,7 +17,7 @@ param adminUsername string = 'azureuser'
 param adminPassword string = newGuid()
 
 @description('The VM size to use for testing.')
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_D2s_v5'
 
 // Compute ignores the default location from eng/common
 var location string = 'eastus2'
