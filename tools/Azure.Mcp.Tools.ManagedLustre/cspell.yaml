@@ -10,5 +10,7 @@ words:
   - amlfilesystem
   - availablevmsku
   - availablevmskulocation
+  - overwritealways
+  - overwriteifdirty
   - southcentralus
   - uami
