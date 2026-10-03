@@ -1210,10 +1210,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | none |
 | resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | none |
 | resiliencyagent_iac_generate | Generate resilient infrastructure-as-code for this architecture; ask me which format to use | clarification-required |
+| resiliencyagent_bicep_review | Review this Bicep for availability-zone resiliency while preserving the resource name: `resource plan 'Microsoft.Web/serverfarms@2024-11-01' = { name: 'contoso-plan' location: 'eastus2' sku: { name: 'P1v3' } properties: { zoneRedundant: false } }` | none |
 | resiliencyagent_bicep_review | Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency | context-required |
 | resiliencyagent_bicep_review | Correct the attached Bicep without changing existing resource names, parameters, or module relationships | context-required |
+| resiliencyagent_arm_review | Review this ARM JSON for availability-zone resiliency while preserving its resource name: `{"type":"Microsoft.Web/serverfarms","apiVersion":"2024-11-01","name":"contoso-plan","location":"eastus2","sku":{"name":"P1v3"},"properties":{"zoneRedundant":false}}` | none |
 | resiliencyagent_arm_review | Review the attached ARM template and parameter file for resiliency gaps | context-required |
 | resiliencyagent_arm_review | Correct the attached ARM JSON while preserving resource names, API versions, and parameter names | context-required |
+| resiliencyagent_terraform_review | Review this Terraform for availability-zone resiliency while preserving the resource address: `resource "azurerm_service_plan" "api" { name = "contoso-plan" location = "East US 2" resource_group_name = "contoso-rg" os_type = "Linux" sku_name = "P1v3" zone_balancing_enabled = false }` | none |
 | resiliencyagent_terraform_review | Review the attached Terraform root module and local child modules for zone resiliency | context-required |
 | resiliencyagent_terraform_review | Correct the attached Terraform while preserving resource addresses, variables, and provider constraints | context-required |
 
