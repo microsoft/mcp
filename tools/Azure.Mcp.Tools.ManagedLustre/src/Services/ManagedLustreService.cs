@@ -589,30 +589,20 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // Generate job name from timestamp if not provided
         jobName ??= $"autoexport-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
-        // Validate admin status if provided
-        if (!string.IsNullOrEmpty(adminStatus))
-        {
-            var validStatuses = new[] { "Enable", "Disable" };
-            if (!validStatuses.Contains(adminStatus, StringComparer.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException($"Invalid admin status '{adminStatus}'. Valid values are: {string.Join(", ", validStatuses)}", nameof(adminStatus));
-            }
-        }
-
         // Create auto export job data with filesystem location
         var autoExportJobData = new AutoExportJobData(fs.Value.Data.Location);
 
-        // Set admin status if provided (default is Enable per SDK docs)
-        if (!string.IsNullOrEmpty(adminStatus))
-        {
-            autoExportJobData.AdminStatus = Enum.Parse<AutoExportJobAdminStatus>(adminStatus, ignoreCase: true);
-        }
+        // The StorageCache REST API omits the entire "properties" object from the request
+        // body when none of its fields are set, and ARM then rejects the PUT with
+        // "Required parameter 'properties' is missing". Apply the defaults documented on
+        // AutoexportJobCreateOptions (Enable / '/') whenever the caller omits them, instead
+        // of leaving the fields - and therefore "properties" - unset.
+        // AutoExportJobAdminStatus is an extensible enum (struct), not a true System.Enum, so
+        // Enum.Parse<T> throws "Type provided must be an Enum" at runtime - use a switch instead.
+        autoExportJobData.AdminStatus = ParseAdminStatusForExport(adminStatus);
 
-        // Set autoexport prefix if provided (SDK allows only 1 prefix)
-        if (!string.IsNullOrEmpty(autoexportPrefix))
-        {
-            autoExportJobData.AutoExportPrefixes.Add(autoexportPrefix);
-        }
+        // Set autoexport prefix (SDK allows only 1 prefix)
+        autoExportJobData.AutoExportPrefixes.Add(string.IsNullOrEmpty(autoexportPrefix) ? "/" : autoexportPrefix);
 
         // Create the auto export job
         var createOperation = await fs.Value.GetAutoExportJobs().CreateOrUpdateAsync(
@@ -811,45 +801,25 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         // Create auto import job data with filesystem location
         var autoImportJobData = new AutoImportJobData(fs.Value.Data.Location);
 
-        // Set optional properties
-        if (!string.IsNullOrWhiteSpace(conflictResolutionMode))
+        // The StorageCache REST API omits the entire "properties" object from the request
+        // body when none of its fields are set (confirmed via ModelReaderWriter against the
+        // generated AutoImportJobData model), and ARM then rejects the PUT with
+        // "Required parameter 'properties' is missing". Apply the defaults documented on
+        // AutoimportJobCreateOptions (Skip / '/' / Enable / false) whenever the caller omits
+        // them, instead of leaving the fields - and therefore "properties" - unset.
+        autoImportJobData.ConflictResolutionMode = ParseConflictResolutionMode(conflictResolutionMode);
+
+        if (autoimportPrefixes != null && autoimportPrefixes.Length > 100)
         {
-            autoImportJobData.ConflictResolutionMode = conflictResolutionMode switch
-            {
-                "Fail" => ConflictResolutionMode.Fail,
-                "Skip" => ConflictResolutionMode.Skip,
-                "OverwriteIfDirty" => ConflictResolutionMode.OverwriteIfDirty,
-                "OverwriteAlways" => ConflictResolutionMode.OverwriteAlways,
-                _ => throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways")
-            };
+            throw new ArgumentException("Maximum of 100 autoimport prefixes allowed");
+        }
+        foreach (var prefix in (autoimportPrefixes is { Length: > 0 } ? autoimportPrefixes : ["/"]))
+        {
+            autoImportJobData.AutoImportPrefixes.Add(prefix);
         }
 
-        if (autoimportPrefixes != null && autoimportPrefixes.Length > 0)
-        {
-            if (autoimportPrefixes.Length > 100)
-            {
-                throw new ArgumentException("Maximum of 100 autoimport prefixes allowed");
-            }
-            foreach (var prefix in autoimportPrefixes!)
-            {
-                autoImportJobData.AutoImportPrefixes.Add(prefix);
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(adminStatus))
-        {
-            autoImportJobData.AdminStatus = adminStatus switch
-            {
-                "Enable" => AutoImportJobPropertiesAdminStatus.Enable,
-                "Disable" => AutoImportJobPropertiesAdminStatus.Disable,
-                _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
-            };
-        }
-
-        if (enableDeletions.HasValue)
-        {
-            autoImportJobData.EnableDeletions = enableDeletions.Value;
-        }
+        autoImportJobData.AdminStatus = ParseAdminStatusForImport(adminStatus);
+        autoImportJobData.EnableDeletions = enableDeletions ?? false;
 
         if (maximumErrors.HasValue)
         {
@@ -1300,15 +1270,99 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             NewStorageCapacityTiB = newSizeTiB
         };
 
-        var createOperation = await fs.Value.GetAmlFileSystemExpansionJobs().CreateOrUpdateAsync(
-            WaitUntil.Started,
-            jobName,
-            expansionJobData,
-            cancellationToken);
+        // Immediately after a filesystem finishes its own create/update LRO, ARM can still be
+        // finalizing capacity reservations internally and rejects expansion-job creation with
+        // "400 BadRequest: ExpansionJobs cannot be created while the amlfilesystem is still
+        // finalizing capacity reservations after initial deployment." This is not reflected by
+        // AmlFileSystemData.Health.State (observed as Available while the rejection still
+        // occurs), so retry on the specific error itself (bounded) rather than pre-checking state.
+        var deadline = DateTime.UtcNow + s_expansionJobRetryTimeout;
+        ArmOperation<AmlFileSystemExpansionJobResource> createOperation;
+        while (true)
+        {
+            try
+            {
+                createOperation = await fs.Value.GetAmlFileSystemExpansionJobs().CreateOrUpdateAsync(
+                    WaitUntil.Completed,
+                    jobName,
+                    expansionJobData,
+                    cancellationToken);
+                break;
+            }
+            catch (RequestFailedException ex) when (IsCapacityReservationFinalizing(ex))
+            {
+                if (DateTime.UtcNow >= deadline)
+                {
+                    throw;
+                }
+
+                _logger.LogDebug(
+                    "Filesystem '{FileSystemName}' is still finalizing capacity reservations; retrying expansion job creation.",
+                    filesystemName);
+                await Task.Delay(s_expansionJobRetryInterval, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
         await WaitForLroCompletionAsync(createOperation, cancellationToken);
 
         return createOperation.Value.Data.Name;
     }
+
+    private static readonly TimeSpan s_expansionJobRetryInterval = TimeSpan.FromSeconds(15);
+
+    private static readonly TimeSpan s_expansionJobRetryTimeout = TimeSpan.FromMinutes(15);
+
+    private static AutoExportJobAdminStatus ParseAdminStatusForExport(string? adminStatus)
+    {
+        var adminStatusUsed = adminStatus == null || string.IsNullOrWhiteSpace(adminStatus) ? "enable" : adminStatus;
+        switch (adminStatusUsed.ToLowerInvariant())
+        {
+            case "enable":
+                return AutoExportJobAdminStatus.Enable;
+            case "disable":
+                return AutoExportJobAdminStatus.Disable;
+            default:
+                throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable",
+                    nameof(adminStatus));
+        }
+    }
+
+    private static AutoImportJobPropertiesAdminStatus ParseAdminStatusForImport(string? adminStatus)
+    {
+        var adminStatusUsed = adminStatus == null || string.IsNullOrWhiteSpace(adminStatus) ? "enable" : adminStatus;
+        switch (adminStatusUsed.ToLowerInvariant())
+        {
+            case "enable":
+                return AutoImportJobPropertiesAdminStatus.Enable;
+            case "disable":
+                return AutoImportJobPropertiesAdminStatus.Disable;
+            default:
+                throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable",
+                    nameof(adminStatus));
+        }
+    }
+
+    private static ConflictResolutionMode ParseConflictResolutionMode(string? conflictResolutionMode)
+    {
+        var conflictResolutionModeUsed = conflictResolutionMode == null || string.IsNullOrWhiteSpace(conflictResolutionMode) ? "skip" : conflictResolutionMode;
+        switch (conflictResolutionModeUsed.ToLowerInvariant())
+        {
+            case "fail":
+                return ConflictResolutionMode.Fail;
+            case "skip":
+                return ConflictResolutionMode.Skip;
+            case "overwriteifdirty":
+                return ConflictResolutionMode.OverwriteIfDirty;
+            case "overwritealways":
+                return ConflictResolutionMode.OverwriteAlways;
+            default:
+                throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways",
+                    nameof(conflictResolutionMode));
+        }
+    }
+
+    private static bool IsCapacityReservationFinalizing(RequestFailedException ex) =>
+        ex.Status == 400 && ex.Message.Contains("finalizing capacity reservations", StringComparison.OrdinalIgnoreCase);
 
     public async Task<Models.ExpansionJob> GetExpansionJobAsync(
         string subscription,
