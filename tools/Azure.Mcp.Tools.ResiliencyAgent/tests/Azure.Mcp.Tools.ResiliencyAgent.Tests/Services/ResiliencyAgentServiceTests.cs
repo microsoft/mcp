@@ -78,9 +78,11 @@ public sealed class ResiliencyAgentServiceTests
         Assert.Equal(2, parts.GetArrayLength());
         Assert.Equal("text", parts[0].GetProperty("kind").GetString());
         Assert.Equal("file", parts[1].GetProperty("kind").GetString());
-        Assert.Equal("architecture.png", parts[1].GetProperty("file").GetProperty("name").GetString());
-        Assert.Equal("image/png", parts[1].GetProperty("file").GetProperty("mimeType").GetString());
-        Assert.Equal(Convert.ToBase64String(content), parts[1].GetProperty("file").GetProperty("bytes").GetString());
+        JsonElement file = parts[1].GetProperty("file");
+        Assert.Equal("bytes", file.GetProperty("kind").GetString());
+        Assert.Equal("architecture.png", file.GetProperty("name").GetString());
+        Assert.Equal("image/png", file.GetProperty("mimeType").GetString());
+        Assert.Equal(Convert.ToBase64String(content), file.GetProperty("bytes").GetString());
     }
 
     [Fact]

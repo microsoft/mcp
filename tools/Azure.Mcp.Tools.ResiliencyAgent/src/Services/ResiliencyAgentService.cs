@@ -150,6 +150,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
                 ["kind"] = "file",
                 ["file"] = new JsonObject
                 {
+                    ["kind"] = "bytes",
                     ["name"] = attachment.Name,
                     ["mimeType"] = attachment.MimeType,
                     ["bytes"] = Convert.ToBase64String(attachment.Content),
