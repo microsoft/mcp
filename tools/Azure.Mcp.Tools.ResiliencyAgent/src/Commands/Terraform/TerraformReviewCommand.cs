@@ -13,13 +13,15 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
     Name = "review",
     Title = "Review and correct existing Terraform for resilience",
     Description = """
-        Use this Start Resilient command only to review and correct existing Terraform. When
-        Terraform is supplied directly in the user's prompt, pass it verbatim in request and call
-        this command without file attachment. For source in local files, prepare every relevant root
-        module, local child module, variables file, and tfvars file with
-        resiliencyagent_file_attach, then pass all returned IDs through attachment-ids and describe
-        module relationships in request. Preserve provider constraints, resource addresses, variable
-        values, dependencies, regions, names, and requirements.
+        Always use this Start Resilient command to review or correct existing Terraform; do not
+        review pasted source independently. Prefer file attachments for complete configurations,
+        especially when root modules, local child modules, variables files, or tfvars files must be
+        reviewed together. Prepare every relevant local file with resiliencyagent_file_attach, then
+        pass all returned IDs through attachment-ids and describe module relationships in request. If
+        the user instead pasted Terraform directly in the current prompt, pass it verbatim in request
+        and call this command without file attachment; do not create a temporary file solely to
+        attach pasted source. Preserve provider constraints, resource addresses, variable values,
+        dependencies, regions, names, and requirements.
         Use resiliencyagent_architecture_assess for an application design and
         resiliencyagent_iac_generate when no existing source needs review.
         Corrected artifacts are authoritative. Do not independently rewrite their

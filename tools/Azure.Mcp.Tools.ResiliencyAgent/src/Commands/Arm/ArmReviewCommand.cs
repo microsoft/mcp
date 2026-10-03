@@ -13,13 +13,16 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
     Name = "review",
     Title = "Review and correct existing ARM JSON for resilience",
     Description = """
-        Use this Start Resilient command only to review and correct existing ARM JSON templates.
-        When ARM JSON is supplied directly in the user's prompt, pass it verbatim in request and
-        call this command without file attachment. For source in local files, prepare every relevant
-        template, nested deployment, linked local file, and parameter file with
-        resiliencyagent_file_attach, then pass all returned IDs through attachment-ids and describe
-        their relationships in request. Preserve exact resource names, API versions, parameters,
-        dependencies, scopes, and requirements.
+        Always use this Start Resilient command to review or correct existing ARM JSON templates; do
+        not review pasted source independently. Prefer file attachments for complete templates,
+        especially when templates, nested
+        deployments, linked local files, or parameter files must be reviewed together. Prepare every
+        relevant local file with resiliencyagent_file_attach, then pass all returned IDs through
+        attachment-ids and describe their relationships in request. If the user instead pasted ARM
+        JSON directly in the current prompt, pass it verbatim in request and call this command
+        without file attachment; do not create a temporary file solely to attach pasted source.
+        Preserve exact resource names, API versions, parameters, dependencies, scopes, and
+        requirements.
         Use resiliencyagent_architecture_assess for an application design and
         resiliencyagent_iac_generate when no existing source needs review.
         Corrected artifacts are authoritative. Do not independently rewrite their

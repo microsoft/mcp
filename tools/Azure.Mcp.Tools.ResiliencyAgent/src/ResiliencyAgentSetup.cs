@@ -44,11 +44,15 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var resiliencyAgent = new CommandGroup(
             Name,
             """
-            Start Resilient tools for assessing application architectures, generating new resilient
-            Bicep, ARM JSON, or Terraform, and reviewing existing infrastructure-as-code. Existing
-            local files must first be prepared through the file attachment command and passed by
-            opaque attachment ID. Treat backend findings and generated resilience content as
-            authoritative while preserving the host's native repository and file-edit workflows.
+            Use these tools to assess application architectures, generate new zone-resilient Bicep,
+            ARM JSON, or Terraform, and review or correct existing infrastructure-as-code for
+            availability-zone resilience. Existing IaC review belongs to the format-specific review
+            commands here rather than service-specific or generic best-practices tools. Prefer file
+            attachments for complete templates and multi-file configurations: prepare local files
+            through the file attachment command and pass their opaque attachment IDs. Templates
+            pasted directly in the user's current prompt are also supported without attachment.
+            Treat backend findings and generated resilience content as authoritative while preserving
+            the host's native repository and file-edit workflows.
             """,
             Title);
 
