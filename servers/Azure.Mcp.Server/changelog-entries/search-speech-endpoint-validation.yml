@@ -1,0 +1,5 @@
+changes:
+  - section: Other Changes
+    description: Added cloud-specific endpoint validation for Azure AI Search and Azure AI Speech data-plane requests.
+  - section: Bugs Fixed
+    description: Rejected Speech endpoints now fail without falling back to another transcription method.

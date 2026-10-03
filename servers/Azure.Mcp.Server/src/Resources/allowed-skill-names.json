@@ -1,9 +1,19 @@
 {
   "skills": {
+    "azure-cost": [
+      "cost-analysis",
+      "cost-estimation",
+      "cost-governance",
+      "cost-optimization"
+    ],
     "azure-kusto-graph-skills": [
       "azure-kusto-graph",
       "azure-kusto-irql",
       "azure-kusto-irql-graph"
+    ],
+    "azure-local-skills": [
+      "azure-local",
+      "azure-local-multi-rack"
     ],
     "azure-skills": [
       "airunway-aks-setup",
@@ -15,7 +25,6 @@
       "azure-cloud-migrate",
       "azure-compliance",
       "azure-compute",
-      "azure-cost",
       "azure-deploy",
       "azure-diagnostics",
       "azure-enterprise-infra-planner",
@@ -30,10 +39,14 @@
       "azure-storage",
       "azure-upgrade",
       "azure-validate",
+      "discover-azure-skills",
       "entra-agent-id",
       "entra-app-registration",
       "microsoft-foundry",
       "python-appservice-deploy"
+    ],
+    "foundry-iq-skills": [
+      "foundry-iq"
     ]
   }
 }

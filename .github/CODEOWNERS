@@ -22,7 +22,7 @@
 # Eng Sys
 ##################
 /eng/                                  @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
-/eng/common/                           @microsoft/azure-sdk-eng
+/eng/common/                           @microsoft/azure-sdk-eng @microsoft/azure-sdk-sync-approvers
 /.github/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 /.config/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 
@@ -43,10 +43,10 @@
 # ServiceOwners:                       @vcolin7 @microsoft/azure-mcp
 
 # ServiceLabel: %packages-npx
-# ServiceOwners:                       @KarishmaGhiya @hallipr @microsoft/azure-mcp
+# ServiceOwners:                       @KarishmaGhiya @microsoft/azure-mcp
 
 # ServiceLabel: %packages-NuGet
-# ServiceOwners:                       @chidozieononiwu @hallipr @microsoft/azure-mcp
+# ServiceOwners:                       @chidozieononiwu @microsoft/azure-mcp
 
 # ServiceLabel: %packages-PyPi
 # ServiceOwners:                       @microsoft/azure-mcp
@@ -84,6 +84,19 @@
 # ServiceOwners:                       @microsoft/azure-mcp
 
 ##################
+# Changelog management (must be after Servers section as last rule wins)
+##################
+# Don't specify an owner for the changelog-entries folder.
+# PRLabel: %server-Azure.Mcp
+/servers/Azure.Mcp.Server/changelog-entries/
+
+# PRLabel: %server-Fabric.Mcp
+/servers/Fabric.Mcp.Server/changelog-entries/
+
+# PRLabel: %server-Template.Mcp
+/servers/Template.Mcp.Server/changelog-entries/
+
+##################
 # Tools
 ##################
 
@@ -112,10 +125,10 @@
 # ServiceOwners:                       @feiskyer @gossion
 
 # PRLabel: %tools-AppConfig
-/tools/Azure.Mcp.Tools.AppConfig/      @conniey @JonathanCrd @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AppConfig/      @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AppConfig
-# ServiceOwners:                       @avanigupta @conniey @JonathanCrd @shenmuxiaosen
+# ServiceOwners:                       @avanigupta @conniey @shenmuxiaosen
 
 # PRLabel: %tools-AppLens
 /tools/Azure.Mcp.Tools.AppLens/        @msalaman @microsoft/azure-mcp
@@ -124,7 +137,7 @@
 # ServiceOwners:                       @msalaman
 
 # PRLabel: %tools-ApplicationInsights
-/tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ApplicationInsights/ @xiaomi7732 @cweining @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ApplicationInsights
 # ServiceOwners:                             @regexrowboat @xiaomi7732
@@ -169,10 +182,10 @@
 # ServiceOwners:                                @akshayrohilla @andynski @mentaltraffic @yeddlapurishivasai
 
 # PRLabel: %tools-BestPractices
-/tools/Azure.Mcp.Tools.AzureBestPractices/      @conniey @fanyang-mono @g2vinay @XiaofuHuang @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AzureBestPractices/      @conniey @g2vinay @XiaofuHuang @microsoft/azure-mcp
 
 # ServiceLabel: %tools-BestPractices
-# ServiceOwners:                                @conniey @fanyang-mono @g2vinay @XiaofuHuang
+# ServiceOwners:                                @conniey @g2vinay @XiaofuHuang
 
 # PRLabel: %tools-Terraform
 /tools/Azure.Mcp.Tools.AzureTerraform/          @yunliu1 @microsoft/azure-mcp
@@ -294,11 +307,17 @@
 # ServiceLabel: %tools-IoTHub
 # ServiceOwners:                       @adarsh1 @riteshrao @sasundaram @microsoft/azure-mcp
 
+# PRLabel: %tools-IoTOperations
+/tools/Azure.Mcp.Tools.IoTOperations/ @sarsoma @byronjinmsft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-IoTOperations
+# ServiceOwners:                       @sarsoma @byronjinmsft @microsoft/azure-mcp
+
 # PRLabel: %tools-KeyVault
-/tools/Azure.Mcp.Tools.KeyVault/       @JonathanCrd @vcolin7 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.KeyVault/       @vcolin7 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-KeyVault
-# ServiceOwners:                       @JonathanCrd @vcolin7
+# ServiceOwners:                       @vcolin7
 
 # PRLabel: %tools-Kusto
 /tools/Azure.Mcp.Tools.Kusto/          @danield137 @prvavill @microsoft/azure-mcp
@@ -419,10 +438,10 @@
 # ServiceOwners:                       @HaofanLiao @JialinXin @chenkennt
 
 # PRLabel: %tools-Speech
-/tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @JonathanCrd @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Speech
-# ServiceOwners:                       @dilin-MS2 @JonathanCrd
+# ServiceOwners:                       @dilin-MS2
 
 # PRLabel: %tools-SQL
 /tools/Azure.Mcp.Tools.Sql/          @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp

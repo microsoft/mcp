@@ -22,7 +22,14 @@ public sealed class CommandValidationExceptionTests
         Id = "00000000-0000-0000-0000-0000000000ce",
         Name = "test-validation",
         Title = "Test Validation Command",
-        Description = "A command used only to exercise HandleException in tests.")]
+        Description = "A command used only to exercise HandleException in tests.",
+        OperationPlane = ToolOperationPlane.NotApplicable,
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false)]
     private sealed class ValidationTestCommand : BaseCommand<EmptyOptions, string>
     {
         public override Task<CommandResponse> ExecuteAsync(

@@ -93,7 +93,11 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             {
                 try
                 {
-                    EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, cloud);
+                    EndpointValidator.ValidateAzureServiceEndpoint(
+                        endpoint: endpoint,
+                        serviceType: serviceType,
+                        armEnvironment: cloud,
+                        executingToolNamespaceName: "cosmos");
                     return;
                 }
                 catch (Exception ex) when (ex is SecurityException or ArgumentException)

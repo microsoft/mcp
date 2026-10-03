@@ -899,6 +899,7 @@ All PRs automatically run the following validation checks:
 - **Spelling check** - Validates spelling across the codebase
 - **AOT compatibility** - Checks ahead-of-time compilation compatibility
 - **Tool metadata verification** - Ensures `azmcp-commands.md` is up-to-date with tool metadata (run `.\eng\scripts\Update-AzCommandsMetadata.ps1` if this fails)
+- **VSIX packaging** - On changes to a VS Code extension's `package.json` or `package-lock.json`, resolves its npm dependencies and packages the extension without signing or publishing.
 
 ## Support and Community
 

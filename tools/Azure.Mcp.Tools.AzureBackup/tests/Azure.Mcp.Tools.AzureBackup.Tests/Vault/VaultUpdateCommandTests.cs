@@ -30,7 +30,7 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         Service.UpdateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Vault updated successfully"));
 
         // Act
@@ -53,7 +53,7 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         Service.UpdateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -89,7 +89,7 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         Service.UpdateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is("SystemAssigned"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Not found"));
 
         // Act
@@ -118,7 +118,7 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
             Service.UpdateVaultAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -166,7 +166,7 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         Service.UpdateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Is(identityType), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Is(identityType), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         // Act
@@ -178,6 +178,90 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("Enabled")]
+    [InlineData("Disabled")]
+    public async Task ExecuteAsync_AcceptsValidPublicNetworkAccess(string publicNetworkAccess)
+    {
+        // Arrange
+        Service.UpdateVaultAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(publicNetworkAccess), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new OperationResult("Succeeded", null, null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--public-network-access", publicNetworkAccess);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("Deny")]
+    [InlineData("Off")]
+    [InlineData("true")]
+    public async Task ExecuteAsync_RejectsInvalidPublicNetworkAccess(string publicNetworkAccess)
+    {
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--public-network-access", publicNetworkAccess);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--public-network-access", response.Message);
+    }
+
+    [Theory]
+    [InlineData("UserAssigned")]
+    [InlineData("SystemAssigned,UserAssigned")]
+    public async Task ExecuteAsync_AcceptsUserAssignedIdentity(string identityType)
+    {
+        // Arrange
+        const string uami = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi1";
+        Service.UpdateVaultAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is(identityType), Arg.Is(uami), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new OperationResult("Succeeded", null, null));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--identity-type", identityType,
+            "--user-assigned-identity", uami);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("SystemAssigned")]
+    [InlineData("None")]
+    public async Task ExecuteAsync_RejectsUserAssignedIdentityWithoutMatchingType(string identityType)
+    {
+        // Arrange & Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--identity-type", identityType,
+            "--user-assigned-identity", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi1");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--user-assigned-identity", response.Message);
     }
 
     [Theory]
@@ -209,7 +293,7 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         Service.UpdateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, null));
 
         // Act

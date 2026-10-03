@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Tools.Adme.Commands.Storage;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Options.Storage;
 using Azure.Mcp.Tools.Adme.Services;
@@ -23,8 +24,11 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
         Service.GetRecordAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null,
                 Arg.Is<IReadOnlyList<string>?>(attributes => attributes == null), TestConstants.Tenant,
+            null,
                 Arg.Any<CancellationToken>())
-            .Returns(new StorageRecord { Id = RecordId, Kind = TestConstants.WellKind });
+            .Returns(new AdmeResponse<StorageRecord>(
+                new StorageRecord { Id = RecordId, Kind = TestConstants.WellKind },
+                "test-correlation-id"));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -32,8 +36,9 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
             "--id", RecordId,
             "--tenant", TestConstants.Tenant);
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.StorageRecord);
-        Assert.Equal(RecordId, result.Id);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseStorageRecord);
+        Assert.Equal(RecordId, result.Result.Id);
+        Assert.Equal("test-correlation-id", result.CorrelationId);
     }
 
     [Fact]
@@ -43,8 +48,8 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
         Service.GetRecordAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, RecordId, version,
                 Arg.Is<IReadOnlyList<string>>(attributes => attributes.SequenceEqual(new[] { "data.Name" })),
-                null, Arg.Any<CancellationToken>())
-            .Returns(new StorageRecord { Id = RecordId, Version = version });
+            null, null, Arg.Any<CancellationToken>())
+            .Returns(new AdmeResponse<StorageRecord>(new StorageRecord { Id = RecordId, Version = version }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -53,14 +58,13 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
             "--version", version.ToString(),
             "--attributes", "data.Name");
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.StorageRecord);
-        Assert.Equal(version, result.Version);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseStorageRecord);
+        Assert.Equal(version, result.Result.Version);
     }
 
     [Theory]
     [InlineData("--id", "")]
     [InlineData("--id", "opendes::work-product-component--SeismicBinGrid:grid-1")]
-    [InlineData("--id", "opendes:master-data-Well:W-99")]
     [InlineData("--version", "0")]
     [InlineData("--endpoint", "https://example.com")]
     [InlineData("--data-partition", " ")]
@@ -81,7 +85,7 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().GetRecordAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 
@@ -94,7 +98,7 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().GetRecordAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 

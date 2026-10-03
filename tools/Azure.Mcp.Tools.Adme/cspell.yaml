@@ -7,7 +7,15 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - aggregateBy
+  - bulkupdate
+  - cursorPaginationMode
   - dataservices
+  - excludedFields
   - legaltags
   - opendes
+  - returnedFields
+  - spatialFilter
+  - suggestPhrase
+  - Volve
   - wks

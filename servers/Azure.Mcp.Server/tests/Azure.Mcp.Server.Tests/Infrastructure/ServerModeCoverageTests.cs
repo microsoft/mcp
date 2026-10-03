@@ -163,7 +163,8 @@ public class ServerModeCoverageTests
 
     private static async Task<string?> ReadResponseAsync(StreamReader reader, TimeSpan? timeout = null)
     {
-        using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(15));
+        // Default raised to 60 s: single/namespace modes can exceed a 15 s read window on slow macOS CI runners.
+        using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(60));
         try
         {
             return await reader.ReadLineAsync(cts.Token);

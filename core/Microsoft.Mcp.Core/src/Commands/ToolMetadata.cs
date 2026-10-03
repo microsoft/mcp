@@ -17,7 +17,7 @@ public sealed class ToolMetadata
     /// Gets or sets the API plane the tool acts against.
     /// </summary>
     [JsonIgnore]
-    public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.Unspecified;
+    public ToolOperationPlane OperationPlane { get; init; } = ToolOperationPlane.NotApplicable;
 
     /// <summary>
     /// Gets or sets whether the tool may perform destructive updates to its environment.

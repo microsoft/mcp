@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Tools.Adme.Commands.Storage;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Options.Storage;
 using Azure.Mcp.Tools.Adme.Services;
@@ -24,8 +25,10 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
                 TestConstants.Endpoint, TestConstants.DataPartition,
                 Arg.Is<IReadOnlyList<string>>(ids => ids.SequenceEqual(new[] { RecordId })),
                 Arg.Is<IReadOnlyList<string>?>(attributes => attributes == null), false,
-                TestConstants.Tenant, Arg.Any<CancellationToken>())
-            .Returns(new FetchRecordsResponse { Records = [new StorageRecord { Id = RecordId }] });
+                TestConstants.Tenant, null, Arg.Any<CancellationToken>())
+            .Returns(new AdmeResponse<FetchRecordsResponse>(
+                new FetchRecordsResponse { Records = [new StorageRecord { Id = RecordId }] },
+                "test-correlation-id"));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -33,8 +36,9 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
             "--ids", RecordId,
             "--tenant", TestConstants.Tenant);
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.FetchRecordsResponse);
-        Assert.Equal(RecordId, Assert.Single(result.Records).Id);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseFetchRecordsResponse);
+        Assert.Equal(RecordId, Assert.Single(result.Result.Records).Id);
+        Assert.Equal("test-correlation-id", result.CorrelationId);
     }
 
     [Fact]
@@ -44,8 +48,8 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
                 TestConstants.Endpoint, TestConstants.DataPartition,
                 Arg.Is<IReadOnlyList<string>>(ids => ids.SequenceEqual(new[] { RecordId })),
                 Arg.Is<IReadOnlyList<string>>(attributes => attributes.SequenceEqual(new[] { "data.Name" })),
-                false, null, Arg.Any<CancellationToken>())
-            .Returns(new FetchRecordsResponse { Records = [] });
+                false, null, null, Arg.Any<CancellationToken>())
+            .Returns(new AdmeResponse<FetchRecordsResponse>(new FetchRecordsResponse { Records = [] }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -53,8 +57,8 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
             "--ids", RecordId,
             "--attributes", "data.Name");
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.FetchRecordsResponse);
-        Assert.Empty(result.Records);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseFetchRecordsResponse);
+        Assert.Empty(result.Result.Records);
     }
 
     [Fact]
@@ -63,12 +67,13 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
         Service.FetchRecordsAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<IReadOnlyList<string>>(),
                 Arg.Is<IReadOnlyList<string>?>(attributes => attributes == null), true, null,
+            null,
                 Arg.Any<CancellationToken>())
-            .Returns(new FetchRecordsResponse
+            .Returns(new AdmeResponse<FetchRecordsResponse>(new FetchRecordsResponse
             {
                 Records = [new StorageRecord { Id = RecordId }],
                 ConversionStatuses = [new ConversionStatus { Id = RecordId, Status = "NO_FRAME_OF_REFERENCE" }],
-            });
+            }, null));
 
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
@@ -76,8 +81,8 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
             "--ids", RecordId,
             "--frame-of-reference");
 
-        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.FetchRecordsResponse);
-        Assert.Equal("NO_FRAME_OF_REFERENCE", Assert.Single(result.ConversionStatuses!).Status);
+        var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseFetchRecordsResponse);
+        Assert.Equal("NO_FRAME_OF_REFERENCE", Assert.Single(result.Result.ConversionStatuses!).Status);
     }
 
     [Fact]
@@ -89,7 +94,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().FetchRecordsAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 
@@ -108,7 +113,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().FetchRecordsAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 
@@ -124,7 +129,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().FetchRecordsAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 

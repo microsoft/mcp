@@ -16,6 +16,7 @@ namespace Azure.Mcp.Core.Tests;
 public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
 {
+    private const string StatelessProtocolVersion = "2026-07-28";
 
     [Fact]
     public async Task Should_List_Tools()
@@ -60,12 +61,10 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
     [Fact]
     public async Task Client_Should_Ping_Server_Successfully()
     {
-        // The `ping` method was removed in the MCP 2026-07-28 protocol revision. The client
-        // negotiates the modern protocol, so the server rejects ping as unavailable.
-        // (Method name is retained so the recorded playback session continues to match.)
-        await AssertMethodNotFoundAsync(
+        await AssertProtocolMethodBehaviorAsync(
             async () => await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken),
-            "ping");
+            "ping",
+            Client.NegotiatedProtocolVersion);
     }
 
     [Fact]
@@ -111,14 +110,12 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
     [Fact]
     public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported()
     {
-        // logging/setLevel was removed in MCP 2026-07-28 (SDK 2.0.0-preview.3).
-        // The method is no longer supported; per-request log level is now set via
-        // _meta/io.modelcontextprotocol/logLevel. The call should throw rather than hang.
 #pragma warning disable MCP9005 // Type or member is obsolete
-        await AssertMethodNotFoundAsync(
+        await AssertProtocolMethodBehaviorAsync(
             () => Client.SetLoggingLevelAsync(LoggingLevel.Info,
                 cancellationToken: TestContext.Current.CancellationToken),
-            "logging/setLevel");
+            "logging/setLevel",
+            Client.NegotiatedProtocolVersion);
 #pragma warning restore MCP9005 // Type or member is obsolete
     }
 
@@ -155,6 +152,20 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
         var protocolException = await Assert.ThrowsAsync<McpProtocolException>(action);
         Assert.Equal(McpErrorCode.MethodNotFound, protocolException.ErrorCode);
         Assert.Contains(method, protocolException.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task AssertProtocolMethodBehaviorAsync(
+        Func<Task> action,
+        string method,
+        string? negotiatedProtocolVersion)
+    {
+        if (string.Equals(negotiatedProtocolVersion, StatelessProtocolVersion, StringComparison.Ordinal))
+        {
+            await AssertMethodNotFoundAsync(action, method);
+            return;
+        }
+
+        await action();
     }
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers =>

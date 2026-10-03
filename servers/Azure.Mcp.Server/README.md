@@ -1,9 +1,6 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
-<!-- remove-section: start nuget;vsix;npm;pypi remove_managed_hosting_survey -->
-[![Help shape Azure MCP Server's Managed Remote Hosting — take our 1-minute survey](images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
-<!-- remove-section: end remove_managed_hosting_survey -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
@@ -965,6 +962,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
 * "Get Advisor metadata for a recommendation type id"
+* "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
 ### 🔎 Azure AI Search
 
@@ -1010,6 +1008,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Soft restart the web app 'my-webapp' in 'my-resource-group' waiting for restart to complete"
 
 ### 🛡️ Azure Backup
+
+Vault creation checks whether the requested Recovery Services vault or Backup vault already exists and rejects existing vaults. Use `azurebackup_vault_update` to modify an existing vault. Creation requires read permission on the target vault in addition to write permission. The existence check and creation are separate ARM requests, so this check is not an atomic guarantee against concurrent creation by another caller.
 
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
@@ -1109,12 +1109,19 @@ Example prompts that generate Azure CLI commands:
 ### Azure Data Manager for Energy
 
 * "Check authentication and connectivity for my ADME endpoint and data partition"
+* "Check health for my customer-hosted ADME endpoint using its resource application ID as the token audience"
 * "Get an ADME schema by kind"
 * "List shared Well schemas from my ADME data partition"
+* "Find ADME records matching an indexed-field Lucene query across multiple or wildcard kinds"
+* "Aggregate ADME search results by kind and sort them by id"
+* "Start a point-in-time ADME search snapshot to process more than 10,000 records"
+* "Continue an ADME snapshot search from its cursor"
 * "Fetch multiple OSDU records by id from my ADME data partition"
 * "Get an OSDU record by id or version from my ADME data partition"
 * "List OSDU record ids for a kind in my ADME data partition"
 * "List all versions of an OSDU record in my ADME data partition"
+
+For customer-hosted ADME instances, pass the resource application ID or App ID URI with `--auth-app-id`. The server requests the corresponding `/.default` scope; when this option is omitted, it uses the standard Azure Energy resource audience.
 
 ### 🧮 Azure Data Explorer
 
@@ -1140,6 +1147,14 @@ Example prompts that generate Azure CLI commands:
 * "List Event Grid subscriptions for topic 'my-topic' in location 'my-location'"
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
+
+### ⚡ Azure Event Hubs
+
+* "Get details for Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Update tags on Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Get details for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Get consumer group 'my-consumergroup' for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Delete consumer group 'my-consumergroup' from Event Hub 'my-eventhub' in namespace 'my-namespace' and resource group 'my-rg'"
 
 ### 📂 Azure File Shares
 
@@ -1184,6 +1199,11 @@ Example prompts that generate Azure CLI commands:
 * "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
 * "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
 
+### 🏭 Azure IoT Operations
+
+* "List all Azure IoT Operations instances in my subscription"
+* "Get details for Azure IoT Operations instance 'my-instance' in resource group 'my-resource-group'"
+
 ### 🔑 Azure Key Vault
 
 * "List all secrets in my key vault 'my-vault'"
@@ -1201,12 +1221,21 @@ Example prompts that generate Azure CLI commands:
 * "List the node pools for my AKS cluster"
 * "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
+### 🚀 Azure Managed Grafana
+
+* "List all Managed Grafana workspaces in my subscription"
+* "Find Azure Managed Grafana workspaces available in subscription 'my-subscription'"
+
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
-* "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
-* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'
-* Create a 4 TIB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'
+* "How many IP addresses do I need to create a 128 TiB cluster of AMLFS 500?"
+* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'"
+* "Create a 4 TiB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'"
+* "Create an expansion job to increase the storage capacity of my AMLFS filesystem 'my-filesystem' to 128 TiB in resource group 'my-rg'"
+* "Get the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
+* "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
+* "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
 ### 📊 Azure Monitor
 
@@ -1223,11 +1252,33 @@ Example prompts that generate Azure CLI commands:
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### 📊 Azure Quota
+
+* "Check resource usage and quota for 'Microsoft.App/containerApps' in region 'eastus'"
+* "Check current quota and usage for 'Microsoft.Compute/virtualMachines,Microsoft.Storage/storageAccounts' in 'westeurope'"
+* "List available regions for resource type 'Microsoft.Web/sites'"
+* "Find available regions for cognitive service model 'gpt-4o' of type 'Microsoft.CognitiveServices/accounts'"
+
 ### 🔧 Azure Resource Management
 
 * "List my resource groups"
 * "List my Azure CDN endpoints"
 * "Help me build an Azure application using Node.js"
+
+### 🩺 Azure Resource Health
+
+* "Get availability status for resource '/subscriptions/my-sub/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm'"
+* "Check current health and availability of my Azure resource 'my-vm'"
+* "List active service health issues in my subscription"
+* "List planned maintenance events affecting my Azure resources"
+* "Find service health event details for tracking ID 'ABC1-XYZ'"
+
+### 💲 Azure Retail Pricing
+
+* "Get retail pricing for SKU 'Standard_D2s_v5' in region 'eastus'"
+* "Check pricing for Virtual Machines SKU 'Standard_E4s_v5' in region 'westeurope' with currency 'EUR'"
+* "Get one-year and three-year reservation pricing for SKU 'Standard_B2s'"
+* "Find retail prices for Azure App Service in region 'centralus'"
 
 ### 🗄️ Azure SQL Database
 
@@ -1245,6 +1296,12 @@ Example prompts that generate Azure CLI commands:
 * "Create a new Azure SQL server in my resource group 'my-resource-group'"
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
+
+### 📶 Azure SignalR Service
+
+* "List all SignalR services in my subscription"
+* "List SignalR services in resource group 'my-resource-group'"
+* "Get details for SignalR service 'my-signalr' in resource group 'my-resource-group'"
 
 ### 🤖 Azure SRE Agent
 
@@ -1283,8 +1340,6 @@ Example prompts that generate Azure CLI commands:
 
 ### 🛡️ Azure Resilience Management
 
-* "List all resilience goal templates in service group 'my-service-group'"
-* "Get the details of goal template 'my-template' in service group 'my-service-group'"
 * "List all resilience goal assignments in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
@@ -1298,9 +1353,27 @@ Example prompts that generate Azure CLI commands:
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
 * "List the recovery jobs of recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Check whether recovery plan 'my-recovery-plan' and its protected resources are ready for recovery operations in service group 'my-service-group'"
+* "Validate which resources in recovery plan 'my-recovery-plan' in service group 'my-service-group' can fail over from 'eastus'"
+* "Fail over recovery plan 'my-recovery-plan' in service group 'my-service-group' from source location 'eastus'"
+* "Reprotect resources for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Finalize recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Resume paused recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "Retry failed recovery job 'my-job' for recovery plan 'my-recovery-plan' in service group 'my-service-group'"
+* "List all runs of drill 'my-drill' in service group 'my-service-group'"
+* "Get drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "List all resources of drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Get resource 'my-resource' from drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Update resilience drill 'my-drill' in service group 'my-service-group' to use manual RBAC setup"
 * "Create a zonal resilience drill 'my-drill' in service group 'my-service-group'"
 * "Get the resilience drill 'my-drill' in service group 'my-service-group'"
+* "List all resilience drills in service group 'my-service-group'"
+* "List all resources targeted by drill 'my-drill' in service group 'my-service-group'"
+* "Get drill resource 'my-resource' for drill 'my-drill' in service group 'my-service-group'"
+* "Start resilience drill 'my-drill' in service group 'my-service-group' in Failover mode"
+* "Run a TestFailover for resilience drill 'my-drill' in service group 'my-service-group'"
+* "End resilience drill 'my-drill' in service group 'my-service-group' and attest it as Success with notes 'Validation completed'"
+* "Stop the running resilience drill 'my-drill' in service group 'my-service-group' and attest it as Failed"
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 
@@ -1342,6 +1415,14 @@ Example prompts that generate Azure CLI commands:
 * "Get Well-Architected Framework guidance for App Service"
 * "What's the architectural guidance for Azure Cosmos DB?"
 
+### 📊 Azure Workbooks
+
+* "List all workbooks in resource group 'my-resource-group'"
+* "Show details and content of workbook with resource ID '<workbook_resource_id>'"
+* "Create a new workbook named 'Cost Analysis' in resource group 'my-resource-group'"
+* "Update workbook 'my-workbook-id' with new dashboard visualization content"
+* "Delete workbook 'my-workbook-id' from resource group 'my-resource-group'"
+
 ## Complete List of Supported Azure Services
 
 The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
@@ -1361,36 +1442,40 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
-- **Azure Data Manager for Energy** - Health checks and OSDU schema, record retrieval, and version history operations
+- **Azure Data Manager for Energy** - Health checks and OSDU schema, record search, retrieval, and version history operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
+- ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
 - 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
+- 🏭 **Azure IoT Operations** - IoT Operations instance discovery and details
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
 - 🚀 **Azure Managed Grafana** - Monitoring dashboards
-- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
+- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
-- 🛡️ **Azure Quick Review CLI** - Compliance scanning
+- 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
 - 📊 **Azure Quota** - Resource quota and usage management
+- 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery jobs, recovery job resources, and drills
-- 🧭 **Azure Resiliency Agent** - Zonal resilience assessment for an application described in natural language, resilience recommendations and posture reports, and generation of zone-resilient Bicep, ARM and Terraform templates
+- 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🧭 **Azure Resiliency Agent** - Start Resilient architecture assessment, infrastructure-as-code generation, and review of existing Bicep, ARM, and Terraform
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
 - 🏥 **Azure Service Health** - Resource health status and availability
+- 📶 **Azure SignalR Service** - SignalR service runtime management, network ACLs, and configuration
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration

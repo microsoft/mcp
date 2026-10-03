@@ -29,6 +29,7 @@ extends:
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
     RunVSCodeIntegrationTests: ${{ parameters.RunVSCodeIntegrationTests }}
+    RunPerfTests: true
     PackageDocker: true
     PackageVSIX: true
     PackagePyPI: true

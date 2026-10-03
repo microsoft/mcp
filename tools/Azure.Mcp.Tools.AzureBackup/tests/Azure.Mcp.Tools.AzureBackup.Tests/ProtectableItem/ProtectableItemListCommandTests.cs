@@ -34,7 +34,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         };
 
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedItems);
 
@@ -55,7 +55,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
     {
         // Arrange
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -76,7 +76,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
     {
         // Arrange
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -99,7 +99,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         if (shouldSucceed)
         {
             Service.ListProtectableItemsAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -130,7 +130,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         Assert.Contains(options, o => o.Name == "--vault");
         Assert.Contains(options, o => o.Name == "--vault-type");
         Assert.Contains(options, o => o.Name == "--workload-type");
-        Assert.Contains(options, o => o.Name == "--container");
+        Assert.DoesNotContain(options, o => o.Name == "--container");
     }
 
     // NEW-4: --workload-type must be rejected at the command boundary with a 400-class
@@ -161,7 +161,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
     {
         // Arrange
         Service.ListProtectableItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is<string?>(workloadType), Arg.Any<string?>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is<string?>(workloadType),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -200,7 +200,7 @@ public class ProtectableItemListCommandTests : SubscriptionCommandUnitTestsBase<
         // And the service is never invoked once validation has rejected the input.
         await Service.DidNotReceive().ListProtectableItemsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 }

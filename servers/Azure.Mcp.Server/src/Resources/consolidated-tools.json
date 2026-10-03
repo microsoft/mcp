@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_resilience_management_details",
-      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, recovery plans (plans, resources, and jobs), drills, drill runs, and drill run resources for Azure service groups.",
+      "description": "Get details about Azure Resilience Management resources, including resilience goal assignments and their resources, usage plans and enrollments, recovery plans (plans, resources, and jobs), drills, drill runs, and drill run resources for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -30,19 +30,18 @@
         }
       },
       "mappedToolList": [
-        "resilience_goal_template_get",
-        "resilience_goal_assignment_get",
-        "resilience_goal_resource_get",
-        "resilience_usageplan_get",
-        "resilience_usageplan_enrollment_get",
-        "resilience_recoveryplan_get",
-        "resilience_recoveryplan_resource_get",
-        "resilience_recoveryjob_get",
-        "resilience_recoveryjob_resource_get",
-        "resilience_drill_get",
-        "resilience_drill_resource_get",
-        "resilience_drill_run_get",
-        "resilience_drill_run_resource_get"
+        "resiliency_goal_assignment_get",
+        "resiliency_goal_resource_get",
+        "resiliency_usageplan_get",
+        "resiliency_usageplan_enrollment_get",
+        "resiliency_recoveryplan_get",
+        "resiliency_recoveryplan_resource_get",
+        "resiliency_recoveryjob_get",
+        "resiliency_recoveryjob_resource_get",
+        "resiliency_drill_get",
+        "resiliency_drill_resource_get",
+        "resiliency_drill_run_get",
+        "resiliency_drill_run_resource_get"
       ]
     },
     {
@@ -75,17 +74,17 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_update",
-        "resilience_drill_create",
-        "resilience_usageplan_create",
-        "resilience_usageplan_delete",
-        "resilience_usageplan_enrollment_create",
-        "resilience_usageplan_enrollment_delete",
-        "resilience_recoveryplan_create",
-        "resilience_recoveryplan_delete",
-        "resilience_recoveryplan_resource_update",
-        "resilience_drill_resource_add-or-update",
-        "resilience_drill_run_mark-complete"
+        "resiliency_drill_update",
+        "resiliency_drill_create",
+        "resiliency_usageplan_create",
+        "resiliency_usageplan_delete",
+        "resiliency_usageplan_enrollment_create",
+        "resiliency_usageplan_enrollment_delete",
+        "resiliency_recoveryplan_create",
+        "resiliency_recoveryplan_delete",
+        "resiliency_recoveryplan_resource_update",
+        "resiliency_drill_resource_add-or-update",
+        "resiliency_drill_run_mark-complete"
       ]
     },
     {
@@ -118,7 +117,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_add-notes"
+        "resiliency_drill_run_add-notes"
       ]
     },
     {
@@ -151,7 +150,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_failover"
+        "resiliency_drill_run_failover"
       ]
     },
     {
@@ -184,7 +183,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_resume"
+        "resiliency_drill_run_resume"
       ]
     },
     {
@@ -217,7 +216,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_reprotect"
+        "resiliency_drill_run_reprotect"
       ]
     },
     {
@@ -250,7 +249,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_finalize"
+        "resiliency_recoveryplan_finalize"
       ]
     },
     {
@@ -283,7 +282,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_failover"
+        "resiliency_recoveryplan_failover"
       ]
     },
     {
@@ -316,7 +315,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_reprotect"
+        "resiliency_recoveryplan_reprotect"
       ]
     },
     {
@@ -349,7 +348,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryjob_retry"
+        "resiliency_recoveryjob_retry"
       ]
     },
     {
@@ -382,7 +381,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryjob_resume"
+        "resiliency_recoveryjob_resume"
       ]
     },
     {
@@ -415,7 +414,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforfailover"
+        "resiliency_recoveryplan_validateforfailover"
       ]
     },
     {
@@ -448,7 +447,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforreprotect"
+        "resiliency_recoveryplan_validateforreprotect"
       ]
     },
     {
@@ -481,7 +480,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforoperation"
+        "resiliency_recoveryplan_validateforoperation"
       ]
     },
     {
@@ -514,9 +513,9 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_checkreadiness",
-        "resilience_drill_check-resync-readiness",
-        "resilience_drill_validate-for-execution"
+        "resiliency_recoveryplan_checkreadiness",
+        "resiliency_drill_check-resync-readiness",
+        "resiliency_drill_validate-for-execution"
       ]
     },
     {
@@ -549,7 +548,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_delete"
+        "resiliency_drill_delete"
       ]
     },
     {
@@ -582,8 +581,8 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_start",
-        "resilience_drill_end"
+        "resiliency_drill_start",
+        "resiliency_drill_end"
       ]
     },
     {
@@ -724,7 +723,7 @@
     },
     {
       "name": "get_azure_databases_details",
-      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List databases, retrieve server configurations and parameters, explore table schemas, query and manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -753,12 +752,10 @@
       },
       "mappedToolList": [
         "mysql_list",
-        "mysql_database_query",
         "mysql_server_config_get",
         "mysql_server_param_get",
         "mysql_table_schema_get",
         "postgres_list",
-        "postgres_database_query",
         "postgres_server_config_get",
         "postgres_server_param_get",
         "postgres_table_schema_get",
@@ -771,6 +768,40 @@
         "cosmos_database_container_item_get",
         "cosmos_database_container_item_text-search",
         "cosmos_database_container_item_vector-search"
+      ]
+    },
+    {
+      "name": "execute_azure_database_query",
+      "description": "Execute an arbitrary SQL statement against an Azure Database for MySQL or Azure Database for PostgreSQL flexible server database. Supports reads such as SELECT as well as statements that modify data or schema, including INSERT, UPDATE, DELETE, and DDL. The statement runs with the permissions of the signed-in user, so what it is allowed to do is determined by that user's database privileges.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "mysql_database_query",
+        "postgres_database_query"
       ]
     },
     {
@@ -1289,8 +1320,8 @@
           "description": "This tool does not handle sensitive or secret information."
         },
         "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
+          "value": true,
+          "description": "This tool requires local execution and is not available in remote server mode."
         }
       },
       "mappedToolList": [
@@ -1367,6 +1398,39 @@
       ]
     },
     {
+      "name": "search_azure_data_manager_for_energy_records",
+      "description": "Search OSDU records in Azure Data Manager for Energy by indexed fields and wildcard or multiple kinds, with cursor pagination, aggregation, projection, sorting, and spatial filtering.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not modify resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "A continuation cursor can advance when consumed and must not be replayed after a failed request."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "adme_search"
+      ]
+    },
+    {
       "name": "get_azure_data_manager_for_energy_schemas",
       "description": "Get a specific OSDU schema definition or list schema descriptors in an Azure Data Manager for Energy data partition, with optional identity, lifecycle, scope, version, and paging filters.",
       "toolMetadata": {
@@ -1402,7 +1466,7 @@
     },
     {
       "name": "list_azure_advisor_recommendations",
-      "description": "List individual Azure Advisor recommendation records or summarize that recommendation population with server-side counts, totals, rankings, and distributions. Summary groupings include recommendation type IDs with labels, category, impact, impacted resource type, lifecycle status, metadata subcategory, and service-retirement date. Supports filters for category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem text, subcategory, and one-sided retirement-date comparisons. Use individual results for recommendation details and summaries for aggregate questions; le:<end-date> includes overdue active retirements and is not a bounded next-N window.",
+      "description": "List actual Azure Advisor recommendation records in a subscription or summarize that subscription's recommendation population with server-side counts, totals, rankings, and distributions. Summary groupings include recommendation type IDs with labels, category, impact, impacted resource type, lifecycle status, metadata subcategory, and service-retirement date. Supports filters for category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem text, subcategory, and one-sided retirement-date comparisons. Use this for current recommendation instances, affected-resource details, or subscription aggregates. For the global recommendation metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID, use the metadata tool instead. le:<end-date> includes overdue active retirements and is not a bounded next-N window.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1469,7 +1533,7 @@
     },
     {
       "name": "list_azure_advisor_recommendation_metadata",
-      "description": "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use it even when no recommendation instances exist: discover available types for greenfield environments, filter by supported resource type during brownfield onboarding, or find service-retirement metadata by Service Health tracking ID and retirement date. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, and retirement date filters, ordered High, Medium, then Low impact.",
+      "description": "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use this for metadata catalog lookups, including service-retirement metadata by Service Health tracking ID, and for discovering recommendation types for greenfield environments or supported resource types during brownfield onboarding. This returns catalog metadata, not current recommendation instances or affected-resource records; use the recommendations tool for those subscription-scoped requests. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, and retirement date filters, ordered High, Medium, then Low impact.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1502,7 +1566,7 @@
     },
     {
       "name": "get_azure_advisor_recommendation_metadata",
-      "description": "Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and remediation actions.",
+      "description": "Get Azure Advisor metadata for a specific recommendation type id. Explains what an Advisor recommendation type means, including its display name, category, sub-category, impact, supported resource type, description, potential benefits, and a learn-more documentation link for the recommendation.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1531,6 +1595,39 @@
       },
       "mappedToolList": [
         "advisor_metadata_get"
+      ]
+    },
+    {
+      "name": "get_azure_advisor_remediation",
+      "description": "Fix, resolve, or remediate a specific Azure Advisor recommendation type id. Use this whenever you are asked how to fix or how to resolve an Advisor recommendation. Returns its remediation package: step-by-step remediation steps plus ready-to-run artifacts, scripts, and deployment templates in ARM template, Bicep, Azure CLI, PowerShell, and terraform formats to remediate the issue. Also indicates remediation characteristics such as whether it is destructive, reversible, or grounded, along with its confidence, effort, and output type. Use whenever you need to fix, resolve, remediate, or verify a recommendation, or want the ARM, Bicep, CLI, PowerShell, or terraform artifacts and scripts to remediate it.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_remediation_get"
       ]
     },
     {
@@ -2914,6 +3011,40 @@
       ]
     },
     {
+      "name": "get_azure_iot_operations",
+      "description": "List and get Azure IoT Operations instances (Microsoft.IoTOperations/instances) in a subscription or resource group.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about Azure IoT Operations instances without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iotoperations_instance_list",
+        "iotoperations_instance_get"
+      ]
+    },
+    {
       "name": "list_azure_iot_hub_devices",
       "description": "List devices registered in an Azure IoT Hub's device registry, returning device identity metadata without authentication keys.",
       "toolMetadata": {
@@ -3815,8 +3946,8 @@
           "description": "This tool may interact with an unpredictable or dynamic set of external entities."
         },
         "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
         },
         "secret": {
           "value": false,
@@ -4259,6 +4390,39 @@
       },
       "mappedToolList": [
         "storagesync_registeredserver_update"
+      ]
+    },
+    {
+      "name": "update_azure_storage_sync_cloud_endpoints",
+      "description": "Update Azure File Sync Cloud Endpoint change enumeration settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "storagesync_cloudendpoint_update"
       ]
     },
     {
@@ -4829,7 +4993,9 @@
         "azurebackup_policy_get",
         "azurebackup_protecteditem_get",
         "azurebackup_protectableitem_list",
+        "azurebackup_container_list-available",
         "azurebackup_backup_status",
+        "azurebackup_container_get",
         "azurebackup_job_get",
         "azurebackup_recoverypoint_get",
         "azurebackup_governance_find-unprotected",
@@ -4917,6 +5083,41 @@
         "azurebackup_resourceguard_delete",
         "azurebackup_vault_privateendpoint_delete",
         "azurebackup_vault_privateendpoint_approve-reject"
+      ]
+    },
+    {
+      "name": "refresh_azure_backup_containers",
+      "description": "Trigger Recovery Services vault container discovery refresh so newly eligible resources can be discovered for backup workflows.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool triggers a discovery refresh operation without deleting or mutating existing protected resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces equivalent refresh behavior without cumulative side effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool initiates a service operation and is not a pure read-only query."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "azurebackup_container_refresh",
+        "azurebackup_container_register",
+        "azurebackup_protectableitem_inquire"
       ]
     },
     {

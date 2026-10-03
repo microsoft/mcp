@@ -19,7 +19,14 @@ public sealed class CommandTelemetryTests
         Id = "00000000-0000-0000-0000-0000000000cf",
         Name = "test-telemetry",
         Title = "Test Telemetry Command",
-        Description = "A command used only to exercise command telemetry in tests.")]
+        Description = "A command used only to exercise command telemetry in tests.",
+        OperationPlane = ToolOperationPlane.NotApplicable,
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false)]
     private sealed class TelemetryTestCommand(HttpStatusCode status, string? telemetryFailureMessage)
         : BaseCommand<EmptyOptions, string>
     {

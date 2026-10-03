@@ -94,4 +94,30 @@ public class CommandGroup(string name, string description, string? title = null)
             return subGroup.GetCommand(parts[1]);
         }
     }
+
+    /// <summary>
+    /// Checks if all tools in this group and its subgroups match the given predicate.
+    /// </summary>
+    /// <param name="predicate">A predicate to test each tool's metadata.</param>
+    /// <returns>Whether all tools in the group match the predicate.</returns>
+    public bool AllToolsInGroupMatch(Predicate<ToolMetadata> predicate)
+    {
+        foreach (var command in Commands)
+        {
+            if (!predicate(command.Value.Metadata))
+            {
+                return false;
+            }
+        }
+
+        foreach (var subGroup in SubGroup)
+        {
+            if (!subGroup.AllToolsInGroupMatch(predicate))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "The extension_azqr tool is now advertised only for local execution when Azure Quick Review CLI version 3.0.0 or later is installed."

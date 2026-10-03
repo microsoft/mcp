@@ -34,11 +34,6 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
     private readonly IOptions<McpServerConfiguration> _configurationOptions = configurationOptions;
     private ICommandFactory? _consolidatedCommandFactory;
 
-    /// <summary>
-    /// Gets or sets the entry point to use for the command group servers.
-    /// This can be used to specify a custom entry point for the commands.
-    /// </summary>
-    public string? EntryPoint { get; set; } = null;
     public static readonly string[] IgnoredCommandGroups = ["server", "tools"];
 
     /// <summary>
