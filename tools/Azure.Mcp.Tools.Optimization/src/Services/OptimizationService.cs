@@ -224,29 +224,41 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             return ([], false, candidates);
         }
 
-        var tenantResource = await GetTenantResourceAsync(subscriptionTenantId, cancellationToken);
+        string? resolvedTenantId = subscriptionTenantId?.ToString();
+        if (string.IsNullOrEmpty(resolvedTenantId) && !string.IsNullOrEmpty(tenant))
+        {
+            resolvedTenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken);
+        }
+
+        if (string.IsNullOrEmpty(resolvedTenantId))
+        {
+            var tenants = await AzureService.GetTenants(cancellationToken);
+            if (tenants.Count == 0)
+            {
+                throw new InvalidOperationException("No accessible Azure tenants were found.");
+            }
+
+            resolvedTenantId = tenants[0].Data.TenantId?.ToString()
+                ?? throw new InvalidOperationException("Default tenant did not contain a valid tenant ID.");
+        }
 
         var queryContent = new ResourceQueryContent(query)
         {
             Subscriptions = { subscriptionId! },
         };
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, resolvedTenantId, cancellationToken);
 
         var rows = new List<JsonElement>();
-        if (result != null && result.Count > 0)
+        if (result.Count > 0 && result.Data.ValueKind == JsonValueKind.Array)
         {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
+            foreach (var item in result.Data.EnumerateArray())
             {
-                foreach (var item in jsonDocument.RootElement.EnumerateArray())
-                {
-                    rows.Add(item.Clone());
-                }
+                rows.Add(item.Clone());
             }
         }
 
-        return (rows, result?.ResultTruncated == ResultTruncated.True, null);
+        return (rows, result.IsTruncated, null);
     }
 
     /// <summary>
@@ -269,18 +281,31 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             return (subscription, tenantId, null);
         }
 
-        var tenantResource = await GetTenantResourceAsync(tenantId, cancellationToken);
+        string? resolvedTenantId = tenantId?.ToString();
+        if (string.IsNullOrEmpty(resolvedTenantId) && !string.IsNullOrEmpty(tenant))
+        {
+            resolvedTenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken);
+        }
+
+        if (string.IsNullOrEmpty(resolvedTenantId))
+        {
+            var tenants = await AzureService.GetTenants(cancellationToken);
+            if (tenants.Count == 0)
+            {
+                throw new InvalidOperationException("No accessible Azure tenants were found.");
+            }
+
+            resolvedTenantId = tenants[0].Data.TenantId?.ToString()
+                ?? throw new InvalidOperationException("Default tenant did not contain a valid tenant ID.");
+        }
+
         var queryContent = new ResourceQueryContent(OptimizationKqlQueries.BuildSubscriptionIdByNameQuery(subscription));
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, resolvedTenantId, cancellationToken);
 
         List<JsonElement> matches = [];
-        if (result != null && result.Count > 0)
+        if (result.Count > 0 && result.Data.ValueKind == JsonValueKind.Array)
         {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
-            {
-                matches.AddRange(jsonDocument.RootElement.EnumerateArray().Select(item => item.Clone()));
-            }
+            matches.AddRange(result.Data.EnumerateArray().Select(item => item.Clone()));
         }
 
         if (matches.Count == 0)
@@ -310,31 +335,11 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
 
         var subscriptionId = GetString(matches[0], "subscriptionId")
             ?? throw new KeyNotFoundException($"Could not find subscription with name '{subscription}'.");
-        var resolvedTenantId = Guid.TryParse(GetString(matches[0], "tenantId"), out var matchTenant)
+        var resolvedTenantIdGuid = Guid.TryParse(GetString(matches[0], "tenantId"), out var matchTenant)
             ? matchTenant
             : tenantId;
 
-        return (subscriptionId, resolvedTenantId, null);
-    }
-
-    private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken)
-    {
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        if (tenants.Count == 0)
-        {
-            throw new InvalidOperationException("No accessible Azure tenants were found.");
-        }
-
-        if (tenantId is { } id)
-        {
-            var match = tenants.FirstOrDefault(t => t.Data.TenantId == id);
-            if (match is not null)
-            {
-                return match;
-            }
-        }
-
-        return tenants[0];
+        return (subscriptionId, resolvedTenantIdGuid, null);
     }
 
     private static CostSavingsRecommendation ConvertToCostSavings(JsonElement item) => new(

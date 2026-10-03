@@ -35,14 +35,11 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        // Get accessible tenants
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        var currentTenant = tenants.FirstOrDefault()
-            ?? throw new InvalidOperationException("No accessible tenants found");
-
         // Build the query with optional scope filtering
         var queryText = BuildWorkbooksQuery(resourceGroups, filters, maxResults, outputFormat);
         var query = new ResourceQueryContent(queryText);
+
+        string? resolvedTenantId = null;
 
         // If subscriptions are specified, add them to the query scope
         if (subscriptions?.Count > 0)
@@ -52,24 +49,21 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
                 // Resolve subscription name to ID if needed
                 var subscriptionResource = await AzureService.GetSubscription(sub, tenant, cancellationToken: cancellationToken);
                 query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
+                resolvedTenantId ??= subscriptionResource.Data.TenantId?.ToString();
             }
         }
 
-        ResourceQueryResult resources = await currentTenant.GetResourcesAsync(query, cancellationToken);
+        resolvedTenantId ??= await ResolveTenantIdAsync(tenant, cancellationToken);
+
+        using var resources = await ExecuteResourceGraphQueryAsync(query, resolvedTenantId, cancellationToken);
 
         var workbooks = new List<WorkbookInfo>();
 
-        if (resources != null && resources.Count > 0 && resources.Data != null)
+        if (resources.Count > 0 && resources.Data.ValueKind == JsonValueKind.Array)
         {
-            using JsonDocument document = JsonDocument.Parse(resources.Data);
-            JsonElement resourcesArray = document.RootElement;
-
-            if (resourcesArray.ValueKind == JsonValueKind.Array)
+            foreach (JsonElement resource in resources.Data.EnumerateArray())
             {
-                foreach (JsonElement resource in resourcesArray.EnumerateArray())
-                {
-                    workbooks.Add(ParseWorkbookFromResourceGraph(resource, outputFormat));
-                }
+                workbooks.Add(ParseWorkbookFromResourceGraph(resource, outputFormat));
             }
         }
 
@@ -334,15 +328,9 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
     {
         try
         {
-            var tenants = await AzureService.GetTenants(cancellationToken);
-            var currentTenant = tenants.FirstOrDefault();
-            if (currentTenant == null)
-            {
-                return null;
-            }
-
             var countQuery = BuildCountQuery(resourceGroups, filters);
             var query = new ResourceQueryContent(countQuery);
+            string? resolvedTenantId = null;
 
             if (subscriptions?.Count > 0)
             {
@@ -350,26 +338,23 @@ public class WorkbooksService(IAzureService azureService, ILogger<WorkbooksServi
                 {
                     var subscriptionResource = await AzureService.GetSubscription(sub, tenant, cancellationToken: cancellationToken);
                     query.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
+                    resolvedTenantId ??= subscriptionResource.Data.TenantId?.ToString();
                 }
             }
 
-            ResourceQueryResult resources = await currentTenant.GetResourcesAsync(query, cancellationToken);
+            resolvedTenantId ??= await ResolveTenantIdAsync(tenant, cancellationToken);
 
-            if (resources == null || resources.Count == 0 || resources.Data == null)
+            using var resources = await ExecuteResourceGraphQueryAsync(query, resolvedTenantId, cancellationToken);
+
+            if (resources.Count == 0 || resources.Data.ValueKind != JsonValueKind.Array || resources.Data.GetArrayLength() == 0)
             {
                 return null;
             }
 
-            using JsonDocument document = JsonDocument.Parse(resources.Data);
-            var result = document.RootElement;
-
-            if (result.ValueKind == JsonValueKind.Array && result.GetArrayLength() > 0)
+            var firstItem = resources.Data[0];
+            if (firstItem.TryGetProperty("totalCount", out var countElement))
             {
-                var firstItem = result[0];
-                if (firstItem.TryGetProperty("totalCount", out var countElement))
-                {
-                    return countElement.GetInt32();
-                }
+                return countElement.GetInt32();
             }
 
             return null;

@@ -355,8 +355,8 @@ public class AdvisorService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
         var query = BuildMetadataListQuery(language, filters);
-        var tenantResource = await GetTenantResourceAsync(cancellationToken);
-        var result = await ExecuteMetadataPageAsync(tenantResource, query, null, cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(null, cancellationToken);
+        var result = await ExecuteMetadataPageAsync(tenantId, query, null, cancellationToken);
 
         return new(
             SortMetadata(result.Metadata),
@@ -370,11 +370,11 @@ public class AdvisorService(IAzureService azureService)
         CancellationToken cancellationToken)
     {
         var query = BuildMetadataListQuery(language, filters);
-        var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(tenant, cancellationToken);
         var results = new List<RecommendationMetadata>();
         results.AddRange(await CollectMetadataPagesAsync(
             (skipToken, token) => ExecuteMetadataPageAsync(
-                tenantResource,
+                tenantId,
                 query,
                 skipToken,
                 token),
@@ -417,8 +417,8 @@ public class AdvisorService(IAzureService azureService)
         return results;
     }
 
-    private static async Task<(List<RecommendationMetadata> Metadata, string? SkipToken, bool IsTruncated)> ExecuteMetadataPageAsync(
-        TenantResource tenantResource,
+    private async Task<(List<RecommendationMetadata> Metadata, string? SkipToken, bool IsTruncated)> ExecuteMetadataPageAsync(
+        string tenantId,
         string query,
         string? skipToken,
         CancellationToken cancellationToken)
@@ -432,29 +432,27 @@ public class AdvisorService(IAzureService azureService)
             },
         };
 
-        var response = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        var result = response.Value;
-        if (result == null || result.Count == 0)
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
+        if (result.Count == 0)
         {
-            return new([], result?.SkipToken, result?.ResultTruncated == ResultTruncated.True);
+            return new([], result.SkipToken, result.IsTruncated);
         }
 
         return new(
             ParseMetadata(result.Data),
             result.SkipToken,
-            result.ResultTruncated == ResultTruncated.True);
+            result.IsTruncated);
     }
 
-    private static List<RecommendationMetadata> ParseMetadata(BinaryData data)
+    private static List<RecommendationMetadata> ParseMetadata(JsonElement data)
     {
         var results = new List<RecommendationMetadata>();
-        using var jsonDocument = JsonDocument.Parse(data);
-        if (jsonDocument.RootElement.ValueKind != JsonValueKind.Array)
+        if (data.ValueKind != JsonValueKind.Array)
         {
             throw new JsonException("Azure Resource Graph returned an invalid recommendation metadata payload.");
         }
 
-        foreach (var item in jsonDocument.RootElement.EnumerateArray())
+        foreach (var item in data.EnumerateArray())
         {
             results.Add(ConvertToRecommendationMetadataModel(item));
         }
@@ -472,13 +470,14 @@ public class AdvisorService(IAzureService azureService)
         string? tenant,
         CancellationToken cancellationToken)
     {
-        var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(tenant, cancellationToken);
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(
+        using var result = await ExecuteResourceGraphQueryAsync(
             new ResourceQueryContent(query),
+            tenantId,
             cancellationToken);
 
-        if (result == null || result.Count == 0)
+        if (result.Count == 0)
         {
             return [];
         }
@@ -658,32 +657,6 @@ public class AdvisorService(IAzureService azureService)
             Caption: action.Caption,
             DocumentLink: action.DocumentLink,
             BladeName: action.BladeName);
-
-    private async Task<TenantResource> GetTenantResourceAsync(CancellationToken cancellationToken)
-        => await GetTenantResourceAsync(null, cancellationToken);
-
-    private async Task<TenantResource> GetTenantResourceAsync(
-        string? tenant,
-        CancellationToken cancellationToken)
-    {
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        if (tenants.Count == 0)
-        {
-            throw new InvalidOperationException("No accessible Azure tenants were found.");
-        }
-
-        if (string.IsNullOrWhiteSpace(tenant))
-        {
-            return tenants[0];
-        }
-
-        var resolvedTenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
-            ?? throw new InvalidOperationException($"Could not resolve tenant '{tenant}'.");
-        var tenantId = Guid.Parse(resolvedTenantId);
-        return tenants.FirstOrDefault(candidate => candidate.Data.TenantId == tenantId)
-            ?? throw new InvalidOperationException($"No accessible tenant found for tenant '{tenant}'.");
-    }
-
     public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
         string recommendationTypeId,
         string language,
@@ -692,7 +665,7 @@ public class AdvisorService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
-        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(null, cancellationToken);
 
         var query =
             "advisorresources " +
@@ -703,20 +676,13 @@ public class AdvisorService(IAzureService azureService)
 
         var queryContent = new ResourceQueryContent(query);
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        if (result == null || result.Count == 0)
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
+        if (result.Count == 0 || result.Data.ValueKind != JsonValueKind.Array || result.Data.GetArrayLength() == 0)
         {
             return null;
         }
 
-        using var jsonDocument = JsonDocument.Parse(result.Data);
-        var dataArray = jsonDocument.RootElement;
-        if (dataArray.ValueKind != JsonValueKind.Array || dataArray.GetArrayLength() == 0)
-        {
-            return null;
-        }
-
-        return ConvertToRecommendationMetadataModel(dataArray[0]);
+        return ConvertToRecommendationMetadataModel(result.Data[0]);
     }
 
     internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item)
@@ -890,5 +856,28 @@ public class AdvisorService(IAzureService azureService)
             message,
             errorCode,
             null);
+    }
+
+    private async Task<string> ResolveMetadataTenantIdAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(tenant))
+        {
+            return await ResolveTenantIdAsync(tenant, cancellationToken);
+        }
+
+        var tenantId = await AzureService.ResolveTenantIdAsync(null, cancellationToken);
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            return tenantId;
+        }
+
+        var tenants = await AzureService.GetTenants(cancellationToken);
+        if (tenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible tenants found");
+        }
+
+        return tenants[0].Data.TenantId?.ToString()
+            ?? throw new InvalidOperationException("First accessible tenant does not have a valid tenant ID.");
     }
 }

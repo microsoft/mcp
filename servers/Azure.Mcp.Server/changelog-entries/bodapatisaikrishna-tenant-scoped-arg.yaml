@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Applied tenant-scoped Azure Resource Graph execution to Advisor, AppLens, Insights, Optimization, and Workbooks tools to avoid cross-tenant permission failures"
