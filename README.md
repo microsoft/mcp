@@ -167,7 +167,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 
 ### <img height="18" width="18" src="https://learn.microsoft.com/fabric/media/fabric-icon.png" alt="Microsoft Fabric Logo" /> Microsoft Fabric (Public Preview)
 - **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server#readme)
-- **DESCRIPTION**: A local-first MCP server providing AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Enables AI-assisted development for all Fabric workloads without connecting to live environments.
+- **DESCRIPTION**: A local-first MCP server providing AI agents with Fabric API documentation, item definitions, best practices, and tools for live operations. Documentation tools work offline; OneLake, core Fabric, and Data Factory tools use configured credentials to access Fabric resources.
 - **CATEGORY**: `DATA AND ANALYTICS`
 - **TYPE**: `Local`
 - **INSTALL**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server#readme)
