@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Honor remote MCP tool-list time-to-live values and refresh cached proxy tools when they expire."
