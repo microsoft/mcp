@@ -129,6 +129,21 @@ foreach ($tool in $toolsData.results) {
     }
 }
 
+# Azqr is conditionally registered at runtime (only when a supported azqr CLI
+# is installed on PATH), so it may be absent from `azmcp tools list` output
+# (e.g. in CI). Include its metadata explicitly so the docs stay in sync.
+# Values mirror tools/Azure.Mcp.Tools.Extension/src/Commands/AzqrCommand.cs.
+if (-not $commandMetadata.ContainsKey("extension azqr")) {
+    $commandMetadata["extension azqr"] = [PSCustomObject]@{
+        destructive = [PSCustomObject]@{ value = $false }
+        idempotent = [PSCustomObject]@{ value = $true }
+        openWorld = [PSCustomObject]@{ value = $false }
+        readOnly = [PSCustomObject]@{ value = $true }
+        secret = [PSCustomObject]@{ value = $false }
+        localRequired = [PSCustomObject]@{ value = $true }
+    }
+}
+
 Write-Host "Found $($commandMetadata.Count) tools with metadata" -ForegroundColor Green
 
 # Read the docs file
