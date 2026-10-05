@@ -9,6 +9,8 @@ namespace Fabric.Mcp.Tools.Core.Models;
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(CapacityGetCommandResult))]
+[JsonSerializable(typeof(CapacityListCommandResult))]
+[JsonSerializable(typeof(CapacityListResponse))]
 [JsonSerializable(typeof(FabricItem))]
 [JsonSerializable(typeof(CreateItemRequest))]
 [JsonSerializable(typeof(ItemCreateCommandResult))]
