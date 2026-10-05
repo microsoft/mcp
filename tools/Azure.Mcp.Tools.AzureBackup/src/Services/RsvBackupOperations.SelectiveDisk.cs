@@ -96,10 +96,10 @@ public sealed partial class RsvBackupOperations
         var updateResult = await vmProtectedItemResource.UpdateAsync(WaitUntil.Started, vmProtectedItemData, cancellationToken);
 
         var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-        jobId ??= ExtractOperationIdFromResponse(updateResult.GetRawResponse());
+        var operationId = ExtractOperationIdFromResponse(updateResult.GetRawResponse());
 
         return await BuildRsvProtectResultAsync(
-            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, jobId,
+            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, jobId, operationId,
             "VM protection update", cancellationToken);
     }
 
