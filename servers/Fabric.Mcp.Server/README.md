@@ -350,6 +350,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 |-----------|-------------|
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
+| `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
@@ -538,6 +539,38 @@ It performs no automatic retry or long-running-operation polling. HTTP failures 
 valid nonnegative integer `Retry-After` values provide wait guidance. After a timeout or invalid response, the update may already
 have completed: verify the item's state before retrying.
 Existing HTTP-client redirect behavior is unchanged; one application-level PATCH is not a one-wire-hop guarantee.
+
+#### Delete a Fabric item
+
+`core_delete-item` sends one [Delete Item API](https://learn.microsoft.com/rest/api/fabric/core/items/delete-item) request. It does not resolve names, inspect item types, retry requests, or poll operations.
+This is one application-level DELETE; existing HTTP-client redirect behavior is unchanged, not a one-wire-hop guarantee.
+
+| Parameter | Required | Behavior |
+|-----------|----------|----------|
+| `workspace-id` | Yes | Nonempty UUID of the workspace containing the item. |
+| `item-id` | Yes | Nonempty UUID of the item to delete. |
+| `hard-delete` | No | Omit to leave the API parameter unspecified, explicitly pass `false` to send `hardDelete=false`, or explicitly pass `true` to request permanent deletion. |
+
+**Deletion is destructive in every mode.** Omission or `false` uses Fabric's default deletion behavior, which soft-deletes only supported item types. It does not guarantee that the item can be recovered. Rejected default/soft deletions are returned as errors; the tool never falls back to permanent deletion.
+
+**Permanent deletion cannot be recovered.** The CLI requires an explicit value: `--hard-delete true`. A bare `--hard-delete`, invalid value, or repeated occurrence is rejected before authentication or deletion. MCP advertises an optional Boolean input and preserves the existing argument conversion behavior: an explicitly supplied string `"true"` or string array `["true"]` can also bind as one explicit true value. The command does not enforce the original JSON type. Omission, `null`, an empty value, and `false` never enable hard deletion; empty/invalid values are rejected.
+
+Illustrative CLI syntax (replace the placeholders only when intentionally deleting an item):
+
+```powershell
+# Default API deletion behavior; recovery is not guaranteed.
+fabmcp core delete-item --workspace-id "<workspace-uuid>" --item-id "<item-uuid>"
+
+# Explicitly do not request permanent deletion.
+fabmcp core delete-item --workspace-id "<workspace-uuid>" --item-id "<item-uuid>" --hard-delete false
+
+# Explicitly request irreversible permanent deletion.
+fabmcp core delete-item --workspace-id "<workspace-uuid>" --item-id "<item-uuid>" --hard-delete true
+```
+
+Soft deletion requires write permission on the item; hard/permanent deletion requires the workspace **Admin** role. Delegated callers need `Item.ReadWrite.All` or the corresponding item-specific write scope. Service principal and managed identity support depends on the item type. Existing host authentication and destructive-operation consent requirements apply; the tool is unavailable in read-only mode.
+
+On the documented empty HTTP 200 response, the tool returns only `workspaceId`, `itemId`, and `hardDeleteRequested`. These identify the requested target and mode, not item metadata or a recovery guarantee. A 404 or other failure is an error, not a successful deletion. Throttling responses retain status 429 and include validated `Retry-After` guidance when available, without automatic retries. Cancellation or timeout does not confirm the final deletion state.
 
 ### Data Factory Operations
 

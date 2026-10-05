@@ -43,7 +43,7 @@ public sealed class WorkspaceCreateToolRegistrationTests()
         var tools = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
 
         Assert.Equal(
-            ["core_create-item", "core_create-workspace", "core_get-capacity", "core_get-workspace",
+            ["core_create-item", "core_create-workspace", "core_delete-item", "core_get-capacity", "core_get-workspace",
              "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog",
              "core_update-item", "core_update-workspace"],
             tools.Tools.Select(static tool => tool.Name).Order());

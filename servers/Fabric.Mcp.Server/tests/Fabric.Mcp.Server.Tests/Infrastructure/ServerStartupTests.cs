@@ -252,6 +252,7 @@ public class ServerStartupTests
         [
             "core_create-item",
             "core_create-workspace",
+            "core_delete-item",
             "core_get-capacity",
             "core_get-workspace",
             "core_list-capacities",
@@ -269,7 +270,7 @@ public class ServerStartupTests
 
         using var document = JsonDocument.Parse(response);
         var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
-        Assert.Equal(56, tools.Length);
+        Assert.Equal(57, tools.Length);
         var creation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-workspace");
         Assert.False(creation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.False(creation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
@@ -287,6 +288,15 @@ public class ServerStartupTests
         Assert.True(itemUpdate.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
         Assert.Equal(["item-id", "workspace-id"], itemUpdate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
             .Select(value => value.GetString()).Order());
+        var itemDelete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-item");
+        Assert.False(itemDelete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemDelete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(itemDelete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemDelete.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var hardDelete = itemDelete.GetProperty("inputSchema").GetProperty("properties").GetProperty("hard-delete");
+        Assert.Equal(["boolean", "null"], hardDelete.GetProperty("type").EnumerateArray().Select(value => value.GetString()));
+        Assert.False(hardDelete.TryGetProperty("default", out _));
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)

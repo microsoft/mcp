@@ -76,6 +76,47 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return await JsonSerializer.DeserializeAsync<FabricItem>(response, CoreJsonContext.Default.FabricItem, cancellationToken) ?? new FabricItem();
     }
 
+    public async Task DeleteItemAsync(
+        string workspaceId,
+        string itemId,
+        bool? hardDelete = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(workspaceId, out var parsedWorkspaceId) || parsedWorkspaceId == Guid.Empty)
+        {
+            throw new ArgumentException("Workspace ID must be a nonempty UUID.", nameof(workspaceId));
+        }
+
+        if (!Guid.TryParse(itemId, out var parsedItemId) || parsedItemId == Guid.Empty)
+        {
+            throw new ArgumentException("Item ID must be a nonempty UUID.", nameof(itemId));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}/items/{parsedItemId:D}";
+        if (hardDelete is { } requestedHardDelete)
+        {
+            url += requestedHardDelete ? "?hardDelete=true" : "?hardDelete=false";
+        }
+
+        using var response = await SendFabricHttpRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            return;
+        }
+
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            throw new FabricItemDeleteThrottledException(FabricCoreHttpHelpers.GetRetryAfter(response));
+        }
+
+        var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
+        throw new HttpRequestException("Fabric item deletion was not confirmed.", null, statusCode);
+    }
+
     /// <inheritdoc />
     public async Task<FabricCapacityMetadata> GetCapacityAsync(string capacityId, CancellationToken cancellationToken)
     {

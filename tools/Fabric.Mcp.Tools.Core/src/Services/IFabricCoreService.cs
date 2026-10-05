@@ -16,6 +16,12 @@ public interface IFabricCoreService
 
     Task<FabricItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default);
 
+    Task DeleteItemAsync(
+        string workspaceId,
+        string itemId,
+        bool? hardDelete = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Gets metadata for one existing Fabric capacity.</summary>
     Task<FabricCapacityMetadata> GetCapacityAsync(string capacityId, CancellationToken cancellationToken);
 
