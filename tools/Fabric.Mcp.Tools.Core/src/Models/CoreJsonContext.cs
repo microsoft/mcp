@@ -18,6 +18,11 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(CatalogSearchResponse))]
 [JsonSerializable(typeof(CatalogSearchCommandResult))]
 [JsonSerializable(typeof(FabricCapacityMetadata))]
+[JsonSerializable(typeof(FabricWorkspaceAppliedTag))]
+[JsonSerializable(typeof(FabricWorkspaceIdentity))]
+[JsonSerializable(typeof(FabricWorkspaceMetadata))]
+[JsonSerializable(typeof(FabricWorkspaceOneLakeEndpoints))]
+[JsonSerializable(typeof(WorkspaceGetCommandResult))]
 public partial class CoreJsonContext : JsonSerializerContext
 {
 }

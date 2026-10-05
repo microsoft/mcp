@@ -28,6 +28,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
     - [Resource Definitions & Schemas](#resource-definitions--schemas)
     - [Best Practices & Examples](#best-practices--examples)
     - [Development Workflows](#development-workflows)
+  - [Workspace Metadata](#workspace-metadata)
   - [Available Tools](#available-tools)
     - [API Documentation & Best Practices](#api-documentation--best-practices)
     - [OneLake Data Operations](#onelake-data-operations)
@@ -238,6 +239,34 @@ The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/cor
 * "Show me how to handle long-running operations in Fabric APIs"
 * "What's the recommended error handling pattern for Fabric API calls?"
 
+## Workspace Metadata
+
+Use `core_get-workspace` to retrieve metadata for one known workspace through the [Get Workspace REST API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/get-workspace).
+
+* "Get metadata for Fabric workspace `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`."
+* "Show the capacity, domain, and workspace identity for Fabric workspace `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`."
+* "Get Fabric workspace `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa` with workspace-specific API and OneLake endpoints."
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `workspace-id` | Yes | Nonempty workspace UUID, not a name or URL. Accepted UUID representations are normalized before the request. |
+| `prefer-workspace-specific-endpoints` | No | Boolean endpoint preference. Omit to preserve the service default, or explicitly pass `true` or `false`. |
+
+```powershell
+fabmcp core get-workspace --workspace-id aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+fabmcp core get-workspace --workspace-id aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa --prefer-workspace-specific-endpoints true
+```
+
+The result contains a `workspace` object with `id`, `displayName`, and `type`. When returned by Fabric it also includes `description`, `capacityId`, `capacityAssignmentProgress`, `capacityRegion`, `domainId`, `workspaceIdentity`, `oneLakeEndpoints`, `apiEndpoint`, and applied `tags`. Missing/null optional fields are omitted; an explicitly empty tag list remains empty. New workspace types, capacity regions, and progress values are preserved.
+
+Workspace identity fields contain application and service-principal IDs, not credentials. Returned endpoints are metadata only: this tool never contacts them. Workspaces with public access disabled may return workspace-specific OneLake endpoints even when the preference is omitted or false; an absent API endpoint is not inferred.
+
+The tool does not list workspaces or items, read item data or definitions, modify resources, or poll capacity assignments. Errors retain their HTTP status without exposing backend bodies. A 429 includes validated `Retry-After` guidance when available, but the tool does not automatically retry.
+
+**Permissions:** The caller needs Viewer-or-higher workspace access. Delegated callers also need `Workspace.Read.All` or `Workspace.ReadWrite.All`. The API supports users, service principals, and managed identities subject to their permissions and Fabric configuration. The tool preserves the server's configured credentials: stdio/hosting identity uses the host's credential provider, and HTTP/OBO uses the current caller's delegated context.
+
+By default, the MCP text response contains the command envelope with `results.workspace`. With `--structured-output-mode compact` or `--structured-output-mode duplicated`, the server also advertises the typed output schema and returns `structuredContent.workspace`.
+
 <!-- remove-section: start vsix remove_available_tools_section -->
 ## Available Tools
 
@@ -313,6 +342,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 |-----------|-------------|
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
 
@@ -379,7 +409,7 @@ Example prompts: "Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a45
 
 ## Security
 
-The Fabric MCP Server is a **local-first** tool that runs entirely on your machine. It provides API specifications, schemas, and best practices without connecting to live Microsoft Fabric environments.
+The Fabric MCP Server is a **local-first** tool. Its documentation tools provide API specifications, schemas, and best practices without connecting to live Fabric environments. Operational tools, including Get Workspace, make authenticated requests using the server's configured identity and permissions.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 

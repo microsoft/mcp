@@ -19,5 +19,18 @@ public interface IFabricCoreService
     /// <summary>Gets metadata for one existing Fabric capacity.</summary>
     Task<FabricCapacityMetadata> GetCapacityAsync(string capacityId, CancellationToken cancellationToken);
 
+    /// <summary>Retrieves metadata for one existing workspace without reading its items or data.</summary>
+    /// <param name="workspaceId">The workspace ID as a nonempty UUID.</param>
+    /// <param name="preferWorkspaceSpecificEndpoints">The endpoint preference, or null to preserve the service default.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    /// <returns>The validated workspace metadata.</returns>
+    /// <exception cref="ArgumentException">The workspace ID is not a nonempty UUID.</exception>
+    /// <exception cref="HttpRequestException">Fabric returns a failure or an unexpected success status.</exception>
+    /// <exception cref="System.Text.Json.JsonException">Fabric returns invalid workspace metadata.</exception>
+    Task<FabricWorkspaceMetadata> GetWorkspaceAsync(
+        string workspaceId,
+        bool? preferWorkspaceSpecificEndpoints = null,
+        CancellationToken cancellationToken = default);
+
     Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default);
 }

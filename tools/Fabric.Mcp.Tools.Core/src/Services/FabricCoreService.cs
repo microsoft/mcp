@@ -110,6 +110,49 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return capacity;
     }
 
+    /// <inheritdoc />
+    public async Task<FabricWorkspaceMetadata> GetWorkspaceAsync(
+        string workspaceId,
+        bool? preferWorkspaceSpecificEndpoints = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(workspaceId, out var parsedWorkspaceId) || parsedWorkspaceId == Guid.Empty)
+        {
+            throw new ArgumentException("Workspace ID must be a nonempty UUID.", nameof(workspaceId));
+        }
+
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}";
+        if (preferWorkspaceSpecificEndpoints is { } prefer)
+        {
+            url += prefer ? "?preferWorkspaceSpecificEndpoints=true" : "?preferWorkspaceSpecificEndpoints=false";
+        }
+
+        using var response = await SendFabricHttpRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new FabricWorkspaceThrottledException(retryAfter);
+            }
+
+            var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
+            throw new HttpRequestException("Unable to retrieve Fabric workspace metadata.", null, statusCode);
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var workspace = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.FabricWorkspaceMetadata, cancellationToken);
+
+        if (workspace is null || workspace.Id != parsedWorkspaceId ||
+            string.IsNullOrWhiteSpace(workspace.DisplayName) || string.IsNullOrWhiteSpace(workspace.Type) ||
+            workspace.Tags?.Any(static tag => tag is null || tag.Id == Guid.Empty || string.IsNullOrWhiteSpace(tag.DisplayName)) == true)
+        {
+            throw new JsonException("Fabric returned invalid workspace metadata.");
+        }
+
+        return workspace;
+    }
+
     public async Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default)
     {
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/catalog/search";

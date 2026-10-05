@@ -24,6 +24,7 @@ public class FabricCoreSetupTests
         Assert.Contains(services, s => s.ServiceType == typeof(IFabricCoreService));
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(CapacityGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
         Assert.Contains(services, s => s.ServiceType == typeof(CapacityListCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(WorkspaceGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
     }
 
     [Fact]
@@ -53,7 +54,8 @@ public class FabricCoreSetupTests
         Assert.True(rootGroup.Commands.ContainsKey("search-catalog"), "Should have search-catalog command");
         Assert.True(rootGroup.Commands.ContainsKey("get-capacity"), "Should have get-capacity command");
         Assert.True(rootGroup.Commands.ContainsKey("list-capacities"), "Should have list-capacities command");
-        Assert.Equal(4, rootGroup.Commands.Count);
+        Assert.True(rootGroup.Commands.ContainsKey("get-workspace"), "Should have get-workspace command");
+        Assert.Equal(5, rootGroup.Commands.Count);
     }
 
     [Fact]
