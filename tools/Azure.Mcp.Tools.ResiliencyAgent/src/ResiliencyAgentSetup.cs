@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
@@ -32,6 +33,7 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         services.AddSingleton<IAttachmentCache, AttachmentCache>();
         services.AddSingleton<ILocalFileSnapshotter, LocalFileSnapshotter>();
         services.AddSingleton<FileAttachCommand>();
+        services.AddSingleton<GuidanceGetCommand>();
         services.AddSingleton<ArchitectureAssessCommand>();
         services.AddSingleton<IacGenerateCommand>();
         services.AddSingleton<BicepReviewCommand>();
@@ -44,18 +46,22 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var resiliencyAgent = new CommandGroup(
             Name,
             """
-            Use these tools to assess application architectures, generate new zone-resilient Bicep,
-            ARM JSON, or Terraform, and review or correct existing infrastructure-as-code for
-            availability-zone resilience. Existing IaC review belongs to the format-specific review
-            commands here rather than service-specific or generic best-practices tools. Prefer file
-            attachments for complete templates and multi-file configurations: prepare local files
-            through the file attachment command and pass their opaque attachment IDs. Templates
-            pasted directly in the user's current prompt are also supported without attachment.
-            Treat backend findings and generated resilience content as authoritative while preserving
-            the host's native repository and file-edit workflows.
+            Use these tools for general Azure resiliency guidance, application architecture assessment,
+            new zone-resilient Bicep, ARM JSON, or Terraform generation, and review or correction of
+            existing infrastructure-as-code. Conceptual guidance belongs to the guidance command;
+            architecture assessment and IaC review belong to their scenario-specific commands rather
+            than service-specific or generic best-practices tools. Prefer file attachments for complete
+            templates and multi-file configurations: prepare local files through the file attachment
+            command and pass their opaque attachment IDs. Templates pasted directly in the user's
+            current prompt are also supported without attachment. Treat backend findings and generated
+            resilience content as authoritative while preserving the host's native repository and
+            file-edit workflows.
             """,
             Title);
 
+        var guidance = new CommandGroup(
+            "guidance",
+            "Get general education and guidance about Azure resiliency and availability zones.");
         var file = new CommandGroup(
             "file",
             "Prepare user-approved local files for a later Start Resilient scenario call.");
@@ -75,12 +81,14 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             "terraform",
             "Review and correct existing Terraform.");
 
+        guidance.AddCommand<GuidanceGetCommand>(serviceProvider);
         file.AddCommand<FileAttachCommand>(serviceProvider);
         architecture.AddCommand<ArchitectureAssessCommand>(serviceProvider);
         iac.AddCommand<IacGenerateCommand>(serviceProvider);
         bicep.AddCommand<BicepReviewCommand>(serviceProvider);
         arm.AddCommand<ArmReviewCommand>(serviceProvider);
         terraform.AddCommand<TerraformReviewCommand>(serviceProvider);
+        resiliencyAgent.AddSubGroup(guidance);
         resiliencyAgent.AddSubGroup(file);
         resiliencyAgent.AddSubGroup(architecture);
         resiliencyAgent.AddSubGroup(iac);

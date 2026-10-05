@@ -1463,7 +1463,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
-- 🧭 **Azure Resiliency Agent** - Azure application architecture assessment, resilient infrastructure-as-code generation, and review of existing Bicep, ARM JSON, and Terraform
+- 🧭 **Azure Resiliency Agent** - General Azure resiliency guidance, application architecture assessment, resilient infrastructure-as-code generation, and review of existing Bicep, ARM JSON, and Terraform
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

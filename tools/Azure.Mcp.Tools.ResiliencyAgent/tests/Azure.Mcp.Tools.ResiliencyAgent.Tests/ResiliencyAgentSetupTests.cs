@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,10 +30,11 @@ public sealed class ResiliencyAgentSetupTests
         var area = setup.RegisterCommands(serviceProvider);
 
         Assert.Equal("resiliencyagent", area.Name);
-        Assert.Equal(6, area.SubGroup.Count);
-        Assert.Contains("Start Resilient tools", area.Description, StringComparison.Ordinal);
+        Assert.Equal(7, area.SubGroup.Count);
+        Assert.Contains("general Azure resiliency guidance", area.Description, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Zonal Resilience Agent", area.Description, StringComparison.Ordinal);
 
+        AssertCommand(area, "guidance", "get", "general, conceptual questions");
         AssertCommand(area, "file", "attach", "user confirmation");
         AssertCommand(area, "architecture", "assess", "design-time zonal resilience");
         AssertCommand(area, "iac", "generate", "Bicep, ARM JSON, or Terraform");
@@ -40,7 +42,8 @@ public sealed class ResiliencyAgentSetupTests
         AssertCommand(area, "arm", "review", "existing ARM JSON");
         AssertCommand(area, "terraform", "review", "existing Terraform");
 
-        Assert.DoesNotContain(area.SubGroup, group => group.Name is "guidance" or "zonal" or "conversation");
+        Assert.DoesNotContain(area.SubGroup, group => group.Name is "zonal" or "conversation");
+        Assert.NotNull(serviceProvider.GetRequiredService<GuidanceGetCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<FileAttachCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<ArchitectureAssessCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<IacGenerateCommand>());

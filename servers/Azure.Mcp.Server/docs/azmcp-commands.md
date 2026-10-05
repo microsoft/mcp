@@ -4517,6 +4517,11 @@ azmcp resiliency drill run resource get --service-group <service-group> \
 ### Azure Resiliency Agent Operations
 
 ```bash
+# Get general guidance about Azure resiliency and availability zones
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent guidance get --request <request> \
+                                        [--conversation-id <conversation-id>]
+
 # Prepare one user-approved local file and return an opaque attachment ID
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent file attach --file-path <file-path>

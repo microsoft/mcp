@@ -5605,7 +5605,7 @@
     },
     {
       "name": "use_azure_resiliency_agent",
-      "description": "Use the Azure Resiliency Agent to assess application architectures, generate new resilient Bicep, ARM JSON, or Terraform, and review existing infrastructure-as-code. The agent asks its own clarifying questions, so one call can carry a multi-turn conversation.",
+      "description": "Use the Azure Resiliency Agent for general Azure resiliency guidance, application architecture assessment, new resilient Bicep, ARM JSON, or Terraform generation, and review of existing infrastructure-as-code. The agent asks its own clarifying questions, so one call can carry a multi-turn conversation.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -5633,6 +5633,7 @@
         }
       },
       "mappedToolList": [
+        "resiliencyagent_guidance_get",
         "resiliencyagent_architecture_assess",
         "resiliencyagent_iac_generate",
         "resiliencyagent_bicep_review",

@@ -22,29 +22,16 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposable
 {
     /// <summary>
-    /// Overrides the A2A endpoint. Point this at a deployed environment to work against it instead of
-    /// a service running on this machine.
-    /// </summary>
-    private const string EndpointEnvironmentVariable = "AZURE_RESILIENCY_AGENT_A2A_URL";
-
-    /// <summary>
-    /// Overrides the delegated scope requested for the endpoint. Set it to the empty string to call
-    /// without a token, which is what a locally running service in its development configuration
-    /// expects.
-    /// </summary>
-    private const string ScopeEnvironmentVariable = "AZURE_RESILIENCY_AGENT_SCOPE";
-
-    /// <summary>
     /// The deployed Resiliency Agent endpoint.
     /// </summary>
-    private const string DefaultEndpoint = "https://agent.public.resiliencemanagement.azure.com/a2a";
+    private const string Endpoint = "https://agent.public.resiliencemanagement.azure.com/a2a";
 
     /// <summary>
     /// Delegated scope for the Resiliency Agent application. The developer client signs the user in and
     /// acquires this token; the endpoint then exchanges it on-behalf-of for ARM, so the user's own RBAC
     /// applies throughout. This is the same scope Azure Portal Copilot requests in its manifest.
     /// </summary>
-    private const string DefaultScope = "5c43d95c-7a1a-4860-8361-d86bb81364d0/.default";
+    private const string Scope = "5c43d95c-7a1a-4860-8361-d86bb81364d0/.default";
 
     private static readonly TimeSpan s_pollInterval = TimeSpan.FromSeconds(2);
 
@@ -62,39 +49,19 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
     {
         _logger = logger;
         _dataBoundaryResolver = dataBoundaryResolver;
-        _endpoint = ReadSetting(EndpointEnvironmentVariable, DefaultEndpoint);
+        _endpoint = Endpoint;
+        _sendDataBoundary = true;
+        _logger.LogDebug(
+            "Calling the Resiliency Agent at {Endpoint} with a delegated token for scope {Scope}.",
+            _endpoint,
+            Scope);
 
-        // The token is attached per request by the shared handler rather than cached here, so a
-        // refreshed or re-scoped credential is picked up without restarting the server. An explicitly
-        // empty scope disables it, which is how a locally running service - where authentication is
-        // skipped in its development configuration - is reached.
-        string scope = ResolveScope();
-
-        if (scope.Length > 0)
+        var handler = new AccessTokenHandler(tokenCredentialProvider, [Scope])
         {
-            _sendDataBoundary = true;
-            _logger.LogDebug(
-                "Calling the Resiliency Agent at {Endpoint} with a delegated token for scope {Scope}.",
-                _endpoint,
-                scope);
+            InnerHandler = new HttpClientHandler(),
+        };
 
-            var handler = new AccessTokenHandler(tokenCredentialProvider, [scope])
-            {
-                InnerHandler = new HttpClientHandler(),
-            };
-
-            _httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(2) };
-        }
-        else
-        {
-            _sendDataBoundary = false;
-            _logger.LogDebug(
-                "Calling the Resiliency Agent at {Endpoint} without a delegated token, because {Variable} is set to an empty value.",
-                _endpoint,
-                ScopeEnvironmentVariable);
-
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
-        }
+        _httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(2) };
     }
 
     public ResiliencyAgentService(
@@ -110,24 +77,6 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
         _endpoint = endpoint;
         _sendDataBoundary = sendDataBoundary;
     }
-
-    /// <summary>
-    /// Resolves the delegated scope, distinguishing "not set" from "deliberately empty".
-    /// </summary>
-    private static string ResolveScope()
-    {
-        string? configured = Environment.GetEnvironmentVariable(ScopeEnvironmentVariable);
-
-        // A set-but-empty value is a deliberate opt out of authentication; an unset value means take
-        // the default. Treating both as "no token" would silently drop authentication whenever the
-        // variable was simply absent.
-        return configured is null ? DefaultScope : configured.Trim();
-    }
-
-    private static string ReadSetting(string variable, string fallback) =>
-        Environment.GetEnvironmentVariable(variable) is string value && !string.IsNullOrWhiteSpace(value)
-            ? value
-            : fallback;
 
     public async Task<AgentTurn> SendAsync(
         string conversationId,
