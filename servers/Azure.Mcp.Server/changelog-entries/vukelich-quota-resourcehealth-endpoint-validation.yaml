@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: Validate raw Azure Resource Manager requests from Quota and Resource Health against cloud-specific management endpoints, and safely escape generated Resource Health OData filter values.

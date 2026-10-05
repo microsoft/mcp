@@ -100,6 +100,13 @@ public static partial class EndpointValidator
             UsGov: [".azconfig.azure.us"],
             Germany: [".azconfig.azure.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["arm"] = new AllowedSuffixManager(
+            // Raw ARM requests in Quota, Resource Health, and Service Fabric use ArmEnvironment.Endpoint to construct these hosts.
+            Public: ["management.azure.com"],
+            China: ["management.chinacloudapi.cn"],
+            UsGov: ["management.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: true),
         ["azure-openai"] = new AllowedSuffixManager(
             Public: [
                 ".openai.azure.com",
@@ -178,17 +185,67 @@ public static partial class EndpointValidator
             UsGov: [".mysql.database.usgovcloudapi.net"],
             Germany: [],
             UseLegacyCheck: false),
+        ["postgres"] = new AllowedSuffixManager(
+            // PostgresService.cs also has a copy of these. Keep them in sync.
+            Public: [".postgres.database.azure.com"],
+            China: [".postgres.database.chinacloudapi.cn"],
+            UsGov: [".postgres.database.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: false),
+        ["pricing"] = new AllowedSuffixManager(
+            // PricingService.GetPricingEndpoint constructs these exact hosts, while the endpoint policy uses
+            // this copy to authorize initial and paginated requests. Keep both copies and their tests in sync.
+            Public: ["prices.azure.com"],
+            China: ["prices.azure.cn"],
+            UsGov: ["prices.azure.us"],
+            Germany: [],
+            UseLegacyCheck: true),
+        ["search"] = new AllowedSuffixManager(
+            // SearchService.CreateAndValidateSearchEndpoint constructs these suffixes for the Search SDK.
+            // Keep both copies and their tests in sync when Azure cloud endpoint domains change.
+            Public: [".search.windows.net"],
+            China: [".search.azure.cn"],
+            UsGov: [".search.azure.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["servicebus"] = new AllowedSuffixManager(
             Public: [".servicebus.windows.net"],
             China: [".servicebus.chinacloudapi.cn"],
             UsGov: [".servicebus.usgovcloudapi.net"],
+            Germany: [],
+            UseLegacyCheck: false),
+        ["speech"] = new AllowedSuffixManager(
+            // SpeechEndpointValidator authorizes user-supplied Speech SDK and REST endpoints with these suffixes.
+            // Keep its validation behavior and tests synchronized with this central endpoint policy.
+            Public: [".cognitiveservices.azure.com"],
+            China: [".cognitiveservices.azure.cn"],
+            UsGov: [".cognitiveservices.azure.us"],
             Germany: [".servicebus.cloudapi.de"],
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+        ["sreagent"] = new AllowedSuffixManager(
+            // SRE Agent is currently offered only in the public cloud and its data-plane endpoints use
+            // the global '.azuresre.ai' domain. Leave the sovereign clouds empty so validation fails
+            // closed rather than implicitly accepting a public-cloud host there.
+            Public: [".azuresre.ai"],
+            China: [],
+            UsGov: [],
+            Germany: [],
+            UseLegacyCheck: false),
         ["storage-blob"] = new AllowedSuffixManager(
             Public: [".blob.core.windows.net"],
             China: [".blob.core.chinacloudapi.cn"],
             UsGov: [".blob.core.usgovcloudapi.net"],
-            Germany: [".blob.core.cloudapi.de"],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            // Azure Germany (Microsoft Cloud Deutschland) is retired and unsupported by the runtime
+            // cloud configuration, so leave it empty to fail closed rather than trust a dead domain.
+            Germany: [],
+            UseLegacyCheck: false),
+        ["storage-table"] = new AllowedSuffixManager(
+            Public: [".table.core.windows.net"],
+            China: [".table.core.chinacloudapi.cn"],
+            UsGov: [".table.core.usgovcloudapi.net"],
+            // Azure Germany (Microsoft Cloud Deutschland) is retired and unsupported by the runtime
+            // cloud configuration, so leave it empty to fail closed rather than trust a dead domain.
+            Germany: [],
+            UseLegacyCheck: false),
     }.ToFrozenDictionary();
 }

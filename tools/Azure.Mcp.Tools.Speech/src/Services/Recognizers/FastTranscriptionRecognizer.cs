@@ -31,6 +31,9 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
+        Uri apiUrl = SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(
+            endpoint,
+            AzureService.CloudConfiguration.ArmEnvironment);
 
         // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
         filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
@@ -62,16 +65,6 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
                 // Get access token for Cognitive Services with proper scope
                 var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
-                // Build the Fast Transcription API URL
-                var apiVersion = "2024-11-15";
-                var baseUri = new UriBuilder(endpoint.TrimEnd('/'))
-                {
-                    Scheme = "https",
-                    Port = -1 // Use default port for scheme
-                }.Uri;
-
-                var apiPath = $"speechtotext/transcriptions:transcribe?api-version={apiVersion}";
-                var apiUrl = new Uri(baseUri, apiPath);
                 _logger.LogDebug("Fast Transcription API URL: {ApiUrl}", apiUrl);
 
                 // Create the request definition

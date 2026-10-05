@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util;
 
@@ -45,7 +46,9 @@ public interface IUsageChecker
     Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
 }
 
-// Abstract base class for checking Azure quotas
+/// <summary>
+/// Base class for Azure resource-provider quota checkers.
+/// </summary>
 public abstract class AzureUsageChecker : IUsageChecker
 {
     protected readonly string SubscriptionId;
@@ -54,49 +57,82 @@ public abstract class AzureUsageChecker : IUsageChecker
     protected readonly ILogger Logger;
     protected readonly IAzureService AzureService;
 
-    protected AzureUsageChecker(TokenCredential credential, string subscriptionId, ILogger logger, IAzureService azureService)
+    /// <summary>
+    /// Initializes a quota checker with a configured ARM client and raw-request dependencies.
+    /// </summary>
+    /// <param name="resourceClient">
+    /// The ARM client created by the owning <see cref="BaseAzureService"/> so it uses the configured cloud,
+    /// credential provider, HTTP transport, user agent, and retry policies.
+    /// </param>
+    /// <param name="credential">The credential used by raw ARM quota requests.</param>
+    /// <param name="subscriptionId">The Azure subscription ID whose quota will be checked.</param>
+    /// <param name="logger">The logger used by the concrete quota checker.</param>
+    /// <param name="azureService">The Azure service used by raw ARM quota requests.</param>
+    protected AzureUsageChecker(
+        ArmClient resourceClient,
+        TokenCredential credential,
+        string subscriptionId,
+        ILogger logger,
+        IAzureService azureService)
     {
         SubscriptionId = subscriptionId;
+        ResourceClient = resourceClient ?? throw new ArgumentNullException(nameof(resourceClient));
         Credential = credential ?? throw new ArgumentNullException(nameof(credential));
         AzureService = azureService ?? throw new ArgumentNullException(nameof(azureService));
-        Logger = logger;
-        var clientOptions = new ArmClientOptions { Environment = azureService.CloudConfiguration.ArmEnvironment };
-
-        ResourceClient = new ArmClient(
-            credential,
-            subscriptionId,
-            clientOptions);
+        Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
-    protected string GetManagementEndpoint()
-    {
-        return AzureService.CloudConfiguration.ArmEnvironment.Endpoint.ToString().TrimEnd('/');
-    }
-
 
     public abstract Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
 
-    protected async Task<JsonDocument?> GetQuotaByUrlAsync(string requestUrl, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Sends a quota request to a path under the configured Azure Resource Manager endpoint.
+    /// </summary>
+    /// <param name="relativePath">
+    /// The rooted or relative ARM request path. Absolute and network-path values are rejected unless they resolve
+    /// to the configured cloud's exact ARM host.
+    /// </param>
+    /// <param name="cancellationToken">The token used to cancel the request.</param>
+    /// <returns>The parsed response body, or <see langword="null"/> when the ARM request fails.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the ARM endpoint allow-list is unavailable.
+    /// </exception>
+    /// <exception cref="System.Security.SecurityException">
+    /// Thrown when the completed request URI is not an HTTPS Azure Resource Manager endpoint for the configured cloud.
+    /// </exception>
+    protected async Task<JsonDocument?> GetQuotaByUrlAsync(
+        string relativePath,
+        CancellationToken cancellationToken)
     {
+        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
+        Uri requestUri = new(armEnvironment.Endpoint, relativePath);
+
+        // Uri resolution accepts absolute and network-path inputs that can replace the configured ARM authority.
+        // Validate the completed URI before access-token acquisition so derived usage checkers cannot redirect tokens.
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: requestUri.AbsoluteUri,
+            serviceType: "arm",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "quota");
+
         try
         {
-            var token = await Credential.GetTokenAsync(
+            AccessToken token = await Credential.GetTokenAsync(
                 new TokenRequestContext([AzureService.CloudConfiguration.ArmEnvironment.DefaultScope]),
                 cancellationToken);
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+            using HttpRequestMessage request = new(HttpMethod.Get, requestUri);
             request.Headers.Authorization = new("Bearer", token.Token);
             request.Headers.Accept.Add(new("application/json"));
 
-            var httpClient = AzureService.GetClient(nameof(AzureUsageChecker));
-            var response = await httpClient.SendAsync(request, cancellationToken);
+            HttpClient httpClient = AzureService.GetClient(nameof(AzureUsageChecker));
+            using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"HTTP error! status: {response.StatusCode}");
             }
 
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            string content = await response.Content.ReadAsStringAsync(cancellationToken);
             return JsonDocument.Parse(content);
         }
         catch (Exception error)
@@ -105,7 +141,6 @@ public abstract class AzureUsageChecker : IUsageChecker
             return null;
         }
     }
-
 }
 
 // Factory function to create usage checkers
@@ -126,83 +161,33 @@ public static class UsageCheckerFactory
         { "Microsoft.ContainerInstance", ResourceProvider.ContainerInstance }
     };
 
-    public static IUsageChecker CreateUsageChecker(TokenCredential credential, string provider, string subscriptionId, ILoggerFactory loggerFactory, IAzureService azureService)
+    public static IUsageChecker CreateUsageChecker(
+        ArmClient resourceClient,
+        TokenCredential credential,
+        string provider,
+        string subscriptionId,
+        ILoggerFactory loggerFactory,
+        IAzureService azureService)
     {
-        if (!ProviderMapping.TryGetValue(provider, out var resourceProvider))
+        if (!ProviderMapping.TryGetValue(provider, out ResourceProvider resourceProvider))
         {
             throw new ArgumentException($"Unsupported resource provider: {provider}");
         }
 
         return resourceProvider switch
         {
-            ResourceProvider.Compute => new ComputeUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ComputeUsageChecker>(), azureService),
-            ResourceProvider.CognitiveServices => new CognitiveServicesUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<CognitiveServicesUsageChecker>(), azureService),
-            ResourceProvider.Storage => new StorageUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<StorageUsageChecker>(), azureService),
-            ResourceProvider.ContainerApp => new ContainerAppUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerAppUsageChecker>(), azureService),
-            ResourceProvider.Network => new NetworkUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<NetworkUsageChecker>(), azureService),
-            ResourceProvider.MachineLearning => new MachineLearningUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<MachineLearningUsageChecker>(), azureService),
-            ResourceProvider.PostgreSQL => new PostgreSQLUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<PostgreSQLUsageChecker>(), azureService),
-            ResourceProvider.HDInsight => new HDInsightUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<HDInsightUsageChecker>(), azureService),
-            ResourceProvider.Search => new SearchUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<SearchUsageChecker>(), azureService),
-            ResourceProvider.ContainerInstance => new ContainerInstanceUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<ContainerInstanceUsageChecker>(), azureService),
-            ResourceProvider.SQL => new SQLUsageChecker(credential, subscriptionId, loggerFactory.CreateLogger<SQLUsageChecker>(), azureService),
+            ResourceProvider.Compute => new ComputeUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<ComputeUsageChecker>(), azureService),
+            ResourceProvider.CognitiveServices => new CognitiveServicesUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<CognitiveServicesUsageChecker>(), azureService),
+            ResourceProvider.Storage => new StorageUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<StorageUsageChecker>(), azureService),
+            ResourceProvider.ContainerApp => new ContainerAppUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<ContainerAppUsageChecker>(), azureService),
+            ResourceProvider.Network => new NetworkUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<NetworkUsageChecker>(), azureService),
+            ResourceProvider.MachineLearning => new MachineLearningUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<MachineLearningUsageChecker>(), azureService),
+            ResourceProvider.PostgreSQL => new PostgreSQLUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<PostgreSQLUsageChecker>(), azureService),
+            ResourceProvider.HDInsight => new HDInsightUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<HDInsightUsageChecker>(), azureService),
+            ResourceProvider.Search => new SearchUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<SearchUsageChecker>(), azureService),
+            ResourceProvider.ContainerInstance => new ContainerInstanceUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<ContainerInstanceUsageChecker>(), azureService),
+            ResourceProvider.SQL => new SQLUsageChecker(resourceClient, credential, subscriptionId, loggerFactory.CreateLogger<SQLUsageChecker>(), azureService),
             _ => throw new ArgumentException($"No implementation for provider: {provider}")
         };
-    }
-}
-
-// Service to get Azure quota for a list of resource types
-public static class AzureQuotaService
-{
-    public static async Task<Dictionary<string, List<UsageInfo>>> GetAzureQuotaAsync(
-        TokenCredential credential,
-        List<string> resourceTypes,
-        string subscriptionId,
-        string location,
-        IAzureService azureService,
-        ILoggerFactory loggerFactory,
-        CancellationToken cancellationToken)
-    {
-        // Group resource types by provider to avoid duplicate processing
-        var providerToResourceTypes = resourceTypes
-            .GroupBy(rt => rt.Split('/')[0])
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        var logger = loggerFactory.CreateLogger(typeof(AzureQuotaService));
-
-        // Use Select to create tasks and await them all
-        var quotaTasks = providerToResourceTypes.Select(async kvp =>
-        {
-            var (provider, resourceTypesForProvider) = (kvp.Key, kvp.Value);
-            try
-            {
-                var usageChecker = UsageCheckerFactory.CreateUsageChecker(credential, provider, subscriptionId, loggerFactory, azureService);
-                var quotaInfo = await usageChecker.GetUsageForLocationAsync(location, cancellationToken);
-                logger.LogDebug("Retrieved quota info for provider {Provider}: {ItemCount} items", provider, quotaInfo.Count);
-
-                return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt, quotaInfo));
-            }
-            catch (ArgumentException ex) when (ex.Message.Contains("Unsupported resource provider", StringComparison.OrdinalIgnoreCase))
-            {
-                return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt, [
-                    new(rt, 0, 0, Description: "No Limit")
-                ]));
-            }
-            catch (Exception error)
-            {
-                logger.LogWarning("Error fetching quota for provider {Provider}: {Error}", provider, error.Message);
-                return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt,
-                [
-                    new(rt, 0, 0, Description: error.Message)
-                ]));
-            }
-        });
-
-        var results = await Task.WhenAll(quotaTasks);
-
-        // Flatten the results into a single dictionary
-        return results
-            .SelectMany(i => i)
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 }

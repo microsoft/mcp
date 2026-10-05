@@ -248,6 +248,7 @@
     "azureservicebus",
     "azuresql",
     "azuresqldatabase",
+    "azuresre",
     "azurestorage",
     "azuresubscription",
     "azureterraform",
