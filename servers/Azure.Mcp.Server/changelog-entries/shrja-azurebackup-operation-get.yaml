@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added azurebackup operation get to read asynchronous operation status at Recovery Services vault or protected-item scope, returning timestamps, safe errors, and actual job IDs when present without treating operation IDs as job IDs.

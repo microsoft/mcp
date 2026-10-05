@@ -48,6 +48,7 @@ public class AzureBackupSetupTests
         Assert.Contains("backup", groupNames);
         Assert.Contains("container", groupNames);
         Assert.Contains("job", groupNames);
+        Assert.Contains("operation", groupNames);
         Assert.Contains("recoverypoint", groupNames);
         Assert.Contains("governance", groupNames);
         Assert.Contains("disasterrecovery", groupNames);
@@ -195,6 +196,17 @@ public class AzureBackupSetupTests
     {
         var setup = new AzureBackupSetup();
         Assert.Throws<ArgumentNullException>(() => setup.RegisterCommands(null!));
+    }
+
+    [Fact]
+    public void RegisterCommands_OperationGroup_HasOnlyReadOnlyGet()
+    {
+        var setup = new AzureBackupSetup();
+        var services = CreateServiceProvider(setup);
+        var root = setup.RegisterCommands(services);
+        var operation = root.SubGroup.Single(g => g.Name == "operation");
+        Assert.Equal("get", Assert.Single(operation.Commands).Key);
+        Assert.NotNull(services.GetRequiredService<AzureBackup.Services.IRsvBackupOperationService>());
     }
 
     private static IServiceProvider CreateServiceProvider(AzureBackupSetup setup)
