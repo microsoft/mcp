@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Azure SRE Agent tool selection so that 'investigate this issue' prompts route to the investigate tool instead of the read-only get-thread tool."

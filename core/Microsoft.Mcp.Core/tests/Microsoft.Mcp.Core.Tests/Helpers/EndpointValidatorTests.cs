@@ -85,13 +85,29 @@ public class EndpointValidatorTests
     [InlineData("https://my-instance.energy.azure.com", "adme")]
     [InlineData("https://my-instance.oep.ppe.azure-int.net", "adme")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://my-foundry.services.ai.azure.com", "foundry")]
     [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]
     [InlineData("https://my-resource.openai.azure.com", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.com", "azure-openai")]
+    [InlineData("https://topic.westus2-1.eventgrid.azure.net/api/events", "eventgrid")]
+    [InlineData("https://hub.azure-devices.net/devices", "iothub")]
+    [InlineData("https://vault.vault.azure.net/secrets", "keyvault")]
+    [InlineData("https://00000000-0000-0000-0000-000000000000.eastus.cnt-prod.loadtesting.azure.com", "loadtesting")]
+    [InlineData("https://hsm.managedhsm.azure.net/settings", "managedhsm")]
+    [InlineData("https://eastus.metrics.monitor.azure.com", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.azure.com", "mysql")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
+    [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://agent1.azuresre.ai", "sreagent")]
+    [InlineData("https://mystorage.blob.core.windows.net", "storage-blob")]
+    [InlineData("https://mystorage.table.core.windows.net", "storage-table")]
     [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
+    [InlineData("https://servicebus.windows.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -104,6 +120,50 @@ public class EndpointValidatorTests
     }
 
     [Theory]
+    [InlineData("eventgrid")]
+    [InlineData("foundry")]
+    [InlineData("iothub")]
+    [InlineData("keyvault")]
+    [InlineData("loadtesting")]
+    [InlineData("managedhsm")]
+    [InlineData("monitor-metrics")]
+    [InlineData("mysql")]
+    [InlineData("sreagent")]
+    [InlineData("storage-table")]
+    public void ValidateAzureServiceEndpoint_ReviewedToolServices_AreRegistered(string serviceType)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "https://invalid.example",
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
+    }
+
+    [Theory]
+    [InlineData("https://topic.eventgrid.azure.net.evil.example", "eventgrid")]
+    [InlineData("https://my-foundry.services.ai.azure.com.evil.example", "foundry")]
+    [InlineData("https://hub.azure-devices.net.evil.example", "iothub")]
+    [InlineData("https://vault.vault.azure.net.evil.example", "keyvault")]
+    [InlineData("https://resource.eastus.cnt-prod.loadtesting.azure.com.evil.example", "loadtesting")]
+    [InlineData("https://hsm.managedhsm.azure.net.evil.example", "managedhsm")]
+    [InlineData("https://eastus.metrics.monitor.azure.com.evil.example", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
+    [InlineData("https://agent1.azuresre.ai.evil.example", "sreagent")]
+    [InlineData("https://mystorage.table.core.windows.net.evil.example", "storage-table")]
+    public void ValidateAzureServiceEndpoint_ReviewedServiceSuffixes_RejectSpoofedHosts(
+        string endpoint,
+        string serviceType)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
+    }
+
+    [Theory]
     [InlineData("https://evil.com", "communication", "not a valid communication domain")]
     [InlineData("https://evil.com", "adme", "not a valid adme domain")]
     [InlineData("https://my-instance.energy.azure.com.evil.com", "adme", "not a valid adme domain")]
@@ -111,16 +171,35 @@ public class EndpointValidatorTests
     [InlineData("https://evil.com/.communication.azure.com", "communication", "not a valid communication domain")]
     [InlineData("http://mycomm.communication.azure.com", "communication", "must use HTTPS")]
     [InlineData("ftp://myconfig.azconfig.io", "appconfig", "must use HTTPS")]
+    [InlineData("https://evil.com", "arm", "not a valid arm domain")]
+    [InlineData("http://management.azure.com", "arm", "must use HTTPS")]
+    [InlineData("https://management.azure.com.evil.com", "arm", "not a valid arm domain")]
+    [InlineData("https://sub.management.azure.com", "arm", "not a valid arm domain")]
     [InlineData("https://evil.com", "foundry", "not a valid foundry domain")]
     [InlineData("http://my-foundry.services.ai.azure.com", "foundry", "must use HTTPS")]
     [InlineData("https://my-foundry.services.ai.azure.com.evil.com", "foundry", "not a valid foundry domain")]
     [InlineData("https://evil.com", "azure-openai", "not a valid azure-openai domain")]
     [InlineData("http://my-resource.openai.azure.com", "azure-openai", "must use HTTPS")]
     [InlineData("https://my-resource.openai.azure.com.evil.com", "azure-openai", "not a valid azure-openai domain")]
+    [InlineData("http://resource.eastus.cnt-prod.loadtesting.azure.com", "loadtesting", "must use HTTPS")]
+    [InlineData("http://eastus.metrics.monitor.azure.com", "monitor-metrics", "must use HTTPS")]
+    [InlineData("https://evil.com", "postgres", "not a valid postgres domain")]
+    [InlineData("http://myserver.postgres.database.azure.com", "postgres", "must use HTTPS")]
+    [InlineData("https://myserver.postgres.database.azure.com.evil.com", "postgres", "not a valid postgres domain")]
+    [InlineData("https://evil.com", "pricing", "not a valid pricing domain")]
+    [InlineData("http://prices.azure.com", "pricing", "must use HTTPS")]
+    [InlineData("https://prices.azure.com.evil.com", "pricing", "not a valid pricing domain")]
+    [InlineData("https://sub.prices.azure.com", "pricing", "not a valid pricing domain")]
+    [InlineData("https://evil.com", "search", "not a valid search domain")]
+    [InlineData("http://my-search.search.windows.net", "search", "must use HTTPS")]
+    [InlineData("https://my-search.search.windows.net.evil.com", "search", "not a valid search domain")]
     [InlineData("https://attacker.dssldrf.net", "servicebus", "not a valid servicebus domain")]
     [InlineData("http://mynamespace.servicebus.windows.net", "servicebus", "must use HTTPS")]
     [InlineData("https://mynamespace.servicebus.windows.net.evil.com", "servicebus", "not a valid servicebus domain")]
     [InlineData("https://evil.com/.servicebus.windows.net", "servicebus", "not a valid servicebus domain")]
+    [InlineData("https://evil.com", "speech", "not a valid speech domain")]
+    [InlineData("http://my-speech.cognitiveservices.azure.com", "speech", "must use HTTPS")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com.evil.com", "speech", "not a valid speech domain")]
     public void ValidateAzureServiceEndpoint_InvalidEndpoints_ThrowsSecurityException(
         string endpoint,
         string serviceType,
@@ -205,11 +284,23 @@ public class EndpointValidatorTests
     // Azure China Cloud
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://management.chinacloudapi.cn/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://mycomm.communication.azure.cn", "communication")]
-    [InlineData("https://my-foundry.services.ai.azure.cn", "foundry")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
+    [InlineData("https://topic.chinanorth3-1.eventgrid.azure.cn", "eventgrid")]
+    [InlineData("https://hub.azure-devices.cn", "iothub")]
+    [InlineData("https://vault.vault.azure.cn", "keyvault")]
+    [InlineData("https://hsm.managedhsm.azure.cn", "managedhsm")]
+    [InlineData("https://chinanorth3.metrics.monitor.azure.cn", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.chinacloudapi.cn", "mysql")]
+    [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
+    [InlineData("https://prices.azure.cn", "pricing")]
+    [InlineData("https://my-search.search.azure.cn", "search")]
+    [InlineData("https://mystorage.blob.core.chinacloudapi.cn", "storage-blob")]
+    [InlineData("https://mystorage.table.core.chinacloudapi.cn", "storage-table")]
     [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.cn", "speech")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -226,11 +317,25 @@ public class EndpointValidatorTests
     // Azure US Government
     [InlineData("https://myregistry.azurecr.us", "acr")]
     [InlineData("https://myconfig.azconfig.azure.us", "appconfig")]
+    [InlineData("https://management.usgovcloudapi.net/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://mycomm.communication.azure.us", "communication")]
     [InlineData("https://my-foundry.services.ai.azure.us", "foundry")]
     [InlineData("https://my-resource.openai.azure.us", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.us", "azure-openai")]
+    [InlineData("https://topic.usgovvirginia-1.eventgrid.azure.us", "eventgrid")]
+    [InlineData("https://hub.azure-devices.us", "iothub")]
+    [InlineData("https://vault.vault.usgovcloudapi.net", "keyvault")]
+    [InlineData("https://00000000-0000-0000-0000-000000000000.usgovvirginia.cnt-prod.loadtesting.azure.us", "loadtesting")]
+    [InlineData("https://hsm.managedhsm.usgovcloudapi.net", "managedhsm")]
+    [InlineData("https://usgovvirginia.metrics.monitor.azure.us", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.usgovcloudapi.net", "mysql")]
+    [InlineData("https://myserver.postgres.database.usgovcloudapi.net", "postgres")]
+    [InlineData("https://prices.azure.us", "pricing")]
+    [InlineData("https://my-search.search.azure.us", "search")]
+    [InlineData("https://mystorage.blob.core.usgovcloudapi.net", "storage-blob")]
+    [InlineData("https://mystorage.table.core.usgovcloudapi.net", "storage-table")]
     [InlineData("https://mynamespace.servicebus.usgovcloudapi.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.us", "speech")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -247,6 +352,12 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in China cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com", "arm")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
+    [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InChinaCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -264,6 +375,12 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in Gov cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com", "arm")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
+    [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InGovCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
@@ -281,6 +398,12 @@ public class EndpointValidatorTests
     // China cloud endpoint should fail in public cloud
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://management.chinacloudapi.cn", "arm")]
+    [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
+    [InlineData("https://prices.azure.cn", "pricing")]
+    [InlineData("https://my-search.search.azure.cn", "search")]
+    [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.cn", "speech")]
     public void ValidateAzureServiceEndpoint_ChinaCloudEndpoint_InPublicCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert

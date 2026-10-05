@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.Communication.Commands.Sms;
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,
-    ReadOnly = true,
+    ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
 public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService)

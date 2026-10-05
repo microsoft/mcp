@@ -23,6 +23,7 @@ public sealed class ExtensionSetup : IAreaSetup
     {
         services.AddHttpClientServices();
         services.AddSingleton<ICliGenerateService, CliGenerateService>();
+        services.AddSingleton<IAzqrCliService, AzqrCliService>();
         services.AddSingleton<AzqrCommand>();
         services.AddSingleton<CliGenerateCommand>();
         services.AddSingleton<ICliInstallService, CliInstallService>();
@@ -31,15 +32,16 @@ public sealed class ExtensionSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        bool exposeExternalProcessCommands = ShouldExposeExternalProcessCommands(serviceProvider);
+        bool exposeAzqr = ShouldExposeExternalProcessCommands(serviceProvider)
+            && serviceProvider.GetRequiredService<IAzqrCliService>().GetSupportedExecutablePath() is not null;
 
-        string description = exposeExternalProcessCommands
+        string description = exposeAzqr
             ? "Extension commands for CLI tooling related to Azure. Includes running Azure Quick Review (azqr) to scan a subscription for compliance issues and generate compliance and security reports with compliance recommendations, generating Azure CLI commands from user intent, and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func)."
             : "Extension commands for CLI tooling related to Azure. Includes generating Azure CLI commands from user intent and providing installation instructions for Azure CLI (az), Azure Developer CLI (azd), and Azure Functions Core Tools (func).";
 
         var extension = new CommandGroup(Name, description, Title);
 
-        if (exposeExternalProcessCommands)
+        if (exposeAzqr)
         {
             extension.AddCommand<AzqrCommand>(serviceProvider);
         }

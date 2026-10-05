@@ -84,16 +84,14 @@ public class FabricOneLakeSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricOneLake = new CommandGroup(Name,
-            """
-            Microsoft Fabric OneLake Operations - Manage and interact with OneLake data lake storage.
-            OneLake is Microsoft Fabric's built-in data lake that provides unified storage for all
-            analytics workloads. Use this tool when you need to:
-            - Manage OneLake folders and files
-            - Configure data access and permissions
-            - Monitor OneLake storage usage and performance
-            - Integrate with other Fabric workloads through OneLake
-            This tool provides operations for working with OneLake resources within your Fabric tenant.
-            """);
+            "Microsoft Fabric OneLake Operations - Manage and interact with OneLake data lake storage. " +
+            "OneLake is Microsoft Fabric's built-in data lake that provides unified storage for all " +
+            "analytics workloads. Use this tool when you need to:\n" +
+            "- Manage OneLake folders and files\n" +
+            "- Configure data access and permissions\n" +
+            "- Monitor OneLake storage usage and performance\n" +
+            "- Integrate with other Fabric workloads through OneLake\n" +
+            "This tool provides operations for working with OneLake resources within your Fabric tenant.");
 
         // Register all commands at the onelake level (flat structure with verb_object naming)
         fabricOneLake.AddCommand<OneLakeWorkspaceListCommand>(serviceProvider);

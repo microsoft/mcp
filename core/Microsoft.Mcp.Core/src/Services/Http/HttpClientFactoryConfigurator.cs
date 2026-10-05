@@ -8,6 +8,7 @@ using System.Runtime.Versioning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Services.Http;
 
@@ -43,7 +44,13 @@ public static class HttpClientFactoryConfigurator
         builder.ConfigureHttpClient((serviceProvider, client) =>
         {
             var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
-            client.Timeout = httpClientOptions.DefaultTimeout;
+            // Give the playback SDK timeout time to expire before the HTTP client times out.
+            // Playback tests expect an exact sequence of requests and returns recorded responses.
+            // The default timeout is not long enough to eliminate the possibility of retried requests.
+            // When that happens, the playback system returns an error due to request mismatch and will very likely fail the test, leading to transient failures.
+            client.Timeout = EnvironmentHelpers.IsPlaybackTesting()
+                ? TimeSpan.FromMinutes(11)
+                : httpClientOptions.DefaultTimeout;
 
             var transport = serviceProvider.GetRequiredService<IOptions<ServerRuntimeConfiguration>>().Value.Transport;
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));

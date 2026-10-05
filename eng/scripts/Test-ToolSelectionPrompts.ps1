@@ -61,6 +61,12 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
+# Tools that are only registered when an external CLI dependency is present on PATH
+# (for example, extension_azqr requires the Azure Quick Review CLI). In environments
+# without that dependency the tool is intentionally absent from 'tools list', so prompts
+# referencing it are reported as skipped rather than as missing-tool violations.
+$conditionallyRegisteredTools = @('extension_azqr')
+
 class Prompt {
     [string] $ToolArea
     [string] $ToolName
@@ -296,6 +302,11 @@ foreach ($serverInfo in $serversToTest) {
 
     foreach ($prompt in $allPrompts) {
         if ($tools.names -notcontains $prompt.ToolName) {
+            if ($conditionallyRegisteredTools -contains $prompt.ToolName) {
+                Write-Host "Skipping '$($prompt.ToolName)': conditionally registered only when its external CLI dependency is installed (absent in this environment)." -ForegroundColor Yellow
+                continue
+            }
+
             $violations.Add($prompt)
         }
     }
