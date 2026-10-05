@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -21,6 +22,28 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         ExcludedHeaders = "Authorization,Content-Type,x-ms-client-request-id",
         CompareBodies = false
     };
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        .. base.UriRegexSanitizers,
+        new(new()
+        {
+            Regex = "[?&]c=(?<token>[^&]+)",
+            Value = "Sanitized",
+            GroupForReplace = "token"
+        })
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        .. base.HeaderRegexSanitizers,
+        new(new("Azure-AsyncOperation")
+        {
+            Regex = "[?&]c=(?<token>[^&]+)",
+            Value = "Sanitized",
+            GroupForReplace = "token"
+        })
+    ];
 
     // Disable default BodyKeySanitizers that replace the ENTIRE value of JSON fields used in
     // subsequent API URL construction. AZSDK3430 ($..id) is already disabled by the base class.
@@ -100,6 +123,16 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             Value = "Sanitized",
         })
     ];
+
+    protected override async ValueTask LoadSettingsAsync()
+    {
+        await base.LoadSettingsAsync();
+        GeneralRegexSanitizers.Add(new(new()
+        {
+            Regex = $"(?i){Regex.Escape(Settings.ResourceGroupName)}",
+            Value = "Sanitized"
+        }));
+    }
 
     #region Vault Tests (RSV)
 
