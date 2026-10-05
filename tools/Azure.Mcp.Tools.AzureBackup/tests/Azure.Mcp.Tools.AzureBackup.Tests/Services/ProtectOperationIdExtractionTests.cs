@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Services;
 
-// Regression coverage for the deconfliation of the async operation id (from the
+// Regression coverage for the deconflation of the async operation id (from the
 // Azure-AsyncOperation response header) from a real backup job id. The command-level
 // tests mock IAzureBackupService, so they never exercise the service-level extraction.
 // These tests drive the real DppBackupOperations / RsvBackupOperations against a mock
