@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `core_list-workspaces` to list one page of accessible Fabric workspace management metadata, with role filtering, continuation information, and optional workspace-specific API endpoints."

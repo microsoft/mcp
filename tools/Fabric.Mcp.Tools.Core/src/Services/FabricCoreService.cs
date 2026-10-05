@@ -8,6 +8,7 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
 using Fabric.Mcp.Tools.Core.Models;
+using Fabric.Mcp.Tools.Core.Validation;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
@@ -160,6 +161,82 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
         return await JsonSerializer.DeserializeAsync<CatalogSearchResponse>(response, CoreJsonContext.Default.CatalogSearchResponse, cancellationToken) ?? new CatalogSearchResponse();
     }
+
+    public async Task<WorkspaceListResponse> ListWorkspacesAsync(
+        string? roles = null,
+        string? continuationToken = null,
+        bool? preferWorkspaceSpecificEndpoints = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!WorkspaceListInputValidator.TryNormalizeRoles(roles, out var normalizedRoles))
+        {
+            throw new ArgumentException(WorkspaceListInputValidator.RolesError, nameof(roles));
+        }
+
+        if (!WorkspaceListInputValidator.IsValidContinuationToken(continuationToken))
+        {
+            throw new ArgumentException(WorkspaceListInputValidator.ContinuationTokenError, nameof(continuationToken));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        List<string> query = [];
+        if (normalizedRoles is not null)
+        {
+            query.Add($"roles={Uri.EscapeDataString(normalizedRoles)}");
+        }
+        if (continuationToken is not null)
+        {
+            query.Add($"continuationToken={FabricCoreHttpHelpers.EncodeContinuationToken(continuationToken)}");
+        }
+        if (preferWorkspaceSpecificEndpoints is { } preferEndpoints)
+        {
+            query.Add($"preferWorkspaceSpecificEndpoints={(preferEndpoints ? "true" : "false")}");
+        }
+
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces";
+        if (query.Count > 0)
+        {
+            url += $"?{string.Join('&', query)}";
+        }
+
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Get,
+            url,
+            completionOption: HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken: cancellationToken);
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new WorkspaceListThrottledException(retryAfter);
+            }
+
+            throw new HttpRequestException(
+                "Unable to list Fabric workspaces.",
+                null,
+                response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode);
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var page = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.WorkspaceListResponse, cancellationToken);
+        if (page is null || page.Value is null || page.Value.Any(static workspace => !IsValidWorkspace(workspace)))
+        {
+            throw new JsonException("Fabric returned invalid workspace metadata.");
+        }
+
+        return page;
+    }
+
+    private static bool IsValidWorkspace(FabricWorkspaceListEntry? workspace) =>
+        workspace is not null &&
+        workspace.Id != Guid.Empty &&
+        !string.IsNullOrWhiteSpace(workspace.DisplayName) &&
+        !string.IsNullOrWhiteSpace(workspace.Type) &&
+        (workspace.Tags is null || workspace.Tags.All(static tag =>
+            tag is not null && tag.Id != Guid.Empty && !string.IsNullOrWhiteSpace(tag.DisplayName)));
 
     private async Task<Stream> SendFabricApiRequestAsync(
         HttpMethod method,

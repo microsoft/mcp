@@ -36,8 +36,10 @@ public class ServerStartupTests
         return new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json");
     }
 
-    [Fact]
-    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools)
     {
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
         var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
@@ -48,7 +50,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = "server start --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}",
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -91,6 +93,10 @@ public class ServerStartupTests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("\"result\"", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
+            if (listAllTools)
+            {
+                AssertCoreToolsAreListed(content);
+            }
         }
         finally
         {
@@ -101,8 +107,10 @@ public class ServerStartupTests
         }
     }
 
-    [Fact]
-    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools)
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
@@ -113,7 +121,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = "server start",
+            Arguments = listAllTools ? "server start --mode all" : "server start",
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -158,6 +166,10 @@ public class ServerStartupTests
             Assert.NotNull(response);
             Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
+            if (listAllTools)
+            {
+                AssertCoreToolsAreListed(response);
+            }
         }
         finally
         {
@@ -227,6 +239,24 @@ public class ServerStartupTests
             {
                 process.Kill();
             }
+        }
+    }
+
+    private static void AssertCoreToolsAreListed(string response)
+    {
+        string[] names =
+        [
+            "core_create-item",
+            "core_get-capacity",
+            "core_get-workspace",
+            "core_list-capacities",
+            "core_list-workspaces",
+            "core_search-catalog"
+        ];
+
+        foreach (var name in names)
+        {
+            Assert.Contains($"\"{name}\"", response, StringComparison.Ordinal);
         }
     }
 

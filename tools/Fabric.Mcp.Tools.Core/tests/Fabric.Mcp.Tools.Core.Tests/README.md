@@ -16,6 +16,10 @@ Offline tests for the Fabric Core toolset.
 - **Commands/WorkspaceGetCommandTests.cs**: Workspace UUID and endpoint-preference validation, typed output, cancellation, and sanitized errors
 - **Services/WorkspaceGetServiceTests.cs**: Get Workspace request/response handling, optional metadata, validated retry headers, cancellation/disposal, and create/search regression coverage with substituted HTTP and credentials
 - **WorkspaceGetMcpTests.cs**: Get Workspace discovery/execution through the real Core command factory and MCP handlers
+- **Commands/WorkspaceListCommandTests.cs**: Optional input binding, role normalization, read-only metadata, cancellation forwarding, and sanitized failures for `list-workspaces`
+- **Services/FabricCoreServiceWorkspaceListTests.cs**: Fixed-endpoint HTTP requests, encoded cursors, single-page pagination, optional metadata, response validation/disposal, cancellation, per-request tokens, and existing POST-operation regression coverage
+- **Models/WorkspaceListSerializationTests.cs**: Source-generated result serialization, optional metadata, and independent continuation fields
+- **WorkspaceListToolRegistrationTests.cs**: Registered MCP discovery/call handlers, optional input and typed output schemas, read-only filtering, and legacy/compact/duplicated output
 - **FabricCoreSetupTests.cs**: Tests for service registration and cumulative command setup
 - **Services/FabricCoreServiceBaselineTests.cs**: Direct HTTP tests preserving create/search authentication, JSON bodies, responses, error handling, cancellation, and single-request behavior
 - **Services/FabricCoreHttpHelpersTests.cs**: Validated `Retry-After` parsing and continuation-token encoding checked against constructed HTTP request URIs
@@ -35,6 +39,8 @@ Offline tests for the Fabric Core toolset.
 
 ## Running Tests
 
+Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
+
 ```powershell
 # Run all Core tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj
@@ -50,6 +56,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run only Get Workspace command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceGetCommandTests"
+
+# Run workspace listing tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceList*"
 ```
 
 Run these commands from the repository root. These are offline unit tests, not live Fabric, OBO, or recorded/playback validation.
@@ -65,6 +74,6 @@ Tests follow the standard MCP pattern:
 
 ## Coverage Boundaries
 
-Get Capacity, List Capacities, and Get Workspace service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization.
+Get Capacity, List Capacities, Get Workspace, and List Workspaces service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
 
 Live Fabric calls, real OBO authorization, service-principal/managed-identity access, and recorded playback were not exercised. Fabric live/recorded infrastructure is outside this scoped tool change; mocked tests are not evidence of live permissions or playback. No shared authentication, host, or recording-proxy changes are required.

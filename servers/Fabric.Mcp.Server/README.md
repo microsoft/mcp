@@ -208,6 +208,9 @@ The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/cor
 * "Find a Lakehouse with 'customer' in the name across my workspaces"
 * "Discover all Report items in the catalog and show which workspace they live in"
 * "Filter the catalog to Warehouse and Notebook items"
+* "List the Fabric workspaces I can access and show their capacity and domain metadata"
+* "List my Fabric workspaces where I am an Admin or Member"
+* "List accessible Fabric workspaces and include their workspace-specific API endpoints"
 
 ### Fabric Item Types & APIs
 
@@ -344,6 +347,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
+| `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
 
 **Get Capacity (`core_get-capacity`)**
@@ -377,6 +381,30 @@ The caller needs **Administrator or Contributor** permission on the capacity. De
 Failures preserve the service status with sanitized messages. For throttling, valid `Retry-After` guidance is returned without automatic retries. The operation expects a synchronous HTTP 200 response and rejects incomplete or invalid metadata instead of returning an empty success.
 
 Example prompts: "Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357" or "Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357."
+
+**Listing workspace management metadata**
+
+`core_list-workspaces` calls the [Core List Workspaces REST API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/list-workspaces). Use it to discover workspace IDs and inspect management metadata. Unlike `onelake_list-workspaces`, it does not use the OneLake storage/data-plane listing. Unlike `core_search-catalog`, it enumerates workspaces rather than searching catalog items. It does not read item data or definitions, modify resources, or perform long-running operations.
+
+| Optional parameter | Behavior |
+|---|---|
+| `--roles` | Comma-separated Admin, Member, Contributor, or Viewer roles for the calling principal. Case and surrounding whitespace are normalized; duplicate roles are removed. Unknown roles and empty entries are rejected. Omit for no role filter. |
+| `--continuation-token` | Token returned by the preceding page. Pass it unchanged, including any percent escapes, and repeat the same roles and endpoint preference. Omit for the first page. Empty or whitespace-only tokens are rejected. |
+| `--prefer-workspace-specific-endpoints` | Set `true` to request each workspace's `apiEndpoint` metadata, or `false` to exclude it. Omission preserves the API default. Returned endpoints are not contacted by this tool. |
+
+```powershell
+fabmcp core list-workspaces
+fabmcp core list-workspaces --roles Admin,Member --prefer-workspace-specific-endpoints true
+fabmcp core list-workspaces --roles Admin,Member --prefer-workspace-specific-endpoints true --continuation-token '<token from the preceding page>'
+```
+
+Each call returns **one server-sized page** in `results.workspaces`, plus `results.continuationToken` and `results.continuationUri` when supplied by Fabric. Structured MCP output uses the same payload without the command envelope. An empty workspace array can still have continuation information; no continuation information means enumeration is complete. There is no page-size option or automatic all-pages fetch. `continuationUri` is informational only and is never followed.
+
+Workspace entries contain `id`, `displayName`, and `type`, with `description`, `capacityId`, `capacityRegion`, `domainId`, `tags` (ID and display name), and `apiEndpoint` when available. Missing optional metadata is omitted rather than guessed or fetched separately; explicit empty descriptions and tag arrays are preserved. The role filter does not add a role field to the response. Requesting endpoint metadata does not configure private-link connectivity or change the listing endpoint.
+
+The API supports users, service principals, and managed identities. Delegated access requires `Workspace.Read.All` or `Workspace.ReadWrite.All`; service principals and managed identities also require the Fabric tenant setting permitting service principals to use Fabric APIs. Results are limited to workspaces accessible to the configured calling identity, including the authenticated caller when using HTTP/OBO. The tool does not change authentication configuration.
+
+Failures preserve the service's HTTP status without exposing raw backend error bodies. For HTTP 429, the tool returns parsed `Retry-After` guidance when available, or a generic wait-before-retrying message. It does not automatically retry or sleep.
 
 ### Data Factory Operations
 

@@ -33,4 +33,10 @@ public interface IFabricCoreService
         CancellationToken cancellationToken = default);
 
     Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default);
+
+    Task<WorkspaceListResponse> ListWorkspacesAsync(
+        string? roles = null,
+        string? continuationToken = null,
+        bool? preferWorkspaceSpecificEndpoints = null,
+        CancellationToken cancellationToken = default);
 }
