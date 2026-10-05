@@ -172,6 +172,10 @@ public class AzureBackupOperationCommandTests(
             }
         }
 
+        // Wait for the re-submitted update to reach a terminal state so the final-state assertions
+        // observe the settled write and the operation does not linger into later tests or cleanup.
+        await update.WaitForCompletionResponseAsync(cancellationToken);
+
         var after = Assert.IsType<IaasComputeVmProtectedItem>((await resource.GetAsync(cancellationToken: cancellationToken)).Value.Data.Properties);
         Assert.Equal(policyBefore, after.PolicyId);
         Assert.Equal(sourceBefore, after.SourceResourceId);
