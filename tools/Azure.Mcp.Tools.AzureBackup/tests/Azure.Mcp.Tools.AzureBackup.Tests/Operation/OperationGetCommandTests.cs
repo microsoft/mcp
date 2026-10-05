@@ -138,4 +138,21 @@ public class OperationGetCommandTests : SubscriptionCommandUnitTestsBase<Operati
         Assert.Null(result.Operation.JobId);
         Assert.Empty(result.Operation.JobIds);
     }
+
+    public static IEnumerable<object[]> CancellationExceptions()
+    {
+        yield return new object[] { new OperationCanceledException() };
+        yield return new object[] { new TaskCanceledException() };
+    }
+
+    [Theory]
+    [MemberData(nameof(CancellationExceptions))]
+    public async Task ExecuteAsync_MapsCancellationToGatewayTimeout(OperationCanceledException exception)
+    {
+        Service.GetOperationAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(exception);
+        var response = await ExecuteCommandAsync(Arguments);
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
+    }
 }

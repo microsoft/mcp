@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -68,6 +69,14 @@ public sealed class OperationGetCommand(
         ArgumentException => "Invalid RSV operation parameters. Check the operation ID and paired container/protected-item scope.",
         OperationCanceledException => "RSV operation status request was canceled.",
         _ => "Unable to retrieve RSV operation status. Check Azure Backup diagnostics."
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        // Map every cancellation (including TaskCanceledException) to 504 so the status matches
+        // the canceled message from GetErrorMessage; the base mapping would otherwise return 500.
+        OperationCanceledException => HttpStatusCode.GatewayTimeout,
+        _ => base.GetStatusCode(ex)
     };
 
     protected override void HandleException(CommandContext context, Exception ex)
