@@ -4,6 +4,10 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
+- **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
+- **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
+- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Cumulative Core discovery/schema/read-only invariants and assignment consent and validation through real registration with substituted HTTP and credentials
 - **Commands/CapacityListCommandTests.cs**: Tests for the `list-capacities` contract, metadata, option binding, cancellation, and sanitized failures
 - **Services/FabricCoreServiceCapacityListTests.cs**: Offline HTTP tests for single-page requests, opaque continuation tokens, metadata validation, status/Retry-After handling, disposal, concurrent identities, and existing POST regressions
 - **Models/CapacityListSerializationTests.cs**: Source-generated capacity output and unchanged continuation information
@@ -98,6 +102,9 @@ Run from the repository root using the SDK pinned in `global.json` and Microsoft
 # Run all Core tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj
 
+# Run assignment command, service, and registered-handler tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*WorkspaceAssignToCapacity*' '*WorkspaceCapacityAssignment*'
+
 # Run specific test
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemCreateCommandTests"
 
@@ -150,10 +157,18 @@ Tests follow the standard MCP pattern:
 
 ## Coverage Boundaries
 
-Get Capacity, List Capacities, Get Workspace, List Workspaces, List Items, Create Workspace, Update Workspace, Update Item, Delete Item, and Delete Workspace service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
+Get Capacity, List Capacities, Get Workspace, List Workspaces, List Items, Create Workspace, Update Workspace, Update Item, Delete Item, Delete Workspace, and Assign Workspace to Capacity service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
 
 Live Fabric calls, real OBO authorization, service-principal/managed-identity access, and recorded playback were not exercised. Fabric live/recorded infrastructure is outside this scoped tool change; mocked tests are not evidence of live permissions or playback. No shared authentication, host, or recording-proxy changes are required.
 
 Delete Item tests use fake credentials and mocked HTTP handlers; no real Fabric item may be deleted during development or testing. Registration tests use the actual `FabricCoreSetup` factory, not unguarded direct command construction. The optional Boolean requires one explicit CLI value, and repeated/ambiguous occurrences fail before service or authentication. MCP retains the shared argument conversion behavior, including explicitly supplied `"true"` and `["true"]`; tests do not claim strict original JSON-type validation.
 
 Registered MCP checks exercise the in-process tool pipeline with stdio/HTTP runtime settings and text/structured output modes. They are not live transport, real Fabric, real OBO/RBAC, or recorded/playback evidence. The existing host credential bridge is unchanged. ToolDescriptionEvaluator requires separate configuration and remains pending/not run when that configuration is absent. These offline tests do not waive required CI.
+
+## Workspace Capacity Assignment
+
+Assignment uses the shared authenticated sender with `ResponseHeadersRead`, preserving its post-credential cancellation check. Exactly one application-level POST accepts only 202 and returns requested target IDs plus `accepted: true` and `state: "Pending"`. It never requires a response body, claims completion, polls, retries, invents an operation handle, or follows a Location header.
+
+The assignment-specific Retry-After projection remains nullable `long` seconds and ignores dates. Its existing BCL parser accepts deltas up to `int.MaxValue`; returning a `long` does not widen those accepted inputs. The typed header getter can retain the first valid value when multiple values are supplied, whereas the shared helper rejects every multiple-valued header. The local projection preserves that behavior rather than changing the accepted input set. Boundary tests cover raw and typed deltas, dates, and multiple headers.
+
+Tests reuse `FabricCoreHttpMessageHandler` and retain `UnreadableHttpContent`. All new and inherited operation suites remain offline; no actual assignment or other resource call is authorized. The existing single-proxy local-command text-only fallback is unchanged, as are the Item Delete explicit Boolean safeguard and the six-tool read-only Core set.

@@ -348,6 +348,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
+| `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
@@ -586,6 +587,31 @@ The tool sends one `DELETE /v1/workspaces/{workspaceId}` request with no body. O
 
 The tool is marked destructive, not read-only, and idempotent in the no-additional-effects sense; repeated requests can still return 404. Read-only MCP servers hide and reject this tool. The existing MCP elicitation gate requires consent and rejects unsupported or declined consent unless explicitly disabled by the host's dangerous configuration. Annotations alone do not guarantee human confirmation, and direct CLI execution does not use the MCP elicitation gate. Implementation or test approval does not authorize real deletion; API-level tests use substituted HTTP and credentials only.
 
+**Workspace capacity assignment**
+
+Example prompt: "Submit a request to assign workspace \<workspace-id> to capacity \<capacity-id>; do not wait for completion."
+
+`fabmcp core assign-workspace-to-capacity` requires both `--workspace-id` and `--capacity-id` as nonempty GUIDs. It uses [Assign To Capacity](https://learn.microsoft.com/rest/api/fabric/core/workspaces/assign-to-capacity) to send one POST with `{ "capacityId": "<target-capacity-id>" }`.
+
+The documented response is **202 Accepted**, with no response body: assignment is in progress. The tool preserves status 202 and returns its own receipt:
+
+```json
+{
+  "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff512",
+  "capacityId": "0f084df7-c13d-451b-af5f-ed0c466403b2",
+  "accepted": true,
+  "state": "Pending"
+}
+```
+
+`capacityId` is the requested target, not a verified current assignment. The tool never reports completion, invents an operation handle, polls, or follows up automatically. A caller can later inspect `capacityId` and `capacityAssignmentProgress` through [Get Workspace](https://learn.microsoft.com/rest/api/fabric/core/workspaces/get-workspace). Assignment can still fail after acceptance.
+
+The caller needs **workspace Admin** and **capacity Contributor or Admin** permissions, with both **Capacity.ReadWrite.All** and **Workspace.ReadWrite.All** scopes. The API supports users, service principals, and managed identities. Authentication uses the server's configured identity provider; remote OBO calls use the caller's permissions.
+
+Workspaces containing Fabric items other than Power BI items cannot migrate across regions. Such workspaces can only be assigned to Fabric, Fabric trial, or Power BI Premium capacity. These restrictions are enforced by Fabric: the tool makes no preflight calls or eligibility guarantees. It does not create workspaces or provision, resize, or activate capacities; creating a workspace with a `capacityId` is a separate API operation.
+
+Failures preserve the service's HTTP status and return sanitized guidance. On throttling, a valid `Retry-After` delay is reported without automatically retrying. If a timeout or network failure prevents confirmation, inspect the workspace before submitting again. The tool never chooses a different target capacity.
+
 ### Data Factory Operations
 
 | Tool Name | Description |
@@ -624,6 +650,8 @@ The Fabric MCP Server is a **local-first** tool. Its documentation tools provide
 `core_update-item` modifies an existing item's name or description; review its arguments and item permissions before use.
 
 `core_delete-workspace` can delete a workspace and its items. Review the exact UUID, permissions, and destructive-operation controls before invoking it.
+
+`core_assign-workspace-to-capacity` is a mutating control-plane operation. Verify both target IDs and permissions before invoking it; acceptance does not confirm completion.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 

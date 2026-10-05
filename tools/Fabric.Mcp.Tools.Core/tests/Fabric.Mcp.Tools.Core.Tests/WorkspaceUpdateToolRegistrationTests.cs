@@ -203,6 +203,7 @@ public class WorkspaceUpdateToolRegistrationTests()
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_update-workspace");
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_delete-item");
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_delete-workspace");
+        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_assign-workspace-to-capacity");
         Assert.Contains(listed.Tools, static tool => tool.Name == "core_search-catalog");
         var result = await loader.CallToolHandler(CreateRequest(ClearDescriptionArguments), TestContext.Current.CancellationToken);
 

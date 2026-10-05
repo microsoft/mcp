@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_assign-workspace-to-capacity to submit workspace capacity assignments and return a 202 accepted/pending receipt without polling or automatic retries."

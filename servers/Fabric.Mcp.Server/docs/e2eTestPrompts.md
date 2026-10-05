@@ -8,10 +8,17 @@ These prompts describe tool selection, not live test execution. Delete Item is t
 
 Delete Workspace likewise uses substituted HTTP and credentials only. Its prompts describe deletion of the specified workspace and the items under it, not authorization to execute a real deletion.
 
+Workspace capacity assignment changes a live resource. Use only with an explicitly approved workspace, capacity, and identity; do not run these assignments as automated development checks.
+
+`context-required` means the caller must supply the required resource context and authorization. Sections and tool names are sorted alphabetically.
+
 ## Core
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
+| core_assign-workspace-to-capacity | Submit a request to assign existing Fabric workspace \<workspace-id> to capacity \<capacity-id>; return acceptance without waiting for completion. | context-required |
+| core_assign-workspace-to-capacity | Move workspace \<workspace-id> to Fabric capacity \<capacity-id> with one submission only, without polling or retries. | context-required |
+| core_assign-workspace-to-capacity | Assign workspace \<workspace-id> to capacity \<capacity-id> and return the requested IDs with an accepted/pending state, not a claim that assignment finished. | context-required |
 | core_create-workspace | Create a Microsoft Fabric workspace called Sales Planning. | none |
 | core_create-workspace | Create a new Fabric workspace named Finance Sandbox with description Quarterly planning experiments. | none |
 | core_create-workspace | Create a Fabric workspace called Capacity Analytics and assign it to existing capacity f4031b2e-318f-4a14-9a3e-103e9bcfc953 during creation. | none |

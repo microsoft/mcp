@@ -250,6 +250,7 @@ public class ServerStartupTests
     {
         string[] names =
         [
+            "core_assign-workspace-to-capacity",
             "core_create-item",
             "core_create-workspace",
             "core_delete-item",
@@ -271,7 +272,15 @@ public class ServerStartupTests
 
         using var document = JsonDocument.Parse(response);
         var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
-        Assert.Equal(58, tools.Length);
+        Assert.Equal(59, tools.Length);
+        Assert.Equal(13, tools.Count(tool => tool.GetProperty("name").GetString()!.StartsWith("core_", StringComparison.Ordinal)));
+        Assert.DoesNotContain(tools, tool => tool.GetProperty("name").GetString() == "core_get-item");
+        var assignment = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_assign-workspace-to-capacity");
+        Assert.False(assignment.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(assignment.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.False(assignment.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["capacity-id", "workspace-id"], assignment.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
         var creation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-workspace");
         Assert.False(creation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.False(creation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());

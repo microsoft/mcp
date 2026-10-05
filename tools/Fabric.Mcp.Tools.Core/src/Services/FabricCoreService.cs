@@ -68,6 +68,36 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return page;
     }
 
+    public async Task AssignWorkspaceToCapacityAsync(Guid workspaceId, Guid capacityId, CancellationToken cancellationToken = default)
+    {
+        if (workspaceId == Guid.Empty)
+        {
+            throw new ArgumentException("Workspace ID must be a nonempty GUID.", nameof(workspaceId));
+        }
+
+        if (capacityId == Guid.Empty)
+        {
+            throw new ArgumentException("Capacity ID must be a nonempty GUID.", nameof(capacityId));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId:D}/assignToCapacity";
+        var jsonContent = JsonSerializer.Serialize(
+            new AssignWorkspaceToCapacityRequest(capacityId), CoreJsonContext.Default.AssignWorkspaceToCapacityRequest);
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Post, url, jsonContent,
+            completionOption: HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
+        if (response.StatusCode != HttpStatusCode.Accepted)
+        {
+            // Preserve the typed-header long projection; the shared helper rejects multiple values this getter can accept.
+            var retryAfterSeconds = response.Headers.RetryAfter?.Delta is { Ticks: >= 0 } delay
+                ? (long?)delay.TotalSeconds
+                : null;
+            throw new WorkspaceCapacityAssignmentException(
+                response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode, retryAfterSeconds);
+        }
+    }
+
     public async Task<FabricItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";

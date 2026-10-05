@@ -178,6 +178,7 @@ public sealed class ItemUpdateToolRegistrationTests()
         Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_update-workspace");
         Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_delete-item");
         Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_delete-workspace");
+        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_assign-workspace-to-capacity");
         Assert.Contains(catalog.Tools, t => t.Name == "core_search-catalog");
         Assert.All(catalog.Tools, t => Assert.True(t.Annotations!.ReadOnlyHint));
         Assert.True(result.IsError);

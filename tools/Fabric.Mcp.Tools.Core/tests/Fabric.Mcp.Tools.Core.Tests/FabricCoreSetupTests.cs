@@ -32,6 +32,8 @@ public class FabricCoreSetupTests
         Assert.Contains(services, s => s.ServiceType == typeof(ItemUpdateCommand) && s.Lifetime == ServiceLifetime.Singleton);
         Assert.Contains(services, s => s.ServiceType == typeof(ItemDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
         Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceAssignToCapacityCommand)
+            && s.Lifetime == ServiceLifetime.Singleton);
     }
 
     [Fact]
@@ -69,7 +71,8 @@ public class FabricCoreSetupTests
         Assert.True(rootGroup.Commands.ContainsKey("update-item"), "Should have update-item command");
         Assert.True(rootGroup.Commands.ContainsKey("delete-item"), "Should have delete-item command");
         Assert.True(rootGroup.Commands.ContainsKey("delete-workspace"), "Should have delete-workspace command");
-        Assert.Equal(12, rootGroup.Commands.Count);
+        Assert.True(rootGroup.Commands.ContainsKey("assign-workspace-to-capacity"), "Should have assign-workspace-to-capacity command");
+        Assert.Equal(13, rootGroup.Commands.Count);
     }
 
     [Fact]
