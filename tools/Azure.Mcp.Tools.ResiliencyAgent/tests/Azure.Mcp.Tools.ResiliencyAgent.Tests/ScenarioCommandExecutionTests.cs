@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
@@ -107,6 +108,40 @@ public sealed class ArchitectureAssessCommandTests
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
         _attachmentCache.DidNotReceive().Remove(Arg.Any<IReadOnlyList<string>>());
+    }
+
+    [Theory]
+    [InlineData("failed", HttpStatusCode.BadGateway)]
+    [InlineData("rejected", HttpStatusCode.BadRequest)]
+    [InlineData("canceled", HttpStatusCode.BadRequest)]
+    public async Task ExecuteAsync_ReturnsErrorForNonSuccessTerminalState(
+        string state,
+        HttpStatusCode expectedStatus)
+    {
+        Service.SendAsync(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<AgentAttachment>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new AgentTurn(
+                "conv-terminal",
+                "task-terminal",
+                state,
+                true,
+                false,
+                $"Backend ended in {state}.",
+                []));
+
+        CommandResponse response = await ExecuteCommandAsync("--request", "Assess");
+        ResiliencyAgentCommandResult result = ValidateAndDeserializeResponse(
+            response,
+            ResiliencyAgentJsonContext.Default.ResiliencyAgentCommandResult,
+            expectedStatus);
+
+        Assert.Equal(state, result.State);
+        Assert.Contains(state, response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(response.TelemetryFailureMessage);
     }
 }
 

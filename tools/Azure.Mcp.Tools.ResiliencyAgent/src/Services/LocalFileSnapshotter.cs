@@ -268,7 +268,7 @@ public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider) : IL
             ".csv" => "text/csv",
             ".json" => "application/json",
             ".yaml" => "application/yaml",
-            ".tf" or ".bicep" or ".md" => "text/plain",
+            ".tf" or ".tfvars" or ".bicep" or ".bicepparam" or ".md" => "text/plain",
             ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             ".pdf" => "application/pdf",
             ".vsdx" => "application/vnd.ms-visio.drawing",

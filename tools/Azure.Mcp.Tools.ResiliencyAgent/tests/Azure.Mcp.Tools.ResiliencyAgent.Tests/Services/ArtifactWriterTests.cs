@@ -87,6 +87,13 @@ public sealed class ArtifactWriterTests : IDisposable
     [InlineData("corrected.txt", "text/plain", "bicep", "corrected.bicep")]
     [InlineData("corrected", "text/markdown", "bicep", "corrected.bicep")]
     [InlineData("already.bicep", "text/plain", "bicep", "already.bicep")]
+    [InlineData("main", "text/plain", "arm", "main.json")]
+    [InlineData("main.txt", "text/plain", "arm", "main.json")]
+    [InlineData("main.json", "application/json", "arm", "main.json")]
+    [InlineData("main", "text/plain", "terraform", "main.tf")]
+    [InlineData("main.txt", "text/plain", "terraform", "main.tf")]
+    [InlineData("main.tf", "text/plain", "terraform", "main.tf")]
+    [InlineData("variables.tfvars", "text/plain", "terraform", "variables.tfvars")]
     public void Write_AddsAUsefulExtension(
         string name,
         string mimeType,
@@ -178,6 +185,36 @@ public sealed class ArtifactWriterTests : IDisposable
                 Assert.Equal("main-2.bicep", artifact.Name);
                 Assert.Equal("param second string", File.ReadAllText(artifact.Path));
             });
+    }
+
+    [Fact]
+    public void Write_PreservesExistingArtifactAndAllocatesNextName()
+    {
+        string outputDirectory = Path.Combine(_workingDirectory, "azure-resiliency");
+        Directory.CreateDirectory(outputDirectory);
+        string existingPath = Path.Combine(outputDirectory, "main.bicep");
+        File.WriteAllText(existingPath, "existing");
+        var artifact = new AgentArtifact("main.bicep", null, "text/plain", "new", "bicep");
+
+        WrittenArtifact written = Assert.Single(_writer.Write([artifact], "conv-1"));
+
+        Assert.Equal("existing", File.ReadAllText(existingPath));
+        Assert.Equal("main-2.bicep", written.Name);
+        Assert.Equal("new", File.ReadAllText(written.Path));
+    }
+
+    [Fact]
+    public void Write_UsesNextAvailableNameAcrossInvocations()
+    {
+        var artifact = new AgentArtifact("main.bicep", null, "text/plain", "content", "bicep");
+
+        WrittenArtifact first = Assert.Single(_writer.Write([artifact], "conv-1"));
+        WrittenArtifact second = Assert.Single(_writer.Write([artifact], "conv-2"));
+
+        Assert.Equal("main.bicep", first.Name);
+        Assert.Equal("main-2.bicep", second.Name);
+        Assert.Equal("content", File.ReadAllText(first.Path));
+        Assert.Equal("content", File.ReadAllText(second.Path));
     }
 
     [Theory]

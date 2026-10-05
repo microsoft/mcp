@@ -50,6 +50,14 @@ public sealed class ResiliencyAgentSetupTests
         Assert.NotNull(serviceProvider.GetRequiredService<BicepReviewCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<ArmReviewCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<TerraformReviewCommand>());
+
+        Assert.All(
+            area.SubGroup.SelectMany(group => group.Commands.Values),
+            command =>
+            {
+                Assert.True(command.Metadata.LocalRequired);
+                Assert.False(command.Metadata.ReadOnly);
+            });
     }
 
     private static void AssertCommand(

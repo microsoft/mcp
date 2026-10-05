@@ -40,6 +40,25 @@ public sealed class AttachmentServicesTests : IDisposable
     }
 
     [Theory]
+    [InlineData("parameters.bicepparam")]
+    [InlineData("prod.tfvars")]
+    public async Task SnapshotAsync_AcceptsParameterFilesAsPlainText(string fileName)
+    {
+        string path = Path.Combine(_root, fileName);
+        byte[] expected = "location = \"eastus2\"\n"u8.ToArray();
+        await File.WriteAllBytesAsync(path, expected, TestContext.Current.CancellationToken);
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System);
+
+        ValidatedLocalFile validated = snapshotter.Validate(path);
+        AgentAttachment snapshot =
+            await snapshotter.SnapshotAsync(validated, TestContext.Current.CancellationToken);
+
+        Assert.Equal(fileName, snapshot.Name);
+        Assert.Equal("text/plain", snapshot.MimeType);
+        Assert.Equal(expected, snapshot.Content);
+    }
+
+    [Theory]
     [InlineData("relative.bicep", "fully-qualified")]
     [InlineData("https://example.test/main.bicep", "URLs")]
     public void Validate_RejectsUnsafePathForms(string path, string expectedMessage)
@@ -50,6 +69,22 @@ public sealed class AttachmentServicesTests : IDisposable
             () => snapshotter.Validate(path));
 
         Assert.Contains(expectedMessage, exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Validate_RejectsUncPathBeforeFilesystemAccess()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System);
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => snapshotter.Validate(@"\\server\share\main.bicep"));
+
+        Assert.Contains("UNC paths", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

@@ -35,7 +35,7 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,
-    ReadOnly = true,
+    ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
 public sealed class BicepReviewCommand(

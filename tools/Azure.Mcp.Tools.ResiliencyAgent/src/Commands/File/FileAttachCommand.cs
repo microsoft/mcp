@@ -33,7 +33,7 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
-    ReadOnly = true,
+    ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
 public sealed class FileAttachCommand(

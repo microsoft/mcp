@@ -5587,8 +5587,8 @@
           "description": "This tool only reads the exact local file approved by the user."
         },
         "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
+          "value": false,
+          "description": "This tool creates a short-lived process-local attachment snapshot and opaque ID."
         },
         "secret": {
           "value": false,
@@ -5620,8 +5620,8 @@
           "description": "This tool interacts with an agent whose domain of interaction is open."
         },
         "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
+          "value": false,
+          "description": "This tool may materialize generated or corrected artifacts in the caller's working directory."
         },
         "secret": {
           "value": false,

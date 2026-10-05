@@ -46,6 +46,24 @@ public sealed class ConsolidatedToolMetadataTests()
             string.Join(Environment.NewLine, mismatches));
     }
 
+    [Fact]
+    public async Task ResiliencyAgentConsolidatedTools_AreLocalAndNotReadOnly()
+    {
+        ServiceCollection serviceCollection = new();
+        Program.ConfigureServices(serviceCollection);
+        await using var services = serviceCollection.BuildServiceProvider();
+
+        var definitionProvider = services.GetRequiredService<IConsolidatedToolDefinitionProvider>();
+        var definitions = definitionProvider.GetToolDefinitions();
+
+        foreach (string name in new[] { "prepare_azure_resiliency_file", "use_azure_resiliency_agent" })
+        {
+            var definition = Assert.Single(definitions, candidate => candidate.Name == name);
+            Assert.True(definition.ToolMetadata.LocalRequired);
+            Assert.False(definition.ToolMetadata.ReadOnly);
+        }
+    }
+
     private static bool MetadataMatches(ToolMetadata actual, ToolMetadata expected) =>
         actual.Destructive == expected.Destructive &&
         actual.Idempotent == expected.Idempotent &&

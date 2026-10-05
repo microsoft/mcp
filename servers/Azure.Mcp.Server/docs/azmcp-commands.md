@@ -4518,39 +4518,39 @@ azmcp resiliency drill run resource get --service-group <service-group> \
 
 ```bash
 # Get general guidance about Azure resiliency and availability zones
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent guidance get --request <request> \
                                         [--conversation-id <conversation-id>]
 
 # Prepare one user-approved local file and return an opaque attachment ID
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent file attach --file-path <file-path>
 
 # Assess an application architecture for availability-zone resilience
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent architecture assess --request <request> \
                                            [--attachment-ids <attachment-id>] \
                                            [--conversation-id <conversation-id>]
 
 # Generate new resilient Bicep, ARM JSON, or Terraform
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent iac generate --request <request> \
                                     [--conversation-id <conversation-id>]
 
 # Review and correct existing Bicep
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent bicep review --request <request> \
                                     [--attachment-ids <attachment-id>] \
                                     [--conversation-id <conversation-id>]
 
 # Review and correct existing ARM JSON
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent arm review --request <request> \
                                   [--attachment-ids <attachment-id>] \
                                   [--conversation-id <conversation-id>]
 
 # Review and correct existing Terraform
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent terraform review --request <request> \
                                         [--attachment-ids <attachment-id>] \
                                         [--conversation-id <conversation-id>]

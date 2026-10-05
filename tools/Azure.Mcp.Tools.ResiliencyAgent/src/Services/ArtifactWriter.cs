@@ -38,13 +38,10 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
                 continue;
             }
 
-            fileName = MakeUniqueFileName(fileName, usedNames);
-
             try
             {
                 Directory.CreateDirectory(root);
-                string path = Path.Combine(root, fileName);
-                File.WriteAllText(path, artifact.Content);
+                (fileName, string path) = WriteUniqueFile(root, fileName, artifact.Content, usedNames);
                 written.Add(new WrittenArtifact(
                     fileName,
                     path,
@@ -171,6 +168,16 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
             return ReplaceGenericExtension(fileName, extension, ".bicep");
         }
 
+        if (string.Equals(artifact.Format, "arm", StringComparison.OrdinalIgnoreCase))
+        {
+            return ReplaceGenericExtension(fileName, extension, ".json");
+        }
+
+        if (string.Equals(artifact.Format, "terraform", StringComparison.OrdinalIgnoreCase))
+        {
+            return ReplaceGenericExtension(fileName, extension, ".tf");
+        }
+
         if (string.Equals(artifact.MimeType, "text/markdown", StringComparison.OrdinalIgnoreCase))
         {
             return ReplaceGenericExtension(fileName, extension, ".md");
@@ -197,22 +204,39 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
         return fileName;
     }
 
-    private static string MakeUniqueFileName(string fileName, HashSet<string> usedNames)
+    private static (string FileName, string Path) WriteUniqueFile(
+        string root,
+        string fileName,
+        string content,
+        HashSet<string> usedNames)
     {
-        if (usedNames.Add(fileName))
-        {
-            return fileName;
-        }
-
         string extension = Path.GetExtension(fileName);
         string stem = Path.GetFileNameWithoutExtension(fileName);
 
-        for (int suffix = 2; ; suffix++)
+        for (int suffix = 1; ; suffix++)
         {
-            string candidate = $"{stem}-{suffix}{extension}";
-            if (usedNames.Add(candidate))
+            string candidate = suffix == 1 ? fileName : $"{stem}-{suffix}{extension}";
+            if (!usedNames.Add(candidate))
             {
-                return candidate;
+                continue;
+            }
+
+            string path = Path.Combine(root, candidate);
+            try
+            {
+                using var stream = new FileStream(
+                    path,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None);
+                using var writer = new StreamWriter(stream);
+                writer.Write(content);
+                return (candidate, path);
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                // Another response or process already owns this name. Keep the existing file and
+                // atomically try the next suffix rather than overwriting user-visible output.
             }
         }
     }

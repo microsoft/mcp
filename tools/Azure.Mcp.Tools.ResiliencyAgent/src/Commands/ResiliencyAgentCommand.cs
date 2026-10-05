@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Options;
@@ -26,7 +27,7 @@ public abstract class ResiliencyAgentCommand<
     IArtifactWriter artifactWriter,
     IAttachmentCache attachmentCache)
     : AuthenticatedCommand<TOptions, ResiliencyAgentCommandResult>
-    where TOptions : ResiliencyAgentRequestOptions
+    where TOptions : class, IResiliencyAgentRequestOptions
 {
     private static readonly TimeSpan s_pollBudget = TimeSpan.FromSeconds(5);
     private const int MaxClarificationRounds = 20;
@@ -50,7 +51,7 @@ public abstract class ResiliencyAgentCommand<
 
             context.Activity?.AddTag("conversationId", conversationId);
 
-            string[] attachmentIds = options is ResiliencyAgentAttachmentRequestOptions attachmentOptions
+            string[] attachmentIds = options is IAttachmentIdsOption attachmentOptions
                 ? attachmentOptions.AttachmentIds ?? []
                 : [];
             IReadOnlyList<AgentAttachment> attachments = _attachmentCache.Resolve(attachmentIds);
@@ -85,7 +86,7 @@ public abstract class ResiliencyAgentCommand<
                     string? answer = await AskUserAsync(context, turn.Reply, cancellationToken);
                     if (answer is null)
                     {
-                        return Complete(context, turn with { State = "cancelled" });
+                        return Complete(context, turn with { State = "canceled" });
                     }
 
                     turn = await _service.SendAsync(
@@ -116,6 +117,8 @@ public abstract class ResiliencyAgentCommand<
 
     private CommandResponse Complete(CommandContext context, AgentTurn turn)
     {
+        SetTerminalStatus(context.Response, turn);
+
         IReadOnlyList<WrittenArtifact> written = turn.Artifacts.Count > 0
             ? _artifactWriter.Write(turn.Artifacts, turn.ConversationId)
             : [];
@@ -131,6 +134,35 @@ public abstract class ResiliencyAgentCommand<
         AddMcpArtifactContent(context.Response, written);
 
         return context.Response;
+    }
+
+    private static void SetTerminalStatus(CommandResponse response, AgentTurn turn)
+    {
+        switch (turn.State)
+        {
+            case "completed":
+                return;
+            case "failed":
+                response.Status = HttpStatusCode.BadGateway;
+                response.TelemetryFailureMessage = "Azure Resiliency Agent task failed.";
+                break;
+            case "rejected":
+                response.Status = HttpStatusCode.BadRequest;
+                response.TelemetryFailureMessage = "Azure Resiliency Agent task was rejected.";
+                break;
+            case "canceled":
+                response.Status = HttpStatusCode.BadRequest;
+                response.TelemetryFailureMessage = "Azure Resiliency Agent task was canceled.";
+                break;
+            default:
+                response.Status = HttpStatusCode.InternalServerError;
+                response.TelemetryFailureMessage = "Azure Resiliency Agent returned an unexpected terminal state.";
+                break;
+        }
+
+        response.Message = !string.IsNullOrWhiteSpace(turn.Reply)
+            ? turn.Reply
+            : $"The Azure Resiliency Agent ended in the '{turn.State}' state.";
     }
 
     private void AddMcpArtifactContent(
