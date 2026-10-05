@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
@@ -27,9 +26,24 @@ public sealed class CommandTelemetryTests
         ReadOnly = false,
         Secret = false,
         LocalRequired = false)]
-    private sealed class TelemetryTestCommand(HttpStatusCode status, string? telemetryFailureMessage)
+    private sealed class TelemetryTestCommand(HttpStatusCode status, string? telemetryFailureMessage, bool failValidation = false, bool legacyValidation = false)
         : BaseCommand<EmptyOptions, string>
     {
+        public override void ValidateOptions(EmptyOptions options, ValidationResult validationResult)
+        {
+            base.ValidateOptions(options, validationResult);
+
+            if (failValidation)
+            {
+                validationResult.AddError("Invalid option 'private value'.", "Invalid option.");
+            }
+
+            if (legacyValidation)
+            {
+                validationResult.Errors.Add("Invalid option 'private value'.");
+            }
+        }
+
         public override Task<CommandResponse> ExecuteAsync(
             CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
         {
@@ -50,6 +64,49 @@ public sealed class CommandTelemetryTests
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal("Sanitized failure details.", activity.GetTagItem(TagName.ToolFailureMessage));
         Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ValidationError_PreservesUserMessageAndCapturesSafeTelemetry()
+    {
+        using var activity = CreateActivity();
+        var response = await ExecuteAsync(
+            new TelemetryTestCommand(HttpStatusCode.OK, null, failValidation: true),
+            activity);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Invalid option 'private value'.", response.Message);
+        Assert.Equal("Invalid option.", response.TelemetryFailureMessage);
+        Assert.Equal("Invalid option.", activity.GetTagItem(TagName.ToolFailureMessage));
+        Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LegacyValidationError_UsesGenericSafeTelemetry()
+    {
+        using var activity = CreateActivity();
+        var response = await ExecuteAsync(
+            new TelemetryTestCommand(HttpStatusCode.OK, null, legacyValidation: true),
+            activity);
+
+        Assert.Equal("Invalid option 'private value'.", response.Message);
+        Assert.Equal("Invalid options.", response.TelemetryFailureMessage);
+        Assert.Equal("Invalid options.", activity.GetTagItem(TagName.ToolFailureMessage));
+    }
+
+    [Fact]
+    public void Validate_ParserError_PreservesMessageAndUsesGenericSafeTelemetry()
+    {
+        var command = new TelemetryTestCommand(HttpStatusCode.OK, null);
+        var parseResult = command.GetCommand().Parse("--unknown private");
+        var response = new CommandResponse();
+
+        var result = ((IBaseCommand)command).Validate(parseResult.CommandResult, response);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(string.Join('\n', result.Errors), response.Message);
+        Assert.Equal("Invalid options.", response.TelemetryFailureMessage);
     }
 
     [Fact]

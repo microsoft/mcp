@@ -52,7 +52,8 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             {
                 if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(options.TokenEnv)))
                 {
-                    validationResult.Errors.Add($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.");
+                    validationResult.AddError($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.",
+                        "ServiceNow token environment variable not set.");
                 }
             }
         }

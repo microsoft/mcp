@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: Validate Azure Retail Prices requests against cloud-specific endpoints before sending initial or paginated requests.

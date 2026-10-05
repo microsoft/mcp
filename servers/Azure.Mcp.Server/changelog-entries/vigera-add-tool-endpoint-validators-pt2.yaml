@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added namespace-aware endpoint validation for Azure SRE Agent data-plane and Azure Storage blob and table endpoints."

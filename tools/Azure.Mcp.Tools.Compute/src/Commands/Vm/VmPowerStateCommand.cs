@@ -53,7 +53,8 @@ public sealed class VmPowerStateCommand(ILogger<VmPowerStateCommand> logger, ICo
 
         if (!string.IsNullOrEmpty(options.PowerAction) && !s_validActions.Contains(options.PowerAction))
         {
-            validationResult.Errors.Add($"Invalid --power-action value '{options.PowerAction}'. Accepted values: start, stop, deallocate, restart.");
+            validationResult.AddError($"Invalid --power-action value '{options.PowerAction}'. Accepted values: start, stop, deallocate, restart.",
+                "Invalid VM power action.");
         }
 
         if (options.SkipShutdown && !string.Equals(options.PowerAction, "stop", StringComparison.OrdinalIgnoreCase))
