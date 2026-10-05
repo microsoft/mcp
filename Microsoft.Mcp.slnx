@@ -323,6 +323,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Grafana/tests/Azure.Mcp.Tools.Grafana.Tests/Azure.Mcp.Tools.Grafana.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.InfraIq/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.InfraIq/src/">
+    <Project Path="tools/Azure.Mcp.Tools.InfraIq/src/Azure.Mcp.Tools.InfraIq.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.InfraIq/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.InfraIq/tests/Azure.Mcp.Tools.InfraIq.Tests/Azure.Mcp.Tools.InfraIq.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Insights/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Insights/src/">
     <Project Path="tools/Azure.Mcp.Tools.Insights/src/Azure.Mcp.Tools.Insights.csproj" />
