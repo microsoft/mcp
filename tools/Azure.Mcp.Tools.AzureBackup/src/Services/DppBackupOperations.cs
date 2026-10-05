@@ -403,56 +403,19 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
         var collection = vaultResource.GetDataProtectionBackupInstances();
 
-        var items = new List<ProtectedItemInfo>();
-
-        // BUG-B fix: DPP backup instances sometimes deserialize to an "unknown" polymorphic
-        // subtype whose base-properties converter throws (ArgumentNullException /
-        // ArgumentException / FormatException / InvalidOperationException) inside
-        // MoveNextAsync. Previously the whole listing failed with an MCP-classified
-        // exception. Now we skip past the bad item and continue - matching the pattern
-        // already used by ListPoliciesAsync above - so a single unsupported instance
-        // does not blank out the entire list. Cap consecutive failures so a page-level
-        // deserialization loop can not spin forever.
+        // DPP backup instances sometimes deserialize to an "unknown" polymorphic subtype whose
+        // base-properties converter throws (ArgumentNullException / ArgumentException /
+        // FormatException / InvalidOperationException) inside MoveNextAsync. A single unsupported
+        // instance the enumerator can advance past is skipped so it does not blank the whole list
+        // (matching ListPoliciesAsync above). A failure the enumerator cannot advance past - for
+        // example a page that fails to deserialize because an instance has an empty resourceGroupId -
+        // truncates the listing; that case now surfaces as an error instead of silently returning an
+        // incomplete list as a success.
         var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
-        const int maxConsecutiveFailures = 3;
-        var consecutiveFailures = 0;
-        try
-        {
-            while (true)
-            {
-                try
-                {
-                    if (!await enumerator.MoveNextAsync())
-                    {
-                        break;
-                    }
-
-                    items.Add(MapToProtectedItemInfo(enumerator.Current.Data));
-                    consecutiveFailures = 0;
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex) when (
-                    ex is FormatException
-                    or ArgumentNullException
-                    or ArgumentException
-                    or InvalidOperationException)
-                {
-                    if (++consecutiveFailures >= maxConsecutiveFailures)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-        finally
-        {
-            await enumerator.DisposeAsync();
-        }
-
-        return items;
+        return await ProtectedItemEnumerator.CollectToleratingItemFailuresAsync(
+            enumerator,
+            static resource => MapToProtectedItemInfo(resource.Data),
+            $"Listing protected items in vault '{vaultName}'");
     }
 
     public async Task<BackupPolicyInfo> GetPolicyAsync(
