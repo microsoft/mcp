@@ -181,26 +181,50 @@ public sealed class ArtifactWriterTests : IDisposable
     [Theory]
     [InlineData(
         "main.bicep",
-        @"C:\workspace\azure-resiliency\main.bicep",
-        "[main.bicep](file:///C:/workspace/azure-resiliency/main.bicep)")]
+        "main.bicep",
+        "main.bicep")]
     [InlineData(
         "Zone-Resilient Posture Report.md",
-        @"C:\Users\saspandit\azure-resiliency\Zone-Resilient Posture Report.md",
-        "[Zone-Resilient Posture Report.md](file:///C:/Users/saspandit/azure-resiliency/Zone-Resilient%20Posture%20Report.md)")]
+        "Zone-Resilient Posture Report.md",
+        "Zone-Resilient Posture Report.md")]
     [InlineData(
         "Report (final) [1] #demo.md",
-        @"C:\workspace\Report (final) [1] #demo.md",
-        @"[Report \(final\) \[1\] \#demo.md](file:///C:/workspace/Report%20%28final%29%20%5B1%5D%20%23demo.md)")]
+        "Report (final) [1] #demo.md",
+        @"Report \(final\) \[1\] \#demo.md")]
     [InlineData(
         "![open](unexpected)#.md",
-        @"C:\workspace\![open](unexpected)#.md",
-        @"[\!\[open\]\(unexpected\)\#.md](file:///C:/workspace/!%5Bopen%5D%28unexpected%29%23.md)")]
+        "![open](unexpected)#.md",
+        @"\!\[open\]\(unexpected\)\#.md")]
     public void CreateMarkdownLink_EscapesLabelAndFileUri(
         string displayName,
-        string path,
-        string expected)
+        string fileName,
+        string expectedLabel)
     {
-        Assert.Equal(expected, ArtifactWriter.CreateMarkdownLink(displayName, path));
+        string path = Path.Combine(_workingDirectory, "azure-resiliency", fileName);
+        string expectedUri = new Uri(Path.GetFullPath(path)).AbsoluteUri
+            .Replace("(", "%28", StringComparison.Ordinal)
+            .Replace(")", "%29", StringComparison.Ordinal)
+            .Replace("[", "%5B", StringComparison.Ordinal)
+            .Replace("]", "%5D", StringComparison.Ordinal);
+
+        Assert.Equal(
+            $"[{expectedLabel}]({expectedUri})",
+            ArtifactWriter.CreateMarkdownLink(displayName, path));
+    }
+
+    [Fact]
+    public void CreateMarkdownLink_UsesWindowsFileUriForWindowsAbsolutePath()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        const string path = @"C:\workspace\azure-resiliency\main.bicep";
+
+        Assert.Equal(
+            "[main.bicep](file:///C:/workspace/azure-resiliency/main.bicep)",
+            ArtifactWriter.CreateMarkdownLink("main.bicep", path));
     }
 
     public void Dispose()

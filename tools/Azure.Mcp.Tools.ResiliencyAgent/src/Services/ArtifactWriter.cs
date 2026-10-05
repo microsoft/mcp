@@ -113,7 +113,9 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
             return null;
         }
 
-        string candidate = Path.GetFileName(name.Trim());
+        string trimmedName = name.Trim();
+        int lastSeparator = trimmedName.LastIndexOfAny(['/', '\\']);
+        string candidate = lastSeparator >= 0 ? trimmedName[(lastSeparator + 1)..] : trimmedName;
         if (string.IsNullOrWhiteSpace(candidate) || candidate is "." or "..")
         {
             return null;

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Azure.Mcp.Tools.ResiliencyAgent.Options;
+using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 
