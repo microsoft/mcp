@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Net.ServerSentEvents;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -85,7 +87,7 @@ public class ServerStartupTests
             request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
-            var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            var content = await ReadToolResponseAsync(response, TestContext.Current.CancellationToken);
 
             var errorOutput = stderrBuilder.ToString();
             Assert.DoesNotContain("Unable to resolve service", errorOutput);
@@ -96,6 +98,7 @@ public class ServerStartupTests
             if (listAllTools)
             {
                 AssertCoreToolsAreListed(content);
+                AssertListItemsTool(content);
             }
         }
         finally
@@ -169,6 +172,7 @@ public class ServerStartupTests
             if (listAllTools)
             {
                 AssertCoreToolsAreListed(response);
+                AssertListItemsTool(response);
             }
         }
         finally
@@ -250,6 +254,7 @@ public class ServerStartupTests
             "core_get-capacity",
             "core_get-workspace",
             "core_list-capacities",
+            "core_list-items",
             "core_list-workspaces",
             "core_search-catalog"
         ];
@@ -258,6 +263,32 @@ public class ServerStartupTests
         {
             Assert.Contains($"\"{name}\"", response, StringComparison.Ordinal);
         }
+    }
+
+    private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
+        {
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var messages = new List<string>();
+        await foreach (var item in SseParser.Create(stream).EnumerateAsync(cancellationToken))
+        {
+            messages.Add(item.Data);
+        }
+        return Assert.Single(messages);
+    }
+
+    private static void AssertListItemsTool(string response)
+    {
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        var tool = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-items");
+        Assert.True(tool.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.Equal(["workspace-id"], tool.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
     }
 
     private static int GetAvailablePort()

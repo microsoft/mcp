@@ -32,6 +32,22 @@ public interface IFabricCoreService
         bool? preferWorkspaceSpecificEndpoints = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Lists one page of item metadata without following continuation URIs.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="type">The optional item-type filter.</param>
+    /// <param name="recursive">Whether to include items in nested folders.</param>
+    /// <param name="rootFolderId">The optional nonempty root folder UUID.</param>
+    /// <param name="continuationToken">The token returned by a preceding page with the same filters.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>One page, including any continuation information returned by Fabric.</returns>
+    Task<ItemListResponse> ListItemsAsync(
+        string workspaceId,
+        string? type = null,
+        bool recursive = true,
+        string? rootFolderId = null,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
     Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default);
 
     Task<WorkspaceListResponse> ListWorkspacesAsync(

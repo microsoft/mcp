@@ -230,6 +230,82 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return page;
     }
 
+    /// <inheritdoc />
+    public async Task<ItemListResponse> ListItemsAsync(
+        string workspaceId,
+        string? type = null,
+        bool recursive = true,
+        string? rootFolderId = null,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(workspaceId, out var parsedWorkspaceId) || parsedWorkspaceId == Guid.Empty)
+        {
+            throw new ArgumentException("Workspace ID must be a nonempty UUID.", nameof(workspaceId));
+        }
+
+        Guid? parsedFolderId = null;
+        if (rootFolderId is not null)
+        {
+            if (!Guid.TryParse(rootFolderId, out var folderId) || folderId == Guid.Empty)
+            {
+                throw new ArgumentException("Root folder ID must be a nonempty UUID.", nameof(rootFolderId));
+            }
+            parsedFolderId = folderId;
+        }
+
+        if (type is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(type);
+        }
+        if (continuationToken is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(continuationToken);
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        List<string> query = [];
+        if (type is not null)
+        {
+            query.Add($"type={Uri.EscapeDataString(type)}");
+        }
+        query.Add($"recursive={(recursive ? "true" : "false")}");
+        if (parsedFolderId is { } root)
+        {
+            query.Add($"rootFolderId={root:D}");
+        }
+        if (continuationToken is not null)
+        {
+            query.Add($"continuationToken={FabricCoreHttpHelpers.EncodeContinuationToken(continuationToken)}");
+        }
+
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}/items?{string.Join("&", query)}";
+        using var response = await SendFabricHttpRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new FabricItemListThrottledException(retryAfter);
+            }
+
+            throw new HttpRequestException("Unable to list Fabric item metadata.", null,
+                response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode);
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var page = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.ItemListResponse, cancellationToken);
+        if (page?.Value is null || page.Value.Any(item =>
+            item is null || item.Id == Guid.Empty || item.WorkspaceId != parsedWorkspaceId ||
+            string.IsNullOrWhiteSpace(item.DisplayName) || string.IsNullOrWhiteSpace(item.Type)))
+        {
+            throw new JsonException("Fabric returned an invalid item metadata page.");
+        }
+
+        return page;
+    }
+
     private static bool IsValidWorkspace(FabricWorkspaceListEntry? workspace) =>
         workspace is not null &&
         workspace.Id != Guid.Empty &&

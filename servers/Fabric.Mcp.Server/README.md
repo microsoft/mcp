@@ -211,6 +211,8 @@ The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/cor
 * "List the Fabric workspaces I can access and show their capacity and domain metadata"
 * "List my Fabric workspaces where I am an Admin or Member"
 * "List accessible Fabric workspaces and include their workspace-specific API endpoints"
+* "List item metadata in my Fabric workspace, including nested folders"
+* "Show only the Lakehouses directly in this Fabric folder"
 
 ### Fabric Item Types & APIs
 
@@ -347,6 +349,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
+| `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
 
@@ -405,6 +408,32 @@ Workspace entries contain `id`, `displayName`, and `type`, with `description`, `
 The API supports users, service principals, and managed identities. Delegated access requires `Workspace.Read.All` or `Workspace.ReadWrite.All`; service principals and managed identities also require the Fabric tenant setting permitting service principals to use Fabric APIs. Results are limited to workspaces accessible to the configured calling identity, including the authenticated caller when using HTTP/OBO. The tool does not change authentication configuration.
 
 Failures preserve the service's HTTP status without exposing raw backend error bodies. For HTTP 429, the tool returns parsed `Retry-After` guidance when available, or a generic wait-before-retrying message. It does not automatically retry or sleep.
+
+**Workspace and folder inventory**
+
+`core_list-items` calls the [Fabric Core List Items API](https://learn.microsoft.com/rest/api/fabric/core/items/list-items). Use it for a scoped metadata inventory, not for OneLake file/blob listing (`onelake_list-items`) or cross-workspace discovery (`core_search-catalog`).
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `workspace-id` | Yes | Nonempty workspace UUID; workspace names are not resolved. |
+| `type` | No | Fabric item type, such as `Lakehouse` or `Notebook`. Omit for all types. New service-defined types are accepted without a client-side enum restriction. |
+| `recursive` | No | Defaults to `true`, including nested folders. Set `false` for direct items only. |
+| `root-folder-id` | No | Nonempty folder UUID. Omit to use the workspace root. |
+| `continuation-token` | No | Token from a previous response, copied unchanged. Keep the same workspace and filters. |
+
+```powershell
+# First page of all workspace items, including nested folders.
+fabmcp core list-items --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+
+# Direct Lakehouses in one folder, excluding its nested folders.
+fabmcp core list-items --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --root-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --type Lakehouse --recursive false
+```
+
+Each invocation returns exactly one page: an `items` array and any `continuationToken` and `continuationUri` supplied by Fabric. An empty array can still have a next page. Call again with `continuation-token` and unchanged filters to continue; this tool never fetches all pages automatically or follows the returned URI. Copy the token without decoding Base64 or changing existing percent escapes.
+
+Items contain ID, display name, type, workspace ID, and available description, folder ID, logical ID, tags, and sensitivity-label ID. Optional null properties are omitted. No item data, definitions, or workload-specific properties are returned. The optional REST `include=DefaultIdentity` expansion is intentionally unsupported: it is neither requested nor serialized.
+
+The caller needs workspace **Viewer** access. Delegated calls require `Workspace.Read.All` or `Workspace.ReadWrite.All`; the API supports user, service-principal, and managed identities. The tool preserves the server's configured authentication strategy, including its existing HTTP/OBO credential path. A `429` response retains its status and provides retry guidance when a valid `Retry-After` header is available; the tool does not retry automatically.
 
 ### Data Factory Operations
 

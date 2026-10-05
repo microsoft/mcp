@@ -15,6 +15,10 @@ These prompts validate tool selection. They do not imply that live Fabric calls,
 | core_list-capacities | List the Fabric capacities where I am an administrator or contributor. | Return one page of accessible capacity metadata without modifying capacities. |
 | core_list-capacities | Show one page of my accessible Fabric capacity IDs, display names, SKUs, regions, and states. | List capacity metadata through the Fabric Core API, not an ARM inventory. |
 | core_list-capacities | Get the next page of Fabric capacities using continuation token ABCsMTAwMDAwLDA%3D from the previous response. | Retrieve one page using the unchanged token without following returned URIs. |
+| core_list-items | List Fabric item metadata in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb, including nested folders. | Returns one workspace inventory page with any continuation information. |
+| core_list-items | List the Lakehouse items in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | Applies the item-type filter to one metadata page. |
+| core_list-items | Show only items directly in Fabric folder bbbbbbbb-1111-2222-3333-cccccccccccc within workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb, not its nested folders. | Uses the root folder and disables recursive listing. |
+| core_list-items | Get the next page of Fabric items in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb using the continuation token from the previous listing and the same filters. | Requests exactly one additional metadata page. |
 | core_list-workspaces | List the Microsoft Fabric workspaces I can access and show their workspace IDs, types, capacity, and domain metadata. | Read-only |
 | core_list-workspaces | List my Fabric workspaces where I am an Admin or Member using the Core management API, not the OneLake storage listing. | Read-only |
 | core_list-workspaces | List accessible Fabric workspaces and include their workspace-specific API endpoints. | Read-only |

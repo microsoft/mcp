@@ -20,6 +20,9 @@ Offline tests for the Fabric Core toolset.
 - **Services/FabricCoreServiceWorkspaceListTests.cs**: Fixed-endpoint HTTP requests, encoded cursors, single-page pagination, optional metadata, response validation/disposal, cancellation, per-request tokens, and existing POST-operation regression coverage
 - **Models/WorkspaceListSerializationTests.cs**: Source-generated result serialization, optional metadata, and independent continuation fields
 - **WorkspaceListToolRegistrationTests.cs**: Registered MCP discovery/call handlers, optional input and typed output schemas, read-only filtering, and legacy/compact/duplicated output
+- **Commands/ItemListCommandTests.cs**: Input binding, UUID validation, recursive defaults, typed results, cancellation mapping, and sanitized failures for `list-items`
+- **Services/ItemListServiceTests.cs**: Substituted-HTTP tests for one-page listing, metadata whitelisting, optional filters, continuation encoding, invalid responses, throttling, cancellation, disposal, and create/search regressions
+- **ItemListMcpTests.cs**: Read-only discovery, input/output schemas, and calls through the real Core command factory, loader, and service with substituted HTTP and credentials
 - **FabricCoreSetupTests.cs**: Tests for service registration and cumulative command setup
 - **Services/FabricCoreServiceBaselineTests.cs**: Direct HTTP tests preserving create/search authentication, JSON bodies, responses, error handling, cancellation, and single-request behavior
 - **Services/FabricCoreHttpHelpersTests.cs**: Validated `Retry-After` parsing and continuation-token encoding checked against constructed HTTP request URIs
@@ -36,6 +39,10 @@ Offline tests for the Fabric Core toolset.
 `FabricCapacityMetadata` is the shared capacity contract: required `Guid Id` followed by required string `DisplayName`, `Sku`, `Region`, and `State`. `IsValid` rejects null metadata, an empty ID, and blank strings without closing the string values to enums. A get operation must additionally compare the returned ID with its requested ID. Workspace and item response models remain operation-specific.
 
 `TestSupport/FabricCoreHttpMessageHandler` accepts an asynchronous request/cancellation callback and exposes a thread-safe `CallCount`. Reuse it for offline HTTP tests; inspect or capture request details inside the callback rather than introducing per-tool handler copies. Keep specialized content/cancellation doubles and all operation-specific assertions.
+
+## Item Listing
+
+Pagination cases include Fabric's documented `ABCsMTAwMDAwLDA%3D` token/URI pair, raw and escaped delimiters, invalid percent sequences, normal .NET URI unreserved-character normalization, and query-injection prevention. The documented `%3D` remains intact on the wire; raw `+` is encoded as data, not treated as a space. Empty pages retain continuation information, and each invocation performs only one request.
 
 ## Running Tests
 
@@ -59,6 +66,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run workspace listing tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceList*"
+
+# Run only List Items command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "Fabric.Mcp.Tools.Core.Tests.Commands.ItemListCommandTests"
 ```
 
 Run these commands from the repository root. These are offline unit tests, not live Fabric, OBO, or recorded/playback validation.
@@ -74,6 +84,6 @@ Tests follow the standard MCP pattern:
 
 ## Coverage Boundaries
 
-Get Capacity, List Capacities, Get Workspace, and List Workspaces service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
+Get Capacity, List Capacities, Get Workspace, List Workspaces, and List Items service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
 
 Live Fabric calls, real OBO authorization, service-principal/managed-identity access, and recorded playback were not exercised. Fabric live/recorded infrastructure is outside this scoped tool change; mocked tests are not evidence of live permissions or playback. No shared authentication, host, or recording-proxy changes are required.
