@@ -21,6 +21,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<ItemCreateCommand>();
         services.AddSingleton<ItemListCommand>();
+        services.AddSingleton<ItemUpdateCommand>();
         services.AddSingleton<CatalogSearchCommand>();
         services.AddSingleton<WorkspaceCreateCommand>();
         services.AddSingleton<WorkspaceGetCommand>();
@@ -49,6 +50,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceCreateCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);

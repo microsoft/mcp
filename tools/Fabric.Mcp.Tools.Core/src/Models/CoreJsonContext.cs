@@ -39,6 +39,9 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(UpdateWorkspaceRequest))]
 [JsonSerializable(typeof(WorkspaceUpdateCommandResult))]
 [JsonSerializable(typeof(WorkspaceUpdateResponse))]
+[JsonSerializable(typeof(ItemUpdateCommandResult))]
+[JsonSerializable(typeof(ItemUpdateMetadata))]
+[JsonSerializable(typeof(UpdateItemRequest))]
 public partial class CoreJsonContext : JsonSerializerContext
 {
 }

@@ -199,6 +199,7 @@ public class WorkspaceUpdateToolRegistrationTests()
         var listed = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_create-item");
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_create-workspace");
+        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_update-item");
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_update-workspace");
         Assert.Contains(listed.Tools, static tool => tool.Name == "core_search-catalog");
         var result = await loader.CallToolHandler(CreateRequest(ClearDescriptionArguments), TestContext.Current.CancellationToken);

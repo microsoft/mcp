@@ -9,6 +9,7 @@ using Azure.Core;
 using Azure.Identity;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Validation;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
@@ -18,6 +19,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
     private readonly TokenCredential _credential = credential ?? new DefaultAzureCredential();
     private const string UserAgentHeaderName = "User-Agent";
     private const string UserAgentHeaderValue = "Fabric Core MCP";
+    private const string InvalidUpdateResponseMessage = "Fabric returned an invalid Update Item response.";
 
     /// <inheritdoc />
     public async Task<CapacityListResponse> ListCapacitiesAsync(
@@ -405,6 +407,70 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         !string.IsNullOrWhiteSpace(workspace.Type) &&
         (workspace.Tags is null || workspace.Tags.All(static tag =>
             tag is not null && tag.Id != Guid.Empty && !string.IsNullOrWhiteSpace(tag.DisplayName)));
+
+    /// <inheritdoc />
+    public async Task<ItemUpdateMetadata> UpdateItemAsync(
+        string workspaceId,
+        string itemId,
+        UpdateItemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var validation = new ValidationResult();
+        ItemUpdateInputValidator.Validate(workspaceId, itemId, request.DisplayName, request.Description, validation);
+        if (!validation.IsValid)
+        {
+            throw new ArgumentException(string.Join('\n', validation.Errors));
+        }
+
+        var workspaceGuid = Guid.Parse(workspaceId);
+        var itemGuid = Guid.Parse(itemId);
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceGuid:D}/items/{itemGuid:D}";
+        var jsonContent = JsonSerializer.Serialize(request, CoreJsonContext.Default.UpdateItemRequest);
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Patch, url, jsonContent,
+            completionOption: HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken: cancellationToken);
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.IsSuccessStatusCode)
+            {
+                throw new InvalidDataException(InvalidUpdateResponseMessage);
+            }
+
+            throw new ItemUpdateRequestException(response.StatusCode, GetUpdateRetryAfterSeconds(response));
+        }
+
+        using var body = await response.Content.ReadAsStreamAsync(cancellationToken);
+        ItemUpdateMetadata? item;
+        try
+        {
+            item = await JsonSerializer.DeserializeAsync(body, CoreJsonContext.Default.ItemUpdateMetadata, cancellationToken);
+        }
+        catch (JsonException)
+        {
+            throw new InvalidDataException(InvalidUpdateResponseMessage);
+        }
+
+        if (item is null
+            || !Guid.TryParse(item.Id, out var responseItemId) || responseItemId != itemGuid
+            || !Guid.TryParse(item.WorkspaceId, out var responseWorkspaceId) || responseWorkspaceId != workspaceGuid
+            || string.IsNullOrWhiteSpace(item.DisplayName)
+            || string.IsNullOrWhiteSpace(item.Type))
+        {
+            throw new InvalidDataException(InvalidUpdateResponseMessage);
+        }
+
+        return item;
+    }
+
+    private static int? GetUpdateRetryAfterSeconds(HttpResponseMessage response)
+    {
+        return FabricCoreHttpHelpers.GetRetryAfter(response)?.Delta is { TotalSeconds: >= 0 and <= int.MaxValue } delta
+            ? (int)delta.TotalSeconds
+            : null;
+    }
 
     private async Task<Stream> SendFabricApiRequestAsync(
         HttpMethod method,

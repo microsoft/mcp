@@ -356,6 +356,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
+| `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
 | `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
 
 **Get Capacity (`core_get-capacity`)**
@@ -506,6 +507,38 @@ Failures retain the HTTP status and expose only sanitized messages and validated
 guidance. If a request times out or returns an invalid success payload, the update might already
 have been applied; verify the workspace before manually retrying.
 
+**Updating item metadata**
+
+`core_update-item` implements [Update Item](https://learn.microsoft.com/rest/api/fabric/core/items/update-item):
+one application-level `PATCH /v1/workspaces/{workspaceId}/items/{itemId}` with a synchronous `200` Item response.
+It requires `workspace-id` and `item-id` as nonempty UUIDs, plus at least one of `display-name` or `description`.
+It does not resolve names, fetch the item first, read item data, or change definitions, permissions, tags, or identity.
+
+Omitted properties remain unchanged. An explicitly empty description clears it; JSON `null` is treated as omitted.
+Descriptions may contain at most 256 characters and are not trimmed. Display names must not be empty or whitespace-only and must follow the item's
+type-specific naming rules; there is no universal display-name length limit enforced by this tool.
+For example, these MCP arguments clear only the description:
+
+```json
+{
+  "workspace-id": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+  "item-id": "5b218778-e7a5-4d73-8187-f10824047715",
+  "description": ""
+}
+```
+
+The result contains an `item` with `id`, `displayName`, `type`, `workspaceId`, and an optional `description`.
+Definitions, data, identities, tags, and workload-specific properties are not returned. Existing server output modes apply:
+the default returns text content; compact and duplicated modes additionally expose the typed output schema and structured content.
+
+The caller needs read and write permission on the item. Delegated callers need `Item.ReadWrite.All` or the corresponding
+item-specific scope, such as `Notebook.ReadWrite.All`. Service-principal and managed-identity support depends on the item type.
+The tool is mutating and idempotent, is unavailable in read-only mode, and uses the existing host authentication and confirmation policies.
+It performs no automatic retry or long-running-operation polling. HTTP failures preserve their status and suppress backend details;
+valid nonnegative integer `Retry-After` values provide wait guidance. After a timeout or invalid response, the update may already
+have completed: verify the item's state before retrying.
+Existing HTTP-client redirect behavior is unchanged; one application-level PATCH is not a one-wire-hop guarantee.
+
 ### Data Factory Operations
 
 | Tool Name | Description |
@@ -540,6 +573,8 @@ have been applied; verify the workspace before manually retrying.
 The Fabric MCP Server is a **local-first** tool. Its documentation tools provide API specifications, schemas, and best practices without connecting to live Fabric environments. Operational tools, including Get Workspace, make authenticated requests using the server's configured identity and permissions.
 
 `core_create-workspace` creates a real workspace and can assign it to an existing capacity and domain; review those arguments and use an appropriately authorized identity before invoking it.
+
+`core_update-item` modifies an existing item's name or description; review its arguments and item permissions before use.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 

@@ -258,6 +258,7 @@ public class ServerStartupTests
             "core_list-items",
             "core_list-workspaces",
             "core_search-catalog",
+            "core_update-item",
             "core_update-workspace"
         ];
 
@@ -268,7 +269,7 @@ public class ServerStartupTests
 
         using var document = JsonDocument.Parse(response);
         var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
-        Assert.Equal(55, tools.Length);
+        Assert.Equal(56, tools.Length);
         var creation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-workspace");
         Assert.False(creation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.False(creation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
@@ -280,6 +281,12 @@ public class ServerStartupTests
         Assert.True(update.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
         Assert.Equal(["workspace-id"], update.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
             .Select(value => value.GetString()));
+        var itemUpdate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-item");
+        Assert.False(itemUpdate.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemUpdate.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(itemUpdate.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemUpdate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)

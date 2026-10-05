@@ -71,4 +71,16 @@ public interface IFabricCoreService
         string workspaceId,
         UpdateWorkspaceRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Updates only the supplied display name and description of an existing Fabric item.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="request">At least one property to update; an empty description clears it.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The updated item's metadata, without definition or workload-specific properties.</returns>
+    Task<ItemUpdateMetadata> UpdateItemAsync(
+        string workspaceId,
+        string itemId,
+        UpdateItemRequest request,
+        CancellationToken cancellationToken = default);
 }
