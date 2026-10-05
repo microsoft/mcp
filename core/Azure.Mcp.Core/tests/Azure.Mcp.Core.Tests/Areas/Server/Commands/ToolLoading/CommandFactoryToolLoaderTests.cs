@@ -180,6 +180,70 @@ public class CommandFactoryToolLoaderTests
         Assert.Equal(specificToolName, result.Tools[0].Name);
     }
 
+    [Theory]
+    [InlineData("eventgrid_subscription_list", "eventgrid_subscription_list")]
+    [InlineData("EVENTGRID_SUBSCRIPTION_LIST", "eventgrid_subscription_list")]
+    [InlineData("EventGrid_Subscription_List", "eventgrid_subscription_list")]
+    [InlineData("subscription_list", "subscription_list")]
+    public async Task ListToolsHandler_WithOverlappingToolNames_ReturnsOnlyExactMatch(string configuredTool, string expectedTool)
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader(new ServerRuntimeConfiguration { Tool = [configuredTool] });
+        foreach (var name in new[] { "subscription_list", "eventgrid_subscription_list" })
+        {
+            InjectCommandFactoryTool(commandFactory, CreateFakeCommand(name, new() { ReadOnly = true }));
+        }
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(expectedTool, Assert.Single(result.Tools).Name);
+    }
+
+    [Theory]
+    [InlineData("eventgrid_subscription_list", "subscription_list", false)]
+    [InlineData("EVENTGRID_SUBSCRIPTION_LIST", "subscription_list", false)]
+    [InlineData("subscription_list", "eventgrid_subscription_list", false)]
+    [InlineData("eventgrid_subscription_list", "eventgrid_subscription_list", true)]
+    [InlineData("EVENTGRID_SUBSCRIPTION_LIST", "eventgrid_subscription_list", true)]
+    [InlineData("EventGrid_Subscription_List", "eventgrid_subscription_list", true)]
+    public async Task CallToolHandler_WithOverlappingToolNames_DispatchesOnlyExactMatch(string configuredTool, string requestedTool, bool allowed)
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader(new ServerRuntimeConfiguration { Tool = [configuredTool] });
+        foreach (var name in new[] { "subscription_list", "eventgrid_subscription_list" })
+        {
+            var command = CreateFakeCommand(name, new() { ReadOnly = true, Destructive = false, Secret = false });
+            command.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
+                .Returns(new CommandResponse { Status = HttpStatusCode.OK });
+            InjectCommandFactoryTool(commandFactory, command);
+        }
+
+        var result = await toolLoader.CallToolHandler(McpTestUtilities.CreateToolCallRequest(requestedTool), TestContext.Current.CancellationToken);
+
+        Assert.Equal(!allowed, result.IsError);
+        if (!allowed)
+        {
+            Assert.Contains($"Tool '{requestedTool}' is not available", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        }
+        foreach (var name in new[] { "subscription_list", "eventgrid_subscription_list" })
+        {
+            await commandFactory.AllCommands[name].Received(allowed && name == requestedTool ? 1 : 0)
+                .ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>());
+        }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMultipleOverlappingToolNames_ReturnsOnlyExactMatches()
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader(new ServerRuntimeConfiguration { Tool = ["TOOL_A", "tool_b"] });
+        foreach (var name in new[] { "tool", "tool_a", "tool_b", "prefix_tool_a", "tool_a_extra", "prefix_tool_b" })
+        {
+            InjectCommandFactoryTool(commandFactory, CreateFakeCommand(name, new() { ReadOnly = true }));
+        }
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { "tool_a", "tool_b" }, result.Tools.Select(t => t.Name).OrderBy(name => name));
+    }
+
     [Fact]
     public async Task ListToolsHandler_WithNonExistentToolFilter_ReturnsEmptyList()
     {
