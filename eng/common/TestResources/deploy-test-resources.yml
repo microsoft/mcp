@@ -13,6 +13,7 @@ parameters:
   PersistOidcToken: false
   SelfContainedPostScript: self-contained-test-resources-post.ps1
   SkipEnvironmentSetup: false
+  Condition: succeeded()
 
 # SubscriptionConfiguration will be splatted into the parameters of the test
 # resources script. It should be JSON in the form:
@@ -45,10 +46,13 @@ steps:
 
   - ${{ if eq(parameters.SkipEnvironmentSetup, false) }}:
     - template: /eng/common/TestResources/setup-environments.yml
+      parameters:
+        Condition: ${{ parameters.Condition }}
 
   - ${{ if eq(parameters.PersistOidcToken, true) }}:
     - task: AzureCLI@2
       displayName: Set OIDC token
+      condition: ${{ parameters.Condition }}
       env:
         ARM_OIDC_TOKEN: $(ARM_OIDC_TOKEN)
       inputs:
@@ -62,6 +66,7 @@ steps:
   - ${{ if eq('true', parameters.UseFederatedAuth) }}:
     - task: AzurePowerShell@5
       displayName: 🚀 Deploy test resources
+      condition: ${{ parameters.Condition }}
       env:
         TEMP: $(Agent.TempDirectory)
         PoolSubnet: $(PoolSubnet)
@@ -120,6 +125,7 @@ steps:
       # Add a new task with a refreshed token as a workaround to this issue.
       - task: AzureCLI@2
         displayName: Test Resources Post with refreshed login
+        condition: ${{ parameters.Condition }}
         env:
           ${{ insert }}: ${{ parameters.EnvVars }}
         inputs:
@@ -160,6 +166,7 @@ steps:
           -Force `
           -Verbose | Out-Null
       displayName: 🚀 Deploy test resources
+      condition: ${{ parameters.Condition }}
       env:
         TEMP: $(Agent.TempDirectory)
         PoolSubnet: $(PoolSubnet)

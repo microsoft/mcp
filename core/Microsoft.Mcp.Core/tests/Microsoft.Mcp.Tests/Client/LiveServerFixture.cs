@@ -20,6 +20,8 @@ public sealed class LiveServerFixture() : IAsyncLifetime
     public List<string> Arguments { get; set; } = [];
     public ITestOutputHelper? Output { get; set; }
     public LiveTestSettings? Settings { get; set; }
+    public string ExecutableName { get; set; } = "azmcp";
+    public string? ExecutablePath { get; set; }
 
     public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
@@ -37,7 +39,7 @@ public sealed class LiveServerFixture() : IAsyncLifetime
                 return;
             }
 
-            string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
+            string executablePath = ExecutablePath ?? McpTestUtilities.GetMcpExecutablePath(ExecutableName);
 
             var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
                 executablePath,

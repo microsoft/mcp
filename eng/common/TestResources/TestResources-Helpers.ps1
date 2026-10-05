@@ -12,6 +12,79 @@ function LogVsoCommand([string]$message) {
     Write-Host $message
 }
 
+function PublishCustomTestResourceOutputs(
+    [System.Collections.IDictionary] $provisioningResult,
+    [hashtable] $environmentVariables = @{}
+) {
+    if (!$provisioningResult) {
+        throw "Custom test resource provisioners must return a dictionary containing an 'EnvironmentVariables' or 'SecretEnvironmentVariables' dictionary."
+    }
+
+    $supportedKeys = @('EnvironmentVariables', 'SecretEnvironmentVariables')
+    foreach ($key in $provisioningResult.Keys) {
+        if ($supportedKeys -notcontains $key) {
+            throw "Custom test resource provisioner returned unsupported key '$key'. Supported keys: $($supportedKeys -join ', ')."
+        }
+    }
+
+    $publicVariables = $provisioningResult['EnvironmentVariables']
+    $secretVariables = $provisioningResult['SecretEnvironmentVariables']
+    if ($publicVariables -and $publicVariables -isnot [System.Collections.IDictionary]) {
+        throw "Custom test resource provisioner output 'EnvironmentVariables' must be a dictionary."
+    }
+    if ($secretVariables -and $secretVariables -isnot [System.Collections.IDictionary]) {
+        throw "Custom test resource provisioner output 'SecretEnvironmentVariables' must be a dictionary."
+    }
+    if (!$publicVariables -and !$secretVariables) {
+        throw "Custom test resource provisioners must return at least one environment variable."
+    }
+
+    $outputs = @{}
+    foreach ($entry in $environmentVariables.GetEnumerator()) {
+        $outputs[$entry.Key.ToUpperInvariant()] = $entry.Value
+    }
+
+    foreach ($variables in @($publicVariables, $secretVariables)) {
+        if (!$variables) {
+            continue
+        }
+
+        foreach ($entry in $variables.GetEnumerator()) {
+            $name = $entry.Key.ToUpperInvariant()
+            if ($outputs.ContainsKey($name)) {
+                throw "Custom test resource provisioner returned duplicate environment variable '$name'."
+            }
+            $outputs[$name] = $entry.Value
+        }
+    }
+
+    $parentProcessName = (Get-Process -Id $PID).Parent.ProcessName
+    $shellExportFormat = if ($parentProcessName -eq 'cmd') {
+        'set {0}=''{1}'''
+    } elseif (@('bash', 'csh', 'tcsh', 'zsh') -contains $parentProcessName) {
+        'export {0}=''{1}'''
+    } else {
+        '${{env:{0}}} = ''{1}'''
+    }
+
+    foreach ($entry in $outputs.GetEnumerator()) {
+        $isSecret = $secretVariables -and $secretVariables.Keys -contains $entry.Key
+        if ($CI) {
+            if ($isSecret) {
+                Write-Host "Setting variable as secret '$($entry.Key)'"
+                LogVsoCommand "##vso[task.setvariable variable=_$($entry.Key);issecret=true;]$($entry.Value)"
+            } else {
+                Write-Host "Setting variable '$($entry.Key)': $($entry.Value)"
+            }
+            LogVsoCommand "##vso[task.setvariable variable=$($entry.Key);]$($entry.Value)"
+        } else {
+            Write-Host ($shellExportFormat -f $entry.Key, $entry.Value)
+        }
+    }
+
+    return $outputs
+}
+
 function Retry([scriptblock] $Action, [int] $Attempts = 5) {
     $attempt = 0
     $sleep = 5

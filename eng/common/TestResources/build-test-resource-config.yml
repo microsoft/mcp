@@ -12,11 +12,14 @@ parameters:
   - name: SubscriptionConfigurationFilePaths
     type: object
     default: null
+  - name: Condition
+    type: string
+    default: succeeded()
 
 steps:
   - task: AzurePowerShell@5
     displayName: Set Pipeline Subnet Info
-    condition: and(succeeded(), ne(variables['Pool'], ''))
+    condition: and(${{ parameters.Condition }}, ne(variables['Pool'], ''))
     env: ${{ parameters.EnvVars }}
     inputs:
       azureSubscription: azure-sdk-tests
@@ -51,3 +54,4 @@ steps:
 
       BuildAndSetSubscriptionConfig $baseSubConfigJson $additionalSubConfigsJson $subConfigFilesJson
     displayName: Merge subscription configurations
+    condition: ${{ parameters.Condition }}

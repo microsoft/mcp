@@ -163,6 +163,9 @@ public class PathToTest
     [JsonPropertyName("testResourcesPath")]
     public string? TestResourcesPath { get; set; }
 
+    [JsonPropertyName("testResourceProvider")]
+    public string? TestResourceProvider { get; set; }
+
     [JsonPropertyName("hasUnitTests")]
     public bool HasUnitTests { get; set; }
 

@@ -1,3 +1,6 @@
+parameters:
+  Condition: succeeded()
+
 # Cloud Configuration will be splat into parameters of `Add-AzEnvironment`. It
 # should be JSON in the form (not all fields are required):
 # {
@@ -18,10 +21,11 @@
 steps:
   - bash: sudo chown -R runner ~/.Azure
     displayName: (MacOS) Grant access to ~/.Azure
-    condition: contains(variables['OSVmImage'], 'mac')
+    condition: and(${{ parameters.Condition }}, contains(variables['OSVmImage'], 'mac'))
 
   - task: Powershell@2
     displayName: Setup Az Modules and Dogfood Environment
+    condition: ${{ parameters.Condition }}
     inputs:
       targetType: inline
       pwsh: true
