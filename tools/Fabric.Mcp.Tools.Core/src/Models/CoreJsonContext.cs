@@ -8,6 +8,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(CapacityGetCommandResult))]
 [JsonSerializable(typeof(FabricItem))]
 [JsonSerializable(typeof(CreateItemRequest))]
 [JsonSerializable(typeof(ItemCreateCommandResult))]

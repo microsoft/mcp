@@ -17,6 +17,7 @@ public class FabricCoreSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpClient<IFabricCoreService, FabricCoreService>();
+        services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<ItemCreateCommand>();
         services.AddSingleton<CatalogSearchCommand>();
     }
@@ -24,13 +25,15 @@ public class FabricCoreSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricCore = new CommandGroup(Name,
-            "Microsoft Fabric Core Operations - Search, create, and manage Fabric items.\n" +
+            "Microsoft Fabric Core Operations - Inspect capacities, search, create, and manage Fabric items.\n" +
             "Use this tool when you need to:\n" +
+            "- Get metadata for a known Fabric capacity\n" +
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
             "- Manage core Fabric workspace items\n" +
             "This tool provides core operations for working with Fabric resources.");
 
+        fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
 
