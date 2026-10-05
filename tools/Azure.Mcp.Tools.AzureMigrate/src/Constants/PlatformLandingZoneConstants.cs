@@ -29,7 +29,7 @@ internal static class PlatformLandingZoneConstants
     /// (<c>Microsoft.Migrate/migrateProjects/artifacts</c>). Deliberately different from
     /// <see cref="PlatformLandingZoneApiVersion"/>: the two resource types version independently.
     /// </summary>
-    public const string ArtifactApiVersion = "2026-06-01-preview";
+    public const string ArtifactApiVersion = "2026-06-15-preview";
 
     /// <summary>
     /// The only Platform Landing Zone resource name the service accepts. A migrate project holds

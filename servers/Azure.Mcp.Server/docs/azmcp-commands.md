@@ -3872,6 +3872,11 @@ azmcp azuremigrate platformlandingzone request --subscription <subscription> \
    ```
 
 5. **Download Landing Zone** (`--action download`)
+   Downloads require a successful generation run and a committed artifact version. Artifact metadata
+   and download URL requests use the Artifact Store ARM API version `2026-06-15-preview`, independently
+   of the Platform Landing Zone resource API version `2026-02-01-preview`. The download requests the
+   committed `output.zip` file; it does not deploy the generated infrastructure.
+
    ```bash
    # Download the generated output to the local workspace
    azmcp azuremigrate platformlandingzone request --subscription <subscription> \

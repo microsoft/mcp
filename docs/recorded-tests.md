@@ -100,6 +100,24 @@ Follow this checklist any time you need to update recordings:
 | Restore recordings referenced by an assets file | `./.proxy/Azure.Sdk.Tools.TestProxy.exe restore -a path/to/assets.json` |
 | Reset local clone to the current tag | `./.proxy/Azure.Sdk.Tools.TestProxy.exe reset -a path/to/assets.json` |
 
+### Azure Migrate Platform Landing Zone downloads
+
+The create/wait/download test regenerates the existing `default` landing zone, retaining its effective
+configuration. Obtain permission for the configured project before recording; the test refuses to
+overwrite an in-flight or unknown generation state. It downloads and reads the generated ZIP but does
+not deploy its contents.
+
+Before publishing, verify the live ZIP size and SHA256 against `metadata.json` from the newly committed
+artifact version, using the `artifactId` returned by the PLZ resource. Do not reuse a previous run's
+manifest. The recorded test checks every ZIP entry can be read and that Terraform files are present.
+
+The test's text sanitizers remove live SAS URLs, project identities and configuration identifiers.
+**The proxy does not sanitize inside binary ZIP bodies.** Inspect every archived file before pushing
+assets, sanitize identities and secrets in both entry names and contents, and rebuild the recorded ZIP
+with valid sizes and checksums. Preserve representative generated content and verify playback after
+this step. The sanitized archive has a different hash from the live artifact; never use it as evidence
+of the live manifest match.
+
 
 ## Working With Sanitizers and Matchers
 
@@ -259,4 +277,3 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
   - Details on how assets are stored in `Azure/azure-sdk-assets` repo
 - [Azure SDK Test Proxy Discussions](https://teams.microsoft.com/l/channel/19%3Ab7c3eda7e0864d059721517174502bdb%40thread.skype/Test-Proxy%20-%20Questions%2C%20Help%2C%20and%20Discussion?groupId=3e17dcb0-4257-4a30-b843-77f47f1d4121&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47)
   - Feel free to post any questions about the test-proxy here in addition to the standard MCP channels.
-
