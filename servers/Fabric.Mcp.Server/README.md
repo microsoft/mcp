@@ -241,6 +241,8 @@ The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/cor
 
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
+* "Create a Microsoft Fabric workspace called Sales Planning"
+* "Create a Fabric workspace called Capacity Analytics using the existing capacity with ID \<capacity-id>"
 * "Show me how to handle long-running operations in Fabric APIs"
 * "What's the recommended error handling pattern for Fabric API calls?"
 
@@ -346,6 +348,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | Tool Name | Description |
 |-----------|-------------|
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
+| `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
@@ -435,6 +438,36 @@ Items contain ID, display name, type, workspace ID, and available description, f
 
 The caller needs workspace **Viewer** access. Delegated calls require `Workspace.Read.All` or `Workspace.ReadWrite.All`; the API supports user, service-principal, and managed identities. The tool preserves the server's configured authentication strategy, including its existing HTTP/OBO credential path. A `429` response retains its status and provides retry guidance when a valid `Retry-After` header is available; the tool does not retry automatically.
 
+**Creating a workspace**
+
+`core_create-workspace` implements [Create Workspace](https://learn.microsoft.com/rest/api/fabric/core/workspaces/create-workspace) with one `POST /v1/workspaces`, expecting a synchronous `201 Created` response.
+
+| Parameter | Required | Behavior |
+|-----------|----------|----------|
+| `display-name` | Yes | Workspace display name, not empty or whitespace, at most 256 characters. Only unused names are allowed. `Admin monitoring` is reserved, including case variations and surrounding whitespace. |
+| `description` | No | At most 4000 characters. An explicitly empty string is preserved. |
+| `capacity-id` | No | Nonempty UUID of an existing capacity to assign during creation. Names are not resolved. |
+| `domain-id` | No | Nonempty UUID of an existing domain to assign during creation. Names are not resolved. |
+
+Omitted optional fields are not sent. The tool does not provision a capacity or domain, check name availability, call `assignToCapacity`, create items, or poll an operation.
+
+These examples **create real workspaces** when run with authorized credentials. Replace the placeholders with existing resource IDs before using the second example:
+
+```powershell
+fabmcp core create-workspace --display-name "Sales Planning"
+
+fabmcp core create-workspace --display-name "Capacity Analytics" `
+  --description "Analytics workspace" `
+  --capacity-id "<capacity-id>" `
+  --domain-id "<domain-id>"
+```
+
+The typed result contains `workspace` and, when supplied by Fabric, `location`. Workspace metadata includes ID, display name, type, and any returned description, capacity ID/region, domain ID, API endpoint, and applied tags. Missing optional metadata remains absent; the result does not infer capacity-assignment completion. Location and API endpoints are metadata only and are never followed. A valid workspace body succeeds even if the Location header is absent.
+
+**Permissions:** The caller needs [workspace-creation permission](https://learn.microsoft.com/fabric/admin/portal-workspace#create-workspaces) granted by a Fabric administrator. When assigning a capacity, the caller needs [capacity contributor or admin permission](https://learn.microsoft.com/fabric/admin/capacity-settings#details). Domain assignment also requires the relevant domain permission. Delegated callers need `Workspace.ReadWrite.All`. For service principals, the administrator must enable [Service principals can create workspaces, connections, and deployment pipelines](https://learn.microsoft.com/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines) for an allowed security group containing the principal. The separate **Service principals can call Fabric public APIs** setting alone does not grant workspace-creation permission. Admin access on an existing workspace is not the creation prerequisite.
+
+**Failure handling:** Creation is mutating and not idempotent. The tool never automatically retries, including after throttling, and preserves failure status with sanitized messages and valid Retry-After guidance. A timeout, cancellation, network failure, or invalid success response can leave the creation outcome uncertain. Check whether the workspace exists before making another creation request. The tool is unavailable in read-only server mode.
+
 ### Data Factory Operations
 
 | Tool Name | Description |
@@ -467,6 +500,8 @@ The caller needs workspace **Viewer** access. Delegated calls require `Workspace
 ## Security
 
 The Fabric MCP Server is a **local-first** tool. Its documentation tools provide API specifications, schemas, and best practices without connecting to live Fabric environments. Operational tools, including Get Workspace, make authenticated requests using the server's configured identity and permissions.
+
+`core_create-workspace` creates a real workspace and can assign it to an existing capacity and domain; review those arguments and use an appropriately authorized identity before invoking it.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 

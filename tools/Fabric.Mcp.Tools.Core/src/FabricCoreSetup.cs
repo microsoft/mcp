@@ -22,6 +22,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<ItemCreateCommand>();
         services.AddSingleton<ItemListCommand>();
         services.AddSingleton<CatalogSearchCommand>();
+        services.AddSingleton<WorkspaceCreateCommand>();
         services.AddSingleton<WorkspaceGetCommand>();
         services.AddSingleton<WorkspaceListCommand>();
     }
@@ -29,7 +30,7 @@ public class FabricCoreSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricCore = new CommandGroup(Name,
-            "Microsoft Fabric Core Operations - Inspect capacities, discover workspaces, and search, create, and manage Fabric items.\n" +
+            "Microsoft Fabric Core Operations - Inspect capacities, discover and create workspaces, and search, create, and manage Fabric items.\n" +
             "Use this tool when you need to:\n" +
             "- Get metadata for a known Fabric capacity\n" +
             "- List accessible Fabric capacities and their metadata\n" +
@@ -38,6 +39,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
+            "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
             "- Manage core Fabric workspace items\n" +
             "This tool provides core operations for working with Fabric resources.");
 
@@ -46,6 +48,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceCreateCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceListCommand>(serviceProvider);
 

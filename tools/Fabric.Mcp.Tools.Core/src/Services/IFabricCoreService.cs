@@ -48,6 +48,12 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Creates one workspace, optionally assigning an existing capacity and domain in the same request.</summary>
+    /// <param name="request">The workspace creation properties.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The workspace metadata and optional Location header, without polling or retries.</returns>
+    Task<WorkspaceCreateResult> CreateWorkspaceAsync(CreateWorkspaceRequest request, CancellationToken cancellationToken = default);
+
     Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default);
 
     Task<WorkspaceListResponse> ListWorkspacesAsync(

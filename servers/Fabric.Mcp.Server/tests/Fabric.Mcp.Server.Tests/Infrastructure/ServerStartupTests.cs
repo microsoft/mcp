@@ -251,6 +251,7 @@ public class ServerStartupTests
         string[] names =
         [
             "core_create-item",
+            "core_create-workspace",
             "core_get-capacity",
             "core_get-workspace",
             "core_list-capacities",
@@ -263,6 +264,15 @@ public class ServerStartupTests
         {
             Assert.Contains($"\"{name}\"", response, StringComparison.Ordinal);
         }
+
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        Assert.Equal(54, tools.Length);
+        var creation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-workspace");
+        Assert.False(creation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.False(creation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["display-name"], creation.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)

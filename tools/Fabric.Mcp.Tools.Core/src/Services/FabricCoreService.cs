@@ -154,6 +154,55 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return workspace;
     }
 
+    /// <inheritdoc />
+    public async Task<WorkspaceCreateResult> CreateWorkspaceAsync(CreateWorkspaceRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var errors = WorkspaceCreateInputValidator.GetErrors(
+            request.DisplayName, request.Description, request.CapacityId, request.DomainId).ToArray();
+        if (errors.Length > 0)
+        {
+            throw new ArgumentException(string.Join(" ", errors), nameof(request));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces";
+        var jsonContent = JsonSerializer.Serialize(
+            new CreateWorkspaceRequest
+            {
+                DisplayName = request.DisplayName,
+                Description = request.Description,
+                CapacityId = NormalizeWorkspaceAssignmentId(request.CapacityId),
+                DomainId = NormalizeWorkspaceAssignmentId(request.DomainId)
+            },
+            CoreJsonContext.Default.CreateWorkspaceRequest);
+
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Post, url, jsonContent,
+            completionOption: HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken: cancellationToken);
+
+        if (response.StatusCode != HttpStatusCode.Created)
+        {
+            throw new WorkspaceCreateRequestException(
+                response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode,
+                FabricCoreHttpHelpers.GetRetryAfter(response));
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var workspace = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.CreatedWorkspaceMetadata, cancellationToken);
+        if (workspace is null || workspace.Id == Guid.Empty ||
+            string.IsNullOrWhiteSpace(workspace.DisplayName) || string.IsNullOrWhiteSpace(workspace.Type) ||
+            workspace.CapacityId == Guid.Empty || workspace.DomainId == Guid.Empty ||
+            workspace.Tags?.Any(static tag => tag is null || tag.Id == Guid.Empty || string.IsNullOrWhiteSpace(tag.DisplayName)) == true)
+        {
+            throw new JsonException("Fabric returned invalid created workspace metadata.");
+        }
+
+        return new(workspace, GetWorkspaceLocation(response));
+    }
+
     public async Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default)
     {
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/catalog/search";
@@ -355,6 +404,25 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         }
 
         return await _httpClient.SendAsync(request, completionOption, cancellationToken);
+    }
+
+    private static string? NormalizeWorkspaceAssignmentId(string? value) => value is null ? null : Guid.Parse(value).ToString("D");
+
+    private static string? GetWorkspaceLocation(HttpResponseMessage response)
+    {
+        if (!response.Headers.TryGetValues("Location", out var values))
+        {
+            return null;
+        }
+
+        var locations = values.ToArray();
+        if (locations.Length != 1 || string.IsNullOrWhiteSpace(locations[0]) ||
+            !Uri.TryCreate(locations[0], UriKind.RelativeOrAbsolute, out var location))
+        {
+            throw new JsonException("Fabric returned an invalid workspace Location header.");
+        }
+
+        return location.OriginalString;
     }
 
     private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
