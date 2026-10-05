@@ -1314,8 +1314,12 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
 
     private static AutoExportJobAdminStatus ParseAdminStatusForExport(string? adminStatus)
     {
-        var adminStatusUsed = adminStatus == null || string.IsNullOrWhiteSpace(adminStatus) ? "enable" : adminStatus;
-        switch (adminStatusUsed.ToLowerInvariant())
+        if (string.IsNullOrWhiteSpace(adminStatus))
+        {
+            return AutoExportJobAdminStatus.Enable;
+        }
+        
+        switch (adminStatus.ToLowerInvariant())
         {
             case "enable":
                 return AutoExportJobAdminStatus.Enable;
@@ -1329,8 +1333,12 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
 
     private static AutoImportJobPropertiesAdminStatus ParseAdminStatusForImport(string? adminStatus)
     {
-        var adminStatusUsed = adminStatus == null || string.IsNullOrWhiteSpace(adminStatus) ? "enable" : adminStatus;
-        switch (adminStatusUsed.ToLowerInvariant())
+        if (string.IsNullOrWhiteSpace(adminStatus)) 
+{
+            return AutoImportJobPropertiesAdminStatus.Enable;
+        }
+
+        switch (adminStatus.ToLowerInvariant())
         {
             case "enable":
                 return AutoImportJobPropertiesAdminStatus.Enable;
@@ -1344,8 +1352,11 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
 
     private static ConflictResolutionMode ParseConflictResolutionMode(string? conflictResolutionMode)
     {
-        var conflictResolutionModeUsed = conflictResolutionMode == null || string.IsNullOrWhiteSpace(conflictResolutionMode) ? "skip" : conflictResolutionMode;
-        switch (conflictResolutionModeUsed.ToLowerInvariant())
+        if (string.IsNullOrWhiteSpace(conflictResolutionMode))
+        {
+            return ConflictResolutionMode.Skip;
+        }
+        switch (conflictResolutionMode.ToLowerInvariant())
         {
             case "fail":
                 return ConflictResolutionMode.Fail;
