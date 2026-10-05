@@ -402,10 +402,10 @@
 # ServiceOwners:                                @g2vinay @gautam714
 
 # PRLabel: %tools-ResiliencyAgent
-/tools/Azure.Mcp.Tools.ResiliencyAgent/    @psaswata @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ResiliencyAgent/    @psaswata @viveksheelsingh @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ResiliencyAgent
-# ServiceOwners:                           @psaswata
+# ServiceOwners:                           @psaswata @viveksheelsingh
 
 # PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp
