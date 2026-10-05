@@ -256,6 +256,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn with 14 days retention for vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_operation_get | Get asynchronous operation <operation_id> at vault scope for Recovery Services vault <vault_name> in resource group <resource_group> and subscription <subscription> | none |
+| azurebackup_operation_get | Check operation <operation_id> for protected item <protected_item> in container <container> and Azure fabric of RSV vault <vault_name>, resource group <resource_group>, subscription <subscription> and tenant <tenant> | none |
+| azurebackup_operation_get | Show the status and actual job IDs, if any, for RSV operation <operation_id> in vault <vault_name>, resource group <resource_group> and subscription <subscription>; do not treat the operation ID as a job | none |
 | azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> | investigation-required |

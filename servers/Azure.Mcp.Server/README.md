@@ -1009,6 +1009,13 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 🛡️ Azure Backup
 
+Read asynchronous operation status with `azurebackup_operation_get` (Recovery Services vaults only).
+Query vault scope, or supply both container and protected item for item scope. Operation IDs are not
+job IDs: only actual job IDs returned by Azure can be used with `azurebackup_job_get`; no job is valid.
+
+* "Get asynchronous operation 'operation-id' in RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+* "Check operation 'operation-id' for protected item 'item' in container 'container' of RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+
 Vault creation checks whether the requested Recovery Services vault or Backup vault already exists and rejects existing vaults. Use `azurebackup_vault_update` to modify an existing vault. Creation requires read permission on the target vault in addition to write permission. The existence check and creation are separate ARM requests, so this check is not an atomic guarantee against concurrent creation by another caller.
 
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"

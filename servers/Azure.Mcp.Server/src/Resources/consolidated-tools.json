@@ -4961,7 +4961,7 @@
     },
     {
       "name": "get_azure_backup_details",
-      "description": "Get information about Azure Backup resources including vault details, backup policies, protected items, protectable items, backup status, jobs, recovery points, and unprotected resources.",
+      "description": "Get information about Azure Backup resources including vault details, backup policies, protected items, protectable items, backup status, jobs, RSV asynchronous operation status, recovery points, and unprotected resources.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -4997,6 +4997,7 @@
         "azurebackup_backup_status",
         "azurebackup_container_get",
         "azurebackup_job_get",
+        "azurebackup_operation_get",
         "azurebackup_recoverypoint_get",
         "azurebackup_governance_find-unprotected",
         "azurebackup_resourceguard_get",

@@ -515,6 +515,7 @@
     "sqlazureconnstr",
     "sqldatabase",
     "sqldb",
+    "sqlrsv",
     "sreagent",
     "ssirp",
     "staticwebapp",

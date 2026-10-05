@@ -1051,6 +1051,44 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 
 ### Azure Backup Operations
 
+#### Operation Status (RSV only)
+
+```bash
+# Read one asynchronous operation without polling or modifying backup.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup operation get --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --vault <vault> \
+                                --operation <operation> \
+                                [--container <container>] \
+                                [--protected-item <protected-item>] \
+                                [--fabric <fabric>] \
+                                [--tenant <tenant>]
+```
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--operation` | Yes | Decoded opaque operation ID from an asynchronous status response header; not a job ID, URL or ARM resource ID. GUID format is not required. |
+| `--vault` | Yes | Recovery Services vault name. DPP Backup vaults are not supported; there is no `--vault-type` option. |
+| `--resource-group` | Yes | Resource group containing the vault. |
+| `--subscription` | Yes | Subscription ID or display name. |
+| `--container` | No | Decoded protection container name; requires `--protected-item`. Semicolon-delimited RSV names are supported. |
+| `--protected-item` | No | Decoded protected item name; requires `--container`. |
+| `--fabric` | No | Item-scope fabric, default `Azure`; requires both item-scope options. |
+| `--tenant` | No | Tenant ID or display name for authentication. |
+
+With neither item option, reads `vaults/{vault}/backupOperations/{operation}`. With both,
+reads `vaults/{vault}/backupFabrics/{fabric}/protectionContainers/{container}/protectedItems/{item}/operationsStatus/{operation}`.
+No arbitrary URL is accepted, and path separators, percent encoding, query/fragment delimiters and control characters are rejected in identifiers.
+
+Returns an `operation` object with `operationId`, `resourceId`, `scope` (`vault` or `protectedItem`),
+`vaultType` (`rsv`), `status`, optional `startTime`/`endTime`, safe `error` code and explanatory message,
+optional `jobId`, `jobIds`, and `failedJobsError` codes. Backend error messages and unrelated extended
+properties (including recovery scripts) are intentionally omitted. Only job IDs explicitly returned by
+Azure are exposed; missing jobs is a valid result, including after success. Operation success is not
+backup job success. Use `azurebackup job get --job <jobId>` only with an actual returned job ID.
+A missing or expired operation returns not found; it does not fall back to a vault-wide job search.
+
 #### Vault
 
 ```bash
