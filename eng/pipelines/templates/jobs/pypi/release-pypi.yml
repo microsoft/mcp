@@ -60,10 +60,10 @@ jobs:
             artifactFeeds: public/azure-sdk-for-python
             onlyAddExtraIndex: false
         
-        - task: TwineAuthenticate@1
+        - task: TwineAuthenticate@0
           displayName: 'Twine Authenticate to feed: public/azure-sdk-for-python'
           inputs:
-            artifactFeed: public/azure-sdk-for-python
+            artifactFeeds: public/azure-sdk-for-python
 
         - script: |
             set -e
