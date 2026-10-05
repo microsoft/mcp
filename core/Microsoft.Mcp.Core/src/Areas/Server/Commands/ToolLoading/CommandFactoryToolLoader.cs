@@ -51,7 +51,7 @@ public sealed class CommandFactoryToolLoader(
             visibleCommands = visibleCommands.Where(kvp =>
             {
                 var toolKey = kvp.Key;
-                return _configuration.Value.Tool.Any(tool => tool.Contains(toolKey, StringComparison.OrdinalIgnoreCase));
+                return _configuration.Value.Tool.Any(tool => string.Equals(tool, toolKey, StringComparison.OrdinalIgnoreCase));
             });
         }
 
@@ -98,7 +98,7 @@ public sealed class CommandFactoryToolLoader(
         // Check if tool filtering is enabled and validate the requested tool
         if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
-            if (!_configuration.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
+            if (!_configuration.Value.Tool.Any(tool => string.Equals(tool, toolName, StringComparison.OrdinalIgnoreCase)))
             {
                 activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                     .SetTag(TagName.ToolName, TagConstants.Unknown);
