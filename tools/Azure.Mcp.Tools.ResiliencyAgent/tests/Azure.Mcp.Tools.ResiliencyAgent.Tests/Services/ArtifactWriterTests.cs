@@ -18,9 +18,11 @@ public sealed class ArtifactWriterTests : IDisposable
     public ArtifactWriterTests()
     {
         _originalDirectory = Environment.CurrentDirectory;
-        _workingDirectory = Path.Combine(Path.GetTempPath(), "resiliency-tests-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_workingDirectory);
-        Environment.CurrentDirectory = _workingDirectory;
+        string requestedWorkingDirectory =
+            Path.Combine(Path.GetTempPath(), "resiliency-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(requestedWorkingDirectory);
+        Environment.CurrentDirectory = requestedWorkingDirectory;
+        _workingDirectory = Environment.CurrentDirectory;
     }
 
     [Fact]
