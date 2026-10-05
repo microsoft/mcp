@@ -4,7 +4,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using Azure.Core;
@@ -12,7 +11,9 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
+using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
@@ -36,7 +37,7 @@ public class IoTHubDeviceService(
     // Microsoft Entra ID scope for the IoT Hub service (data-plane) REST API.
     private const string IoTHubTokenScope = "https://iothubs.azure.net/.default";
 
-    private async Task<T> ExecuteWithTimeoutAsync<T>(
+    private static async Task<T> ExecuteWithTimeoutAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         string operationName,
         CancellationToken cancellationToken,
@@ -81,6 +82,30 @@ public class IoTHubDeviceService(
         return HttpPipelineBuilder.Build(clientOptions);
     }
 
+    /// <summary>
+    /// Validates that the given IoT Hub data-plane host name, path, and query satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="hostname">The host name of the Iot Hub to validate.</param>
+    /// <param name="pathAndQuery">The path and query portion of the IoT Hub endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the IoT Hub endpoint.</returns>
+    internal static Uri CreateValidatedDataPlaneUri(
+        string hostname,
+        string pathAndQuery,
+        ArmEnvironment armEnvironment)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(hostname);
+        ArgumentException.ThrowIfNullOrWhiteSpace(pathAndQuery);
+
+        var endpoint = new Uri($"https://{hostname}{pathAndQuery}", UriKind.Absolute);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "iothub",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "iothub");
+        return endpoint;
+    }
+
     // Translate a failed IoT Hub data-plane response into an actionable exception. The thrown
     // HttpRequestException carries the status code so the command surfaces the matching HTTP status.
     private static void EnsureSuccessOrThrow(Response response)
@@ -122,14 +147,17 @@ public class IoTHubDeviceService(
             // beyond the page; otherwise a full page simply means the hub holds exactly maxCount
             // devices. This avoids a false "truncated" flag when the count equals the max.
             var maxCountParam = maxCount.HasValue ? $"&top={maxCount.Value + 1}" : string.Empty;
-            var requestUri = $"https://{hostname}/devices?api-version={RegistryApiVersion}{maxCountParam}";
+            var requestUri = CreateValidatedDataPlaneUri(
+                hostname,
+                $"/devices?api-version={RegistryApiVersion}{maxCountParam}",
+                AzureService.CloudConfiguration.ArmEnvironment);
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
-            request.Uri.Reset(new Uri(requestUri));
+            request.Uri.Reset(requestUri);
             request.Headers.Add("Authorization", $"Bearer {token}");
 
             using var response = await pipeline.SendRequestAsync(request, ct);
@@ -171,11 +199,14 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = $"https://{hostname}/devices/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}";
+            var requestUri = CreateValidatedDataPlaneUri(
+                hostname,
+                $"/devices/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}",
+                AzureService.CloudConfiguration.ArmEnvironment);
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
-            request.Uri.Reset(new Uri(requestUri));
+            request.Uri.Reset(requestUri);
             request.Headers.Add("Authorization", $"Bearer {token}");
 
             using var response = await pipeline.SendRequestAsync(request, ct);
@@ -206,11 +237,14 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = $"https://{hostname}/twins/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}";
+            var requestUri = CreateValidatedDataPlaneUri(
+                hostname,
+                $"/twins/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}",
+                AzureService.CloudConfiguration.ArmEnvironment);
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
-            request.Uri.Reset(new Uri(requestUri));
+            request.Uri.Reset(requestUri);
             request.Headers.Add("Authorization", $"Bearer {token}");
 
             using var response = await pipeline.SendRequestAsync(request, ct);
@@ -252,7 +286,10 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = $"https://{hostname}/devices/query?api-version={RegistryApiVersion}";
+            var requestUri = CreateValidatedDataPlaneUri(
+                hostname,
+                $"/devices/query?api-version={RegistryApiVersion}",
+                AzureService.CloudConfiguration.ArmEnvironment);
 
             var queryObject = new IoTHubQueryRequest(query);
             var queryJson = JsonSerializer.Serialize(queryObject, IoTHubJsonContext.Default.IoTHubQueryRequest);
@@ -261,7 +298,7 @@ public class IoTHubDeviceService(
             // size and x-ms-continuation carries the cursor for the next page.
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Post;
-            request.Uri.Reset(new Uri(requestUri));
+            request.Uri.Reset(requestUri);
             request.Headers.Add("Authorization", $"Bearer {token}");
             request.Headers.Add("Content-Type", "application/json");
             if (maxCount.HasValue)
@@ -324,11 +361,14 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = $"https://{hostname}/statistics/devices?api-version={RegistryApiVersion}";
+            var requestUri = CreateValidatedDataPlaneUri(
+                hostname,
+                $"/statistics/devices?api-version={RegistryApiVersion}",
+                AzureService.CloudConfiguration.ArmEnvironment);
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
-            request.Uri.Reset(new Uri(requestUri));
+            request.Uri.Reset(requestUri);
             request.Headers.Add("Authorization", $"Bearer {token}");
 
             using var response = await pipeline.SendRequestAsync(request, ct);

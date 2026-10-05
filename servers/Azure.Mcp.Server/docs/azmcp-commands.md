@@ -366,14 +366,12 @@ azmcp server info
 
 ```bash
 # Check authentication and connectivity for an ADME endpoint and data partition
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme health check --endpoint <endpoint> \
                          --data-partition <data-partition> \
                          [--tenant <tenant>] \
                          [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get a schema by its fully-qualified OSDU kind
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema get --endpoint <endpoint> \
                        --data-partition <data-partition> \
                        --kind <authority:source:entity-type:version> \
@@ -381,7 +379,6 @@ azmcp adme schema get --endpoint <endpoint> \
                        [--auth-app-id <application-id-or-app-id-uri>]
 
 # List schemas with optional identity, lifecycle, scope, version, and paging filters
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema list --endpoint <endpoint> \
                         --data-partition <data-partition> \
                         [--tenant <tenant>] \
@@ -399,7 +396,6 @@ azmcp adme schema list --endpoint <endpoint> \
                         [--limit <limit>]
 
 # Search OSDU records by kind and Lucene criteria; query pagination is the default
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme search --endpoint <endpoint> \
                   --data-partition <data-partition> \
                   --kind <authority:source:entity-type:version> [<kind>...] \
@@ -427,7 +423,6 @@ Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is
 For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record fetch --endpoint <endpoint> \
                                   --data-partition <data-partition> \
                                   --ids <id> [<id>...] \
@@ -437,7 +432,6 @@ azmcp adme storage record fetch --endpoint <endpoint> \
                                   [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get the latest or a specific version of an OSDU record, optionally projecting attributes
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record get --endpoint <endpoint> \
                                 --data-partition <data-partition> \
                                 --id <record-id> \
@@ -447,7 +441,6 @@ azmcp adme storage record get --endpoint <endpoint> \
                                 [--auth-app-id <application-id-or-app-id-uri>]
 
 # List record ids for a fully-qualified OSDU kind
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record list --endpoint <endpoint> \
                                  --data-partition <data-partition> \
                                  --kind <authority:source:entity-type:version> \
@@ -457,7 +450,6 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  [--auth-app-id <application-id-or-app-id-uri>]
 
 # List all numeric versions of an OSDU record
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record version list --endpoint <endpoint> \
                                          --data-partition <data-partition> \
                                          --id <record-id> \
@@ -468,7 +460,9 @@ azmcp adme storage record version list --endpoint <endpoint> \
 ### Azure Advisor Operations
 
 ```bash
-# List Advisor recommendations in a subscription, with optional filters
+# List actual Advisor recommendation records in a subscription, with optional filters.
+# For global recommendation metadata/catalog lookups, including service-retirement metadata by tracking ID,
+# use advisor metadata list instead; that command does not require a subscription.
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
@@ -537,9 +531,11 @@ azmcp advisor recommendation summary --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation apply --resource <resource>
 
-# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
-# Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
-# during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
+# List the global, subscription-independent Azure Advisor recommendation metadata catalog (also called recommendation types)
+# from Azure Resource Graph. Use it for metadata/catalog lookups, including service-retirement metadata by Service Health
+# tracking ID, even when no subscription or active recommendation instance is specified. Use recommendation list for actual
+# subscription-scoped recommendation records. Use metadata in greenfield environments with no generated recommendations,
+# or filter by supported resource type during brownfield onboarding. Supports service-retirement filtering by tracking ID and retirement
 # date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting
 # subcategory filters are rejected. Results are ordered High, Medium, Low.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1554,7 +1550,7 @@ azmcp extension cli install --cli-type <cli-type>
 
 ```bash
 # Send email using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint <endpoint> \
                                --from <sender-email> \
                                --to <recipient-email> \
@@ -1567,7 +1563,7 @@ azmcp communication email send --endpoint <endpoint> \
 
 # Examples:
 # Send plain text email
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
@@ -1575,7 +1571,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --message "Hello from Azure Communication Services!"
 
 # Send HTML-formatted email with CC
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
@@ -1585,7 +1581,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --is-html
 
 # Send to multiple recipients with BCC and reply-to
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "notifications@verified-domain.com" \
                                --to "recipient1@example.com,recipient2@example.com" \
@@ -1610,7 +1606,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 
 ```bash
 # SMS message using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint <endpoint> \
                              --from <sender-phone-number> \
                              --to <recipient-phone-number> \
@@ -1620,14 +1616,14 @@ azmcp communication sms send --endpoint <endpoint> \
 
 # Examples:
 # Send SMS to single recipient
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
                              --from "+1234567890" \
                              --to "+1234567891" \
                              --message "Hello from Azure Communication Services!"
 
 # Send SMS to multiple recipients with delivery reporting
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
                              --from "+1234567890" \
                              --to "+1234567891,+1234567892" \
@@ -2943,6 +2939,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--maximum-throughput-units <units>] \
                                  [--kafka-enabled <true/false>] \
                                  [--zone-redundant <true/false>] \
+                                 [--disable-local-auth <true|false>] \
                                  [--tags <json-tags>]
 ```
 
@@ -4113,13 +4110,13 @@ azmcp datadog monitoredresources list --subscription <subscription> \
 
 ### Azure Quick Review CLI Operations
 
+These local-only commands are available when Azure Quick Review CLI (`azqr`) version 3.0.0 or later is installed and available on `PATH`.
+
 ```bash
 # Scan a subscription for recommendations
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp extension azqr --subscription <subscription>
 
 # Scan a subscription and scope to a specific resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp extension azqr --subscription <subscription> \
                      --resource-group <resource-group-name>
 ```
@@ -5095,6 +5092,7 @@ azmcp storage account create --subscription <subscription> \
                              [--sku <sku>] \
                              [--access-tier <access-tier>] \
                              [--enable-hierarchical-namespace <true|false>] \
+                             [--allow-shared-key-access <true|false>] \
                              [--tenant <tenant>]
 ```
 
@@ -5109,6 +5107,7 @@ azmcp storage account create --subscription <subscription> \
 | `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
 | `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
 | `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
+| `--allow-shared-key-access` | No | Allow Shared Key authentication. Defaults to `false`; use Microsoft Entra ID unless explicitly opting in. |
 | `--tenant` | No | Azure tenant ID or name. |
 
 ```bash
