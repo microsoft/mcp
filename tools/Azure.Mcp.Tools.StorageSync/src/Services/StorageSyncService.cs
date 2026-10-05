@@ -103,7 +103,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string location,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        bool enablePublicNetworkAccess = false,
+        string? incomingTrafficPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -122,7 +122,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         {
             IncomingTrafficPolicy = existing.HasValue
                 ? existing.Value!.Data.IncomingTrafficPolicy
-                : new(enablePublicNetworkAccess ? "AllowAllTraffic" : "AllowVirtualNetworksOnly")
+                : incomingTrafficPolicy == null ? IncomingTrafficPolicy.AllowAllTraffic : new(incomingTrafficPolicy)
         };
         if (tags != null)
         {

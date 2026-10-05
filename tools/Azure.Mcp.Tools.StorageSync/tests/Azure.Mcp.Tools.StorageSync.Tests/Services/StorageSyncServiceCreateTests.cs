@@ -16,12 +16,15 @@ namespace Azure.Mcp.Tools.StorageSync.Tests.Services;
 public class StorageSyncServiceCreateTests
 {
     [Theory]
-    [InlineData(false, null, "AllowVirtualNetworksOnly")]
-    [InlineData(true, null, "AllowAllTraffic")]
-    [InlineData(false, "AllowAllTraffic", "AllowAllTraffic")]
-    [InlineData(true, "AllowVirtualNetworksOnly", "AllowVirtualNetworksOnly")]
+    [InlineData("AllowVirtualNetworksOnly", null, "AllowVirtualNetworksOnly")]
+    [InlineData("AllowAllTraffic", null, "AllowAllTraffic")]
+    [InlineData("AllowAllTraffic", "AllowAllTraffic", "AllowAllTraffic")]
+    [InlineData("AllowVirtualNetworksOnly", "AllowVirtualNetworksOnly", "AllowVirtualNetworksOnly")]
+    [InlineData(null, null, "AllowAllTraffic")]
+    [InlineData(null, "AllowVirtualNetworksOnly", "AllowVirtualNetworksOnly")]
+    [InlineData(null, "AllowAllTraffic", "AllowAllTraffic")]
     public async Task CreateStorageSyncService_PreservesExistingPolicy(
-        bool enablePublicNetworkAccess, string? existingPolicy, string expectedPolicy)
+        string? incomingTrafficPolicy, string? existingPolicy, string expectedPolicy)
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
@@ -40,7 +43,7 @@ public class StorageSyncServiceCreateTests
 
         await Assert.ThrowsAsync<RequestFailedException>(() => service.CreateStorageSyncServiceAsync(
             "11111111-1111-1111-1111-111111111111", "testrg", "test-service", "eastus",
-            enablePublicNetworkAccess: enablePublicNetworkAccess,
+            incomingTrafficPolicy: incomingTrafficPolicy,
             cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal(1, handler.ServiceLookupCount);
