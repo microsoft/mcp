@@ -40,6 +40,19 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         Dictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
     {
+        var response = await SendFabricHttpRequestAsync(method, url, jsonContent, headers, cancellationToken: cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    private async Task<HttpResponseMessage> SendFabricHttpRequestAsync(
+        HttpMethod method,
+        string url,
+        string? jsonContent = null,
+        Dictionary<string, string>? headers = null,
+        HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead,
+        CancellationToken cancellationToken = default)
+    {
         var tokenRequestContext = new TokenRequestContext(FabricEndpoints.FabricScopes);
         var accessToken = await _credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
@@ -60,9 +73,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
         }
 
-        var response = await _httpClient.SendAsync(request, cancellationToken);
-        await EnsureSuccessAsync(response, cancellationToken);
-        return await response.Content.ReadAsStreamAsync(cancellationToken);
+        return await _httpClient.SendAsync(request, completionOption, cancellationToken);
     }
 
     private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
