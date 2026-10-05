@@ -355,6 +355,49 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return page;
     }
 
+    /// <inheritdoc />
+    public async Task<WorkspaceUpdateResponse> UpdateWorkspaceAsync(
+        string workspaceId,
+        UpdateWorkspaceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var errors = WorkspaceUpdateInputValidator.GetErrors(workspaceId, request.DisplayName, request.Description);
+        if (errors.Count > 0)
+        {
+            throw new ArgumentException(string.Join('\n', errors));
+        }
+
+        var parsedId = Guid.Parse(workspaceId);
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedId:D}";
+        var jsonContent = JsonSerializer.Serialize(request, CoreJsonContext.Default.UpdateWorkspaceRequest);
+
+        using var response = await SendFabricHttpRequestAsync(HttpMethod.Patch, url, jsonContent, cancellationToken: cancellationToken);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new WorkspaceUpdateThrottledException(retryAfter);
+            }
+
+            throw new HttpRequestException(
+                "Unable to update Fabric workspace metadata.",
+                null,
+                response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode);
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var workspace = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.WorkspaceUpdateResponse, cancellationToken);
+        if (workspace is null || workspace.Id != parsedId ||
+            string.IsNullOrWhiteSpace(workspace.DisplayName) || string.IsNullOrWhiteSpace(workspace.Type))
+        {
+            throw new JsonException("Fabric returned invalid workspace metadata.");
+        }
+
+        return workspace;
+    }
+
     private static bool IsValidWorkspace(FabricWorkspaceListEntry? workspace) =>
         workspace is not null &&
         workspace.Id != Guid.Empty &&

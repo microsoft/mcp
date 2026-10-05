@@ -25,12 +25,13 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<WorkspaceCreateCommand>();
         services.AddSingleton<WorkspaceGetCommand>();
         services.AddSingleton<WorkspaceListCommand>();
+        services.AddSingleton<WorkspaceUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricCore = new CommandGroup(Name,
-            "Microsoft Fabric Core Operations - Inspect capacities, discover and create workspaces, and search, create, and manage Fabric items.\n" +
+            "Microsoft Fabric Core Operations - Inspect capacities, discover, create, and update workspaces, and search, create, and manage Fabric items.\n" +
             "Use this tool when you need to:\n" +
             "- Get metadata for a known Fabric capacity\n" +
             "- List accessible Fabric capacities and their metadata\n" +
@@ -40,6 +41,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
             "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
+            "- Rename a known workspace or update or clear its description\n" +
             "- Manage core Fabric workspace items\n" +
             "This tool provides core operations for working with Fabric resources.");
 
@@ -51,6 +53,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<WorkspaceCreateCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceListCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceUpdateCommand>(serviceProvider);
 
         return fabricCore;
     }

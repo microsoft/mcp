@@ -44,7 +44,8 @@ public sealed class WorkspaceCreateToolRegistrationTests()
 
         Assert.Equal(
             ["core_create-item", "core_create-workspace", "core_get-capacity", "core_get-workspace",
-             "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
+             "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog",
+             "core_update-workspace"],
             tools.Tools.Select(static tool => tool.Name).Order());
         var tool = Assert.Single(tools.Tools, static tool => tool.Name == ToolName);
         Assert.Equal(["capacity-id", "description", "display-name", "domain-id"],

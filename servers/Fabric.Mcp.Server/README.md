@@ -55,6 +55,7 @@ Key capabilities:
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
 - **Local-First Documentation**: Documentation tools read bundled resources locally; operational tools access Fabric under the configured identity
+- **Workspace Metadata Updates**: Rename a known workspace or update or clear its description without changing other properties
 - **Data Factory Integration**: Pipeline and Dataflow Gen2 management with M query execution
 
 # Installation
@@ -355,6 +356,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
+| `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
 
 **Get Capacity (`core_get-capacity`)**
 
@@ -467,6 +469,42 @@ The typed result contains `workspace` and, when supplied by Fabric, `location`. 
 **Permissions:** The caller needs [workspace-creation permission](https://learn.microsoft.com/fabric/admin/portal-workspace#create-workspaces) granted by a Fabric administrator. When assigning a capacity, the caller needs [capacity contributor or admin permission](https://learn.microsoft.com/fabric/admin/capacity-settings#details). Domain assignment also requires the relevant domain permission. Delegated callers need `Workspace.ReadWrite.All`. For service principals, the administrator must enable [Service principals can create workspaces, connections, and deployment pipelines](https://learn.microsoft.com/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines) for an allowed security group containing the principal. The separate **Service principals can call Fabric public APIs** setting alone does not grant workspace-creation permission. Admin access on an existing workspace is not the creation prerequisite.
 
 **Failure handling:** Creation is mutating and not idempotent. The tool never automatically retries, including after throttling, and preserves failure status with sanitized messages and valid Retry-After guidance. A timeout, cancellation, network failure, or invalid success response can leave the creation outcome uncertain. Check whether the workspace exists before making another creation request. The tool is unavailable in read-only server mode.
+
+**Updating workspace metadata**
+
+* "Rename Fabric workspace \<workspace-id> to 'Finance Analytics' without changing its description"
+* "Set the description of Fabric workspace \<workspace-id> to 'Quarterly reporting' without renaming it"
+* "Clear the description of Fabric workspace \<workspace-id> and keep its display name"
+
+`core_update-workspace` (`fabmcp core update-workspace`) implements the synchronous
+[Update Workspace API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/update-workspace).
+It requires a nonempty workspace UUID and at least one update:
+
+| Option | Behavior |
+|--------|----------|
+| `workspace-id` | Required workspace UUID; names and name resolution are not supported. |
+| `display-name` | Optional name, up to 256 characters; cannot be empty or whitespace-only. Names must be unique within the tenant; `Admin monitoring` is reserved. |
+| `description` | Optional description, up to 4000 characters. An empty string clears it. |
+
+Omitted or null optional values are not sent and leave those properties unchanged. Supplied text is
+not trimmed. For example, MCP arguments to clear only the description are:
+
+```json
+{ "workspace-id": "<workspace-id>", "description": "" }
+```
+
+The caller needs the **workspace Admin role** and, for delegated access, **Workspace.ReadWrite.All**.
+This mutating tool is unavailable in read-only mode and uses the server's standard destructive-operation
+confirmation. Its result contains `workspace` with only `id`, `displayName`, `type`, and `description`
+when returned by Fabric; an empty returned description remains empty.
+
+The tool makes one application-level PATCH with no application retries, prefetch, follow-up requests,
+polling, or enrichment. The existing HTTP client's redirect behavior is unchanged, so this is not a
+guarantee of one wire-level hop. Response URLs are not followed by application code. Capacity, domain,
+identity, permissions, tags, endpoints, items, and data cannot be updated through this tool.
+Failures retain the HTTP status and expose only sanitized messages and validated `Retry-After`
+guidance. If a request times out or returns an invalid success payload, the update might already
+have been applied; verify the workspace before manually retrying.
 
 ### Data Factory Operations
 

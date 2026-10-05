@@ -61,4 +61,14 @@ public interface IFabricCoreService
         string? continuationToken = null,
         bool? preferWorkspaceSpecificEndpoints = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Updates only the supplied display name and description of a Fabric workspace.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="request">At least one property to update; null properties are omitted.</param>
+    /// <param name="cancellationToken">The token for canceling the operation.</param>
+    /// <returns>The workspace metadata from the synchronous PATCH response.</returns>
+    Task<WorkspaceUpdateResponse> UpdateWorkspaceAsync(
+        string workspaceId,
+        UpdateWorkspaceRequest request,
+        CancellationToken cancellationToken = default);
 }

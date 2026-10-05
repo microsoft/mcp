@@ -2,7 +2,7 @@
 
 These prompts validate tool selection. They do not imply that live Fabric calls, real OBO authorization, or recorded playback have been exercised.
 
-`none` means the prompt supplies the inputs needed for invocation, not that permission to mutate resources has been granted. Workspace creation requires separate authorization for any live test; offline tests substitute HTTP and credentials. The resource UUIDs below are examples, not provisioned test resources.
+`none` means the prompt supplies the inputs needed for invocation, not that permission to mutate resources has been granted. Workspace creation and updates require separate authorization for live tests; offline tests substitute HTTP and credentials. Standard mutation confirmation still applies. The resource UUIDs below are examples, not provisioned test resources.
 
 ## Core
 
@@ -29,3 +29,7 @@ These prompts validate tool selection. They do not imply that live Fabric calls,
 | core_list-workspaces | List my Fabric workspaces where I am an Admin or Member using the Core management API, not the OneLake storage listing. | Read-only |
 | core_list-workspaces | List accessible Fabric workspaces and include their workspace-specific API endpoints. | Read-only |
 | core_list-workspaces | Get the next page of accessible Fabric workspace management metadata using the continuation token from the preceding list, keeping the same role filter and endpoint preference. | Read-only |
+| core_update-workspace | Rename Fabric workspace \<workspace-id> to 'Finance Analytics' without changing its description. | none |
+| core_update-workspace | Set the description of Fabric workspace \<workspace-id> to 'Quarterly reporting' and leave its name unchanged. | none |
+| core_update-workspace | Clear the description of Fabric workspace \<workspace-id> without renaming it. | none |
+| core_update-workspace | Update Fabric workspace \<workspace-id> to the name 'Team Reporting' and description 'Shared reporting workspace'. | none |
