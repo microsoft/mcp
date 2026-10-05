@@ -45,8 +45,8 @@ public sealed class IacGenerateCommandTests
     {
         var command = Command.GetCommand();
         Assert.Equal("generate", command.Name);
-        Assert.Contains("new zone-resilient Bicep, ARM JSON, or Terraform", command.Description, StringComparison.Ordinal);
-        Assert.Contains("does not review existing files", command.Description, StringComparison.Ordinal);
+        Assert.Contains("create or generate new zone-resilient", command.Description, StringComparison.Ordinal);
+        Assert.Contains("does not review or correct", command.Description, StringComparison.Ordinal);
     }
 
     [Theory]

@@ -31,7 +31,9 @@ public sealed class GuidanceGetCommandTests
         var command = Command.GetCommand();
 
         Assert.Equal("get", command.Name);
-        Assert.Contains("general, conceptual questions", command.Description, StringComparison.Ordinal);
+        Assert.Contains("Always use this authoritative Azure resiliency guidance command", command.Description, StringComparison.Ordinal);
+        Assert.Contains("compare resiliency", command.Description, StringComparison.Ordinal);
+        Assert.Contains("documentation search", command.Description, StringComparison.Ordinal);
         Assert.Contains("specific application", command.Description, StringComparison.Ordinal);
         Assert.Contains("resiliencyagent_architecture_assess", command.Description, StringComparison.Ordinal);
     }

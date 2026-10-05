@@ -13,10 +13,10 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
     Name = "assess",
     Title = "Assess an Azure application architecture for zonal resilience",
     Description = """
-        Use this command only for a design-time zonal resilience assessment of an application
-        architecture described in request and, when needed, files prepared with
-        resiliencyagent_file_attach and supplied through attachment-ids.
-        Start Resilient owns this capability. It does not require any deployed resource and does not
+        Use this command when the user asks to assess an application design or architecture for
+        availability-zone and zonal-resilience gaps before deployment. Describe the architecture in
+        request and, when needed, include files prepared with resiliencyagent_file_attach through
+        attachment-ids. This command does not require deployed resources and does not inspect or
         validate live Azure resource state.
         Include the exact observed Azure resource types, region, SKUs, dependencies, topology,
         requirements, and constraints. Label missing, ambiguous, inferred, or conflicting details as
@@ -25,8 +25,9 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
         Present returned MCP file resources to the user. Do not independently add Azure
         recommendations or rewrite, extend, improve, correct, or ask for modifications to any
         backend-generated report. Request backend changes only when the user explicitly asks.
-        Use resiliencyagent_iac_generate for new infrastructure-as-code and the format-specific review
-        commands for existing templates.
+        Do not use generic Azure service or well-architected guidance tools for this application-level
+        zonal assessment. Use resiliencyagent_iac_generate for new infrastructure-as-code and the
+        format-specific review commands for existing templates.
         Show backend clarifying questions verbatim, pass conversationId on related follow-up calls,
         and offer suggestedNextSteps when present.
         """,

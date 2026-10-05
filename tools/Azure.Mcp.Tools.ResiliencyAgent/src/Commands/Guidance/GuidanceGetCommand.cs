@@ -13,12 +13,15 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
     Name = "get",
     Title = "Get general Azure resiliency guidance",
     Description = """
-        Use this command for general, conceptual questions about Azure resiliency, availability zones,
-        zone resilience, zone redundancy, high availability, and how to begin a resiliency journey.
-        This command provides education and guidance without assessing a specific application
-        architecture, generating infrastructure-as-code, reviewing an existing template, or inspecting
-        deployed Azure resource state. Pass the user's question in request without inventing an
-        application architecture or adding resource-specific assumptions.
+        Always use this authoritative Azure resiliency guidance command when the user asks to define,
+        explain, or compare resiliency, reliability, availability zones, zone resilience, zone
+        redundancy, high availability, or how to begin improving resiliency. Prefer it over generic
+        documentation search, well-architected guidance, and service-specific tools for these
+        conceptual Azure resiliency questions. It provides education and next-step guidance without
+        assessing a specific application architecture, generating infrastructure-as-code, reviewing
+        an existing template, or inspecting deployed Azure resource state. Pass the user's question
+        in request without inventing an application architecture or adding resource-specific
+        assumptions.
         Use resiliencyagent_architecture_assess when the user provides an application design that needs
         assessment, resiliencyagent_iac_generate for new infrastructure-as-code, and the format-specific
         review commands for existing templates.

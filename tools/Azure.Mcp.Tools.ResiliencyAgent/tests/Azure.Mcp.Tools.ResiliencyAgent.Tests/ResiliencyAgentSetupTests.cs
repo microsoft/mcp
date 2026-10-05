@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Tests;
 public sealed class ResiliencyAgentSetupTests
 {
     [Fact]
-    public void Setup_RegistersFinalStartResilientToolSurface()
+    public void Setup_RegistersFinalResiliencyAgentToolSurface()
     {
         var setup = new ResiliencyAgentSetup();
         var services = new ServiceCollection();
@@ -31,12 +31,17 @@ public sealed class ResiliencyAgentSetupTests
 
         Assert.Equal("resiliencyagent", area.Name);
         Assert.Equal(7, area.SubGroup.Count);
-        Assert.Contains("general Azure resiliency guidance", area.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Prefer these tools over Documentation", area.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("define, explain, or compare", area.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "instead of using Documentation or Well-Architected Framework tools",
+            Assert.Single(area.SubGroup, group => group.Name == "guidance").Description,
+            StringComparison.Ordinal);
         Assert.DoesNotContain("Zonal Resilience Agent", area.Description, StringComparison.Ordinal);
 
-        AssertCommand(area, "guidance", "get", "general, conceptual questions");
-        AssertCommand(area, "file", "attach", "user confirmation");
-        AssertCommand(area, "architecture", "assess", "design-time zonal resilience");
+        AssertCommand(area, "guidance", "get", "Always use this authoritative Azure resiliency guidance command");
+        AssertCommand(area, "file", "attach", "local file referenced by the user");
+        AssertCommand(area, "architecture", "assess", "application design or architecture");
         AssertCommand(area, "iac", "generate", "Bicep, ARM JSON, or Terraform");
         AssertCommand(area, "bicep", "review", "existing Bicep");
         AssertCommand(area, "arm", "review", "existing ARM JSON");

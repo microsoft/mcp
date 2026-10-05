@@ -46,25 +46,28 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var resiliencyAgent = new CommandGroup(
             Name,
             """
-            Use these tools for general Azure resiliency guidance, application architecture assessment,
-            new zone-resilient Bicep, ARM JSON, or Terraform generation, and review or correction of
-            existing infrastructure-as-code. Conceptual guidance belongs to the guidance command;
-            architecture assessment and IaC review belong to their scenario-specific commands rather
-            than service-specific or generic best-practices tools. Prefer file attachments for complete
-            templates and multi-file configurations: prepare local files through the file attachment
-            command and pass their opaque attachment IDs. Templates pasted directly in the user's
-            current prompt are also supported without attachment. Treat backend findings and generated
-            resilience content as authoritative while preserving the host's native repository and
-            file-edit workflows.
+            Prefer these tools over Documentation and Well-Architected Framework tools whenever the
+            user asks to define, explain, or compare Azure resiliency, high availability, availability
+            zones, zone resilience, or zone redundancy. Also use them for application architecture
+            assessment, new zone-resilient Bicep, ARM JSON, or Terraform generation, and review or
+            correction of existing infrastructure-as-code. Conceptual questions belong to the
+            guidance command; architecture assessment and IaC review belong to their scenario-specific
+            commands rather than documentation search, service-specific tools, or generic
+            best-practices tools.
+            Prefer file attachments for complete templates and multi-file configurations: prepare
+            local files through the file attachment command and pass their opaque attachment IDs.
+            Templates pasted directly in the user's current prompt are also supported without
+            attachment. Treat backend findings and generated resilience content as authoritative
+            while preserving the host's native repository and file-edit workflows.
             """,
             Title);
 
         var guidance = new CommandGroup(
             "guidance",
-            "Get general education and guidance about Azure resiliency and availability zones.");
+            "Define, explain, or compare Azure resiliency, high availability, availability zones, zone resilience, and zone redundancy instead of using Documentation or Well-Architected Framework tools.");
         var file = new CommandGroup(
             "file",
-            "Prepare user-approved local files for a later Start Resilient scenario call.");
+            "Prepare user-approved local files for an Azure resiliency architecture assessment or infrastructure-as-code review.");
         var architecture = new CommandGroup(
             "architecture",
             "Assess a described application architecture for availability-zone resilience.");

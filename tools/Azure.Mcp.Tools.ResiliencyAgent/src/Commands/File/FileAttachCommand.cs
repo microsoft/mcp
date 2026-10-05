@@ -21,13 +21,15 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
     Name = "attach",
     Title = "Prepare a local file for Azure Resiliency analysis",
     Description = """
-        Prepare exactly one user-selected local architecture or infrastructure-as-code file for a
-        later Azure Resiliency scenario call. Supply its fully-qualified path. The command validates
-        the path, type, and ACP-aligned 1.4 MiB raw-size limit, then shows the exact path, file type,
-        size, and hosted Azure Resiliency Agent destination in a user confirmation before reading any
-        bytes. If approved, it stores a short-lived process-local immutable snapshot and returns an
-        opaque attachmentId. Pass that ID to architecture_assess, bicep_review, arm_review, or
-        terraform_review. This command does not contact A2A and never returns file content or Base64.
+        Use this command when an Azure resiliency architecture assessment or Bicep, ARM JSON, or
+        Terraform review needs a local file referenced by the user. Prepare exactly one user-selected
+        local architecture or infrastructure-as-code file and supply its fully-qualified path. The
+        command validates the path, type, and ACP-aligned 1.4 MiB raw-size limit, then shows the exact
+        path, file type, size, and hosted Azure Resiliency Agent destination for confirmation before
+        reading any bytes. If approved, it stores a short-lived process-local immutable snapshot and
+        returns an opaque attachmentId. Pass that ID to architecture_assess, bicep_review, arm_review,
+        or terraform_review. Do not use this command for source pasted directly in the prompt. This
+        command does not contact A2A and never returns file content or Base64.
         """,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,

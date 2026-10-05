@@ -34,7 +34,7 @@ public sealed class ArchitectureAssessCommandTests
         var command = Command.GetCommand();
 
         Assert.Equal("assess", command.Name);
-        Assert.Contains("design-time zonal resilience assessment", command.Description, StringComparison.Ordinal);
+        Assert.Contains("application design or architecture", command.Description, StringComparison.Ordinal);
         Assert.Contains("resiliencyagent_file_attach", command.Description, StringComparison.Ordinal);
         Assert.Contains("resiliencyagent_iac_generate", command.Description, StringComparison.Ordinal);
     }

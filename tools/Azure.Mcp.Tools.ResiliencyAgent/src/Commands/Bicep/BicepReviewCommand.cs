@@ -13,14 +13,14 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
     Name = "review",
     Title = "Review and correct existing Bicep for resilience",
     Description = """
-        Always use this Start Resilient command to review or correct existing Bicep; do not review
-        pasted source independently. Prefer file attachments for complete templates, especially when
-        entry files, local modules, or parameter files must be reviewed together. Prepare every
-        relevant local file with
-        resiliencyagent_file_attach, then pass all returned IDs through attachment-ids and describe
-        their relationships in request. If the user instead pasted Bicep directly in the current
-        prompt, pass that source verbatim in request and call this command without file attachment;
-        do not create a temporary file solely to attach pasted source.
+        Use this command when the user asks to review, assess, or correct existing Bicep for
+        availability-zone or zonal-resilience gaps. Do not review pasted Bicep independently of this
+        command. Prefer file attachments for complete templates, especially when entry files, local
+        modules, or .bicepparam files must be reviewed together. Prepare every relevant local file
+        with resiliencyagent_file_attach, then pass all returned IDs through attachment-ids and
+        describe their relationships in request. If the user pasted Bicep directly in the current
+        prompt, pass that source verbatim in request without file attachment; do not create a
+        temporary file solely to attach pasted source.
         Preserve exact observed names, values, references, scopes, and requirements.
         Use resiliencyagent_architecture_assess for an application design and
         resiliencyagent_iac_generate when no existing source needs review.
