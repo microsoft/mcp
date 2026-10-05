@@ -210,7 +210,10 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
                         $"2. Identify which columns have non-standard data types.\n" +
                         $"3. Modify the query to convert them to a supported type (e.g. using CAST or converting to text, integer, or the appropriate standard type).\n" +
                         $"4. Re-execute the modified query.\n" +
-                        $"Please perform steps 1-4 now and re-execute.", HttpStatusCode.BadRequest);
+                        $"Please perform steps 1-4 now and re-execute.", HttpStatusCode.BadRequest)
+                    {
+                        TelemetrySafeMessage = "Unsupported PostgreSQL query column type."
+                    };
                 }
             }
             rows.Add(string.Join(", ", row));
@@ -431,11 +434,17 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         {
             if (string.IsNullOrEmpty(password))
             {
-                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.");
+                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.")
+                {
+                    TelemetrySafeMessage = $"Password must be provided for '{AuthTypes.PostgreSQL}' authentication."
+                };
             }
             return password;
         }
 
-        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'");
+        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'")
+        {
+            TelemetrySafeMessage = $"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'"
+        };
     }
 }

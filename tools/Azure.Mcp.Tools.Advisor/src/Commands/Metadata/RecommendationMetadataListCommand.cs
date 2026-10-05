@@ -63,25 +63,28 @@ public sealed class RecommendationMetadataListCommand(
 
         if (!TryNormalizeLanguage(options.Language, out _))
         {
-            validationResult.Errors.Add(
+            validationResult.AddError(
                 $"Unsupported --language value '{options.Language}'. Supported values: " +
-                $"{string.Join(", ", SupportedLanguages.OrderBy(l => l, StringComparer.Ordinal))}.");
+                $"{string.Join(", ", SupportedLanguages.OrderBy(l => l, StringComparer.Ordinal))}.",
+                "Unsupported Advisor language.");
         }
 
         var normalizedImpact = options.Impact?.Trim();
         if (!string.IsNullOrEmpty(normalizedImpact) &&
             !AllowedImpacts.Contains(normalizedImpact, StringComparer.OrdinalIgnoreCase))
         {
-            validationResult.Errors.Add(
-                $"Invalid --impact value '{options.Impact}'. Allowed values: {string.Join(", ", AllowedImpacts)}.");
+            validationResult.AddError(
+                $"Invalid --impact value '{options.Impact}'. Allowed values: {string.Join(", ", AllowedImpacts)}.",
+                "Invalid Advisor impact.");
         }
 
         var normalizedCategory = options.Category?.Trim();
         if (!string.IsNullOrEmpty(normalizedCategory) &&
             !AllowedCategories.Contains(normalizedCategory, StringComparer.OrdinalIgnoreCase))
         {
-            validationResult.Errors.Add(
-                $"Invalid --category value '{options.Category}'. Allowed values: {string.Join(", ", AllowedCategories)}.");
+            validationResult.AddError(
+                $"Invalid --category value '{options.Category}'. Allowed values: {string.Join(", ", AllowedCategories)}.",
+                "Invalid Advisor category.");
         }
 
         ServiceRetirementFilterValidator.Validate(
