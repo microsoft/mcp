@@ -38,6 +38,9 @@ Offline tests for the Fabric Core toolset.
 - **Services/FabricCoreServiceWorkspaceUpdateTests.cs**: Mocked PATCH bodies, field limits, response validation, status and retry guidance, cancellation, disposal, concurrent credentials, and existing create/search regressions
 - **Models/WorkspaceUpdateSerializationTests.cs**: Source-generated request omission and whitelisted workspace output
 - **WorkspaceUpdateToolRegistrationTests.cs**: Real command/service registration and MCP handlers with mocked credentials and HTTP, including output modes, empty-description binding, mutation confirmation, and read-only enforcement
+- **Commands/WorkspaceDeleteCommandTests.cs**: Required UUID validation, destructive metadata, typed deletion acknowledgement, and sanitized failures
+- **Services/FabricCoreServiceWorkspaceDeleteTests.cs**: Substituted HTTP tests for the exact DELETE request, empty 200 response, status and retry guidance, cancellation, disposal, concurrency, and existing create/search regressions
+- **WorkspaceDeleteToolRegistrationTests.cs**: Registered MCP handler tests for consent, read-only discovery/execution restrictions, input/output schemas, and legacy/compact/duplicated output
 - **FabricCoreSetupTests.cs**: Tests for service registration and cumulative command setup
 - **Services/FabricCoreServiceBaselineTests.cs**: Direct HTTP tests preserving create/search authentication, JSON bodies, responses, error handling, cancellation, and single-request behavior
 - **Services/FabricCoreHttpHelpersTests.cs**: Validated `Retry-After` parsing and continuation-token encoding checked against constructed HTTP request URIs
@@ -81,6 +84,12 @@ Delete Item retains the shared authenticated send's buffered `ResponseContentRea
 
 The optional Boolean safeguard is configured by the `FabricCoreSetup` registration factory before discovery or execution, using one explicit value and command-local validators. It rejects valueless, invalid, repeated, or ambiguous input without changing the shared binder. Missing/null/false never enables hard deletion; the existing MCP coercion boundary is retained.
 
+## Workspace Deletion
+
+Delete Workspace selects `ResponseHeadersRead` on the inherited authenticated sender and reuses `FabricCoreHttpHelpers.GetRetryAfter`, retaining its own throttling exception and unknown-outcome wording. It keeps explicit cancellation checks before authentication and after the response, plus the shared sender's post-credential check before HTTP. Tests reuse `FabricCoreHttpMessageHandler` and retain `WorkspaceDeleteResponseContent` to verify that deletion response bodies are never read.
+
+Workspace deletion tests substitute every credential and HTTP request. They never delete real workspaces. These tests do not establish live Fabric behavior, actual identity permissions, OBO authorization, or recorded playback. Approval to implement or run these offline tests does not authorize a real deletion.
+
 ## Running Tests
 
 Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
@@ -117,6 +126,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 dotnet test --project .\tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemUpdateCommandTests'
 # Run only the Delete Item coverage.
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemDelete*"
+
+# Run the workspace deletion command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceDeleteCommandTests"
 ```
 
 Run these commands from the repository root. These are offline unit tests, not live Fabric, OBO, or recorded/playback validation.
@@ -138,7 +150,7 @@ Tests follow the standard MCP pattern:
 
 ## Coverage Boundaries
 
-Get Capacity, List Capacities, Get Workspace, List Workspaces, List Items, Create Workspace, Update Workspace, Update Item, and Delete Item service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
+Get Capacity, List Capacities, Get Workspace, List Workspaces, List Items, Create Workspace, Update Workspace, Update Item, Delete Item, and Delete Workspace service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
 
 Live Fabric calls, real OBO authorization, service-principal/managed-identity access, and recorded playback were not exercised. Fabric live/recorded infrastructure is outside this scoped tool change; mocked tests are not evidence of live permissions or playback. No shared authentication, host, or recording-proxy changes are required.
 

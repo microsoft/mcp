@@ -118,6 +118,33 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
     }
 
     /// <inheritdoc />
+    public async Task DeleteWorkspaceAsync(string workspaceId, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(workspaceId, out var parsedWorkspaceId) || parsedWorkspaceId == Guid.Empty)
+        {
+            throw new ArgumentException("Workspace ID must be a nonempty UUID.", nameof(workspaceId));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}";
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Delete, url, completionOption: HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new WorkspaceDeleteThrottledException(retryAfter);
+            }
+
+            var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
+            throw new HttpRequestException("Fabric workspace deletion was not confirmed.", null, statusCode);
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<FabricCapacityMetadata> GetCapacityAsync(string capacityId, CancellationToken cancellationToken)
     {
         if (!Guid.TryParse(capacityId, out var parsedCapacityId) || parsedCapacityId == Guid.Empty)
@@ -535,6 +562,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
     {
         var tokenRequestContext = new TokenRequestContext(FabricEndpoints.FabricScopes);
         var accessToken = await _credential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
         using var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);

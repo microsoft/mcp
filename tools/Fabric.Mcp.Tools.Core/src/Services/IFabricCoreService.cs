@@ -60,6 +60,12 @@ public interface IFabricCoreService
     /// <returns>The workspace metadata and optional Location header, without polling or retries.</returns>
     Task<WorkspaceCreateResult> CreateWorkspaceAsync(CreateWorkspaceRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Deletes one workspace and the items under it.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the workspace to delete.</param>
+    /// <param name="cancellationToken">The token that cancels the request.</param>
+    /// <returns>A task that completes only after Fabric returns the documented successful response.</returns>
+    Task DeleteWorkspaceAsync(string workspaceId, CancellationToken cancellationToken);
+
     Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default);
 
     Task<WorkspaceListResponse> ListWorkspacesAsync(

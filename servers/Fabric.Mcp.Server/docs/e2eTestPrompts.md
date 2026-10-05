@@ -6,6 +6,8 @@ These prompts validate tool selection. They do not imply that live Fabric calls,
 
 These prompts describe tool selection, not live test execution. Delete Item is tested only with mocked Fabric HTTP responses; never execute these destructive prompts against real Fabric during development or testing. Live Fabric, real OBO authorization, and recorded playback have not been exercised for this tool.
 
+Delete Workspace likewise uses substituted HTTP and credentials only. Its prompts describe deletion of the specified workspace and the items under it, not authorization to execute a real deletion.
+
 ## Core
 
 | Tool Name | Test Prompt | Interaction |
@@ -17,6 +19,9 @@ These prompts describe tool selection, not live test execution. Delete Item is t
 | core_delete-item | Delete Fabric item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb from workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa using the default deletion behavior. Do not request permanent deletion. | Request consent, then send one deletion request with hard-delete omitted. Do not promise recovery or fall back to permanent deletion. |
 | core_delete-item | Delete Fabric item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa with hard-delete explicitly set to false. | Request consent, then send one deletion request with hardDelete=false. Soft deletion depends on item-type support. |
 | core_delete-item | Permanently delete Fabric item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb from workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Explicitly set hard-delete to true. | Explain that permanent deletion cannot be recovered and requires workspace Admin, request consent, then send one deletion request with hardDelete=true. |
+| core_delete-workspace | Delete Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff222 and the items under it. | Explain that the workspace and its items are deleted, request consent, then send one deletion request for that UUID. |
+| core_delete-workspace | Remove Microsoft Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff222, including its items. | Request consent for that workspace and its items. Do not promise recovery or permanent-deletion semantics. |
+| core_delete-workspace | Use workspace UUID cfafbeb1-8037-4d0c-896e-a46fb27ff222 to delete only that Fabric workspace and its contained items. | Request consent, then send one deletion request without retries, prefetch, item-by-item deletion, or polling. |
 | core_get-capacity | Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | What is the display name of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357? | none |

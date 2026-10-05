@@ -351,6 +351,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
+| `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
@@ -572,6 +573,19 @@ Soft deletion requires write permission on the item; hard/permanent deletion req
 
 On the documented empty HTTP 200 response, the tool returns only `workspaceId`, `itemId`, and `hardDeleteRequested`. These identify the requested target and mode, not item metadata or a recovery guarantee. A 404 or other failure is an error, not a successful deletion. Throttling responses retain status 429 and include validated `Retry-After` guidance when available, without automatic retries. Cancellation or timeout does not confirm the final deletion state.
 
+**Delete Workspace** implements the [Fabric Core Delete Workspace API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/delete-workspace).
+
+> [!WARNING]
+> Deleting a workspace also deletes the items under it. Verify the exact workspace UUID and obtain authorization for that specific deletion before invoking this tool. No recovery, retention, or permanent-deletion semantics are promised by this tool.
+
+The CLI command is `fabmcp core delete-workspace --workspace-id <workspace-uuid>`. Its only option, `workspace-id`, is required and must be a nonempty UUID. Invalid IDs are rejected before authentication or HTTP. Names, fuzzy lookup, implicit target selection, and bulk deletion are not supported.
+
+The caller must have the **Admin** workspace role. Delegated callers additionally require **Workspace.ReadWrite.All**. The API documents support for users, service principals, and managed identities; this does not imply those identity flows have been exercised by the offline tests.
+
+The tool sends one `DELETE /v1/workspaces/{workspaceId}` request with no body. Only the documented synchronous, empty `200 OK` produces a typed acknowledgement: `{"workspaceId":"<canonical-workspace-uuid>","deleted":true}`. It does not deserialize a workspace response, enumerate or individually delete items, change permissions, retry automatically, or poll. Failures retain their HTTP status and expose sanitized messages; 403 and 404 never count as successful deletion. Validated `Retry-After` guidance can be returned for throttling. A canceled or timed-out request does not confirm the outcome; check the workspace state before attempting another deletion.
+
+The tool is marked destructive, not read-only, and idempotent in the no-additional-effects sense; repeated requests can still return 404. Read-only MCP servers hide and reject this tool. The existing MCP elicitation gate requires consent and rejects unsupported or declined consent unless explicitly disabled by the host's dangerous configuration. Annotations alone do not guarantee human confirmation, and direct CLI execution does not use the MCP elicitation gate. Implementation or test approval does not authorize real deletion; API-level tests use substituted HTTP and credentials only.
+
 ### Data Factory Operations
 
 | Tool Name | Description |
@@ -608,6 +622,8 @@ The Fabric MCP Server is a **local-first** tool. Its documentation tools provide
 `core_create-workspace` creates a real workspace and can assign it to an existing capacity and domain; review those arguments and use an appropriately authorized identity before invoking it.
 
 `core_update-item` modifies an existing item's name or description; review its arguments and item permissions before use.
+
+`core_delete-workspace` can delete a workspace and its items. Review the exact UUID, permissions, and destructive-operation controls before invoking it.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 

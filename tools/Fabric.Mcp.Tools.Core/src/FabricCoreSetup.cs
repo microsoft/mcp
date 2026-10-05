@@ -27,6 +27,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<ItemUpdateCommand>();
         services.AddSingleton<CatalogSearchCommand>();
         services.AddSingleton<WorkspaceCreateCommand>();
+        services.AddSingleton<WorkspaceDeleteCommand>();
         services.AddSingleton<WorkspaceGetCommand>();
         services.AddSingleton<WorkspaceListCommand>();
         services.AddSingleton<WorkspaceUpdateCommand>();
@@ -47,6 +48,7 @@ public class FabricCoreSetup : IAreaSetup
             "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
             "- Rename a known workspace or update or clear its description\n" +
             "- Delete a known Fabric item, with permanent deletion only by explicit opt-in\n" +
+            "- Delete an explicitly identified workspace and the items under it\n" +
             "- Manage core Fabric workspace items\n" +
             "This tool provides core operations for working with Fabric resources.");
 
@@ -58,6 +60,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceCreateCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceListCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceUpdateCommand>(serviceProvider);
