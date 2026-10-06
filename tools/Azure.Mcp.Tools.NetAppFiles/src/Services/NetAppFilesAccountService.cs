@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.ResourceManager.NetApp;
 using Azure.ResourceManager.NetApp.Models;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Services;
 
@@ -19,12 +19,11 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription,
+        var resourceGroupResource = await GetResourceGroupOrThrowAsync(
             resourceGroup,
+            subscription,
             tenant,
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+            cancellationToken: cancellationToken);
 
         var accountResource = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
 
@@ -39,12 +38,24 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription,
+        var resourceGroupResource = await GetResourceGroupOrThrowAsync(
             resourceGroup,
+            subscription,
             tenant,
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+            cancellationToken: cancellationToken);
+
+        try
+        {
+            var existingAccount = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
+            if (existingAccount.HasValue)
+            {
+                throw new InvalidOperationException($"NetApp account '{account}' already exists in resource group '{resourceGroup}'.");
+            }
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            // Account does not exist, continue with creation
+        }
 
         var accountData = new NetAppAccountData(new AzureLocation(location));
         var operation = await resourceGroupResource
@@ -65,12 +76,11 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription,
+        var resourceGroupResource = await GetResourceGroupOrThrowAsync(
             resourceGroup,
+            subscription,
             tenant,
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+            cancellationToken: cancellationToken);
 
         var accountResource = (await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken)).Value;
         var patch = new NetAppAccountPatch(accountResource.Data.Location)
@@ -98,4 +108,20 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         account.Data.Id.ToString(),
         account.Data.Location.ToString(),
         account.Data.ProvisioningState?.ToString());
+
+    private async Task<ResourceGroupResource> GetResourceGroupOrThrowAsync(
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(
+            subscription,
+            resourceGroup,
+            tenant,
+            cancellationToken: cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+
+        return resourceGroupResource;
+    }
 }

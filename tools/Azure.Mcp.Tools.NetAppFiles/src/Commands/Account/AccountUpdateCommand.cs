@@ -122,5 +122,11 @@ public sealed class AccountUpdateCommand(
         _ => base.GetErrorMessage(ex)
     };
 
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        _ => base.GetStatusCode(ex),
+    };
+
     public record AccountUpdateResult(NetAppFilesAccount Account);
 }
