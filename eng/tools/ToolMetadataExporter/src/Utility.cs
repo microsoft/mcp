@@ -33,10 +33,24 @@ public partial class Utility(ILogger<Utility> logger)
                 throw new InvalidOperationException("No JSON output found from azmcp command.");
             }
 
-            // Parse the JSON output
-            var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
+            try
+            {
+                return JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
+            }
+            catch (JsonException ex)
+            {
+                var sanitizedJson = EscapeInvalidJsonControlCharacters(jsonOutput);
+                if (string.Equals(sanitizedJson, jsonOutput, StringComparison.Ordinal))
+                {
+                    throw;
+                }
 
-            return result;
+                _logger.LogWarning(
+                    ex,
+                    "azmcp returned JSON containing unescaped control characters. Retrying with escaped values.");
+
+                return JsonSerializer.Deserialize(sanitizedJson, SourceGenerationContext.Default.ListToolsResult);
+            }
         }
         catch (Exception)
         {
@@ -212,6 +226,16 @@ public partial class Utility(ILogger<Utility> logger)
     }
 
     /// <summary>
+    /// Escapes control characters that are never valid as raw JSON characters.
+    /// Tabs, carriage returns, and line feeds are excluded because JSON permits them as structural whitespace.
+    /// Historical azmcp versions emitted characters such as U+001A unescaped inside tool descriptions.
+    /// </summary>
+    private static string EscapeInvalidJsonControlCharacters(string json) =>
+        InvalidJsonControlCharacterRegex().Replace(
+            json,
+            static match => $"\\u{(int)match.Value[0]:X4}");
+
+    /// <summary>
     /// Traverse up from a starting directory to find the repo root.
     /// Directory containing <see cref="Constants.RepositoryRootSolution"/> or .git).
     /// </summary>
@@ -245,4 +269,7 @@ public partial class Utility(ILogger<Utility> logger)
 
     [GeneratedRegex(NewLineRegexPattern)]
     private static partial Regex NewLineRegex();
+
+    [GeneratedRegex("[\u0000-\u0008\u000B\u000C\u000E-\u001F]")]
+    private static partial Regex InvalidJsonControlCharacterRegex();
 }
