@@ -214,6 +214,16 @@
                     "default": false,
                     "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled). **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
                 },
+                "azureMcp.dangerouslyDisableSsrfProtectionsByNamespace": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "default": [],
+                    "uniqueItems": true,
+                    "markdownDescription": "**DANGER:** Disables endpoint SSRF validation, including protocol, hostname allow-list, and private-network checks, for the specified Azure MCP tool namespaces. Add one namespace per item, or use `ALL` to disable protections for every namespace. Only use this option temporarily in a fully trusted environment. Leave empty to keep protections enabled. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+                },
                 "azureMcp.dangerouslyWriteSupportLogsToDir": {
                     "type": "string",
                     "default": "",

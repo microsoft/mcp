@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added a VS Code setting to disable endpoint SSRF validation for explicitly selected Azure MCP tool namespaces."
