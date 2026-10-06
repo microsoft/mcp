@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Prevented option values from appearing in validation failure telemetry while preserving client-facing error messages."
