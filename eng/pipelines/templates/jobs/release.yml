@@ -118,7 +118,9 @@ jobs:
   - task: AzureCLI@2
     displayName: "Build and run ToolMetadataExporter"
     env:
-      DOTNET_ENVIRONMENT: Development
+      AppConfig__IngestionEndpoint: $(ToolMetadataIngestionEndpoint)
+      AppConfig__QueryEndpoint: $(ToolMetadataQueryEndpoint)
+      AppConfig__DatabaseName: $(ToolMetadataDatabaseName)
     inputs:
       azureSubscription: "Azure SDK Engineering System"
       scriptType: pscore
