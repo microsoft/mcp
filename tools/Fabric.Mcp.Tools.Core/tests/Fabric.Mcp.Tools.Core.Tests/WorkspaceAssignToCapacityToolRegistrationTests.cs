@@ -257,12 +257,20 @@ public class WorkspaceAssignToCapacityToolRegistrationTests()
         services.AddSingleton(Substitute.For<ITelemetryService>());
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
-            RootCommandGroupName = "fabmcp", Name = "Fabric.Mcp.Server", ShortName = "fabric",
-            DisplayName = "Fabric", Version = "1.0.0", Description = "Offline assignment test server", IsTelemetryEnabled = false
+            RootCommandGroupName = "fabmcp",
+            Name = "Fabric.Mcp.Server",
+            ShortName = "fabric",
+            DisplayName = "Fabric",
+            Version = "1.0.0",
+            Description = "Offline assignment test server",
+            IsTelemetryEnabled = false
         }));
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
-            Namespace = ["core"], StructuredOutputMode = mode, Transport = transport, ReadOnly = readOnly
+            Namespace = ["core"],
+            StructuredOutputMode = mode,
+            Transport = transport,
+            ReadOnly = readOnly
         }));
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
