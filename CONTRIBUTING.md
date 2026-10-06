@@ -23,7 +23,6 @@ If you are contributing significant changes, or if the issue is already assigned
   - [Development Workflow](#development-workflow)
     - [Development Process](#development-process)
     - [Adding a New Command](#adding-a-new-command)
-    - [Tool Description Evaluation](#tool-description-evaluation)
   - [Testing](#testing)
     - [Unit Tests](#unit-tests)
       - [Cancellation plumbing](#cancellation-plumbing)
@@ -217,15 +216,7 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
    - Include tests in the `/tests` folder
    - Ensure all tests pass
    - Follow code style requirements
-   - For new or modified Azure and other non-Fabric tool descriptions, run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts, meeting any stricter toolset-specific gates. Evaluation is optional for Fabric MCP tools; see [Tool Description Evaluation](#tool-description-evaluation).
-
-### Tool Description Evaluation
-
-`ToolDescriptionEvaluator` is **optional for Fabric MCP tools**. Embedding scores, top-three rankings, and access to an Azure OpenAI embedding deployment are not required for Fabric tool PRs. If voluntary evaluation is not run, report `not run (optional for Fabric)` rather than claiming a passing result or checking a box asserting that it ran.
-
-Azure and other non-Fabric tools must still satisfy their existing evaluation requirements, including any stricter toolset-specific gates. Apply this policy per tool/server, not by PR label, incidental Fabric files, or whether credentials are available. In mixed Fabric/Azure PRs, evaluate the Azure tool descriptions under their existing rules; Fabric changes do not exempt any non-Fabric changes.
-
-Prompt-format and tool-catalog validation, applicable tests, code review, and required CI remain required for all servers. Reviewers must still assess description clarity and accuracy, prompt schema correctness, and actual code issues.
+   - Run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the new tool description (excluding Fabric MCP tools) and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts
 
 ## Testing
 

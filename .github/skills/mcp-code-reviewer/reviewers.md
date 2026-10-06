@@ -97,7 +97,7 @@ Cross-reference the repository instructions and pull request checklist. Focus on
 - Command reference and README updates
 - End-to-end prompt coverage
 - Consolidated tool mappings for new, renamed, or removed Azure MCP tools; do not apply this check to Fabric MCP changes
-- Tool description evaluation evidence for changed Azure and other non-Fabric descriptions under their existing gates, including stricter toolset-specific requirements. [Fabric evaluation is optional](../../../CONTRIBUTING.md#tool-description-evaluation): missing embedding scores, top-three rankings, or Azure OpenAI embedding access are not findings for Fabric tools. In mixed PRs, apply the existing gates to non-Fabric tools; continue checking description clarity and accuracy and prompt schema correctness for all tools.
+- Tool description evaluation evidence when descriptions change (not required for Fabric MCP tools)
 - Changelog entry schema and required entries
 - Rename, compatibility, and breaking-change requirements
 

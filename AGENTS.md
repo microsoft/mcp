@@ -188,7 +188,7 @@ dotnet build
 - Live tests: Include live tests for all commands that interact with Azure resources
 - Recorded tests: All live tests **must** be recorded for playback (see `/docs/recorded-tests.md`)
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
-- Tool validation: Run `ToolDescriptionEvaluator` for Azure and other non-Fabric command descriptions (target: top 3 ranking, ≥0.4 confidence, or stricter toolset-specific gates). Evaluation is optional for Fabric MCP tools; see the [evaluation policy](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#tool-description-evaluation).
+- Tool validation (optional for Fabric MCP tools): Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
 - Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `/docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `/servers/Azure.Mcp.Server/CHANGELOG.md` or `/servers/Fabric.Mcp.Server/CHANGELOG.md`).
 - One tool per PR: Submit single toolsets for faster review cycles
@@ -558,11 +558,6 @@ tools/Azure.Mcp.Tools.{Service}/
 ```
 
 ### Tool Description Quality Validation
-
-Follow the [evaluation policy](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#tool-description-evaluation): `ToolDescriptionEvaluator`, embedding scores, top-three rankings, and Azure OpenAI embedding access are optional for Fabric MCP tools. In mixed PRs, Azure and other non-Fabric tool descriptions must still meet their existing gates, including stricter toolset-specific requirements. Report `not run (optional for Fabric)` when voluntary evaluation is not run.
-
-Prompt-format and tool-catalog validation, applicable tests, code review, and required CI remain required. Continue reviewing description clarity and accuracy, prompt schema correctness, and actual code issues.
-
 ```powershell
 # Validate command descriptions for AI agent compatibility
 pushd 'eng/tools/ToolDescriptionEvaluator/src'
@@ -581,7 +576,7 @@ dotnet run -- --validate \
 dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.md
 popd
 
-# Non-Fabric target: Top 3 ranking and confidence score ≥ 0.4 (or stricter toolset-specific gates)
+# Target: Top 3 ranking and confidence score ≥ 0.4 (optional for Fabric MCP tools)
 ```
 
 ## Local Development and Testing
@@ -772,7 +767,7 @@ When working in a linked git worktree (multiple worktrees sharing one repository
 - **Run all tests**: `./eng/scripts/Test-Code.ps1`
 - **Format code**: `dotnet format`
 - **Check spelling**: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- **Validate tool descriptions**: Use ToolDescriptionEvaluator for Azure and other non-Fabric tools under their existing gates; optional for Fabric MCP tools (see the [evaluation policy](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#tool-description-evaluation)).
+- **Validate tool descriptions**: Use ToolDescriptionEvaluator (optional for Fabric MCP tools)
 - **Follow contribution guidelines**: See `CONTRIBUTING.md`
 - **One tool per PR**: Submit single toolsets for faster review
 
