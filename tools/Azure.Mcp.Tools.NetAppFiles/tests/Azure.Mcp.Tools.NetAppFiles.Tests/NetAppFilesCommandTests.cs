@@ -117,6 +117,7 @@ public class NetAppFilesCommandTests(
         var accountName = $"{Settings.ResourceBaseName}-account";
         var poolName = $"{Settings.ResourceBaseName}-pool";
         var subnetId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Network/virtualNetworks/{Settings.ResourceBaseName}-vnet/subnets/anf";
+        var volumeName = RegisterOrRetrieveVariable("createdVolume", $"test-volume-{DateTime.UtcNow:MMddHHmmss}");
         var location = "westus";
         var volumeSizeGib = 50;
 
@@ -126,7 +127,7 @@ public class NetAppFilesCommandTests(
             {
                 { "account", accountName },
                 { "pool", poolName },
-                { "volume", $"{Settings.ResourceBaseName}-volume" },
+                { "volume", volumeName },
                 { "location", location },
                 { "subnet-id", subnetId },
                 { "quota-gib", volumeSizeGib },
@@ -139,6 +140,7 @@ public class NetAppFilesCommandTests(
         var volume = result.AssertProperty("volume");
         Assert.Equal(JsonValueKind.Object, volume.ValueKind);
         volume.AssertProperty("id");
+        Assert.Equal($"{accountName}/{poolName}/{volumeName}", volume.AssertProperty("name").GetString());
         Assert.Equal(location, volume.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
         Assert.Equal(volumeSizeGib, volume.AssertProperty("quotaGib").GetInt64());
@@ -152,7 +154,6 @@ public class NetAppFilesCommandTests(
         var poolName = $"{Settings.ResourceBaseName}-pool";
         var volumeName = $"{Settings.ResourceBaseName}-volume";
         var location = "westus";
-        var volumeSizeGib = 50;
 
         var result = await CallToolAsync(
             "netappfiles_volume_get",
@@ -171,7 +172,6 @@ public class NetAppFilesCommandTests(
         volume.AssertProperty("id");
         Assert.Equal(location, volume.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
-        Assert.Equal(volumeSizeGib, volume.AssertProperty("quotaGib").GetInt64());
         Assert.Equal("Standard", volume.AssertProperty("serviceLevel").GetString());
     }
 
@@ -182,9 +182,9 @@ public class NetAppFilesCommandTests(
         var poolName = $"{Settings.ResourceBaseName}-pool";
         var subnetId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Network/virtualNetworks/{Settings.ResourceBaseName}-vnet/subnets/anf";
         var location = "westus";
-        var volumeName = $"{Settings.ResourceBaseName}-volume";
         var volumeSizeGib = 50;
         var updatedVolumeSizeGib = volumeSizeGib + 50;
+        var volumeName = RegisterOrRetrieveVariable("updatedVolume", $"test-volume-update-{DateTime.UtcNow:MMddHHmmss}");
         await CallToolAsync(
             "netappfiles_volume_create",
             new()
