@@ -44,7 +44,9 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
     [Theory]
     [InlineData(VmResourceId)]
     [InlineData(VmssVmResourceId)]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss/virtualMachines/instance-a")]
     [InlineData(DiskResourceId)]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/région/providers/Microsoft.Compute/virtualMachines/vm-東京")]
     public async Task ExecuteAsync_ValidResource_ReturnsAnalysis(string resourceId)
     {
         _subscriptionResolver.ResolveSubscription(null).Returns(Subscription);
@@ -140,6 +142,17 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
     [Theory]
     [InlineData("", "resource-group")]
     [InlineData("--resource-id not-an-arm-id", "valid Azure resource ID")]
+    [InlineData("--resource-id https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/not-a-guid/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/{00000000-0000-0000-0000-000000000001}/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/providers/Microsoft.Compute/virtualMachines/test-vm", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm/extensions/extension", "Microsoft.Compute")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss", "Microsoft.Compute")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss/virtualMachines", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm?api-version=2024-03-01", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm#fragment", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/../test-vm", "valid Azure resource ID")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines\\test-vm", "valid Azure resource ID")]
     [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/account", "Microsoft.Compute")]
     [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --resource-group test-rg --vm test-vm", "not both")]
     [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/disks/test-disk --disk test-disk", "virtual machine")]
@@ -148,7 +161,6 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
     [InlineData("--subscription sub123 --resource-group invalid/rg --vm test-vm", "resource group")]
     [InlineData("--subscription sub123 --resource-group test-rg --vm invalid/vm", "virtual machine name")]
     [InlineData("--subscription sub123 --resource-group test-rg --vm test-vm --disk invalid.disk", "managed disk name")]
-    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --start-time invalid", "ISO 8601")]
     [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --start-time 2026-07-20T12:00:00Z --end-time 2026-07-20T11:00:00Z", "must be after")]
     [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --start-time 2026-07-19T00:00:00Z --end-time 2026-07-20T01:00:00Z", "cannot exceed 24 hours")]
     public async Task ExecuteAsync_InvalidInput_ReturnsBadRequest(string args, string expectedMessage)
@@ -181,6 +193,86 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
             "--vm", "test.vm");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("2026-02-20T00:00:00Z")]
+    [InlineData("2026-02-20T00:00:00.1Z")]
+    [InlineData("2026-02-20T00:00:00.1234567Z")]
+    [InlineData("2026-02-20T00:00:00+05:30")]
+    [InlineData("2026-02-20T00:00:00.1234567-08:00")]
+    public async Task ExecuteAsync_StorageIntelligenceTimestampFormats_AreAccepted(string timestamp)
+    {
+        Service.DiagnoseDiskAsync(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string[]?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .Returns(CreateJsonElement("""{"status":"Healthy"}"""));
+
+        var response = await ExecuteCommandAsync(
+            "--resource-id", VmResourceId,
+            "--start-time", timestamp);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Theory]
+    [InlineData("invalid")]
+    [InlineData("02/20/2026T00:00:00Z")]
+    [InlineData("2026-02-20T00:00:00")]
+    [InlineData("2026-02-20 00:00:00Z")]
+    [InlineData("2026-02-20T00:00:00+0530")]
+    [InlineData("2026-02-20T00:00:00.12345678Z")]
+    [InlineData("2026-02-20T00:00:00z")]
+    public async Task ExecuteAsync_NonStorageIntelligenceTimestampFormat_ReturnsBadRequest(
+        string timestamp)
+    {
+        var response = await ExecuteCommandAsync(
+            "--resource-id", VmResourceId,
+            "--start-time", timestamp);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("explicit UTC offset", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().DiagnoseDiskAsync(
+            default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(64, HttpStatusCode.OK)]
+    [InlineData(65, HttpStatusCode.BadRequest)]
+    public async Task ExecuteAsync_DiskCount_EnforcesStorageIntelligenceLimit(
+        int diskCount,
+        HttpStatusCode expectedStatus)
+    {
+        Service.DiagnoseDiskAsync(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string[]?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .Returns(CreateJsonElement("""{"status":"Healthy"}"""));
+        var args = new List<string> { "--resource-id", VmResourceId };
+        for (var index = 0; index < diskCount; index++)
+        {
+            args.Add("--disk");
+            args.Add($"disk-{index}");
+        }
+
+        var response = await ExecuteCommandAsync([.. args]);
+
+        Assert.Equal(expectedStatus, response.Status);
+        if (expectedStatus == HttpStatusCode.BadRequest)
+        {
+            Assert.Contains("at most 64", response.Message);
+        }
     }
 
     [Fact]

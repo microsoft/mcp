@@ -10,6 +10,9 @@ namespace Azure.Mcp.Tools.Storage.Services;
 
 public sealed class AttachedDiskService(IAzureService azureService) : IAttachedDiskService
 {
+    private static readonly ResourceType s_virtualMachineResourceType = new("Microsoft.Compute/virtualMachines");
+    private static readonly ResourceType s_virtualMachineScaleSetResourceType = new("Microsoft.Compute/virtualMachineScaleSets");
+    private static readonly ResourceType s_virtualMachineScaleSetVmResourceType = new("Microsoft.Compute/virtualMachineScaleSets/virtualMachines");
     private readonly IAzureService _azureService = azureService;
 
     public async Task<(string VmResourceId, string[]? DiskResourceIds)> ResolveFriendlySelectorAsync(
@@ -30,7 +33,7 @@ public sealed class AttachedDiskService(IAzureService azureService) : IAttachedD
 
         return (
             vmResource.Value.Id.ToString(),
-            ResolveDiskResourceIds(vmResource.Value.Data, diskNames));
+            ResolveDiskResourceIds(vmResource.Value.Data.StorageProfile, diskNames));
     }
 
     public async Task<string[]> ResolveDiskNamesAsync(
@@ -48,14 +51,39 @@ public sealed class AttachedDiskService(IAzureService azureService) : IAttachedD
             tenant: null,
             cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroupName, cancellationToken);
-        var vmResource = await resourceGroupResource.Value
-            .GetVirtualMachines()
-            .GetAsync(resourceId.Name, cancellationToken: cancellationToken);
+        VirtualMachineStorageProfile? storageProfile;
+        if (resourceId.ResourceType == s_virtualMachineResourceType)
+        {
+            var vmResource = await resourceGroupResource.Value
+                .GetVirtualMachines()
+                .GetAsync(resourceId.Name, cancellationToken: cancellationToken);
+            storageProfile = vmResource.Value.Data.StorageProfile;
+        }
+        else if (resourceId.ResourceType == s_virtualMachineScaleSetVmResourceType
+            && resourceId.Parent is { } parent
+            && parent.ResourceType == s_virtualMachineScaleSetResourceType)
+        {
+            var vmssResource = await resourceGroupResource.Value
+                .GetVirtualMachineScaleSets()
+                .GetAsync(parent.Name, cancellationToken: cancellationToken);
+            var vmssVmResource = await vmssResource.Value
+                .GetVirtualMachineScaleSetVms()
+                .GetAsync(resourceId.Name, cancellationToken: cancellationToken);
+            storageProfile = vmssVmResource.Value.Data.StorageProfile;
+        }
+        else
+        {
+            throw new ArgumentException(
+                "The compute instance resource ID must identify a standalone virtual machine or virtual machine scale set instance.",
+                nameof(vmResourceId));
+        }
 
-        return ResolveDiskResourceIds(vmResource.Value.Data, diskNames) ?? [];
+        return ResolveDiskResourceIds(storageProfile, diskNames) ?? [];
     }
 
-    private static string[]? ResolveDiskResourceIds(VirtualMachineData vmData, string[]? diskNames)
+    private static string[]? ResolveDiskResourceIds(
+        VirtualMachineStorageProfile? storageProfile,
+        string[]? diskNames)
     {
         if (diskNames is not { Length: > 0 })
         {
@@ -63,14 +91,14 @@ public sealed class AttachedDiskService(IAzureService azureService) : IAttachedD
         }
 
         var attachedDisks = new List<(string? Name, string? ResourceId)>();
-        var osDisk = vmData.StorageProfile?.OSDisk;
+        var osDisk = storageProfile?.OSDisk;
         if (osDisk is not null)
         {
             attachedDisks.Add((osDisk.Name, osDisk.ManagedDisk?.Id?.ToString()));
         }
-        if (vmData.StorageProfile?.DataDisks is not null)
+        if (storageProfile?.DataDisks is not null)
         {
-            attachedDisks.AddRange(vmData.StorageProfile.DataDisks.Select(dataDisk =>
+            attachedDisks.AddRange(storageProfile.DataDisks.Select(dataDisk =>
                 ((string?)dataDisk.Name, dataDisk.ManagedDisk?.Id?.ToString())));
         }
 
