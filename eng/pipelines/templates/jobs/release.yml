@@ -92,6 +92,53 @@ jobs:
     ServerName: ${{ parameters.ServerName }}
     DependsOn: TagRepository
 
+- job: ExportToolMetadata
+  displayName: "Export tool metadata"
+  dependsOn: PublishNugetPackage
+  condition: and(succeeded(), eq('${{ parameters.ServerName }}', 'Azure.Mcp.Server'), ne(variables['Skip.PublishPackage'], 'true'))
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: "Download build_info"
+    artifact: build_info
+
+  - download: current
+    displayName: "Download signed NuGet packages"
+    artifact: packages_nuget_signed
+    patterns: |
+      ${{ parameters.ServerName }}/platform/*.win-x64.*.nupkg
+
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
+
+  - task: AzureCLI@2
+    displayName: "Build and run ToolMetadataExporter"
+    env:
+      DOTNET_ENVIRONMENT: Development
+    inputs:
+      azureSubscription: "Azure SDK Engineering System"
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: $(Build.SourcesDirectory)/eng/scripts/Invoke-ReleaseToolMetadataExport.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -PackagesDirectory '$(Pipeline.Workspace)/packages_nuget_signed'
+        -ServerName '${{ parameters.ServerName }}'
+        -ExtractDirectory '$(Agent.TempDirectory)/tool-metadata-export'
+        -OutputDirectory '$(Agent.TempDirectory)/tool-metadata-output'
+        -ArtifactDirectory '$(Build.ArtifactStagingDirectory)/tool-metadata-changes'
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactName: tool_metadata_changes
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/tool-metadata-changes
+      CustomCondition: eq(variables['ShouldPublishToolMetadataChanges'], 'true')
+      SbomEnabled: false
+
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
     parameters:
