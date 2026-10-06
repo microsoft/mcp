@@ -23,9 +23,9 @@ public class DiskDiagnoseOptions
     [Option(Description = "The names of up to 64 specific disks attached to the virtual machine to analyze. If omitted, all attached disks are analyzed.")]
     public string[]? Disk { get; set; }
 
-    [Option(Description = "The analysis start time in ISO 8601 format with an explicit Z, +HH:mm, or -HH:mm UTC offset. If omitted, the analysis covers the previous 24 hours.")]
+    [Option(Description = "The analysis start time in ISO 8601 format with an explicit Z, +HH:mm, or -HH:mm UTC offset. Must be provided with --end-time. If both timestamps are omitted, the analysis covers the previous 24 hours.")]
     public string? StartTime { get; set; }
 
-    [Option(Description = "The analysis end time in ISO 8601 format with an explicit Z, +HH:mm, or -HH:mm UTC offset. If omitted, the analysis ends at the current time. The analysis window cannot exceed 24 hours.")]
+    [Option(Description = "The analysis end time in ISO 8601 format with an explicit Z, +HH:mm, or -HH:mm UTC offset. Must be provided with --start-time. The analysis window cannot exceed 24 hours.")]
     public string? EndTime { get; set; }
 }

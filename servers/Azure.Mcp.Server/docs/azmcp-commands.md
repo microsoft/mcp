@@ -5163,7 +5163,8 @@ Direct VM scale set selection requires the canonical nested instance resource ID
 `/subscriptions/{subscription}/resourceGroups/{resource-group}/providers/Microsoft.Compute/virtualMachineScaleSets/{scale-set}/virtualMachines/{instance}`.
 The optional `--disk` argument accepts at most 64 attached disk names. Timestamps must use ISO 8601
 with an explicit `Z` or UTC offset, such as `2026-07-19T00:00:00Z` or
-`2026-07-19T00:00:00.1234567+05:30`. A provisional 10 MiB client safety cap rejects larger successful
+`2026-07-19T00:00:00.1234567+05:30`. Provide `--start-time` and `--end-time` together, or omit both
+to analyze the previous 24 hours. A provisional 10 MiB client safety cap rejects larger successful
 responses with a sanitized upstream-service error. High-cardinality responses may require this cap to
 be revised after Storage Intelligence publishes or measures its maximum response size.
 Host-side latency metrics depend on Storage Intelligence telemetry support. The recorded test uses a
