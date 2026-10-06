@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Improved Azure Advisor tool selection by distinguishing global recommendation metadata lookups from subscription-scoped recommendation records."

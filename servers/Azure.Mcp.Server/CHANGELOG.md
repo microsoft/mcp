@@ -2,15 +2,32 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.50 (Unreleased)
-
-### Features Added
+## 3.0.0-beta.50 (2026-10-06)
 
 ### Breaking Changes
 
+- Recovery Services vault creation now disables public network access by default. Use `--enable-public-network-access true` to explicitly enable public access. This option is not supported for Data Protection vaults. [[#3755](https://github.com/microsoft/mcp/pull/3755)]
+- New NFS shares default to `RootSquash` with encrypted transit. Explicit options remain available, while omitted security settings preserve existing shares during updates. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+
 ### Bugs Fixed
 
+- Fixed `azurebackup protecteditem get` silently returning an incomplete or empty list for Data Protection Backup vaults; when a backup instance repeatedly fails to deserialize (commonly an empty or malformed resourceGroupId) the truncated listing now surfaces as an error instead of being reported as a successful result. [[#3840](https://github.com/microsoft/mcp/pull/3840)]
+- Improved Azure Advisor tool selection by distinguishing global recommendation metadata lookups from subscription-scoped recommendation records. [[#3817](https://github.com/microsoft/mcp/pull/3817)]
+- The `extension_azqr tool` is now advertised only for local execution when Azure Quick Review CLI version `3.0.0` or later is installed. [[#3503](https://github.com/microsoft/mcp/pull/3503)]
+- Fixed `--tool` filtering to match exposed tool names exactly, ignoring case, so selecting a tool no longer exposes or allows calls to other tools whose names are substrings of it. [[#3837](https://github.com/microsoft/mcp/pull/3837)]
+- Updating an existing file share now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+- Prevented option values from appearing in validation failure telemetry while preserving client-facing error messages. [[#3792](https://github.com/microsoft/mcp/pull/3792)]
+- Added namespace-aware endpoint validation for Azure SRE Agent data-plane and Azure Storage blob and table endpoints. [[#3820](https://github.com/microsoft/mcp/pull/3820)]
+- Validated PostgreSQL server inputs against the configured Azure cloud before acquiring credentials or opening database connections. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate Azure Retail Prices requests against cloud-specific endpoints before sending initial or paginated requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate raw Azure Resource Manager requests from Quota and Resource Health against cloud-specific management endpoints, and safely escape generated Resource Health OData filter values. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Fixed Azure SRE Agent tool selection so that `investigate this issue` prompts route to the investigate tool instead of the read-only get-thread tool. [[#3826](https://github.com/microsoft/mcp/pull/3826)]
+- Rejected Speech endpoints now fail without falling back to another transcription method. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+
 ### Other Changes
+
+- Added cloud-specific endpoint validation for Azure AI Search and Azure AI Speech data-plane requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Hardened Service Bus namespace validation to require bare DNS hostnames and added cloud-specific endpoint validation for Service Fabric ARM requests and pagination. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
 
 ## 3.0.0-beta.49 (2026-10-01)
 
