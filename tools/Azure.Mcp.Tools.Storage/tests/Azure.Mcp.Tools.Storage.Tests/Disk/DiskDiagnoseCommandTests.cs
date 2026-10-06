@@ -161,6 +161,8 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
     [InlineData("--subscription sub123 --resource-group invalid/rg --vm test-vm", "resource group")]
     [InlineData("--subscription sub123 --resource-group test-rg --vm invalid/vm", "virtual machine name")]
     [InlineData("--subscription sub123 --resource-group test-rg --vm test-vm --disk invalid.disk", "managed disk name")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --start-time 2026-07-20T11:00:00Z", "provided together")]
+    [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --end-time 2026-07-20T12:00:00Z", "provided together")]
     [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --start-time 2026-07-20T12:00:00Z --end-time 2026-07-20T11:00:00Z", "must be after")]
     [InlineData("--resource-id /subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm --start-time 2026-07-19T00:00:00Z --end-time 2026-07-20T01:00:00Z", "cannot exceed 24 hours")]
     public async Task ExecuteAsync_InvalidInput_ReturnsBadRequest(string args, string expectedMessage)
@@ -196,12 +198,14 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
     }
 
     [Theory]
-    [InlineData("2026-02-20T00:00:00Z")]
-    [InlineData("2026-02-20T00:00:00.1Z")]
-    [InlineData("2026-02-20T00:00:00.1234567Z")]
-    [InlineData("2026-02-20T00:00:00+05:30")]
-    [InlineData("2026-02-20T00:00:00.1234567-08:00")]
-    public async Task ExecuteAsync_StorageIntelligenceTimestampFormats_AreAccepted(string timestamp)
+    [InlineData("2026-02-20T00:00:00Z", "2026-02-20T01:00:00Z")]
+    [InlineData("2026-02-20T00:00:00.1Z", "2026-02-20T01:00:00.1Z")]
+    [InlineData("2026-02-20T00:00:00.1234567Z", "2026-02-20T01:00:00.1234567Z")]
+    [InlineData("2026-02-20T00:00:00+05:30", "2026-02-20T01:00:00+05:30")]
+    [InlineData("2026-02-20T00:00:00.1234567-08:00", "2026-02-20T01:00:00.1234567-08:00")]
+    public async Task ExecuteAsync_StorageIntelligenceTimestampFormats_AreAccepted(
+        string startTime,
+        string endTime)
     {
         Service.DiagnoseDiskAsync(
                 Arg.Any<string>(),
@@ -216,7 +220,8 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
 
         var response = await ExecuteCommandAsync(
             "--resource-id", VmResourceId,
-            "--start-time", timestamp);
+            "--start-time", startTime,
+            "--end-time", endTime);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
@@ -234,7 +239,8 @@ public class DiskDiagnoseCommandTests : CommandUnitTestsBase<DiskDiagnoseCommand
     {
         var response = await ExecuteCommandAsync(
             "--resource-id", VmResourceId,
-            "--start-time", timestamp);
+            "--start-time", timestamp,
+            "--end-time", "2026-02-20T01:00:00Z");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("explicit UTC offset", response.Message);

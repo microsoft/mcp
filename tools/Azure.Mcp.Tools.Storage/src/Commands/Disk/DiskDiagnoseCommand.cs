@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Disk;
     Name = "diagnose",
     Title = "Diagnose Azure Disk Performance",
     Description = "Diagnoses Azure virtual machine disk performance through the Storage Intelligence service. The built-in endpoint and application scope target Azure public cloud. Identify the target with a standalone VM, canonical VM scale set instance, or attached managed disk resource ID, or with subscription, resource group, and VM name. Diagnose all attached disks or select up to 64 named disks attached to a VM in a resource group. Optionally specify an ISO 8601 time window with explicit UTC offsets of up to 24 hours. Returns disk configuration, performance metrics, throttling intervals, per-LUN analysis, host-side latency metrics when provided by the service, and recommendations.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -105,10 +106,17 @@ public sealed class DiskDiagnoseCommand(
             }
         }
 
+        var hasStart = !string.IsNullOrWhiteSpace(options.StartTime);
+        var hasEnd = !string.IsNullOrWhiteSpace(options.EndTime);
+        if (hasStart != hasEnd)
+        {
+            validationResult.Errors.Add("--start-time and --end-time must be provided together.");
+        }
+
         var hasValidStart = TryValidateTimestamp(options.StartTime, "--start-time", validationResult, out var start);
         var hasValidEnd = TryValidateTimestamp(options.EndTime, "--end-time", validationResult, out var end);
 
-        if (hasValidStart && hasValidEnd && start.HasValue && end.HasValue)
+        if (hasStart && hasEnd && hasValidStart && hasValidEnd && start.HasValue && end.HasValue)
         {
             if (end <= start)
             {
