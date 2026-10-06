@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Options;
@@ -174,8 +175,21 @@ public abstract class ResiliencyAgentCommand<
             return;
         }
 
-        List<ContentBlock> contentBlocks = [];
-        foreach (WrittenArtifact artifact in writtenArtifacts)
+        WrittenArtifact[] orderedArtifacts =
+        [
+            .. writtenArtifacts
+                .OrderBy(static artifact => IsDetailedRecommendationReport(artifact) ? 0 : 1),
+        ];
+
+        List<ContentBlock> contentBlocks =
+        [
+            new TextContentBlock
+            {
+                Text = BuildArtifactPresentation(orderedArtifacts),
+            },
+        ];
+
+        foreach (WrittenArtifact artifact in orderedArtifacts)
         {
             try
             {
@@ -197,16 +211,6 @@ public abstract class ResiliencyAgentCommand<
                         Text = text,
                     },
                 });
-
-                contentBlocks.Add(new ResourceLinkBlock
-                {
-                    Uri = uri,
-                    Name = artifact.Name,
-                    Title = artifact.Name,
-                    Description = artifact.Description,
-                    MimeType = mimeType,
-                    Size = new FileInfo(artifact.Path).Length,
-                });
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -221,6 +225,56 @@ public abstract class ResiliencyAgentCommand<
         {
             response.McpContent = contentBlocks;
         }
+    }
+
+    private static string BuildArtifactPresentation(IReadOnlyList<WrittenArtifact> artifacts)
+    {
+        var builder = new StringBuilder(
+            "The Azure Resiliency Agent returned the following authoritative file artifacts. " +
+            "Explicitly name each attached file when responding to the user.\n");
+
+        foreach (WrittenArtifact artifact in artifacts)
+        {
+            builder.Append("- `");
+            builder.Append(artifact.Name);
+            builder.Append('`');
+
+            if (IsDetailedRecommendationReport(artifact))
+            {
+                builder.Append(
+                    " — full detailed recommendation report. Tell the user that this attached report " +
+                    "contains the complete findings, alternatives, cost considerations, and " +
+                    "per-resource recommendations. A chat summary is abbreviated and must not replace " +
+                    "notifying the user about this report.");
+            }
+            else if (!string.IsNullOrWhiteSpace(artifact.Description))
+            {
+                builder.Append(" — ");
+                builder.Append(artifact.Description);
+            }
+
+            builder.Append('\n');
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static bool IsDetailedRecommendationReport(WrittenArtifact artifact)
+    {
+        if (!string.Equals(Path.GetExtension(artifact.Name), ".md", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string normalizedName = Path.GetFileNameWithoutExtension(artifact.Name)
+            .Replace("-", string.Empty, StringComparison.Ordinal)
+            .Replace("_", string.Empty, StringComparison.Ordinal)
+            .Replace(" ", string.Empty, StringComparison.Ordinal);
+
+        return normalizedName.StartsWith("DetailedRecommendationReport", StringComparison.OrdinalIgnoreCase)
+            || artifact.Description?.Contains(
+                "recommendation report",
+                StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private async Task<string?> AskUserAsync(

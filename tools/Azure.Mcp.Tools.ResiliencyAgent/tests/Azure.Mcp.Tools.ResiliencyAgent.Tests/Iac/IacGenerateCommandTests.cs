@@ -140,31 +140,49 @@ public sealed class IacGenerateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_AddsEmbeddedResourceAndResourceLinkForWrittenArtifact()
+    public async Task ExecuteAsync_PromotesDetailedReportAndAddsOnlyEmbeddedResources()
     {
         string directory = Path.Combine(Path.GetTempPath(), "resiliency-mcp-blocks-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
-        string path = Path.Combine(directory, "posture-report.md");
-        const string content = "# Zonal Posture Report\n\nResource is resilient.";
-        File.WriteAllText(path, content);
+        string reportPath = Path.Combine(directory, "DetailedRecommendationReport-2.md");
+        string templatePath = Path.Combine(directory, "main.bicep");
+        const string reportContent = "# Detailed recommendations\n\nResource is resilient.";
+        const string templateContent = "resource plan 'Microsoft.Web/serverfarms@2024-11-01' = {}";
+        File.WriteAllText(reportPath, reportContent);
+        File.WriteAllText(templatePath, templateContent);
 
         try
         {
-            var artifact = new AgentArtifact(
-                "posture-report.md",
-                "Zonal posture report",
+            var reportArtifact = new AgentArtifact(
+                "DetailedRecommendationReport.md",
+                "Zonal resiliency recommendation report",
                 "text/markdown",
-                content,
-                "resiliencyagent");
+                reportContent,
+                "md");
+            var templateArtifact = new AgentArtifact(
+                "main.bicep",
+                "Corrected Bicep template",
+                "text/plain",
+                templateContent,
+                "bicep");
             Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
-                .Returns(Completed("Done.", artifact));
+                .Returns(Completed("Done.", templateArtifact, reportArtifact));
             _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
-                .Returns([new WrittenArtifact(
-                    "posture-report.md",
-                    path,
-                    $"[posture-report.md]({new Uri(path).AbsoluteUri})",
-                    "resiliencyagent",
-                    "Zonal posture report")]);
+                .Returns(
+                [
+                    new WrittenArtifact(
+                        "main.bicep",
+                        templatePath,
+                        $"[main.bicep]({new Uri(templatePath).AbsoluteUri})",
+                        "bicep",
+                        "Corrected Bicep template"),
+                    new WrittenArtifact(
+                        "DetailedRecommendationReport-2.md",
+                        reportPath,
+                        $"[DetailedRecommendationReport-2.md]({new Uri(reportPath).AbsoluteUri})",
+                        "md",
+                        "Zonal resiliency recommendation report"),
+                ]);
 
             var response = await ExecuteCommandAsync("--request", "assess posture");
 
@@ -173,21 +191,27 @@ public sealed class IacGenerateCommandTests
                 response.McpContent,
                 block =>
                 {
-                    var embedded = Assert.IsType<EmbeddedResourceBlock>(block);
-                    var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
-                    Assert.Equal(new Uri(path).AbsoluteUri, resource.Uri);
-                    Assert.Equal("text/markdown", resource.MimeType);
-                    Assert.Equal(content, resource.Text);
+                    var presentation = Assert.IsType<TextContentBlock>(block);
+                    Assert.Contains("DetailedRecommendationReport-2.md", presentation.Text, StringComparison.Ordinal);
+                    Assert.Contains("full detailed recommendation report", presentation.Text, StringComparison.Ordinal);
+                    Assert.Contains("chat summary is abbreviated", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("main.bicep", presentation.Text, StringComparison.Ordinal);
                 },
                 block =>
                 {
-                    var link = Assert.IsType<ResourceLinkBlock>(block);
-                    Assert.Equal(new Uri(path).AbsoluteUri, link.Uri);
-                    Assert.Equal("posture-report.md", link.Name);
-                    Assert.Equal("posture-report.md", link.Title);
-                    Assert.Equal("Zonal posture report", link.Description);
-                    Assert.Equal("text/markdown", link.MimeType);
-                    Assert.Equal(new FileInfo(path).Length, link.Size);
+                    var embedded = Assert.IsType<EmbeddedResourceBlock>(block);
+                    var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
+                    Assert.Equal(new Uri(reportPath).AbsoluteUri, resource.Uri);
+                    Assert.Equal("text/markdown", resource.MimeType);
+                    Assert.Equal(reportContent, resource.Text);
+                },
+                block =>
+                {
+                    var embedded = Assert.IsType<EmbeddedResourceBlock>(block);
+                    var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
+                    Assert.Equal(new Uri(templatePath).AbsoluteUri, resource.Uri);
+                    Assert.Equal("text/plain", resource.MimeType);
+                    Assert.Equal(templateContent, resource.Text);
                 });
         }
         finally
