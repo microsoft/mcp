@@ -29,8 +29,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 | none |
 | advisor_metadata_list | Find global Azure Advisor recommendation metadata for Service Health tracking ID QNY1-HB8, not active recommendations | none |
 | advisor_metadata_list | Show Advisor service retirements on or after March 31, 2026 | none |
-| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template | context-required |
-| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account | context-required |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription \<subscription> | none |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription \<subscription> | none |

@@ -518,19 +518,6 @@ azmcp advisor recommendation summary --subscription <subscription> \
                                      [--resource-group <resource-group>] \
                                      [--tenant <tenant>]
 
-# Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
-# Supported --resource values:
-#   aad_domainservices, apimanagement_service, cognitiveservices_accounts,
-#   compute_virtualmachines, compute_virtualmachinescalesets,
-#   containerregistry_registries, containerservice_managedclusters,
-#   dbforpostgresql_flexibleservers, documentdb_databaseaccounts,
-#   keyvault_vaults, kubernetes_connectedclusters, kubernetesconfiguration_extensions,
-#   netapp_volumes, network_applicationgatewaywebapplicationfirewallpolicies,
-#   network_expressrouteports, network_frontdoorwebapplicationfirewallpolicies,
-#   sql_managedinstances, storage_storageaccounts, web_serverfarms, web_staticsites
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation apply --resource <resource>
-
 # List the global, subscription-independent Azure Advisor recommendation metadata catalog (also called recommendation types)
 # from Azure Resource Graph. Use it for metadata/catalog lookups, including service-retirement metadata by Service Health
 # tracking ID, even when no subscription or active recommendation instance is specified. Use recommendation list for actual

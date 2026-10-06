@@ -8,6 +8,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Removed the `advisor recommendation apply` tool (`advisor_recommendation_apply`), which returned infrastructure-as-code rules for applying Advisor recommendations. Use the `advisor recommendation` and `advisor remediation` tools for recommendation guidance and remediation artifacts. [[#XXXX](https://github.com/microsoft/mcp/pull/XXXX)]
+
 ### Bugs Fixed
 
 ### Other Changes

@@ -24,7 +24,6 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationUpdateCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
-        services.AddSingleton<RecommendationApplyCommand>();
         services.AddSingleton<RecommendationMetadataListCommand>();
         services.AddSingleton<MetadataGetCommand>();
         services.AddSingleton<RemediationGetCommand>();
@@ -34,16 +33,15 @@ public class AdvisorSetup : IAreaSetup
     {
         // Create Advisor command group
         var advisor = new CommandGroup(Name,
-            "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions OR Apply Azure " +
-            "Advisor recommendations to your IaaC files (ARM, Terraform). Use when you need subscription-scoped " +
-            "visibility into Advisor recommendations OR want to apply Advisor recommendations to your IaaC files. " +
+            "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions. Use when you " +
+            "need subscription-scoped visibility into Advisor recommendations. " +
             "Requires Azure subscription context for querying Advisor recommendations.",
             Title);
 
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; update customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
+            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; or update customer-provided state.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(
@@ -60,7 +58,6 @@ public class AdvisorSetup : IAreaSetup
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
-        recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
         metadata.AddCommand<MetadataGetCommand>(serviceProvider);
         remediation.AddCommand<RemediationGetCommand>(serviceProvider);
