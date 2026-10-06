@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.Insights.Services;
 
 /// <inheritdoc cref="IInsightsService"/>
 public sealed class InsightsService(IAzureService azureService, ICacheService cacheService, ILogger<InsightsService> logger)
-    : BaseAzureService(azureService), IInsightsService
+    : BaseAzureResourceService(azureService), IInsightsService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<InsightsService> _logger = logger;
@@ -84,10 +84,11 @@ public sealed class InsightsService(IAzureService azureService, ICacheService ca
                 ? $"--{InsightsOptionDefinitions.NoCacheName} set; fetching fresh Azure data."
                 : "Fetching fresh Azure data.");
 
-        var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
+        var tenantId = subscriptionResource.Data.TenantId?.ToString()
+            ?? await ResolveTenantIdAsync(tenant, cancellationToken);
 
         var aggregation = await RunQueryAsync(
-            tenantResource,
+            tenantId,
             new[] { subscriptionResource.Data.SubscriptionId },
             subscriptionCount: 1,
             scopeLabel: subscription,
@@ -141,15 +142,13 @@ public sealed class InsightsService(IAzureService azureService, ICacheService ca
                 ? $"--{InsightsOptionDefinitions.NoCacheName} set; fetching fresh Azure data."
                 : "Fetching fresh Azure data.");
 
-        var tenantResource = await GetTenantResourceAsync(tenantId, cancellationToken);
-
         var subscriptionIds = subscriptions
             .Select(s => s.SubscriptionId)
             .Where(id => !string.IsNullOrEmpty(id))
             .ToArray();
 
         var aggregation = await RunQueryAsync(
-            tenantResource,
+            tenantId.ToString(),
             subscriptionIds,
             subscriptionCount: subscriptionIds.Length,
             scopeLabel: $"tenant:{tenantId}",
@@ -161,7 +160,7 @@ public sealed class InsightsService(IAzureService azureService, ICacheService ca
     }
 
     private async Task<SubscriptionAggregation> RunQueryAsync(
-        TenantResource tenantResource,
+        string tenantId,
         IReadOnlyList<string> subscriptionIds,
         int subscriptionCount,
         string scopeLabel,
@@ -171,70 +170,53 @@ public sealed class InsightsService(IAzureService azureService, ICacheService ca
         var rows = new List<JsonElement>();
         string? skipToken = null;
         var pages = 0;
-        var documents = new List<JsonDocument>();
 
-        try
+        while (true)
         {
-            while (true)
+            pages++;
+            progress?.Report($"Fetching ARG page {pages} for {scopeLabel}...");
+
+            var queryContent = new ResourceQueryContent(KqlQuery)
             {
-                pages++;
-                progress?.Report($"Fetching ARG page {pages} for {scopeLabel}...");
+                Options = new ResourceQueryRequestOptions
+                {
+                    Top = PageSize,
+                    SkipToken = skipToken,
+                },
+            };
+            foreach (var id in subscriptionIds)
+            {
+                queryContent.Subscriptions.Add(id);
+            }
 
-                var queryContent = new ResourceQueryContent(KqlQuery)
-                {
-                    Options = new ResourceQueryRequestOptions
-                    {
-                        Top = PageSize,
-                        SkipToken = skipToken,
-                    },
-                };
-                foreach (var id in subscriptionIds)
-                {
-                    queryContent.Subscriptions.Add(id);
-                }
+            using var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
 
-                ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-                if (result is null)
+            if (result.Count > 0 && result.Data.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in result.Data.EnumerateArray())
                 {
-                    break;
-                }
-
-                if (result.Count > 0 && result.Data is not null)
-                {
-                    var doc = JsonDocument.Parse(result.Data);
-                    documents.Add(doc);
-                    if (doc.RootElement.ValueKind == JsonValueKind.Array)
-                    {
-                        rows.AddRange(doc.RootElement.EnumerateArray());
-                    }
-                }
-
-                skipToken = result.SkipToken;
-                if (string.IsNullOrEmpty(skipToken))
-                {
-                    break;
-                }
-
-                if (pages >= MaxPages)
-                {
-                    _logger.LogWarning(
-                        "Reached pagination cap of {MaxPages} pages for scope {Scope}; results may be truncated.",
-                        MaxPages, scopeLabel);
-                    break;
+                    rows.Add(item.Clone());
                 }
             }
 
-            var aggregation = PropertyAggregator.Aggregate(rows, subscriptionCount);
-            progress?.Report($"Aggregating properties across {rows.Count} resources for {scopeLabel}.");
-            return AggregationFilter.Filter(aggregation);
-        }
-        finally
-        {
-            foreach (var doc in documents)
+            skipToken = result.SkipToken;
+            if (string.IsNullOrEmpty(skipToken))
             {
-                doc.Dispose();
+                break;
+            }
+
+            if (pages >= MaxPages)
+            {
+                _logger.LogWarning(
+                    "Reached pagination cap of {MaxPages} pages for scope {Scope}; results may be truncated.",
+                    MaxPages, scopeLabel);
+                break;
             }
         }
+
+        var aggregation = PropertyAggregator.Aggregate(rows, subscriptionCount);
+        progress?.Report($"Aggregating properties across {rows.Count} resources for {scopeLabel}.");
+        return AggregationFilter.Filter(aggregation);
     }
 
     /// <summary>
@@ -252,19 +234,6 @@ public sealed class InsightsService(IAzureService azureService, ICacheService ca
 
         await _cacheService.SetAsync(CacheGroup, guardKey, DateTimeOffset.UtcNow + NoCacheGuardWindow, NoCacheGuardWindow, cancellationToken);
         return null;
-    }
-
-    private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken)
-    {
-        if (tenantId is null)
-        {
-            throw new ArgumentException("Tenant ID cannot be null.", nameof(tenantId));
-        }
-
-        var allTenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == tenantId.Value)
-            ?? throw new InvalidOperationException($"No accessible tenant found for tenant ID '{tenantId}'.");
-        return tenantResource;
     }
 
 }
