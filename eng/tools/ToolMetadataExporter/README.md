@@ -65,6 +65,8 @@ Authentication uses Azure CLI credentials or an interactive Microsoft Entra prom
 az login
 ```
 
+The Azure MCP public release pipeline uses [`Invoke-ReleaseToolMetadataExport.ps1`](../../scripts/Invoke-ReleaseToolMetadataExport.ps1) after publishing the signed NuGet package. The script extracts the `win-x64` executable, builds the exporter, records its metadata, and publishes generated `*_tool_changes_*.json` files as the `tool_metadata_changes` artifact.
+
 ## Export downloaded versions
 
 [`src\Export-DownloadedVersions.ps1`](src/Export-DownloadedVersions.ps1) finds versioned package directories, orders them using semantic versioning, and runs the exporter against each `tools\any\win-x64\azmcp.exe`.
