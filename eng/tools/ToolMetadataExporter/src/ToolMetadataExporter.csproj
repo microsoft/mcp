@@ -7,6 +7,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <!-- Enable strongly typed binding for IConfiguration to support AOT and trimming. -->
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+    <UserSecretsId>f8ab031a-6160-4218-b776-51a5b6fe2d17</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
