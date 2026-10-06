@@ -1318,7 +1318,7 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         {
             return AutoExportJobAdminStatus.Enable;
         }
-        
+
         switch (adminStatus.ToLowerInvariant())
         {
             case "enable":
@@ -1333,8 +1333,8 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
 
     private static AutoImportJobPropertiesAdminStatus ParseAdminStatusForImport(string? adminStatus)
     {
-        if (string.IsNullOrWhiteSpace(adminStatus)) 
-{
+        if (string.IsNullOrWhiteSpace(adminStatus))
+        {
             return AutoImportJobPropertiesAdminStatus.Enable;
         }
 
