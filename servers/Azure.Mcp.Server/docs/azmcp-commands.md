@@ -1058,7 +1058,7 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 #### Vault
 
 ```bash
-# Creates a new backup vault. Rejects vaults found to already exist; use 'azurebackup vault update' to modify an existing vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. Returns the created vault details.
+# Creates a new backup vault. Rejects vaults found to already exist; use 'azurebackup vault update' to modify an existing vault. Specify --vault-type as 'rsv' for a Recovery Services vault or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned Managed Identity is enabled by default so the vault can authenticate to protected datasources (storage accounts, disks, PG Flex, etc.) - change later with 'azurebackup vault update --identity-type ...' if needed. For RSV vaults, public network access is disabled by default (secure-by-default); pass --enable-public-network-access true to enable it (insecure, RSV only). Returns the created vault details.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault create --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -1066,6 +1066,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                --location <location> \
                                --vault-type <vault-type> \
                                [--sku <sku>] \
+                               [--enable-public-network-access <true|false>] \
                                [--storage-type <storage-type>]
 
 # Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, storage redundancy, and managed identity details when configured. Identity details include the identity type, principal ID, tenant ID, and attached user-assigned identities with their resource IDs, principal IDs, and client IDs. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
