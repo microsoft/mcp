@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Stable VS Code extension changelog entries now use the same Marketplace-derived version as the packaged VSIX. Public Azure MCP VSIX packaging rejects mismatched changelog versions and release channels."
