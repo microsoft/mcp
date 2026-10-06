@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Tools.Storage.Services;
@@ -94,6 +95,228 @@ public class StorageServiceDiskDiagnoseTests
 
         Assert.Equal((int)HttpStatusCode.Forbidden, exception.Status);
         Assert.Contains("HTTP status 403", exception.Message);
+        Assert.DoesNotContain("sensitive backend details", exception.Message);
+        Assert.DoesNotContain("test-token", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("""{"status":"Healthy","additive":{"nested":[1,{"preserved":true},null]},"computeInstanceResourceId":"/current","vmResourceId":"/legacy"}""", JsonValueKind.Object)]
+    [InlineData("""[{"nested":true},2,null]""", JsonValueKind.Array)]
+    [InlineData("\"value\"", JsonValueKind.String)]
+    [InlineData("42", JsonValueKind.Number)]
+    [InlineData("true", JsonValueKind.True)]
+    [InlineData("null", JsonValueKind.Null)]
+    public async Task DiagnoseDiskAsync_ValidJsonRoot_IsPreserved(
+        string responseJson,
+        JsonValueKind expectedKind)
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(responseJson)))
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var result = await service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(expectedKind, result.ValueKind);
+        using var expectedDocument = JsonDocument.Parse(responseJson);
+        Assert.True(JsonElement.DeepEquals(expectedDocument.RootElement, result));
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_AdditiveNestedPropertiesAndResourceIdNamesArePreserved()
+    {
+        const string responseJson =
+            """{"computeInstanceResourceId":"/current","vmResourceId":"/legacy","additive":{"nested":[1,{"preserved":true},null]}}""";
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(responseJson)
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var result = await service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("/current", result.GetProperty("computeInstanceResourceId").GetString());
+        Assert.Equal("/legacy", result.GetProperty("vmResourceId").GetString());
+        Assert.True(result.GetProperty("additive").GetProperty("nested")[1].GetProperty("preserved").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, result.GetProperty("additive").GetProperty("nested")[2].ValueKind);
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_LatencyMetricsArePreservedWhenProvided()
+    {
+        const string responseJson =
+            """{"status":"Healthy","latencyMetrics":{"latencyEnabled":true,"highLatencyDetected":false,"perDiskLatency":[]}}""";
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(responseJson)
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var result = await service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var latencyMetrics = result.GetProperty("latencyMetrics");
+        Assert.True(latencyMetrics.GetProperty("latencyEnabled").GetBoolean());
+        Assert.False(latencyMetrics.GetProperty("highLatencyDetected").GetBoolean());
+        Assert.Empty(latencyMetrics.GetProperty("perDiskLatency").EnumerateArray());
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" \r\n\t")]
+    [InlineData("""{"incomplete":""")]
+    public async Task DiagnoseDiskAsync_InvalidSuccessfulBodyThrowsSanitizedBadGateway(string responseBody)
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(responseBody)
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)HttpStatusCode.BadGateway, exception.Status);
+        Assert.Contains("Storage Intelligence disk analysis returned", exception.Message);
+        Assert.DoesNotContain("incomplete", exception.Message);
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_DeclaredOversizedBodyThrowsBeforeReading()
+    {
+        var content = new TrackingHttpContent("""{"sensitive":"backend body"}""");
+        content.Headers.ContentLength = StorageIntelligenceService.ProvisionalMaxResponseSizeBytes + 1;
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = content
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)HttpStatusCode.BadGateway, exception.Status);
+        Assert.Contains(StorageIntelligenceService.ProvisionalMaxResponseSizeBytes.ToString(), exception.Message);
+        Assert.False(content.WasRead);
+        Assert.DoesNotContain("sensitive", exception.Message);
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_ChunkedOversizedBodyThrowsBadGateway()
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StreamContent(new RepeatingByteStream(
+                StorageIntelligenceService.ProvisionalMaxResponseSizeBytes + 1,
+                (byte)'{'))
+        };
+        Assert.Null(response.Content.Headers.ContentLength);
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)HttpStatusCode.BadGateway, exception.Status);
+        Assert.Contains(StorageIntelligenceService.ProvisionalMaxResponseSizeBytes.ToString(), exception.Message);
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_ResponseAtExactLimitSucceeds()
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StreamContent(new ExactSizeJsonStringStream(
+                StorageIntelligenceService.ProvisionalMaxResponseSizeBytes))
+        };
+        Assert.Null(response.Content.Headers.ContentLength);
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var result = await service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(JsonValueKind.String, result.ValueKind);
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_MisleadingLowerContentLengthStillEnforcesActualSize()
+    {
+        var content = new StreamContent(new RepeatingByteStream(
+            StorageIntelligenceService.ProvisionalMaxResponseSizeBytes + 1,
+            (byte)'{'));
+        content.Headers.ContentLength = 1;
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = content
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)HttpStatusCode.BadGateway, exception.Status);
+        Assert.Contains(StorageIntelligenceService.ProvisionalMaxResponseSizeBytes.ToString(), exception.Message);
+    }
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_CanceledResponseReadPropagatesCancellation()
+    {
+        using var cancellationSource = new CancellationTokenSource();
+        cancellationSource.Cancel();
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StreamContent(new RepeatingByteStream(1, (byte)'0'))
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: cancellationSource.Token));
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.Forbidden)]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    [InlineData(HttpStatusCode.BadGateway)]
+    public async Task DiagnoseDiskAsync_NonSuccessBodyIsNeverReadOrLeaked(HttpStatusCode statusCode)
+    {
+        var content = new TrackingHttpContent("sensitive backend details test-token");
+        var response = new HttpResponseMessage(statusCode)
+        {
+            Content = content
+        };
+        var handler = new RecordingHttpMessageHandler(response);
+        var (service, _, _, _) = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)statusCode, exception.Status);
+        Assert.False(content.WasRead);
         Assert.DoesNotContain("sensitive backend details", exception.Message);
         Assert.DoesNotContain("test-token", exception.Message);
     }
@@ -234,5 +457,117 @@ public class StorageServiceDiskDiagnoseTests
     private sealed class HttpClientFactoryStub(HttpClient httpClient) : IHttpClientFactory
     {
         public HttpClient CreateClient(string name) => httpClient;
+    }
+
+    private sealed class TrackingHttpContent(string content) : HttpContent
+    {
+        public bool WasRead { get; private set; }
+
+        protected override Task SerializeToStreamAsync(
+            Stream stream,
+            TransportContext? context)
+        {
+            WasRead = true;
+            var bytes = Encoding.UTF8.GetBytes(content);
+            return stream.WriteAsync(bytes).AsTask();
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = Encoding.UTF8.GetByteCount(content);
+            return true;
+        }
+    }
+
+    private sealed class RepeatingByteStream(long length, byte value) : Stream
+    {
+        private long _position;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => length;
+        public override long Position
+        {
+            get => _position;
+            set => throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var bytesToRead = (int)Math.Min(count, length - _position);
+            buffer.AsSpan(offset, bytesToRead).Fill(value);
+            _position += bytesToRead;
+            return bytesToRead;
+        }
+
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var bytesToRead = (int)Math.Min(buffer.Length, length - _position);
+            buffer.Span[..bytesToRead].Fill(value);
+            _position += bytesToRead;
+            return ValueTask.FromResult(bytesToRead);
+        }
+
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    private sealed class ExactSizeJsonStringStream(long length) : Stream
+    {
+        private long _position;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => length;
+        public override long Position
+        {
+            get => _position;
+            set => throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            ReadCore(buffer.AsSpan(offset, count));
+
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(ReadCore(buffer.Span));
+        }
+
+        private int ReadCore(Span<byte> buffer)
+        {
+            var bytesToRead = (int)Math.Min(buffer.Length, length - _position);
+            if (bytesToRead == 0)
+            {
+                return 0;
+            }
+
+            buffer[..bytesToRead].Fill((byte)'a');
+            if (_position == 0)
+            {
+                buffer[0] = (byte)'"';
+            }
+            if (_position + bytesToRead == length)
+            {
+                buffer[bytesToRead - 1] = (byte)'"';
+            }
+
+            _position += bytesToRead;
+            return bytesToRead;
+        }
+
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 }

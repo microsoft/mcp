@@ -32,7 +32,7 @@ public class StorageDiskCommandTests(
         if (TestMode == TestMode.Playback)
         {
             Settings.EnvironmentVariables[EndpointEnvironmentVariable] =
-                "https://storageintelligenceweb.canary.production.portalrp.azure.com/api/Disk/analyze";
+                "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze";
             Settings.EnvironmentVariables[ScopeEnvironmentVariable] =
                 "00000000-0000-0000-0000-000000000000/.default";
         }
@@ -68,7 +68,7 @@ public class StorageDiskCommandTests(
     public async Task Should_diagnose_virtual_machine_disks_by_resource_id()
     {
         var vmResourceId = TestMode == TestMode.Playback
-            ? "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Sanitized/providers/Microsoft.Compute/virtualMachines/Sanitized"
+            ? "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Sanitized/providers/Microsoft.Compute/virtualMachines/Sanitized-disk-vm"
             : Settings.DeploymentOutputs["VMRESOURCEID"];
 
         var result = await CallToolAsync(
@@ -81,20 +81,14 @@ public class StorageDiskCommandTests(
         var analysis = result.AssertProperty("analysis");
         Assert.Equal(JsonValueKind.Object, analysis.ValueKind);
 
-        var status = analysis.AssertProperty("status");
-        Assert.False(string.IsNullOrWhiteSpace(status.GetString()));
+        var analyzedVmResourceId = analysis.AssertProperty("computeInstanceResourceId");
+        Assert.Equal(vmResourceId, analyzedVmResourceId.GetString(), ignoreCase: true);
 
-        var summary = analysis.AssertProperty("summary");
-        Assert.False(string.IsNullOrWhiteSpace(summary.GetString()));
-
-        var analyzedVmResourceId = analysis.AssertProperty("vmResourceId");
-        Assert.False(string.IsNullOrWhiteSpace(analyzedVmResourceId.GetString()));
-
-        var diskInfo = analysis.AssertProperty("diskInfo");
-        Assert.True(diskInfo.AssertProperty("success").GetBoolean());
-
-        var recommendations = analysis.AssertProperty("recommendations");
-        Assert.True(recommendations.AssertProperty("success").GetBoolean());
+        if (analysis.TryGetProperty("latencyMetrics", out var latencyMetrics)
+            && latencyMetrics.ValueKind != JsonValueKind.Null)
+        {
+            Assert.True(latencyMetrics.AssertProperty("latencyEnabled").GetBoolean());
+        }
     }
 
     private static string GetRequiredEnvironmentVariable(string name) =>

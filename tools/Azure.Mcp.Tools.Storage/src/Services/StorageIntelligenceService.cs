@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Buffers;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using Azure.Core;
@@ -16,6 +18,9 @@ public sealed class StorageIntelligenceService(
     IAzureTokenCredentialProvider tokenCredentialProvider,
     IHttpClientFactory httpClientFactory) : IStorageIntelligenceService
 {
+    internal const int ProvisionalMaxResponseSizeBytes = 10 * 1024 * 1024;
+    private const int ResponseReadBufferSizeBytes = 80 * 1024;
+    private const int InitialResponseCapacityBytes = 16 * 1024;
     private const string DefaultEndpoint = "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze";
     private const string DefaultScope = "a5965d26-227b-4df0-a516-d86aba489cb6/.default";
     private const string EndpointEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT";
@@ -102,10 +107,108 @@ public sealed class StorageIntelligenceService(
                 $"Storage Intelligence disk analysis failed with HTTP status {(int)response.StatusCode}.");
         }
 
-        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var responseDocument = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
-        return responseDocument.RootElement.Clone();
+        return await ReadResponseAsync(response.Content, cancellationToken);
     }
+
+    private static async Task<JsonElement> ReadResponseAsync(
+        HttpContent content,
+        CancellationToken cancellationToken)
+    {
+        if (content.Headers.ContentLength is > ProvisionalMaxResponseSizeBytes)
+        {
+            throw CreateInvalidResponseException(
+                $"Storage Intelligence disk analysis returned a response larger than the provisional {ProvisionalMaxResponseSizeBytes} byte safety limit.");
+        }
+
+        var initialCapacity = content.Headers.ContentLength is > 0 and var contentLength
+            ? (int)Math.Min(contentLength, InitialResponseCapacityBytes)
+            : 0;
+        using var bufferedResponse = new MemoryStream(initialCapacity);
+        var readBuffer = ArrayPool<byte>.Shared.Rent(ResponseReadBufferSizeBytes);
+        try
+        {
+            await using var responseStream = await content.ReadAsStreamAsync(cancellationToken);
+            var totalBytesRead = 0;
+            while (true)
+            {
+                var bytesRead = await responseStream.ReadAsync(
+                    readBuffer.AsMemory(),
+                    cancellationToken);
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+
+                if (totalBytesRead > ProvisionalMaxResponseSizeBytes - bytesRead)
+                {
+                    throw CreateInvalidResponseException(
+                        $"Storage Intelligence disk analysis returned a response larger than the provisional {ProvisionalMaxResponseSizeBytes} byte safety limit.");
+                }
+
+                EnsureResponseCapacity(bufferedResponse, totalBytesRead + bytesRead);
+                await bufferedResponse.WriteAsync(
+                    readBuffer.AsMemory(0, bytesRead),
+                    cancellationToken);
+                totalBytesRead += bytesRead;
+            }
+
+            if (IsEmptyJsonContent(bufferedResponse.GetBuffer().AsSpan(0, totalBytesRead)))
+            {
+                throw CreateInvalidResponseException(
+                    "Storage Intelligence disk analysis returned an empty response.");
+            }
+
+            try
+            {
+                using var responseDocument = JsonDocument.Parse(
+                    bufferedResponse.GetBuffer().AsMemory(0, totalBytesRead));
+                return responseDocument.RootElement.Clone();
+            }
+            catch (JsonException ex)
+            {
+                throw CreateInvalidResponseException(
+                    "Storage Intelligence disk analysis returned invalid JSON.",
+                    ex);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(readBuffer, clearArray: true);
+        }
+    }
+
+    private static void EnsureResponseCapacity(MemoryStream bufferedResponse, int requiredCapacity)
+    {
+        if (requiredCapacity <= bufferedResponse.Capacity)
+        {
+            return;
+        }
+
+        var doubledCapacity = bufferedResponse.Capacity == 0
+            ? InitialResponseCapacityBytes
+            : bufferedResponse.Capacity * 2L;
+        bufferedResponse.Capacity = (int)Math.Min(
+            ProvisionalMaxResponseSizeBytes,
+            Math.Max(requiredCapacity, doubledCapacity));
+    }
+
+    private static bool IsEmptyJsonContent(ReadOnlySpan<byte> content)
+    {
+        foreach (var value in content)
+        {
+            if (value is not ((byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n'))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static RequestFailedException CreateInvalidResponseException(
+        string message,
+        Exception? innerException = null) =>
+        new((int)HttpStatusCode.BadGateway, message, errorCode: null, innerException);
 
     private static string GetEnvironmentVariableOrDefault(string name, string defaultValue) =>
         Environment.GetEnvironmentVariable(name) is { Length: > 0 } value

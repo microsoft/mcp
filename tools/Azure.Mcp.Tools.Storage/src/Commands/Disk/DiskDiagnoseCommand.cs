@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Disk;
 using Azure.Mcp.Tools.Storage.Services;
+using Azure.ResourceManager.Compute;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -16,7 +19,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Disk;
     Id = "65d4c07d-212c-46c9-bf88-6991189aeb6e",
     Name = "diagnose",
     Title = "Diagnose Azure Disk Performance",
-    Description = "Diagnoses Azure virtual machine disk performance through the Storage Intelligence service. Identify the target with a standalone VM, VM scale set instance, or attached managed disk resource ID, or with subscription, resource group, and VM name. Diagnose all attached disks or select one or more named disks attached to a VM in a resource group. Optionally specify an ISO 8601 time window of up to 24 hours. Returns disk configuration, performance metrics, throttling intervals, per-LUN analysis, host-side latency metrics when provided by the service, and recommendations.",
+    Description = "Diagnoses Azure virtual machine disk performance through the Storage Intelligence service. The built-in endpoint and application scope target Azure public cloud. Identify the target with a standalone VM, canonical VM scale set instance, or attached managed disk resource ID, or with subscription, resource group, and VM name. Diagnose all attached disks or select up to 64 named disks attached to a VM in a resource group. Optionally specify an ISO 8601 time window with explicit UTC offsets of up to 24 hours. Returns disk configuration, performance metrics, throttling intervals, per-LUN analysis, host-side latency metrics when provided by the service, and recommendations.",
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -30,10 +33,17 @@ public sealed class DiskDiagnoseCommand(
     : AuthenticatedCommand<DiskDiagnoseOptions, DiskDiagnoseCommand.DiskDiagnoseCommandResult>
 {
     private const int MaxResourceIdLength = 2048;
-    private const int MaxDiskCount = 100;
     private static readonly ResourceType s_managedDiskResourceType = new("Microsoft.Compute/disks");
     private static readonly ResourceType s_virtualMachineResourceType = new("Microsoft.Compute/virtualMachines");
+    private static readonly ResourceType s_virtualMachineScaleSetResourceType = new("Microsoft.Compute/virtualMachineScaleSets");
     private static readonly ResourceType s_virtualMachineScaleSetVmResourceType = new("Microsoft.Compute/virtualMachineScaleSets/virtualMachines");
+    private static readonly string[] s_timestampFormats =
+    [
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'",
+        "yyyy-MM-dd'T'HH:mm:sszzz",
+        "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFzzz"
+    ];
     private readonly ILogger<DiskDiagnoseCommand> _logger = logger;
     private readonly IStorageIntelligenceService _storageIntelligenceService = storageIntelligenceService;
     private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver;
@@ -76,9 +86,9 @@ public sealed class DiskDiagnoseCommand(
             isVirtualMachineResource = true;
         }
 
-        if (options.Disk is { Length: > MaxDiskCount })
+        if (options.Disk is { Length: > DiskAnalysisRequest.MaxSubResourceIds })
         {
-            validationResult.Errors.Add($"--disk accepts at most {MaxDiskCount} attached disk names.");
+            validationResult.Errors.Add($"--disk accepts at most {DiskAnalysisRequest.MaxSubResourceIds} attached disk names.");
         }
         else if (options.Disk is not null)
         {
@@ -173,24 +183,61 @@ public sealed class DiskDiagnoseCommand(
             return false;
         }
 
-        try
-        {
-            var resourceId = new ResourceIdentifier(value);
-            isVirtualMachine = resourceId.ResourceType == s_virtualMachineResourceType
-                || resourceId.ResourceType == s_virtualMachineScaleSetVmResourceType;
-            if (resourceId.ResourceType == s_managedDiskResourceType || isVirtualMachine)
-            {
-                return true;
-            }
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        if (!value.StartsWith("/", StringComparison.Ordinal)
+            || value.StartsWith("//", StringComparison.Ordinal)
+            || value.IndexOfAny(['?', '#', '\\']) >= 0
+            || value.Split('/', StringSplitOptions.RemoveEmptyEntries).Any(segment => segment is "." or "..")
+            || !ResourceIdentifier.TryParse(value, out var resourceId)
+            || resourceId is null
+            || !Guid.TryParseExact(resourceId.SubscriptionId, "D", out _)
+            || string.IsNullOrWhiteSpace(resourceId.ResourceGroupName)
+            || string.IsNullOrWhiteSpace(resourceId.Name))
         {
             error = "The provided value is not a valid Azure resource ID.";
             return false;
         }
 
-        error = "--resource-id must identify a Microsoft.Compute/virtualMachines, Microsoft.Compute/virtualMachineScaleSets/virtualMachines, or Microsoft.Compute/disks resource.";
-        return false;
+        ResourceIdentifier expectedResourceId;
+        if (resourceId.ResourceType == s_managedDiskResourceType)
+        {
+            expectedResourceId = ManagedDiskResource.CreateResourceIdentifier(
+                resourceId.SubscriptionId,
+                resourceId.ResourceGroupName,
+                resourceId.Name);
+        }
+        else if (resourceId.ResourceType == s_virtualMachineResourceType)
+        {
+            isVirtualMachine = true;
+            expectedResourceId = VirtualMachineResource.CreateResourceIdentifier(
+                resourceId.SubscriptionId,
+                resourceId.ResourceGroupName,
+                resourceId.Name);
+        }
+        else if (resourceId.ResourceType == s_virtualMachineScaleSetVmResourceType
+            && resourceId.Parent is { } parent
+            && parent.ResourceType == s_virtualMachineScaleSetResourceType
+            && !string.IsNullOrWhiteSpace(parent.Name))
+        {
+            isVirtualMachine = true;
+            expectedResourceId = VirtualMachineScaleSetVmResource.CreateResourceIdentifier(
+                resourceId.SubscriptionId,
+                resourceId.ResourceGroupName,
+                parent.Name,
+                resourceId.Name);
+        }
+        else
+        {
+            error = "--resource-id must identify a Microsoft.Compute/virtualMachines, Microsoft.Compute/virtualMachineScaleSets/virtualMachines, or Microsoft.Compute/disks resource.";
+            return false;
+        }
+
+        if (!string.Equals(expectedResourceId.ToString(), resourceId.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            error = "The provided value is not a valid Azure resource ID.";
+            return false;
+        }
+
+        return true;
     }
 
     private static bool IsValidResourceGroupName(string? value) =>
@@ -218,14 +265,41 @@ public sealed class DiskDiagnoseCommand(
             return true;
         }
 
-        if (!DateTimeOffset.TryParse(value, out var parsedTimestamp))
+        if (!HasExplicitTimestampOffset(value)
+            || !DateTimeOffset.TryParseExact(
+                value,
+                s_timestampFormats,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal,
+                out var parsedTimestamp))
         {
-            validationResult.Errors.Add($"{optionName} must be a valid ISO 8601 timestamp.");
+            validationResult.Errors.Add($"{optionName} must be a valid ISO 8601 timestamp with an explicit UTC offset.");
             return false;
         }
 
         timestamp = parsedTimestamp;
         return true;
+    }
+
+    private static bool HasExplicitTimestampOffset(string value)
+    {
+        if (value.EndsWith('Z'))
+        {
+            return true;
+        }
+
+        if (value.Length < 6)
+        {
+            return false;
+        }
+
+        var offset = value.AsSpan(value.Length - 6);
+        return offset[0] is '+' or '-'
+            && char.IsAsciiDigit(offset[1])
+            && char.IsAsciiDigit(offset[2])
+            && offset[3] == ':'
+            && char.IsAsciiDigit(offset[4])
+            && char.IsAsciiDigit(offset[5]);
     }
 
     public record DiskDiagnoseCommandResult(JsonElement Analysis);
