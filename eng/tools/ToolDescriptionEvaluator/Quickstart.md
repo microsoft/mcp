@@ -2,6 +2,9 @@
 
 This tool helps you test and validate the descriptions of new Azure MCP Server tools. It checks how well your tool descriptions match real user prompts, ensuring users get the right tool when they ask for something.
 
+> [!NOTE]
+> **Fabric MCP tools: evaluation is optional.** Embedding scores, top-three rankings, and Azure OpenAI embedding access are not required for Fabric tool PRs. The setup and execution below are voluntary for Fabric; report `not run (optional for Fabric)` when not run. Azure and other non-Fabric evaluation requirements, including stricter toolset-specific gates, still apply to those tools, including in mixed PRs. Prompt-format and tool-catalog validation, applicable tests, code review, and required CI remain required. See the [evaluation policy](../../../CONTRIBUTING.md#tool-description-evaluation).
+
 The tool returns a confidence score between `0.00` and `1.00` for each tool-prompt combination. The higher the score, the better chance the tool will be selected given a specific prompt. Scores below `0.40` generally indicate low tool selection chances and tool descriptions should be improved.
 
 ## What It Does
@@ -16,7 +19,7 @@ The tool returns a confidence score between `0.00` and `1.00` for each tool-prom
 
 ### Requirements
 
-An Azure OpenAI deployment of the text embedding model `text-embedding-3-large`.
+Running the evaluator requires an Azure OpenAI deployment of the text embedding model `text-embedding-3-large`. This setup is not required for Fabric tool PRs.
 
 > For internal contributors, refer to the **Before creating a pull request** section of [this document](https://eng.ms/docs/products/azure-developer-experience/mcp/mcp-getting-started) to use our team's deployment and credentials.
 
@@ -37,20 +40,20 @@ Or copy `.env.example` to `.env` and fill in your credentials.
 2. Add test prompts for your tool to the appropriate server's test prompts file:
    - For Azure tools: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
    - For Fabric tools: `servers/Fabric.Mcp.Server/docs/e2eTestPrompts.md`
-3. Run the analyzer using PowerShell
+3. Run the analyzer using PowerShell (optional for Fabric tools)
 
     ```pwsh
     # For Azure MCP Server (default)
     ./scripts/Run-ToolDescriptionEvaluator.ps1
 
-    # For Fabric MCP Server
+    # For Fabric MCP Server (optional)
     ./scripts/Run-ToolDescriptionEvaluator.ps1 -Area "Acr"
 
     # Build the Azure.Mcp.Server as part of the run
     ./scripts/Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp
     ```
 
-4. Check if your tool ranks in the top 3 for the prompts (ideally #1) and with a score of at least `0.4`
+4. For Azure and other non-Fabric tools, check if your tool ranks in the top 3 for the prompts (ideally #1) and with a score of at least `0.4`, meeting any stricter toolset-specific gates. For Fabric tools, scores and rankings are feedback, not PR gates.
 5. Refine the description if needed and try again
 
 ### Testing a Single Tool Description
@@ -80,7 +83,7 @@ dotnet run -- --test-single-tool \
 By default, the tool tests Azure MCP Server tools. To test other servers:
 
 ```bash
-# Test Fabric MCP Server tools
+# Test Fabric MCP Server tools (optional)
 dotnet run -- --server "Fabric"
 
 # Use a specific executable path (useful for custom builds)
