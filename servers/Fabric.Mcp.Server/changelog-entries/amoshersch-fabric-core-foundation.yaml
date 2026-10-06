@@ -1,3 +1,0 @@
-changes:
-  - section: Other Changes
-    description: Extracted shared Fabric Core HTTP helpers and capacity metadata without adding or changing tools.
