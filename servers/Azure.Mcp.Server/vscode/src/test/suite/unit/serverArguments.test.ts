@@ -3,9 +3,21 @@
 
 import 'mocha';
 import * as assert from 'assert';
+import * as fs from 'fs';
+import * as path from 'path';
 import { buildServerArguments } from '../../../serverArguments';
 
 suite('Azure MCP Extension - server arguments', () => {
+    test('offers every enabled service namespace plus ALL for SSRF overrides', () => {
+        const manifest = readExtensionManifest();
+        const properties = manifest.contributes.configuration.properties;
+        const enabledNamespaces = properties['azureMcp.enabledServices'].items.enum;
+        const dangerouslyDisabledNamespaces =
+            properties['azureMcp.dangerouslyDisableSsrfProtectionsByNamespace'].items.enum;
+
+        assert.deepStrictEqual(dangerouslyDisabledNamespaces, [...enabledNamespaces, 'ALL']);
+    });
+
     test('keeps SSRF protections enabled by default', () => {
         const args = buildServerArguments(createConfiguration({}));
 
@@ -46,5 +58,22 @@ function createConfiguration(values: Readonly<Record<string, unknown>>) {
         get<T>(section: string): T | undefined {
             return values[section] as T | undefined;
         }
+    };
+}
+
+function readExtensionManifest(): ExtensionManifest {
+    const manifestPath = path.resolve(__dirname, '..', '..', '..', '..', 'package.json');
+    return JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as ExtensionManifest;
+}
+
+interface ExtensionManifest {
+    contributes: {
+        configuration: {
+            properties: Record<string, {
+                items: {
+                    enum: string[];
+                };
+            }>;
+        };
     };
 }
