@@ -45,12 +45,19 @@ Previews deleting the success ledger and reprocessing all eligible versions.
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [string] $PackagesDirectory = 'C:\Users\conniey\Downloads\azure.mcp',
+    [Parameter(Mandatory)]
+    [string] $PackagesDirectory,
     [string] $SuccessfulPathsFile,
     [string] $ExportUntil,
     [switch] $IsDryRun,
     [switch] $Force
 )
+
+$ErrorActionPreference = 'Stop'
+
+. $PSScriptRoot/../../../common/scripts/common.ps1
+
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $exportUntilVersion = if ($ExportUntil) {
     try {
@@ -61,12 +68,11 @@ $exportUntilVersion = if ($ExportUntil) {
     }
 }
 
-$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\..'))
 $SuccessfulPathsFile = if ($SuccessfulPathsFile) {
     [System.IO.Path]::GetFullPath($SuccessfulPathsFile)
 }
 else {
-    Join-Path $repositoryRoot '.work\ToolMetadataExporter\Export-DownloadedVersions.successful.txt'
+    Join-Path $RepoRoot '.work\ToolMetadataExporter\Export-DownloadedVersions.successful.txt'
 }
 
 if ($Force -and
@@ -75,16 +81,14 @@ if ($Force -and
     Remove-Item -LiteralPath $SuccessfulPathsFile -Force
 }
 
-$successfulPathsDirectory = Split-Path -Parent $SuccessfulPathsFile
-[System.IO.Directory]::CreateDirectory($successfulPathsDirectory) | Out-Null
-[System.IO.File]::Open($SuccessfulPathsFile, [System.IO.FileMode]::OpenOrCreate).Dispose()
-
 $successfulPaths = [System.Collections.Generic.HashSet[string]]::new(
     [System.StringComparer]::OrdinalIgnoreCase)
 
-foreach ($path in [System.IO.File]::ReadAllLines($SuccessfulPathsFile)) {
-    if (-not [string]::IsNullOrWhiteSpace($path)) {
-        $successfulPaths.Add([System.IO.Path]::GetFullPath($path.Trim())) | Out-Null
+if (Test-Path -LiteralPath $SuccessfulPathsFile -PathType Leaf) {
+    foreach ($path in Get-Content -LiteralPath $SuccessfulPathsFile) {
+        if (-not [string]::IsNullOrWhiteSpace($path)) {
+            $successfulPaths.Add([System.IO.Path]::GetFullPath($path.Trim())) | Out-Null
+        }
     }
 }
 
@@ -106,8 +110,7 @@ $packages = Get-ChildItem -LiteralPath $PackagesDirectory -Directory |
 Push-Location $PSScriptRoot
 try {
     foreach ($package in $packages) {
-        $azmcpExe = [System.IO.Path]::GetFullPath(
-            (Join-Path $package.Directory.FullName 'tools\any\win-x64\azmcp.exe'))
+        $azmcpExe = Join-Path $package.Directory.FullName 'tools\any\win-x64\azmcp.exe'
 
         if ($successfulPaths.Contains($azmcpExe)) {
             Write-Host "Skipping $($package.Version); '$azmcpExe' was exported successfully in a previous run."
@@ -130,9 +133,9 @@ try {
                 throw "Tool metadata export failed for version $($package.Version) with exit code $LASTEXITCODE."
             }
 
-            [System.IO.File]::AppendAllText(
-                $SuccessfulPathsFile,
-                "$azmcpExe$([System.Environment]::NewLine)")
+            $successfulPathsDirectory = Split-Path -Parent $SuccessfulPathsFile
+            New-Item -ItemType Directory -Path $successfulPathsDirectory -Force | Out-Null
+            Add-Content -LiteralPath $SuccessfulPathsFile -Value $azmcpExe
             $successfulPaths.Add($azmcpExe) | Out-Null
         }
     }
