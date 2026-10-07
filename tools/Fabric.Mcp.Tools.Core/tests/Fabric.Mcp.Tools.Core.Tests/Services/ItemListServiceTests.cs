@@ -405,7 +405,7 @@ public class ItemListServiceTests
             }
         });
 
-        Assert.Null(exception.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         Assert.Contains("existing-error", exception.Message);
         Assert.Equal(1, handler.CallCount);
     }

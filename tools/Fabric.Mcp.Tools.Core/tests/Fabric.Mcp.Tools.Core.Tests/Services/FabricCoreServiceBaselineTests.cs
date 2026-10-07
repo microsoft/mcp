@@ -128,15 +128,28 @@ public sealed class FabricCoreServiceBaselineTests()
     [Theory]
     [InlineData(false, HttpStatusCode.BadRequest)]
     [InlineData(true, HttpStatusCode.BadRequest)]
+    [InlineData(false, HttpStatusCode.Unauthorized)]
+    [InlineData(true, HttpStatusCode.Unauthorized)]
     [InlineData(false, HttpStatusCode.Forbidden)]
     [InlineData(true, HttpStatusCode.Forbidden)]
+    [InlineData(false, HttpStatusCode.NotFound)]
+    [InlineData(true, HttpStatusCode.NotFound)]
+    [InlineData(false, HttpStatusCode.Conflict)]
+    [InlineData(true, HttpStatusCode.Conflict)]
     [InlineData(false, HttpStatusCode.TooManyRequests)]
     [InlineData(true, HttpStatusCode.TooManyRequests)]
     [InlineData(false, HttpStatusCode.InternalServerError)]
     [InlineData(true, HttpStatusCode.InternalServerError)]
-    public async Task LegacyOperations_PreserveErrorMessageAndDoNotRetry(bool search, HttpStatusCode status)
+    [InlineData(false, HttpStatusCode.ServiceUnavailable)]
+    [InlineData(true, HttpStatusCode.ServiceUnavailable)]
+    public async Task LegacyOperations_PreserveErrorStatusAndMessageAndDoNotRetry(bool search, HttpStatusCode status)
     {
-        const string backendError = """{"errorCode":"OriginalError","message":"original-backend-text"}""";
+        var backendError = status switch
+        {
+            HttpStatusCode.Forbidden => """{"errorCode":"FeatureNotAvailable","message":"Feature is not available"}""",
+            HttpStatusCode.TooManyRequests => """{"errorCode":"CapacityLimitExceeded","message":"Capacity limit exceeded","isRetriable":true}""", // cspell:ignore Retriable
+            _ => """{"errorCode":"OriginalError","message":"original-backend-text"}"""
+        };
         using var response = new HttpResponseMessage(status) { Content = new StringContent(backendError) };
         response.Headers.RetryAfter = new(TimeSpan.FromSeconds(45));
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
@@ -146,7 +159,7 @@ public sealed class FabricCoreServiceBaselineTests()
         var exception = await Assert.ThrowsAsync<HttpRequestException>(() => InvokeAsync(service, search, TestContext.Current.CancellationToken));
 
         Assert.Equal($"Fabric API request failed with status {(int)status} ({status}): {backendError}", exception.Message);
-        Assert.Null(exception.StatusCode);
+        Assert.Equal(status, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 
@@ -186,11 +199,13 @@ public sealed class FabricCoreServiceBaselineTests()
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task LegacyOperations_PropagateTransportFailureWithoutRetry(bool search)
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(false, HttpStatusCode.ServiceUnavailable)]
+    [InlineData(true, HttpStatusCode.ServiceUnavailable)]
+    public async Task LegacyOperations_PropagateTransportFailureWithoutRetry(bool search, HttpStatusCode? status)
     {
-        var failure = new HttpRequestException("transport-failure", null, HttpStatusCode.ServiceUnavailable);
+        var failure = new HttpRequestException("transport-failure", null, status);
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromException<HttpResponseMessage>(failure));
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, CreateCredential());
@@ -198,6 +213,7 @@ public sealed class FabricCoreServiceBaselineTests()
         var exception = await Assert.ThrowsAsync<HttpRequestException>(() => InvokeAsync(service, search, TestContext.Current.CancellationToken));
 
         Assert.Same(failure, exception);
+        Assert.Equal(status, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 

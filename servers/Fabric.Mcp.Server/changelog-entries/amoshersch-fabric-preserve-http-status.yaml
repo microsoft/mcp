@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Create Item and Catalog Search errors losing HTTP status codes, with actionable guidance for feature availability and throttling failures."

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
@@ -66,5 +67,33 @@ public sealed class ItemCreateCommand(
         }
 
         return context.Response;
+    }
+
+    protected override string GetErrorMessage(Exception ex)
+    {
+        if (ex is not HttpRequestException { StatusCode: { } statusCode })
+        {
+            return base.GetErrorMessage(ex);
+        }
+
+        var message = statusCode switch
+        {
+            HttpStatusCode.BadRequest =>
+                "Fabric rejected the item creation request. Check the item type, display name, and description.",
+            HttpStatusCode.Unauthorized =>
+                "Authentication failed while creating the Fabric item. Check the configured Fabric identity and its access to the workspace.",
+            HttpStatusCode.Forbidden =>
+                "Fabric denied item creation. Check workspace permissions and whether the item type is supported and enabled for the tenant and capacity.",
+            HttpStatusCode.NotFound =>
+                "The Fabric workspace was not found, or the caller does not have access.",
+            HttpStatusCode.Conflict =>
+                "Item creation conflicts with an existing item name or workspace state. Check for an existing item before retrying.",
+            HttpStatusCode.TooManyRequests =>
+                "Fabric throttled item creation or reached a capacity limit. Retry the request later.",
+            _ =>
+                $"Fabric item creation failed with HTTP {(int)statusCode}."
+        };
+
+        return $"{message} Details: {ex.Message}";
     }
 }

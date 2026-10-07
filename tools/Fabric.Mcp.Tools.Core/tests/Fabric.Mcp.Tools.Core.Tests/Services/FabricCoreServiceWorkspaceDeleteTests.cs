@@ -435,7 +435,7 @@ public class FabricCoreServiceWorkspaceDeleteTests()
             }
         });
 
-        Assert.Null(exception.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, exception.StatusCode);
         Assert.Contains("403", exception.Message);
         Assert.Contains("legacy-error", exception.Message);
         Assert.Equal(1, handler.CallCount);

@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.Core.Tests.Commands;
@@ -146,6 +147,56 @@ public class CatalogSearchCommandTests : CommandUnitTestsBase<CatalogSearchComma
         var response = await ExecuteCommandAsync("--search", "Sales", "--page-size", pageSize);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest, "search criteria, filter, page size, and continuation token")]
+    [InlineData(HttpStatusCode.Unauthorized, "configured Fabric identity")]
+    [InlineData(HttpStatusCode.Forbidden, "supported and enabled for the tenant and capacity")]
+    [InlineData(HttpStatusCode.NotFound, "catalog search resource was not found")]
+    [InlineData(HttpStatusCode.Conflict, "Review the error details before retrying")]
+    [InlineData(HttpStatusCode.TooManyRequests, "Retry the request later")]
+    [InlineData(HttpStatusCode.InternalServerError, "HTTP 500")]
+    [InlineData(HttpStatusCode.ServiceUnavailable, "HTTP 503")]
+    public async Task ExecuteAsync_PreservesHttpStatusAndProvidesGuidance(HttpStatusCode status, string guidance)
+    {
+        Service.SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("upstream-error", null, status));
+
+        var response = await ExecuteCommandAsync("--search", "Sales");
+
+        Assert.Equal(status, response.Status);
+        Assert.Contains(guidance, response.Message);
+        Assert.Contains("upstream-error", response.Message);
+        Assert.DoesNotContain("Service unavailable or network connectivity issues", response.Message);
+        Assert.NotNull(response.Results);
+        await Service.Received(1).SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesNetworkFallback_WhenHttpStatusIsMissing()
+    {
+        Service.SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("network-failure"));
+
+        var response = await ExecuteCommandAsync("--search", "Sales");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
+        Assert.StartsWith("Service unavailable or network connectivity issues. Details: network-failure", response.Message);
+        await Service.Received(1).SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesNonHttpErrorMapping()
+    {
+        Service.SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("configuration-error"));
+
+        var response = await ExecuteCommandAsync("--search", "Sales");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+        Assert.StartsWith("configuration-error.", response.Message);
         await Service.Received(1).SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>());
     }
 }

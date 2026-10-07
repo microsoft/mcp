@@ -360,7 +360,7 @@ public class WorkspaceGetServiceTests()
                 }
             });
             Assert.Contains("legacy-service-error", exception.Message);
-            Assert.Null(exception.StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         }
         else if (createItem)
         {

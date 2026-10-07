@@ -398,7 +398,7 @@ public class FabricCoreServiceWorkspaceUpdateTests()
         {
             var exception = await Assert.ThrowsAsync<HttpRequestException>(ExecuteAsync);
             Assert.Contains("existing-error", exception.Message);
-            Assert.Null(exception.StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         }
         else
         {

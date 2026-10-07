@@ -431,7 +431,7 @@ public sealed class FabricCoreServiceItemUpdateTests()
         });
 
         Assert.Contains("existing error", error.Message);
-        Assert.Null(error.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, error.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 

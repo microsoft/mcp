@@ -566,7 +566,7 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
         });
 
         Assert.Contains("existing failure", exception.Message);
-        Assert.Null(exception.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 }

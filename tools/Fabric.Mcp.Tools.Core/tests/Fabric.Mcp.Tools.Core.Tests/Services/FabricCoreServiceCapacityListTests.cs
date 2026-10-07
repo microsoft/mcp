@@ -530,7 +530,7 @@ public class FabricCoreServiceCapacityListTests()
 
         Assert.Contains("status 400", exception.Message);
         Assert.Contains("existing-error", exception.Message);
-        Assert.Null(exception.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 }

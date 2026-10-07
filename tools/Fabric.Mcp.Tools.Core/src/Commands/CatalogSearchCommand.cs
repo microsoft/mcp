@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
@@ -64,5 +65,33 @@ public sealed class CatalogSearchCommand(ILogger<CatalogSearchCommand> logger, I
         }
 
         return context.Response;
+    }
+
+    protected override string GetErrorMessage(Exception ex)
+    {
+        if (ex is not HttpRequestException { StatusCode: { } statusCode })
+        {
+            return base.GetErrorMessage(ex);
+        }
+
+        var message = statusCode switch
+        {
+            HttpStatusCode.BadRequest =>
+                "Fabric rejected the catalog search. Check the search criteria, filter, page size, and continuation token.",
+            HttpStatusCode.Unauthorized =>
+                "Authentication failed while searching the Fabric catalog. Check the configured Fabric identity and its catalog access.",
+            HttpStatusCode.Forbidden =>
+                "Fabric denied the catalog search. Check permissions and whether catalog search is supported and enabled for the tenant and capacity.",
+            HttpStatusCode.NotFound =>
+                "The Fabric catalog search resource was not found, or the caller does not have access.",
+            HttpStatusCode.Conflict =>
+                "The catalog search conflicts with the current Fabric state. Review the error details before retrying.",
+            HttpStatusCode.TooManyRequests =>
+                "Fabric throttled the catalog search or reached a capacity limit. Retry the request later.",
+            _ =>
+                $"Fabric catalog search failed with HTTP {(int)statusCode}."
+        };
+
+        return $"{message} Details: {ex.Message}";
     }
 }
