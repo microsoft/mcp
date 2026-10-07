@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -23,6 +24,43 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         var jsonContent = JsonSerializer.Serialize(request, CoreJsonContext.Default.CreateItemRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
         return await JsonSerializer.DeserializeAsync<FabricItem>(response, CoreJsonContext.Default.FabricItem, cancellationToken) ?? new FabricItem();
+    }
+
+    /// <inheritdoc />
+    public async Task<FabricCapacityMetadata> GetCapacityAsync(string capacityId, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(capacityId, out var parsedCapacityId) || parsedCapacityId == Guid.Empty)
+        {
+            throw new ArgumentException("Capacity ID must be a nonempty UUID.", nameof(capacityId));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/capacities/{parsedCapacityId:D}";
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Get, url,
+            completionOption: HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken: cancellationToken);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new FabricCapacityGetThrottledException(retryAfter);
+            }
+
+            var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
+            throw new HttpRequestException("Unable to retrieve Fabric capacity metadata.", null, statusCode);
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var capacity = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.FabricCapacityMetadata, cancellationToken);
+
+        if (!FabricCapacityMetadata.IsValid(capacity) || capacity.Id != parsedCapacityId)
+        {
+            throw new JsonException("Fabric returned invalid capacity metadata.");
+        }
+
+        return capacity;
     }
 
     public async Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default)
