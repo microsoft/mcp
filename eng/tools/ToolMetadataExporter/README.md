@@ -6,7 +6,7 @@ Each run:
 
 1. Invokes `server info` and `tools list` on the configured MCP executable.
 1. Writes the complete tool catalog to JSON.
-1. Queries Kusto for the latest known tool state.
+1. Queries Kusto for the latest known tool state for that server.
 1. Writes detected changes locally.
 1. Ingests changes unless dry-run mode is enabled.
 
