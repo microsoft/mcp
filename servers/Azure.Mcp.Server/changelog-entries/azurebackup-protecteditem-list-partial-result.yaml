@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed `azurebackup protecteditem get` silently returning an incomplete or empty list for Data Protection Backup vaults; when a backup instance repeatedly fails to deserialize (commonly an empty or malformed resourceGroupId) the truncated listing now surfaces as an error instead of being reported as a successful result."

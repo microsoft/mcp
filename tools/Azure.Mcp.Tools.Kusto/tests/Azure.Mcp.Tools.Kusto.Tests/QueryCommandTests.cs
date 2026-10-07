@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -110,6 +111,20 @@ public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCo
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
+
+        var logCall = Assert.Single(Logger.ReceivedCalls(), call =>
+            call.GetMethodInfo().Name == nameof(ILogger.Log) &&
+            call.GetArguments()[0] is LogLevel.Error);
+        var logArguments = logCall.GetArguments();
+        var logMessage = logArguments[2]?.ToString();
+        var expectedCluster = useClusterUri ? "https://mycluster.kusto.windows.net" : "mycluster";
+
+        Assert.Equal(
+            $"An exception occurred querying Kusto. Cluster: {expectedCluster}, Database: db1, ExceptionType: Exception",
+            logMessage);
+        Assert.Null(logArguments[3]);
+        Assert.DoesNotContain("StormEvents | take 1", logMessage, StringComparison.Ordinal);
+        Assert.DoesNotContain("Test error", logMessage, StringComparison.Ordinal);
     }
 
     [Fact]
