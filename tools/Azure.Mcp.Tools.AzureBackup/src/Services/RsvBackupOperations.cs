@@ -194,10 +194,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             var result = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
 
             var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            jobId ??= ExtractOperationIdFromResponse(result.GetRawResponse());
+            var operationId = ExtractOperationIdFromResponse(result.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId,
+                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId, operationId,
                 "Workload protection", cancellationToken);
         }
 
@@ -241,10 +241,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             var fsResult = await fsProtectedItemResource.UpdateAsync(WaitUntil.Started, fsProtectedItemData, cancellationToken);
 
             var fsJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            fsJobId ??= ExtractOperationIdFromResponse(fsResult.GetRawResponse());
+            var fsOperationId = ExtractOperationIdFromResponse(fsResult.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId,
+                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId, fsOperationId,
                 "File share protection", cancellationToken);
         }
 
@@ -275,10 +275,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vmResult = await vmProtectedItemResource.UpdateAsync(WaitUntil.Started, vmProtectedItemData, cancellationToken);
 
         var vmJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-        vmJobId ??= ExtractOperationIdFromResponse(vmResult.GetRawResponse()); // Fallback to operation ID
+        var vmOperationId = ExtractOperationIdFromResponse(vmResult.GetRawResponse());
 
         return await BuildRsvProtectResultAsync(
-            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId,
+            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId, vmOperationId,
             "VM protection", cancellationToken);
     }
 
@@ -2238,12 +2238,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         var protectedItemResource = armClient.GetBackupProtectedItemResource(protectedItemId);
         var operation = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
-        var jobId = ExtractOperationIdFromResponse(operation.GetRawResponse());
+        var operationId = ExtractOperationIdFromResponse(operation.GetRawResponse());
 
-        return new OperationResult("Accepted", jobId,
-            jobId != null
-                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup job get --job {jobId}' to monitor progress."
-                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'.");
+        return new OperationResult("Accepted", JobId: null,
+            string.IsNullOrEmpty(operationId)
+                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup protecteditem get' to verify."
+                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Operation id '{operationId}' tracks the request (it is not a backup job id); use 'azurebackup protecteditem get' to verify.",
+            OperationId: operationId);
     }
 
     /// <summary>
@@ -2279,16 +2280,27 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     /// </summary>
     private static async Task<ProtectResult> BuildRsvProtectResultAsync(
         ArmClient armClient, string subscription, string resourceGroup, string vaultName,
-        string protectedItemName, string? jobId, string operationDescription,
+        string protectedItemName, string? jobId, string? operationId, string operationDescription,
         CancellationToken cancellationToken)
     {
+        // Only a genuine ConfigureBackup job id (found via FindLatestJobIdAsync) can be polled
+        // or queried with 'azurebackup job get'. The async operation id from the PUT response is
+        // NOT a job id, so when no job is available we surface it separately as OperationId and
+        // avoid polling a non-existent job (which previously wasted the full 12-minute budget and
+        // returned a "jobId" that 'azurebackup job get' could not resolve).
         if (string.IsNullOrEmpty(jobId))
         {
+            var acceptedMessage = string.IsNullOrEmpty(operationId)
+                ? $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify."
+                : $"{operationDescription} initiated. Operation id '{operationId}' tracks the request " +
+                  "(it is not a backup job id); use 'azurebackup protecteditem get' to verify.";
+
             return new ProtectResult(
                 "Accepted",
                 protectedItemName,
-                null,
-                $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify.");
+                JobId: null,
+                acceptedMessage,
+                OperationId: operationId);
         }
 
         var finalJob = await WaitForJobAsync(
@@ -2301,7 +2313,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                 protectedItemName,
                 jobId,
                 $"{operationDescription} is still running after the polling budget elapsed. " +
-                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.");
+                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.",
+                OperationId: operationId);
         }
 
         var status = finalJob.Status ?? "Unknown";
@@ -2319,7 +2332,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             jobId,
             message,
             ProtectionStatus: null,
-            ErrorMessage: isFailure ? errorMessage ?? status : null);
+            ErrorMessage: isFailure ? errorMessage ?? status : null,
+            OperationId: operationId);
     }
 
     /// <summary>
