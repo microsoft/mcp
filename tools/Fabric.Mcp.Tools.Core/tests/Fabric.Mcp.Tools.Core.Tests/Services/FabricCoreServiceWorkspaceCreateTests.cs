@@ -499,14 +499,14 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
         using var response = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(createItem
-                ? """{"id":"item-id","displayName":"Existing item","type":"Lakehouse","workspaceId":"workspace-id"}"""
+                ? $$"""{"id":"item-id","displayName":"Existing item","type":"Lakehouse","workspaceId":"{{WorkspaceCreateTestData.WorkspaceId}}"}"""
                 : """{"value":[{"id":"item-id","displayName":"Existing item","type":"Lakehouse"}],"continuationToken":"cursor"}""")
         };
         using var handler = new FabricCoreHttpMessageHandler(async (request, cancellationToken) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
             Assert.Equal(createItem
-                ? "https://api.fabric.microsoft.com/v1/workspaces/workspace-id/items"
+                ? $"https://api.fabric.microsoft.com/v1/workspaces/{WorkspaceCreateTestData.WorkspaceId}/items"
                 : "https://api.fabric.microsoft.com/v1/catalog/search", request.RequestUri?.AbsoluteUri);
             Assert.Equal("offline-token", request.Headers.Authorization?.Parameter);
             using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
@@ -528,10 +528,10 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
 
         if (createItem)
         {
-            var result = await service.CreateItemAsync("workspace-id",
+            var result = await service.CreateItemAsync(WorkspaceCreateTestData.WorkspaceId,
                 new() { DisplayName = "Existing item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
             Assert.Equal("item-id", result.Id);
-            Assert.Equal("workspace-id", result.WorkspaceId);
+            Assert.Equal(WorkspaceCreateTestData.WorkspaceId, result.WorkspaceId);
         }
         else
         {
@@ -557,7 +557,7 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
         {
             if (createItem)
             {
-                await service.CreateItemAsync("workspace-id", new() { DisplayName = "Item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
+                await service.CreateItemAsync(WorkspaceCreateTestData.WorkspaceId, new() { DisplayName = "Item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
             }
             else
             {

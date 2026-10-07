@@ -349,7 +349,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 | Tool Name | Description |
 |-----------|-------------|
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
-| `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
+| `core_create-item` | Creates a Fabric item in a workspace identified by UUID, using its display name, item type, and optional description. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
@@ -358,9 +358,41 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
-| `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
+| `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
 | `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
+
+**Create Item (`core_create-item`)**
+
+Calls the [Create Item API](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) once with `display-name`, `item-type`, and optional `description`. Supply a nonempty workspace UUID using `workspace-id` or the backward-compatible `workspace` alias. Workspace names are not resolved. A `workspace-id` that is not empty or whitespace takes precedence when both options are supplied, even if it is invalid; the command does not silently fall back to the alias. Invalid and all-zero UUIDs are rejected before authentication or HTTP, and accepted UUID formats are normalized in the request URL.
+
+This example **creates a real item** when run with authorized credentials:
+
+```powershell
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Sales" --item-type Lakehouse
+```
+
+The caller needs **Contributor or higher workspace access**. Delegated calls require `Item.ReadWrite.All` or the item-specific `ReadWrite.All` scope. Non-Power BI items require a supported Fabric capacity and [tenant/capacity settings that enable Fabric item creation](https://learn.microsoft.com/fabric/admin/fabric-switch); Power BI items require the appropriate license. Service-principal and managed-identity support depends on the item type. Item types remain strings rather than a fixed client-side list.
+
+Display names must follow the item's naming rules, and descriptions allow at most 256 characters. The tool does not supply item definitions, creation payloads, folders, or sensitivity-label settings. Item types that require a definition or creation payload need a different creation path. A synchronous response returns the existing typed `results.item` payload. The tool does not poll long-running operations or confirm completion from HTTP 202; an accepted asynchronous request is not a completed creation.
+
+Failures preserve the original status and return sanitized guidance without raw exception messages, API bodies, types, stack traces, or local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; HTTP 429 advises retrying later without an automatic retry. Network failures retain HTTP 503. After a timeout, cancellation, network failure, or invalid response, check whether the item was created before retrying.
+
+**Catalog Search (`core_search-catalog`)**
+
+Calls the [Catalog Search API](https://learn.microsoft.com/rest/api/fabric/core/catalog/search) for one page of metadata visible to the caller. Delegated calls require `Catalog.Read.All`; catalog discovery does not grant access to item contents.
+
+```powershell
+# Initial page.
+fabmcp core search-catalog --search "Sales" --filter "Type eq 'Report'" --page-size 25
+
+# Next page: copy the token unchanged; do not repeat search or filter.
+fabmcp core search-catalog --continuation-token '<token from the preceding page>'
+```
+
+A continuation token already carries the original search, filter, and page size. Combining `continuation-token` with `search` or `filter` is rejected locally with HTTP 400 before service, authentication, or network calls; supplied criteria are never silently dropped. `page-size` remains optional and must be between 1 and 1000 when supplied, including with a token.
+
+Success keeps the existing nested command envelope: entries are in `results.results.value`, and the next token is in `results.results.continuationToken`. Entries retain their typed metadata and available `hierarchy.workspace` information. There is no all-pages fetch, polling, or automatic retry. HTTP failures retain their original status with sanitized messages, while status-less network failures retain HTTP 503; raw exception details are not included in public error results.
 
 **Get Capacity (`core_get-capacity`)**
 

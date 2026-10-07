@@ -193,6 +193,25 @@ public sealed class ItemUpdateCommandTests() : CommandUnitTestsBase<ItemUpdateCo
         AssertSanitized(response);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData(7)]
+    public async Task ExecuteAsync_NotFoundHasOneSeparatorBeforeMitigation(int? retryAfterSeconds)
+    {
+        Service.UpdateItemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<UpdateItemRequest>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ItemUpdateRequestException(HttpStatusCode.NotFound, retryAfterSeconds));
+
+        var response = await ExecuteWithUpdateAsync("--description", "Updated");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        var retryGuidance = retryAfterSeconds is null ? "" : " Wait at least 7 seconds before another request.";
+        Assert.Equal(
+            "The Fabric workspace or item was not found, or the caller does not have access." + retryGuidance +
+            " To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.",
+            response.Message);
+        AssertSanitized(response);
+    }
+
     [Fact]
     public async Task ExecuteAsync_SanitizesAuthenticationFailure()
     {

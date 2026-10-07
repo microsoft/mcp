@@ -122,6 +122,6 @@ public sealed class ItemUpdateCommand(
             message += $" Wait at least {seconds.ToString(CultureInfo.InvariantCulture)} seconds before another request.";
         }
 
-        return message;
+        return message.TrimEnd('.');
     }
 }

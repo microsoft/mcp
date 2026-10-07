@@ -5,6 +5,7 @@ using System.Net;
 using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
+using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -14,6 +15,8 @@ namespace Fabric.Mcp.Tools.Core.Tests.Commands;
 
 public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IFabricCoreService>
 {
+    private const string WorkspaceId = "cfafbeb1-8037-4d0c-896e-a46fb27ff229";
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -68,16 +71,16 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     public async Task ExecuteAsync_ReturnsItem_WhenCreationSucceeds()
     {
         Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new FabricItem { Id = "item-id", DisplayName = "Sales", Type = "Lakehouse", WorkspaceId = "workspace-id" });
+            .Returns(new FabricItem { Id = "item-id", DisplayName = "Sales", Type = "Lakehouse", WorkspaceId = WorkspaceId });
 
-        var response = await ExecuteCommandAsync("--workspace-id", "workspace-id", "--display-name", "Sales", "--item-type", "Lakehouse");
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
 
         var result = ValidateAndDeserializeResponse(response, CoreJsonContext.Default.ItemCreateCommandResult);
         Assert.Equal("item-id", result.Item.Id);
         Assert.Equal("Sales", result.Item.DisplayName);
         Assert.Equal("Lakehouse", result.Item.Type);
-        Assert.Equal("workspace-id", result.Item.WorkspaceId);
-        await Service.Received(1).CreateItemAsync("workspace-id", Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        Assert.Equal(WorkspaceId, result.Item.WorkspaceId);
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -92,41 +95,140 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     public async Task ExecuteAsync_PreservesHttpStatusAndProvidesGuidance(HttpStatusCode status, string guidance)
     {
         Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("upstream-error", null, status));
+            .ThrowsAsync(new HttpRequestException(FabricCoreErrorTestData.PrivateDetails, null, status));
 
-        var response = await ExecuteCommandAsync("--workspace-id", "workspace-id", "--display-name", "Sales", "--item-type", "Lakehouse");
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
 
         Assert.Equal(status, response.Status);
         Assert.Contains(guidance, response.Message);
-        Assert.Contains("upstream-error", response.Message);
         Assert.DoesNotContain("Service unavailable or network connectivity issues", response.Message);
-        Assert.NotNull(response.Results);
-        await Service.Received(1).CreateItemAsync("workspace-id", Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        FabricCoreErrorTestData.AssertSanitized(response);
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_PreservesNetworkFallback_WhenHttpStatusIsMissing()
     {
         Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("network-failure"));
+            .ThrowsAsync(new HttpRequestException(FabricCoreErrorTestData.PrivateDetails));
 
-        var response = await ExecuteCommandAsync("--workspace-id", "workspace-id", "--display-name", "Sales", "--item-type", "Lakehouse");
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
-        Assert.StartsWith("Service unavailable or network connectivity issues. Details: network-failure", response.Message);
-        await Service.Received(1).CreateItemAsync("workspace-id", Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        Assert.Contains("network connectivity", response.Message);
+        Assert.Contains("Check whether the item was created before retrying", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("credentials", HttpStatusCode.Unauthorized)]
+    [InlineData("authentication", HttpStatusCode.Unauthorized)]
+    [InlineData("argument", HttpStatusCode.BadRequest)]
+    [InlineData("configuration", HttpStatusCode.UnprocessableEntity)]
+    [InlineData("json", HttpStatusCode.InternalServerError)]
+    [InlineData("timeout", HttpStatusCode.GatewayTimeout)]
+    [InlineData("task-canceled", HttpStatusCode.GatewayTimeout)]
+    [InlineData("operation-canceled", HttpStatusCode.InternalServerError)]
+    [InlineData("service", HttpStatusCode.Forbidden)]
+    [InlineData("unexpected", HttpStatusCode.InternalServerError)]
+    public async Task ExecuteAsync_SanitizesOtherFailuresWithoutChangingStatus(string failure, HttpStatusCode status)
+    {
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(FabricCoreErrorTestData.CreateException(failure));
+
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
+
+        Assert.Equal(status, response.Status);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_PreservesNonHttpErrorMapping()
+    public async Task ExecuteAsync_SanitizesParserErrorsBeforeService()
+    {
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse",
+            "--unknown", FabricCoreErrorTestData.PrivateDetails);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid item creation request", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("workspace-name")]
+    [InlineData("not-a-uuid")]
+    [InlineData("../other?token=private")]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    public async Task ExecuteAsync_RejectsInvalidWorkspaceBeforeService(string? workspace)
+    {
+        List<string> args = ["--display-name", "Sales", "--item-type", "Lakehouse"];
+        if (workspace is not null)
+        {
+            args.AddRange(["--workspace-id", workspace]);
+        }
+
+        var response = await ExecuteCommandAsync([.. args]);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("UUID", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("--workspace-id")]
+    [InlineData("--workspace")]
+    public async Task ExecuteAsync_AcceptsWorkspaceUuidAndCompatibilityAlias(string option)
     {
         Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("configuration-error"));
+            .Returns(new FabricItem());
 
-        var response = await ExecuteCommandAsync("--workspace-id", "workspace-id", "--display-name", "Sales", "--item-type", "Lakehouse");
+        var response = await ExecuteCommandAsync(option, WorkspaceId, "--display-name", "Sales", "--item-type", "FutureItemType");
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
-        Assert.StartsWith("configuration-error.", response.Message);
-        await Service.Received(1).CreateItemAsync("workspace-id", Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateItemAsync(WorkspaceId,
+            Arg.Is<CreateItemRequest>(request => request.Type == "FutureItemType"), TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData("workspace-name")]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    public async Task ExecuteAsync_RejectsInvalidWorkspaceAlias(string workspace)
+    {
+        var response = await ExecuteCommandAsync("--workspace", workspace, "--display-name", "Sales", "--item-type", "Lakehouse");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(WorkspaceId, "ignored-workspace-name", WorkspaceId)]
+    [InlineData("", WorkspaceId, WorkspaceId)]
+    [InlineData(" ", WorkspaceId, WorkspaceId)]
+    public async Task ExecuteAsync_PreservesWorkspaceIdPrecedence(string workspaceId, string workspace, string expected)
+    {
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
+            .Returns(new FabricItem());
+
+        var response = await ExecuteCommandAsync("--workspace-id", workspaceId, "--workspace", workspace,
+            "--display-name", "Sales", "--item-type", "Lakehouse");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateItemAsync(expected, Arg.Any<CreateItemRequest>(), TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DoesNotFallBackFromInvalidCanonicalWorkspaceId()
+    {
+        var response = await ExecuteCommandAsync("--workspace-id", "invalid-name", "--workspace", WorkspaceId,
+            "--display-name", "Sales", "--item-type", "Lakehouse");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
     }
 }

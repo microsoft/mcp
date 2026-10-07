@@ -1,3 +1,7 @@
 changes:
   - section: "Bugs Fixed"
-    description: "Fixed Create Item and Catalog Search errors losing HTTP status codes, with actionable guidance for feature availability and throttling failures."
+    description: "Preserved Create Item and Catalog Search HTTP error statuses while sanitizing public exception details and providing actionable feature-availability and throttling guidance."
+  - section: "Bugs Fixed"
+    description: "Validated Create Item workspace UUIDs while retaining the workspace alias, corrected Catalog Search continuation requests, and clarified tool requirements and limitations."
+  - section: "Bugs Fixed"
+    description: "Fixed duplicate punctuation before troubleshooting guidance in Update Item errors."

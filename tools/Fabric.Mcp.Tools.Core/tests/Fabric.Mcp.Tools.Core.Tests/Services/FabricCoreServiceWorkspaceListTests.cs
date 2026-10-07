@@ -438,12 +438,12 @@ public class FabricCoreServiceWorkspaceListTests()
     public async Task SharedRequestHelper_PreservesExistingPostOperations(bool createItem)
     {
         using var response = WorkspaceListTestData.CreateResponse(createItem
-            ? """{"id":"item","displayName":"Lakehouse","type":"Lakehouse","workspaceId":"workspace"}"""
+            ? $$"""{"id":"item","displayName":"Lakehouse","type":"Lakehouse","workspaceId":"{{WorkspaceListTestData.WorkspaceId}}"}"""
             : """{"value":[]}""");
         using var handler = new FabricCoreHttpMessageHandler(async (request, cancellationToken) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Equal(createItem ? "/v1/workspaces/workspace/items" : "/v1/catalog/search", request.RequestUri?.AbsolutePath);
+            Assert.Equal(createItem ? $"/v1/workspaces/{WorkspaceListTestData.WorkspaceId}/items" : "/v1/catalog/search", request.RequestUri?.AbsolutePath);
             Assert.NotNull(request.Content);
             using var body = JsonDocument.Parse(await request.Content.ReadAsStringAsync(cancellationToken));
             Assert.Equal(createItem ? "Lakehouse" : "finance", body.RootElement.GetProperty(createItem ? "displayName" : "search").GetString());
@@ -454,7 +454,7 @@ public class FabricCoreServiceWorkspaceListTests()
 
         if (createItem)
         {
-            var item = await service.CreateItemAsync("workspace", new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
+            var item = await service.CreateItemAsync(WorkspaceListTestData.WorkspaceId, new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
             Assert.Equal("item", item.Id);
         }
         else

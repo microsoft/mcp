@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Identity;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
+using Fabric.Mcp.Tools.Core.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -15,7 +17,14 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Id = "3b8bc9c0-b833-4a61-9278-d58e366a70d7",
     Name = "search-catalog",
     Title = "Search Catalog",
-    Description = "Searches the Microsoft Fabric OneLake catalog for items matching the specified criteria. Supports cross-workspace search over catalog metadata and returns results filtered to entries the calling principal is authorized to access. Use this when the user wants to discover or find Fabric items (Lakehouse, Report, Notebook, and other item types) across workspaces by name, description, or workspace name. Optionally filter by item type.",
+    Description = """
+        Searches one page of Microsoft Fabric OneLake catalog metadata across workspaces, limited to entries
+        the calling principal can access. Find Fabric items by name, description, or workspace name, optionally
+        filtering by item type. Returns typed entries with available workspace hierarchy and a continuation token.
+        For the next page, send the returned continuation-token without search or filter: the token already
+        carries the original search, filter, and page size. An explicitly supplied page-size must be 1 through 1000.
+        Does not fetch all pages, read item data, or retry automatically. Delegated callers need Catalog.Read.All.
+        """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
@@ -33,10 +42,7 @@ public sealed class CatalogSearchCommand(ILogger<CatalogSearchCommand> logger, I
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.PageSize is < 1 or > 1000)
-        {
-            validationResult.Errors.Add("Page size must be between 1 and 1000.");
-        }
+        CatalogSearchInputValidator.Validate(options.Search, options.Filter, options.PageSize, options.ContinuationToken, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CatalogSearchOptions options, CancellationToken cancellationToken)
@@ -67,31 +73,42 @@ public sealed class CatalogSearchCommand(ILogger<CatalogSearchCommand> logger, I
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex)
+    protected override void HandleException(CommandContext context, Exception ex)
     {
-        if (ex is not HttpRequestException { StatusCode: { } statusCode })
+        base.HandleException(context, ex);
+        context.Response.Results = null;
+        if (ex is CommandValidationException)
         {
-            return base.GetErrorMessage(ex);
+            context.Response.Message = "Invalid catalog search request. Check option names and values; page-size must be an integer from 1 through 1000.";
         }
+    }
 
-        var message = statusCode switch
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        CredentialUnavailableException =>
+            "Fabric credentials are unavailable. Authenticate the configured Fabric identity before searching the catalog",
+        HttpRequestException { StatusCode: null } =>
+            "Service unavailable or network connectivity issues prevented the Fabric catalog search. Check connectivity and retry later",
+        OperationCanceledException or TimeoutException =>
+            "The Fabric catalog search timed out or was canceled. Retry the search later",
+        _ => GetStatusCode(ex) switch
         {
             HttpStatusCode.BadRequest =>
-                "Fabric rejected the catalog search. Check the search criteria, filter, page size, and continuation token.",
+                "Fabric rejected the catalog search. Check the search criteria, filter, page size, and continuation token",
             HttpStatusCode.Unauthorized =>
-                "Authentication failed while searching the Fabric catalog. Check the configured Fabric identity and its catalog access.",
+                "Authentication failed while searching the Fabric catalog. Check the configured Fabric identity and its catalog access",
             HttpStatusCode.Forbidden =>
-                "Fabric denied the catalog search. Check permissions and whether catalog search is supported and enabled for the tenant and capacity.",
+                "Fabric denied the catalog search. Check permissions and whether catalog search is supported and enabled for the tenant and capacity",
             HttpStatusCode.NotFound =>
-                "The Fabric catalog search resource was not found, or the caller does not have access.",
+                "The Fabric catalog search resource was not found, or the caller does not have access",
             HttpStatusCode.Conflict =>
-                "The catalog search conflicts with the current Fabric state. Review the error details before retrying.",
+                "The catalog search conflicts with the current Fabric state. Check the catalog state before retrying",
             HttpStatusCode.TooManyRequests =>
-                "Fabric throttled the catalog search or reached a capacity limit. Retry the request later.",
+                "Fabric throttled the catalog search or reached a capacity limit. Retry the request later",
+            _ when ex is HttpRequestException { StatusCode: { } statusCode } =>
+                $"Fabric catalog search failed with HTTP {(int)statusCode}. Check service availability before retrying",
             _ =>
-                $"Fabric catalog search failed with HTTP {(int)statusCode}."
-        };
-
-        return $"{message} Details: {ex.Message}";
-    }
+                "The Fabric catalog search could not be completed. Check service availability before retrying"
+        }
+    };
 }

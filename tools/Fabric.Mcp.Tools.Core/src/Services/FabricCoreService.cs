@@ -100,7 +100,13 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
 
     public async Task<FabricItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
-        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
+        ArgumentNullException.ThrowIfNull(request);
+        if (!Guid.TryParse(workspaceId, out var parsedWorkspaceId) || parsedWorkspaceId == Guid.Empty)
+        {
+            throw new ArgumentException("Workspace ID must be a nonempty UUID.", nameof(workspaceId));
+        }
+
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}/items";
         var jsonContent = JsonSerializer.Serialize(request, CoreJsonContext.Default.CreateItemRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
         return await JsonSerializer.DeserializeAsync<FabricItem>(response, CoreJsonContext.Default.FabricItem, cancellationToken) ?? new FabricItem();
@@ -305,6 +311,14 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
 
     public async Task<CatalogSearchResponse> SearchCatalogAsync(CatalogSearchRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        var validation = new ValidationResult();
+        CatalogSearchInputValidator.Validate(request.Search, request.Filter, request.PageSize, request.ContinuationToken, validation);
+        if (!validation.IsValid)
+        {
+            throw new ArgumentException(string.Join('\n', validation.Errors), nameof(request));
+        }
+
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/catalog/search";
         var jsonContent = JsonSerializer.Serialize(request, CoreJsonContext.Default.CatalogSearchRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
