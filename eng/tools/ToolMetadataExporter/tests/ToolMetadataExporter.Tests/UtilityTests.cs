@@ -33,6 +33,30 @@ public class UtilityTests
     }
 
     [Fact]
+    public async Task LoadToolsDynamicallyAsync_EscapesWhitespaceControlCharactersInsideJsonStrings()
+    {
+        const string ServerFile = "azmcp.exe";
+        const string Description = "before\tmiddle\r\nafter";
+        var output =
+            "{\r\n"
+            + "  \"status\": 200, \"results\": [{\"name\":\"test\",\"description\":\""
+            + Description
+            + "\",\"command\":\"test\"}]}"
+            + "\r\n";
+
+        var logger = Substitute.For<ILogger<Utility>>();
+        var utility = Substitute.ForPartsOf<Utility>(logger);
+        utility.Configure()
+            .ExecuteAzmcpAsync(ServerFile, "tools list", false, true)
+            .Returns(Task.FromResult(output));
+
+        var result = await utility.LoadToolsDynamicallyAsync(ServerFile, string.Empty);
+
+        var tool = Assert.Single(result!.Tools!);
+        Assert.Equal(Description, tool.Description);
+    }
+
+    [Fact]
     public async Task LoadToolsDynamicallyAsync_DoesNotMaskOtherInvalidJson()
     {
         const string ServerFile = "azmcp.exe";
