@@ -588,11 +588,16 @@ azmcp search knowledge base get --service <service>
                                 [--knowledge-base <knowledge-base>]
 
 # Run retrieval against an AI Search knowledge base
+# Optionally include source document fields in references for citations and provenance.
+# Explicit true or false requests references from all knowledge sources; omission preserves service defaults.
+# Including source data may substantially increase response size. For search index sources, configure
+# sourceDataFields on the knowledge source to include the title and URL fields needed for citations.
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
-                                     [--messages <messages>]
+                                     [--messages <messages>] \
+                                     [--include-reference-source-data <true|false>]
 
 # Get AI Search knowledge sources (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

@@ -221,7 +221,8 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
-        CancellationToken cancellationToken)
+        bool? includeReferenceSourceData = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(baseName), baseName));
 
@@ -245,6 +246,15 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(null, cancellationToken), clientOptions);
         var useMinimalReasoning = knowledgeBase.Value.RetrievalReasoningEffort is KnowledgeRetrievalMinimalReasoningEffort;
         var request = BuildKnowledgeBaseRetrievalRequest(useMinimalReasoning, query, messages);
+
+        if (includeReferenceSourceData.HasValue)
+        {
+            foreach (var sourceReference in knowledgeBase.Value.KnowledgeSources)
+            {
+                var source = await searchClient.GetKnowledgeSourceAsync(sourceReference.Name, cancellationToken: cancellationToken);
+                request.KnowledgeSourceParams.Add(CreateKnowledgeSourceParams(source.Value, includeReferenceSourceData.Value));
+            }
+        }
 
         var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
 
@@ -281,6 +291,30 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
 
         request.Messages.Add(new([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
         return request;
+    }
+
+    internal static KnowledgeSourceParams CreateKnowledgeSourceParams(KnowledgeSource source, bool includeReferenceSourceData)
+    {
+        KnowledgeSourceParams parameters = source switch
+        {
+            SearchIndexKnowledgeSource => new SearchIndexKnowledgeSourceParams(source.Name),
+            AzureBlobKnowledgeSource => new AzureBlobKnowledgeSourceParams(source.Name),
+            IndexedSharePointKnowledgeSource => new IndexedSharePointKnowledgeSourceParams(source.Name),
+            IndexedOneLakeKnowledgeSource => new IndexedOneLakeKnowledgeSourceParams(source.Name),
+            IndexedSqlKnowledgeSource => new IndexedSqlKnowledgeSourceParams(source.Name),
+            FileKnowledgeSource => new FileKnowledgeSourceParams(source.Name),
+            WebKnowledgeSource => new WebKnowledgeSourceParams(source.Name),
+            RemoteSharePointKnowledgeSource => new RemoteSharePointKnowledgeSourceParams(source.Name),
+            WorkIQKnowledgeSource => new WorkIQKnowledgeSourceParams(source.Name),
+            McpServerKnowledgeSource => new McpServerKnowledgeSourceParams(source.Name),
+            FabricDataAgentKnowledgeSource => new FabricDataAgentKnowledgeSourceParams(source.Name),
+            FabricOntologyKnowledgeSource => new FabricOntologyKnowledgeSourceParams(source.Name),
+            _ => throw new NotSupportedException("Reference source data options are not supported for this knowledge source type.")
+        };
+
+        parameters.IncludeReferences = true;
+        parameters.IncludeReferenceSourceData = includeReferenceSourceData;
+        return parameters;
     }
 
     internal static async Task<string> ProcessRetrieveResponse(Stream responseStream)

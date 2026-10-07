@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added optional --include-reference-source-data to search_knowledge_base_retrieve to return source document fields for citations while preserving service defaults when omitted."

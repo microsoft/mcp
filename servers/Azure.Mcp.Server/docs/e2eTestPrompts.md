@@ -119,6 +119,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | search_knowledge_base_retrieve | Search knowledge base \<agent-name> in Azure AI Search service \<service-name> for \<query> | none |
 | search_knowledge_base_retrieve | What does knowledge base \<agent-name> in search service \<service-name> know about \<query> | none |
 | search_knowledge_base_retrieve | Find information about \<query> using knowledge base \<agent-name> in search service \<service-name> | none |
+| search_knowledge_base_retrieve | Query knowledge base \<agent-name> in search service \<service-name> about \<query> and include source document fields so I can cite the original sources | none |
+| search_knowledge_base_retrieve | Query knowledge base \<agent-name> in search service \<service-name> about \<query> with references but without source document fields | none |
 | search_knowledge_source_get | List all knowledge sources in the Azure AI Search service \<service-name> | none |
 | search_knowledge_source_get | Show me the knowledge sources in the Azure AI Search service \<service-name> | none |
 | search_knowledge_source_get | List all knowledge sources in the search service \<service-name> | none |

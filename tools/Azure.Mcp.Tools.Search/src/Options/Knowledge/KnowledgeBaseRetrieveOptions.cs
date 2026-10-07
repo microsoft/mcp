@@ -16,6 +16,9 @@ public sealed class KnowledgeBaseRetrieveOptions
     [Option(Description = "Conversation history messages passed to the knowledge base. Able to specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).")]
     public string[]? Messages { get; set; }
 
+    [Option(Description = "Include source document fields in references for citations and provenance. Applies to all knowledge sources and may substantially increase response size. Either true or false requests references; omission preserves the service defaults.")]
+    public bool? IncludeReferenceSourceData { get; set; }
+
     [Option(Description = SearchOptionDescriptions.Service)]
     public required string Service { get; set; }
 }
