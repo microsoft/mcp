@@ -106,7 +106,7 @@ public class ToolAnalyzerTests : IDisposable
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
 
         // Assert
-        await _datastore.DidNotReceive().GetAvailableToolsAsync(Arg.Any<CancellationToken>());
+        await _datastore.DidNotReceive().GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _datastore.DidNotReceive().AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
     }
 
@@ -128,7 +128,7 @@ public class ToolAnalyzerTests : IDisposable
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
 
         // Assert
-        await _datastore.DidNotReceive().GetAvailableToolsAsync(Arg.Any<CancellationToken>());
+        await _datastore.DidNotReceive().GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _datastore.DidNotReceive().AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
     }
 
@@ -151,7 +151,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -180,7 +180,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -216,7 +216,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
 
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(existingTools));
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(existingTools));
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -224,7 +224,7 @@ public class ToolAnalyzerTests : IDisposable
         await analyzer.RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
 
         // Assert
-        await _datastore.Received(1).GetAvailableToolsAsync(Arg.Any<CancellationToken>());
+        await _datastore.Received(1).GetAvailableToolsAsync("test-server", Arg.Any<CancellationToken>());
         await _datastore.Received(numberOfExpectedDatabaseUpdateCalls)
             .AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>());
     }
@@ -252,7 +252,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverNameResult);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersionResult);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -298,7 +298,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverNameResult);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersionResult);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -341,7 +341,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverNameResult);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersionResult);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
         _datastore.AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
@@ -385,7 +385,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -425,7 +425,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -466,7 +466,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.AzMcpBuildDateTime.Returns(buildDate);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -511,7 +511,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
         _datastore.AddToolEventsAsync(Arg.Any<List<McpToolEvent>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
@@ -550,7 +550,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -582,7 +582,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -619,7 +619,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -658,7 +658,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(toolsResult);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
@@ -696,7 +696,7 @@ public class ToolAnalyzerTests : IDisposable
         _azmcpProgram.GetServerNameAsync().Returns(serverName);
         _azmcpProgram.GetServerVersionAsync().Returns(serverVersion);
         _azmcpProgram.LoadToolsDynamicallyAsync().Returns(result);
-        _datastore.GetAvailableToolsAsync(Arg.Any<CancellationToken>()).Returns(availableTools);
+        _datastore.GetAvailableToolsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(availableTools);
 
         var analyzer = new ToolAnalyzer(_azmcpProgram, _datastore, _runInformation, _options, _logger);
 
