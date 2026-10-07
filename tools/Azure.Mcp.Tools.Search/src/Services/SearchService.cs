@@ -29,6 +29,8 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private const string CacheGroup = "search";
     private const string SearchServicesCacheKey = "services";
+    private const string KnowledgeSourceTypesCacheKey = "knowledge-source-types";
+    private const int MaxConcurrentKnowledgeSourceLookups = 5;
     private static readonly TimeSpan s_cacheDurationServices = CacheDurations.ServiceData;
     private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
 
@@ -249,10 +251,23 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
 
         if (includeReferenceSourceData.HasValue)
         {
-            foreach (var sourceReference in knowledgeBase.Value.KnowledgeSources)
+            var sources = knowledgeBase.Value.KnowledgeSources;
+            var sourceParameters = new KnowledgeSourceParams[sources.Count];
+            await Parallel.ForEachAsync(
+                Enumerable.Range(0, sources.Count),
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = MaxConcurrentKnowledgeSourceLookups,
+                    CancellationToken = cancellationToken
+                },
+                async (index, token) =>
+                {
+                    sourceParameters[index] = await GetKnowledgeSourceParamsAsync(
+                        searchClient, sources[index].Name, includeReferenceSourceData.Value, token);
+                });
+            foreach (var parameters in sourceParameters)
             {
-                var source = await searchClient.GetKnowledgeSourceAsync(sourceReference.Name, cancellationToken: cancellationToken);
-                request.KnowledgeSourceParams.Add(CreateKnowledgeSourceParams(source.Value, includeReferenceSourceData.Value));
+                request.KnowledgeSourceParams.Add(parameters);
             }
         }
 
@@ -293,22 +308,44 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         return request;
     }
 
-    internal static KnowledgeSourceParams CreateKnowledgeSourceParams(KnowledgeSource source, bool includeReferenceSourceData)
+    private async Task<KnowledgeSourceParams> GetKnowledgeSourceParamsAsync(
+        SearchIndexClient searchClient,
+        string sourceName,
+        bool includeReferenceSourceData,
+        CancellationToken cancellationToken)
     {
-        KnowledgeSourceParams parameters = source switch
+        var cacheKey = CacheKeyBuilder.Build(KnowledgeSourceTypesCacheKey, searchClient.Endpoint.AbsoluteUri, sourceName);
+        var sourceType = await _cacheService.GetAsync<string>(CacheGroup, cacheKey, CacheDurations.ServiceData, cancellationToken);
+        if (sourceType != null)
         {
-            SearchIndexKnowledgeSource => new SearchIndexKnowledgeSourceParams(source.Name),
-            AzureBlobKnowledgeSource => new AzureBlobKnowledgeSourceParams(source.Name),
-            IndexedSharePointKnowledgeSource => new IndexedSharePointKnowledgeSourceParams(source.Name),
-            IndexedOneLakeKnowledgeSource => new IndexedOneLakeKnowledgeSourceParams(source.Name),
-            IndexedSqlKnowledgeSource => new IndexedSqlKnowledgeSourceParams(source.Name),
-            FileKnowledgeSource => new FileKnowledgeSourceParams(source.Name),
-            WebKnowledgeSource => new WebKnowledgeSourceParams(source.Name),
-            RemoteSharePointKnowledgeSource => new RemoteSharePointKnowledgeSourceParams(source.Name),
-            WorkIQKnowledgeSource => new WorkIQKnowledgeSourceParams(source.Name),
-            McpServerKnowledgeSource => new McpServerKnowledgeSourceParams(source.Name),
-            FabricDataAgentKnowledgeSource => new FabricDataAgentKnowledgeSourceParams(source.Name),
-            FabricOntologyKnowledgeSource => new FabricOntologyKnowledgeSourceParams(source.Name),
+            return CreateKnowledgeSourceParams(sourceName, sourceType, includeReferenceSourceData);
+        }
+
+        var source = await searchClient.GetKnowledgeSourceAsync(sourceName, cancellationToken: cancellationToken);
+        sourceType = source.Value.GetType().Name;
+        var parameters = CreateKnowledgeSourceParams(sourceName, sourceType, includeReferenceSourceData);
+        await _cacheService.SetAsync(CacheGroup, cacheKey, sourceType, CacheDurations.ServiceData, cancellationToken);
+        return parameters;
+    }
+
+    internal static KnowledgeSourceParams CreateKnowledgeSourceParams(
+        string sourceName, string sourceType, bool includeReferenceSourceData)
+    {
+        // Cache only source types, never mutable parameters shared across retrievals.
+        KnowledgeSourceParams parameters = sourceType switch
+        {
+            nameof(SearchIndexKnowledgeSource) => new SearchIndexKnowledgeSourceParams(sourceName),
+            nameof(AzureBlobKnowledgeSource) => new AzureBlobKnowledgeSourceParams(sourceName),
+            nameof(IndexedSharePointKnowledgeSource) => new IndexedSharePointKnowledgeSourceParams(sourceName),
+            nameof(IndexedOneLakeKnowledgeSource) => new IndexedOneLakeKnowledgeSourceParams(sourceName),
+            nameof(IndexedSqlKnowledgeSource) => new IndexedSqlKnowledgeSourceParams(sourceName),
+            nameof(FileKnowledgeSource) => new FileKnowledgeSourceParams(sourceName),
+            nameof(WebKnowledgeSource) => new WebKnowledgeSourceParams(sourceName),
+            nameof(RemoteSharePointKnowledgeSource) => new RemoteSharePointKnowledgeSourceParams(sourceName),
+            nameof(WorkIQKnowledgeSource) => new WorkIQKnowledgeSourceParams(sourceName),
+            nameof(McpServerKnowledgeSource) => new McpServerKnowledgeSourceParams(sourceName),
+            nameof(FabricDataAgentKnowledgeSource) => new FabricDataAgentKnowledgeSourceParams(sourceName),
+            nameof(FabricOntologyKnowledgeSource) => new FabricOntologyKnowledgeSourceParams(sourceName),
             _ => throw new NotSupportedException("Reference source data options are not supported for this knowledge source type.")
         };
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text.Json;
 using Azure.Core;
@@ -40,7 +41,7 @@ public sealed class KnowledgeBaseRetrievalTests
 
         foreach (var includeSourceData in new[] { true, false })
         {
-            var parameters = SearchService.CreateKnowledgeSourceParams(source, includeSourceData);
+            var parameters = SearchService.CreateKnowledgeSourceParams(source.Name, source.GetType().Name, includeSourceData);
             using var json = JsonDocument.Parse(ModelReaderWriter.Write(parameters));
             var root = json.RootElement;
 
@@ -59,7 +60,7 @@ public sealed class KnowledgeBaseRetrievalTests
         var source = ModelReaderWriter.Read<KnowledgeSource>(
             BinaryData.FromString("""{"name":"test-source","kind":"unsupported"}"""))!;
 
-        Assert.Throws<NotSupportedException>(() => SearchService.CreateKnowledgeSourceParams(source, true));
+        Assert.Throws<NotSupportedException>(() => SearchService.CreateKnowledgeSourceParams(source.Name, source.GetType().Name, true));
     }
 
     [Theory]
@@ -72,7 +73,7 @@ public sealed class KnowledgeBaseRetrievalTests
     public async Task RetrieveFromKnowledgeBase_SendsReferenceOptionsAndPreservesSourceData(
         bool? includeReferenceSourceData, bool useMinimalReasoning)
     {
-        List<string> sourceRequests = [];
+        ConcurrentQueue<string> sourceRequests = [];
         string? retrievalRequest = null;
         const string retrievalResponse = """
             {
@@ -111,7 +112,7 @@ public sealed class KnowledgeBaseRetrievalTests
             else
             {
                 Assert.Contains("knowledgesources", path);
-                sourceRequests.Add(path);
+                sourceRequests.Enqueue(path);
                 response = path.Contains("index-source", StringComparison.Ordinal)
                     ? """{"name":"index-source","kind":"searchIndex","searchIndexParameters":{"searchIndexName":"products"}}"""
                     : """{"name":"web-source","kind":"web"}""";
@@ -123,7 +124,8 @@ public sealed class KnowledgeBaseRetrievalTests
             };
         });
         using var httpClient = new HttpClient(handler);
-        var service = CreateService(httpClient);
+        var cache = Substitute.For<ICacheService>();
+        var service = CreateService(httpClient, cache);
 
         var result = await service.RetrieveFromKnowledgeBase(
             "test-search",
@@ -152,11 +154,19 @@ public sealed class KnowledgeBaseRetrievalTests
                 Assert.Equal(includeReferenceSourceData.Value, parameter.GetProperty("includeReferenceSourceData").GetBoolean());
                 Assert.False(parameter.TryGetProperty("alwaysQuerySource", out _));
             });
+            await cache.Received(1).SetAsync(
+                "search", SourceTypeCacheKey("https://test-search.search.windows.net/", "index-source"),
+                nameof(SearchIndexKnowledgeSource), CacheDurations.ServiceData, Arg.Any<CancellationToken>());
+            await cache.Received(1).SetAsync(
+                "search", SourceTypeCacheKey("https://test-search.search.windows.net/", "web-source"),
+                nameof(WebKnowledgeSource), CacheDurations.ServiceData, Arg.Any<CancellationToken>());
         }
         else
         {
             Assert.Empty(sourceRequests);
             Assert.False(requestRoot.TryGetProperty("knowledgeSourceParams", out _));
+            await cache.DidNotReceive().GetAsync<string>(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<TimeSpan?>(), Arg.Any<CancellationToken>());
         }
 
         using var resultJson = JsonDocument.Parse(result);
@@ -196,7 +206,66 @@ public sealed class KnowledgeBaseRetrievalTests
         Assert.Equal(status, exception.Status);
     }
 
-    private static SearchService CreateService(HttpClient httpClient)
+    [Fact]
+    public async Task RetrieveFromKnowledgeBase_UsesCachedSourceTypesWithCurrentReferenceOptions()
+    {
+        List<bool[]> referenceOptions = [];
+        using var handler = new StubHttpMessageHandler(async (request, cancellationToken) =>
+        {
+            if (request.Method == HttpMethod.Post)
+            {
+                using var json = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
+                var parameters = json.RootElement.GetProperty("knowledgeSourceParams").EnumerateArray().ToArray();
+                Assert.Equal(["searchIndex", "web"], parameters.Select(parameter => parameter.GetProperty("kind").GetString()));
+                referenceOptions.Add([.. parameters.Select(parameter => parameter.GetProperty("includeReferenceSourceData").GetBoolean())]);
+                return JsonResponse("""{"response":[],"references":[]}""");
+            }
+
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Contains("knowledgebases", request.RequestUri!.AbsolutePath);
+            return JsonResponse(KnowledgeBaseResponse(["index-source", "web-source"]));
+        });
+        using var httpClient = new HttpClient(handler);
+        var cache = Substitute.For<ICacheService>();
+        cache.GetAsync<string>(
+            "search", SourceTypeCacheKey("https://test-search.search.windows.net/", "index-source"),
+            CacheDurations.ServiceData, Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<string?>(nameof(SearchIndexKnowledgeSource)));
+        cache.GetAsync<string>(
+            "search", SourceTypeCacheKey("https://test-search.search.windows.net/", "web-source"),
+            CacheDurations.ServiceData, Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<string?>(nameof(WebKnowledgeSource)));
+        var service = CreateService(httpClient, cache);
+
+        foreach (var includeSourceData in new[] { true, false })
+        {
+            await service.RetrieveFromKnowledgeBase(
+                "test-search", "test-base", "Find documents", null, includeSourceData, TestContext.Current.CancellationToken);
+        }
+
+        Assert.Equal([true, true], referenceOptions[0]);
+        Assert.Equal([false, false], referenceOptions[1]);
+    }
+
+    private static string SourceTypeCacheKey(string endpoint, string sourceName) =>
+        CacheKeyBuilder.Build("knowledge-source-types", endpoint, sourceName);
+
+    private static string KnowledgeBaseResponse(IEnumerable<string> sourceNames) => $$"""
+        {
+          "name":"test-base",
+          "knowledgeSources":[{{string.Join(",", sourceNames.Select(name => $$"""{"name":"{{name}}"}"""))}}],
+          "retrievalReasoningEffort":{"kind":"minimal"}
+        }
+        """;
+
+    private static HttpResponseMessage JsonResponse(string json) => new(HttpStatusCode.OK)
+    {
+        Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+    };
+
+    private static SearchService CreateService(
+        HttpClient httpClient,
+        ICacheService? cacheService = null)
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
@@ -209,6 +278,6 @@ public sealed class KnowledgeBaseRetrievalTests
         azureService.CloudConfiguration.Returns(cloud);
         azureService.GetClient(Arg.Any<string?>()).Returns(httpClient);
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
-        return new SearchService(Substitute.For<ICacheService>(), azureService);
+        return new SearchService(cacheService ?? Substitute.For<ICacheService>(), azureService);
     }
 }
