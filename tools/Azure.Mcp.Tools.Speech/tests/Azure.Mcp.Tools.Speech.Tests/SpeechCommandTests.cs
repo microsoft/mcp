@@ -8,6 +8,7 @@ using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.Tests;
@@ -19,7 +20,28 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
 
     #region SpeechToText Tests
 
-    [LiveTestOnly]
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+        [
+            // ResourceGroupName FIRST (e.g. "vigera-mcpdb643c27" → "Sanitized")
+            new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = System.Text.RegularExpressions.Regex.Escape(Settings.ResourceGroupName),
+            Value = "Sanitized",
+        }),
+        // Then ResourceBaseName (e.g. "mcpdb643c27" → "Sanitized")
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = Settings.ResourceBaseName,
+            Value = "Sanitized",
+        }),
+        // Then SubscriptionId
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = Settings.SubscriptionId,
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
+    ];
+
     [Fact]
     public async Task SpeechToText_ShouldHandleMissingAudioFileGracefully()
     {
@@ -42,12 +64,10 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         Assert.Null(result);
     }
 
-    [LiveTestOnly]
     [Theory]
     [InlineData(null, "test-audio.wav", "My voice is my passport. Verify me.")] // Fast Transcription without language will use multi-language model
     [InlineData("en-US", "test-audio.wav", "My voice is my passport. Verify me.")]
     [InlineData("en-US", "whatstheweatherlike.mp3", "What's the weather like?")]
-    [InlineData("en-US", "TheGreatGatsby.wav", "In my younger and more vulnerable years, my father gave me some advice that I've been turning over in my mind ever since. Whenever you feel like criticizing anyone, he told me, just remember that all the people in this world haven't had the advantages that you've had. He didn't say anymore, but we've always been unusually commutative in a reserved way, and I understood that he meant a great deal more than that. In consequence, I'm inclined to reserve all judgments, a habit that has opened up many curious natures to me.")]
     [InlineData("ar-AE", "ar-rewind-music.wav", "ارجع الموسيقى 20 ثانية.")]
     [InlineData("es-ES", "es-ES.wav", "Rebobinar la música 20 segundos.")]
     [InlineData("fr-FR", "fr-FR.wav", "Rembobinez la musique de vingt secondes.")]
@@ -91,6 +111,19 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         Assert.NotNull(resultObj.FastTranscriptionResult);
         Assert.Null(resultObj.RealtimeContinuousResult);
         Assert.Equal(expectedText, resultObj.FastTranscriptionResult.CombinedPhrases?.FirstOrDefault()?.Text);
+    }
+
+    /// <summary>
+    /// Split from original test because playback file could not be recorded due to length of text.
+    /// </summary>
+    [Fact]
+    public Task SpeechToText_WithFastSupportedLanguage_ShouldRecognizeSpeechWithFastTranscription_LongInput()
+    {
+        var language = "en-US";
+        var file = "TheGreatGatsby.wav";
+        var expectedText = "In my younger and more vulnerable years, my father gave me some advice that I've been turning over in my mind ever since. Whenever you feel like criticizing anyone, he told me, just remember that all the people in this world haven't had the advantages that you've had. He didn't say anymore, but we've always been unusually commutative in a reserved way, and I understood that he meant a great deal more than that. In consequence, I'm inclined to reserve all judgments, a habit that has opened up many curious natures to me.";
+
+        return SpeechToText_WithFastSupportedLanguage_ShouldRecognizeSpeechWithFastTranscription(language, file, expectedText);
     }
 
     [LiveTestOnly]
@@ -253,7 +286,6 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         });
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SpeechToText_WithPhrases_ShouldIncreaseRecognitionAccuracy()
     {
@@ -293,7 +325,6 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         Assert.Equal(expectedText, resultObj.FastTranscriptionResult.CombinedPhrases?.FirstOrDefault()?.Text);
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SpeechToText_WithInvalidEndpoint_ShouldHandleGracefully()
     {
@@ -373,7 +404,6 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SpeechToText_WithEmptyAudioFileAndRealtimeTranscription_ShouldHandleGracefully()
     {
@@ -427,7 +457,6 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SpeechToText_WithBrokenFile_ShouldHandleGracefully()
     {
@@ -483,7 +512,6 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task SpeechToText_RecognizeCompressedAudioWithRealtimeTranscription_ShouldFailWithoutGStreamer()
     {
@@ -707,7 +735,6 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         }
     }
 
-    [LiveTestOnly]
     [Fact]
     public async Task Should_handle_invalid_text_input()
     {
@@ -743,7 +770,34 @@ public class SpeechCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         }
     }
 
-    [LiveTestOnly]
+    [Fact]
+    public async Task Should_error_on_missing_endpoint()
+    {
+        var outputFile = RegisterOrRetrieveVariable("outputFile", $"tts-test-invalid-{Guid.NewGuid()}.wav");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "speech_tts_synthesize",
+                new()
+                {
+                    { "text", "Text" }, // Empty text should fail validation
+                    { "outputAudio", outputFile },
+                    { "language", "en-US" }
+                });
+
+            // Should return error response
+            Assert.Null(result);
+        }
+        finally
+        {
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
     [Fact]
     public async Task Should_handle_invalid_language_format()
     {
