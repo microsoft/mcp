@@ -64,7 +64,7 @@ if (-not $platformInformation) {
 
 $packageDirectory = Join-Path $BinariesDirectory $platformInformation.artifactPath
 Write-Host "Locating the signed binary '$($server.cliName)' in '$packageDirectory'."
-$matching = Get-ChildItem $packageDirectory -Filter "$($server.cliName)"
+$matching = Get-ChildItem -LiteralPath $packageDirectory -Filter "$($server.cliName)$($platformInformation.extension)" -File
 
 if ($matching.Count -eq 0) {
     throw "No signed binary '$($server.cliName)' was found in '$packageDirectory'."
