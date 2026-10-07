@@ -252,7 +252,10 @@ public abstract class ResiliencyAgentCommand<
                     "it already contains the exact returned content. If it does not exist, create it " +
                     "with the host's native file-edit workflow. If that name exists with different " +
                     "content, do not overwrite it; use a collision-safe suffix. Preserve the report " +
-                    "content exactly and tell the user the resulting workspace-relative path.");
+                    "content exactly and tell the user the resulting workspace-relative path. After " +
+                    "verifying that workspace file exists, include a Markdown link to it using its " +
+                    "canonical absolute `file:///` URI. Never link an MCP session, tool-call, cache, " +
+                    "or temporary path.");
             }
             else if (!string.IsNullOrWhiteSpace(artifact.Description))
             {

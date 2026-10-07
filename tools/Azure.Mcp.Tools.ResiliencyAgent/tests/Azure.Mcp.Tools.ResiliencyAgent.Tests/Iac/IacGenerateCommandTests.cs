@@ -202,6 +202,9 @@ public sealed class IacGenerateCommandTests
                     Assert.Contains("collision-safe suffix", presentation.Text, StringComparison.OrdinalIgnoreCase);
                     Assert.Contains("preserve the report content exactly", presentation.Text, StringComparison.OrdinalIgnoreCase);
                     Assert.Contains("workspace-relative path", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("Markdown link", presentation.Text, StringComparison.Ordinal);
+                    Assert.Contains("canonical absolute `file:///` URI", presentation.Text, StringComparison.Ordinal);
+                    Assert.Contains("Never link an MCP session", presentation.Text, StringComparison.Ordinal);
                     Assert.Contains("main.bicep", presentation.Text, StringComparison.Ordinal);
                 },
                 block =>
