@@ -195,6 +195,13 @@ public sealed class IacGenerateCommandTests
                     Assert.Contains("DetailedRecommendationReport-2.md", presentation.Text, StringComparison.Ordinal);
                     Assert.Contains("full detailed recommendation report", presentation.Text, StringComparison.Ordinal);
                     Assert.Contains("chat summary is abbreviated", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("azure-resiliency/DetailedRecommendationReport-2.md", presentation.Text, StringComparison.Ordinal);
+                    Assert.Contains("does not satisfy this workspace-file requirement", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("already contains the exact returned content", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("do not overwrite it", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("collision-safe suffix", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("preserve the report content exactly", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("workspace-relative path", presentation.Text, StringComparison.OrdinalIgnoreCase);
                     Assert.Contains("main.bicep", presentation.Text, StringComparison.Ordinal);
                 },
                 block =>

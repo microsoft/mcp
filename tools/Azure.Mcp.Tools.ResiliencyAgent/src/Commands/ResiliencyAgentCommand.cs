@@ -245,7 +245,14 @@ public abstract class ResiliencyAgentCommand<
                     " — full detailed recommendation report. Tell the user that this attached report " +
                     "contains the complete findings, alternatives, cost considerations, and " +
                     "per-resource recommendations. A chat summary is abbreviated and must not replace " +
-                    "notifying the user about this report.");
+                    "notifying the user about this report. Materialize the exact report content as a " +
+                    "normal workspace file under `azure-resiliency/" + artifact.Name + "`. An MCP " +
+                    "attachment, embedded resource, temporary session file, or tool-call path does not " +
+                    "satisfy this workspace-file requirement. Reuse the intended workspace file when " +
+                    "it already contains the exact returned content. If it does not exist, create it " +
+                    "with the host's native file-edit workflow. If that name exists with different " +
+                    "content, do not overwrite it; use a collision-safe suffix. Preserve the report " +
+                    "content exactly and tell the user the resulting workspace-relative path.");
             }
             else if (!string.IsNullOrWhiteSpace(artifact.Description))
             {
