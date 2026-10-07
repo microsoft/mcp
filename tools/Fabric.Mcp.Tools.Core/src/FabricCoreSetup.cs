@@ -18,7 +18,24 @@ public class FabricCoreSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClient<IFabricCoreService, FabricCoreService>();
+        services.AddHttpClient<IFabricCoreService, FabricCoreService>()
+            .ConfigurePrimaryHttpMessageHandler(static (handler, _) =>
+            {
+                // Retain configured wrappers and proxy settings while disabling transport-level redirects.
+                while (handler is DelegatingHandler { InnerHandler: { } innerHandler })
+                {
+                    handler = innerHandler;
+                }
+
+                if (handler is HttpClientHandler httpHandler)
+                {
+                    httpHandler.AllowAutoRedirect = false;
+                }
+                else if (handler is SocketsHttpHandler socketsHandler)
+                {
+                    socketsHandler.AllowAutoRedirect = false;
+                }
+            });
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<ItemCreateCommand>();

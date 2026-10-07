@@ -12,8 +12,8 @@ public sealed class WorkspaceUpdateResponse()
     /// <summary>Gets or sets the workspace display name.</summary>
     public required string DisplayName { get; set; }
 
-    /// <summary>Gets or sets the workspace type, including future service values.</summary>
-    public required string Type { get; set; }
+    /// <summary>Gets or sets the workspace type when returned, including future service values.</summary>
+    public string? Type { get; set; }
 
     /// <summary>Gets or sets the description when returned by Fabric.</summary>
     public string? Description { get; set; }

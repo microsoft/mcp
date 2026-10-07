@@ -12,8 +12,8 @@ public sealed class CreatedWorkspaceMetadata()
     /// <summary>Gets the workspace's display name.</summary>
     public required string DisplayName { get; init; }
 
-    /// <summary>Gets the workspace type, including future service-defined values.</summary>
-    public required string Type { get; init; }
+    /// <summary>Gets the workspace type when returned, including future service-defined values.</summary>
+    public string? Type { get; init; }
 
     /// <summary>Gets the description when returned by Fabric.</summary>
     public string? Description { get; init; }

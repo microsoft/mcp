@@ -127,9 +127,12 @@ public class FabricCoreServiceWorkspaceDeleteTests()
     [InlineData(HttpStatusCode.ServiceUnavailable)]
     [InlineData(HttpStatusCode.GatewayTimeout)]
     [InlineData(HttpStatusCode.Redirect)]
+    [InlineData(HttpStatusCode.TemporaryRedirect)]
+    [InlineData(HttpStatusCode.PermanentRedirect)]
     public async Task DeleteWorkspaceAsync_PreservesFailureStatusWithoutRetryingOrEchoingBody(HttpStatusCode status)
     {
         using var response = new HttpResponseMessage(status) { Content = new StringContent("private-backend-detail") };
+        response.Headers.Location = new Uri("https://example.invalid/must-not-delete");
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, WorkspaceDeleteTestData.CreateCredential());
@@ -292,7 +295,7 @@ public class FabricCoreServiceWorkspaceDeleteTests()
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task DeleteWorkspaceAsync_CancellationDuringHttpNeverConfirmsDeletion(bool responseReturned)
+    public async Task DeleteWorkspaceAsync_DistinguishesConfirmedSuccessFromCanceledHttp(bool responseReturned)
     {
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         using var content = new WorkspaceDeleteResponseContent();
@@ -307,14 +310,18 @@ public class FabricCoreServiceWorkspaceDeleteTests()
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, WorkspaceDeleteTestData.CreateCredential());
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            service.DeleteWorkspaceAsync(WorkspaceDeleteTestData.WorkspaceId, cancellation.Token));
-
-        Assert.Equal(1, handler.CallCount);
         if (responseReturned)
         {
+            await service.DeleteWorkspaceAsync(WorkspaceDeleteTestData.WorkspaceId, cancellation.Token);
             Assert.True(content.IsDisposed);
         }
+        else
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                service.DeleteWorkspaceAsync(WorkspaceDeleteTestData.WorkspaceId, cancellation.Token));
+        }
+        Assert.True(cancellation.IsCancellationRequested);
+        Assert.Equal(1, handler.CallCount);
         Assert.False(content.ReadAttempted);
     }
 

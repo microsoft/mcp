@@ -24,6 +24,35 @@ namespace Fabric.Mcp.Tools.Core.Tests;
 public class WorkspaceGetMcpTests()
 {
     [Theory]
+    [InlineData("")]
+    [InlineData(""","type":null""")]
+    public async Task GetWorkspaceTool_AllowsMissingOrNullType(string typeProperty)
+    {
+        using var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent($$"""{"id":"{{WorkspaceTestData.WorkspaceId}}","displayName":"Finance","description":""{{typeProperty}}}""")
+        };
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
+        await using var provider = CreateToolServices(handler, WorkspaceTestData.CreateCredential(), StructuredOutputMode.Duplicated);
+        var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
+        var tools = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+        var schema = Assert.Single(tools.Tools, tool => tool.Name == "core_get-workspace").OutputSchema!.Value;
+        Assert.Equal(["displayName", "id"], schema.GetProperty("properties").GetProperty("workspace")
+            .GetProperty("required").EnumerateArray().Select(property => property.GetString()).Order());
+
+        var result = await loader.CallToolHandler(McpTestUtilities.CreateToolCallRequest("core_get-workspace",
+            new Dictionary<string, object?> { ["workspace-id"] = WorkspaceTestData.WorkspaceId }), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        var workspace = result.StructuredContent!.Value.GetProperty("workspace");
+        Assert.Equal(WorkspaceTestData.WorkspaceId, workspace.GetProperty("id").GetString());
+        Assert.False(workspace.TryGetProperty("type", out _));
+        using var envelope = JsonDocument.Parse(Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        Assert.True(JsonElement.DeepEquals(envelope.RootElement.GetProperty("results"), result.StructuredContent.Value));
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Theory]
     [InlineData(null, TransportTypes.StdIo, null)]
     [InlineData(StructuredOutputMode.Compact, TransportTypes.StdIo, true)]
     [InlineData(StructuredOutputMode.Duplicated, TransportTypes.StdIo, false)]

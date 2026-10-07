@@ -199,6 +199,10 @@ public sealed class FabricCoreServiceBaselineTests()
     [InlineData(true, HttpStatusCode.InternalServerError)]
     [InlineData(false, HttpStatusCode.ServiceUnavailable)]
     [InlineData(true, HttpStatusCode.ServiceUnavailable)]
+    [InlineData(false, HttpStatusCode.TemporaryRedirect)]
+    [InlineData(true, HttpStatusCode.TemporaryRedirect)]
+    [InlineData(false, HttpStatusCode.PermanentRedirect)]
+    [InlineData(true, HttpStatusCode.PermanentRedirect)]
     public async Task LegacyOperations_PreserveErrorStatusAndMessageAndDoNotRetry(bool search, HttpStatusCode status)
     {
         var backendError = status switch
@@ -208,6 +212,7 @@ public sealed class FabricCoreServiceBaselineTests()
             _ => """{"errorCode":"OriginalError","message":"original-backend-text"}"""
         };
         using var response = new HttpResponseMessage(status) { Content = new StringContent(backendError) };
+        response.Headers.Location = new Uri("https://example.invalid/must-not-follow");
         response.Headers.RetryAfter = new(TimeSpan.FromSeconds(45));
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
         using var client = new HttpClient(handler);

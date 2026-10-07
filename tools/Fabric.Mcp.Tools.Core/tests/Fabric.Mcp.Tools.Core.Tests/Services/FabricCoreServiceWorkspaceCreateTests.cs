@@ -245,7 +245,7 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
         get
         {
             var data = new TheoryData<string> { "", "null", "[]", "{}", "not-json" };
-            foreach (var name in new[] { "id", "displayName", "type" })
+            foreach (var name in new[] { "id", "displayName" })
             {
                 data.Add(WorkspaceCreateTestData.WithoutMetadataProperty(name));
                 data.Add(WorkspaceCreateTestData.WithMetadataProperty(name, null));
@@ -259,7 +259,9 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
             }
 
             data.Add(WorkspaceCreateTestData.WithMetadataProperty("displayName", " "));
+            data.Add(WorkspaceCreateTestData.WithMetadataProperty("type", ""));
             data.Add(WorkspaceCreateTestData.WithMetadataProperty("type", " "));
+            data.Add(WorkspaceCreateTestData.WithMetadataProperty("type", JsonValue.Create(42)));
             data.Add(WorkspaceCreateTestData.WithMetadataProperty("tags", JsonNode.Parse("[null]")));
             data.Add(WorkspaceCreateTestData.WithMetadataProperty("tags", JsonNode.Parse("[{}]")));
             data.Add(WorkspaceCreateTestData.WithMetadataProperty("tags",

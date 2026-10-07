@@ -86,11 +86,11 @@ public sealed class ItemDeleteCommand(
 
     protected override string GetErrorMessage(Exception ex) => GetStatusCode(ex) switch
     {
-        HttpStatusCode.BadRequest => "Provide nonempty workspace and item UUIDs and an explicit true or false value when supplying hard-delete",
+        HttpStatusCode.BadRequest when ex is ArgumentException => "Provide nonempty workspace and item UUIDs and an explicit true or false value when supplying hard-delete",
         HttpStatusCode.Unauthorized => "Authentication failed. Use an identity authorized to delete the Fabric item",
         HttpStatusCode.Forbidden => "Access denied. Soft deletion needs item write permission; permanent deletion needs workspace Admin. Delegated callers also need Item.ReadWrite.All or the item-specific write scope",
         HttpStatusCode.NotFound => "The Fabric item was not found. Check its workspace ID, item ID, and the caller's access. Deletion was not confirmed",
-        HttpStatusCode.Conflict or HttpStatusCode.UnprocessableEntity => "Fabric rejected item deletion. Check the item state, item-type soft-deletion support, and tenant settings. No fallback to permanent deletion was attempted",
+        HttpStatusCode.BadRequest or HttpStatusCode.Conflict or HttpStatusCode.UnprocessableEntity => "Fabric rejected item deletion. Check the item state, item-type soft-deletion support, and tenant settings. No fallback to permanent deletion was attempted",
         HttpStatusCode.TooManyRequests when ex is FabricItemDeleteThrottledException => ex.Message,
         HttpStatusCode.TooManyRequests => "Fabric throttled the deletion request. Wait before retrying; the request was not automatically retried",
         HttpStatusCode.RequestTimeout or HttpStatusCode.GatewayTimeout => "The Fabric item deletion request was canceled or timed out. The item's deletion state was not confirmed",

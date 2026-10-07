@@ -81,9 +81,13 @@ public class FabricCoreServiceItemDeleteTests()
     [InlineData(HttpStatusCode.UnprocessableEntity)]
     [InlineData(HttpStatusCode.InternalServerError)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.Redirect)]
+    [InlineData(HttpStatusCode.TemporaryRedirect)]
+    [InlineData(HttpStatusCode.PermanentRedirect)]
     public async Task DeleteItemAsync_PreservesFailureStatusWithoutRetryOrHardDeleteFallback(HttpStatusCode status)
     {
         using var response = ItemDeleteTestData.CreateResponse(status, "private-backend-detail");
+        response.Headers.Location = new Uri("https://example.invalid/must-not-delete");
         var content = Assert.IsType<ItemDeleteTrackingContent>(response.Content);
         using var handler = new FabricCoreHttpMessageHandler((request, _) =>
         {
@@ -210,6 +214,26 @@ public class FabricCoreServiceItemDeleteTests()
         Assert.Equal(1, handler.CallCount);
         Assert.NotNull(capturedRequest);
         Assert.Throws<ObjectDisposedException>(() => capturedRequest.RequestUri = new Uri(ItemDeleteTestData.ItemUrl));
+    }
+
+    [Fact]
+    public async Task DeleteItemAsync_HonorsConfirmedSuccessAfterLateCancellation()
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        using var response = ItemDeleteTestData.CreateResponse();
+        using var handler = new FabricCoreHttpMessageHandler((_, _) =>
+        {
+            cancellation.Cancel();
+            return Task.FromResult(response);
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, ItemDeleteTestData.CreateCredential());
+
+        await service.DeleteItemAsync(ItemDeleteTestData.WorkspaceId, ItemDeleteTestData.ItemId, false, cancellation.Token);
+
+        Assert.True(cancellation.IsCancellationRequested);
+        Assert.True(Assert.IsType<ItemDeleteTrackingContent>(response.Content).IsDisposed);
+        Assert.Equal(1, handler.CallCount);
     }
 
     [Fact]

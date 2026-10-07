@@ -174,6 +174,33 @@ public class WorkspaceListToolRegistrationTests()
         Assert.Empty(credential.ReceivedCalls());
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(""","type":null""")]
+    public async Task RegisteredTool_AllowsMissingOrNullWorkspaceType(string typeProperty)
+    {
+        using var response = WorkspaceListTestData.CreateResponse(
+            $$"""{"value":[{"id":"{{WorkspaceListTestData.WorkspaceId}}","displayName":"Finance","description":""{{typeProperty}}}]}""");
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
+        await using var provider = CreateServices(handler, WorkspaceListTestData.CreateCredential(), StructuredOutputMode.Duplicated);
+        var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
+        var tools = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+        var schema = Assert.Single(tools.Tools, tool => tool.Name == "core_list-workspaces").OutputSchema!.Value;
+        Assert.Equal(["displayName", "id"], schema.GetProperty("properties").GetProperty("workspaces").GetProperty("items")
+            .GetProperty("required").EnumerateArray().Select(property => property.GetString()).Order());
+
+        var result = await loader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("core_list-workspaces", new Dictionary<string, object?>()), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        var workspace = Assert.Single(result.StructuredContent!.Value.GetProperty("workspaces").EnumerateArray());
+        Assert.Equal(WorkspaceListTestData.WorkspaceId, workspace.GetProperty("id").GetString());
+        Assert.False(workspace.TryGetProperty("type", out _));
+        using var envelope = JsonDocument.Parse(Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        Assert.True(JsonElement.DeepEquals(envelope.RootElement.GetProperty("results"), result.StructuredContent.Value));
+        Assert.Equal(1, handler.CallCount);
+    }
+
     private static ServiceProvider CreateServices(
         HttpMessageHandler handler, TokenCredential credential, StructuredOutputMode? mode, string transport = TransportTypes.StdIo)
     {

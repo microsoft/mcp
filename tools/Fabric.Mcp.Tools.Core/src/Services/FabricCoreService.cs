@@ -137,12 +137,13 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         }
 
         using var response = await SendFabricHttpRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
-        cancellationToken.ThrowIfCancellationRequested();
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
             return;
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
         {
@@ -165,10 +166,11 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}";
         using var response = await SendFabricHttpRequestAsync(
             HttpMethod.Delete, url, completionOption: HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
-        cancellationToken.ThrowIfCancellationRequested();
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (response.StatusCode == HttpStatusCode.TooManyRequests &&
                 FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
             {
@@ -251,7 +253,8 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         var workspace = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.FabricWorkspaceMetadata, cancellationToken);
 
         if (workspace is null || workspace.Id != parsedWorkspaceId ||
-            string.IsNullOrWhiteSpace(workspace.DisplayName) || string.IsNullOrWhiteSpace(workspace.Type) ||
+            string.IsNullOrWhiteSpace(workspace.DisplayName) ||
+            (workspace.Type is not null && string.IsNullOrWhiteSpace(workspace.Type)) ||
             workspace.Tags?.Any(static tag => tag is null || tag.Id == Guid.Empty || string.IsNullOrWhiteSpace(tag.DisplayName)) == true)
         {
             throw new JsonException("Fabric returned invalid workspace metadata.");
@@ -299,7 +302,8 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
         var workspace = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.CreatedWorkspaceMetadata, cancellationToken);
         if (workspace is null || workspace.Id == Guid.Empty ||
-            string.IsNullOrWhiteSpace(workspace.DisplayName) || string.IsNullOrWhiteSpace(workspace.Type) ||
+            string.IsNullOrWhiteSpace(workspace.DisplayName) ||
+            (workspace.Type is not null && string.IsNullOrWhiteSpace(workspace.Type)) ||
             workspace.CapacityId == Guid.Empty || workspace.DomainId == Guid.Empty ||
             workspace.Tags?.Any(static tag => tag is null || tag.Id == Guid.Empty || string.IsNullOrWhiteSpace(tag.DisplayName)) == true)
         {
@@ -504,7 +508,8 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
         var workspace = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.WorkspaceUpdateResponse, cancellationToken);
         if (workspace is null || workspace.Id != parsedId ||
-            string.IsNullOrWhiteSpace(workspace.DisplayName) || string.IsNullOrWhiteSpace(workspace.Type))
+            string.IsNullOrWhiteSpace(workspace.DisplayName) ||
+            (workspace.Type is not null && string.IsNullOrWhiteSpace(workspace.Type)))
         {
             throw new JsonException("Fabric returned invalid workspace metadata.");
         }
@@ -516,7 +521,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         workspace is not null &&
         workspace.Id != Guid.Empty &&
         !string.IsNullOrWhiteSpace(workspace.DisplayName) &&
-        !string.IsNullOrWhiteSpace(workspace.Type) &&
+        (workspace.Type is null || !string.IsNullOrWhiteSpace(workspace.Type)) &&
         (workspace.Tags is null || workspace.Tags.All(static tag =>
             tag is not null && tag.Id != Guid.Empty && !string.IsNullOrWhiteSpace(tag.DisplayName)));
 

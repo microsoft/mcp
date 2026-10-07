@@ -145,6 +145,32 @@ public class ItemDeleteCommandTests() : CommandUnitTestsBase<ItemDeleteCommand, 
     }
 
     [Theory]
+    [InlineData(false, "nonempty workspace and item UUIDs")]
+    [InlineData(true, "item-type soft-deletion support, and tenant settings")]
+    public async Task ExecuteAsync_DistinguishesInvalidInputFromFabricRejection(bool upstream, string guidance)
+    {
+        RegisterCommand();
+        Exception exception = upstream
+            ? new HttpRequestException("private-body", null, HttpStatusCode.BadRequest)
+            : new ArgumentException("private-input");
+        Service.DeleteItemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(exception);
+
+        var response = await ExecuteCommandAsync(ItemDeleteTestData.RequiredArguments + " --hard-delete false");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(guidance, response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        if (upstream)
+        {
+            Assert.DoesNotContain("Provide nonempty", response.Message);
+            Assert.Contains("No fallback to permanent deletion was attempted", response.Message);
+        }
+        await Service.Received(1).DeleteItemAsync(
+            ItemDeleteTestData.WorkspaceId, ItemDeleteTestData.ItemId, false, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
     [InlineData("authentication", HttpStatusCode.Unauthorized)]
     [InlineData("cancellation", HttpStatusCode.RequestTimeout)]
     [InlineData("timeout", HttpStatusCode.GatewayTimeout)]

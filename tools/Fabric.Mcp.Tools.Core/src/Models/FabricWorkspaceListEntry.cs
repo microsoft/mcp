@@ -9,7 +9,7 @@ public sealed class FabricWorkspaceListEntry()
 
     public required string DisplayName { get; init; }
 
-    public required string Type { get; init; }
+    public string? Type { get; init; }
 
     public string? Description { get; init; }
 

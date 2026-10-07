@@ -183,6 +183,7 @@ public class FabricCoreServiceWorkspaceListTests()
     [InlineData("""{"value":{}}""")]
     [InlineData("""{"value":[null]}""")]
     [InlineData("""{"value":[{}]}""")]
+    [InlineData("""{"value":[{"id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","displayName":"Workspace","type":42}]}""")]
     [InlineData("""{"value":[],"continuationToken":42}""")]
     public async Task ListWorkspacesAsync_RejectsInvalidPagesAndDisposesResponse(string body)
     {
@@ -203,7 +204,7 @@ public class FabricCoreServiceWorkspaceListTests()
     [InlineData("id", "00000000-0000-0000-0000-000000000000")]
     [InlineData("displayName", null)]
     [InlineData("displayName", " ")]
-    [InlineData("type", null)]
+    [InlineData("type", " ")]
     [InlineData("type", "")]
     public async Task ListWorkspacesAsync_RejectsInvalidWorkspaceIdentity(string property, string? value)
     {

@@ -80,7 +80,8 @@ public sealed class WorkspaceDeleteCommand(
 
     protected override string GetErrorMessage(Exception ex) => GetStatusCode(ex) switch
     {
-        HttpStatusCode.BadRequest => "Provide a nonempty workspace UUID",
+        HttpStatusCode.BadRequest when ex is ArgumentException => "Provide a nonempty workspace UUID",
+        HttpStatusCode.BadRequest => "Fabric rejected workspace deletion. Check the workspace state and tenant restrictions before trying again. Deletion was not confirmed",
         HttpStatusCode.Unauthorized => "Authentication failed. Use an identity authorized to delete the Fabric workspace",
         HttpStatusCode.Forbidden => "Access denied. The caller needs the Admin workspace role; delegated callers also need Workspace.ReadWrite.All",
         HttpStatusCode.NotFound => "The Fabric workspace was not found. Check its ID and the caller's access. Deletion was not confirmed",

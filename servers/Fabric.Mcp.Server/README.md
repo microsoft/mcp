@@ -265,7 +265,7 @@ fabmcp core get-workspace --workspace-id aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
 fabmcp core get-workspace --workspace-id aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa --prefer-workspace-specific-endpoints true
 ```
 
-The result contains a `workspace` object with `id`, `displayName`, and `type`. When returned by Fabric it also includes `description`, `capacityId`, `capacityAssignmentProgress`, `capacityRegion`, `domainId`, `workspaceIdentity`, `oneLakeEndpoints`, `apiEndpoint`, and applied `tags`. Missing/null optional fields are omitted; an explicitly empty tag list remains empty. New workspace types, capacity regions, and progress values are preserved.
+The result contains a `workspace` object with `id` and `displayName`. When returned by Fabric it also includes `type`, `description`, `capacityId`, `capacityAssignmentProgress`, `capacityRegion`, `domainId`, `workspaceIdentity`, `oneLakeEndpoints`, `apiEndpoint`, and applied `tags`. Missing/null optional fields are omitted; an explicitly empty tag list remains empty. New workspace types, capacity regions, and progress values are preserved.
 
 Workspace identity fields contain application and service-principal IDs, not credentials. Returned endpoints are metadata only: this tool never contacts them. Workspaces with public access disabled may return workspace-specific OneLake endpoints even when the preference is omitted or false; an absent API endpoint is not inferred.
 
@@ -345,6 +345,8 @@ The Fabric MCP Server exposes tools organized into three categories:
 | `onelake_modify-immutability-policy` | Modifies the workspace-level OneLake immutability policy (scope, retention days). |
 
 ### Core Fabric Operations
+
+The configured Fabric Core HTTP client does not automatically follow redirects. This policy applies to all Core operations, including existing create/search and update calls as well as deletion: a returned 3xx response is surfaced as a failure instead of following its Location. Existing configured handlers, proxy settings, timeouts, credentials, and recording wrappers are retained. Workspace `type` is optional in Get, List, Create, and Update responses; omitted/null values are not invented, while present nonempty future type strings are preserved.
 
 | Tool Name | Description |
 |-----------|-------------|
@@ -535,8 +537,8 @@ confirmation. Its result contains `workspace` with only `id`, `displayName`, `ty
 when returned by Fabric; an empty returned description remains empty.
 
 The tool makes one application-level PATCH with no application retries, prefetch, follow-up requests,
-polling, or enrichment. The existing HTTP client's redirect behavior is unchanged, so this is not a
-guarantee of one wire-level hop. Response URLs are not followed by application code. Capacity, domain,
+polling, or enrichment. The Fabric Core HTTP client does not automatically follow redirects.
+Response URLs are not followed by application code. Capacity, domain,
 identity, permissions, tags, endpoints, items, and data cannot be updated through this tool.
 Failures retain the HTTP status and expose only sanitized messages and validated `Retry-After`
 guidance. If a request times out or returns an invalid success payload, the update might already
@@ -572,12 +574,12 @@ The tool is mutating and idempotent, is unavailable in read-only mode, and uses 
 It performs no automatic retry or long-running-operation polling. HTTP failures preserve their status and suppress backend details;
 valid nonnegative integer `Retry-After` values provide wait guidance. After a timeout or invalid response, the update may already
 have completed: verify the item's state before retrying.
-Existing HTTP-client redirect behavior is unchanged; one application-level PATCH is not a one-wire-hop guarantee.
+The Fabric Core HTTP client does not automatically follow redirects.
 
 #### Delete a Fabric item
 
 `core_delete-item` sends one [Delete Item API](https://learn.microsoft.com/rest/api/fabric/core/items/delete-item) request. It does not resolve names, inspect item types, retry requests, or poll operations.
-This is one application-level DELETE; existing HTTP-client redirect behavior is unchanged, not a one-wire-hop guarantee.
+The Fabric Core HTTP client does not automatically follow redirects, including 307/308 responses that would otherwise repeat the DELETE.
 
 | Parameter | Required | Behavior |
 |-----------|----------|----------|
@@ -604,7 +606,7 @@ fabmcp core delete-item --workspace-id "<workspace-uuid>" --item-id "<item-uuid>
 
 Soft deletion requires write permission on the item; hard/permanent deletion requires the workspace **Admin** role. Delegated callers need `Item.ReadWrite.All` or the corresponding item-specific write scope. Service principal and managed identity support depends on the item type. Existing host authentication and destructive-operation consent requirements apply; the tool is unavailable in read-only mode.
 
-On the documented empty HTTP 200 response, the tool returns only `workspaceId`, `itemId`, and `hardDeleteRequested`. These identify the requested target and mode, not item metadata or a recovery guarantee. A 404 or other failure is an error, not a successful deletion. Throttling responses retain status 429 and include validated `Retry-After` guidance when available, without automatic retries. Cancellation or timeout does not confirm the final deletion state.
+On the documented empty HTTP 200 response, the tool returns only `workspaceId`, `itemId`, and `hardDeleteRequested`. These identify the requested target and mode, not item metadata or a recovery guarantee. A 404 or other failure is an error, not a successful deletion. An upstream 400 reports Fabric rejection with item-state, soft-delete support, and tenant-setting guidance, not a missing-ID diagnosis. Throttling responses retain status 429 and include validated `Retry-After` guidance when available, without automatic retries. A genuinely canceled or timed-out request does not confirm deletion, but cancellation arriving after a completed HTTP 200 response does not discard that confirmation.
 
 **Delete Workspace** implements the [Fabric Core Delete Workspace API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/delete-workspace).
 
@@ -615,7 +617,7 @@ The CLI command is `fabmcp core delete-workspace --workspace-id <workspace-uuid>
 
 The caller must have the **Admin** workspace role. Delegated callers additionally require **Workspace.ReadWrite.All**. The API documents support for users, service principals, and managed identities; this does not imply those identity flows have been exercised by the offline tests.
 
-The tool sends one `DELETE /v1/workspaces/{workspaceId}` request with no body. Only the documented synchronous, empty `200 OK` produces a typed acknowledgement: `{"workspaceId":"<canonical-workspace-uuid>","deleted":true}`. It does not deserialize a workspace response, enumerate or individually delete items, change permissions, retry automatically, or poll. Failures retain their HTTP status and expose sanitized messages; 403 and 404 never count as successful deletion. Validated `Retry-After` guidance can be returned for throttling. A canceled or timed-out request does not confirm the outcome; check the workspace state before attempting another deletion.
+The tool sends one `DELETE /v1/workspaces/{workspaceId}` request with no body or automatic redirects. Only the documented synchronous, empty `200 OK` produces a typed acknowledgement: `{"workspaceId":"<canonical-workspace-uuid>","deleted":true}`. It does not read or deserialize a workspace response body, enumerate or individually delete items, change permissions, retry automatically, or poll. Failures retain their HTTP status and expose sanitized messages; 403 and 404 never count as successful deletion. An upstream 400 advises checking workspace state and tenant restrictions rather than claiming the validated UUID is missing. Validated `Retry-After` guidance can be returned for throttling. A genuinely canceled or timed-out request does not confirm the outcome; check the workspace state before attempting another deletion. A returned HTTP 200 still confirms success if cancellation arrives afterward.
 
 The tool is marked destructive, not read-only, and idempotent in the no-additional-effects sense; repeated requests can still return 404. Read-only MCP servers hide and reject this tool. The existing MCP elicitation gate requires consent and rejects unsupported or declined consent unless explicitly disabled by the host's dangerous configuration. Annotations alone do not guarantee human confirmation, and direct CLI execution does not use the MCP elicitation gate. Implementation or test approval does not authorize real deletion; API-level tests use substituted HTTP and credentials only.
 

@@ -73,7 +73,7 @@ public sealed class WorkspaceCreateToolRegistrationTests()
             var properties = schema.GetProperty("properties");
             Assert.True(properties.TryGetProperty("location", out _));
             var workspaceSchema = properties.GetProperty("workspace");
-            Assert.Equal(["displayName", "id", "type"],
+            Assert.Equal(["displayName", "id"],
                 workspaceSchema.GetProperty("required").EnumerateArray().Select(static property => property.GetString()).Order());
             var workspace = workspaceSchema.GetProperty("properties");
             Assert.True(workspace.TryGetProperty("id", out _));
@@ -84,6 +84,29 @@ public sealed class WorkspaceCreateToolRegistrationTests()
 
         Assert.Equal(0, handler.CallCount);
         await credential.DidNotReceive().GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(""","type":null""")]
+    public async Task CallTool_AllowsMissingOrNullTypeOnCreatedWorkspace(string typeProperty)
+    {
+        using var response = WorkspaceCreateTestData.CreateResponse(
+            $$"""{"id":"{{WorkspaceCreateTestData.WorkspaceId}}","displayName":"New workspace","description":""{{typeProperty}}}""");
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
+        await using var provider = CreateServiceProvider(handler, WorkspaceCreateTestData.CreateCredential());
+        await using var loader = CreateToolLoader(provider, new() { StructuredOutputMode = StructuredOutputMode.Duplicated });
+
+        var result = await loader.CallToolHandler(CreateRequest(CreateArguments()), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        var workspace = result.StructuredContent!.Value.GetProperty("workspace");
+        Assert.Equal(WorkspaceCreateTestData.WorkspaceId, workspace.GetProperty("id").GetString());
+        Assert.False(workspace.TryGetProperty("type", out _));
+        using var envelope = JsonDocument.Parse(GetText(result));
+        Assert.Equal(201, envelope.RootElement.GetProperty("status").GetInt32());
+        Assert.True(JsonElement.DeepEquals(envelope.RootElement.GetProperty("results"), result.StructuredContent.Value));
+        Assert.Equal(1, handler.CallCount);
     }
 
     [Theory]

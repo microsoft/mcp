@@ -229,8 +229,9 @@ public class FabricCoreServiceWorkspaceUpdateTests()
     [InlineData("""{"id":"00000000-0000-0000-0000-000000000000","displayName":"Finance","type":"Workspace"}""")]
     [InlineData("""{"id":"8ca5dd7f-41db-482a-85d9-21086b17799b","displayName":"Finance","type":"Workspace"}""")]
     [InlineData("""{"id":"33bae707-5fe7-4352-89bd-061a1318b60a","displayName":"","type":"Workspace"}""")]
-    [InlineData("""{"id":"33bae707-5fe7-4352-89bd-061a1318b60a","displayName":"Finance","type":null}""")]
-    [InlineData("""{"id":"33bae707-5fe7-4352-89bd-061a1318b60a","displayName":"Finance"}""")]
+    [InlineData("""{"id":"33bae707-5fe7-4352-89bd-061a1318b60a","displayName":"Finance","type":""}""")]
+    [InlineData("""{"id":"33bae707-5fe7-4352-89bd-061a1318b60a","displayName":"Finance","type":" "}""")]
+    [InlineData("""{"id":"33bae707-5fe7-4352-89bd-061a1318b60a","displayName":"Finance","type":42}""")]
     [InlineData("""{"id":"33bae707-5fe7-4352-89bd-061a1318b60a","displayName":"Finance","type":"Workspace","description":{}}""")]
     public async Task UpdateWorkspaceAsync_RejectsInvalidSuccessPayloadsAndDisposesResponse(string json)
     {

@@ -90,7 +90,7 @@ public class WorkspaceDeleteCommandTests() : CommandUnitTestsBase<WorkspaceDelet
     }
 
     [Theory]
-    [InlineData(HttpStatusCode.BadRequest, "nonempty workspace UUID")]
+    [InlineData(HttpStatusCode.BadRequest, "Fabric rejected workspace deletion")]
     [InlineData(HttpStatusCode.Unauthorized, "Authentication failed")]
     [InlineData(HttpStatusCode.Forbidden, "Admin workspace role")]
     [InlineData(HttpStatusCode.NotFound, "Deletion was not confirmed")]
@@ -113,6 +113,29 @@ public class WorkspaceDeleteCommandTests() : CommandUnitTestsBase<WorkspaceDelet
         Assert.Null(response.Results);
         Assert.DoesNotContain(Logger.ReceivedCalls(), static call =>
             call.GetArguments().Any(static argument => argument?.ToString()?.Contains("private-", StringComparison.Ordinal) == true));
+    }
+
+    [Theory]
+    [InlineData(false, "nonempty workspace UUID")]
+    [InlineData(true, "workspace state and tenant restrictions")]
+    public async Task ExecuteAsync_DistinguishesInvalidInputFromFabricRejection(bool upstream, string guidance)
+    {
+        Exception exception = upstream
+            ? new HttpRequestException("private-body", null, HttpStatusCode.BadRequest)
+            : new ArgumentException("private-input");
+        Service.DeleteWorkspaceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
+
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceDeleteTestData.WorkspaceId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(guidance, response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        if (upstream)
+        {
+            Assert.DoesNotContain("Provide a nonempty", response.Message);
+            Assert.Contains("Deletion was not confirmed", response.Message);
+        }
+        await Service.Received(1).DeleteWorkspaceAsync(WorkspaceDeleteTestData.WorkspaceId, TestContext.Current.CancellationToken);
     }
 
     [Theory]
