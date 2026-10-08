@@ -1,5 +1,10 @@
 #Requires -Version 7
 
+# Single source of truth for the public VSIX version. New-BuildInfo.ps1 records the result of
+# Resolve-PublicVsixVersion in build_info.json for Pack-Vsix.ps1, and Compile-Changelog.ps1 calls it directly for the
+# release it is preparing, so the packaged version and the changelog heading cannot diverge. The versioning policy is
+# described under "VSIX Versioning" in servers/Azure.Mcp.Server/vscode/VSIX-DESIGN.md.
+
 function Get-LatestMarketplaceVersion {
     [CmdletBinding()]
     param(
