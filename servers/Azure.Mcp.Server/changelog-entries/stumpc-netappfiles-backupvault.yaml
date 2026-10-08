@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added the `netappfiles backupvault create`, `netappfiles backupvault get`, and `netappfiles backupvault update` commands for creating, retrieving, and updating Azure NetApp Files backup vaults.
