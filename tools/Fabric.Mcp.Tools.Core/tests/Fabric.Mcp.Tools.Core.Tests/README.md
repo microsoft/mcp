@@ -7,7 +7,7 @@ Offline tests for the Fabric Core toolset.
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
-- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Cumulative Core discovery/schema/read-only invariants and assignment consent and validation through real registration with substituted HTTP and credentials
+- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Assignment schemas, consent, validation, and read-only rejection through real registration with substituted HTTP and credentials
 - **Commands/CapacityListCommandTests.cs**: Tests for the `list-capacities` contract, metadata, option binding, cancellation, and sanitized failures
 - **Services/FabricCoreServiceCapacityListTests.cs**: Offline HTTP tests for single-page requests, opaque continuation tokens, metadata validation, status/Retry-After handling, disposal, concurrent identities, and existing POST regressions
 - **Models/CapacityListSerializationTests.cs**: Source-generated capacity output and unchanged continuation information
@@ -48,10 +48,24 @@ Offline tests for the Fabric Core toolset.
 - **Commands/WorkspaceDeleteCommandTests.cs**: Required UUID validation, destructive metadata, typed deletion acknowledgement, and sanitized failures
 - **Services/FabricCoreServiceWorkspaceDeleteTests.cs**: Substituted HTTP tests for the exact DELETE request, empty 200 response, status and retry guidance, cancellation, disposal, concurrency, and existing create/search regressions
 - **WorkspaceDeleteToolRegistrationTests.cs**: Registered MCP handler tests for consent, read-only discovery/execution restrictions, input/output schemas, and legacy/compact/duplicated output
-- **FabricCoreSetupTests.cs**: Tests for service registration and cumulative command setup
+- **FabricCoreCatalogTests.cs**: Exact Core catalog and read-only membership, singleton command registration, discovery annotations, and schema consistency
+- **FabricCoreSetupTests.cs**: Setup identity and configured HTTP transport, proxy, timeout, and redirect behavior
 - **Services/FabricCoreServiceBaselineTests.cs**: Direct HTTP tests preserving create/search authentication, JSON bodies, responses, error handling, cancellation, and single-request behavior
 - **Services/FabricCoreHttpHelpersTests.cs**: Validated `Retry-After` parsing and continuation-token encoding checked against constructed HTTP request URIs
 - **Models/FabricCapacityMetadataTests.cs**: Source-generated five-field capacity serialization/schema and required metadata validation
+
+## Catalog Expectations
+
+`FabricCoreCatalogTests.ExpectedTools` is the single test-owned catalog manifest. When adding a Core
+tool, add one entry with its MCP name, command type, and read-only eligibility. The expected normal
+and read-only catalogs are derived only from this manifest, never from production registration or
+command metadata. Exact comparisons reject missing, unexpected, duplicate, or misclassified tools;
+focused regression cases verify those failures in both modes.
+
+Keep each tool's registration tests focused on its own options, input/output schemas, annotations,
+operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
+catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
+representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
 
 ## Shared Core Building Blocks
 

@@ -105,49 +105,26 @@ public class WorkspaceAssignToCapacityToolRegistrationTests()
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task CumulativeCoreDiscovery_PreservesAllSchemasAndReadOnlyFiltering(bool readOnly)
+    [InlineData(TransportTypes.StdIo)]
+    [InlineData(TransportTypes.Http)]
+    public async Task RegisteredAssignment_IsHiddenAndRejectedInReadOnlyMode(string transport)
     {
         using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("Discovery must not send HTTP."));
         var credential = CreateCredential();
-        await using var provider = CreateServices(handler, credential, StructuredOutputMode.Compact, readOnly: readOnly);
+        await using var provider = CreateServices(handler, credential, StructuredOutputMode.Compact, transport, readOnly: true);
         var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
-        var factory = provider.GetRequiredService<ICommandFactory>();
 
         var catalog = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
 
-        string[] readOnlyNames =
-        [
-            "core_get-capacity", "core_get-item", "core_get-workspace", "core_list-capacities",
-            "core_list-items", "core_list-workspaces", "core_search-catalog"
-        ];
-        string[] allNames =
-        [
-            ToolName, "core_create-item", "core_create-workspace", "core_delete-item", "core_delete-workspace",
-            "core_get-capacity", "core_get-item", "core_get-workspace", "core_list-capacities", "core_list-items",
-            "core_list-workspaces", "core_search-catalog", "core_update-item", "core_update-workspace"
-        ];
-        Assert.Equal(readOnly ? readOnlyNames : allNames, catalog.Tools.Select(tool => tool.Name).Order());
-        foreach (var tool in catalog.Tools)
-        {
-            var command = factory.AllCommands[tool.Name];
-            Assert.Equal(command.Metadata.ReadOnly, tool.Annotations?.ReadOnlyHint);
-            Assert.Equal(command.Metadata.Destructive, tool.Annotations?.DestructiveHint);
-            Assert.Equal(command.Metadata.Idempotent, tool.Annotations?.IdempotentHint);
-            Assert.Equal(command.ResultTypeInfo is not null, tool.OutputSchema.HasValue);
-            Assert.Equal(command.GetCommand().Options.Where(option => option.Name != "--learn")
-                .Select(option => option.Name.TrimStart('-')).Order(),
-                tool.InputSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
-        }
-        if (readOnly)
-        {
-            var result = await loader.CallToolHandler(CreateRequest(CreateConsentServer()), TestContext.Current.CancellationToken);
-            Assert.True(result.IsError);
-            Assert.Contains("read-only", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
-        }
+        Assert.DoesNotContain(catalog.Tools, tool => tool.Name == ToolName);
+        var server = CreateConsentServer();
+        var result = await loader.CallToolHandler(CreateRequest(server), TestContext.Current.CancellationToken);
+        Assert.True(result.IsError);
+        Assert.Contains("read-only", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        Assert.Null(result.StructuredContent);
         Assert.Equal(0, handler.CallCount);
         Assert.Empty(credential.ReceivedCalls());
+        await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]

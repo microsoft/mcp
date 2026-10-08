@@ -97,7 +97,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertCoreToolsAreListed(content);
+                AssertRepresentativeCoreTools(content);
                 AssertListItemsTool(content);
             }
         }
@@ -171,7 +171,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertCoreToolsAreListed(response);
+                AssertRepresentativeCoreTools(response);
                 AssertListItemsTool(response);
             }
         }
@@ -246,35 +246,12 @@ public class ServerStartupTests
         }
     }
 
-    private static void AssertCoreToolsAreListed(string response)
+    private static void AssertRepresentativeCoreTools(string response)
     {
-        string[] names =
-        [
-            "core_assign-workspace-to-capacity",
-            "core_create-item",
-            "core_create-workspace",
-            "core_delete-item",
-            "core_delete-workspace",
-            "core_get-capacity",
-            "core_get-item",
-            "core_get-workspace",
-            "core_list-capacities",
-            "core_list-items",
-            "core_list-workspaces",
-            "core_search-catalog",
-            "core_update-item",
-            "core_update-workspace"
-        ];
-
-        foreach (var name in names)
-        {
-            Assert.Contains($"\"{name}\"", response, StringComparison.Ordinal);
-        }
-
         using var document = JsonDocument.Parse(response);
         var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
-        Assert.Equal(60, tools.Length);
-        Assert.Equal(14, tools.Count(tool => tool.GetProperty("name").GetString()!.StartsWith("core_", StringComparison.Ordinal)));
+        var names = tools.Select(tool => tool.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
         var itemGet = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-item");
         Assert.True(itemGet.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.True(itemGet.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());

@@ -173,14 +173,6 @@ public sealed class ItemUpdateToolRegistrationTests()
         var result = await loader.CallToolHandler(CreateCall(UpdateArguments()), TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_update-item");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_create-item");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_create-workspace");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_update-workspace");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_delete-item");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_delete-workspace");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_assign-workspace-to-capacity");
-        Assert.Contains(catalog.Tools, t => t.Name == "core_search-catalog");
-        Assert.All(catalog.Tools, t => Assert.True(t.Annotations!.ReadOnlyHint));
         Assert.True(result.IsError);
         Assert.Equal(0, handler.CallCount);
         Assert.Empty(credential.ReceivedCalls());

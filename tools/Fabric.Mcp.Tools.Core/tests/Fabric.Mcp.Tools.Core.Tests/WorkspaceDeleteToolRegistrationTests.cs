@@ -116,11 +116,6 @@ public class WorkspaceDeleteToolRegistrationTests()
 
         var listed = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == ToolName);
-        Assert.Contains(listed.Tools, static tool => tool.Name == "core_search-catalog");
-        Assert.Equal(
-            ["core_get-capacity", "core_get-item", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
-            listed.Tools.Select(static tool => tool.Name).Order());
-        Assert.All(listed.Tools, static tool => Assert.True(tool.Annotations?.ReadOnlyHint));
         var result = await loader.CallToolHandler(CreateRequest(), TestContext.Current.CancellationToken);
 
         Assert.True(result.IsError);

@@ -62,10 +62,6 @@ public class ItemGetToolRegistrationTests()
         var tools = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
         var tool = Assert.Single(tools.Tools, candidate => candidate.Name == "core_get-item");
 
-        Assert.Equal(
-            ["core_get-capacity", "core_get-item", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
-            tools.Tools.Select(candidate => candidate.Name).Order());
-        Assert.All(tools.Tools, candidate => Assert.True(candidate.Annotations?.ReadOnlyHint));
         Assert.True(tool.Annotations?.ReadOnlyHint);
         Assert.True(tool.Annotations?.IdempotentHint);
         Assert.False(tool.Annotations?.DestructiveHint);
