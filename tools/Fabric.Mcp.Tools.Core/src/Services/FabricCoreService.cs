@@ -18,6 +18,53 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
     private const string UserAgentHeaderName = "User-Agent";
     private const string UserAgentHeaderValue = "Fabric Core MCP";
 
+    /// <inheritdoc />
+    public async Task<CapacityListResponse> ListCapacitiesAsync(
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (continuationToken is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(continuationToken);
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/capacities";
+        if (continuationToken is not null)
+        {
+            url += $"?continuationToken={FabricCoreHttpHelpers.EncodeContinuationToken(continuationToken)}";
+        }
+
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Get,
+            url,
+            completionOption: HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken: cancellationToken);
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new CapacityListThrottledException(retryAfter);
+            }
+
+            throw new HttpRequestException(
+                "Unable to list Fabric capacities.",
+                null,
+                response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode);
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var page = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.CapacityListResponse, cancellationToken);
+        if (page?.Value is null || page.Value.Any(static capacity => !FabricCapacityMetadata.IsValid(capacity)))
+        {
+            throw new JsonException("Fabric returned an invalid capacity metadata page.");
+        }
+
+        return page;
+    }
+
     public async Task<FabricItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";

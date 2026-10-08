@@ -18,6 +18,7 @@ public class FabricCoreSetup : IAreaSetup
     {
         services.AddHttpClient<IFabricCoreService, FabricCoreService>();
         services.AddSingleton<CapacityGetCommand>();
+        services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<ItemCreateCommand>();
         services.AddSingleton<CatalogSearchCommand>();
     }
@@ -28,12 +29,14 @@ public class FabricCoreSetup : IAreaSetup
             "Microsoft Fabric Core Operations - Inspect capacities, search, create, and manage Fabric items.\n" +
             "Use this tool when you need to:\n" +
             "- Get metadata for a known Fabric capacity\n" +
+            "- List accessible Fabric capacities and their metadata\n" +
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
             "- Manage core Fabric workspace items\n" +
             "This tool provides core operations for working with Fabric resources.");
 
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
+        fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
 

@@ -191,6 +191,16 @@ Use one of the following options to configure your `mcp.json`:
 
 The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
 
+### Capacity Discovery
+
+* "List Fabric capacities where I am an administrator or contributor"
+* "Show the IDs, SKUs, regions, and states of my accessible Fabric capacities"
+* "Get the next page of Fabric capacities using the continuation token from the previous response"
+
+`core_list-capacities` returns exactly one page of capacity metadata in `capacities`, with `continuationToken` and `continuationUri` when supplied by Fabric. Pass the token unchanged through `--continuation-token` to request another page. Returned URIs are metadata only and are never followed; the tool does not retrieve all pages automatically.
+
+The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/core/capacities/list-capacities) lists capacities where the calling principal is an administrator or contributor. It supports users, service principals, and managed identities. Delegated calls require `Capacity.Read.All` or `Capacity.ReadWrite.All`; this is not an Azure subscription inventory and takes no subscription parameter.
+
 ### Catalog Discovery
 
 * "Search the OneLake catalog for items related to 'sales revenue'"
@@ -303,6 +313,7 @@ The Fabric MCP Server exposes tools organized into three categories:
 |-----------|-------------|
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
 
 **Get Capacity (`core_get-capacity`)**
