@@ -74,7 +74,20 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         TestMode = Settings.TestMode;
     }
 
-    private static async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
+    // xUnit creates a new instance of the test class (and thus calls InitializeAsync/
+    // LoadSettingsAsync) for every single test method. Without caching, a suite with
+    // 100 live tests would acquire a fresh Entra ID token via LiveTestSettingsFixture's
+    // CustomChainedCredential 100 times over, which under load has been observed to
+    // hit "Azure PowerShell authentication timed out" failures. The underlying
+    // .testsettings.json-derived settings (including the principal name/type) are
+    // identical for every test in a run, so it's safe - and much more reliable - to
+    // load them once per test process and share the result.
+    private static readonly Lazy<Task<LiveTestSettings?>> s_liveSettingsTask =
+        new(LoadLiveSettingsCoreAsync, LazyThreadSafetyMode.ExecutionAndPublication);
+
+    private static Task<LiveTestSettings?> TryLoadLiveSettingsAsync() => s_liveSettingsTask.Value;
+
+    private static async Task<LiveTestSettings?> LoadLiveSettingsCoreAsync()
     {
         try
         {
