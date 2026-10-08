@@ -235,12 +235,16 @@ public sealed class ItemUpdateToolRegistrationTests()
             Description = "Offline Fabric Core tests",
             IsTelemetryEnabled = false
         }));
+        services.AddCommandContextAccessor();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         return services.BuildServiceProvider();
     }
 
     private static CommandFactoryToolLoader CreateLoader(ServiceProvider provider, ServerRuntimeConfiguration configuration) =>
-        new(provider.GetRequiredService<ICommandFactory>(), Microsoft.Extensions.Options.Options.Create(configuration), NullLogger<CommandFactoryToolLoader>.Instance);
+        new(provider.GetRequiredService<ICommandContextAccessor>(),
+            provider.GetRequiredService<ICommandFactory>(),
+            Microsoft.Extensions.Options.Options.Create(configuration),
+            NullLogger<CommandFactoryToolLoader>.Instance);
 
     private static RequestContext<CallToolRequestParams> CreateCall(Dictionary<string, JsonElement> arguments) =>
         McpTestUtilities.CreateToolCallRequest(

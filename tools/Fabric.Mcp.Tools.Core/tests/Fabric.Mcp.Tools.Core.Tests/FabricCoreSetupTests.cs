@@ -37,7 +37,7 @@ public class FabricCoreSetupTests
 
         using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(IFabricCoreService));
         Assert.NotNull(configuredHandler);
-        var transport = Assert.IsType<HttpClientHandler>(GetTransport(configuredHandler));
+        SocketsHttpHandler transport = Assert.IsType<SocketsHttpHandler>(GetTransport(configuredHandler));
         Assert.Same(transport, GetTransport(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(nameof(IFabricCoreService))));
         Assert.False(transport.AllowAutoRedirect);
         Assert.True(transport.UseProxy);
@@ -53,7 +53,7 @@ public class FabricCoreSetupTests
         }
 #endif
         var unrelated = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("unrelated");
-        Assert.True(Assert.IsType<HttpClientHandler>(GetTransport(unrelated)).AllowAutoRedirect);
+        Assert.True(Assert.IsType<SocketsHttpHandler>(GetTransport(unrelated)).AllowAutoRedirect);
     }
 
     [Fact]
