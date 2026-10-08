@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed a deserialization failure in the Advisor remediation tool (`advisor_remediation_get`) when the Advisor API returns a non-integer `properties.version` value. The `version` field is now read as a number, resolving the 500 error."
