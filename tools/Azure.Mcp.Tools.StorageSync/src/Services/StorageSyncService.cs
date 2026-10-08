@@ -116,13 +116,17 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var services = resourceGroupResource.Value.GetStorageSyncServices();
-        var existing = await services.GetIfExistsAsync(storageSyncServiceName, cancellationToken);
+        if (await services.ExistsAsync(storageSyncServiceName, cancellationToken))
+        {
+            throw new InvalidOperationException(
+                $"Storage Sync service '{storageSyncServiceName}' already exists in resource group '{resourceGroup}' and subscription '{subscription}'.");
+        }
 
         var content = new StorageSyncServiceCreateOrUpdateContent(new(location))
         {
-            IncomingTrafficPolicy = existing.HasValue
-                ? existing.Value!.Data.IncomingTrafficPolicy
-                : incomingTrafficPolicy == null ? IncomingTrafficPolicy.AllowAllTraffic : new(incomingTrafficPolicy)
+            IncomingTrafficPolicy = incomingTrafficPolicy == null ?
+                IncomingTrafficPolicy.AllowAllTraffic
+                : new(incomingTrafficPolicy)
         };
         if (tags != null)
         {
