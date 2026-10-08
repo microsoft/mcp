@@ -28,7 +28,6 @@ using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
-using Microsoft.Mcp.Core.Services.Http;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using OpenTelemetry;
@@ -146,8 +145,9 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 
             await host.StartAsync(cancellationToken);
 
-            var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
-            LogStartTelemetry(telemetryService, options, host.Services);
+            ITelemetryService telemetryService = host.Services.GetRequiredService<ITelemetryService>();
+            SsrfProtectionPolicy ssrfProtectionPolicy = host.Services.GetRequiredService<SsrfProtectionPolicy>();
+            LogStartTelemetry(telemetryService, options, ssrfProtectionPolicy);
 
             await host.WaitForShutdownAsync(cancellationToken);
 
@@ -161,26 +161,27 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     }
 
     /// <summary>
-    /// Emits successful-start configuration, including privacy-safe SSRF posture, through the usage activity.
+    /// Emits successful-start configuration, including privacy-safe SSRF namespace override posture,
+    /// through the usage activity.
     /// </summary>
     /// <param name="telemetryService">The initialized telemetry service that honors the host's telemetry opt-outs.</param>
     /// <param name="options">The startup command options; SSRF overrides are reported from the host's effective policy.</param>
-    /// <param name="serviceProvider">The started host whose effective shared transport settings are reported.</param>
+    /// <param name="ssrfProtectionPolicy">The started host's effective SSRF protection policy.</param>
     /// <remarks>
-    /// Reports startup configuration, not enforcement on every request. Transport proxy exceptions and
-    /// namespace overrides are independent dimensions. Only bounded categories and an entry count are
-    /// added for SSRF: no proxy addresses, credentials, exclusions, or raw override namespaces.
-    /// Does not create HTTP handlers or invoke custom recording resolvers.
+    /// Reports startup configuration, not enforcement on every request. Only a bounded category and
+    /// an entry count are added for SSRF; raw override namespaces are not exported.
     /// </remarks>
-    /// <exception cref="ArgumentNullException">A required argument is null.</exception>
+    /// <exception cref="ArgumentNullException">
+    /// A required argument is <see langword="null"/>.
+    /// </exception>
     internal static void LogStartTelemetry(
         ITelemetryService telemetryService,
         ServerStartOptions options,
-        IServiceProvider serviceProvider)
+        SsrfProtectionPolicy ssrfProtectionPolicy)
     {
         ArgumentNullException.ThrowIfNull(telemetryService);
         ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(serviceProvider);
+        ArgumentNullException.ThrowIfNull(ssrfProtectionPolicy);
         using var activity = telemetryService.StartActivity(ActivityName.ServerStarted);
 
         if (activity != null)
@@ -191,11 +192,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             activity.SetTag(TagName.DangerouslyDisableElicitation, options.DangerouslyDisableElicitation);
             activity.SetTag(TagName.DangerouslyDisableHttpIncomingAuth, options.DangerouslyDisableHttpIncomingAuth);
             activity.SetTag(TagName.IsDebug, options.Debug);
-            activity.SetTag(TagName.SsrfTransportMode, HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(serviceProvider));
-
-            SsrfProtectionPolicy ssrfPolicy = serviceProvider.GetRequiredService<SsrfProtectionPolicy>();
-            activity.SetTag(TagName.SsrfNamespaceOverrideScope, ssrfPolicy.NamespaceOverrideScope);
-            activity.SetTag(TagName.SsrfNamespaceOverrideCount, ssrfPolicy.NamespaceOverrideCount);
+            activity.SetTag(TagName.SsrfNamespaceOverrideScope, ssrfProtectionPolicy.NamespaceOverrideScope);
+            activity.SetTag(TagName.SsrfNamespaceOverrideCount, ssrfProtectionPolicy.NamespaceOverrideCount);
 
             if (options.Namespace != null && options.Namespace.Length > 0)
             {

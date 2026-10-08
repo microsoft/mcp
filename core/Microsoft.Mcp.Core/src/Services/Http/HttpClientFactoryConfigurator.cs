@@ -78,55 +78,9 @@ public static class HttpClientFactoryConfigurator
         services.AddCommandContextAccessor();
         services.AddEndpointValidation();
         services.AddHttpClient(NoSsrfClientName);
-        services.AddSingleton(new HttpClientFactoryConfiguration(recordingProxyResolver));
         services.ConfigureHttpClientDefaults(builder => ConfigureHttpClientBuilder(builder, recordingProxyResolver));
 
         return services;
-    }
-
-    /// <summary>
-    /// Reports the configured shared transport posture without creating handlers or sending requests.
-    /// </summary>
-    /// <param name="serviceProvider">The host whose effective options and defaults registration are reported.</param>
-    /// <returns>
-    /// A bounded telemetry value: external_only_latest, http_proxy_override,
-    /// recording_proxy_override, deferred, not_configured when shared defaults were not registered,
-    /// or invalid_configuration when an explicit HTTP proxy cannot be constructed.
-    /// </returns>
-    /// <remarks>
-    /// Reports configuration, not per-request enforcement. Does not capture namespace overrides,
-    /// infer use of <see cref="NoSsrfClientName"/>, or report custom named transports. In debug builds a custom
-    /// recording resolver makes the decision deferred; the callback is never invoked here.
-    /// Proxy addresses, credentials, and exclusions are never returned.
-    /// An invalid HTTP proxy is reported rather than thrown so enabling telemetry does not
-    /// change startup behavior. Actual handler creation still rejects invalid proxy settings.
-    /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
-    internal static string GetConfiguredSsrfTransportMode(IServiceProvider serviceProvider)
-    {
-        ArgumentNullException.ThrowIfNull(serviceProvider);
-        HttpClientFactoryConfiguration? configuration = serviceProvider.GetService<HttpClientFactoryConfiguration>();
-        if (configuration is null)
-        {
-            return "not_configured";
-        }
-
-        HttpClientOptions options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
-        (WebProxy? Proxy, Uri? RecordingProxy, bool Deferred) decision;
-        try
-        {
-            decision = ResolveProxyConfiguration(options, configuration.RecordingProxyResolver, evaluateRecordingResolver: false);
-        }
-        catch (ArgumentException)
-        {
-            // Report the failure explicitly without changing the handler's existing validation
-            // or making host startup depend on whether a telemetry listener is enabled.
-            return "invalid_configuration";
-        }
-        return decision.Deferred ? "deferred"
-            : decision.RecordingProxy is not null ? "recording_proxy_override"
-            : decision.Proxy is not null ? "http_proxy_override"
-            : "external_only_latest";
     }
 
     /// <summary>
@@ -221,8 +175,7 @@ public static class HttpClientFactoryConfigurator
         HttpClientOptions options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
         var handler = new SocketsHttpHandler();
 
-        (WebProxy? proxy, Uri? recordingProxy, _) =
-            ResolveProxyConfiguration(options, recordingProxyResolver, evaluateRecordingResolver: true);
+        WebProxy? proxy = CreateProxy(options);
         if (proxy != null)
         {
             handler.Proxy = proxy;
@@ -230,6 +183,7 @@ public static class HttpClientFactoryConfigurator
         }
 
 #if DEBUG
+        Uri? recordingProxy = ResolveRecordingProxy(options.RecordingProxy, recordingProxyResolver);
         if (recordingProxy != null)
         {
             LogProxyProtectionWarning(serviceProvider, clientName);
@@ -263,38 +217,6 @@ public static class HttpClientFactoryConfigurator
         => serviceProvider.GetRequiredService<ILoggerFactory>()
             .CreateLogger(typeof(HttpClientFactoryConfigurator).FullName!)
             .LogWarning("Proxy configuration takes precedence for HTTP client {ClientName} and disables transport-level AntiSSRF protections. Endpoint domain validation remains enabled unless separately bypassed.", clientName);
-
-    /// <summary>
-    /// Applies the proxy precedence shared by startup reporting and actual handler creation.
-    /// </summary>
-    /// <param name="options">The effective factory HTTP settings.</param>
-    /// <param name="recordingProxyResolver">The optional debug recording callback.</param>
-    /// <param name="evaluateRecordingResolver">Whether a custom callback may be invoked for handler creation.</param>
-    /// <returns>
-    /// The explicit <see cref="WebProxy"/>, recording <see cref="Uri"/>,
-    /// and whether the recording decision is deferred.
-    /// </returns>
-    /// <exception cref="ArgumentException">The HTTP proxy address is not an absolute URI.</exception>
-    /// <exception cref="InvalidOperationException">An evaluated recording callback returns a relative URI.</exception>
-    private static (WebProxy? Proxy, Uri? RecordingProxy, bool Deferred) ResolveProxyConfiguration(
-        HttpClientOptions options,
-        Func<Uri?>? recordingProxyResolver,
-        bool evaluateRecordingResolver)
-    {
-        WebProxy? proxy = CreateProxy(options);
-#if DEBUG
-        // A custom resolver takes priority over environment settings and explicit HTTP proxies.
-        // Do not guess its outcome or trigger fixture initialization merely to emit startup telemetry.
-        if (recordingProxyResolver is not null && !evaluateRecordingResolver)
-        {
-            return (proxy, null, true);
-        }
-
-        return (proxy, ResolveRecordingProxy(options.RecordingProxy, recordingProxyResolver), false);
-#else
-        return (proxy, null, false);
-#endif
-    }
 
 #if DEBUG
     /// <summary>
