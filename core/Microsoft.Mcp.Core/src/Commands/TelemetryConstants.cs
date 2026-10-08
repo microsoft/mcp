@@ -146,13 +146,6 @@ public class TagName
     public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
 
     /// <summary>
-    /// The shared factory's configured startup transport posture: external_only_latest,
-    /// http_proxy_override, recording_proxy_override, deferred, not_configured, or invalid_configuration.
-    /// This is not a per-request enforcement or explicit unprotected-client usage signal.
-    /// </summary>
-    public const string SsrfTransportMode = "SsrfTransportMode";
-
-    /// <summary>
     /// The configured namespace override scope at startup: none, selected, or all.
     /// An all override still requires a resolved executing namespace at request time.
     /// </summary>

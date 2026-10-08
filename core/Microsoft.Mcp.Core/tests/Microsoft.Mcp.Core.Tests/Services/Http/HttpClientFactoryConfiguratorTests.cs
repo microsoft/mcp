@@ -44,7 +44,6 @@ public class HttpClientFactoryConfiguratorTests
         services.AddSingleton(loggerFactory);
         services.ConfigureDefaultHttpClient();
         using ServiceProvider provider = services.BuildServiceProvider();
-        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
         SocketsHttpHandler handler = GetTerminalHandler(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("custom"));
         Assert.Equal(new Uri("http://127.0.0.1:9000"), handler.Proxy!.GetProxy(new Uri("https://management.azure.com")));
         Assert.True(handler.Proxy.IsBypassed(new Uri("https://host.internal")));
@@ -63,47 +62,10 @@ public class HttpClientFactoryConfiguratorTests
         services.ConfigureDefaultHttpClient();
         using ServiceProvider provider = services.BuildServiceProvider();
         Assert.Throws<ArgumentException>(() => provider.GetRequiredService<IHttpClientFactory>().CreateClient());
-        Assert.Equal("invalid_configuration", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
     }
 
     [Fact]
-    public void StartupPosture_DistinguishesMissingDefaultsWithoutResolvingOptions()
-    {
-        var services = new ServiceCollection();
-        services.Configure<HttpClientOptions>(_ => throw new InvalidOperationException("Options must not be resolved."));
-        using ServiceProvider provider = services.BuildServiceProvider();
-        Assert.Equal("not_configured", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void StartupPosture_DoesNotInvokeCustomRecordingResolver(bool configureProxy)
-    {
-        var services = new ServiceCollection();
-        services.Configure<HttpClientOptions>(options => options.AllProxy = configureProxy ? "http://127.0.0.1:9000" : null);
-        services.ConfigureDefaultHttpClient(() => throw new InvalidOperationException("Startup must not invoke this callback."));
-        using ServiceProvider provider = services.BuildServiceProvider();
-#if DEBUG
-        Assert.Equal("deferred", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
-#else
-        Assert.Equal(configureProxy ? "http_proxy_override" : "external_only_latest",
-            HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
-#endif
-    }
-
-    [Fact]
-    public void StartupPosture_FollowsLastDefaultsRegistration()
-    {
-        var services = new ServiceCollection();
-        services.ConfigureDefaultHttpClient(() => throw new InvalidOperationException("Startup must not invoke this callback."));
-        services.ConfigureDefaultHttpClient();
-        using ServiceProvider provider = services.BuildServiceProvider();
-        Assert.Equal("external_only_latest", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
-    }
-
-    [Fact]
-    public void StartupPosture_RecordingOptionsMatchActualHandlerPrecedence()
+    public void RecordingOptionsPreserveExplicitHttpProxyOnInnerHandler()
     {
         var services = new ServiceCollection();
         services.Configure<HttpClientOptions>(options =>
@@ -115,43 +77,15 @@ public class HttpClientFactoryConfiguratorTests
         using ServiceProvider provider = services.BuildServiceProvider();
         HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(string.Empty);
 #if DEBUG
-        Assert.Equal("recording_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
         HttpMessageHandler current = handler;
         while (current is DelegatingHandler delegating && current is not RecordingRedirectHandler)
         {
             current = delegating.InnerHandler!;
         }
         Assert.IsType<RecordingRedirectHandler>(current);
-#else
-        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
 #endif
         Assert.Equal(new Uri("http://127.0.0.1:9000"),
             GetTerminalHandler(handler).Proxy!.GetProxy(new Uri("https://management.azure.com")));
-    }
-
-    [Fact]
-    public void StartupPosture_RecordingFallbackIsOwnedByEachProvider()
-    {
-        using ServiceProvider recorded = CreateProvider("http://127.0.0.1:5000");
-        using ServiceProvider ordinary = CreateProvider(null);
-#if DEBUG
-        Assert.Equal("recording_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(recorded));
-#else
-        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(recorded));
-#endif
-        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(ordinary));
-
-        static ServiceProvider CreateProvider(string? recordingProxy)
-        {
-            var services = new ServiceCollection();
-            services.Configure<HttpClientOptions>(options =>
-            {
-                options.AllProxy = "http://127.0.0.1:9000";
-                options.RecordingProxy = recordingProxy;
-            });
-            services.ConfigureDefaultHttpClient();
-            return services.BuildServiceProvider();
-        }
     }
 
     [Theory]

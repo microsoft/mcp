@@ -32,9 +32,9 @@ Missing or unresolved contexts remain protected, including when `ALL` is configu
 
 Each host owns one immutable, DI-registered `SsrfProtectionPolicy`. Its namespace
 configuration is copied during host composition and shared by `EndpointValidator`,
-the HTTP transports, and startup telemetry. Direct CLI registrations default to no
-overrides. Independent hosts and test providers can configure different policies
-concurrently without process-global initialization or resets.
+the HTTP transports, and namespace override startup telemetry. Direct CLI registrations
+default to no overrides. Independent hosts and test providers can configure different
+policies concurrently without process-global initialization or resets.
 
 `EndpointValidator` is injected as `IEndpointValidator` and shares the host's singleton
 `ICommandContextAccessor` with command loaders and HTTP transports. Both Azure endpoint
@@ -52,31 +52,23 @@ from untrusted input or use it instead of the namespace override mechanism.
 ### Startup Usage Telemetry
 
 When telemetry is enabled, the `ServerStarted` activity includes a privacy-safe
-snapshot of the shared factory configuration:
+summary of configured namespace overrides:
 
 | Tag | Values |
 | --- | --- |
-| `SsrfTransportMode` | `external_only_latest`, `http_proxy_override`, `recording_proxy_override`, `deferred`, `not_configured`, or `invalid_configuration` |
 | `SsrfNamespaceOverrideScope` | `none`, `selected`, or `all` |
 | `SsrfNamespaceOverrideCount` | Count of distinct, non-blank configured entries, ignoring case; includes the `ALL` marker |
 
-Transport mode and namespace overrides are independent: a proxy exception does not
-disable domain validation. `NO_PROXY` exclusions do not restore transport protection.
 The count describes configuration entries, not the number of tools actually affected.
 Names are not trimmed into different override values.
 
-`deferred` means a custom debug recording resolver must be evaluated during handler
-creation, not startup reporting. `not_configured` means shared factory defaults were
-not registered. `invalid_configuration` explicitly reports an invalid HTTP proxy
-without making startup behavior depend on telemetry; handler creation still rejects
-that configuration. The snapshot does not create handlers or make network requests.
-It does not attest to per-request enforcement, custom named transports, or use of
-`NoSsrfClientName`; missing contexts still cannot enable a namespace override.
+The summary does not attest to per-request enforcement; missing contexts still cannot
+enable a namespace override.
 
-No proxy addresses, credentials, exclusions, or raw override namespace strings are
-included in these tags. Existing telemetry opt-outs remain effective. The activity
-uses the trace pipeline, including Microsoft-owned usage telemetry in release
-builds when enabled, rather than relying on `ILogger` warnings.
+Raw override namespace strings are not included in these tags. Existing telemetry
+opt-outs remain effective. The activity uses the trace pipeline, including
+Microsoft-owned usage telemetry in release builds when enabled, rather than relying
+on `ILogger` warnings.
 
 ## Environment Variables
 

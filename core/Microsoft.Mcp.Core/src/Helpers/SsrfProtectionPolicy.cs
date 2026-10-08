@@ -14,7 +14,8 @@ namespace Microsoft.Mcp.Core.Helpers;
 /// <see cref="AllNamespaces"/> matches every resolved executing namespace.
 /// </param>
 /// <remarks>
-/// Register one instance per host, shared by <see cref="EndpointValidator"/>, transports, and startup telemetry.
+/// Register one instance per host, shared by <see cref="EndpointValidator"/>, transports,
+/// and namespace override startup telemetry.
 /// Never mutate configuration or retain a request's namespace or bypass decision in this policy.
 /// Independent hosts and test providers can safely use different policies concurrently.
 /// </remarks>

@@ -38,7 +38,8 @@ public interface IAzureService
     /// <remarks>
     /// Validates against <see cref="IAzureCloudConfiguration.ArmEnvironment"/> from <see cref="CloudConfiguration"/>;
     /// callers cannot override the configured cloud.
-    /// Uses the same immutable <see cref="SsrfProtectionPolicy"/> as shared HTTP transports and startup telemetry.
+    /// Uses the same immutable <see cref="SsrfProtectionPolicy"/> as shared HTTP transports
+    /// and namespace override startup telemetry.
     /// The validator resolves the executing namespace through
     /// <see cref="ICommandContextAccessor.CurrentContext"/> on every call.
     /// A missing context or unresolved namespace cannot enable an override,

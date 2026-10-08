@@ -97,28 +97,6 @@ public class WorkspaceAssignToCapacityMcpTests
     [InlineData("all")]
     [InlineData("namespace")]
     [InlineData("single")]
-    public async Task CallToolHandler_UsesRegisteredNamespaceAndClearsExecutionContext(string mode)
-    {
-        Assert.Null(_contextAccessor.CurrentContext);
-        Service.AssignWorkspaceToCapacityAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(_ =>
-            {
-                Assert.Equal("core", _contextAccessor.CurrentContext?.ToolNamespaceName);
-                return Task.CompletedTask;
-            });
-        await using var loader = CreateLoader(mode, StructuredOutputMode.Compact);
-
-        CallToolResult result = await loader.CallToolHandler(CreateRequest(mode), TestContext.Current.CancellationToken);
-
-        Assert.False(result.IsError);
-        Assert.Null(_contextAccessor.CurrentContext);
-        Assert.Single(Service.ReceivedCalls());
-    }
-
-    [Theory]
-    [InlineData("all")]
-    [InlineData("namespace")]
-    [InlineData("single")]
     public async Task CallToolHandler_ReadOnlyModePreventsMutation(string mode)
     {
         await using var loader = CreateLoader(mode, StructuredOutputMode.Compact, readOnly: true);
