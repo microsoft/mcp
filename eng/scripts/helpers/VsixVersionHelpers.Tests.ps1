@@ -34,7 +34,9 @@ Describe "Resolve-PublicVsixVersion" {
             $ExtensionId | Should -Be "vscode-azure-mcp-server"
             $MajorVersion | Should -Be 2
             [PSCustomObject]@{
+                ExtensionPublished = $true
                 LatestVersion = "2.0.42"
+                MaxPatch = 42
                 NextPatch = 43
             }
         }
@@ -65,8 +67,10 @@ Describe "Resolve-PublicVsixVersion" {
         $result.Source | Should -Be "ServerVersion"
     }
 
-    It "uses 1.0.0 for a first stable release without marketplace history" {
-        $marketplaceProvider = { return $null }
+    It "uses 1.0.0 only for a first stable release of an unpublished extension" {
+        $marketplaceProvider = {
+            [PSCustomObject]@{ ExtensionPublished = $false; LatestVersion = $null; MaxPatch = $null; NextPatch = $null }
+        }
 
         $result = Resolve-PublicVsixVersion `
             -ServerName "Azure.Mcp.Server" `
@@ -78,8 +82,39 @@ Describe "Resolve-PublicVsixVersion" {
         $result.Source | Should -Be "FirstGaRelease"
     }
 
-    It "fails a later stable release without marketplace history" {
-        $marketplaceProvider = { return $null }
+    It "uses the next marketplace patch for 1.0.0 when the 1.0.X series is already published" {
+        $marketplaceProvider = {
+            [PSCustomObject]@{ ExtensionPublished = $true; LatestVersion = "1.0.4"; MaxPatch = 4; NextPatch = 5 }
+        }
+
+        $result = Resolve-PublicVsixVersion `
+            -ServerName "Azure.Mcp.Server" `
+            -ServerVersion "1.0.0" `
+            -PackageJsonPath $script:packageJsonPath `
+            -MarketplaceVersionProvider $marketplaceProvider
+
+        $result.Version | Should -Be "1.0.5"
+        $result.Source | Should -Be "Marketplace"
+    }
+
+    It "does not use the first-GA exception when only other major series are published" {
+        $marketplaceProvider = {
+            [PSCustomObject]@{ ExtensionPublished = $true; LatestVersion = $null; MaxPatch = $null; NextPatch = $null }
+        }
+
+        {
+            Resolve-PublicVsixVersion `
+                -ServerName "Azure.Mcp.Server" `
+                -ServerVersion "1.0.0" `
+                -PackageJsonPath $script:packageJsonPath `
+                -MarketplaceVersionProvider $marketplaceProvider
+        } | Should -Throw "*first-GA exception*applies only when the extension has no published versions*"
+    }
+
+    It "fails a later stable release of an unpublished extension" {
+        $marketplaceProvider = {
+            [PSCustomObject]@{ ExtensionPublished = $false; LatestVersion = $null; MaxPatch = $null; NextPatch = $null }
+        }
 
         {
             Resolve-PublicVsixVersion `
@@ -88,6 +123,36 @@ Describe "Resolve-PublicVsixVersion" {
                 -PackageJsonPath $script:packageJsonPath `
                 -MarketplaceVersionProvider $marketplaceProvider
         } | Should -Throw "*No marketplace versions were found for the 2.0.X series*"
+    }
+
+    It "fails a later stable release when its major series has no marketplace history" {
+        $marketplaceProvider = {
+            [PSCustomObject]@{ ExtensionPublished = $true; LatestVersion = $null; MaxPatch = $null; NextPatch = $null }
+        }
+
+        {
+            Resolve-PublicVsixVersion `
+                -ServerName "Azure.Mcp.Server" `
+                -ServerVersion "2.0.2" `
+                -PackageJsonPath $script:packageJsonPath `
+                -MarketplaceVersionProvider $marketplaceProvider
+        } | Should -Throw "*No marketplace versions were found for the 2.0.X series*"
+    }
+
+    It "rejects a marketplace provider result without the expected shape" -ForEach @(
+        @{ Name = "no result"; Result = $null }
+        @{ Name = "missing ExtensionPublished"; Result = [PSCustomObject]@{ NextPatch = 43 } }
+        @{ Name = "missing NextPatch"; Result = [PSCustomObject]@{ ExtensionPublished = $true } }
+    ) {
+        $marketplaceProvider = { $Result }.GetNewClosure()
+
+        {
+            Resolve-PublicVsixVersion `
+                -ServerName "Azure.Mcp.Server" `
+                -ServerVersion "2.0.2" `
+                -PackageJsonPath $script:packageJsonPath `
+                -MarketplaceVersionProvider $marketplaceProvider
+        } | Should -Throw "*invalid result*"
     }
 
     It "fails when stable release package metadata is incomplete" {
@@ -128,6 +193,7 @@ Describe "Resolve-PublicVsixVersion" {
     It "rejects an invalid next marketplace patch" {
         $marketplaceProvider = {
             [PSCustomObject]@{
+                ExtensionPublished = $true
                 LatestVersion = "2.0.42"
                 NextPatch = "invalid"
             }
@@ -170,6 +236,7 @@ Describe "Get-LatestMarketplaceVersion" {
 
         $result = Get-LatestMarketplaceVersion -PublisherId "ms-azuretools" -ExtensionId "vscode-azure-mcp-server" -MajorVersion 2
 
+        $result.ExtensionPublished | Should -BeTrue
         $result.LatestVersion | Should -Be "2.0.42"
         $result.MaxPatch | Should -Be 42
         $result.NextPatch | Should -Be 43
@@ -204,21 +271,27 @@ Describe "Get-LatestMarketplaceVersion" {
         }
     }
 
-    It "returns no history for an unpublished extension in strict mode" {
+    It "reports an unpublished extension as having no versions in strict mode" {
         Set-StrictMode -Version Latest
         Mock Invoke-RestMethod { '{"results":[{"extensions":[]}]}' | ConvertFrom-Json }
 
-        Get-LatestMarketplaceVersion -PublisherId "ms-azuretools" -ExtensionId "vscode-azure-mcp-server" -MajorVersion 1 |
-            Should -BeNullOrEmpty
+        $result = Get-LatestMarketplaceVersion -PublisherId "ms-azuretools" -ExtensionId "vscode-azure-mcp-server" -MajorVersion 1
+
+        $result.ExtensionPublished | Should -BeFalse
+        $result.LatestVersion | Should -BeNullOrEmpty
+        $result.NextPatch | Should -BeNullOrEmpty
     }
 
-    It "returns no history when the requested major series has not been published" {
+    It "distinguishes an unpublished major series from an unpublished extension" {
         Mock Invoke-RestMethod {
             '{"results":[{"extensions":[{"versions":[{"version":"1.0.42"}]}]}]}' | ConvertFrom-Json
         }
 
-        Get-LatestMarketplaceVersion -PublisherId "ms-azuretools" -ExtensionId "vscode-azure-mcp-server" -MajorVersion 2 |
-            Should -BeNullOrEmpty
+        $result = Get-LatestMarketplaceVersion -PublisherId "ms-azuretools" -ExtensionId "vscode-azure-mcp-server" -MajorVersion 2
+
+        $result.ExtensionPublished | Should -BeTrue
+        $result.LatestVersion | Should -BeNullOrEmpty
+        $result.NextPatch | Should -BeNullOrEmpty
     }
 
     It "surfaces network errors instead of returning empty history" {

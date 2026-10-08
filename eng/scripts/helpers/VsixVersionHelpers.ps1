@@ -44,27 +44,35 @@ function Get-LatestMarketplaceVersion {
         throw "VS Code Marketplace returned an invalid response for '$PublisherId.$ExtensionId'."
     }
 
-    $matchingPatches = @(
+    $publishedVersions = @(
         foreach ($result in $response.results) {
             foreach ($extension in $result.extensions) {
                 foreach ($extensionVersion in $extension.versions) {
-                    if ($extensionVersion.version -match "^$MajorVersion\.0\.(\d+)$") {
-                        [int]$Matches[1]
-                    }
+                    $extensionVersion.version
                 }
             }
         }
     )
 
-    if ($matchingPatches.Count -eq 0) {
-        return $null
+    # List order is not guaranteed, so take the numeric maximum instead of the first match.
+    $matchingPatches = @(
+        foreach ($publishedVersion in $publishedVersions) {
+            if ($publishedVersion -match "^$MajorVersion\.0\.(\d+)$") {
+                [int]$Matches[1]
+            }
+        }
+    )
+
+    $maxPatch = $null
+    if ($matchingPatches.Count -gt 0) {
+        $maxPatch = [int]($matchingPatches | Measure-Object -Maximum).Maximum
     }
 
-    $maxPatch = [int]($matchingPatches | Measure-Object -Maximum).Maximum
     return [PSCustomObject]@{
-        LatestVersion = "$MajorVersion.0.$maxPatch"
+        ExtensionPublished = $publishedVersions.Count -gt 0
+        LatestVersion = $null -eq $maxPatch ? $null : "$MajorVersion.0.$maxPatch"
         MaxPatch = $maxPatch
-        NextPatch = $maxPatch + 1
+        NextPatch = $null -eq $maxPatch ? $null : $maxPatch + 1
     }
 }
 
@@ -137,7 +145,13 @@ function Resolve-PublicVsixVersion {
     }
 
     $marketplaceInfo = & $MarketplaceVersionProvider $publisherId $extensionName $version.Major
-    if ($marketplaceInfo) {
+    foreach ($requiredProperty in 'ExtensionPublished', 'NextPatch') {
+        if ($null -eq $marketplaceInfo -or -not $marketplaceInfo.PSObject.Properties[$requiredProperty]) {
+            throw "Marketplace version provider returned an invalid result for '$publisherId.$extensionName': '$requiredProperty' is missing."
+        }
+    }
+
+    if ($null -ne $marketplaceInfo.NextPatch) {
         $nextPatch = 0
         if (-not [int]::TryParse("$($marketplaceInfo.NextPatch)", [ref]$nextPatch) -or $nextPatch -lt 0) {
             throw "Marketplace version provider returned an invalid next patch for '$publisherId.$extensionName'."
@@ -156,7 +170,9 @@ function Resolve-PublicVsixVersion {
         $version.Minor -eq 0 -and
         $version.Patch -eq 0
 
-    if ($isFirstGaRelease) {
+    # Only an extension that has never been published may start at 1.0.0. An extension with other published
+    # versions but no history for this series indicates a gap that must be investigated, not guessed.
+    if ($isFirstGaRelease -and -not $marketplaceInfo.ExtensionPublished) {
         return [PSCustomObject]@{
             Version = '1.0.0'
             IsPrerelease = $false
@@ -165,7 +181,7 @@ function Resolve-PublicVsixVersion {
         }
     }
 
-    throw "Cannot determine VSIX version for $ServerName $ServerVersion. No marketplace versions were found for the $($version.Major).0.X series. The 1.0.0 first-GA exception does not apply."
+    throw "Cannot determine VSIX version for $ServerName $ServerVersion. No marketplace versions were found for the $($version.Major).0.X series. The first-GA exception (server version 1.0.0) applies only when the extension has no published versions."
 }
 
 function Assert-VsixChangelogVersion {
