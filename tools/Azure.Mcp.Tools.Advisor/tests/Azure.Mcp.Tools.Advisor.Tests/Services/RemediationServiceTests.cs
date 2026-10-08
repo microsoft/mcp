@@ -79,7 +79,6 @@ public class RemediationServiceTests
         Assert.Equal("medium", method.Confidence);
         var step = Assert.Single(method.Steps!);
         Assert.Equal("1", step.Number);
-        Assert.Equal("source_doc", step.Source);
         Assert.Equal("https://learn.microsoft.com/azure/app-service/configure-common", step.SourceUrl);
         var check = Assert.Single(method.Checks!);
         Assert.Equal("Confirm the setting was applied.", check.Text);
@@ -198,7 +197,7 @@ public class RemediationServiceTests
                   { "name": "app-name", "description": "The App Service name.", "example": "my-web-app", "required": true }
                 ],
                 "steps": [
-                  { "number": "1", "text": "Apply the remediation command.", "kind": "command", "command": "az webapp config set", "source": "source_doc", "sourceUrl": "https://learn.microsoft.com/azure/app-service/configure-common" }
+                  { "number": "1", "text": "Apply the remediation command.", "kind": "command", "command": "az webapp config set", "sourceUrl": "https://learn.microsoft.com/azure/app-service/configure-common" }
                 ],
                 "verification": "az webapp config show --name <app-name> --resource-group <resource-group>",
                 "confidence": "medium",
