@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.DeviceProvisioning.Tests;
@@ -15,6 +16,24 @@ public class DeviceProvisioningCommandTests(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // Resource-group names can include the recording user's alias.
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        ..base.BodyKeySanitizers,
+        new(new BodyKeySanitizerBody("$..resourcegroup"))
+    ];
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        ..base.BodyRegexSanitizers,
+        new(new BodyRegexSanitizerBody
+        {
+            Regex = "resource[Gg]roups/(?<resourceGroup>[^/?\"]+)",
+            GroupForReplace = "resourceGroup",
+            Value = "Sanitized"
+        })
+    ];
+
     [Fact]
     public async Task ShouldGetDeviceProvisioningService()
     {
