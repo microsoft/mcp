@@ -87,6 +87,27 @@ public class RemediationServiceTests
     }
 
     [Theory]
+    [InlineData("6", 6d)]
+    [InlineData("6.0", 6d)]
+    [InlineData("6.5", 6.5d)]
+    public async Task GetRemediationAsync_DeserializesNonIntegerVersion(string versionLiteral, double expected)
+    {
+        // The Advisor API may return properties.version as an integer or a
+        // decimal (e.g. 6.0). Inject the raw JSON literal so an integral value
+        // retains its decimal notation and exercises the production deserializer.
+        var json = MinimalPackageJson.Replace(
+            "\"recommendationTypeId\": \"18745007-438b-4c68-bfa3-b6576d85a831\"",
+            $"\"recommendationTypeId\": \"18745007-438b-4c68-bfa3-b6576d85a831\", \"version\": {versionLiteral}");
+        var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, json));
+        var service = CreateService(handler);
+
+        var package = await service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(package.Properties);
+        Assert.Equal(expected, package.Properties!.Version);
+    }
+
+    [Theory]
     [InlineData(HttpStatusCode.NotFound)]
     [InlineData(HttpStatusCode.Unauthorized)]
     [InlineData(HttpStatusCode.BadRequest)]
