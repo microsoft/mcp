@@ -231,6 +231,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
         var fsName = RegisterOrRetrieveVariable("amlfsHsmName", $"amlfs-{Guid.NewGuid().ToString("N")[..8]}");
         var subnetId = SanitizeAndRecordSubnetId(Settings.DeploymentOutputs.GetValueOrDefault("AMLFS_SUBNET_ID", ""), "amlfsSubnetId");
         var location = SanitizeAndRecordBaseName(RegisterOrRetrieveVariable("location", Settings.DeploymentOutputs.GetValueOrDefault("LOCATION", "")), "location");
+        var zone = RegisterOrRetrieveVariable("zone", Settings.DeploymentOutputs.GetValueOrDefault("ZONE", "1"));
 
         // Calculate HSM required variables
         var hsmDataContainerId = SanitizeAndRecordContainerId(Settings.DeploymentOutputs.GetValueOrDefault("HSM_CONTAINER_ID", ""), "hsmContainerId");
@@ -252,7 +253,7 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
                 { "name", fsName },
                 { "sku", "AMLFS-Durable-Premium-500" },
                 { "size", 4 },
-                { "zone", 1 },
+                { "zone", zone },
                 { "subnet-id", subnetId },
                 { "hsm-container", hsmDataContainerId },
                 { "hsm-log-container", hsmLogContainerId },
