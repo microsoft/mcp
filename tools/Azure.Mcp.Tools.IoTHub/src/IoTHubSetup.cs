@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.IoTHub.Commands.Device;
 using Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
 using Azure.Mcp.Tools.IoTHub.Commands.Query;
+using Azure.Mcp.Tools.IoTHub.Commands.Routing;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -22,6 +23,7 @@ public class IoTHubSetup : IAreaSetup
         services.AddSingleton<IIoTHubService, IoTHubService>();
         services.AddSingleton<IIoTHubHostnameResolver, IoTHubHostnameResolver>();
         services.AddSingleton<IIoTHubDeviceService, IoTHubDeviceService>();
+        services.AddSingleton<IIoTHubRoutingService, IoTHubRoutingService>();
 
         services.AddSingleton<IoTHubGetCommand>();
         services.AddSingleton<IoTHubDeviceListCommand>();
@@ -29,6 +31,8 @@ public class IoTHubSetup : IAreaSetup
         services.AddSingleton<IoTHubDeviceStatisticsCommand>();
         services.AddSingleton<IoTHubDeviceTwinGetCommand>();
         services.AddSingleton<IoTHubQueryRunCommand>();
+        services.AddSingleton<IoTHubRoutingEndpointHealthCommand>();
+        services.AddSingleton<IoTHubRoutingEndpointDiagnosticsCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -54,6 +58,11 @@ public class IoTHubSetup : IAreaSetup
         var query = new CommandGroup("query", "IoT Hub query operations.");
         iothub.AddSubGroup(query);
         query.AddCommand<IoTHubQueryRunCommand>(serviceProvider);
+
+        var routing = new CommandGroup("routing", "IoT Hub message-routing operations.");
+        iothub.AddSubGroup(routing);
+        routing.AddCommand<IoTHubRoutingEndpointHealthCommand>(serviceProvider);
+        routing.AddCommand<IoTHubRoutingEndpointDiagnosticsCommand>(serviceProvider);
 
         return iothub;
     }

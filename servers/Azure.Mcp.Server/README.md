@@ -1197,6 +1197,8 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Query all devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 * "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
 * "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
+* "Show routing endpoint health for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show routing endpoint diagnostics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 
 ### 🏭 Azure IoT Operations
 
@@ -1444,7 +1446,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
-- 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
+- 🌐 **Azure IoT Hub** - IoT Hub resource discovery, details, routing endpoint health, and routing diagnostics
 - 🏭 **Azure IoT Operations** - IoT Operations instance discovery and details
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
