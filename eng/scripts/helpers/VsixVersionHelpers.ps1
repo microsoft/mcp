@@ -56,6 +56,8 @@ function Get-LatestMarketplaceVersion {
         }
     )
 
+    # Azure MCP stable versions are always X.0.N, so versions with a non-zero minor are deliberately ignored. This
+    # must change if minor releases are ever supported (see "VSIX Versioning" in VSIX-DESIGN.md).
     # List order is not guaranteed, so take the numeric maximum instead of the first match.
     $matchingPatches = @(
         foreach ($publishedVersion in $publishedVersions) {
