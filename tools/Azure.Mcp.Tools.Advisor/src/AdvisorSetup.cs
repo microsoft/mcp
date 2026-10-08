@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
+using Azure.Mcp.Tools.Advisor.Commands.ServiceRetirement;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -28,6 +29,7 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<RecommendationMetadataListCommand>();
         services.AddSingleton<MetadataGetCommand>();
         services.AddSingleton<RemediationGetCommand>();
+        services.AddSingleton<ServiceRetirementInsightsCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -51,6 +53,11 @@ public class AdvisorSetup : IAreaSetup
             "Get the Azure Advisor remediation package that explains how to fix or resolve a recommendation type id. Returns step-by-step remediation guidance (manual, human-readable steps to fix the issue) and/or ready-to-run executable artifacts and scripts to remediate it: Azure CLI, PowerShell, Bicep, ARM template and terraform. Also includes remediation metadata, safety flags, methods with parameters, ordered steps, and verification. Use when an agent needs to know how to fix a recommendation, or wants the ARM, Bicep, CLI, PowerShell or terraform artifacts to remediate it.");
         advisor.AddSubGroup(remediation);
 
+        var serviceRetirement = new CommandGroup(
+            "serviceretirement",
+            "Query service-retirement exposure, burndown, backlog, risk, and completion insights at subscription and service-group levels.");
+        advisor.AddSubGroup(serviceRetirement);
+
         // Register Advisor commands
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
@@ -59,6 +66,7 @@ public class AdvisorSetup : IAreaSetup
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
         metadata.AddCommand<MetadataGetCommand>(serviceProvider);
         remediation.AddCommand<RemediationGetCommand>(serviceProvider);
+        serviceRetirement.AddCommand<ServiceRetirementInsightsCommand>(serviceProvider);
 
         return advisor;
     }

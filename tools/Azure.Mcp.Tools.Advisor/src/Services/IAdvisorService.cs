@@ -34,4 +34,9 @@ public interface IAdvisorService
         string recommendationTypeId,
         string language,
         CancellationToken cancellationToken = default);
+
+    Task<List<ServiceRetirementInsight>> ListServiceRetirementInsightsAsync(
+        string? insightResource,
+        int top,
+        CancellationToken cancellationToken = default);
 }

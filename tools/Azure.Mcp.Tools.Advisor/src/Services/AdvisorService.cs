@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
@@ -98,6 +99,155 @@ public class AdvisorService(IAzureService azureService)
         return new(
             JoinWithMetadata(recommendations.Results, metadataByTypeId),
             recommendations.AreResultsTruncated);
+    }
+
+    public async Task<List<ServiceRetirementInsight>> ListServiceRetirementInsightsAsync(
+        string? insightResource,
+        int top,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(top, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(top, 100);
+
+        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+        var query = BuildServiceRetirementInsightsQuery(insightResource, top);
+
+        var result = await tenantResource.GetResourcesAsync(new ResourceQueryContent(query), cancellationToken);
+
+        if (result.Value.Count == 0)
+        {
+            return [];
+        }
+
+        using var document = JsonDocument.Parse(result.Value.Data);
+        if (document.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new JsonException("Azure Resource Graph returned an invalid service retirement insights payload.");
+        }
+
+        return [.. document.RootElement.EnumerateArray().Select(ConvertToInsightsData)];
+    }
+
+    internal static string BuildServiceRetirementInsightsQuery(string? insightResource, int top)
+    {
+        var query =
+            "advisorresources" +
+            " | where type =~ 'microsoft.advisor/insights'" +
+            " | where name =~ 'ServiceRetirement'" +
+            " | where tobool(properties.isDeleted) == false";
+
+        if (!string.IsNullOrWhiteSpace(insightResource))
+        {
+            var value = EscapeKqlString(insightResource.Trim());
+            query +=
+                $" | where tostring(properties.insightResourceId) =~ '{value}'" +
+                $" or tostring(properties.insightResourceName) =~ '{value}'";
+        }
+
+        return query +
+            " | order by todatetime(properties.lastUpdatedTime) desc" +
+            $" | take {top}" +
+            " | project properties";
+    }
+
+    internal static ServiceRetirementInsight ConvertToInsightsData(JsonElement item)
+    {
+        var properties = ReadRequiredProperty(item, "properties");
+        if (properties.ValueKind != JsonValueKind.Object)
+        {
+            throw new JsonException("Service retirement insight row has invalid properties.");
+        }
+
+        var insightDetails = ReadInsightDetails(properties);
+
+        return new(
+            ReadString(properties, "insightResourceName"),
+            ReadString(properties, "insightResourceId"),
+            ReadDateTimeOffset(properties, "lastUpdatedTime"),
+            ReadKpiValue(insightDetails, "Day1ImpactedResources"),
+            ReadKpiValue(insightDetails, "CurrentImpactedResources"),
+            ReadString(properties, "insightName"),
+            ReadBoolean(properties, "isDeleted"),
+            ReadString(properties, "domain"));
+    }
+
+    private static Dictionary<string, string> ReadInsightDetails(JsonElement item)
+    {
+        var property = ReadRequiredProperty(item, "insightDetail");
+        if (property.ValueKind != JsonValueKind.Array)
+        {
+            throw new JsonException("Service retirement insight row has an invalid insightDetail.");
+        }
+
+        var details = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var detail in property.EnumerateArray())
+        {
+            var kpiName = ReadString(detail, "kpiName");
+            if (!details.TryAdd(kpiName, ReadString(detail, "kpiValue")))
+            {
+                throw new JsonException($"Service retirement insight row contains duplicate {kpiName} KPI values.");
+            }
+        }
+
+        return details;
+    }
+
+    private static long ReadKpiValue(
+        IReadOnlyDictionary<string, string> insightDetails,
+        string kpiName)
+    {
+        if (!insightDetails.TryGetValue(kpiName, out var value) ||
+            !long.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var parsedValue) ||
+            parsedValue < 0)
+        {
+            throw new JsonException(
+                $"Service retirement insight row is missing a valid non-negative {kpiName} KPI value.");
+        }
+
+        return parsedValue;
+    }
+
+    private static JsonElement ReadRequiredProperty(JsonElement item, string propertyName)
+    {
+        if (!item.TryGetProperty(propertyName, out var property))
+        {
+            throw new JsonException($"Service retirement insight row is missing {propertyName}.");
+        }
+
+        return property;
+    }
+
+    private static string ReadString(JsonElement item, string propertyName)
+    {
+        var property = ReadRequiredProperty(item, propertyName);
+        if (property.ValueKind != JsonValueKind.String)
+        {
+            throw new JsonException($"Service retirement insight row has an invalid {propertyName}.");
+        }
+
+        return property.GetString()!;
+    }
+
+    private static bool ReadBoolean(JsonElement item, string propertyName)
+    {
+        var property = ReadRequiredProperty(item, propertyName);
+        if (property.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            throw new JsonException($"Service retirement insight row has an invalid {propertyName}.");
+        }
+
+        return property.GetBoolean();
+    }
+
+    private static DateTimeOffset ReadDateTimeOffset(JsonElement item, string propertyName)
+    {
+        var property = ReadRequiredProperty(item, propertyName);
+        if (property.ValueKind != JsonValueKind.String || !property.TryGetDateTimeOffset(out var value))
+        {
+            throw new JsonException($"Service retirement insight row has an invalid {propertyName}.");
+        }
+
+        return value;
     }
 
     public async Task<Recommendation> UpdateRecommendationAsync(

@@ -961,6 +961,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Apply Advisor recommendations to IaaC files"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
+* "Which subscriptions or service groups have the largest remaining service-retirement backlog?"
+* "Summarize Day 1 and current service-retirement exposure for my service group"
 * "Get Advisor metadata for a recommendation type id"
 * "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
@@ -1418,7 +1420,7 @@ Example prompts that generate Azure CLI commands:
 The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
 
 - 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
-- 📊 **Azure Advisor** - Advisor recommendation records, aggregate summaries, lifecycle state management, and recommendation metadata
+- 📊 **Azure Advisor** - Advisor recommendation records, aggregate summaries, lifecycle state management, recommendation metadata, and service-retirement burndown insights
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - ⚙️ **Azure App Configuration** - Configuration management

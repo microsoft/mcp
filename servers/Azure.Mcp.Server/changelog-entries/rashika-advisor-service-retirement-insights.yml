@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added an Advisor command for subscription- and service-group-level service-retirement exposure, backlog, risk, and burndown insights.

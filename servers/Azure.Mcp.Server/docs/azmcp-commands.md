@@ -511,9 +511,16 @@ azmcp advisor recommendation summary --subscription <subscription> \
                                      [--search <search>] \
                                      [--sub-category <sub-category>] \
                                      [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>] \
-                                     [--top <1-100>] \
+                                     [--top <1-100>]
                                      [--resource-group <resource-group>] \
                                      [--tenant <tenant>]
+
+# Get service-retirement exposure and burndown insights at subscription or service-group level.
+# Use without scope filters for fleet-wide backlog rankings and 100 percent burndown results.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor serviceretirement insights [--subscription <subscription>] \
+                                         [--service-group <service-group>] \
+                                         [--top <1-100>] \
 
 # Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
 # Supported --resource values:

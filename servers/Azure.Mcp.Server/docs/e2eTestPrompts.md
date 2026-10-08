@@ -130,6 +130,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Is remediating recommendation type id <recommendation-type-id> destructive or reversible? | none |
 | advisor_remediation_get | How do I verify the fix for Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id <recommendation-type-id> | none |
+| advisor_serviceretirement_insights | How much retirement exposure has subscription <subscription> reduced or increased since its Day 1 count? | none |
+| advisor_serviceretirement_insights | How much retirement exposure has service group <service-group> reduced or increased since its Day 1 count? | none |
+| advisor_serviceretirement_insights | Which subscriptions or service groups have the largest remaining retirement backlog? | none |
+| advisor_serviceretirement_insights | Summarize Day 1 exposure, current exposure, and highest-risk retirements for subscription <subscription> | none |
+| advisor_serviceretirement_insights | Summarize Day 1 exposure, current exposure, and highest-risk retirements for service group <service-group> | none |
+| advisor_serviceretirement_insights | Flag retirements that represent more than half of the current impacted resources remaining for subscription <subscription> | none |
+| advisor_serviceretirement_insights | Flag retirements that represent more than half of the current impacted resources remaining for service group <service-group> | none |
+| advisor_serviceretirement_insights | Which subscriptions or service groups have reached 100 percent burndown with zero remaining exposure? | none |
 
 ## Azure AI Search
 
