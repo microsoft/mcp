@@ -247,6 +247,13 @@ public sealed class AuthorizationServiceManagementGroupTransportTests
         azureService.GetTokenCredentialAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(credential);
         azureService.GetClient().Returns(_ => new HttpClient(armHandler, disposeHandler: false));
+        azureService.When(service => service.ConfigureArmClientOptions(Arg.Any<ArmClientOptions>()))
+            .Do(call =>
+            {
+                ArmClientOptions options = call.Arg<ArmClientOptions>();
+                options.Transport = new HttpClientTransport(azureService.GetClient());
+                options.Environment = cloudConfiguration.ArmEnvironment;
+            });
         return azureService;
     }
 

@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Cosmos;
 
@@ -19,6 +20,7 @@ public class CosmosSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddEndpointValidation();
         services.AddSingleton<ICosmosService, CosmosService>();
 
         services.AddSingleton<CosmosListCommand>();

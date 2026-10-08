@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
@@ -11,22 +13,35 @@ using Microsoft.Mcp.Core.Models.Resource;
 using Microsoft.Mcp.Core.Models.ResourceGroup;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
+/// <summary>
+/// Provides shared Azure resource operations and command-aware ARM client configuration.
+/// </summary>
+/// <param name="cacheService">The cache for tenant, subscription, and resource-group lookups.</param>
+/// <param name="logger">The logger for Azure resource operations.</param>
+/// <param name="subscriptionResolver">The resolver for subscription names and identifiers.</param>
+/// <param name="credentialProvider">The provider for the host's configured Azure authentication strategy.</param>
+/// <param name="httpClientFactory">The factory supplying configured HTTP transports.</param>
+/// <param name="cloudConfiguration">The Azure cloud whose endpoints and ARM environment are used.</param>
+/// <param name="endpointValidator">The validator using this host's immutable SSRF protection policy.</param>
 public sealed class AzureService(
     ICacheService cacheService,
     ILogger<AzureService> logger,
     ISubscriptionResolver subscriptionResolver,
     IAzureTokenCredentialProvider credentialProvider,
     IHttpClientFactory httpClientFactory,
-    IAzureCloudConfiguration cloudConfiguration) : IAzureService
+    IAzureCloudConfiguration cloudConfiguration,
+    IEndpointValidator endpointValidator) : IAzureService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<AzureService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly ISubscriptionResolver _subscriptionResolver = subscriptionResolver ?? throw new ArgumentNullException(nameof(subscriptionResolver));
     private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider ?? throw new ArgumentNullException(nameof(credentialProvider));
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly IEndpointValidator _endpointValidator = endpointValidator ?? throw new ArgumentNullException(nameof(endpointValidator));
 
     private const int MaxTenants = 10_000;
     private const int MaxSubscriptions = 10_000;
@@ -49,12 +64,45 @@ public sealed class AzureService(
     public IAzureCloudConfiguration CloudConfiguration { get; } = cloudConfiguration ?? throw new ArgumentNullException(nameof(cloudConfiguration));
 
     /// <inheritdoc/>
+    public void ValidateAzureServiceEndpoint(
+        string endpoint,
+        string serviceType)
+        => _endpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, CloudConfiguration.ArmEnvironment);
+
+    /// <inheritdoc/>
+    public void ValidatePublicTargetUrl(string url)
+        => _endpointValidator.ValidatePublicTargetUrl(url);
+
+    /// <inheritdoc/>
     public async Task<TokenCredential> GetTokenCredentialAsync(string? tenantId, CancellationToken cancellationToken) =>
         await _credentialProvider.GetTokenCredentialAsync(tenantId, cancellationToken);
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// The factory transport evaluates the executing namespace on each send, not here.
+    /// This preserves protection when a shared SDK client outlives the invocation that
+    /// created it. The reserved <see cref="HttpClientFactoryConfigurator.NoSsrfClientName"/>
+    /// is an explicit trusted-only escape hatch.
+    /// </remarks>
     public HttpClient GetClient(string? name = null) =>
         _httpClientFactory.CreateClient(name ?? Microsoft.Extensions.Options.Options.DefaultName);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Uses <see cref="HttpClientFactoryConfigurator.ArmClientName"/> rather than the generic
+    /// <see cref="GetClient"/> path. Cached ARM clients retain a policy that reads the accessor
+    /// at send time, so the current invocation determines validation and namespace bypass decisions.
+    /// </remarks>
+    public void ConfigureArmClientOptions(ArmClientOptions armClientOptions)
+    {
+        ArgumentNullException.ThrowIfNull(armClientOptions);
+        armClientOptions.Environment = CloudConfiguration.ArmEnvironment;
+        armClientOptions.Transport = new HttpClientTransport(
+            _httpClientFactory.CreateClient(HttpClientFactoryConfigurator.ArmClientName));
+        armClientOptions.AddPolicy(
+            new ArmUriValidationPipelinePolicy(CloudConfiguration.ArmEnvironment, _endpointValidator),
+            HttpPipelinePosition.BeforeTransport);
+    }
 
     #endregion General
 

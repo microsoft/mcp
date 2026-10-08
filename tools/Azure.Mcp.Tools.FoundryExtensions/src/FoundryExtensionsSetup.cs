@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.FoundryExtensions;
 
@@ -17,6 +18,7 @@ public class FoundryExtensionsSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddEndpointValidation();
         services.AddSingleton<IFoundryExtensionsService, FoundryExtensionsService>();
 
         services.AddSingleton<KnowledgeIndexListCommand>();

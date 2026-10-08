@@ -617,6 +617,11 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    export NO_PROXY=localhost,127.0.0.1
    ```
 
+   **Security warning:** Configuring an outgoing HTTP/HTTPS/ALL proxy takes precedence
+   over and disables some SSRF protections, including transport-level DNS/IP checks.
+   This also applies to requests excluded by `NO_PROXY`. Use only trusted proxies with
+   restricted network access; endpoint domain validation remains independently active.
+
 #### Troubleshooting Network Connectivity
 
 **Test basic connectivity:**
@@ -1296,6 +1301,12 @@ By default, VS Code logs informational, warning, and error level messages. To ge
 ### Observability with OpenTelemetry
 
 The server supports observability with [OpenTelemetry](https://opentelemetry.io/).
+
+The `ServerStarted` activity reports configured SSRF transport mode and namespace
+override scope/count without exporting proxy addresses or raw override namespaces.
+This is startup configuration, not proof of protection on every request. See
+[Startup Usage Telemetry](../../docs/design/HttpClientFactory.md#startup-usage-telemetry)
+for tag values and limitations. These tags honor existing telemetry opt-outs.
 
 To export telemetry to an OTLP endpoint, set the `AZURE_MCP_ENABLE_OTLP_EXPORTER` environment variable to `true`. By default, when OpenTelemetry is enabled, the server exports telemetry using the default gRPC endpoint at `localhost:4317`. See the [OTLP exporter documentation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry.Exporter.OpenTelemetryProtocol/README.md) for configuration details.
 

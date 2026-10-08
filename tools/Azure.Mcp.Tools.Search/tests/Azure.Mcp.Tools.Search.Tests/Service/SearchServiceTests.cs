@@ -3,6 +3,7 @@
 
 using System.Text;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Azure.ResourceManager;
@@ -26,7 +27,7 @@ public class SearchServiceCacheTests
     public SearchServiceCacheTests()
     {
         _cacheService = Substitute.For<ICacheService>();
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
 
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);

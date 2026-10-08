@@ -32,9 +32,8 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(text), text), (nameof(outputFilePath), outputFilePath));
-        Uri wssEndpoint = SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(
-            endpoint,
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri wssEndpoint = SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(AzureService,
+            endpoint);
 
         // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
         outputFilePath = FilePathValidator.ValidateAndCanonicalize(outputFilePath);

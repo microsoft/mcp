@@ -61,9 +61,8 @@ public sealed class AcrService(IAzureService azureService)
 
     private async Task<List<string>> AddRepositoriesForRegistryAsync(AcrRegistryInfo reg, string? tenant, CancellationToken cancellationToken)
     {
-        var acrEndpoint = CreateValidatedAcrEndpoint(
-            reg.LoginServer!,
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri acrEndpoint = CreateValidatedAcrEndpoint(AzureService,
+            reg.LoginServer!);
 
         // Build data-plane client for this login server
         var credential = await GetCredential(tenant, cancellationToken);
@@ -84,7 +83,7 @@ public sealed class AcrService(IAzureService azureService)
         return repoNames;
     }
 
-    internal static Uri CreateValidatedAcrEndpoint(string loginServer, ArmEnvironment armEnvironment)
+    internal static Uri CreateValidatedAcrEndpoint(IAzureService azureService, string loginServer)
     {
         // GitHub Copilot: ListRegistryRepositories intentionally skips incomplete Resource Graph rows
         // without a login server. Reaching this boundary means the caller requires repository access,
@@ -92,11 +91,9 @@ public sealed class AcrService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(loginServer);
 
         var endpoint = new Uri($"https://{loginServer}");
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "acr",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "acr");
+            serviceType: "acr");
         return endpoint;
     }
 

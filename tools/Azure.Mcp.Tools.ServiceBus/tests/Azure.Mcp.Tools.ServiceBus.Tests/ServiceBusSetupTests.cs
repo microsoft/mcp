@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
@@ -164,7 +165,7 @@ public class ServiceBusSetupTests
         var services = new ServiceCollection();
         services.AddLogging();
         // Add required dependencies
-        services.AddSingleton(Substitute.For<IAzureService>());
+        services.AddSingleton(AzureServiceTestHelpers.CreateAzureService());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();
     }

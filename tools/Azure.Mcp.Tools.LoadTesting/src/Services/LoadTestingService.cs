@@ -13,12 +13,11 @@ using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.ResourceManager;
 using Azure.ResourceManager.LoadTesting;
 using Azure.ResourceManager.Resources;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
-public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingService> logger)
+public class LoadTestingService(IAzureService azureService)
     : BaseAzureService(azureService), ILoadTestingService
 {
     public async Task<List<TestResource>> GetLoadTestResourcesAsync(
@@ -280,10 +279,8 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
 
         if (!string.IsNullOrEmpty(endpointUrl))
         {
-            EndpointValidator.ValidatePublicTargetUrl(
-                url: endpointUrl,
-                logger: logger,
-                executingToolNamespaceName: "loadtesting");
+            AzureService.ValidatePublicTargetUrl(
+                url: endpointUrl);
         }
 
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
@@ -332,7 +329,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         CancellationToken cancellationToken,
         string? tenant = null)
     {
-        var uri = CreateValidatedDataPlaneUri(endpoint, AzureService.CloudConfiguration.ArmEnvironment);
+        Uri uri = CreateValidatedDataPlaneUri(AzureService, endpoint);
         var credential = await GetCredential(tenant, cancellationToken);
         return new LoadTestRunClient(uri, credential, CreateLoadTestingClientOptions());
     }
@@ -342,7 +339,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
         CancellationToken cancellationToken,
         string? tenant = null)
     {
-        var uri = CreateValidatedDataPlaneUri(endpoint, AzureService.CloudConfiguration.ArmEnvironment);
+        Uri uri = CreateValidatedDataPlaneUri(AzureService, endpoint);
         var credential = await GetCredential(tenant, cancellationToken);
         return new LoadTestAdministrationClient(uri, credential, CreateLoadTestingClientOptions());
     }
@@ -350,17 +347,15 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
     /// <summary>
     /// Validates that the given Load Test endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="endpoint">The endpoint of the Load Test to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
     /// <returns>The validated URI of the Load Test endpoint.</returns>
-    internal static Uri CreateValidatedDataPlaneUri(string endpoint, ArmEnvironment armEnvironment)
+    internal static Uri CreateValidatedDataPlaneUri(IAzureService azureService, string endpoint)
     {
         var uri = new Uri($"https://{endpoint}", UriKind.Absolute);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: uri.AbsoluteUri,
-            serviceType: "loadtesting",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "loadtesting");
+            serviceType: "loadtesting");
         return uri;
     }
 

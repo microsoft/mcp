@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.Adme.Options.Schema;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Adme.Commands.Schema;
@@ -27,7 +28,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class SchemaGetCommand(ISchemaService schemaService)
+public sealed class SchemaGetCommand(IEndpointValidator endpointValidator, ISchemaService schemaService)
     : AuthenticatedCommand<SchemaGetOptions, JsonElement>
 {
     private readonly ISchemaService _schemaService = schemaService;
@@ -35,7 +36,7 @@ public sealed class SchemaGetCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
+        AdmeServiceValidator.ValidateTarget(endpointValidator, options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
     }
 

@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
@@ -74,6 +75,13 @@ public class VaultCreateExistenceTests
         service.GetClient().Returns(client);
         service.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
         service.CloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        service.When(azureService => azureService.ConfigureArmClientOptions(Arg.Any<ArmClientOptions>()))
+            .Do(call =>
+            {
+                ArmClientOptions options = call.Arg<ArmClientOptions>();
+                options.Transport = new HttpClientTransport(client);
+                options.Environment = ArmEnvironment.AzurePublicCloud;
+            });
         return service;
     }
 

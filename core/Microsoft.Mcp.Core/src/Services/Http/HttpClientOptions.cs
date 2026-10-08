@@ -6,26 +6,46 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// <summary>
 /// Configuration options for HttpClient services.
 /// </summary>
+/// <remarks>
+/// Configured HTTP/HTTPS/ALL proxies take precedence and disable transport-level SSRF
+/// protection, including requests excluded by NoProxy. Domain validation in callers remains
+/// independent. Use only trusted proxies and restrict their network access.
+/// </remarks>
 public sealed class HttpClientOptions
 {
     /// <summary>
+    /// Gets or sets the debug recording-proxy fallback captured from <c>TEST_PROXY_URL</c> at host configuration.
+    /// </summary>
+    /// <remarks>
+    /// A fixture resolver result that is not <see langword="null"/> takes precedence.
+    /// Release builds ignore this setting.
+    /// Tests can configure it per provider without changing the process environment.
+    /// Configuring a recording proxy disables transport-level SSRF protection, not endpoint domain validation.
+    /// </remarks>
+    public string? RecordingProxy { get; set; }
+
+    /// <summary>
     /// Gets or sets the HTTP proxy address. Can be set via HTTP_PROXY environment variable.
     /// </summary>
+    /// <remarks>Configuring a proxy disables the shared transport's SSRF protection.</remarks>
     public string? HttpProxy { get; set; }
 
     /// <summary>
     /// Gets or sets the HTTPS proxy address. Can be set via HTTPS_PROXY environment variable.
     /// </summary>
+    /// <remarks>Configuring a proxy disables the shared transport's SSRF protection.</remarks>
     public string? HttpsProxy { get; set; }
 
     /// <summary>
     /// Gets or sets the proxy address for all protocols. Can be set via ALL_PROXY environment variable.
     /// </summary>
+    /// <remarks>Configuring a proxy disables the shared transport's SSRF protection.</remarks>
     public string? AllProxy { get; set; }
 
     /// <summary>
     /// Gets or sets the comma-separated list of hostnames that should bypass the proxy. Can be set via NO_PROXY environment variable.
     /// </summary>
+    /// <remarks>Bypassing a configured proxy does not restore transport-level SSRF checks.</remarks>
     public string? NoProxy { get; set; }
 
     /// <summary>

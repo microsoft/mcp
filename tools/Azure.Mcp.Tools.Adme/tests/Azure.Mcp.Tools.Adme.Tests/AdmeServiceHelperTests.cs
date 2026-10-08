@@ -6,6 +6,9 @@ using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Adme.Commands;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -46,7 +49,7 @@ public sealed class AdmeServiceHelperTests
             Content = new StringContent(responseContent),
         });
 
-        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
             CreateCredentialProvider(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
@@ -69,7 +72,7 @@ public sealed class AdmeServiceHelperTests
             Content = new StringContent(responseContent),
         });
 
-        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
             CreateCredentialProvider(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
@@ -97,7 +100,7 @@ public sealed class AdmeServiceHelperTests
             Content = new StringContent("  "),
         });
 
-        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
             CreateCredentialProvider(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
@@ -119,7 +122,7 @@ public sealed class AdmeServiceHelperTests
             Content = new StringContent(new string('a', 2000)),
         });
 
-        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
             CreateCredentialProvider(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
@@ -140,7 +143,7 @@ public sealed class AdmeServiceHelperTests
             Content = new StringContent("null", System.Text.Encoding.UTF8, "application/json"),
         });
 
-        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
             CreateCredentialProvider(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,

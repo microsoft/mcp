@@ -124,7 +124,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
         }
 
         // EndpointValidator enforces HTTPS and the trusted SRE Agent domain for the configured cloud.
-        ValidateDataPlaneEndpoint(endpointUri, AzureService.CloudConfiguration.ArmEnvironment);
+        ValidateDataPlaneEndpoint(AzureService, endpointUri);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var token = await credential.GetTokenAsync(new TokenRequestContext(s_dataPlaneScopes), cancellationToken);
@@ -158,16 +158,14 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
     /// Validates that the SRE Agent data-plane endpoint host belongs to the trusted SRE Agent
     /// domain for the configured cloud to prevent SSRF.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="endpointUri">The SRE Agent data-plane endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
-    internal static void ValidateDataPlaneEndpoint(Uri endpointUri, ArmEnvironment armEnvironment)
+    internal static void ValidateDataPlaneEndpoint(IAzureService azureService, Uri endpointUri)
     {
         ArgumentNullException.ThrowIfNull(endpointUri);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpointUri.AbsoluteUri,
-            serviceType: "sreagent",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "sreagent");
+            serviceType: "sreagent");
     }
 
     /// <summary>

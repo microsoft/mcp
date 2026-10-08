@@ -11,17 +11,38 @@ namespace Microsoft.Mcp.Core.Models.Command;
 /// <summary>
 /// Provides context for command execution including response management
 /// </summary>
-public class CommandContext
+/// <param name="activity">The invocation's telemetry activity, or <see langword="null"/> when unavailable.</param>
+public class CommandContext(Activity? activity = default)
 {
     /// <summary>
     /// The response object that will be returned to the client
     /// </summary>
-    public CommandResponse Response { get; }
+    public CommandResponse Response { get; } = new()
+    {
+        Status = HttpStatusCode.OK,
+        Message = "Success"
+    };
 
     /// <summary>
     /// Current telemetry context if there is one available.
     /// </summary>
-    public Activity? Activity { get; }
+    public Activity? Activity { get; } = activity;
+
+    /// <summary>
+    /// Gets the executing command's original registered setup-area name.
+    /// </summary>
+    /// <value>
+    /// The original tool namespace, such as <c>storage</c>, or <see langword="null"/> when
+    /// the loader cannot resolve a registered namespace.
+    /// </value>
+    /// <remarks>
+    /// Initialized by the local tool loader from the selected command's original registration.
+    /// This identity is independent of single-tool proxy names and synthetic consolidated groups,
+    /// and may differ from an endpoint service type such as <c>arm</c>. Do not populate it from
+    /// request arguments or telemetry tags. An unresolved namespace does not disable endpoint
+    /// validation and cannot match a namespace-scoped bypass.
+    /// </remarks>
+    public string? ToolNamespaceName { get; init; }
 
     /// <summary>
     /// The MCP server handling the current tool call. Used by commands that need to send
@@ -44,16 +65,4 @@ public class CommandContext
     /// </summary>
     public ProgressToken? ProgressToken { get; set; }
 
-    /// <summary>
-    /// Creates a new command context
-    /// </summary>
-    public CommandContext(Activity? activity = default)
-    {
-        Activity = activity;
-        Response = new CommandResponse
-        {
-            Status = HttpStatusCode.OK,
-            Message = "Success"
-        };
-    }
 }

@@ -432,9 +432,8 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             {
                 throw new Exception("Both key-url and source-vault must be provided when custom-encryption is enabled.");
             }
-            var keyUri = CreateValidatedKeyUri(
-                keyUrl,
-                AzureService.CloudConfiguration.ArmEnvironment);
+            Uri keyUri = CreateValidatedKeyUri(AzureService,
+                keyUrl);
             data.KeyEncryptionKey = new(keyUri, new() { Id = new(sourceVaultId!) });
 
             // Assign user-assigned managed identity for Key Vault access
@@ -461,21 +460,19 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
     /// <summary>
     /// Validates that the given Key Vault endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="keyUrl">The URI of the Key Vault endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
     /// <returns>The validated URI of the Key Vault endpoint.</returns>
-    internal static Uri CreateValidatedKeyUri(string keyUrl, ArmEnvironment armEnvironment)
+    internal static Uri CreateValidatedKeyUri(IAzureService azureService, string keyUrl)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(keyUrl);
 
         // At this time ManagedLustre only supports Azure Key Vault URIs as the key URL.
         // https://learn.microsoft.com/azure/security/fundamentals/encryption-customer-managed-keys-support#storage
         var keyUri = new Uri(keyUrl, UriKind.Absolute);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: keyUri.AbsoluteUri,
-            serviceType: "keyvault",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "managedlustre");
+            serviceType: "keyvault");
         return keyUri;
     }
 
