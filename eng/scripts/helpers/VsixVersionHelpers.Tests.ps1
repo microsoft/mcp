@@ -271,6 +271,16 @@ Describe "Get-LatestMarketplaceVersion" {
         }
     }
 
+    It "uses a preview gallery api-version because the service has no GA version" {
+        Mock Invoke-RestMethod { '{"results":[{"extensions":[{"versions":[{"version":"2.0.42"}]}]}]}' | ConvertFrom-Json }
+
+        Get-LatestMarketplaceVersion -PublisherId "ms-azuretools" -ExtensionId "vscode-azure-mcp-server" -MajorVersion 2 | Out-Null
+
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $Uri -eq "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=3.0-preview.1"
+        }
+    }
+
     It "reports an unpublished extension as having no versions in strict mode" {
         Set-StrictMode -Version Latest
         Mock Invoke-RestMethod { '{"results":[{"extensions":[]}]}' | ConvertFrom-Json }

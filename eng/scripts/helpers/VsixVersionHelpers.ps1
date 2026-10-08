@@ -19,7 +19,9 @@ function Get-LatestMarketplaceVersion {
     # IncludeVersions (1) returns the whole history in one unpaged response (~100 KB for ~145 versions across 6
     # platforms). Do not add IncludeLatestVersionOnly (512), which hides every older major series, or
     # IncludeVersionProperties (16), which inflates the payload roughly 12x.
-    $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=7.1-preview.1"
+    # The gallery API only accepts preview api-versions (GA forms such as 3.0 fail with HTTP 400). 3.0-preview.1 is
+    # the version @vscode/vsce, which publishes this VSIX, uses for the same query.
+    $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=3.0-preview.1"
     $body = @{
         filters = @(
             @{
