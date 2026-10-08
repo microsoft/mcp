@@ -149,6 +149,10 @@ configure this option per provider instead of modifying the process environment.
 Fixture callbacks remain deferred until handler construction and a non-null result
 takes precedence over the captured fallback.
 
+`ConfigureDefaultHttpClient` registers shared client and handler defaults once per
+service collection. Repeated calls are ignored rather than stacking duplicate
+configuration delegates; the recording resolver from the first call is retained.
+
 ## Example: Proxy Configuration
 
 ```bash

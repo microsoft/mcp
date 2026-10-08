@@ -67,6 +67,8 @@ public static class HttpClientFactoryConfigurator
     /// The explicit <see cref="NoSsrfClientName"/> and configured HTTP or recording proxies omit AntiSSRF.
     /// Proxy routing takes precedence even for destinations excluded by <c>NO_PROXY</c>; callers'
     /// explicit domain checks remain independent of this transport exception.
+    /// Repeated calls are ignored so client and handler configuration delegates are registered
+    /// exactly once. The first <paramref name="recordingProxyResolver"/> is retained.
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="services"/> is <see langword="null"/>.</exception>
     public static IServiceCollection ConfigureDefaultHttpClient(
@@ -75,10 +77,21 @@ public static class HttpClientFactoryConfigurator
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        if (services.Any(static descriptor =>
+            descriptor.ServiceType == typeof(DefaultHttpClientConfigurationMarker)))
+        {
+            return services;
+        }
+
+        // The changes happening in ConfigureHttpClientBuilder are not idempotent. We use
+        // this DI marker pattern to prevent duplicate execution. This makes ConfigureDefaultHttpClient
+        // idempotent on the whole when its individual steps are not.
+        services.AddSingleton<DefaultHttpClientConfigurationMarker>();
+        services.ConfigureHttpClientDefaults(builder => ConfigureHttpClientBuilder(builder, recordingProxyResolver));
+
         services.AddCommandContextAccessor();
         services.AddEndpointValidation();
         services.AddHttpClient(NoSsrfClientName);
-        services.ConfigureHttpClientDefaults(builder => ConfigureHttpClientBuilder(builder, recordingProxyResolver));
 
         return services;
     }
@@ -421,5 +434,12 @@ public static class HttpClientFactoryConfigurator
     {
         s_userAgent ??= $"azmcp/{s_version} azmcp-{transport}/{s_version} ({s_framework}; {s_platform})";
         return s_userAgent;
+    }
+
+    /// <summary>
+    /// Marks a service collection whose shared HTTP client defaults have already been registered.
+    /// </summary>
+    private sealed class DefaultHttpClientConfigurationMarker()
+    {
     }
 }

@@ -88,6 +88,38 @@ public class HttpClientFactoryConfiguratorTests
             GetTerminalHandler(handler).Proxy!.GetProxy(new Uri("https://management.azure.com")));
     }
 
+    [Fact]
+    public void ConfigureDefaultHttpClient_RepeatedCallsDoNotDuplicateDefaults()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
+        services.ConfigureDefaultHttpClient();
+        int laterResolverCalls = 0;
+        services.ConfigureDefaultHttpClient(() =>
+        {
+            laterResolverCalls++;
+            return new Uri("http://127.0.0.1:5000");
+        });
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("custom");
+        string[] userAgentValues = client.DefaultRequestHeaders.UserAgent
+            .Select(static value => value.ToString())
+            .ToArray();
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>()
+            .CreateHandler("custom");
+        while (handler is DelegatingHandler delegatingHandler)
+        {
+            handler = delegatingHandler.InnerHandler!;
+        }
+
+        Assert.NotEmpty(userAgentValues);
+        Assert.Equal(userAgentValues.Length, userAgentValues.Distinct().Count());
+        Assert.IsType<NamespaceAwareHttpHandler>(handler);
+        Assert.Equal(0, laterResolverCalls);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
