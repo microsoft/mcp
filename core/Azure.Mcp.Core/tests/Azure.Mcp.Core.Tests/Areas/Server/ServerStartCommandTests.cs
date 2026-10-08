@@ -136,11 +136,11 @@ public class ServerStartCommandTests
         // Arrange & Act
         var options = BindOptions(
             "--dangerously-disable-ssrf-protections-by-namespace", "acr",
-            "--dangerously-disable-ssrf-protections-by-namespace", EndpointValidator.AllNamespaces);
+            "--dangerously-disable-ssrf-protections-by-namespace", SsrfProtectionPolicy.AllNamespaces);
 
         // Assert
         Assert.NotNull(options.DangerouslyDisableSsrfProtectionsByNamespace);
-        Assert.Equal(["acr", EndpointValidator.AllNamespaces], options.DangerouslyDisableSsrfProtectionsByNamespace);
+        Assert.Equal(["acr", SsrfProtectionPolicy.AllNamespaces], options.DangerouslyDisableSsrfProtectionsByNamespace);
     }
 
     [Fact]
@@ -601,7 +601,9 @@ public class ServerStartCommandTests
 
 
         // Act
-        ServerStartCommand.LogStartTelemetry(mockTelemetry, serverStartOptions);
+        using ServiceProvider provider = new ServiceCollection()
+            .AddSingleton(new SsrfProtectionPolicy(null)).BuildServiceProvider();
+        ServerStartCommand.LogStartTelemetry(mockTelemetry, serverStartOptions, provider);
 
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
@@ -614,6 +616,9 @@ public class ServerStartCommandTests
         activity.AssertTagEquals(TagName.IsReadOnly, serverStartOptions.ReadOnly);
         activity.AssertTagEquals(TagName.IsDebug, serverStartOptions.Debug);
         activity.AssertTagEquals(TagName.Namespace, string.Join(",", serverStartOptions.Namespace));
+        activity.AssertTagEquals(TagName.SsrfTransportMode, "not_configured");
+        activity.AssertTagEquals(TagName.SsrfNamespaceOverrideScope, "none");
+        Assert.Equal(0, activity.GetTagItem(TagName.SsrfNamespaceOverrideCount));
     }
 
     [Fact]
@@ -635,7 +640,9 @@ public class ServerStartCommandTests
         mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
 
         // Act
-        ServerStartCommand.LogStartTelemetry(mockTelemetry, serverStartOptions);
+        using ServiceProvider provider = new ServiceCollection()
+            .AddSingleton(new SsrfProtectionPolicy(null)).BuildServiceProvider();
+        ServerStartCommand.LogStartTelemetry(mockTelemetry, serverStartOptions, provider);
 
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);

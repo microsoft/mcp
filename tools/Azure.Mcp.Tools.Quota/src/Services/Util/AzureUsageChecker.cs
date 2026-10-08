@@ -108,11 +108,9 @@ public abstract class AzureUsageChecker : IUsageChecker
 
         // Uri resolution accepts absolute and network-path inputs that can replace the configured ARM authority.
         // Validate the completed URI before access-token acquisition so derived usage checkers cannot redirect tokens.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        AzureService.ValidateAzureServiceEndpoint(
             endpoint: requestUri.AbsoluteUri,
-            serviceType: "arm",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "quota");
+            serviceType: "arm");
 
         try
         {

@@ -11,6 +11,7 @@ namespace Azure.Mcp.Tools.Adme;
 internal static class AdmeServiceValidator
 {
     public static void ValidateTarget(
+        IEndpointValidator endpointValidator,
         string endpoint,
         string dataPartition,
         string? authAppId,
@@ -25,7 +26,7 @@ internal static class AdmeServiceValidator
         {
             try
             {
-                ValidateEndpoint(endpointUri);
+                ValidateEndpoint(endpointValidator, endpointUri);
             }
             catch (Exception)
             {
@@ -170,13 +171,12 @@ internal static class AdmeServiceValidator
         }
     }
 
-    public static Uri ValidateEndpoint(Uri endpoint)
+    public static Uri ValidateEndpoint(IEndpointValidator endpointValidator, Uri endpoint)
     {
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        endpointValidator.ValidateAzureServiceEndpoint(
             endpoint.AbsoluteUri,
             serviceType: "adme",
-            ArmEnvironment.AzurePublicCloud,
-            executingToolNamespaceName: "adme");
+            ArmEnvironment.AzurePublicCloud);
         return endpoint;
     }
 }

@@ -186,11 +186,9 @@ public sealed class ServiceFabricService(IAzureService azureService)
         // These are control-plane REST requests, not Service Fabric cluster data-plane endpoints.
         // Initial paths escape caller-supplied segments; the final URI and every nextLink must independently
         // match the shared exact-host ARM policy before the HTTP client can send them.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        AzureService.ValidateAzureServiceEndpoint(
             endpoint: requestUri.AbsoluteUri,
-            serviceType: "arm",
-            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
-            executingToolNamespaceName: "servicefabric");
+            serviceType: "arm");
 
         return requestUri;
     }

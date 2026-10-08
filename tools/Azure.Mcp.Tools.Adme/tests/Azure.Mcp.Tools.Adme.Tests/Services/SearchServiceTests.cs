@@ -8,6 +8,9 @@ using Azure.Core;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -143,10 +146,10 @@ public sealed class SearchServiceTests
     }
 
     private static SearchService CreateService(StubHttpMessageHandler handler) =>
-        new(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        new(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
     private static SearchService CreateService(IHttpClientFactory httpClientFactory) =>
-        new(CreateCredentialProvider(), httpClientFactory);
+        new(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), httpClientFactory);
 
     private static IAzureTokenCredentialProvider CreateCredentialProvider()
     {

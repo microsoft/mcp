@@ -2,13 +2,227 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Services.Http;
+using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.Tests.Services.Http;
 
 public class HttpClientFactoryConfiguratorTests
 {
+    [Theory]
+    [InlineData("http")]
+    [InlineData("https")]
+    [InlineData("all")]
+    public void ProxyConfiguration_PreservesRoutingAndWarns(string setting)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            switch (setting)
+            {
+                case "http":
+                    options.HttpProxy = "http://127.0.0.1:9000";
+                    break;
+                case "https":
+                    options.HttpsProxy = "http://127.0.0.1:9000";
+                    break;
+                case "all":
+                    options.AllProxy = "http://127.0.0.1:9000";
+                    break;
+            }
+            options.NoProxy = "*.internal";
+        });
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        ILogger logger = Substitute.For<ILogger>();
+        ILoggerFactory loggerFactory = Substitute.For<ILoggerFactory>();
+        loggerFactory.CreateLogger(Arg.Any<string>()).Returns(logger);
+        services.AddSingleton(loggerFactory);
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+        SocketsHttpHandler handler = GetTerminalHandler(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("custom"));
+        Assert.Equal(new Uri("http://127.0.0.1:9000"), handler.Proxy!.GetProxy(new Uri("https://management.azure.com")));
+        Assert.True(handler.Proxy.IsBypassed(new Uri("https://host.internal")));
+        Assert.Contains(logger.ReceivedCalls(), call =>
+            call.GetMethodInfo().Name == nameof(ILogger.Log) &&
+            Equals(call.GetArguments()[0], LogLevel.Warning));
+    }
+
+    [Fact]
+    public void InvalidProxyConfiguration_FailsExplicitly()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options => options.AllProxy = "not-an-absolute-uri");
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Throws<ArgumentException>(() => provider.GetRequiredService<IHttpClientFactory>().CreateClient());
+        Assert.Equal("invalid_configuration", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+    }
+
+    [Fact]
+    public void StartupPosture_DistinguishesMissingDefaultsWithoutResolvingOptions()
+    {
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(_ => throw new InvalidOperationException("Options must not be resolved."));
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Equal("not_configured", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void StartupPosture_DoesNotInvokeCustomRecordingResolver(bool configureProxy)
+    {
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options => options.AllProxy = configureProxy ? "http://127.0.0.1:9000" : null);
+        services.ConfigureDefaultHttpClient(() => throw new InvalidOperationException("Startup must not invoke this callback."));
+        using ServiceProvider provider = services.BuildServiceProvider();
+#if DEBUG
+        Assert.Equal("deferred", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+#else
+        Assert.Equal(configureProxy ? "http_proxy_override" : "external_only_latest",
+            HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+#endif
+    }
+
+    [Fact]
+    public void StartupPosture_FollowsLastDefaultsRegistration()
+    {
+        var services = new ServiceCollection();
+        services.ConfigureDefaultHttpClient(() => throw new InvalidOperationException("Startup must not invoke this callback."));
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Equal("external_only_latest", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+    }
+
+    [Fact]
+    public void StartupPosture_RecordingOptionsMatchActualHandlerPrecedence()
+    {
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = "http://127.0.0.1:9000";
+            options.RecordingProxy = "http://127.0.0.1:5000";
+        });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(string.Empty);
+#if DEBUG
+        Assert.Equal("recording_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+        HttpMessageHandler current = handler;
+        while (current is DelegatingHandler delegating && current is not RecordingRedirectHandler)
+        {
+            current = delegating.InnerHandler!;
+        }
+        Assert.IsType<RecordingRedirectHandler>(current);
+#else
+        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(provider));
+#endif
+        Assert.Equal(new Uri("http://127.0.0.1:9000"),
+            GetTerminalHandler(handler).Proxy!.GetProxy(new Uri("https://management.azure.com")));
+    }
+
+    [Fact]
+    public void StartupPosture_RecordingFallbackIsOwnedByEachProvider()
+    {
+        using ServiceProvider recorded = CreateProvider("http://127.0.0.1:5000");
+        using ServiceProvider ordinary = CreateProvider(null);
+#if DEBUG
+        Assert.Equal("recording_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(recorded));
+#else
+        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(recorded));
+#endif
+        Assert.Equal("http_proxy_override", HttpClientFactoryConfigurator.GetConfiguredSsrfTransportMode(ordinary));
+
+        static ServiceProvider CreateProvider(string? recordingProxy)
+        {
+            var services = new ServiceCollection();
+            services.Configure<HttpClientOptions>(options =>
+            {
+                options.AllProxy = "http://127.0.0.1:9000";
+                options.RecordingProxy = recordingProxy;
+            });
+            services.ConfigureDefaultHttpClient();
+            return services.BuildServiceProvider();
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ConfigureArmHttpClient_DisablesOnlyArmRedirectsAndPreservesDefaults(bool configureArm)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = "http://127.0.0.1:9000";
+            options.DefaultTimeout = TimeSpan.FromSeconds(42);
+        });
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
+        if (configureArm)
+        {
+            services.ConfigureArmHttpClient();
+        }
+
+        // Defaults may be registered later by a recording fixture.
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IHttpMessageHandlerFactory handlers = provider.GetRequiredService<IHttpMessageHandlerFactory>();
+        SocketsHttpHandler armHandler = GetTerminalHandler(handlers.CreateHandler(HttpClientFactoryConfigurator.ArmClientName));
+        SocketsHttpHandler defaultHandler = GetTerminalHandler(handlers.CreateHandler(string.Empty));
+        Assert.Equal(!configureArm, armHandler.AllowAutoRedirect);
+        Assert.True(defaultHandler.AllowAutoRedirect);
+        Assert.Equal(new Uri("http://127.0.0.1:9000"), armHandler.Proxy?.GetProxy(new Uri("https://management.azure.com")));
+
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(HttpClientFactoryConfigurator.ArmClientName);
+        Assert.Equal(TimeSpan.FromSeconds(42), client.Timeout);
+        Assert.NotEmpty(client.DefaultRequestHeaders.UserAgent);
+    }
+
+    [Fact]
+    public void ConfigureArmHttpClient_PreservesRecordingProxyResolver()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options => options.AllProxy = "http://127.0.0.1:9000");
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureArmHttpClient();
+        bool resolved = false;
+        services.ConfigureDefaultHttpClient(() =>
+        {
+            resolved = true;
+            return new Uri("http://127.0.0.1:5000");
+        });
+        using ServiceProvider provider = services.BuildServiceProvider();
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>()
+            .CreateHandler(HttpClientFactoryConfigurator.ArmClientName);
+        Assert.False(GetTerminalHandler(handler).AllowAutoRedirect);
+#if DEBUG
+        Assert.True(resolved);
+#else
+        Assert.False(resolved);
+#endif
+    }
+
+    private static SocketsHttpHandler GetTerminalHandler(HttpMessageHandler handler)
+    {
+        while (handler is DelegatingHandler delegating)
+        {
+            handler = delegating.InnerHandler!;
+        }
+
+        return Assert.IsType<SocketsHttpHandler>(handler);
+    }
+
     [Theory]
     [InlineData("api.loganalytics.io", "https://api.loganalytics.io/v1/workspaces", true)]
     [InlineData("api.loganalytics.io", "http://api.loganalytics.io:8080/v1/workspaces", true)]

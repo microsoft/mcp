@@ -3,11 +3,13 @@
 
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme.Services;
 
 public sealed class SearchService(
+    IEndpointValidator endpointValidator,
     IAzureTokenCredentialProvider credentialProvider,
     IHttpClientFactory httpClientFactory) : ISearchService
 {
@@ -26,7 +28,7 @@ public sealed class SearchService(
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
-        return AdmeServiceHelper.PostAsync(
+        return AdmeServiceHelper.PostAsync(endpointValidator,
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/query", request, AdmeJsonContext.Default.SearchQueryRequest,
             AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, authAppId,
@@ -44,7 +46,7 @@ public sealed class SearchService(
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
-        return AdmeServiceHelper.PostAsync(
+        return AdmeServiceHelper.PostAsync(endpointValidator,
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/query_with_cursor{(searchAfter ? "?search_after=true" : string.Empty)}",
             request, AdmeJsonContext.Default.SearchCursorRequest,

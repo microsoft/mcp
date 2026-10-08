@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
 
@@ -35,11 +36,14 @@ internal static class SpeechEndpointValidator
     /// <summary>
     /// Determines whether an endpoint is valid for at least one supported Azure cloud.
     /// </summary>
+    /// <param name="endpointValidator">The host's endpoint validator for early option feedback.</param>
+    /// <param name="endpoint">The user-supplied HTTPS resource-root URL.</param>
+    /// <returns>Whether at least one supported cloud authorizes the resource-root endpoint.</returns>
     /// <remarks>
     /// This provides early command-validation feedback only. The service boundary validates the endpoint again
     /// against the configured cloud and propagates any validation failure before network-capable work begins.
     /// </remarks>
-    internal static bool IsValidForAnySupportedCloud(string endpoint)
+    internal static bool IsValidForAnySupportedCloud(IEndpointValidator endpointValidator, string endpoint)
     {
         Uri serviceEndpoint;
         try
@@ -59,7 +63,10 @@ internal static class SpeechEndpointValidator
         {
             try
             {
-                ValidateAuthorizedHttpsEndpoint(serviceEndpoint, armEnvironment);
+                endpointValidator.ValidateAzureServiceEndpoint(
+                    endpoint: serviceEndpoint.AbsoluteUri,
+                    serviceType: "speech",
+                    armEnvironment: armEnvironment);
                 return true;
             }
             catch (SecurityException)
@@ -82,8 +89,8 @@ internal static class SpeechEndpointValidator
     /// <summary>
     /// Creates and validates the resource-root endpoint used by Azure AI Speech realtime transcription.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="endpoint">The user-supplied HTTPS resource-root URL.</param>
-    /// <param name="armEnvironment">The configured Azure cloud environment.</param>
     /// <returns>The parsed URI after resource-root shape checks and shared endpoint validation.</returns>
     /// <remarks>
     /// Combines <see cref="CreateServiceEndpoint"/> for URI shape checks with
@@ -101,18 +108,18 @@ internal static class SpeechEndpointValidator
     /// Thrown when the endpoint is malformed, is not HTTPS, is outside the configured cloud's Speech domains,
     /// or includes URL components outside this tool's resource-root contract.
     /// </exception>
-    internal static Uri CreateAndValidateRealtimeTranscriptionEndpoint(string endpoint, ArmEnvironment armEnvironment)
+    internal static Uri CreateAndValidateRealtimeTranscriptionEndpoint(IAzureService azureService, string endpoint)
     {
         Uri serviceEndpoint = CreateServiceEndpoint(endpoint);
-        ValidateAuthorizedHttpsEndpoint(serviceEndpoint, armEnvironment);
+        ValidateAuthorizedHttpsEndpoint(azureService, serviceEndpoint);
         return serviceEndpoint;
     }
 
     /// <summary>
     /// Creates and validates the completed Azure AI Speech fast-transcription request endpoint.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="endpoint">The user-supplied HTTPS resource endpoint.</param>
-    /// <param name="armEnvironment">The configured Azure cloud environment.</param>
     /// <returns>The validated fast-transcription request URI.</returns>
     /// <exception cref="ArgumentException">
     /// Thrown when the endpoint is empty or the Speech endpoint allow-list is unavailable.
@@ -120,7 +127,7 @@ internal static class SpeechEndpointValidator
     /// <exception cref="SecurityException">
     /// Thrown when the resource endpoint or completed request endpoint is invalid or unauthorized.
     /// </exception>
-    internal static Uri CreateAndValidateFastTranscriptionEndpoint(string endpoint, ArmEnvironment armEnvironment)
+    internal static Uri CreateAndValidateFastTranscriptionEndpoint(IAzureService azureService, string endpoint)
     {
         Uri serviceEndpoint = CreateServiceEndpoint(endpoint);
         // Azure documents this fixed path and API-version query for synchronous fast transcription:
@@ -131,15 +138,15 @@ internal static class SpeechEndpointValidator
             Query = $"api-version={FastTranscriptionApiVersion}"
         }.Uri;
 
-        ValidateAuthorizedHttpsEndpoint(transcriptionEndpoint, armEnvironment);
+        ValidateAuthorizedHttpsEndpoint(azureService, transcriptionEndpoint);
         return transcriptionEndpoint;
     }
 
     /// <summary>
     /// Creates and validates the WebSocket endpoint used by Azure AI Speech text-to-speech synthesis.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="endpoint">The user-supplied HTTPS resource endpoint.</param>
-    /// <param name="armEnvironment">The configured Azure cloud environment.</param>
     /// <returns>The validated WSS synthesis endpoint.</returns>
     /// <exception cref="ArgumentException">
     /// Thrown when the endpoint is empty or the Speech endpoint allow-list is unavailable.
@@ -147,7 +154,7 @@ internal static class SpeechEndpointValidator
     /// <exception cref="SecurityException">
     /// Thrown when the resource endpoint or derived WebSocket endpoint is not authorized for the configured cloud.
     /// </exception>
-    internal static Uri CreateAndValidateWebSocketEndpoint(string endpoint, ArmEnvironment armEnvironment)
+    internal static Uri CreateAndValidateWebSocketEndpoint(IAzureService azureService, string endpoint)
     {
         Uri serviceEndpoint = CreateServiceEndpoint(endpoint);
         // SpeechConfig.FromEndpoint supports nonstandard resource paths. This exact TTS WebSocket route and the
@@ -171,7 +178,7 @@ internal static class SpeechEndpointValidator
             Scheme = Uri.UriSchemeHttps,
             Port = -1
         }.Uri;
-        ValidateAuthorizedHttpsEndpoint(validationEndpoint, armEnvironment);
+        ValidateAuthorizedHttpsEndpoint(azureService, validationEndpoint);
 
         return websocketEndpoint;
     }
@@ -223,8 +230,8 @@ internal static class SpeechEndpointValidator
     /// <summary>
     /// Checks a completed HTTPS endpoint against the shared Speech domain policy for the specified Azure cloud.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="endpoint">The parsed HTTPS endpoint to authorize without modifying or replacing it.</param>
-    /// <param name="armEnvironment">The configured Azure cloud environment.</param>
     /// <remarks>
     /// This method returns no URI and delegates scheme and domain authorization to <see cref="EndpointValidator"/>,
     /// including its configured namespace-bypass behavior. It does not enforce the resource-root shape: operation
@@ -239,12 +246,10 @@ internal static class SpeechEndpointValidator
     /// <exception cref="SecurityException">
     /// Thrown when the shared validator rejects the endpoint's scheme or domain for the specified cloud.
     /// </exception>
-    private static void ValidateAuthorizedHttpsEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    private static void ValidateAuthorizedHttpsEndpoint(IAzureService azureService, Uri endpoint)
     {
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "speech",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "speech");
+            serviceType: "speech");
     }
 }

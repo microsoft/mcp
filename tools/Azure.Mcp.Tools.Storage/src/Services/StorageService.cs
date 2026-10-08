@@ -330,9 +330,8 @@ public sealed class StorageService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var uri = ValidateBlobEndpoint(
-            new Uri(GetBlobEndpoint(account)),
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri uri = ValidateBlobEndpoint(AzureService,
+            new Uri(GetBlobEndpoint(account)));
         var options = AddDefaultPolicies(new BlobClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new BlobServiceClient(uri, await GetCredential(tenant, cancellationToken), options);
@@ -425,9 +424,8 @@ public sealed class StorageService(IAzureService azureService)
     {
         var options = AddDefaultPolicies(new TableClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
-        var defaultUri = ValidateTableEndpoint(
-            new Uri(GetTableEndpoint(account)),
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri defaultUri = ValidateTableEndpoint(AzureService,
+            new Uri(GetTableEndpoint(account)));
         return new TableServiceClient(defaultUri, await GetCredential(tenant, cancellationToken), options);
     }
 
@@ -514,16 +512,13 @@ public sealed class StorageService(IAzureService azureService)
     /// Validates that the given Azure Storage blob endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
     /// <param name="endpoint">The URI of the blob service endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
     /// <returns>The validated URI of the blob service endpoint.</returns>
-    internal static Uri ValidateBlobEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    internal static Uri ValidateBlobEndpoint(IAzureService azureService, Uri endpoint)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "storage-blob",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "storage");
+            serviceType: "storage-blob");
         return endpoint;
     }
 
@@ -531,16 +526,13 @@ public sealed class StorageService(IAzureService azureService)
     /// Validates that the given Azure Storage table endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
     /// <param name="endpoint">The URI of the table service endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
     /// <returns>The validated URI of the table service endpoint.</returns>
-    internal static Uri ValidateTableEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    internal static Uri ValidateTableEndpoint(IAzureService azureService, Uri endpoint)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "storage-table",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "storage");
+            serviceType: "storage-table");
         return endpoint;
     }
 }

@@ -6,7 +6,7 @@ using Azure.ResourceManager;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
-public static partial class EndpointValidator
+public sealed partial class EndpointValidator
 {
     /// <summary>
     /// A list of allow-list hostname suffixes for some service. See <paramref name="UseLegacyCheck"/>
@@ -102,7 +102,10 @@ public static partial class EndpointValidator
             UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
         ["arm"] = new AllowedSuffixManager(
             // Raw ARM requests in Quota, Resource Health, and Service Fabric use ArmEnvironment.Endpoint to construct these hosts.
-            Public: ["management.azure.com"],
+            Public: [
+                "management.azure.com",
+                "sanitized.azure.com" // 3.0 GA hack: playback tests sometimes use this. @vukelich will remove week of 2026-10-12.
+            ],
             China: ["management.chinacloudapi.cn"],
             UsGov: ["management.usgovcloudapi.net"],
             Germany: [],

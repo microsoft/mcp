@@ -309,6 +309,9 @@ The `azmcp server start` command supports the following options:
 > This option disables endpoint SSRF validation used by tools in the selected namespaces, including protocol, hostname allow-list, and private-network checks. When used:
 > - Untrusted tool input may cause requests to attacker-controlled or internal endpoints
 > - The values identify tool namespaces such as `acr` or `loadtesting`, not endpoint service types
+> - Shared ARM SDK clients use the executing command's original setup namespace in every server mode, including consolidated and single-tool mode. Their ARM policy validates every send, including direct CLI and background sends through the shared pipeline. Missing contexts and unresolved namespaces cannot enable a bypass, including `ALL`.
+> - Default and named factory HTTP clients use `AntiSSRFPolicy` with `ExternalOnlyLatest` to require HTTPS and block private/reserved DNS-to-IP destinations. Namespace overrides are checked on every send, including cached clients; missing or unresolved execution contexts remain protected even for `ALL`.
+> - The shared server-mode ARM transport does not automatically follow HTTP redirects, including during namespace overrides. Its domain policy does not cover raw ARM HTTP requests or SDK clients created outside the shared ARM helper, although factory-created transports still receive DNS/IP protection.
 > - Repeat the option for multiple namespaces, or provide multiple space-delimited values (e.g. `--dangerously-disable-ssrf-protections-by-namespace acr loadtesting`)
 > - The special value `ALL` disables these protections for every namespace
 > - Only use this option temporarily in a fully trusted environment
@@ -319,6 +322,13 @@ The `azmcp server start` command supports the following options:
 >     --dangerously-disable-ssrf-protections-by-namespace acr \
 >     --dangerously-disable-ssrf-protections-by-namespace loadtesting
 > ```
+
+> **Security warning for outgoing proxy configuration:**
+>
+> HTTP/HTTPS/ALL proxies and debug recording proxies take precedence over and disable
+> some SSRF protections, including transport-level DNS/IP checks. Requests excluded by
+> `NO_PROXY` do not restore those checks. Use only trusted proxies with appropriate network
+> restrictions. Endpoint domain validation remains active unless separately bypassed.
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
 >

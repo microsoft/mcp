@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Schema;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme.Services;
@@ -12,6 +13,7 @@ namespace Azure.Mcp.Tools.Adme.Services;
 /// Retrieves schema definitions and descriptors from ADME.
 /// </summary>
 public sealed class SchemaService(
+    IEndpointValidator endpointValidator,
     IAzureTokenCredentialProvider credentialProvider,
     IHttpClientFactory httpClientFactory) : ISchemaService
 {
@@ -32,7 +34,7 @@ public sealed class SchemaService(
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
-        return AdmeServiceHelper.SendAsync(
+        return AdmeServiceHelper.SendAsync(endpointValidator,
             _credentialProvider,
             _httpClientFactory,
             endpoint,
@@ -81,7 +83,7 @@ public sealed class SchemaService(
         AdmeServiceHelper.Add(query, "offset", AdmeServiceHelper.Format(offset));
         AdmeServiceHelper.Add(query, "limit", AdmeServiceHelper.Format(limit));
 
-        return AdmeServiceHelper.SendAsync(
+        return AdmeServiceHelper.SendAsync(endpointValidator,
             _credentialProvider,
             _httpClientFactory,
             endpoint,

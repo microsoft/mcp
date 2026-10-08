@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Xunit;
 
@@ -16,7 +17,7 @@ public class MonitorWebTestServiceEndpointValidationTests
     {
         Assert.Equal(
             endpoint,
-            MonitorWebTestService.MonitorWebTestValidateRequestUri(new Uri(endpoint, UriKind.Absolute), logger: null).AbsoluteUri);
+            MonitorWebTestService.MonitorWebTestValidateRequestUri(AzureServiceTestHelpers.CreateAzureService(), new Uri(endpoint, UriKind.Absolute)).AbsoluteUri);
     }
 
     [Theory]
@@ -27,17 +28,16 @@ public class MonitorWebTestServiceEndpointValidationTests
     public void CreateValidatedRequestUri_PrivateOrUnsupportedTarget_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            MonitorWebTestService.MonitorWebTestValidateRequestUri(new Uri(endpoint, UriKind.Absolute), logger: null));
+            MonitorWebTestService.MonitorWebTestValidateRequestUri(AzureServiceTestHelpers.CreateAzureService(), new Uri(endpoint, UriKind.Absolute)));
     }
 
     [Fact]
     public void ResolveValidatedRequestUri_RetainedPrivateTarget_ThrowsSecurityException()
     {
         Assert.Throws<SecurityException>(() =>
-            MonitorWebTestService.ResolveValidatedRequestUri(
+            MonitorWebTestService.ResolveValidatedRequestUri(AzureServiceTestHelpers.CreateAzureService(),
                 newWebTestUri: null,
-                existingRequestUri: new Uri("http://127.0.0.1/health"),
-                logger: null));
+                existingRequestUri: new Uri("http://127.0.0.1/health")));
     }
 
     [Fact]
@@ -47,9 +47,8 @@ public class MonitorWebTestServiceEndpointValidationTests
 
         Assert.Same(
             existingRequestUri,
-            MonitorWebTestService.ResolveValidatedRequestUri(
+            MonitorWebTestService.ResolveValidatedRequestUri(AzureServiceTestHelpers.CreateAzureService(),
                 newWebTestUri: null,
-                existingRequestUri,
-                logger: null));
+                existingRequestUri));
     }
 }

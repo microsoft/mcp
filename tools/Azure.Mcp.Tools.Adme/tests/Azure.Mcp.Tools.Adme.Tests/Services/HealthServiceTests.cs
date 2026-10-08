@@ -6,6 +6,9 @@ using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -21,7 +24,7 @@ public sealed class HealthServiceTests
     {
         var provider = CreateCredentialProvider(TestConstants.AccessToken);
         var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
-        var service = new HealthService(provider, new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
 
         var result = await service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -49,7 +52,7 @@ public sealed class HealthServiceTests
         var provider = Substitute.For<IAzureTokenCredentialProvider>();
         provider.GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>()).Returns(credential);
         var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
-        var service = new HealthService(provider, new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
 
         var result = await service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -73,7 +76,7 @@ public sealed class HealthServiceTests
             .Returns<Task<TokenCredential>>(_ => throw new InvalidOperationException("no credential available"));
         var handler = new StubHttpMessageHandler(_ =>
             throw new InvalidOperationException("ADME should not be called when auth fails"));
-        var service = new HealthService(provider, new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -92,7 +95,7 @@ public sealed class HealthServiceTests
         {
             Content = new StringContent(errorResponse)
         });
-        var service = new HealthService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -121,7 +124,7 @@ public sealed class HealthServiceTests
             response.Headers.Add(AdmeServiceHelper.CorrelationIdHeader, correlationId);
             return response;
         });
-        var service = new HealthService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -142,7 +145,7 @@ public sealed class HealthServiceTests
     [InlineData("http://sample.oep.ppe.azure-int.net")]
     public async Task CheckHealthAsync_RejectsUntrustedEndpoint(string endpoint)
     {
-        var service = new HealthService(
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
             CreateCredentialProvider(),
             new FakeHttpClientFactory(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK))));
 
