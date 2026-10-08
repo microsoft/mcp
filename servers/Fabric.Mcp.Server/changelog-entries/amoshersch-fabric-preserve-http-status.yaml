@@ -13,3 +13,5 @@ changes:
     description: "Corrected Fabric prompt interaction tokens while preserving prompt text and deletion consent guidance."
   - section: "Bugs Fixed"
     description: "Improved Create Item validation errors to identify missing required options without exposing private input or exception details."
+  - section: "Bugs Fixed"
+    description: "Sanitized shared Fabric Core parser failures, including invalid Boolean values and unknown options, while retaining guidance for known required options."

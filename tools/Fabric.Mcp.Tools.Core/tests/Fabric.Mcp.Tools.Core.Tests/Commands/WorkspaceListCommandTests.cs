@@ -7,6 +7,7 @@ using Azure.Identity;
 using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
+using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Tests.Client;
@@ -124,6 +125,25 @@ public class WorkspaceListCommandTests() : CommandUnitTestsBase<WorkspaceListCom
         var response = await ExecuteCommandAsync("--prefer-workspace-specific-endpoints", "sometimes");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("--prefer-workspace-specific-endpoints", false)]
+    [InlineData("--prefer-workspace-specific-endpoints", true)]
+    [InlineData("--private-unknown-option", false)]
+    public async Task ExecuteAsync_SanitizesParserErrorsBeforeCallingService(string option, bool inlineValue)
+    {
+        string[] args = inlineValue
+            ? [$"{option}={FabricCoreErrorTestData.PrivateDetails}"]
+            : [option, FabricCoreErrorTestData.PrivateDetails];
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Command validation failed.", response.TelemetryFailureMessage);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Equal("Invalid Fabric Core request. Check option names and values; Boolean options must be true or false.", response.Message);
         Assert.Empty(Service.ReceivedCalls());
     }
 

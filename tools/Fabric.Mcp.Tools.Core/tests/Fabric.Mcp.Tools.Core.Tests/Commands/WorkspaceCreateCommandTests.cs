@@ -68,8 +68,6 @@ public sealed class WorkspaceCreateCommandTests()
             var data = new TheoryData<string[], string>
             {
                 { [], "--display-name" },
-                { ["--display-name", ""], "--display-name" },
-                { ["--display-name", " \t "], "--display-name" },
                 { ["--display-name", new string('a', 257)], "--display-name" },
                 { ["--display-name", "Admin monitoring"], "--display-name" },
                 { ["--display-name", "ADMIN MONITORING"], "--display-name" },
@@ -97,6 +95,20 @@ public sealed class WorkspaceCreateCommandTests()
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains(option, response.Message);
         Assert.Null(response.Results);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" \t ")]
+    public async Task ExecuteAsync_SanitizesEmptyDisplayNameParserErrorsBeforeService(string displayName)
+    {
+        var response = await ExecuteCommandAsync("--display-name", displayName);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Command validation failed.", response.TelemetryFailureMessage);
+        Assert.Equal("Invalid Fabric Core request. Check option names and values; Boolean options must be true or false.", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
         Assert.Empty(Service.ReceivedCalls());
     }
 

@@ -99,13 +99,33 @@ public class ItemListCommandTests : CommandUnitTestsBase<ItemListCommand, IFabri
         Assert.Empty(Service.ReceivedCalls());
     }
 
+    [Theory]
+    [InlineData("--recursive", false)]
+    [InlineData("--recursive", true)]
+    [InlineData("--private-unknown-option", false)]
+    public async Task ExecuteAsync_SanitizesParserErrorsBeforeCallingService(string option, bool inlineValue)
+    {
+        string[] args = inlineValue
+            ? ["--workspace-id", ItemListTestData.WorkspaceId, $"{option}={FabricCoreErrorTestData.PrivateDetails}"]
+            : ["--workspace-id", ItemListTestData.WorkspaceId, option, FabricCoreErrorTestData.PrivateDetails];
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Command validation failed.", response.TelemetryFailureMessage);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Equal("Invalid Fabric Core request. Check option names and values; Boolean options must be true or false.", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
     [Fact]
     public async Task ExecuteAsync_RequiresWorkspace()
     {
         var response = await ExecuteCommandAsync(Array.Empty<string>());
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("workspace-id", response.Message);
+        Assert.Equal("Missing Required options: --workspace-id", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
         Assert.Empty(Service.ReceivedCalls());
     }
 

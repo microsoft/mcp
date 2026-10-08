@@ -15,6 +15,11 @@ public abstract class FabricCoreCommand<
     protected override void HandleException(CommandContext context, Exception ex)
     {
         base.HandleException(context, ex);
+        if (ex is CommandValidationException validationException)
+        {
+            context.Response.Message = GetValidationErrorMessage(validationException,
+                "Invalid Fabric Core request. Check option names and values; Boolean options must be true or false.");
+        }
         context.Response.Results = null;
     }
 

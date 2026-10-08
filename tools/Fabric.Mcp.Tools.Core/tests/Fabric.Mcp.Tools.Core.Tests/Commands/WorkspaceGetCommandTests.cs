@@ -65,6 +65,68 @@ public class WorkspaceGetCommandTests() : CommandUnitTestsBase<WorkspaceGetComma
     }
 
     [Theory]
+    [InlineData("--prefer-workspace-specific-endpoints", false)]
+    [InlineData("--prefer-workspace-specific-endpoints", true)]
+    [InlineData("--private-unknown-option", false)]
+    public async Task ExecuteAsync_SanitizesParserErrorsBeforeCallingService(string option, bool inlineValue)
+    {
+        string[] args = inlineValue
+            ? ["--workspace-id", WorkspaceTestData.WorkspaceId, $"{option}={FabricCoreErrorTestData.PrivateDetails}"]
+            : ["--workspace-id", WorkspaceTestData.WorkspaceId, option, FabricCoreErrorTestData.PrivateDetails];
+
+        var response = await ExecuteCommandAsync(args);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Command validation failed.", response.TelemetryFailureMessage);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Equal("Invalid Fabric Core request. Check option names and values; Boolean options must be true or false.", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReportsMissingWorkspaceWithoutEchoingParserInput()
+    {
+        var response = await ExecuteCommandAsync(
+            "--prefer-workspace-specific-endpoints", FabricCoreErrorTestData.PrivateDetails,
+            "--private-unknown-option", FabricCoreErrorTestData.PrivateDetails);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Missing Required options: --workspace-id", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_OnlyReportsKnownRequiredOptionNames(bool knownOption)
+    {
+        List<string> missingOptions =
+        [
+            FabricCoreErrorTestData.PrivateDetails,
+            "--private-unknown-option",
+            "--prefer-workspace-specific-endpoints",
+            "--WORKSPACE-ID"
+        ];
+        if (knownOption)
+        {
+            missingOptions.AddRange(["--workspace-id", "--workspace-id"]);
+        }
+        Service.GetWorkspaceAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CommandValidationException(FabricCoreErrorTestData.PrivateDetails, missingOptions: missingOptions));
+
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceTestData.WorkspaceId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Equal(knownOption
+            ? "Missing Required options: --workspace-id"
+            : "Invalid Fabric Core request. Check option names and values; Boolean options must be true or false.",
+            response.Message);
+        await Service.Received(1).GetWorkspaceAsync(WorkspaceTestData.WorkspaceId, null, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("true")]
     [InlineData("false")]
