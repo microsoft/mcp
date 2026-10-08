@@ -8,14 +8,27 @@ import * as path from 'path';
 import { buildServerArguments } from '../../../serverArguments';
 
 suite('Azure MCP Extension - server arguments', () => {
-    test('offers every enabled service namespace plus ALL for SSRF overrides', () => {
+    test('requires user-level opt-in for SSRF overrides', () => {
+        const properties = readExtensionManifest().contributes.configuration.properties;
+        const setting = properties['azureMcp.dangerouslyDisableSsrfProtectionsByNamespace'];
+
+        assert.strictEqual(setting.scope, 'machine');
+        assert.deepStrictEqual(setting.default, []);
+    });
+
+    test('matches enabled service choices and descriptions, with an ALL warning', () => {
         const manifest = readExtensionManifest();
         const properties = manifest.contributes.configuration.properties;
-        const enabledNamespaces = properties['azureMcp.enabledServices'].items.enum;
-        const dangerouslyDisabledNamespaces =
-            properties['azureMcp.dangerouslyDisableSsrfProtectionsByNamespace'].items.enum;
+        const enabledServices = properties['azureMcp.enabledServices'].items;
+        const ssrfOverrides = properties['azureMcp.dangerouslyDisableSsrfProtectionsByNamespace'].items;
 
-        assert.deepStrictEqual(dangerouslyDisabledNamespaces, [...enabledNamespaces, 'ALL']);
+        assert.deepStrictEqual(ssrfOverrides.enum, [...enabledServices.enum, 'ALL']);
+        assert.deepStrictEqual(ssrfOverrides.markdownEnumDescriptions, [
+            ...enabledServices.markdownEnumDescriptions,
+            '**DANGER:** Disables SSRF protections for every Azure MCP tool namespace.'
+        ]);
+        assert.strictEqual(enabledServices.markdownEnumDescriptions.length, enabledServices.enum.length);
+        assert.strictEqual(ssrfOverrides.markdownEnumDescriptions.length, ssrfOverrides.enum.length);
     });
 
     test('keeps SSRF protections enabled by default', () => {
@@ -70,8 +83,11 @@ interface ExtensionManifest {
     contributes: {
         configuration: {
             properties: Record<string, {
+                scope?: string;
+                default?: string[];
                 items: {
                     enum: string[];
+                    markdownEnumDescriptions: string[];
                 };
             }>;
         };
