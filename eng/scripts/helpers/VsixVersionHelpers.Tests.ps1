@@ -180,6 +180,30 @@ Describe "Get-LatestMarketplaceVersion" {
         }
     }
 
+    It "requests the full version history so older major series are found" {
+        Mock Invoke-RestMethod {
+            $flags = ($Body | ConvertFrom-Json).flags
+            if (($flags -band 512) -ne 0) {
+                '{"results":[{"extensions":[{"versions":[{"version":"3.0.50","targetPlatform":"win32-x64"}]}]}]}' | ConvertFrom-Json
+            }
+            elseif (($flags -band 1) -ne 0) {
+                '{"results":[{"extensions":[{"versions":[{"version":"3.0.50"},{"version":"2.0.46"},{"version":"2.0.45"},{"version":"1.0.4"}]}]}]}' | ConvertFrom-Json
+            }
+            else {
+                '{"results":[{"extensions":[{"versions":[]}]}]}' | ConvertFrom-Json
+            }
+        }
+
+        $result = Get-LatestMarketplaceVersion -PublisherId "ms-azuretools" -ExtensionId "vscode-azure-mcp-server" -MajorVersion 2
+
+        $result.LatestVersion | Should -Be "2.0.46"
+        $result.NextPatch | Should -Be 47
+        Should -Invoke Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $flags = ($Body | ConvertFrom-Json).flags
+            ($flags -band 1) -eq 1 -and ($flags -band 512) -eq 0
+        }
+    }
+
     It "returns no history for an unpublished extension in strict mode" {
         Set-StrictMode -Version Latest
         Mock Invoke-RestMethod { '{"results":[{"extensions":[]}]}' | ConvertFrom-Json }
