@@ -221,7 +221,7 @@ extension changelog, and replaces the `(Unreleased)` placeholder with today's da
 **Parameters:**
 - `-ChangelogPath`: Required. Path to the CHANGELOG.md file (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md`)
 - `-Version`: Optional. Target version section to compile into. If not specified, compiles to "Unreleased" section
-- `-VsCodeVersion`: Optional. VS Code version; resolved with the same rules used by public VSIX packaging when omitted. Beta versions are mapped directly (for example, `3.0.0-beta.27` becomes `3.0.27`), stable Azure MCP versions use the next Marketplace patch, and stable Fabric versions use the server version.
+- `-VsCodeVersion`: Optional. VS Code version; resolved with the same rules used by public VSIX packaging when omitted (see [VSIX versioning](../../servers/Azure.Mcp.Server/vscode/VSIX-DESIGN.md#c-vsix-versioning)). Beta versions are mapped directly (for example, `3.0.0-beta.27` becomes `3.0.27`), stable Azure MCP versions use the next Marketplace patch, and stable Fabric versions use the `.csproj` version as-is because Fabric ships minor-increment GA releases that a `Major.0.X` patch scheme cannot represent.
 - `-DryRun`: Preview compilation without modifying files
 - `-KeepFiles`: Keep YAML files instead of deleting them after successful compilation
 - `-SkipVsCode`: Skip updating the VS Code extension changelog
