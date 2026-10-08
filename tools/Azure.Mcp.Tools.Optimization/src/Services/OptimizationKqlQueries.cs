@@ -12,6 +12,9 @@ namespace Azure.Mcp.Tools.Optimization.Services;
 /// </summary>
 internal static class OptimizationKqlQueries
 {
+    /// <summary>Advisor recommendation type id for "Review disks that are not attached to a VM".</summary>
+    public const string UnattachedDiskRecommendationTypeId = "48eda464-1485-4dcf-a674-d0905df5054a";
+
     private static string EscapeKql(string value) => value.Replace("'", "''", StringComparison.Ordinal);
 
     /// <summary>ARG query resolving a subscription id (and owning tenant) from a subscription name.</summary>
@@ -38,11 +41,16 @@ internal static class OptimizationKqlQueries
         $"| where properties.category == 'Cost'"+
         "| project id, resourceGroup, subscriptionId,properties = bag_remove_keys(properties, dynamic(['impact']))";
 
-    /// <summary>Curated top cost-savings ARG query. Subscription scoping is applied via the query content.</summary>
-    public const string TopCostSavingsQuery = """
+    /// <summary>
+    /// Curated top cost-savings ARG query. Subscription scoping, when requested, is applied via the query content.
+    /// Unattached-disk recommendations are excluded here and summarized by <see cref="UnattachedDiskSummaryQuery"/>.
+    /// </summary>
+    public const string TopCostSavingsQuery = $$"""
 advisorresources
 | where type =~ 'microsoft.advisor/recommendations'
 | where isempty(properties.tracked) or properties.tracked == false
+// Unattached disks are summarized by UnattachedDiskSummaryQuery.
+| where tostring(properties.recommendationTypeId) != '{{UnattachedDiskRecommendationTypeId}}'
 | extend termMatch = iff((isnotnull(properties.extendedProperties) and isnotempty(properties.extendedProperties.term) and properties.extendedProperties.term == 'P3Y'), true, false)
 | extend lookbackPeriodMatch = iff((isnotnull(properties.extendedProperties) and isnotempty(properties.extendedProperties.lookbackPeriod) and properties.extendedProperties.lookbackPeriod == '30'), true, (properties.recommendationTypeId == '84b1a508-fc21-49da-979e-96894f1665df' and isempty(properties.extendedProperties.lookbackPeriod)))
 | extend riFilterCondition = iff((termMatch == true and lookbackPeriodMatch == true), true, (isnull(properties.extendedProperties) or (not(bag_has_key(properties.extendedProperties, 'term')) and not(bag_has_key(properties.extendedProperties, 'lookbackPeriod')))))
@@ -98,15 +106,21 @@ advisorresources
     extendedProperties = properties.extendedProperties
 | extend
     recommendationSubcategory = tostring(extendedProperties.recommendationSubCategory),
-    savingsAmount = toreal(extendedProperties.savingsAmount),
+    extMonthly = toreal(extendedProperties.savingsAmount),
+    extAnnual = toreal(extendedProperties.annualSavingsAmount),
+    extCurrency = tostring(extendedProperties.savingsCurrency),
+    retailDaily = toreal(properties.savings.retail.dailyPotentialSavings)
+| extend useRetail = isnull(extMonthly) and isnull(extAnnual) and isnotnull(retailDaily)
+| extend
+    savingsAmount = iff(useRetail, retailDaily * 365.0 / 12.0, extMonthly),
+    annualSavingsAmount = iff(useRetail, retailDaily * 365.0, extAnnual),
+    savingsCurrency = iff(useRetail, tostring(properties.savings.providerCurrency), extCurrency),
     impactedField = tolower(tostring(properties.impactedField)),
     impactedValue = tolower(tostring(properties.impactedValue)),
     recommendationMessage = tostring(properties.shortDescription.solution),
     recommendationMessageDetailed = tostring(properties.extendedProperties.recommendationMessage),
     recommendationTypeSubCategory = tostring(properties.extendedProperties.recommendationType),
     solution = tostring(properties.shortDescription.solution),
-    annualSavingsAmount = toreal(extendedProperties.annualSavingsAmount),
-    savingsCurrency = tostring(extendedProperties.savingsCurrency),
     PotentialMonthlyCarbonSavings = todouble(coalesce(extendedProperties.PotentialMonthlyCarbonSavings, extendedProperties.potentialMonthlyCarbonSavings)),
     descriptionOfChanges = tostring(extendedProperties.descriptionOfChanges),
     recommendationCostImplication = tostring(extendedProperties.recommendationCostImplication)
@@ -166,5 +180,20 @@ advisorresources
     impactedField,
     impactedValue,
     resourceId
+""";
+
+    /// <summary>
+    /// ARG query summarizing unattached-disk cost recommendations as a single row with the count and
+    /// the subscriptions they are in. Subscription scoping, when requested, is applied via the query content.
+    /// </summary>
+    public const string UnattachedDiskSummaryQuery = $$"""
+advisorresources
+| where type =~ 'microsoft.advisor/recommendations'
+| where properties.category == 'Cost'
+| where properties.impactedField contains 'Microsoft.Compute/disks'
+| where properties.recommendationStatus == 'New'
+| extend recommendationTypeId = tostring(properties.recommendationTypeId)
+| where recommendationTypeId == '{{UnattachedDiskRecommendationTypeId}}'
+| summarize unattachedDiskCount = count(), subscriptionIds = make_set(tolower(subscriptionId))
 """;
 }

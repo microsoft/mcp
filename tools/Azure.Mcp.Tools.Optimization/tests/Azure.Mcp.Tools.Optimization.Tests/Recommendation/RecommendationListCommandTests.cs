@@ -4,12 +4,11 @@
 // cSpell:ignore subcat
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Optimization.Commands;
 using Azure.Mcp.Tools.Optimization.Commands.Recommendation;
 using Azure.Mcp.Tools.Optimization.Models;
 using Azure.Mcp.Tools.Optimization.Services;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -17,7 +16,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.Optimization.Tests.Recommendation;
 
 public class RecommendationListCommandTests
-    : SubscriptionCommandUnitTestsBase<RecommendationListCommand, IOptimizationService>
+    : CommandUnitTestsBase<RecommendationListCommand, IOptimizationService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -31,13 +30,15 @@ public class RecommendationListCommandTests
     [Theory]
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --top 10", true)]
-    [InlineData("", false)]
+    [InlineData("", true)]
+    [InlineData("--top 10", true)]
+    [InlineData("--top abc", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
             Service.ListCostSavingsAsync(
-                Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<int>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
@@ -47,10 +48,26 @@ public class RecommendationListCommandTests
         var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
-        if (!shouldSucceed)
-        {
-            Assert.Contains("required", response.Message.ToLower());
-        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutSubscription_QueriesAllAccessibleSubscriptions()
+    {
+        Service.ListCostSavingsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new CostSavingsResult([], false));
+
+        var response = await ExecuteCommandAsync("--top", "5");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListCostSavingsAsync(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            5,
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -75,6 +92,30 @@ public class RecommendationListCommandTests
         Assert.Single(result.Recommendations);
         Assert.Equal("name1", result.Recommendations[0].Name);
         Assert.False(result.AreResultsTruncated);
+        Assert.Null(result.DiskRecommendationSummary);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsDiskRecommendationSummary()
+    {
+        var summary = new DiskRecommendationSummary(
+            "Review disks that are not attached to a VM and evaluate if you still need the disks: 2 found.",
+            2,
+            ["sub1"],
+            "https://ms.portal.azure.com/#view/Microsoft_Azure_Expert/RecommendationList.ReactView");
+        Service.ListCostSavingsAsync(
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new CostSavingsResult([], false, DiskRecommendationSummary: summary));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        var result = ValidateAndDeserializeResponse(response, OptimizationJsonContext.Default.RecommendationListResult);
+        Assert.NotNull(result.DiskRecommendationSummary);
+        Assert.Equal(2, result.DiskRecommendationSummary!.UnattachedDiskCount);
+        Assert.Equal(summary.ActionUrl, result.DiskRecommendationSummary.ActionUrl);
     }
 
     [Fact]

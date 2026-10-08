@@ -3,8 +3,6 @@
 
 using System.Net;
 using Azure;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Optimization.Models;
 using Azure.Mcp.Tools.Optimization.Options.Recommendation;
 using Azure.Mcp.Tools.Optimization.Services;
@@ -19,17 +17,21 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
     Name = "list",
     Title = "List Top Cost-Saving Recommendations",
     Description = "Get Azure cost-saving / cost-optimization recommendations (a.k.a. top optimization recommendations) " +
-        "for a subscription, ranked by impact and currency-normalized annual savings, by running a curated Azure " +
+        "for a subscription or, when no subscription is given, across all subscriptions accessible to the caller, " +
+        "ranked by impact and currency-normalized annual savings, by running a curated Azure " +
         "Resource Graph (ARG) query over cost recommendations. Call this whenever the user asks about " +
         "'cost savings recommendation(s)', 'cost optimization recommendation(s)', or the 'top optimization " +
         "recommendation(s)'. --top caps the number of returned items (default 100, max 1000). Returns one row per " +
         "recommendation with normalized annual/monthly savings, impacted resource, impact, and solution. When " +
         "presenting results, refer to them as 'cost optimization recommendations' (do not mention 'Azure Advisor'), " +
         "summarize the count and use a readable table sorted by impact and savings rather than raw JSON. " +
+        "Unattached-disk recommendations are not listed individually; when 'diskRecommendationSummary' is present, add one line " +
+        "after the table with its message and a 'Take action in Advisor' link to its actionUrl, and never list individual disks. " +
         "To explain or go deeper on a specific listed recommendation (e.g. 'explain recommendation 1'), call the 'explain' " +
         "tool with that row's resourceId and recommendationTypeId. " +
         "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +
-        "NOT call the 'subscription list' tool first.",
+        "NOT call the 'subscription list' tool first. If the user does not name a subscription, omit --subscription (do not " +
+        "ask for one or pick a default) and tell the user the results cover all accessible subscriptions.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
@@ -39,9 +41,8 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
     LocalRequired = false)]
 public sealed class RecommendationListCommand(
     ILogger<RecommendationListCommand> logger,
-    IOptimizationService optimizationService,
-    ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
+    IOptimizationService optimizationService)
+    : AuthenticatedCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>()
 {
     private const int MinTop = 1;
     private const int MaxTop = 1000;
@@ -72,7 +73,8 @@ public sealed class RecommendationListCommand(
                     results.Recommendations,
                     results.AreResultsTruncated,
                     message,
-                    results.SubscriptionOptions),
+                    results.SubscriptionOptions,
+                    results.DiskRecommendationSummary),
                 OptimizationJsonContext.Default.RecommendationListResult);
         }
         catch (Exception ex)
@@ -97,5 +99,6 @@ public sealed class RecommendationListCommand(
         List<CostSavingsRecommendation> Recommendations,
         bool AreResultsTruncated,
         string? Message = null,
-        IReadOnlyList<SubscriptionOption>? SubscriptionOptions = null);
+        IReadOnlyList<SubscriptionOption>? SubscriptionOptions = null,
+        DiskRecommendationSummary? DiskRecommendationSummary = null);
 }

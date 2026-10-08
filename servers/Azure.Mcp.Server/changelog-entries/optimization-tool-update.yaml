@@ -1,3 +1,7 @@
 changes:
   - section: "Other Changes"
     description: "Updated Azure optimization tool descriptions to refer to results as cost optimization recommendations instead of Azure Advisor."
+  - section: "Features Added"
+    description: "Updated `optimization recommendation list` to make `--subscription` optional, querying all subscriptions accessible to the caller when it is omitted, and to return unattached-disk recommendations as a single summary with a count and a link to take action in the Azure portal instead of listing them individually."
+  - section: "Breaking Changes"
+    description: "Updated the `optimization recommendation list` query to return only New cost recommendations not excluded by Advisor configuration, ordered with underutilized VMs and VM scale sets first and then by annual savings in each recommendation's original currency. Each result now contains only `id`, `subscriptionId`, `resourceGroup`, `recommendationTypeId`, `resourceId`, `recommendationMessage`, `impact`, `savingsCurrency`, `savingsAmount`, and `annualSavingsAmount`."

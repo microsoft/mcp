@@ -8,12 +8,13 @@ namespace Azure.Mcp.Tools.Optimization.Services;
 public interface IOptimizationService
 {
     /// <summary>
-    /// Returns the top cost-saving recommendations for a subscription, ranked by
-    /// impact and currency-normalized annual savings. When the subscription name matches more than
-    /// one subscription, the returned result carries the candidate subscriptions instead.
+    /// Returns the top cost-saving recommendations, ranked by impact and currency-normalized annual
+    /// savings. When <paramref name="subscription"/> is null or empty, all subscriptions accessible to the
+    /// caller are queried. When the subscription name matches more than one subscription, the returned
+    /// result carries the candidate subscriptions instead.
     /// </summary>
     Task<CostSavingsResult> ListCostSavingsAsync(
-        string subscription,
+        string? subscription,
         int top,
         string? tenant = null,
         CancellationToken cancellationToken = default);

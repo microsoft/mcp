@@ -27,27 +27,98 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
     private readonly ILogger<OptimizationService> _logger = logger;
 
     public async Task<CostSavingsResult> ListCostSavingsAsync(
-        string subscription,
+        string? subscription,
         int top,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-
         // Normalize the multi-line raw string query to CRLF so the request body is byte-identical
         // across platforms; raw string literal line endings follow the checkout EOL (CRLF on
         // Windows, LF on Linux), which otherwise breaks recorded-test playback matching.
         var query = $"{OptimizationKqlQueries.TopCostSavingsQuery.ReplaceLineEndings("\r\n")}\n| limit {top}";
-        var (rows, truncated, candidates) = await QueryResourceGraphAsync(
-            query, subscription, tenant, cancellationToken, returnCandidatesOnMultipleMatch: true);
 
-        if (candidates is not null)
+        // Without a subscription, the queries are not scoped and cover every subscription the caller can access.
+        string? subscriptionId = null;
+        Guid? queryTenantId = Guid.TryParse(tenant, out var parsedTenant) ? parsedTenant : null;
+        if (!string.IsNullOrWhiteSpace(subscription))
         {
-            return new CostSavingsResult([], false, candidates);
+            (subscriptionId, queryTenantId, var candidates) = await ResolveSubscriptionAsync(
+                subscription.Trim('"', '\''), tenant, returnCandidatesOnMultipleMatch: true, cancellationToken);
+
+            if (candidates is not null)
+            {
+                return new CostSavingsResult([], false, candidates);
+            }
         }
 
+        var tenantResource = await GetTenantResourceAsync(queryTenantId, cancellationToken);
+
+        var recommendationsTask = ExecuteResourceGraphQueryAsync(tenantResource, query, subscriptionId, cancellationToken);
+        var diskSummaryTask = GetDiskRecommendationSummaryAsync(tenantResource, subscriptionId, cancellationToken);
+        await Task.WhenAll(recommendationsTask, diskSummaryTask);
+
+        var (rows, truncated) = recommendationsTask.Result;
         var recommendations = rows.Select(ConvertToCostSavings).ToList();
-        return new CostSavingsResult(recommendations, truncated);
+        return new CostSavingsResult(recommendations, truncated, DiskRecommendationSummary: diskSummaryTask.Result);
+    }
+
+    /// <summary>
+    /// Runs the unattached-disk summary query. Returns null when no unattached-disk recommendations
+    /// exist, or when the summary query fails so the main recommendation list is still returned.
+    /// A null <paramref name="subscriptionId"/> summarizes across all accessible subscriptions.
+    /// </summary>
+    private async Task<DiskRecommendationSummary?> GetDiskRecommendationSummaryAsync(
+        TenantResource tenantResource,
+        string? subscriptionId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var query = OptimizationKqlQueries.UnattachedDiskSummaryQuery.ReplaceLineEndings("\r\n");
+            var (rows, _) = await ExecuteResourceGraphQueryAsync(tenantResource, query, subscriptionId, cancellationToken);
+            return BuildDiskRecommendationSummary(rows, subscriptionId);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Failed to summarize unattached-disk recommendations. Subscription: {Subscription}.",
+                subscriptionId ?? "all accessible subscriptions");
+            return null;
+        }
+    }
+
+    internal static DiskRecommendationSummary? BuildDiskRecommendationSummary(IReadOnlyList<JsonElement> rows, string? subscriptionId)
+    {
+        if (rows.Count == 0
+            || !rows[0].TryGetProperty("unattachedDiskCount", out var countElement)
+            || !countElement.TryGetInt32(out var count)
+            || count <= 0)
+        {
+            return null;
+        }
+
+        List<string> subscriptionIds = [];
+        if (rows[0].TryGetProperty("subscriptionIds", out var idsElement) && idsElement.ValueKind == JsonValueKind.Array)
+        {
+            subscriptionIds.AddRange(idsElement.EnumerateArray()
+                .Where(e => e.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(e.GetString()))
+                .Select(e => e.GetString()!));
+        }
+
+        if (subscriptionIds.Count == 0 && !string.IsNullOrWhiteSpace(subscriptionId))
+        {
+            subscriptionIds.Add(subscriptionId.ToLowerInvariant());
+        }
+
+        var encodedIds = string.Join("%2C", subscriptionIds.Select(id => $"%22{Uri.EscapeDataString(id)}%22"));
+        var actionUrl =
+            "https://ms.portal.azure.com/#view/Microsoft_Azure_Expert/RecommendationList.ReactView/recommendationTypeId/" +
+            $"{OptimizationKqlQueries.UnattachedDiskRecommendationTypeId}/recommendationStatus~/0/subscriptionIds~/%5B{encodedIds}%5D";
+
+        return new DiskRecommendationSummary(
+            $"Review disks that are not attached to a VM and evaluate if you still need the disks: {count} found.",
+            count,
+            subscriptionIds,
+            actionUrl);
     }
 
     public async Task<IReadOnlyList<AlternativeRecommendation>> GetAlternativesAsync(
@@ -63,7 +134,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         resourceId = ArmResourceId.StripAdvisorRecommendationSuffix(resourceId);
 
         var query = $"{OptimizationKqlQueries.BuildAlternativesQuery(resourceId)}\n| limit {AlternativesLimit}";
-        var (rows, _, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
+        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
 
         return AlternativeRecommendationsArgParser.Parse(rows, resourceId);
     }
@@ -83,7 +154,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         resourceId = ArmResourceId.StripAdvisorRecommendationSuffix(resourceId);
 
         var query = $"{OptimizationKqlQueries.BuildAdvisorRecommendationQuery(resourceId)}\n| limit {ExplanationLimit}";
-        var (rows, _, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
+        var (rows, _) = await QueryResourceGraphAsync(query, subscription, tenant, cancellationToken);
 
         if (rows.Count == 0)
         {
@@ -205,31 +276,37 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
 
     /// <summary>
     /// Runs a raw Azure Resource Graph query scoped to a single subscription and returns the
-    /// cloned data rows plus the truncation flag. When <paramref name="returnCandidatesOnMultipleMatch"/>
-    /// is true and the subscription name matches more than one subscription, the candidate
-    /// subscriptions are returned instead of throwing.
+    /// cloned data rows plus the truncation flag.
     /// </summary>
-    private async Task<(List<JsonElement> Rows, bool Truncated, IReadOnlyList<SubscriptionOption>? Candidates)> QueryResourceGraphAsync(
+    private async Task<(List<JsonElement> Rows, bool Truncated)> QueryResourceGraphAsync(
         string query,
         string subscription,
         string? tenant,
-        CancellationToken cancellationToken,
-        bool returnCandidatesOnMultipleMatch = false)
+        CancellationToken cancellationToken)
     {
-        var (subscriptionId, subscriptionTenantId, candidates) = await ResolveSubscriptionAsync(
-            subscription, tenant, returnCandidatesOnMultipleMatch, cancellationToken);
-
-        if (candidates is not null)
-        {
-            return ([], false, candidates);
-        }
+        var (subscriptionId, subscriptionTenantId, _) = await ResolveSubscriptionAsync(
+            subscription, tenant, returnCandidatesOnMultipleMatch: false, cancellationToken);
 
         var tenantResource = await GetTenantResourceAsync(subscriptionTenantId, cancellationToken);
 
-        var queryContent = new ResourceQueryContent(query)
+        return await ExecuteResourceGraphQueryAsync(tenantResource, query, subscriptionId!, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes an Azure Resource Graph query. When <paramref name="subscriptionId"/> is null the
+    /// query is not scoped and covers every subscription the caller can access.
+    /// </summary>
+    private static async Task<(List<JsonElement> Rows, bool Truncated)> ExecuteResourceGraphQueryAsync(
+        TenantResource tenantResource,
+        string query,
+        string? subscriptionId,
+        CancellationToken cancellationToken)
+    {
+        var queryContent = new ResourceQueryContent(query);
+        if (!string.IsNullOrWhiteSpace(subscriptionId))
         {
-            Subscriptions = { subscriptionId! },
-        };
+            queryContent.Subscriptions.Add(subscriptionId);
+        }
 
         ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
 
@@ -246,7 +323,7 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             }
         }
 
-        return (rows, result?.ResultTruncated == ResultTruncated.True, null);
+        return (rows, result?.ResultTruncated == ResultTruncated.True);
     }
 
     /// <summary>
