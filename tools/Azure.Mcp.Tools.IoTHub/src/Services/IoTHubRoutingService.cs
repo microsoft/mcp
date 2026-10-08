@@ -547,12 +547,12 @@ public class IoTHubRoutingService(
                 cancellationToken);
             return;
         }
-        catch (Exception ex) when (
-            ex is not OperationCanceledException &&
-            !cancellationToken.IsCancellationRequested &&
+        // Azure Monitor rejects a whole batch with 400 when one metric is unavailable for the resource.
+        // Throttling and server errors must not fan out into per-metric requests.
+        catch (RequestFailedException ex) when (
+            ex.Status == (int)HttpStatusCode.BadRequest &&
             metricNames.Length > 1 &&
-            !IsAuthorizationError(ex) &&
-            !IsNotFoundException(ex))
+            !cancellationToken.IsCancellationRequested)
         {
             _logger.LogWarning(
                 ex,
@@ -871,6 +871,11 @@ public class IoTHubRoutingService(
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        // Reject untrusted destinations, including ARM continuation links, before any credential work.
+        var requestUri = BuildArmRequestUri(
+            AzureService.CloudConfiguration.ArmEnvironment,
+            resourcePathOrUrl,
+            apiVersion);
         TokenCredential credential;
         try
         {
@@ -884,10 +889,6 @@ public class IoTHubRoutingService(
             cancellationToken.ThrowIfCancellationRequested();
             throw;
         }
-        var requestUri = BuildArmRequestUri(
-            AzureService.CloudConfiguration.ArmEnvironment,
-            resourcePathOrUrl,
-            apiVersion);
 
         using var httpClient = _httpClientFactory.CreateClient();
         using var transport = new HttpClientTransport(httpClient);
@@ -1182,15 +1183,6 @@ public class IoTHubRoutingService(
         [],
         [],
         []);
-
-    private static bool IsAuthorizationError(Exception exception) =>
-        exception is RequestFailedException requestFailed &&
-            requestFailed.Status is 401 or 403
-        || exception is Azure.Identity.AuthenticationFailedException
-        || exception.Message.Contains("AuthorizationFailed", StringComparison.OrdinalIgnoreCase);
-
-    private static bool IsNotFoundException(Exception exception) =>
-        exception is RequestFailedException requestFailed && requestFailed.Status == 404;
 
     private static void ValidateInputs(
         string hubName,

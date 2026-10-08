@@ -500,6 +500,31 @@ public class IoTHubRoutingServiceDiagnosticsTests()
         Assert.Single(endpoint.TargetEmitted.Errors);
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    public async Task Diagnostics_DoesNotFallBackAfterTransientBatchFailure(HttpStatusCode statusCode)
+    {
+        using var handler = CreateHandler((request, _) =>
+        {
+            if (IsHubMetric(request))
+            {
+                return Metrics(Metric(GetQuery(request, "metricnames")));
+            }
+            var response = JsonResponse("""{"error":{"code":"ServerBusy"}}""", statusCode);
+            response.Headers.Add("x-ms-retry-after-ms", "1");
+            return response;
+        }, eventHub: true);
+
+        var endpoint = Assert.Single((await DiagnoseAsync(CreateService(handler), TestContext.Current.CancellationToken)).Endpoints);
+
+        Assert.Equal(new ArmClientOptions().Retry.MaxRetries + 1, TargetMetricRequests(handler).Count());
+        Assert.All(TargetMetricRequests(handler), uri => Assert.Contains(',', GetQuery(uri, "metricnames")));
+        Assert.Equal(5, endpoint.TargetEmitted.MetricAvailability.Count);
+        Assert.All(endpoint.TargetEmitted.MetricAvailability.Values, status => Assert.Equal("failed", status));
+        Assert.Equal("failed", endpoint.TargetEmitted.QueryStatus);
+    }
+
     [Fact]
     public async Task Diagnostics_CancellationDuringFallbackStopsRemainingQueries()
     {

@@ -224,6 +224,27 @@ public class IoTHubRoutingServiceTests()
     }
 
     [Fact]
+    public async Task GetRoutingEndpointsHealthAsync_RejectsForeignNextLinkBeforeResolvingCredential()
+    {
+        var azureService = Substitute.For<IAzureService>();
+        using var handler = new SequenceHttpMessageHandler(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"value":[],"nextLink":"https://example.com/next-health-page"}""")
+            });
+        var service = CreateService(handler, azureService);
+
+        await Assert.ThrowsAsync<SecurityException>(() =>
+            service.GetRoutingEndpointsHealthAsync(
+                new ResourceIdentifier("/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Devices/IotHubs/hub1"),
+                null,
+                TestContext.Current.CancellationToken));
+
+        Assert.Single(handler.RequestUris);
+        await azureService.Received(1).GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void BuildArmRequestUri_ResolvesResourcePathAgainstArmEndpoint()
     {
         var uri = IoTHubRoutingService.BuildArmRequestUri(
