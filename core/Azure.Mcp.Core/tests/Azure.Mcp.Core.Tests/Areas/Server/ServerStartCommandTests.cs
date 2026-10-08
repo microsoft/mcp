@@ -1084,4 +1084,87 @@ public class ServerStartCommandTests
     }
 
     #endregion
+
+    #region Listening URL Tests
+
+    [Theory]
+    [InlineData("http://+:8080")]
+    [InlineData("http://*:8080")]
+    [InlineData("http://+:8080/")]
+    [InlineData("http://0.0.0.0:8080")]
+    [InlineData("http://[::]:8080")]
+    public void InitializeListingUrls_WildcardHostWithInsecureBindingOptIn_UsesUrl(string url)
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("ASPNETCORE_URLS", url);
+        Environment.SetEnvironmentVariable("ALLOW_INSECURE_EXTERNAL_BINDING", "true");
+
+        try
+        {
+            var builder = WebApplication.CreateBuilder();
+            var serverOptions = new ServerStartOptions { DangerouslyDisableHttpIncomingAuth = true };
+
+            // Act
+            ServerStartCommand.InitializeListingUrls(builder, serverOptions);
+
+            // Assert
+            Assert.Equal(url, builder.WebHost.GetSetting(WebHostDefaults.ServerUrlsKey));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ASPNETCORE_URLS", null);
+            Environment.SetEnvironmentVariable("ALLOW_INSECURE_EXTERNAL_BINDING", null);
+        }
+    }
+
+    [Theory]
+    [InlineData("http://+:8080")]
+    [InlineData("http://*:8080")]
+    [InlineData("http://0.0.0.0:8080")]
+    [InlineData("http://[::]:8080")]
+    public void InitializeListingUrls_WildcardHostWithoutInsecureBindingOptIn_Throws(string url)
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("ASPNETCORE_URLS", url);
+
+        try
+        {
+            var builder = WebApplication.CreateBuilder();
+            var serverOptions = new ServerStartOptions { DangerouslyDisableHttpIncomingAuth = true };
+
+            // Act & Assert
+            var exception = Assert.Throws<InvalidOperationException>(() => ServerStartCommand.InitializeListingUrls(builder, serverOptions));
+            Assert.Contains("ALLOW_INSECURE_EXTERNAL_BINDING", exception.Message);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ASPNETCORE_URLS", null);
+        }
+    }
+
+    [Theory]
+    [InlineData("http://+abc:8080")]
+    [InlineData("http://10.0.0.5:8080")]
+    public void InitializeListingUrls_ExplicitExternalHost_Throws(string url)
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("ASPNETCORE_URLS", url);
+        Environment.SetEnvironmentVariable("ALLOW_INSECURE_EXTERNAL_BINDING", "true");
+
+        try
+        {
+            var builder = WebApplication.CreateBuilder();
+            var serverOptions = new ServerStartOptions { DangerouslyDisableHttpIncomingAuth = true };
+
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() => ServerStartCommand.InitializeListingUrls(builder, serverOptions));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ASPNETCORE_URLS", null);
+            Environment.SetEnvironmentVariable("ALLOW_INSECURE_EXTERNAL_BINDING", null);
+        }
+    }
+
+    #endregion
 }
