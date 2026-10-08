@@ -1236,6 +1236,12 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 * "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
+### Azure NetApp Files
+
+* "Create backup 'my-backup' for volume '/subscriptions/.../volumes/my-volume' in backup vault 'my-vault' under NetApp account 'my-account'"
+* "Get backup 'my-backup' from backup vault 'my-vault' under NetApp account 'my-account'"
+* "Update the label of backup 'my-backup' to 'monthly-retention' in backup vault 'my-vault' under NetApp account 'my-account'"
+
 ### 📊 Azure Monitor
 
 * "Query an Analytics table in my Log Analytics workspace"
@@ -1438,6 +1444,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
+- **Azure NetApp Files** - Enterprise file storage account, volume, and backup management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
