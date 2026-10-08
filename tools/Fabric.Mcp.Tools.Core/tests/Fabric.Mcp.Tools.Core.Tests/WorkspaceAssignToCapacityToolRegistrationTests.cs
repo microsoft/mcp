@@ -131,7 +131,9 @@ public class WorkspaceAssignToCapacityToolRegistrationTests()
         Assert.Equal(readOnly ? readOnlyNames : allNames, catalog.Tools.Select(tool => tool.Name).Order());
         foreach (var tool in catalog.Tools)
         {
-            var command = factory.AllCommands[tool.Name];
+            CommandRegistration registration = factory.AllCommands[tool.Name];
+            Assert.Equal("core", registration.ToolNamespaceName);
+            IBaseCommand command = registration.Command;
             Assert.Equal(command.Metadata.ReadOnly, tool.Annotations?.ReadOnlyHint);
             Assert.Equal(command.Metadata.Destructive, tool.Annotations?.DestructiveHint);
             Assert.Equal(command.Metadata.Idempotent, tool.Annotations?.IdempotentHint);
@@ -272,6 +274,7 @@ public class WorkspaceAssignToCapacityToolRegistrationTests()
             Transport = transport,
             ReadOnly = readOnly
         }));
+        services.AddCommandContextAccessor();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
         return services.BuildServiceProvider();
