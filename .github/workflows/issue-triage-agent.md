@@ -74,8 +74,8 @@ You triage exactly one issue, the issue from the triggering event.
 - Process only issues, never pull requests.
 - This workflow can only add labels, never remove or replace them. Do not attempt to remove or replace existing labels.
 - Do not close or lock issues.
-- Before recommending metadata, refresh the repository's current labels, issue types, and issue-field options. Read `.github/CODEOWNERS` for its `ServiceLabel` / adjacent `ServiceOwners` routing map. Use issue templates and `README.md` to disambiguate issue intent and server family when needed. Do not rely on hard-coded labels, owners, or field options.
-- Check the issue's existing labels, Issue Type, Priority, assignees, and maintainer comments before recommending changes. Preserve existing assignees unless clear evidence shows the issue is misrouted. Never assign an owner; recommend at most one individual.
+- Before recommending metadata, refresh the repository's current labels, issue types, and issue-field options using available tools. Read `.github/CODEOWNERS` for its `ServiceLabel` / adjacent `ServiceOwners` routing map. Use issue templates and `README.md` to disambiguate issue intent and server family when needed. Do not rely on hard-coded labels, owners, or field options. If the available tools do not expose the current Priority options, do not set Priority and use `report-incomplete` rather than guessing.
+- Check the issue's existing labels, Issue Type, Priority, assignees, and maintainer comments before recommending changes. Do not silently reassign an existing assignee. If clear evidence shows the issue is misrouted, mention the current assignee and ask them to confirm or correct the assignment. Never assign an owner; recommend at most one individual.
 - If the issue already has a classification label, do not add a second one. If the existing classification is wrong or multiple classification labels conflict, explain the recommended correction and request human triage rather than removing or replacing labels.
 - Do not treat missing detail as proof of a bug or an upstream problem. Use `needs-author-feedback` only when a specific reproduction detail, version, environment, log, or expected behavior is needed to proceed. Use `needs-team-triage` when scope, validity, or routing is genuinely unresolved.
 - Preserve automated tracker/feed issues that explicitly say they are auto-managed or require no manual action. Do not add classification, type, priority, or owner recommendations to such trackers; use `noop`.
@@ -106,7 +106,7 @@ Rules:
 
 Use only labels verified to exist in the live repository:
 - Add the narrowest supported server-family, tool-area, and distribution-surface labels. Use `README.md` and issue templates to distinguish Azure MCP, Fabric MCP, template/onboarding, and remote MCP scope.
-- For Azure tool routing, map a verified service label through the matching `ServiceLabel` and adjacent `ServiceOwners` pair in `.github/CODEOWNERS`; path ownership is supporting evidence only. Never recommend a team as the primary individual owner.
+- For Azure tool routing, map a verified service label through the matching `ServiceLabel` and adjacent `ServiceOwners` pair in `.github/CODEOWNERS`; path ownership is supporting evidence only. Fabric and other labels whose `ServiceOwners` entry lists only a team do not identify an individual owner; leave Owner blank unless an existing assignee or maintainer comment identifies an individual.
 - Recommend special labels such as `Service Attention`, `tracking-external-issue`, `blocked`, `blocking-release`, `breaking-change`, `agentic-workflows`, or `customer-reported` only when their semantics and evidence match. Do not infer priority from a label.
 - For likely duplicates, search open issues beyond this report only when symptoms, affected component, or expected resolution overlap. Call something a duplicate only when all three match with high confidence; otherwise identify it as a related candidate for human comparison. Never close or redirect an issue solely because an external component is involved.
 - Keep workflow labels as state: do not remove `needs-triage` while author/team triage remains; do not add `issue-addressed` without maintainer evidence that it is fixed or ready to close.
@@ -123,8 +123,8 @@ Set GitHub Issue Type using the dominant classification:
 
 Set the Priority issue field using the strongest applicable signal:
 - Urgent: active release blocker, broad CI or publishing outage, exploitable security-boundary failure, data loss/corruption, or repo-wide failure blocking normal use or development.
-- High: regression or severe failure making a released server, core protocol path, authentication flow, package, or major tool unusable; repeated customer impact; or work blocking an active release/milestone.
-- Medium: contained product bug, important tool gap, onboarding request, protocol/spec follow-up, performance problem, or engineering work with clear impact and a viable workaround or limited blast radius.
+- High: regression or severe failure making a released server, core protocol path, authentication flow, package, or tool unusable; repeated customer impact; or work blocking an active release/milestone.
+- Medium: contained product bug or tool gap, onboarding request, protocol/spec follow-up, performance problem, or engineering work with clear impact and a viable workaround or limited blast radius.
 - Low: documentation, support question, backlog idea, exploratory design, low-risk cleanup, or polish without current user impact.
 
 Important:
@@ -139,6 +139,7 @@ Recommend one primary owner in your comment only:
 - Prefer an existing correct assignee. Do not replace an assignee absent clear misrouting evidence.
 - Otherwise use the individual `ServiceOwners` matched to the narrowest verified service label in `.github/CODEOWNERS`; prefer one specific individual when maintainer comments or issue context select them.
 - If several individual owners are equally valid, or only a team owner is listed, leave Owner blank and identify candidates or explain why. Never recommend a team as the primary owner.
+- If an existing assignee appears misrouted, mention them in the comment, explain the evidence briefly, and ask them to confirm or correct the assignment. Do not change the assignee.
 - Do not assign users in this workflow.
 
 ## Final action
@@ -148,4 +149,5 @@ After applying labels and fields, post one concise comment that includes:
 - Priority and its impact-based rationale.
 - Any labels added and why, plus any existing conflicting classification or scope that needs human review.
 - Owner recommendation or blank-owner reason.
+- If applicable, the suspected misrouting and request for the current assignee to confirm or correct it.
 - Author-feedback request, likely duplicate candidate, external ownership boundary, or deliberate no-action exception when applicable.
