@@ -2,41 +2,75 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
-using Azure.Core;
 using Fabric.Mcp.Tools.Core.Commands;
-using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
-using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
-using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
-using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Configuration;
-using Microsoft.Mcp.Core.Services.Telemetry;
-using Microsoft.Mcp.Tests.Client.Helpers;
-using ModelContextProtocol.Protocol;
-using NSubstitute;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Http;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.Core.Tests;
 
 public class FabricCoreSetupTests
 {
-    private const string WorkspaceId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
-    private const string ItemId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
-    private const string ItemJson = """
-                {
-                    "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-                    "workspaceId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-                    "displayName": "Sales Lakehouse",
-                    "description": "Test metadata",
-                    "type": "Lakehouse",
-                    "definition": { "payload": "excluded-definition" }
-                }
-                """;
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ConfigureServices_DisablesRedirectsWithoutReplacingConfiguredTransport(bool recordingProxy)
+    {
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = "http://proxy.example:8080";
+            options.NoProxy = "localhost";
+            options.DefaultTimeout = TimeSpan.FromSeconds(37);
+        });
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = TransportTypes.StdIo);
+        services.ConfigureDefaultHttpClient(() => recordingProxy ? new Uri("http://recording.example:5000") : null);
+        HttpMessageHandler? configuredHandler = null;
+        services.ConfigureHttpClientDefaults(builder =>
+            builder.ConfigurePrimaryHttpMessageHandler((handler, _) => configuredHandler = handler));
+        new FabricCoreSetup().ConfigureServices(services);
+        using var provider = services.BuildServiceProvider();
+
+        using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(IFabricCoreService));
+        Assert.NotNull(configuredHandler);
+        var transport = Assert.IsType<HttpClientHandler>(GetTransport(configuredHandler));
+        Assert.Same(transport, GetTransport(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(nameof(IFabricCoreService))));
+        Assert.False(transport.AllowAutoRedirect);
+        Assert.True(transport.UseProxy);
+        var proxy = Assert.IsType<WebProxy>(transport.Proxy);
+        Assert.Equal(new Uri("http://proxy.example:8080"), proxy.Address);
+        Assert.True(proxy.IsBypassed(new Uri("http://localhost")));
+        Assert.Equal(EnvironmentHelpers.IsPlaybackTesting() ? TimeSpan.FromMinutes(11) : TimeSpan.FromSeconds(37), client.Timeout);
+        Assert.NotEmpty(client.DefaultRequestHeaders.UserAgent);
+#if DEBUG
+        if (recordingProxy)
+        {
+            Assert.IsAssignableFrom<DelegatingHandler>(configuredHandler);
+        }
+#endif
+        var unrelated = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("unrelated");
+        Assert.True(Assert.IsType<HttpClientHandler>(GetTransport(unrelated)).AllowAutoRedirect);
+    }
+
+    [Fact]
+    public void ConfigureServices_DisablesRedirectsOnExistingSocketsTransport()
+    {
+        using var transport = new SocketsHttpHandler { ConnectTimeout = TimeSpan.FromSeconds(17) };
+        var services = new ServiceCollection();
+        services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => transport));
+        new FabricCoreSetup().ConfigureServices(services);
+        using var provider = services.BuildServiceProvider();
+
+        var handler = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(nameof(IFabricCoreService));
+
+        Assert.Same(transport, GetTransport(handler));
+        Assert.False(transport.AllowAutoRedirect);
+        Assert.Equal(TimeSpan.FromSeconds(17), transport.ConnectTimeout);
+    }
 
     [Fact]
     public void ConfigureServices_RegistersAllServices()
@@ -50,7 +84,19 @@ public class FabricCoreSetupTests
 
         // Assert
         Assert.Contains(services, s => s.ServiceType == typeof(IFabricCoreService));
-        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(ItemGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(CapacityGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(CapacityListCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(WorkspaceGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceListCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(ItemListCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(ItemGetCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceCreateCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceUpdateCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(ItemUpdateCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(ItemDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
+        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceAssignToCapacityCommand)
+            && s.Lifetime == ServiceLifetime.Singleton);
     }
 
     [Fact]
@@ -78,8 +124,19 @@ public class FabricCoreSetupTests
         // Assert
         Assert.True(rootGroup.Commands.ContainsKey("create-item"), "Should have create-item command");
         Assert.True(rootGroup.Commands.ContainsKey("search-catalog"), "Should have search-catalog command");
+        Assert.True(rootGroup.Commands.ContainsKey("get-capacity"), "Should have get-capacity command");
         Assert.True(rootGroup.Commands.ContainsKey("get-item"), "Should have get-item command");
-        Assert.Equal(3, rootGroup.Commands.Count);
+        Assert.True(rootGroup.Commands.ContainsKey("list-capacities"), "Should have list-capacities command");
+        Assert.True(rootGroup.Commands.ContainsKey("get-workspace"), "Should have get-workspace command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-workspaces"), "Should have list-workspaces command");
+        Assert.True(rootGroup.Commands.ContainsKey("list-items"), "Should have list-items command");
+        Assert.True(rootGroup.Commands.ContainsKey("create-workspace"), "Should have create-workspace command");
+        Assert.True(rootGroup.Commands.ContainsKey("update-workspace"), "Should have update-workspace command");
+        Assert.True(rootGroup.Commands.ContainsKey("update-item"), "Should have update-item command");
+        Assert.True(rootGroup.Commands.ContainsKey("delete-item"), "Should have delete-item command");
+        Assert.True(rootGroup.Commands.ContainsKey("delete-workspace"), "Should have delete-workspace command");
+        Assert.True(rootGroup.Commands.ContainsKey("assign-workspace-to-capacity"), "Should have assign-workspace-to-capacity command");
+        Assert.Equal(14, rootGroup.Commands.Count);
     }
 
     [Fact]
@@ -92,189 +149,12 @@ public class FabricCoreSetupTests
         Assert.Equal("Microsoft Fabric Core", setup.Title);
     }
 
-    [Theory]
-    [InlineData(null, TransportTypes.StdIo)]
-    [InlineData(StructuredOutputMode.Compact, TransportTypes.StdIo)]
-    [InlineData(StructuredOutputMode.Duplicated, TransportTypes.StdIo)]
-    [InlineData(StructuredOutputMode.Compact, TransportTypes.Http)]
-    public async Task GetItemTool_ReturnsMetadataThroughRegisteredPipeline(StructuredOutputMode? mode, string transport)
+    private static HttpMessageHandler GetTransport(HttpMessageHandler handler)
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ItemJson) };
-        using var handler = new StubHttpMessageHandler((request, _) =>
+        while (handler is DelegatingHandler { InnerHandler: { } innerHandler })
         {
-            Assert.Equal(HttpMethod.Get, request.Method);
-            Assert.Equal($"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{WorkspaceId}/items/{ItemId}", request.RequestUri?.AbsoluteUri);
-            Assert.Equal("test-token", request.Headers.Authorization?.Parameter);
-            Assert.Null(request.Content);
-            return Task.FromResult(response);
-        });
-        var credential = CreateCredential();
-        await using var provider = CreateToolServices(handler, credential, mode, transport);
-        var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
-
-        var tools = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
-        var tool = Assert.Single(tools.Tools, candidate => candidate.Name == "core_get-item");
-
-        Assert.True(tool.Annotations?.ReadOnlyHint);
-        Assert.True(tool.Annotations?.IdempotentHint);
-        Assert.False(tool.Annotations?.DestructiveHint);
-        Assert.Equal(["item-id", "workspace-id"], tool.InputSchema.GetProperty("required").EnumerateArray()
-            .Select(option => option.GetString()).OrderBy(name => name));
-        Assert.Equal(mode.HasValue, tool.OutputSchema.HasValue);
-        Assert.Equal(0, handler.CallCount);
-        Assert.Empty(credential.ReceivedCalls());
-
-        var result = await loader.CallToolHandler(McpTestUtilities.CreateToolCallRequest("core_get-item", new Dictionary<string, object?>
-        {
-            ["workspace-id"] = $"{{{WorkspaceId.ToUpperInvariant()}}}",
-            ["item-id"] = Guid.Parse(ItemId).ToString("N").ToUpperInvariant()
-        }), TestContext.Current.CancellationToken);
-
-        Assert.False(result.IsError);
-        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
-        JsonElement payload;
-        if (mode is null)
-        {
-            Assert.Null(result.StructuredContent);
-            using var document = JsonDocument.Parse(text);
-            payload = document.RootElement.GetProperty("results").Clone();
+            handler = innerHandler;
         }
-        else
-        {
-            Assert.NotNull(tool.OutputSchema);
-            Assert.True(tool.OutputSchema.Value.GetProperty("properties").TryGetProperty("item", out _));
-            Assert.NotNull(result.StructuredContent);
-            payload = result.StructuredContent.Value;
-            if (mode == StructuredOutputMode.Compact)
-            {
-                Assert.NotEmpty(text);
-                Assert.DoesNotContain("Sales Lakehouse", text);
-            }
-            else
-            {
-                using var document = JsonDocument.Parse(text);
-                Assert.True(JsonElement.DeepEquals(document.RootElement.GetProperty("results"), payload));
-            }
-        }
-
-        var item = payload.GetProperty("item");
-        Assert.Equal(ItemId, item.GetProperty("id").GetString());
-        Assert.Equal(WorkspaceId, item.GetProperty("workspaceId").GetString());
-        Assert.Equal("Sales Lakehouse", item.GetProperty("displayName").GetString());
-        Assert.Equal("Lakehouse", item.GetProperty("type").GetString());
-        Assert.Equal("Test metadata", item.GetProperty("description").GetString());
-        Assert.Equal(["description", "displayName", "id", "type", "workspaceId"],
-            item.EnumerateObject().Select(property => property.Name).OrderBy(name => name));
-        Assert.DoesNotContain("excluded-definition", text);
-        Assert.Equal(1, handler.CallCount);
-        await credential.Received(1).GetTokenAsync(
-            Arg.Is<TokenRequestContext>(context => context.Scopes.SequenceEqual(FabricEndpoints.FabricScopes)),
-            TestContext.Current.CancellationToken);
-    }
-
-    [Theory]
-    [InlineData(null, HttpStatusCode.NotFound, null, "The Fabric item was not found")]
-    [InlineData(StructuredOutputMode.Compact, HttpStatusCode.NotFound, null, "The Fabric item was not found")]
-    [InlineData(StructuredOutputMode.Duplicated, HttpStatusCode.NotFound, null, "The Fabric item was not found")]
-    [InlineData(null, HttpStatusCode.TooManyRequests, "120", "Wait at least 120 seconds before retrying")]
-    [InlineData(StructuredOutputMode.Compact, HttpStatusCode.TooManyRequests, "120", "Wait at least 120 seconds before retrying")]
-    [InlineData(StructuredOutputMode.Compact, HttpStatusCode.TooManyRequests, "Tue, 01 Jan 2030 00:00:00 GMT", "Retry after 2030-01-01 00:00:00 UTC")]
-    [InlineData(StructuredOutputMode.Compact, HttpStatusCode.TooManyRequests, "private-header-detail", "Wait before retrying")]
-    public async Task GetItemTool_ReturnsSanitizedFailuresThroughRegisteredPipeline(
-        StructuredOutputMode? mode, HttpStatusCode statusCode, string? retryAfter, string expectedMessage)
-    {
-        using var response = new HttpResponseMessage(statusCode) { Content = new StringContent("private-backend-detail") };
-        if (retryAfter is not null)
-        {
-            Assert.True(response.Headers.TryAddWithoutValidation("Retry-After", retryAfter));
-        }
-        using var handler = new StubHttpMessageHandler((_, _) => Task.FromResult(response));
-        await using var provider = CreateToolServices(handler, CreateCredential(), mode);
-        var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
-
-        var result = await loader.CallToolHandler(McpTestUtilities.CreateToolCallRequest("core_get-item", new Dictionary<string, object?>
-        {
-            ["workspace-id"] = WorkspaceId,
-            ["item-id"] = ItemId
-        }), TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsError);
-        Assert.Null(result.StructuredContent);
-        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
-        using var document = JsonDocument.Parse(text);
-        Assert.Equal((int)statusCode, document.RootElement.GetProperty("status").GetInt32());
-        Assert.Contains(expectedMessage, document.RootElement.GetProperty("message").GetString());
-        Assert.False(document.RootElement.TryGetProperty("results", out _));
-        Assert.DoesNotContain("private-backend-detail", text);
-        Assert.DoesNotContain("private-header-detail", text);
-        Assert.Equal(1, handler.CallCount);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("not-a-guid")]
-    [InlineData("00000000-0000-0000-0000-000000000000")]
-    [InlineData(ItemId + "/getDefinition")]
-    public async Task GetItemTool_RejectsInvalidInputBeforeAuthentication(string? itemId)
-    {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(ItemJson) };
-        using var handler = new StubHttpMessageHandler((_, _) => Task.FromResult(response));
-        var credential = CreateCredential();
-        await using var provider = CreateToolServices(handler, credential, StructuredOutputMode.Compact);
-        var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
-        var arguments = new Dictionary<string, object?> { ["workspace-id"] = WorkspaceId };
-        if (itemId is not null)
-        {
-            arguments["item-id"] = itemId;
-        }
-
-        var result = await loader.CallToolHandler(
-            McpTestUtilities.CreateToolCallRequest("core_get-item", arguments), TestContext.Current.CancellationToken);
-
-        Assert.True(result.IsError);
-        Assert.Null(result.StructuredContent);
-        Assert.Equal(0, handler.CallCount);
-        Assert.Empty(credential.ReceivedCalls());
-    }
-
-    private static ServiceProvider CreateToolServices(
-        HttpMessageHandler handler, TokenCredential credential, StructuredOutputMode? mode, string transport = TransportTypes.StdIo)
-    {
-        var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
-        setup.ConfigureServices(services);
-        services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
-        services.AddSingleton(credential);
-        services.AddLogging();
-        services.AddSingleton<IAreaSetup>(setup);
-        services.AddSingleton(Substitute.For<ITelemetryService>());
-        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
-        {
-            RootCommandGroupName = "fabmcp",
-            Name = "Fabric.Mcp.Server",
-            ShortName = "fabric",
-            DisplayName = "Microsoft Fabric MCP Server",
-            Version = "1.0.0",
-            Description = "Fabric Core integration test server",
-            IsTelemetryEnabled = false
-        }));
-        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
-        {
-            Namespace = ["core"],
-            ReadOnly = true,
-            StructuredOutputMode = mode,
-            Transport = transport
-        }));
-        services.AddSingleton<ICommandFactory, CommandFactory>();
-        services.AddSingleton<CommandFactoryToolLoader>();
-        return services.BuildServiceProvider();
-    }
-
-    private static TokenCredential CreateCredential()
-    {
-        var credential = Substitute.For<TokenCredential>();
-        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<AccessToken>(new AccessToken("test-token", DateTimeOffset.MaxValue)));
-        return credential;
+        return handler;
     }
 }

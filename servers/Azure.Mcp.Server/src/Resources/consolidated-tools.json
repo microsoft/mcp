@@ -2,7 +2,7 @@
   "consolidated_tools": [
     {
       "name": "get_azure_resilience_management_details",
-      "description": "Get details about Azure Resilience Management resources, including resilience goals (templates, assignments, and their resources), usage plans and enrollments, recovery plans (plans, resources, and jobs), drills, drill runs, and drill run resources for Azure service groups.",
+      "description": "Get details about Azure Resilience Management resources, including resilience goal assignments and their resources, usage plans and enrollments, recovery plans (plans, resources, and jobs), drills, drill runs, and drill run resources for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -30,19 +30,18 @@
         }
       },
       "mappedToolList": [
-        "resilience_goal_template_get",
-        "resilience_goal_assignment_get",
-        "resilience_goal_resource_get",
-        "resilience_usageplan_get",
-        "resilience_usageplan_enrollment_get",
-        "resilience_recoveryplan_get",
-        "resilience_recoveryplan_resource_get",
-        "resilience_recoveryjob_get",
-        "resilience_recoveryjob_resource_get",
-        "resilience_drill_get",
-        "resilience_drill_resource_get",
-        "resilience_drill_run_get",
-        "resilience_drill_run_resource_get"
+        "resiliency_goal_assignment_get",
+        "resiliency_goal_resource_get",
+        "resiliency_usageplan_get",
+        "resiliency_usageplan_enrollment_get",
+        "resiliency_recoveryplan_get",
+        "resiliency_recoveryplan_resource_get",
+        "resiliency_recoveryjob_get",
+        "resiliency_recoveryjob_resource_get",
+        "resiliency_drill_get",
+        "resiliency_drill_resource_get",
+        "resiliency_drill_run_get",
+        "resiliency_drill_run_resource_get"
       ]
     },
     {
@@ -75,17 +74,17 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_update",
-        "resilience_drill_create",
-        "resilience_usageplan_create",
-        "resilience_usageplan_delete",
-        "resilience_usageplan_enrollment_create",
-        "resilience_usageplan_enrollment_delete",
-        "resilience_recoveryplan_create",
-        "resilience_recoveryplan_delete",
-        "resilience_recoveryplan_resource_update",
-        "resilience_drill_resource_add-or-update",
-        "resilience_drill_run_mark-complete"
+        "resiliency_drill_update",
+        "resiliency_drill_create",
+        "resiliency_usageplan_create",
+        "resiliency_usageplan_delete",
+        "resiliency_usageplan_enrollment_create",
+        "resiliency_usageplan_enrollment_delete",
+        "resiliency_recoveryplan_create",
+        "resiliency_recoveryplan_delete",
+        "resiliency_recoveryplan_resource_update",
+        "resiliency_drill_resource_add-or-update",
+        "resiliency_drill_run_mark-complete"
       ]
     },
     {
@@ -118,7 +117,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_add-notes"
+        "resiliency_drill_run_add-notes"
       ]
     },
     {
@@ -151,7 +150,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_failover"
+        "resiliency_drill_run_failover"
       ]
     },
     {
@@ -184,7 +183,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_resume"
+        "resiliency_drill_run_resume"
       ]
     },
     {
@@ -217,7 +216,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_run_reprotect"
+        "resiliency_drill_run_reprotect"
       ]
     },
     {
@@ -250,7 +249,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_finalize"
+        "resiliency_recoveryplan_finalize"
       ]
     },
     {
@@ -283,7 +282,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_failover"
+        "resiliency_recoveryplan_failover"
       ]
     },
     {
@@ -316,7 +315,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_reprotect"
+        "resiliency_recoveryplan_reprotect"
       ]
     },
     {
@@ -349,7 +348,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryjob_retry"
+        "resiliency_recoveryjob_retry"
       ]
     },
     {
@@ -382,7 +381,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryjob_resume"
+        "resiliency_recoveryjob_resume"
       ]
     },
     {
@@ -415,7 +414,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforfailover"
+        "resiliency_recoveryplan_validateforfailover"
       ]
     },
     {
@@ -448,7 +447,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforreprotect"
+        "resiliency_recoveryplan_validateforreprotect"
       ]
     },
     {
@@ -481,7 +480,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_validateforoperation"
+        "resiliency_recoveryplan_validateforoperation"
       ]
     },
     {
@@ -514,9 +513,9 @@
         }
       },
       "mappedToolList": [
-        "resilience_recoveryplan_checkreadiness",
-        "resilience_drill_check-resync-readiness",
-        "resilience_drill_validate-for-execution"
+        "resiliency_recoveryplan_checkreadiness",
+        "resiliency_drill_check-resync-readiness",
+        "resiliency_drill_validate-for-execution"
       ]
     },
     {
@@ -549,7 +548,7 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_delete"
+        "resiliency_drill_delete"
       ]
     },
     {
@@ -582,8 +581,8 @@
         }
       },
       "mappedToolList": [
-        "resilience_drill_start",
-        "resilience_drill_end"
+        "resiliency_drill_start",
+        "resiliency_drill_end"
       ]
     },
     {
@@ -1321,8 +1320,8 @@
           "description": "This tool does not handle sensitive or secret information."
         },
         "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
+          "value": true,
+          "description": "This tool requires local execution and is not available in remote server mode."
         }
       },
       "mappedToolList": [
@@ -1467,7 +1466,7 @@
     },
     {
       "name": "list_azure_advisor_recommendations",
-      "description": "List individual Azure Advisor recommendation records or summarize that recommendation population with server-side counts, totals, rankings, and distributions. Summary groupings include recommendation type IDs with labels, category, impact, impacted resource type, lifecycle status, metadata subcategory, and service-retirement date. Supports filters for category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem text, subcategory, and one-sided retirement-date comparisons. Use individual results for recommendation details and summaries for aggregate questions; le:<end-date> includes overdue active retirements and is not a bounded next-N window.",
+      "description": "List actual Azure Advisor recommendation records in a subscription or summarize that subscription's recommendation population with server-side counts, totals, rankings, and distributions. Summary groupings include recommendation type IDs with labels, category, impact, impacted resource type, lifecycle status, metadata subcategory, and service-retirement date. Supports filters for category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem text, subcategory, and one-sided retirement-date comparisons. Use this for current recommendation instances, affected-resource details, or subscription aggregates. For the global recommendation metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID, use the metadata tool instead. le:<end-date> includes overdue active retirements and is not a bounded next-N window.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1534,7 +1533,7 @@
     },
     {
       "name": "list_azure_advisor_recommendation_metadata",
-      "description": "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use it even when no recommendation instances exist: discover available types for greenfield environments, filter by supported resource type during brownfield onboarding, or find service-retirement metadata by Service Health tracking ID and retirement date. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, and retirement date filters, ordered High, Medium, then Low impact.",
+      "description": "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types, from Azure Resource Graph. Use this for metadata catalog lookups, including service-retirement metadata by Service Health tracking ID, and for discovering recommendation types for greenfield environments or supported resource types during brownfield onboarding. This returns catalog metadata, not current recommendation instances or affected-resource records; use the recommendations tool for those subscription-scoped requests. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting subcategory filters are rejected. Returns localized IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details. Supports language, resource type, impact, category, subcategory, tracking ID, and retirement date filters, ordered High, Medium, then Low impact.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -3947,8 +3946,8 @@
           "description": "This tool may interact with an unpredictable or dynamic set of external entities."
         },
         "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
         },
         "secret": {
           "value": false,

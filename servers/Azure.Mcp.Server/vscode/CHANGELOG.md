@@ -1,18 +1,111 @@
 # Release History
 
 
+## 3.0.50 (2026-10-06) (pre-release)
 
+### Changed
 
+- **Breaking:** Recovery Services vault creation now disables public network access by default. Use `--enable-public-network-access true` to explicitly enable public access. This option is not supported for Data Protection vaults. [[#3755](https://github.com/microsoft/mcp/pull/3755)]
+- **Breaking:** New NFS shares default to `RootSquash` with encrypted transit. Explicit options remain available, while omitted security settings preserve existing shares during updates. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+- Added cloud-specific endpoint validation for Azure AI Search and Azure AI Speech data-plane requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Hardened Service Bus namespace validation to require bare DNS hostnames and added cloud-specific endpoint validation for Service Fabric ARM requests and pagination. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
 
+### Fixed
 
+- Fixed `azurebackup protecteditem get` silently returning an incomplete or empty list for Data Protection Backup vaults; when a backup instance repeatedly fails to deserialize (commonly an empty or malformed resourceGroupId) the truncated listing now surfaces as an error instead of being reported as a successful result. [[#3840](https://github.com/microsoft/mcp/pull/3840)]
+- Improved Azure Advisor tool selection by distinguishing global recommendation metadata lookups from subscription-scoped recommendation records. [[#3817](https://github.com/microsoft/mcp/pull/3817)]
+- The `extension_azqr` tool is now advertised only for local execution when Azure Quick Review CLI version `3.0.0` or later is installed. [[#3503](https://github.com/microsoft/mcp/pull/3503)]
+- Fixed `--tool` filtering to match exposed tool names exactly, ignoring case, so selecting a tool no longer exposes or allows calls to other tools whose names are substrings of it. [[#3837](https://github.com/microsoft/mcp/pull/3837)]
+- Updating an existing file share now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+- Prevented option values from appearing in validation failure telemetry while preserving client-facing error messages. [[#3792](https://github.com/microsoft/mcp/pull/3792)]
+- Added namespace-aware endpoint validation for Azure SRE Agent data-plane and Azure Storage blob and table endpoints. [[#3820](https://github.com/microsoft/mcp/pull/3820)]
+- Validated PostgreSQL server inputs against the configured Azure cloud before acquiring credentials or opening database connections. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate Azure Retail Prices requests against cloud-specific endpoints before sending initial or paginated requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate raw Azure Resource Manager requests from Quota and Resource Health against cloud-specific management endpoints, and safely escape generated Resource Health OData filter values. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Fixed Azure SRE Agent tool selection so that `investigate this issue` prompts route to the investigate tool instead of the read-only get-thread tool. [[#3826](https://github.com/microsoft/mcp/pull/3826)]
+- Rejected Speech endpoints now fail without falling back to another transcription method. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
 
+## 3.0.49 (2026-10-01) (pre-release)
 
+### Changed
 
+- **Breaking:** Removed the ADME tools temporarily for GA release. [[#3805](https://github.com/microsoft/mcp/pull/3805)]
+- **Breaking:** Azure Backup vault creation now checks for an existing Recovery Services or Backup vault and rejects it instead of updating it. Use azurebackup_vault_update to modify existing vaults. Creation also requires permission to read the target vault. [[#3800](https://github.com/microsoft/mcp/pull/3800)]
+- **Breaking:** Creating EventHub Namespaces now disable local authentication by default. Explicit options remain available to enable it, while omitted security options preserve existing Namespaces during updates. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+- **Breaking:** New Storage accounts now disable Shared Key authentication by default while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access. An explicit option remain available to enable Shared Key authentication. [[#3761](https://github.com/microsoft/mcp/pull/3761)]
 
+### Fixed
 
+- Fixed resilience drill create failing with a generic service error when no recovery plan was specified. The tool now sends SystemAssigned identity for RecoveryPlanProperties and the legacy MonitoringProperties required by the 2026-04-01-preview API flow. [[#3801](https://github.com/microsoft/mcp/pull/3801)]
+- Added namespace-aware endpoint validation for Event Grid, Foundry Extensions, IoT Hub, Key Vault, Load Testing, Managed HSM, Managed Lustre, Monitor metrics and web tests, and MySQL endpoints. [[#3694](https://github.com/microsoft/mcp/pull/3694)]
+- Corrected the read-only annotation on the Azure Communication Services email and SMS send tools (`communication_email_send`, `communication_sms_send`). They are now correctly marked as write operations so they are excluded when the server runs with `--read-only`. [[#3818](https://github.com/microsoft/mcp/pull/3818)]
+- Clarified the RemediationNotAvailableForTenant response and directs users to the Advisor recommendation for available guidance. [[#3816](https://github.com/microsoft/mcp/pull/3816)]
+- Client telemetry now records canonical client name and version values, using `<Unknown>` when unavailable and mapping plugin client names with a client type fallback. [[#3793](https://github.com/microsoft/mcp/pull/3793)]
+- Updating an existing EventHub Namespace now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
 
+## 3.0.48 (2026-09-29) (pre-release)
 
+### Added
 
+- Added support for customer-specific resource application IDs when authenticating ADME requests. [[#3789](https://github.com/microsoft/mcp/pull/3789)]
+
+### Changed
+
+- **Breaking:** Removed the resiliency goal template get tool. [[#3790](https://github.com/microsoft/mcp/pull/3790)]
+- Added validation of the platform landing zone download URL in the Azure Migrate tools before the file is retrieved. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+- Added validation of outbound documentation URLs in the Azure Terraform tools to confirm requests target the expected GitHub hosts. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+- Added endpoint validation for Confidential Ledger data-plane requests to confirm the ledger endpoint matches the expected service domain for the target cloud. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+
+### Fixed
+
+- Fix issue where validation for AKS resource group was removed. [[#3785](https://github.com/microsoft/mcp/pull/3785)]
+- Tool name and area telemetry now validates identities before recording them, uses `<Unknown>` for rejected identities, and normalizes command names. Single-proxy mode enforces namespace filters for learning and execution. [[#3749](https://github.com/microsoft/mcp/pull/3749)]
+- Fixed the `tools list` and `--learn` CLI metadata reporting every option's `type` as `string`. Option types now reflect the underlying value type (`string`, `integer`, `number`, `boolean`, or `array`), consistent with the MCP tool `inputSchema`. Array options additionally report an `elementType` describing the array's element type (for example, `string` for a string array). [[#3772](https://github.com/microsoft/mcp/pull/3772)]
+
+## 3.0.47 (2026-09-24) (pre-release)
+
+### Changed
+
+#### Dependency Updates
+- Updated the .NET SDK to version 10.0.401. [[#3751](https://github.com/microsoft/mcp/pull/3751)]
+
+## 3.0.46 (2026-09-22) (pre-release)
+
+### Added
+
+- Expanded the `azurebackup policy get` tool response contract to return the full Azure Backup policy representation for both Recovery Services vaults (RSV) and Backup vaults (DPP). RSV policies now include a `details` object exposing schedule policy, retention policy (simple and long-term daily/weekly/monthly/yearly schedules), tiering policies, sub-protection policies, and workload-specific properties (time zone, instant restore settings, snapshot consistency, compression). DPP policies now include a `dppDetails` object exposing datasource types, object type, and backup/retention rules with their schedules, tagging criteria, and lifecycle settings. Existing top-level fields are preserved. The contract mirrors the current Azure Backup SDK surface and will be revisited when the underlying Azure.ResourceManager SDK packages are upgraded. [[#3720](https://github.com/microsoft/mcp/pull/3720)]
+- Added `--public-network-access` and `--user-assigned-identity` parameters to the `azurebackup vault update` tool (RSV): `--public-network-access` toggles the Recovery Services vault networking Enabled/Disabled state, and `--user-assigned-identity` attaches user-assigned managed identities when `--identity-type` is `UserAssigned` or `SystemAssigned,UserAssigned`. Added `--private-dns-zone-ids` and `--private-dns-zone-group-name` parameters to the `azurebackup vault privateendpoint create` tool to create a Private DNS zone group linking the new Private Endpoint to one or more Private DNS zones. [[#3703](https://github.com/microsoft/mcp/pull/3703)]
+- Added support for authenticating with Azure Pipelines workload identity federation service connections through AzurePipelinesCredential. [[#3388](https://github.com/microsoft/mcp/pull/3388)]
+
+### Changed
+
+- **Breaking:** Renamed the Azure Resilience Management CLI namespace from `azmcp resilience` to `azmcp resiliency` and all MCP tool wire-name prefixes from `resilience_*` to `resiliency_*`. Clients that invoke tools directly or use tool allow-lists, saved tool names, or namespace filters must replace the old CLI namespace and MCP tool-name prefix with the new values. [[#3689](https://github.com/microsoft/mcp/pull/3689)]
+- **Breaking:** Removed the unused `user` parameter from the `postgres server config get`, `postgres server param get`, and `postgres server param set` tools. [[#3648](https://github.com/microsoft/mcp/pull/3648)]
+- Support hostname, domain suffix, IPv4 CIDR notation, and IPv6 host literals in NO_PROXY bypass list, and respect lowercase proxy environment variables on Unix (#3338). [[#3675](https://github.com/microsoft/mcp/pull/3675)]
+
+### Fixed
+
+- Improved ADME schema validation, simplified health response, request timeouts, and guidance for unauthorized responses caused by unknown or incorrectly cased data partitions. [[#3696](https://github.com/microsoft/mcp/pull/3696)]
+- Storage tools (`storage blob get`, `storage blob upload`, `storage blob container create`, `storage blob container get`, `storage table list`, `storage account get`) now return specific, actionable error messages for common failures instead of raw exception text, including missing data-plane RBAC roles (403), create-only conflicts (409), and not-found (404) cases. `storage account create` now validates the account name up front and documents naming rules, and `storage account get` documents Azure Resource Graph propagation delay. [[#3697](https://github.com/microsoft/mcp/pull/3697)]
+- Fixed Resource Graph queries failing with `No accessible tenant found` when an explicit tenant is supplied. [[#3718](https://github.com/microsoft/mcp/pull/3718)]
+- Return concise errors listing available command names instead of full help when namespace or consolidated tool routing cannot resolve a command, including external-server routing. [[#3630](https://github.com/microsoft/mcp/pull/3630)]
+- The npm wrapper no longer writes `@azure/mcp-<platform>-<arch>` into the calling project's `package.json` and lockfile when it auto-installs a missing platform package. The install now targets a private directory inside the wrapper package, or a per-user cache directory when that is not writable, instead of the inherited working directory. Later runs reuse that install rather than running npm again, and npm's output no longer goes to stdout, which carries the MCP protocol stream in `server start`. [[#3184](https://github.com/microsoft/mcp/pull/3184)]
+- Event Grid topic lookup now requires a resource group when multiple topics in a subscription have the same name. [[#3710](https://github.com/microsoft/mcp/pull/3710)]
+
+## 3.0.45 (2026-09-17) (pre-release)
+
+### Added
+
+- Added namespace-scoped emergency overrides for endpoint SSRF validation and began migrating service endpoint checks to `Microsoft.Security.AntiSSRF`. [[#3603](https://github.com/microsoft/mcp/pull/3603)]
+
+### Changed
+
+- **Breaking:** Removed `protected-item` from the `azurebackup protecteditem protect` and `update-protection` tools, removed the non-functional `aks-included-namespaces` and `aks-excluded-namespaces` parameters from `protecteditem protect`, and removed the non-functional `container` filter from `azurebackup protectableitem list`. [[#3641](https://github.com/microsoft/mcp/pull/3641)]
+- **Breaking:** Removed the unused `sender-name` parameter from the `communication email send` tool. [[#3638](https://github.com/microsoft/mcp/pull/3638)]
+- **Breaking:** Removed the unused `user`, `encoding-format`, and `dimensions` parameters from `foundryextensions openai embeddings-create`, `stream` from `foundryextensions openai chat-completions-create`, and `auth-method` from `foundryextensions openai models-list`. [[#3640](https://github.com/microsoft/mcp/pull/3640)]
+- **Breaking:** Removed the unused `subscription` parameter from all Key Vault tools. [[#3644](https://github.com/microsoft/mcp/pull/3644)]
+- **Breaking:** Removed the unused `subscription` and `resource-group` parameters from the `mysql database query` and `mysql table schema get` tools. [[#3646](https://github.com/microsoft/mcp/pull/3646)]
+- **Breaking:** Removed the unused `subscription` parameter from the `storage blob get`, `storage blob upload`, `storage blob container create`, `storage blob container get`, and `storage table list` tools. [[#3649](https://github.com/microsoft/mcp/pull/3649)]
 
 ## 3.0.44 (2026-09-15) (pre-release)
 

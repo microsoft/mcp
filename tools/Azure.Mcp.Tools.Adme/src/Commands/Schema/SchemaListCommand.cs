@@ -37,7 +37,7 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, validationResult);
+        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
 
         if (options.LatestVersion && options.SchemaVersionMinor.HasValue && !options.SchemaVersionMajor.HasValue)
         {
@@ -49,14 +49,29 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
             validationResult.Errors.Add("--schema-version-patch requires --schema-version-minor when --latest-version is true.");
         }
 
+        if (options.SchemaVersionMajor < 0)
+        {
+            validationResult.Errors.Add("--schema-version-major must not be negative.");
+        }
+
+        if (options.SchemaVersionMinor < 0)
+        {
+            validationResult.Errors.Add("--schema-version-minor must not be negative.");
+        }
+
+        if (options.SchemaVersionPatch < 0)
+        {
+            validationResult.Errors.Add("--schema-version-patch must not be negative.");
+        }
+
         if (options.Offset < 0)
         {
             validationResult.Errors.Add("--offset must not be negative.");
         }
 
-        if (options.Limit < 0)
+        if (options.Limit <= 0)
         {
-            validationResult.Errors.Add("--limit must not be negative.");
+            validationResult.Errors.Add("--limit must be greater than zero.");
         }
     }
 
@@ -83,6 +98,7 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
                 options.LatestVersion,
                 options.Offset,
                 options.Limit,
+                options.AuthAppId,
                 cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 result, AdmeJsonContext.Default.AdmeResponseSchemaListResponse);

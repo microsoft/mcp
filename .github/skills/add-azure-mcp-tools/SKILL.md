@@ -74,6 +74,24 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 - For new commands and services, always pass `CancellationToken` as the final parameter to all async downstream calls and propagate it throughout — never substitute `CancellationToken.None` or `default` at call sites.
 - Fail closed: if tenant, subscription, or resource context is ambiguous, return an explicit validation error and require the caller to specify the value. Do not silently pick a default.
 
+### Secure Resource Provisioning Defaults
+
+Tools that create or create-or-update Azure resources must produce a secure configuration when the caller omits security-related options. Do not rely on an Azure service's current defaults. Explicitly set every supported security property in the typed SDK request model so a service-side default change cannot make the tool less secure.
+
+- Disable public network access, public endpoints or IPs, and anonymous access by default where the service supports it. Do not add public connectivity merely to make a newly created resource immediately reachable.
+- Require encrypted transport by default: enable HTTPS-only access, disable non-TLS endpoints or ports, and set the minimum TLS version to the service's current secure recommendation (at least TLS 1.2). A weaker transport setting requires an explicit opt-in.
+- Prefer Managed Identity and RBAC for authentication. Enable a system-assigned identity or accept a user-assigned identity where supported, and disable local or key-based authentication when possible. For service-to-service access, do not make connection strings, account keys, or API keys the default path.
+- For create-or-update operations, omitted security options must never weaken an existing resource. Apply secure defaults when creating a resource; when updating one, preserve its current security settings unless the caller explicitly requests a supported downgrade.
+
+A tool may expose a less secure behavior for a legitimate compatibility or development scenario, but only as a deliberate caller choice:
+
+- Use a narrowly scoped option whose name states the behavior, such as `--allow-public-network-access`, `--allow-http`, `--minimum-tls-version`, or `--enable-local-auth`. Avoid ambiguous options such as `--secure false`.
+- Keep the secure behavior as the effective default when the option is omitted. Never infer consent to a downgrade from another option, selected SKU, or pre-existing dependency.
+- State the secure default and the security consequence in the `[Option]` description and command documentation. Validate allowed values and incompatible combinations before sending the request.
+- Do not accept, log, persist, or return connection strings or keys merely because local authentication was enabled. Follow the existing secret-handling requirements for any command that must handle them.
+
+Add tests proving that an invocation without security options sends or creates the secure configuration. Add focused tests for each downgrade option and for create-or-update omission behavior; use a recorded live test to verify the resulting Azure resource state when practical.
+
 ### MCP-Specific Threat Patterns
 
 | Threat | Established mitigation in this project |
@@ -94,6 +112,7 @@ Requirements:
 - Prefer SDK/runtime validators and deterministic checks for user input validation.
 - Log only individually named, known-safe parameters; never log option objects, credentials, keys, connection strings, or other secret-bearing fields.
 - For endpoint/URL inputs, use `EndpointValidator` methods appropriate to the scenario (`ValidateAzureServiceEndpoint`, `ValidateExternalUrl`, or `ValidatePublicTargetUrl`). Avoid direct interpolation of unvalidated input into URLs or downstream queries.
+- For create or create-or-update tools, explicitly configure secure resource defaults (private access, HTTPS and strong TLS, and Managed Identity/RBAC where supported). Any weaker behavior must require a narrowly named, documented opt-in option, and omission during an update must not weaken the resource.
 - Add negative tests for relevant security cases introduced by the command (for example malformed names, invalid endpoint hosts, or unsafe query text) rather than a one-size-fits-all set of tests.
 - Keep error messages actionable but non-revealing: avoid exposing stack traces, raw backend payloads, or sensitive values to callers.
 ```
@@ -1199,6 +1218,9 @@ Before creating the PR, verify all of these:
 - [ ] Data-plane endpoints validated with `EndpointValidator.ValidateAzureServiceEndpoint` (Azure services), `ValidateExternalUrl` (known external hosts), or `ValidatePublicTargetUrl` (arbitrary user-supplied targets) — never derived from raw user input without validation
 - [ ] Error messages are actionable but do not expose internal state, stack traces, or sensitive field values to callers
 - [ ] Sensitive fields (keys, secrets, connection strings) are not returned in standard list/get responses unless the command is explicitly marked `Secret = true`
+- [ ] Create and create-or-update requests explicitly set supported secure defaults: public access disabled, HTTPS and strong TLS required, and Managed Identity/RBAC preferred over local keys
+- [ ] Any less secure behavior requires a narrowly named, documented opt-in option; omitting security options during an update cannot weaken the existing resource
+- [ ] Tests verify the no-option secure configuration, each supported downgrade option, and create-or-update omission behavior
 - [ ] Negative unit tests included for malformed, oversized, or hostile inputs
 - [ ] If AI was used to generate any code in this PR, the AI prompt included security requirements and the output was reviewed for compliance with the Security Requirements section
 

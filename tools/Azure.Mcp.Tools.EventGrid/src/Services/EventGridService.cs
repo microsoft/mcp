@@ -4,10 +4,13 @@
 using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Messaging.EventGrid;
+using Azure.ResourceManager;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
@@ -109,6 +112,8 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
         }
 
+        var uri = ValidateEventGridEndpoint(topic.Data.Endpoint, AzureService.CloudConfiguration.ArmEnvironment);
+
         // Get credential using standardized method from base class for Azure AD authentication
         var credential = await GetCredential(tenant, cancellationToken);
 
@@ -119,8 +124,11 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         var httpClient = AzureService.GetClient(nameof(EventGridPublisherClient));
         var clientOptions = new EventGridPublisherClientOptions
         {
-            Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient)
+            Transport = new HttpClientTransport(httpClient)
         };
+        clientOptions.AddPolicy(
+            new EventGridEndpointValidationPolicy(AzureService.CloudConfiguration.ArmEnvironment),
+            HttpPipelinePosition.BeforeTransport);
         var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
 
         // Serialize each event individually to JSON using source-generated context
@@ -235,7 +243,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
-    private async Task GetSubscriptionsForSpecificTopic(
+    private static async Task GetSubscriptionsForSpecificTopic(
         SubscriptionResource subscriptionResource,
         string? resourceGroup,
         string topicName,
@@ -337,7 +345,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
-    private async Task<EventGridTopicResource?> FindTopic(
+    private static async Task<EventGridTopicResource?> FindTopic(
         SubscriptionResource subscriptionResource,
         string? resourceGroup,
         string topicName,
@@ -368,19 +376,14 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             return null;
         }
 
-        // Search in all resource groups
-        await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken))
-        {
-            if (topic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
-            {
-                return topic;
-            }
-        }
-
-        return null;
+        return await FindUniqueTopic(
+            subscriptionResource.GetEventGridTopicsAsync(cancellationToken: cancellationToken),
+            topicName,
+            "Event Grid topics",
+            cancellationToken);
     }
 
-    private async Task<SystemTopicResource?> FindSystemTopic(
+    private static async Task<SystemTopicResource?> FindSystemTopic(
         SubscriptionResource subscriptionResource,
         string? resourceGroup,
         string topicName,
@@ -411,16 +414,41 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             return null;
         }
 
-        // Search in all resource groups
-        await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken))
+        return await FindUniqueTopic(
+            subscriptionResource.GetSystemTopicsAsync(cancellationToken: cancellationToken),
+            topicName,
+            "Event Grid system topics",
+            cancellationToken);
+    }
+
+    internal static async Task<T?> FindUniqueTopic<T>(
+        IAsyncEnumerable<T> topics,
+        string topicName,
+        string topicType,
+        CancellationToken cancellationToken) where T : ArmResource
+    {
+        T? match = null;
+        var matchingResourceGroups = new List<string>();
+
+        await foreach (var topic in topics.WithCancellation(cancellationToken))
         {
-            if (systemTopic.Data.Name.Equals(topicName, StringComparisons.ResourceName))
+            if (!topic.Id.Name.Equals(topicName, StringComparisons.ResourceName))
             {
-                return systemTopic;
+                continue;
             }
+
+            match ??= topic;
+            matchingResourceGroups.Add(topic.Id.ResourceGroupName ?? "<unknown>");
         }
 
-        return null;
+        if (matchingResourceGroups.Count > 1)
+        {
+            throw new ArgumentException(
+                $"Multiple {topicType} named '{topicName}' found in resource groups: {string.Join(", ", matchingResourceGroups)}. "
+                + "Specify a specific --resource-group to disambiguate.");
+        }
+
+        return match;
     }
 
     /// <summary>
@@ -534,4 +562,20 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
         }
     }
 
+    /// <summary>
+    /// Validates that the given EventGrid endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="requestUri">The URI of the EventGrid endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the EventGrid endpoint.</returns>
+    internal static Uri ValidateEventGridEndpoint(Uri? requestUri, ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(requestUri);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: requestUri.AbsoluteUri,
+            serviceType: "eventgrid",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "eventgrid");
+        return requestUri;
+    }
 }

@@ -1,7 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
-using Azure.Identity;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
@@ -34,7 +36,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class ItemGetCommand(
     ILogger<ItemGetCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<ItemGetOptions, ItemGetCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<ItemGetOptions, ItemGetCommandResult>
 {
     private readonly ILogger<ItemGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -74,7 +76,6 @@ public sealed class ItemGetCommand(
         {
             _logger.LogError("Error retrieving Fabric item metadata ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;
@@ -82,7 +83,6 @@ public sealed class ItemGetCommand(
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        AuthenticationFailedException => HttpStatusCode.Unauthorized,
         OperationCanceledException => HttpStatusCode.RequestTimeout,
         JsonException => HttpStatusCode.BadGateway,
         _ => base.GetStatusCode(ex)
@@ -94,7 +94,7 @@ public sealed class ItemGetCommand(
         HttpStatusCode.Unauthorized => "Authentication failed. Sign in with an identity that can read the Fabric item",
         HttpStatusCode.Forbidden => "Access denied. The caller needs read permission for this Fabric item",
         HttpStatusCode.NotFound => "The Fabric item was not found. Check its workspace and item IDs",
-        HttpStatusCode.TooManyRequests when ex is FabricItemThrottledException => ex.Message,
+        HttpStatusCode.TooManyRequests when ex is FabricThrottledException => ex.Message,
         HttpStatusCode.TooManyRequests => "Fabric throttled the request. Wait before retrying",
         HttpStatusCode.RequestTimeout => "The Fabric item request was canceled or timed out",
         HttpStatusCode.BadGateway => "Fabric returned an invalid item metadata response",

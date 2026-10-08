@@ -1,9 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 namespace Fabric.Mcp.Tools.Core.Models;
 
 /// <summary>
 /// Generic Fabric item metadata, excluding data, definitions, and workload-specific properties.
 /// </summary>
-public sealed class FabricItemMetadata
+public sealed class FabricItemMetadata()
 {
     /// <summary>Gets or sets the item's unique ID.</summary>
     public required Guid Id { get; set; }

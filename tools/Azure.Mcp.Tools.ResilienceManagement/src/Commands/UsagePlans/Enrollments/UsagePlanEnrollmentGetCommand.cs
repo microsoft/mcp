@@ -18,9 +18,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
     Name = "get",
     Title = "Get or List Resilience Usage Plan Enrollments",
     Description = """
-        Gets enrollments of a resilience usage plan. Provide an enrollment name to get the full details of that
-        enrollment (id, name, the associated service group id, provisioning state, and error details). Omit the
-        name to list all enrollments of the usage plan, returning only their id and name.
+        Gets Azure Resilience Management usage plan enrollments, which associate Azure service groups with a
+        resilience usage plan. Use this command for resilience usage plan enrollments, not API Management
+        subscriptions or generic ARM resources. Provide an enrollment name to get its full details, including
+        the associated service group ID, provisioning state, and errors. Omit the name to list all enrollments
+        of the specified resilience usage plan.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,

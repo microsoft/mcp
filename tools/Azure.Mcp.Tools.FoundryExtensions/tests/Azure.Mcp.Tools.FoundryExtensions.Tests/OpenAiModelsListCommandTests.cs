@@ -51,7 +51,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string?>(),
-            Arg.Is(AuthMethod.Credential),
             Arg.Any<CancellationToken>())
             .Returns(new OpenAiModelsListResult(expectedModels, resourceName));
 
@@ -96,7 +95,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string?>(),
-            Arg.Is(AuthMethod.Credential),
             Arg.Any<CancellationToken>())
             .Returns(new OpenAiModelsListResult([], resourceName));
 
@@ -127,7 +125,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Is(AuthMethod.Credential),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -155,6 +152,7 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
         Assert.False(Command.Metadata.Destructive);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Idempotent);
+        Assert.DoesNotContain("--auth-method", CommandDefinition.Options.Select(option => option.Name));
     }
 
     [Theory]
@@ -172,7 +170,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Is(AuthMethod.Credential),
                 Arg.Any<CancellationToken>())
                 .Returns(new OpenAiModelsListResult([], "myresource"));
         }
@@ -205,7 +202,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string?>(),
-            Arg.Is(AuthMethod.Credential),
             Arg.Any<CancellationToken>())
             .Returns(new OpenAiModelsListResult([], resourceName));
 
@@ -221,7 +217,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             subscriptionId,
             resourceGroup,
             Arg.Any<string?>(),
-            AuthMethod.Credential,
             Arg.Any<CancellationToken>());
     }
 
@@ -238,7 +233,6 @@ public class OpenAiModelsListCommandTests : SubscriptionCommandUnitTestsBase<Ope
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Is(AuthMethod.Credential),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 

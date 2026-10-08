@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the read-only core_get-workspace tool to retrieve workspace metadata by UUID, including optional capacity, domain, identity, tags, and workspace-specific endpoint information."

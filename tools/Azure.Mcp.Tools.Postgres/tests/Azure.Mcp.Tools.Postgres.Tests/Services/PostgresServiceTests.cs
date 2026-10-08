@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Npgsql;
@@ -33,6 +34,7 @@ public class PostgresServiceTests
     public PostgresServiceTests()
     {
         _azureService = Substitute.For<IAzureService>();
+        _azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         _entraTokenAuth.GetEntraToken(Arg.Any<Azure.Core.TokenCredential>(), Arg.Any<CancellationToken>())
@@ -231,7 +233,7 @@ public class PostgresServiceTests
 
         // Act & Assert — resource group lookup happens first; null triggers the exception
         await Assert.ThrowsAsync<Exception>(() =>
-            _postgresService.GetServerConfigAsync(subscriptionId, resourceGroup, user, server, tenant, TestContext.Current.CancellationToken));
+            _postgresService.GetServerConfigAsync(subscriptionId, resourceGroup, server, tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
             .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, Arg.Any<CancellationToken>());
@@ -248,7 +250,7 @@ public class PostgresServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<Exception>(() =>
-            _postgresService.GetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", tenant, TestContext.Current.CancellationToken));
+            _postgresService.GetServerParameterAsync(subscriptionId, resourceGroup, server, "param123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
             .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, Arg.Any<CancellationToken>());
@@ -265,7 +267,7 @@ public class PostgresServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<Exception>(() =>
-            _postgresService.SetServerParameterAsync(subscriptionId, resourceGroup, user, server, "param123", "value123", tenant, TestContext.Current.CancellationToken));
+            _postgresService.SetServerParameterAsync(subscriptionId, resourceGroup, server, "param123", "value123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
             .GetResourceGroupResource(subscriptionId, resourceGroup, tenant, Arg.Any<CancellationToken>());

@@ -1,9 +1,6 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate this README.md for package specific output
 -->
-<!-- remove-section: start nuget;vsix;npm;pypi remove_managed_hosting_survey -->
-[![Help shape Azure MCP Server's Managed Remote Hosting — take our 1-minute survey](images/managed-hosting-survey-banner.png)](https://aka.ms/azmcp/managed-hosting-survey)
-<!-- remove-section: end remove_managed_hosting_survey -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm;pypi {{ToolTitle}} -->
 <!-- remove-section: start nuget;vsix;npm;pypi remove_note_ga -->
 > [!NOTE]
@@ -1012,6 +1009,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 🛡️ Azure Backup
 
+Vault creation checks whether the requested Recovery Services vault or Backup vault already exists and rejects existing vaults. Use `azurebackup_vault_update` to modify an existing vault. Creation requires read permission on the target vault in addition to write permission. The existence check and creation are separate ARM requests, so this check is not an atomic guarantee against concurrent creation by another caller.
+
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
@@ -1110,6 +1109,7 @@ Example prompts that generate Azure CLI commands:
 ### Azure Data Manager for Energy
 
 * "Check authentication and connectivity for my ADME endpoint and data partition"
+* "Check health for my customer-hosted ADME endpoint using its resource application ID as the token audience"
 * "Get an ADME schema by kind"
 * "List shared Well schemas from my ADME data partition"
 * "Find ADME records matching an indexed-field Lucene query across multiple or wildcard kinds"
@@ -1120,6 +1120,8 @@ Example prompts that generate Azure CLI commands:
 * "Get an OSDU record by id or version from my ADME data partition"
 * "List OSDU record ids for a kind in my ADME data partition"
 * "List all versions of an OSDU record in my ADME data partition"
+
+For customer-hosted ADME instances, pass the resource application ID or App ID URI with `--auth-app-id`. The server requests the corresponding `/.default` scope; when this option is omitted, it uses the standard Azure Energy resource audience.
 
 ### 🧮 Azure Data Explorer
 
@@ -1145,6 +1147,14 @@ Example prompts that generate Azure CLI commands:
 * "List Event Grid subscriptions for topic 'my-topic' in location 'my-location'"
 * "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
 * "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
+
+### ⚡ Azure Event Hubs
+
+* "Get details for Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Update tags on Event Hubs namespace 'my-namespace' in resource group 'my-rg'"
+* "Get details for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Get consumer group 'my-consumergroup' for Event Hub 'my-eventhub' in namespace 'my-namespace' of resource group 'my-rg'"
+* "Delete consumer group 'my-consumergroup' from Event Hub 'my-eventhub' in namespace 'my-namespace' and resource group 'my-rg'"
 
 ### 📂 Azure File Shares
 
@@ -1263,6 +1273,13 @@ Example prompts that generate Azure CLI commands:
 * "List planned maintenance events affecting my Azure resources"
 * "Find service health event details for tracking ID 'ABC1-XYZ'"
 
+### 💲 Azure Retail Pricing
+
+* "Get retail pricing for SKU 'Standard_D2s_v5' in region 'eastus'"
+* "Check pricing for Virtual Machines SKU 'Standard_E4s_v5' in region 'westeurope' with currency 'EUR'"
+* "Get one-year and three-year reservation pricing for SKU 'Standard_B2s'"
+* "Find retail prices for Azure App Service in region 'centralus'"
+
 ### 🗄️ Azure SQL Database
 
 * "List all SQL servers in my subscription"
@@ -1323,8 +1340,6 @@ Example prompts that generate Azure CLI commands:
 
 ### 🛡️ Azure Resilience Management
 
-* "List all resilience goal templates in service group 'my-service-group'"
-* "Get the details of goal template 'my-template' in service group 'my-service-group'"
 * "List all resilience goal assignments in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
@@ -1393,6 +1408,14 @@ Example prompts that generate Azure CLI commands:
 * "Get Well-Architected Framework guidance for App Service"
 * "What's the architectural guidance for Azure Cosmos DB?"
 
+### 📊 Azure Workbooks
+
+* "List all workbooks in resource group 'my-resource-group'"
+* "Show details and content of workbook with resource ID '<workbook_resource_id>'"
+* "Create a new workbook named 'Cost Analysis' in resource group 'my-resource-group'"
+* "Update workbook 'my-workbook-id' with new dashboard visualization content"
+* "Delete workbook 'my-workbook-id' from resource group 'my-resource-group'"
+
 ## Complete List of Supported Azure Services
 
 The Azure MCP Server provides tools for interacting with **45+ Azure service areas**:
@@ -1418,6 +1441,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
+- ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
@@ -1433,11 +1457,12 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
-- 🛡️ **Azure Quick Review CLI** - Compliance scanning
+- 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
 - 📊 **Azure Quota** - Resource quota and usage management
+- 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

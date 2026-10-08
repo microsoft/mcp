@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_list-capacities to return one page of accessible Fabric capacity metadata and continuation information."

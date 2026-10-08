@@ -16,9 +16,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Metadata;
     Id = "16c9c57e-8f14-43bd-91da-d1548b6af72e",
     Name = "list",
     Title = "List Advisor Recommendation Metadata",
-    Description = "List Azure Advisor recommendation metadata, also known as recommendation types. " +
-                  "Use this tool before deploying resources such as virtual machines to discover what recommendations Advisor could produce, even when there are no active recommendations. " +
-                  "Show Advisor service retirements on, before, or after a specified retirement date, or find service-retirement metadata by Service Health tracking ID. " +
+    Description = "List the global Azure Advisor recommendation metadata catalog, also known as recommendation types. " +
+                  "Use this for metadata catalog lookups, including service-retirement metadata by Service Health tracking ID (for example, QNY1-HB8), or to discover what recommendations Advisor could produce before deploying resources, even when there are no active recommendations. " +
+                  "Show Advisor service retirements on, before, or after a specified retirement date. For current recommendation records or affected resources, use advisor recommendation list instead. " +
                   "The global Azure Resource Graph catalog supports greenfield discovery and resource-type filtering for brownfield onboarding. " +
                   "Optional filters include language, resource type, impact, category, subcategory, tracking ID, and retirement date. " +
                   "Returns localized type IDs, names, categories, subcategories, impact, priority, descriptions, benefits, actions, scope, source query, and service-retirement details, " +
@@ -63,25 +63,28 @@ public sealed class RecommendationMetadataListCommand(
 
         if (!TryNormalizeLanguage(options.Language, out _))
         {
-            validationResult.Errors.Add(
+            validationResult.AddError(
                 $"Unsupported --language value '{options.Language}'. Supported values: " +
-                $"{string.Join(", ", SupportedLanguages.OrderBy(l => l, StringComparer.Ordinal))}.");
+                $"{string.Join(", ", SupportedLanguages.OrderBy(l => l, StringComparer.Ordinal))}.",
+                "Unsupported Advisor language.");
         }
 
         var normalizedImpact = options.Impact?.Trim();
         if (!string.IsNullOrEmpty(normalizedImpact) &&
             !AllowedImpacts.Contains(normalizedImpact, StringComparer.OrdinalIgnoreCase))
         {
-            validationResult.Errors.Add(
-                $"Invalid --impact value '{options.Impact}'. Allowed values: {string.Join(", ", AllowedImpacts)}.");
+            validationResult.AddError(
+                $"Invalid --impact value '{options.Impact}'. Allowed values: {string.Join(", ", AllowedImpacts)}.",
+                "Invalid Advisor impact.");
         }
 
         var normalizedCategory = options.Category?.Trim();
         if (!string.IsNullOrEmpty(normalizedCategory) &&
             !AllowedCategories.Contains(normalizedCategory, StringComparer.OrdinalIgnoreCase))
         {
-            validationResult.Errors.Add(
-                $"Invalid --category value '{options.Category}'. Allowed values: {string.Join(", ", AllowedCategories)}.");
+            validationResult.AddError(
+                $"Invalid --category value '{options.Category}'. Allowed values: {string.Join(", ", AllowedCategories)}.",
+                "Invalid Advisor category.");
         }
 
         ServiceRetirementFilterValidator.Validate(

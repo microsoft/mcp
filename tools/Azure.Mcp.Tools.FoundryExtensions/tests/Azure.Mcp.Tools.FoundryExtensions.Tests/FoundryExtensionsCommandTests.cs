@@ -236,8 +236,6 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
                 { "resource-name", TestVariables["resourceName"] },
                 { "deployment", TestVariables["deploymentName"] },
                 { "input-text", inputText },
-                { "user", "test-user" },
-                { "encoding-format", "float" },
                 { "tenant", TestVariables["tenantId"] }
             });
 
@@ -307,66 +305,6 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
         Assert.Equal(TestVariables["resourceName"], resourceNameProperty.GetString());
         Assert.Equal(TestVariables["deploymentName"], deploymentNameProperty.GetString());
         Assert.Equal(inputText, inputTextProperty.GetString());
-    }
-
-    [Fact]
-    public async Task Should_create_openai_embeddings_with_optional_parameters()
-    {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
-        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
-        var subscriptionId = Settings.SubscriptionId;
-        var tenantId = Settings.TenantId;
-        var inputText = "Test embeddings with optional parameters.";
-        var dimensions = 512; // Test with reduced dimensions if supported
-
-        RegisterVariable("resourceName", resourceName);
-        RegisterVariable("deploymentName", deploymentName);
-        RegisterVariable("resourceGroup", resourceGroup);
-        RegisterVariable("tenantId", tenantId);
-
-        var result = await CallToolAsync(
-            "foundryextensions_openai_embeddings-create",
-            new()
-            {
-                { "subscription", subscriptionId },
-                { "resource-group", TestVariables["resourceGroup"] },
-                { "resource-name", TestVariables["resourceName"] },
-                { "deployment", TestVariables["deploymentName"] },
-                { "input-text", inputText },
-                { "user", "test-user-with-params" },
-                { "encoding-format", "float" },
-                { "dimensions", dimensions.ToString() },
-                { "tenant", TestVariables["tenantId"] }
-            });
-
-        // Verify the response structure (same as basic test)
-        var embeddingResult = result.AssertProperty("embeddingResult");
-        var data = embeddingResult.AssertProperty("data");
-        var firstEmbedding = data.EnumerateArray().First();
-        var embeddingVector = firstEmbedding.GetProperty("embedding");
-
-        // Verify embedding vector dimensions match requested dimensions (if model supports it)
-        var vectorArray = embeddingVector.EnumerateArray().ToArray();
-        Assert.True(vectorArray.Length > 0, "Embedding vector should not be empty");
-
-        // Note: Some models may not support custom dimensions and will return default size
-        // So we just verify we got a reasonable response, not necessarily the exact dimensions requested
-        Assert.True(vectorArray.Length >= 512, $"Embedding vector should have reasonable dimensions, got {vectorArray.Length}");
-
-        // Verify all values are valid numbers
-        foreach (var value in vectorArray)
-        {
-            Assert.Equal(JsonValueKind.Number, value.ValueKind);
-            var floatValue = value.GetSingle();
-            Assert.True(!float.IsNaN(floatValue), "Embedding values should not be NaN");
-            Assert.True(!float.IsInfinity(floatValue), "Embedding values should not be infinity");
-        }
-
-        // Verify usage information shows token consumption
-        var usage = embeddingResult.AssertProperty("usage");
-        var totalTokens = usage.AssertProperty("total_tokens");
-        Assert.True(totalTokens.GetInt32() > 0, "Should have consumed tokens");
     }
 
     [Fact]

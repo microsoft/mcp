@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 namespace Fabric.Mcp.Tools.Core.Models;
 
 /// <summary>The metadata-only result of the Fabric get-item command.</summary>

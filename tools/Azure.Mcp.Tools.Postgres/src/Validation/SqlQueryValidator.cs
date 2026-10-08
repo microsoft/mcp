@@ -25,14 +25,20 @@ internal static class SqlQueryValidator
     {
         if (string.IsNullOrWhiteSpace(query))
         {
-            throw new CommandValidationException("Query cannot be empty.");
+            throw new CommandValidationException("Query cannot be empty.")
+            {
+                TelemetrySafeMessage = "Query cannot be empty."
+            };
         }
 
         var trimmed = query.Trim();
 
         if (trimmed.Length > MaxQueryLength)
         {
-            throw new CommandValidationException($"Query length exceeds limit of {MaxQueryLength} characters.");
+            throw new CommandValidationException($"Query length exceeds limit of {MaxQueryLength} characters.")
+            {
+                TelemetrySafeMessage = $"Query length exceeds limit of {MaxQueryLength} characters."
+            };
         }
 
         // Allow an optional trailing semicolon; remove for further checks.
@@ -50,13 +56,19 @@ internal static class SqlQueryValidator
         // Reject inline / block comments which can hide stacked statements or alter logic.
         if (withoutStrings.Contains("--", StringComparison.Ordinal) || withoutStrings.Contains("/*", StringComparison.Ordinal))
         {
-            throw new CommandValidationException("Comments are not allowed in the query.");
+            throw new CommandValidationException("Comments are not allowed in the query.")
+            {
+                TelemetrySafeMessage = "Comments are not allowed in the query."
+            };
         }
 
         // Reject any additional semicolons (stacked statements) inside the core content.
         if (core.Contains(';'))
         {
-            throw new CommandValidationException("Multiple or stacked SQL statements are not allowed.");
+            throw new CommandValidationException("Multiple or stacked SQL statements are not allowed.")
+            {
+                TelemetrySafeMessage = "Multiple or stacked SQL statements are not allowed."
+            };
         }
     }
 }

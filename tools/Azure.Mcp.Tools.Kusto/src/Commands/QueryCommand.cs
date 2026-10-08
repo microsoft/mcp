@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Validation;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
@@ -29,6 +30,20 @@ public sealed class QueryCommand(
     ISubscriptionResolver subscriptionResolver)
     : BaseClusterCommand<QueryOptions, QueryCommand.QueryCommandResult>(subscriptionResolver)
 {
+    public override void ValidateOptions(QueryOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        try
+        {
+            KqlQueryValidator.ValidateQuerySafety(options.Query);
+        }
+        catch (CommandValidationException ex)
+        {
+            validationResult.AddError(ex.Message, "Invalid Kusto query.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, QueryOptions options, CancellationToken cancellationToken)
     {
         try
@@ -59,8 +74,11 @@ public sealed class QueryCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred querying Kusto. Cluster: {Cluster}, Database: {Database},"
-            + " Query: {Query}", options.ClusterUri ?? options.Cluster, options.Database, options.Query);
+            logger.LogError(
+                "An exception occurred querying Kusto. Cluster: {Cluster}, Database: {Database}, ExceptionType: {ExceptionType}",
+                options.ClusterUri ?? options.Cluster,
+                options.Database,
+                ex.GetType().Name);
             HandleException(context, ex);
         }
         return context.Response;

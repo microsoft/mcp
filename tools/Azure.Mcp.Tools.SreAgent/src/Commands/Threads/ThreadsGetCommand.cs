@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     Id = "efab1704-5543-496a-830d-19ddb816a102",
     Name = "get",
     Title = "Get Thread",
-    Description = "Get messages for an SRE Agent thread.",
+    Description = "Retrieve the existing messages of an SRE Agent thread by its thread ID. Read-only; does not start, continue, or run an investigation.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
