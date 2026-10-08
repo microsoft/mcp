@@ -4,12 +4,12 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Azure.ResourceManager;
-using Azure.Core.Pipeline;
 using Azure.ResourceManager.EventHubs;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
