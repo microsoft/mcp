@@ -35,7 +35,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class WorkspaceDeleteCommand(
     ILogger<WorkspaceDeleteCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<WorkspaceDeleteOptions, WorkspaceDeleteCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<WorkspaceDeleteOptions, WorkspaceDeleteCommandResult>
 {
     private readonly ILogger<WorkspaceDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -66,7 +66,6 @@ public sealed class WorkspaceDeleteCommand(
         {
             _logger.LogError("Error deleting a Fabric workspace ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;
@@ -85,7 +84,7 @@ public sealed class WorkspaceDeleteCommand(
         HttpStatusCode.Unauthorized => "Authentication failed. Use an identity authorized to delete the Fabric workspace",
         HttpStatusCode.Forbidden => "Access denied. The caller needs the Admin workspace role; delegated callers also need Workspace.ReadWrite.All",
         HttpStatusCode.NotFound => "The Fabric workspace was not found. Check its ID and the caller's access. Deletion was not confirmed",
-        HttpStatusCode.TooManyRequests when ex is WorkspaceDeleteThrottledException => ex.Message,
+        HttpStatusCode.TooManyRequests when ex is FabricThrottledException => ex.Message,
         HttpStatusCode.TooManyRequests => "Fabric throttled the request. Wait before retrying",
         HttpStatusCode.RequestTimeout => "The Fabric workspace deletion request was canceled or timed out; its outcome is not confirmed",
         HttpStatusCode.GatewayTimeout => "The Fabric workspace deletion request timed out; its outcome is not confirmed",

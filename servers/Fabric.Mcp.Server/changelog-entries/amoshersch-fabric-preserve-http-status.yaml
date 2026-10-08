@@ -11,3 +11,5 @@ changes:
     description: "Disabled automatic Fabric Core HTTP redirects, preserved confirmed deletions during late cancellation, and clarified upstream deletion rejection messages."
   - section: "Bugs Fixed"
     description: "Corrected Fabric prompt interaction tokens while preserving prompt text and deletion consent guidance."
+  - section: "Bugs Fixed"
+    description: "Improved Create Item validation errors to identify missing required options without exposing private input or exception details."

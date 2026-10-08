@@ -37,7 +37,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class ItemCreateCommand(
     ILogger<ItemCreateCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<ItemCreateOptions, ItemCreateCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<ItemCreateOptions, ItemCreateCommandResult>
 {
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -84,10 +84,10 @@ public sealed class ItemCreateCommand(
     protected override void HandleException(CommandContext context, Exception ex)
     {
         base.HandleException(context, ex);
-        context.Response.Results = null;
-        if (ex is CommandValidationException)
+        if (ex is CommandValidationException validationException)
         {
-            context.Response.Message = "Invalid item creation request. Provide a nonempty workspace UUID, display name, and item type; check option names and values.";
+            context.Response.Message = GetValidationErrorMessage(validationException,
+                "Invalid item creation request. Provide a nonempty workspace UUID, display name, and item type; check option names and values.");
         }
     }
 

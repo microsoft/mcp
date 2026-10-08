@@ -33,7 +33,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     ReadOnly = true,
     Secret = false)]
 public sealed class CatalogSearchCommand(ILogger<CatalogSearchCommand> logger, IFabricCoreService fabricCoreService)
-    : AuthenticatedCommand<CatalogSearchOptions, CatalogSearchCommandResult>
+    : FabricCoreCommand<CatalogSearchOptions, CatalogSearchCommandResult>
 {
     private readonly ILogger<CatalogSearchCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -76,10 +76,10 @@ public sealed class CatalogSearchCommand(ILogger<CatalogSearchCommand> logger, I
     protected override void HandleException(CommandContext context, Exception ex)
     {
         base.HandleException(context, ex);
-        context.Response.Results = null;
-        if (ex is CommandValidationException)
+        if (ex is CommandValidationException validationException)
         {
-            context.Response.Message = "Invalid catalog search request. Check option names and values; page-size must be an integer from 1 through 1000.";
+            context.Response.Message = GetValidationErrorMessage(validationException,
+                "Invalid catalog search request. Check option names and values; page-size must be an integer from 1 through 1000.");
         }
     }
 

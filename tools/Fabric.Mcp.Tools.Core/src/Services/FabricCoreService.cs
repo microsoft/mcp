@@ -49,7 +49,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
             if (response.StatusCode == HttpStatusCode.TooManyRequests &&
                 FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
             {
-                throw new CapacityListThrottledException(retryAfter);
+                throw new FabricThrottledException(retryAfter);
             }
 
             throw new HttpRequestException(
@@ -174,7 +174,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
             if (response.StatusCode == HttpStatusCode.TooManyRequests &&
                 FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
             {
-                throw new WorkspaceDeleteThrottledException(retryAfter);
+                throw new FabricThrottledException(retryAfter);
             }
 
             var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
@@ -201,7 +201,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
             if (response.StatusCode == HttpStatusCode.TooManyRequests &&
                 FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
             {
-                throw new FabricCapacityGetThrottledException(retryAfter);
+                throw new FabricThrottledException(retryAfter);
             }
 
             var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
@@ -242,7 +242,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
             if (response.StatusCode == HttpStatusCode.TooManyRequests &&
                 FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
             {
-                throw new FabricWorkspaceThrottledException(retryAfter);
+                throw new FabricThrottledException(retryAfter);
             }
 
             var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
@@ -378,7 +378,7 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
             if (response.StatusCode == HttpStatusCode.TooManyRequests &&
                 FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
             {
-                throw new WorkspaceListThrottledException(retryAfter);
+                throw new FabricThrottledException(retryAfter);
             }
 
             throw new HttpRequestException(

@@ -40,7 +40,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class WorkspaceCreateCommand(
     ILogger<WorkspaceCreateCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<WorkspaceCreateOptions, WorkspaceCreateResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<WorkspaceCreateOptions, WorkspaceCreateResult>
 {
     private readonly ILogger<WorkspaceCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -82,7 +82,6 @@ public sealed class WorkspaceCreateCommand(
         {
             _logger.LogError("Error creating a Fabric workspace ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;

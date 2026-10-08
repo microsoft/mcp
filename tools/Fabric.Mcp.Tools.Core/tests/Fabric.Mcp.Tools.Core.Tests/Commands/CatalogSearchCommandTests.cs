@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -275,5 +276,20 @@ public class CatalogSearchCommandTests : CommandUnitTestsBase<CatalogSearchComma
         Assert.Contains("Invalid catalog search request", response.Message);
         FabricCoreErrorTestData.AssertSanitized(response);
         Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DoesNotReportUntrustedOrOptionalNamesAsMissing()
+    {
+        Service.SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CommandValidationException(FabricCoreErrorTestData.PrivateDetails,
+                missingOptions: ["--search", "--filter", "--unknown", FabricCoreErrorTestData.PrivateDetails]));
+
+        var response = await ExecuteCommandAsync("--search", "Sales");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Invalid catalog search request. Check option names and values; page-size must be an integer from 1 through 1000.", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        await Service.Received(1).SearchCatalogAsync(Arg.Any<CatalogSearchRequest>(), TestContext.Current.CancellationToken);
     }
 }

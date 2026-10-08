@@ -368,6 +368,8 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 
 Calls the [Create Item API](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) once with `display-name`, `item-type`, and optional `description`. Supply a nonempty workspace UUID using `workspace-id` or the backward-compatible `workspace` alias. Workspace names are not resolved. A `workspace-id` that is not empty or whitespace takes precedence when both options are supplied, even if it is invalid; the command does not silently fall back to the alias. Invalid and all-zero UUIDs are rejected before authentication or HTTP, and accepted UUID formats are normalized in the request URL.
 
+Missing required options are identified by their registered names, such as `--display-name` or `--item-type`, before any service call. Other parser failures return sanitized guidance without echoing supplied values or unknown option names.
+
 This example **creates a real item** when run with authorized credentials:
 
 ```powershell

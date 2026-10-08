@@ -36,7 +36,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class ItemUpdateCommand(
     ILogger<ItemUpdateCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<ItemUpdateOptions, ItemUpdateCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<ItemUpdateOptions, ItemUpdateCommandResult>
 {
     private readonly ILogger<ItemUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -68,13 +68,6 @@ public sealed class ItemUpdateCommand(
         }
 
         return context.Response;
-    }
-
-    protected override void HandleException(CommandContext context, Exception ex)
-    {
-        base.HandleException(context, ex);
-        // The base exception result contains the original message and, in debug builds, the stack trace.
-        context.Response.Results = null;
     }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch

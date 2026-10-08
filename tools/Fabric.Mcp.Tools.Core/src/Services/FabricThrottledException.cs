@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
-internal sealed class WorkspaceListThrottledException(RetryConditionHeaderValue retryAfter)
+internal sealed class FabricThrottledException(RetryConditionHeaderValue retryAfter)
     : HttpRequestException(CreateMessage(retryAfter), null, HttpStatusCode.TooManyRequests)
 {
     private static string CreateMessage(RetryConditionHeaderValue retryAfter) =>

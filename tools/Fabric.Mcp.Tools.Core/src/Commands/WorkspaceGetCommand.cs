@@ -36,7 +36,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class WorkspaceGetCommand(
     ILogger<WorkspaceGetCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<WorkspaceGetOptions, WorkspaceGetCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<WorkspaceGetOptions, WorkspaceGetCommandResult>
 {
     private readonly ILogger<WorkspaceGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -71,7 +71,6 @@ public sealed class WorkspaceGetCommand(
         {
             _logger.LogError("Error retrieving Fabric workspace metadata ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;
@@ -90,7 +89,7 @@ public sealed class WorkspaceGetCommand(
         HttpStatusCode.Unauthorized => "Authentication failed. Use an identity authorized to read the Fabric workspace",
         HttpStatusCode.Forbidden => "Access denied. The caller needs Viewer or higher workspace access; delegated callers also need Workspace.Read.All or Workspace.ReadWrite.All",
         HttpStatusCode.NotFound => "The Fabric workspace was not found. Check its ID and the caller's access",
-        HttpStatusCode.TooManyRequests when ex is FabricWorkspaceThrottledException => ex.Message,
+        HttpStatusCode.TooManyRequests when ex is FabricThrottledException => ex.Message,
         HttpStatusCode.TooManyRequests => "Fabric throttled the request. Wait before retrying",
         HttpStatusCode.RequestTimeout => "The Fabric workspace request was canceled or timed out",
         HttpStatusCode.GatewayTimeout => "The Fabric workspace request timed out",

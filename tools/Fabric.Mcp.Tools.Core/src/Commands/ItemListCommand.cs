@@ -38,7 +38,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class ItemListCommand(
     ILogger<ItemListCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<ItemListOptions, ItemListCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<ItemListOptions, ItemListCommandResult>
 {
     private readonly ILogger<ItemListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -92,7 +92,6 @@ public sealed class ItemListCommand(
         {
             _logger.LogError("Error listing Fabric item metadata ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;

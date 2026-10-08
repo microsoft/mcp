@@ -35,7 +35,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class ItemDeleteCommand(
     ILogger<ItemDeleteCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<ItemDeleteOptions, ItemDeleteCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<ItemDeleteOptions, ItemDeleteCommandResult>
 {
     private readonly ILogger<ItemDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -72,7 +72,6 @@ public sealed class ItemDeleteCommand(
         {
             _logger.LogError("Error deleting Fabric item ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;

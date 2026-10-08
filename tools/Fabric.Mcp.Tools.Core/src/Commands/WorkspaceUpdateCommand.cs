@@ -40,7 +40,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class WorkspaceUpdateCommand(
     ILogger<WorkspaceUpdateCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<WorkspaceUpdateOptions, WorkspaceUpdateCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<WorkspaceUpdateOptions, WorkspaceUpdateCommandResult>
 {
     private readonly ILogger<WorkspaceUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -75,7 +75,6 @@ public sealed class WorkspaceUpdateCommand(
         {
             _logger.LogError("Error updating Fabric workspace metadata ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;

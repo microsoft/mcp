@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -154,6 +155,62 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
         Assert.Contains("Invalid item creation request", response.Message);
         FabricCoreErrorTestData.AssertSanitized(response);
         Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(null, "Lakehouse", "--display-name", false)]
+    [InlineData("Sales", null, "--item-type", false)]
+    [InlineData(null, null, "--display-name, --item-type", false)]
+    [InlineData(null, "Lakehouse", "--display-name", true)]
+    [InlineData("Sales", null, "--item-type", true)]
+    [InlineData(null, null, "--display-name, --item-type", true)]
+    public async Task ExecuteAsync_IdentifiesMissingRequiredOptionsWithoutEchoingParserInput(
+        string? displayName, string? itemType, string missingOptions, bool invalidInput)
+    {
+        List<string> args = ["--workspace-id", WorkspaceId];
+        if (displayName is not null)
+        {
+            args.AddRange(["--display-name", displayName]);
+        }
+        if (itemType is not null)
+        {
+            args.AddRange(["--item-type", itemType]);
+        }
+        if (invalidInput)
+        {
+            args.AddRange(["--unknown", FabricCoreErrorTestData.PrivateDetails]);
+        }
+
+        var response = await ExecuteCommandAsync([.. args]);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal($"Missing Required options: {missingOptions}", response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_OnlyReportsKnownRequiredOptionNames(bool knownOption)
+    {
+        List<string> missingOptions = [FabricCoreErrorTestData.PrivateDetails, "--unknown", "--workspace-id"];
+        if (knownOption)
+        {
+            missingOptions.AddRange(["--item-type", "--item-type"]);
+        }
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CommandValidationException(FabricCoreErrorTestData.PrivateDetails, missingOptions: missingOptions));
+
+        var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(knownOption
+            ? "Missing Required options: --item-type"
+            : "Invalid item creation request. Provide a nonempty workspace UUID, display name, and item type; check option names and values.",
+            response.Message);
+        FabricCoreErrorTestData.AssertSanitized(response);
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), TestContext.Current.CancellationToken);
     }
 
     [Theory]
