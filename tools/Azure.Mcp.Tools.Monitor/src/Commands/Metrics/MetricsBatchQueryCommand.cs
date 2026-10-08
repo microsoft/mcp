@@ -55,7 +55,8 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
         }
         else if (resources.Length > MaxBatchResources)
         {
-            validationResult.Errors.Add($"A maximum of {MaxBatchResources} resources can be queried in a single batch request. Provided: {resources.Length}.");
+            validationResult.AddError($"A maximum of {MaxBatchResources} resources can be queried in a single batch request. Provided: {resources.Length}.",
+                "Too many metrics batch resources.");
         }
 
         if (options.MetricNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length == 0)
@@ -68,13 +69,15 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
         bool validStartTime = DateTimeOffset.TryParse(options.StartTime, out var startTime);
         if (!validStartTime)
         {
-            validationResult.Errors.Add($"Invalid format for '--start-time': '{options.StartTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).");
+            validationResult.AddError($"Invalid format for '--start-time': '{options.StartTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).",
+                "Invalid metrics start time.");
         }
 
         bool validEndTime = DateTimeOffset.TryParse(options.EndTime, out var endTime);
         if (!validEndTime)
         {
-            validationResult.Errors.Add($"Invalid format for '--end-time': '{options.EndTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).");
+            validationResult.AddError($"Invalid format for '--end-time': '{options.EndTime}'. Provide a valid date/time (e.g. 2023-01-01T00:00:00Z).",
+                "Invalid metrics end time.");
         }
 
         // The expected number of time buckets is always derived from the start/end time range up front, so an
@@ -89,7 +92,8 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
         {
             // The internal default is always a valid duration, so a parse failure here only happens when the
             // user explicitly supplied an invalid '--interval' value.
-            validationResult.Errors.Add($"Invalid format for '--interval': '{options.Interval}'. Provide an ISO 8601 duration (e.g. PT1H, PT5M).");
+            validationResult.AddError($"Invalid format for '--interval': '{options.Interval}'. Provide an ISO 8601 duration (e.g. PT1H, PT5M).",
+                "Invalid metrics interval.");
         }
         else if (validStartTime && validEndTime)
         {
@@ -102,11 +106,12 @@ public sealed class MetricsBatchQueryCommand(ILogger<MetricsBatchQueryCommand> l
                     ? $"'--interval' of '{options.Interval}'"
                     : $"an assumed default interval of '{DefaultValidationInterval}' (since '--interval' was not specified)";
 
-                validationResult.Errors.Add(
+                validationResult.AddError(
                     $"The requested time range ('--start-time' to '--end-time') combined with {intervalDescription} would produce " +
                     $"approximately {expectedBucketCount} time buckets, which exceeds the maximum allowed limit of {maxBuckets}. " +
                     $"To resolve this issue, either query a smaller time range, specify a larger '--interval' (e.g., PT1H), " +
-                    $"or increase the '--max-buckets' parameter.");
+                    $"or increase the '--max-buckets' parameter.",
+                    "Metrics batch exceeds bucket limit.");
             }
         }
     }

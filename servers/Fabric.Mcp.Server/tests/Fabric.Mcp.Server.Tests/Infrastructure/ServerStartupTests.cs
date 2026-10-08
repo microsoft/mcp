@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Net.ServerSentEvents;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -36,8 +38,10 @@ public class ServerStartupTests
         return new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json");
     }
 
-    [Fact]
-    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools)
     {
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
         var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
@@ -48,7 +52,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = "server start --transport http --dangerously-disable-http-incoming-auth",
+            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}",
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -83,7 +87,7 @@ public class ServerStartupTests
             request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
 
             var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
-            var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            var content = await ReadToolResponseAsync(response, TestContext.Current.CancellationToken);
 
             var errorOutput = stderrBuilder.ToString();
             Assert.DoesNotContain("Unable to resolve service", errorOutput);
@@ -91,6 +95,11 @@ public class ServerStartupTests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("\"result\"", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
+            if (listAllTools)
+            {
+                AssertCoreToolsAreListed(content);
+                AssertListItemsTool(content);
+            }
         }
         finally
         {
@@ -101,8 +110,10 @@ public class ServerStartupTests
         }
     }
 
-    [Fact]
-    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools)
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
@@ -113,7 +124,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = "server start",
+            Arguments = listAllTools ? "server start --mode all" : "server start",
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -158,6 +169,11 @@ public class ServerStartupTests
             Assert.NotNull(response);
             Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
+            if (listAllTools)
+            {
+                AssertCoreToolsAreListed(response);
+                AssertListItemsTool(response);
+            }
         }
         finally
         {
@@ -228,6 +244,101 @@ public class ServerStartupTests
                 process.Kill();
             }
         }
+    }
+
+    private static void AssertCoreToolsAreListed(string response)
+    {
+        string[] names =
+        [
+            "core_assign-workspace-to-capacity",
+            "core_create-item",
+            "core_create-workspace",
+            "core_delete-item",
+            "core_delete-workspace",
+            "core_get-capacity",
+            "core_get-workspace",
+            "core_list-capacities",
+            "core_list-items",
+            "core_list-workspaces",
+            "core_search-catalog",
+            "core_update-item",
+            "core_update-workspace"
+        ];
+
+        foreach (var name in names)
+        {
+            Assert.Contains($"\"{name}\"", response, StringComparison.Ordinal);
+        }
+
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        Assert.Equal(59, tools.Length);
+        Assert.Equal(13, tools.Count(tool => tool.GetProperty("name").GetString()!.StartsWith("core_", StringComparison.Ordinal)));
+        Assert.DoesNotContain(tools, tool => tool.GetProperty("name").GetString() == "core_get-item");
+        var assignment = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_assign-workspace-to-capacity");
+        Assert.False(assignment.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(assignment.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.False(assignment.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["capacity-id", "workspace-id"], assignment.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var creation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-workspace");
+        Assert.False(creation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.False(creation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["display-name"], creation.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
+        var update = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-workspace");
+        Assert.False(update.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(update.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(update.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["workspace-id"], update.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
+        var itemUpdate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-item");
+        Assert.False(itemUpdate.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemUpdate.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(itemUpdate.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemUpdate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var itemDelete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-item");
+        Assert.False(itemDelete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemDelete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(itemDelete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemDelete.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var workspaceDelete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-workspace");
+        Assert.False(workspaceDelete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(workspaceDelete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(workspaceDelete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["workspace-id"], workspaceDelete.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
+        var hardDelete = itemDelete.GetProperty("inputSchema").GetProperty("properties").GetProperty("hard-delete");
+        Assert.Equal(["boolean", "null"], hardDelete.GetProperty("type").EnumerateArray().Select(value => value.GetString()));
+        Assert.False(hardDelete.TryGetProperty("default", out _));
+    }
+
+    private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
+        {
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var messages = new List<string>();
+        await foreach (var item in SseParser.Create(stream).EnumerateAsync(cancellationToken))
+        {
+            messages.Add(item.Data);
+        }
+        return Assert.Single(messages);
+    }
+
+    private static void AssertListItemsTool(string response)
+    {
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        var tool = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-items");
+        Assert.True(tool.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.Equal(["workspace-id"], tool.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
     }
 
     private static int GetAvailablePort()

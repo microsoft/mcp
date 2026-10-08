@@ -61,7 +61,7 @@ public class VaultCreateExistenceTests
     private static Task<VaultCreateResult> CreateVaultAsync(IAzureService service, string vaultType, CancellationToken cancellationToken) =>
         vaultType == "rsv"
             ? new RsvBackupOperations(service).CreateVaultAsync(
-                "vault", "rg", "22222222-2222-2222-2222-222222222222", "eastus", null, null, null, cancellationToken)
+                "vault", "rg", "22222222-2222-2222-2222-222222222222", "eastus", null, null, null, cancellationToken: cancellationToken)
             : new DppBackupOperations(service).CreateVaultAsync(
                 "vault", "rg", "22222222-2222-2222-2222-222222222222", "eastus", null, null, null, cancellationToken);
 

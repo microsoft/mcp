@@ -17,18 +17,17 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_get | What does Advisor recommendation type \<recommendation-type-id> mean? | none |
 | advisor_metadata_get | Show me the catalog details for Advisor recommendation type \<recommendation-type-id> | none |
 | advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type \<recommendation-type-id> | none |
-| advisor_metadata_get | What is the impact and category of Advisor recommendation type <recommendation-type-id>? | none |
+| advisor_metadata_get | Get the Advisor metadata catalog entry for recommendation type <recommendation-type-id> and return its impact and category; do not list active recommendation records | none |
 | advisor_metadata_get | When does Advisor recommendation type \<recommendation-type-id> retire? | none |
-| advisor_metadata_get | Explain what Advisor recommendation type \<recommendation-type-id> means and what actions it recommends | none |
+| advisor_metadata_get | Use Advisor recommendation metadata get to explain what recommendation type \<recommendation-type-id> means, including its description and recommended actions; do not query active recommendation records | none |
 | advisor_metadata_list | List the Advisor recommendation metadata catalog | none |
-| advisor_metadata_list | Before I deploy any virtual machines, what kinds of recommendations could Advisor produce for them? | none |
+| advisor_metadata_list | List Advisor recommendation metadata types applicable to virtual machines before deployment; use the metadata catalog, not active recommendation records | none |
 | advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases | none |
 | advisor_metadata_list | Show the German metadata catalog for Advisor recommendations | none |
-| advisor_metadata_list | Which Advisor recommendation types include service-retirement details? | none |
+| advisor_metadata_list | List Advisor recommendation metadata types that include service-retirement details; search the metadata catalog, not active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory | none |
-| advisor_metadata_list | Find the Advisor service-retirement metadata with tracking ID QNY1-HB8 | none |
-| advisor_metadata_list | Find global Azure Advisor recommendation metadata for Service Health tracking ID QNY1-HB8, not active recommendations | none |
-| advisor_metadata_list | Show Advisor service retirements on or after March 31, 2026 | none |
+| advisor_metadata_list | Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records | none |
+| advisor_metadata_list | List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records | none |
 | advisor_recommendation_apply | Apply Advisor recommendations to this ARM template | context-required |
 | advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account | context-required |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
@@ -73,33 +72,33 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Show the distribution of my Advisor recommendations by business impact | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types | none |
 | advisor_recommendation_summary | Which Advisor recommendation type occurs most often for resources in my subscription? | none |
-| advisor_recommendation_summary | Rank impacted Azure resource types by the count of High-impact Advisor recommendations | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to rank impacted Azure resource types by the count of High-impact recommendations; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Rank the Azure resource types with the most critical Advisor recommendations | none |
-| advisor_recommendation_summary | Break down my Advisor recommendations by lifecycle status | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count recommendations grouped by lifecycle status; do not list individual recommendation records | none |
 | advisor_recommendation_summary | How many Advisor recommendations are new, completed, dismissed, or postponed? | none |
-| advisor_recommendation_summary | Group active Advisor recommendations by metadata subcategory | none |
-| advisor_recommendation_summary | Count my zone resiliency Advisor recommendations by impacted resource type | none |
-| advisor_recommendation_summary | How many active service-retirement Advisor recommendations do I have for each retirement date? | none |
-| advisor_recommendation_summary | How many overdue service-retirement Advisor recommendations are still active? | none |
-| advisor_recommendation_summary | Count active recommendations for services retiring on December 31, 2026 | none |
-| advisor_recommendation_summary | Count active service-retirement Advisor recommendations with retirement dates on or before December 31, 2026 | none |
-| advisor_recommendation_summary | Count active service-retirement Advisor recommendations with retirement dates on or after March 31, 2026 | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations grouped by metadata subcategory; do not list individual recommendation records | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active zone resiliency recommendations grouped by impacted resource type; do not list individual recommendation records | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations grouped by retirement date; do not list individual records | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count overdue active service-retirement recommendations; return a count rather than individual records | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations for services retiring on December 31, 2026 | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or before December 31, 2026 | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or after March 31, 2026 | none |
 | advisor_recommendation_summary | Show the impact breakdown for Advisor recommendations affecting resource my-web-app | none |
-| advisor_recommendation_summary | Break down counts by impact for Advisor recommendations whose problem text mentions "encryption" | none |
+| advisor_recommendation_summary | Use Advisor recommendation summary aggregation to group counts by impact for recommendations whose problem text mentions "encryption"; do not list individual records | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Show me the remediation actions for recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Give me the CLI and PowerShell scripts to remediate recommendation type id \<recommendation-type-id> | none |
-| advisor_remediation_get | Get the ARM and Bicep artifacts to fix Advisor recommendation type id \<recommendation-type-id> | none |
-| advisor_remediation_get | Get the terraform to fix Advisor recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its ARM template and Bicep remediation artifacts; do not apply or list recommendations | none |
+| advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its Terraform remediation artifact; do not apply or list recommendations | none |
 | advisor_remediation_get | Resolve or remediate Advisor recommendation type id <recommendation-type-id>? | none |
-| advisor_remediation_get | What are the steps to remediate recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its step-by-step remediation instructions | none |
 | advisor_remediation_get | Give me a ready-to-run script to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Get the executable automation artifacts to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Get the deployment artifacts to fix Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | none |
-| advisor_remediation_get | How do I verify the fix for Advisor recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
 | advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
 
 ## Azure AI Search
@@ -313,6 +312,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_create | Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region \<location> with vault-type 'rsv' | investigation-required |
 | azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location>, but do not modify it if it already exists | investigation-required |
 | azurebackup_vault_create | Create Backup vault <vault_name> with vault-type 'dpp' in <resource_group> in \<location>, rejecting the request if the vault exists | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location> with public network access disabled | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location> and explicitly enable public network access for this test deployment | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in \<location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -402,10 +403,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_create | Deploy a new VM with a 128GB Premium SSD OS disk in resource group \<resource-group-name> | clarification-required |
 | compute_vm_create | Create a VM with Standard_E4s_v3 size and no public IP in \<resource-group-name> | clarification-required |
 | compute_vm_create | Create Linux VM \<vm-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in \<resource-group-name> | none |
-| compute_vm_get | List all virtual machines in my subscription | none |
+| compute_vm_get | List Azure Compute virtual machine resources across my subscription; use the Compute VM inventory rather than a generic Resource Graph query | none |
 | compute_vm_get | Show me all VMs in my subscription | none |
-| compute_vm_get | What virtual machines do I have? | none |
-| compute_vm_get | Get all virtual machines in resource group \<resource-group-name> | none |
+| compute_vm_get | Get the Azure Compute virtual machine inventory for my subscription | none |
+| compute_vm_get | Use Azure Compute VM get inventory to list all virtual machines in resource group \<resource-group-name>; the get operation lists VMs, so do not invent a VM list command or use generic resource listing | none |
 | compute_vm_get | Show me VMs in resource group \<resource-group-name> | none |
 | compute_vm_get | List the Azure virtual machines in resource group \<resource-group-name> | none |
 | compute_vm_get | Get details for virtual machine \<vm-name> in resource group \<resource-group-name> | none |
@@ -413,7 +414,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vm_get | What are the details of VM \<vm-name> in resource group <resource-group-name>? | none |
 | compute_vm_get | Get virtual machine \<vm-name> with instance view in resource group \<resource-group-name> | none |
 | compute_vm_get | Show me VM \<vm-name> with runtime status in resource group \<resource-group-name> | none |
-| compute_vm_get | What is the power state of virtual machine \<vm-name> in resource group <resource-group-name>? | none |
+| compute_vm_get | Use Azure Compute VM get with instance view to read the current power state of virtual machine \<vm-name> in resource group \<resource-group-name>; do not invoke a power-state mutation | none |
 | compute_vm_get | Get VM \<vm-name> status and provisioning state in resource group \<resource-group-name> | none |
 | compute_vm_get | Show me the current status of VM \<vm-name> | none |
 | compute_vm_update | Add tags to VM \<vm-name> in resource group \<resource-group-name> | clarification-required |
@@ -440,7 +441,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_create | Create scale set \<vmss-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in \<resource-group-name> | none |
 | compute_vmss_get | List all virtual machine scale sets in my subscription | none |
 | compute_vmss_get | List virtual machine scale sets in resource group \<resource-group-name> | none |
-| compute_vmss_get | What scale sets are in resource group <resource-group-name>? | none |
+| compute_vmss_get | List Azure Compute virtual machine scale sets in resource group <resource-group-name>; return scale sets rather than individual virtual machines | none |
 | compute_vmss_get | Get details for virtual machine scale set \<vmss-name> in resource group \<resource-group-name> | none |
 | compute_vmss_get | Show me VMSS \<vmss-name> in resource group \<resource-group-name> | none |
 | compute_vmss_get | Show me instance \<instance-id> of VMSS \<vmss-name> in resource group \<resource-group-name> | none |
@@ -454,11 +455,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | compute_vmss_delete | Destroy virtual machine scale set \<vmss-name> in resource group \<resource-group-name> | none |
 | compute_vmss_delete | Force delete VMSS \<vmss-name> in resource group \<resource-group-name> using force-deletion | none |
 | compute_vmss_delete | Delete scale set \<vmss-name> that does not exist in resource group \<resource-group-name> | none |
-| compute_disk_get | List all managed disks in my subscription | none |
-| compute_disk_get | Show me all disks in resource group \<resource-group> | none |
+| compute_disk_get | List Azure Compute managed disk resources across my subscription; use the Compute disk inventory rather than a generic Resource Graph query | none |
+| compute_disk_get | Use Azure Compute managed disk get inventory to list all managed disks in resource group \<resource-group>; the get operation lists disks, so do not invent a disk list command or use generic resource listing | none |
 | compute_disk_get | Get details of disk \<disk-name> in resource group \<resource-group> | none |
-| compute_disk_get | Show me the disk sizes in resource group \<resource-group> | none |
-| compute_disk_get | What managed disks are available? | none |
+| compute_disk_get | Use Azure Compute managed disk get inventory to list managed disk sizes in resource group \<resource-group>; do not invent a disk list command or use generic resource listing | none |
+| compute_disk_get | Use Azure Compute managed disk get inventory to list managed disks across my subscription; do not use Resource Graph or invent a disk list command | none |
 | compute_disk_get | Get information about disk \<disk-name> | none |
 | compute_disk_create | Create a 128 GB managed disk named \<disk-name> in resource group \<resource-group> | none |
 | compute_disk_create | Create a new Premium_LRS disk called \<disk-name> in resource group \<resource-group> with 256 GB | none |
@@ -644,7 +645,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | none |
 | eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> | clarification-required |
 | eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
-| eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> | none |
+| eventhubs_eventhub_get | List the Event Hub entities inside Event Hubs namespace <namespace_name>; do not return namespace details | none |
 | eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | none |
 | eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> | clarification-required |
@@ -676,7 +677,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? | none |
 | fileshares_limits | Get the file share limits for subscription \<subscription> in location \<location> | none |
 | fileshares_limits | Get the Azure Files share service limits in my subscription for location \<location> | none |
-| fileshares_limits | Show me the file share service limits in location \<location> | none |
+| fileshares_limits | Use Azure File Shares service limits to show provisioning constants for location \<location>; do not use Azure resource quota usage | none |
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in \<location> in subscription \<subscription> | none |
 | fileshares_fileshare_check-name-availability | Is the file share name <file_share_name> available in \<location>? | none |
 | fileshares_fileshare_check-name-availability | Verify availability of file share name <file_share_name> in \<location> | none |
@@ -706,9 +707,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_update | Enable NFS encryption in transit for file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Disable NFS encryption in transit on file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_update | Modify file share <file_share_name> in resource group <resource_group_name> with new settings | clarification-required |
-| fileshares_usage | Get Azure Files usage data for subscription \<subscription>in location \<location> | none |
+| fileshares_usage | Use Azure File Shares usage data for subscription \<subscription> in location \<location>; do not use Azure resource-provider quota usage | none |
 | fileshares_usage | Show me Azure File Shares usage statistics in location \<location> | none |
-| fileshares_usage | Get the current Azure File Shares usage in location \<location> for subscription \<subscription>| none |
+| fileshares_usage | Use Azure File Shares usage statistics for subscription \<subscription> in location \<location>; do not use Azure resource-provider quota usage | none |
 
 ## Azure Function App
 
@@ -734,10 +735,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | functions_language_list | Check the available languages that Azure Functions supports. | none |
 | functions_language_list | Use Azure Functions language discovery to list the supported languages and compare them | none |
 | functions_language_list | Use Azure Functions runtime discovery to list the available runtime versions | none |
-| functions_project_get | Set up a new Azure Functions project in Python | none |
+| functions_project_get | Use Azure Functions project get to return the generated files for a new Python Functions project; do not install dependencies, build, or run the project | none |
 | functions_project_get | Generate the project files for a TypeScript Azure Functions app | none |
 | functions_project_get | Use an Azure Functions project template to create boilerplate for a Java app using JDK 21 | none |
-| functions_project_get | Set up a new Azure Functions project in Go | none |
+| functions_project_get | Use Azure Functions project get to return the generated files for a new Go Functions project; do not install dependencies, build, or run the project | none |
 | functions_template_get | Get the available triggers and bindings for C# Azure Functions. | none |
 | functions_template_get | Show me all the Python Azure Function templates | none |
 | functions_template_get | Create a Timer trigger function in C# that runs every 5 minutes | none |
@@ -750,7 +751,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | insights_get | Generate insights from my current subscription | none |
-| insights_get | Summarize what's deployed across my Azure environment and highlight notable patterns | none |
+| insights_get | Use Azure Insights to analyze what is deployed across my Azure environment and highlight notable infrastructure patterns | none |
 | insights_get | Analyze my tenant and give me insights about the overall infrastructure | none |
 | insights_get | Use Azure Insights to analyze my existing Azure environment and summarize its deployed resources | none |
 | insights_get | Analyze subscription <subscription_id> for architectural patterns | none |
@@ -775,7 +776,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_hub_get | Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id> | none |
 | iothub_hub_get | Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name> | none |
 | iothub_query_run | Run the query "SELECT * FROM devices WHERE status = 'enabled'" against IoT Hub <hub_name> | none |
-| iothub_query_run | Query all devices in IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_query_run | Run an IoT Hub device query equivalent to "SELECT * FROM devices" against IoT Hub <hub_name> in resource group <resource_group_name>; do not use the device-list operation | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
 
@@ -843,9 +844,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | keyvault_secret_get | Display the secret details for <secret_name> in vault <key_vault_account_name> | none |
 | keyvault_secret_get | Retrieve secret metadata for <secret_name> in vault <key_vault_account_name> | none |
 | keyvault_secret_get | List all secrets in the key vault <key_vault_account_name> | none |
-| keyvault_secret_get | Show me the secrets in the key vault <key_vault_account_name> | none |
+| keyvault_secret_get | Get the collection of secret metadata from key vault <key_vault_account_name>; omit a secret name to enumerate the vault's secrets | none |
 | keyvault_secret_get | What secrets are in the key vault <key_vault_account_name>? | none |
-| keyvault_secret_get | List secrets names in vault <key_vault_account_name> | none |
+| keyvault_secret_get | Get all secret names and metadata from vault <key_vault_account_name> by enumerating secrets without a specific secret name | none |
 | keyvault_secret_get | Enumerate secrets in key vault <key_vault_account_name> | none |
 | keyvault_secret_get | Show secrets names in the key vault <key_vault_account_name> | none |
 
@@ -937,12 +938,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | get_azure_bestpractices_get | Get the latest Azure Functions best practices | none |
 | get_azure_bestpractices_get | Get the latest Azure Static Web Apps best practices | none |
 | get_azure_bestpractices_get | What are azure function best practices? | none |
-| get_azure_bestpractices_get | configure azure mcp in coding agent for my repo | none |
+| get_azure_bestpractices_get | Use the Azure MCP best-practices guidance tool to get instructions for configuring Azure MCP in a coding-agent repository; do not create files or invoke cloud-agent customization | none |
 | get_azure_bestpractices_ai_app | Get best practices for building AI applications in Azure | none |
 | get_azure_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation | none |
 | get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry | none |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries. | none |
-| get_azure_bestpractices_ai_app | Create an AI app that helps me to manage travel queries in Microsoft Foundry | none |
+| get_azure_bestpractices_ai_app | Use the Azure MCP AI application best-practices tool to return guidance for building an app that manages travel queries; do not create files, install packages, or build the app | none |
+| get_azure_bestpractices_ai_app | Use the Azure MCP AI application best-practices tool to return Microsoft Foundry guidance for an app that manages travel queries; do not create files, install packages, or build the app | none |
 
 ## Azure Migrate
 
@@ -980,14 +981,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_healthmodels_list | List the Azure Monitor health models in my subscription | none |
 | monitor_healthmodels_list | What health models are in resource group <resource_group>? | none |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> | investigation-required |
-| monitor_instrumentation_get-learning-resource | Show me the content of the Azure Monitor onboarding learning resource at path <resource_path> | none |
+| monitor_instrumentation_get-learning-resource | Use Azure Monitor instrumentation onboarding to get the learning-resource content at path <resource_path> | none |
 | monitor_instrumentation_get-learning-resource | Use Azure Monitor instrumentation onboarding to get the learning resource file at path <resource_path> | none |
 | monitor_instrumentation_get-learning-resource | List all available Azure Monitor onboarding learning resources | none |
 | monitor_instrumentation_get-learning-resource | Show me all learning resource paths for Azure Monitor instrumentation | none |
 | monitor_instrumentation_get-learning-resource | What learning resources are available for Azure Monitor instrumentation onboarding? | none |
 | monitor_instrumentation_orchestrator-next | After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note> | none |
 | monitor_instrumentation_orchestrator-next | Get the next Azure Monitor instrumentation onboarding action for session <session_id> after I completed <completion_note> | none |
-| monitor_instrumentation_orchestrator-next | I finished the previous instrumentation step; return the next step for session <session_id> with note <completion_note> | none |
+| monitor_instrumentation_orchestrator-next | Continue Azure Monitor instrumentation onboarding by returning the next orchestrator action for session <session_id> after completion note <completion_note> | none |
 | monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> | none |
 | monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step | none |
 | monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | none |
@@ -998,12 +999,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id> | none |
 | monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
-| monitor_metrics_batchquery | Compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period> | none |
+| monitor_metrics_batchquery | Use one Azure Monitor batch metrics query to compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period>; do not issue a single-resource metrics query | none |
 | monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace \<namespace> | none |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> | none |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> | none |
-| monitor_metrics_query | Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period> | none |
+| monitor_metrics_query | Query Azure Monitor metric time-series data to analyze performance trends and response-time metrics for Application Insights resource <resource_name> over the last <time_period>; do not query logs or metric definitions | none |
 | monitor_metrics_query | Check the availability metrics for my Application Insights resource <resource_name> for the last <time_period> | none |
 | monitor_metrics_query | Get the <aggregation_type> <metric_name> metric for <resource_type> <resource_name> over the last <time_period> with intervals | none |
 | monitor_metrics_query | Investigate error rates and failed requests for Application Insights resource <resource_name> for the last <time_period> | investigation-required |
@@ -1121,13 +1122,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resume | Resume paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> with description \<description> | none |
-| resiliency_recoveryjob_resume | Continue paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryjob_retry | Retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryjob_retry | Rerun failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryjob_resume | Use Azure Resiliency Management to resume, not retry, paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to rerun failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_create | Create a Zonal recoveryplan named <recoveryplan_name> in service group <service_group> | clarification-required |
 | resiliency_recoveryplan_create | Set up a Zonal recoveryplan named <recoveryplan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
-| resiliency_recoveryplan_create | Change recoveryplan <recoveryplan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>. Keep its Zonal plan type and existing recovery groups | none |
+| resiliency_recoveryplan_create | Use Azure Resiliency Management recovery-plan create or update to set recoveryplan <recoveryplan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>; retain its stored Zonal plan type and recovery groups | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, default recovery group description <default_group_description>, and one additional recovery group described as <additional_group_description> | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity and plan description <plan_description>. Add manual pre-action <manual_action_name> with timeout <timeout_minutes> to the default group, and add CustomRunbook post-action <runbook_action_name> with timeout <runbook_timeout_minutes> using Automation runbook <runbook_resource_id> to an additional group described as <additional_group_description> | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, and default group description <default_group_description>. Add a ManualAction pre-action named <manual_action_name>, description <manual_action_description>, and timeout <timeout_minutes> to the default group | none |
@@ -1137,18 +1138,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryplan_checkreadiness | Discover readiness issues for the resources in recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_delete | Delete the entire recoveryplan <recoveryplan_name> from service group <service_group> | none |
 | resiliency_recoveryplan_delete | Recoveryplan <recoveryplan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
-| resiliency_recoveryplan_failover | Fail over qualified resources in recoveryplan <recoveryplan_name> from source location <source_location> in service group <service_group> | none |
+| resiliency_recoveryplan_failover | Start Azure Resiliency Management recovery-plan failover for qualified resources in recoveryplan <recoveryplan_name> from source location <source_location> in service group <service_group>; I authorize this failover | none |
 | resiliency_recoveryplan_failover | Fail over recoveryplan <recoveryplan_name> in service group <service_group> without specifying source locations or recovery resources | clarification-required |
 | resiliency_recoveryplan_finalize | Complete or finalize the current recoveryplan operation for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_finalize | Finish finalizing recoveryplan <recoveryplan_name> in service group <service_group> and return the operation ID | none |
 | resiliency_recoveryplan_get | List all resilience recovery plans in service group <service_group> | none |
 | resiliency_recoveryplan_get | Get the details of recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryplan_reprotect | Reprotect all qualified resources after failover in recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryplan_reprotect | Start reprotection after failover for selected recovery resources in recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryplan_reprotect | Start Azure Resiliency Management recovery-plan reprotection for all qualified resources after failover in recoveryplan <recoveryplan_name> in service group <service_group>; do not use Azure Backup | none |
+| resiliency_recoveryplan_reprotect | Start Azure Resiliency Management recovery-plan reprotection after failover for selected recovery resources <recovery_resource_ids> in recoveryplan <recoveryplan_name> in service group <service_group>; do not use Azure Backup | none |
 | resiliency_recoveryplan_validateforfailover | Validate recoveryplan <recoveryplan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID | clarification-required |
 | resiliency_recoveryplan_validateforfailover | Validate which resources in recoveryplan <recoveryplan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
-| resiliency_recoveryplan_validateforfailover | Check whether recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> is qualified for failover without requiring a source location or executing failover | none |
-| resiliency_recoveryplan_validateforfailover | Validate recoveryplan <recoveryplan_name> for failover from <source_location>, supply required user consent, and return per-resource qualification results without updating resources | none |
+| resiliency_recoveryplan_validateforfailover | Use Azure Resiliency Management failover qualification validation to check recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> without executing failover | none |
+| resiliency_recoveryplan_validateforfailover | Validate Azure Resiliency Management recoveryplan <recoveryplan_name> in service group <service_group> for failover from <source_location>; user consent is Allowed, and return per-resource qualification results without updating resources | none |
 | resiliency_recoveryplan_validateforreprotect | Validate all qualified resources in recoveryplan <recoveryplan_name> in service group <service_group> for reprotect after failover and report blocking reasons | none |
 | resiliency_recoveryplan_validateforreprotect | Check whether recovery resource <recovery_resource_id> in Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group> is qualified for reprotect without executing reprotect or updating resources | none |
 | resiliency_recoveryplan_validateforoperation | Run operation-level pre-validation for Failover on Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group>; check whether the plan's current state, readiness, and permissions support the operation, not per-resource failover qualification | none |
@@ -1169,18 +1170,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
 | resiliency_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
 | resiliency_usageplan_delete | Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name> | none |
-| resiliency_usageplan_delete | Permanently remove the usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
+| resiliency_usageplan_delete | Use Azure Resiliency Management usage-plan delete to permanently remove the entire usage plan <usage_plan_name> from resource group <resource_group_name>, not an enrollment | none |
 | resiliency_usageplan_delete | Remove the usage plan of service group <service_group> | clarification-required |
-| resiliency_usageplan_delete | Remove usage plan <usage_plan_name> entirely, not just one service group enrollment, from resource group <resource_group_name> | none |
-| resiliency_usageplan_delete | Delete usage plan <usage_plan_name> from resource group <resource_group_name>. If dependent enrollments block deletion, list their exact names and ask for explicit confirmation before deleting any enrollment; do not remove them automatically | none |
-| resiliency_usageplan_delete | Retry deleting usage plan <usage_plan_name> from resource group <resource_group_name> only after every separately confirmed dependent enrollment deletion succeeds; stop and report any enrollment cleanup failure | none |
+| resiliency_usageplan_delete | Use Azure Resiliency Management usage-plan delete to remove usage plan <usage_plan_name> entirely from resource group <resource_group_name>; do not delete only a service-group enrollment | none |
+| resiliency_usageplan_delete | Attempt Azure Resiliency Management usage-plan deletion for <usage_plan_name> in resource group <resource_group_name> now; do not remove dependent enrollments automatically, and report their exact names if they block deletion | none |
+| resiliency_usageplan_delete | All separately authorized enrollment cleanup has completed successfully; retry Azure Resiliency Management deletion of the entire usage plan <usage_plan_name> from resource group <resource_group_name> and report any remaining blocker | none |
 | resiliency_usageplan_enrollment_create | Create a usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> associated with service group <service_group> in resource group <resource_group_name> | none |
-| resiliency_usageplan_enrollment_create | Enroll service group <service_group> in usage plan <usage_plan_name> as <enrollment_name> in resource group <resource_group_name> | none |
+| resiliency_usageplan_enrollment_create | Use Azure Resiliency Management usage-plan enrollment create to associate service group <service_group> with usage plan <usage_plan_name> as enrollment <enrollment_name> in resource group <resource_group_name> | none |
 | resiliency_usageplan_enrollment_create | Update enrollment <enrollment_name> under usage plan <usage_plan_name> to use service group <service_group> in resource group <resource_group_name> | none |
-| resiliency_usageplan_enrollment_delete | Delete enrollment <enrollment_name> from usage plan <usage_plan_name> in resource group <resource_group_name> | none |
+| resiliency_usageplan_enrollment_delete | Use Azure Resiliency Management enrollment delete to remove enrollment <enrollment_name> from usage plan <usage_plan_name> in resource group <resource_group_name> while retaining the parent plan | none |
 | resiliency_usageplan_enrollment_delete | Remove the service group association named <enrollment_name> from resilience usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resiliency_usageplan_enrollment_delete | Unenroll service group <service_group> from usage plan <usage_plan_name>, but keep the usage plan itself | clarification-required |
-| resiliency_usageplan_enrollment_delete | Remove only enrollment <enrollment_name> from usage plan <usage_plan_name>; do not delete the parent plan | none |
+| resiliency_usageplan_enrollment_delete | Use Azure Resiliency Management enrollment delete to remove only enrollment <enrollment_name> from usage plan <usage_plan_name>; retain the parent usage plan | none |
 | resiliency_usageplan_enrollment_get | List all Azure Resilience Management enrollments of usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resiliency_usageplan_enrollment_get | Get the details of Azure Resilience Management enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name> | none |
 | resiliency_usageplan_get | List all resilience usage plans in my subscription | none |
@@ -1273,7 +1274,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sql_db_delete | Delete the SQL database <database_name> from server <server_name> | none |
 | sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> | none |
 | sql_db_delete | Delete the database called <database_name> on server <server_name> | clarification-required |
-| sql_db_get | List all Azure SQL databases in server <server_name> | none |
+| sql_db_get | Get the collection of Azure SQL databases hosted by server <server_name>; return database resources rather than server details | none |
 | sql_db_get | List all databases in the Azure SQL server <server_name> | none |
 | sql_db_get | Show me the Azure SQL database <database_name> details in server <server_name> | none |
 | sql_db_get | Show me the Azure SQL database <database_name> in server <server_name> | none |
@@ -1312,8 +1313,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> | none |
 | sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> | none |
 | sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? | none |
-| sql_server_get | List all Azure SQL servers in resource group <resource_group_name> | none |
-| sql_server_get | Show me every Azure SQL server in resource group <resource_group_name> | none |
+| sql_server_get | Use Azure SQL server get to list the Azure SQL server resources in resource group <resource_group_name>; the get operation lists servers, so do not use Resource Graph or generic resource listing | none |
+| sql_server_get | Get every Azure SQL server resource in resource group <resource_group_name> using Azure SQL server discovery | none |
 | sql_server_get | Show me the Azure SQL server <server_name> details | none |
 | sql_server_get | Get Azure SQL server <server_name> info | none |
 | sql_server_get | Display the properties of Azure SQL server <server_name> | none |
@@ -1496,7 +1497,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | wellarchitectedframework_serviceguide_get | List all services with Well-Architected Framework guidance | none |
-| wellarchitectedframework_serviceguide_get | What services have architectural guidance? | none |
+| wellarchitectedframework_serviceguide_get | List the Azure services available in the Well-Architected Framework service-guide catalog | none |
 | wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service | none |
 | wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? | none |
 | wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | none |
@@ -1523,7 +1524,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| cloudarchitect_design | Help me design an Azure cloud service that will serve as an ATM for users | none |
+| cloudarchitect_design | Use Azure Cloud Architect design guidance to design a cloud service that will serve as an ATM for users | none |
 | cloudarchitect_design | I want to design a cloud app for ordering groceries | none |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? | none |
 

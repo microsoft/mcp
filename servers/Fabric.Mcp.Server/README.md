@@ -5,7 +5,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
-A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.
+A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Documentation tools use bundled specifications without connecting to live Fabric environments; operational tools call Fabric APIs using the configured identity.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-fabric.vscode-fabric-mcp-server)
 
@@ -28,6 +28,7 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
     - [Resource Definitions & Schemas](#resource-definitions--schemas)
     - [Best Practices & Examples](#best-practices--examples)
     - [Development Workflows](#development-workflows)
+  - [Workspace Metadata](#workspace-metadata)
   - [Available Tools](#available-tools)
     - [API Documentation & Best Practices](#api-documentation--best-practices)
     - [OneLake Data Operations](#onelake-data-operations)
@@ -47,13 +48,14 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 
 # Overview
 
-**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric—all without directly accessing your environment.
+**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric, alongside authenticated tools for working with Fabric resources.
 
 Key capabilities:
 - **Complete API Context**: Full OpenAPI specifications for all supported Fabric item types
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
-- **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
+- **Local-First Documentation**: Documentation tools read bundled resources locally; operational tools access Fabric under the configured identity
+- **Workspace Metadata Updates**: Rename a known workspace or update or clear its description without changing other properties
 - **Data Factory Integration**: Pipeline and Dataflow Gen2 management with M query execution
 
 # Installation
@@ -191,12 +193,27 @@ Use one of the following options to configure your `mcp.json`:
 
 The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
 
+### Capacity Discovery
+
+* "List Fabric capacities where I am an administrator or contributor"
+* "Show the IDs, SKUs, regions, and states of my accessible Fabric capacities"
+* "Get the next page of Fabric capacities using the continuation token from the previous response"
+
+`core_list-capacities` returns exactly one page of capacity metadata in `capacities`, with `continuationToken` and `continuationUri` when supplied by Fabric. Pass the token unchanged through `--continuation-token` to request another page. Returned URIs are metadata only and are never followed; the tool does not retrieve all pages automatically.
+
+The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/core/capacities/list-capacities) lists capacities where the calling principal is an administrator or contributor. It supports users, service principals, and managed identities. Delegated calls require `Capacity.Read.All` or `Capacity.ReadWrite.All`; this is not an Azure subscription inventory and takes no subscription parameter.
+
 ### Catalog Discovery
 
 * "Search the OneLake catalog for items related to 'sales revenue'"
 * "Find a Lakehouse with 'customer' in the name across my workspaces"
 * "Discover all Report items in the catalog and show which workspace they live in"
 * "Filter the catalog to Warehouse and Notebook items"
+* "List the Fabric workspaces I can access and show their capacity and domain metadata"
+* "List my Fabric workspaces where I am an Admin or Member"
+* "List accessible Fabric workspaces and include their workspace-specific API endpoints"
+* "List item metadata in my Fabric workspace, including nested folders"
+* "Show only the Lakehouses directly in this Fabric folder"
 
 ### Fabric Item Types & APIs
 
@@ -225,8 +242,38 @@ The Fabric MCP Server supercharges your agents with Microsoft Fabric context. He
 
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
+* "Create a Microsoft Fabric workspace called Sales Planning"
+* "Create a Fabric workspace called Capacity Analytics using the existing capacity with ID \<capacity-id>"
 * "Show me how to handle long-running operations in Fabric APIs"
 * "What's the recommended error handling pattern for Fabric API calls?"
+
+## Workspace Metadata
+
+Use `core_get-workspace` to retrieve metadata for one known workspace through the [Get Workspace REST API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/get-workspace).
+
+* "Get metadata for Fabric workspace `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`."
+* "Show the capacity, domain, and workspace identity for Fabric workspace `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`."
+* "Get Fabric workspace `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa` with workspace-specific API and OneLake endpoints."
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `workspace-id` | Yes | Nonempty workspace UUID, not a name or URL. Accepted UUID representations are normalized before the request. |
+| `prefer-workspace-specific-endpoints` | No | Boolean endpoint preference. Omit to preserve the service default, or explicitly pass `true` or `false`. |
+
+```powershell
+fabmcp core get-workspace --workspace-id aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+fabmcp core get-workspace --workspace-id aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa --prefer-workspace-specific-endpoints true
+```
+
+The result contains a `workspace` object with `id` and `displayName`. When returned by Fabric it also includes `type`, `description`, `capacityId`, `capacityAssignmentProgress`, `capacityRegion`, `domainId`, `workspaceIdentity`, `oneLakeEndpoints`, `apiEndpoint`, and applied `tags`. Missing/null optional fields are omitted; an explicitly empty tag list remains empty. New workspace types, capacity regions, and progress values are preserved.
+
+Workspace identity fields contain application and service-principal IDs, not credentials. Returned endpoints are metadata only: this tool never contacts them. Workspaces with public access disabled may return workspace-specific OneLake endpoints even when the preference is omitted or false; an absent API endpoint is not inferred.
+
+The tool does not list workspaces or items, read item data or definitions, modify resources, or poll capacity assignments. Errors retain their HTTP status without exposing backend bodies. A 429 includes validated `Retry-After` guidance when available, but the tool does not automatically retry.
+
+**Permissions:** The caller needs Viewer-or-higher workspace access. Delegated callers also need `Workspace.Read.All` or `Workspace.ReadWrite.All`. The API supports users, service principals, and managed identities subject to their permissions and Fabric configuration. The tool preserves the server's configured credentials: stdio/hosting identity uses the host's credential provider, and HTTP/OBO uses the current caller's delegated context.
+
+By default, the MCP text response contains the command envelope with `results.workspace`. With `--structured-output-mode compact` or `--structured-output-mode duplicated`, the server also advertises the typed output schema and returns `structuredContent.workspace`.
 
 <!-- remove-section: start vsix remove_available_tools_section -->
 ## Available Tools
@@ -299,10 +346,307 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 ### Core Fabric Operations
 
+The configured Fabric Core HTTP client does not automatically follow redirects. This policy applies to all Core operations, including existing create/search and update calls as well as deletion: a returned 3xx response is surfaced as a failure instead of following its Location. Existing configured handlers, proxy settings, timeouts, credentials, and recording wrappers are retained. Workspace `type` is optional in Get, List, Create, and Update responses; omitted/null values are not invented, while present nonempty future type strings are preserved.
+
 | Tool Name | Description |
 |-----------|-------------|
-| `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
-| `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
+| `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
+| `core_create-item` | Creates a Fabric item in a workspace identified by UUID, using its display name, item type, and optional description. |
+| `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
+| `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
+| `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
+| `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
+| `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
+| `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
+| `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
+| `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
+| `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
+| `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
+
+**Create Item (`core_create-item`)**
+
+Calls the [Create Item API](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) once with `display-name`, `item-type`, and optional `description`. Supply a nonempty workspace UUID using `workspace-id` or the backward-compatible `workspace` alias. Workspace names are not resolved. A `workspace-id` that is not empty or whitespace takes precedence when both options are supplied, even if it is invalid; the command does not silently fall back to the alias. Invalid and all-zero UUIDs are rejected before authentication or HTTP, and accepted UUID formats are normalized in the request URL.
+
+Missing required options are identified by their registered names, such as `--display-name` or `--item-type`, before any service call. Other parser failures return sanitized guidance without echoing supplied values or unknown option names.
+
+This example **creates a real item** when run with authorized credentials:
+
+```powershell
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Sales" --item-type Lakehouse
+```
+
+The caller needs **Contributor or higher workspace access**. Delegated calls require `Item.ReadWrite.All` or the item-specific `ReadWrite.All` scope. Non-Power BI items require a supported Fabric capacity and [tenant/capacity settings that enable Fabric item creation](https://learn.microsoft.com/fabric/admin/fabric-switch); Power BI items require the appropriate license. Service-principal and managed-identity support depends on the item type. Item types remain strings rather than a fixed client-side list.
+
+Display names must follow the item's naming rules, and descriptions allow at most 256 characters. The tool does not supply item definitions, creation payloads, folders, or sensitivity-label settings. Item types that require a definition or creation payload need a different creation path. A synchronous response returns the existing typed `results.item` payload. The tool does not poll long-running operations or confirm completion from HTTP 202; an accepted asynchronous request is not a completed creation.
+
+Failures preserve the original status and return sanitized guidance without raw exception messages, API bodies, types, stack traces, or local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; HTTP 429 advises retrying later without an automatic retry. Network failures retain HTTP 503. After a timeout, cancellation, network failure, or invalid response, check whether the item was created before retrying.
+
+**Catalog Search (`core_search-catalog`)**
+
+Calls the [Catalog Search API](https://learn.microsoft.com/rest/api/fabric/core/catalog/search) for one page of metadata visible to the caller. Delegated calls require `Catalog.Read.All`; catalog discovery does not grant access to item contents.
+
+```powershell
+# Initial page.
+fabmcp core search-catalog --search "Sales" --filter "Type eq 'Report'" --page-size 25
+
+# Next page: copy the token unchanged; do not repeat search or filter.
+fabmcp core search-catalog --continuation-token '<token from the preceding page>'
+```
+
+A continuation token already carries the original search, filter, and page size. Combining `continuation-token` with `search` or `filter` is rejected locally with HTTP 400 before service, authentication, or network calls; supplied criteria are never silently dropped. `page-size` remains optional and must be between 1 and 1000 when supplied, including with a token.
+
+Success keeps the existing nested command envelope: entries are in `results.results.value`, and the next token is in `results.results.continuationToken`. Entries retain their typed metadata and available `hierarchy.workspace` information. There is no all-pages fetch, polling, or automatic retry. HTTP failures retain their original status with sanitized messages, while status-less network failures retain HTTP 503; raw exception details are not included in public error results.
+
+**Get Capacity (`core_get-capacity`)**
+
+Calls [Get Capacity](https://learn.microsoft.com/rest/api/fabric/core/capacities/get-capacity):
+`GET https://api.fabric.microsoft.com/v1/capacities/{capacityId}`.
+The required `capacity-id` argument (`--capacity-id` in the CLI) must be a nonempty UUID, not a capacity name or Azure resource ID. Invalid IDs are rejected before authentication or network access.
+
+```powershell
+fabmcp core get-capacity --capacity-id 96f3f0ff-4fe2-4712-b61b-05a456ba9357
+```
+
+The typed result contains only capacity metadata:
+
+```json
+{
+  "capacity": {
+    "id": "96f3f0ff-4fe2-4712-b61b-05a456ba9357",
+    "displayName": "F4 Capacity",
+    "sku": "F4",
+    "region": "West Central US",
+    "state": "Active"
+  }
+}
+```
+
+All five fields are required. SKU, region, and state remain strings so new service values are preserved. The tool does not list capacities, access ARM or billing, read item data, change capacity settings, assign workspaces, or start or poll long-running operations.
+
+The caller needs **Administrator or Contributor** permission on the capacity. Delegated access requires **Capacity.Read.All** or **Capacity.ReadWrite.All**. The API documents support for users, service principals, and managed identities; this tool uses the server's configured credential without changing authentication behavior.
+
+Failures preserve the service status with sanitized messages. For throttling, valid `Retry-After` guidance is returned without automatic retries. The operation expects a synchronous HTTP 200 response and rejects incomplete or invalid metadata instead of returning an empty success.
+
+Example prompts: "Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357" or "Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357."
+
+**Listing workspace management metadata**
+
+`core_list-workspaces` calls the [Core List Workspaces REST API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/list-workspaces). Use it to discover workspace IDs and inspect management metadata. Unlike `onelake_list-workspaces`, it does not use the OneLake storage/data-plane listing. Unlike `core_search-catalog`, it enumerates workspaces rather than searching catalog items. It does not read item data or definitions, modify resources, or perform long-running operations.
+
+| Optional parameter | Behavior |
+|---|---|
+| `--roles` | Comma-separated Admin, Member, Contributor, or Viewer roles for the calling principal. Case and surrounding whitespace are normalized; duplicate roles are removed. Unknown roles and empty entries are rejected. Omit for no role filter. |
+| `--continuation-token` | Token returned by the preceding page. Pass it unchanged, including any percent escapes, and repeat the same roles and endpoint preference. Omit for the first page. Empty or whitespace-only tokens are rejected. |
+| `--prefer-workspace-specific-endpoints` | Set `true` to request each workspace's `apiEndpoint` metadata, or `false` to exclude it. Omission preserves the API default. Returned endpoints are not contacted by this tool. |
+
+```powershell
+fabmcp core list-workspaces
+fabmcp core list-workspaces --roles Admin,Member --prefer-workspace-specific-endpoints true
+fabmcp core list-workspaces --roles Admin,Member --prefer-workspace-specific-endpoints true --continuation-token '<token from the preceding page>'
+```
+
+Each call returns **one server-sized page** in `results.workspaces`, plus `results.continuationToken` and `results.continuationUri` when supplied by Fabric. Structured MCP output uses the same payload without the command envelope. An empty workspace array can still have continuation information; no continuation information means enumeration is complete. There is no page-size option or automatic all-pages fetch. `continuationUri` is informational only and is never followed.
+
+Workspace entries contain `id`, `displayName`, and `type`, with `description`, `capacityId`, `capacityRegion`, `domainId`, `tags` (ID and display name), and `apiEndpoint` when available. Missing optional metadata is omitted rather than guessed or fetched separately; explicit empty descriptions and tag arrays are preserved. The role filter does not add a role field to the response. Requesting endpoint metadata does not configure private-link connectivity or change the listing endpoint.
+
+The API supports users, service principals, and managed identities. Delegated access requires `Workspace.Read.All` or `Workspace.ReadWrite.All`; service principals and managed identities also require the Fabric tenant setting permitting service principals to use Fabric APIs. Results are limited to workspaces accessible to the configured calling identity, including the authenticated caller when using HTTP/OBO. The tool does not change authentication configuration.
+
+Failures preserve the service's HTTP status without exposing raw backend error bodies. For HTTP 429, the tool returns parsed `Retry-After` guidance when available, or a generic wait-before-retrying message. It does not automatically retry or sleep.
+
+**Workspace and folder inventory**
+
+`core_list-items` calls the [Fabric Core List Items API](https://learn.microsoft.com/rest/api/fabric/core/items/list-items). Use it for a scoped metadata inventory, not for OneLake file/blob listing (`onelake_list-items`) or cross-workspace discovery (`core_search-catalog`).
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `workspace-id` | Yes | Nonempty workspace UUID; workspace names are not resolved. |
+| `type` | No | Fabric item type, such as `Lakehouse` or `Notebook`. Omit for all types. New service-defined types are accepted without a client-side enum restriction. |
+| `recursive` | No | Defaults to `true`, including nested folders. Set `false` for direct items only. |
+| `root-folder-id` | No | Nonempty folder UUID. Omit to use the workspace root. |
+| `continuation-token` | No | Token from a previous response, copied unchanged. Keep the same workspace and filters. |
+
+```powershell
+# First page of all workspace items, including nested folders.
+fabmcp core list-items --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+
+# Direct Lakehouses in one folder, excluding its nested folders.
+fabmcp core list-items --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --root-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --type Lakehouse --recursive false
+```
+
+Each invocation returns exactly one page: an `items` array and any `continuationToken` and `continuationUri` supplied by Fabric. An empty array can still have a next page. Call again with `continuation-token` and unchanged filters to continue; this tool never fetches all pages automatically or follows the returned URI. Copy the token without decoding Base64 or changing existing percent escapes.
+
+Items contain ID, display name, type, workspace ID, and available description, folder ID, logical ID, tags, and sensitivity-label ID. Optional null properties are omitted. No item data, definitions, or workload-specific properties are returned. The optional REST `include=DefaultIdentity` expansion is intentionally unsupported: it is neither requested nor serialized.
+
+The caller needs workspace **Viewer** access. Delegated calls require `Workspace.Read.All` or `Workspace.ReadWrite.All`; the API supports user, service-principal, and managed identities. The tool preserves the server's configured authentication strategy, including its existing HTTP/OBO credential path. A `429` response retains its status and provides retry guidance when a valid `Retry-After` header is available; the tool does not retry automatically.
+
+**Creating a workspace**
+
+`core_create-workspace` implements [Create Workspace](https://learn.microsoft.com/rest/api/fabric/core/workspaces/create-workspace) with one `POST /v1/workspaces`, expecting a synchronous `201 Created` response.
+
+| Parameter | Required | Behavior |
+|-----------|----------|----------|
+| `display-name` | Yes | Workspace display name, not empty or whitespace, at most 256 characters. Only unused names are allowed. `Admin monitoring` is reserved, including case variations and surrounding whitespace. |
+| `description` | No | At most 4000 characters. An explicitly empty string is preserved. |
+| `capacity-id` | No | Nonempty UUID of an existing capacity to assign during creation. Names are not resolved. |
+| `domain-id` | No | Nonempty UUID of an existing domain to assign during creation. Names are not resolved. |
+
+Omitted optional fields are not sent. The tool does not provision a capacity or domain, check name availability, call `assignToCapacity`, create items, or poll an operation.
+
+These examples **create real workspaces** when run with authorized credentials. Replace the placeholders with existing resource IDs before using the second example:
+
+```powershell
+fabmcp core create-workspace --display-name "Sales Planning"
+
+fabmcp core create-workspace --display-name "Capacity Analytics" `
+  --description "Analytics workspace" `
+  --capacity-id "<capacity-id>" `
+  --domain-id "<domain-id>"
+```
+
+The typed result contains `workspace` and, when supplied by Fabric, `location`. Workspace metadata includes ID, display name, type, and any returned description, capacity ID/region, domain ID, API endpoint, and applied tags. Missing optional metadata remains absent; the result does not infer capacity-assignment completion. Location and API endpoints are metadata only and are never followed. A valid workspace body succeeds even if the Location header is absent.
+
+**Permissions:** The caller needs [workspace-creation permission](https://learn.microsoft.com/fabric/admin/portal-workspace#create-workspaces) granted by a Fabric administrator. When assigning a capacity, the caller needs [capacity contributor or admin permission](https://learn.microsoft.com/fabric/admin/capacity-settings#details). Domain assignment also requires the relevant domain permission. Delegated callers need `Workspace.ReadWrite.All`. For service principals, the administrator must enable [Service principals can create workspaces, connections, and deployment pipelines](https://learn.microsoft.com/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines) for an allowed security group containing the principal. The separate **Service principals can call Fabric public APIs** setting alone does not grant workspace-creation permission. Admin access on an existing workspace is not the creation prerequisite.
+
+**Failure handling:** Creation is mutating and not idempotent. The tool never automatically retries, including after throttling, and preserves failure status with sanitized messages and valid Retry-After guidance. A timeout, cancellation, network failure, or invalid success response can leave the creation outcome uncertain. Check whether the workspace exists before making another creation request. The tool is unavailable in read-only server mode.
+
+**Updating workspace metadata**
+
+* "Rename Fabric workspace \<workspace-id> to 'Finance Analytics' without changing its description"
+* "Set the description of Fabric workspace \<workspace-id> to 'Quarterly reporting' without renaming it"
+* "Clear the description of Fabric workspace \<workspace-id> and keep its display name"
+
+`core_update-workspace` (`fabmcp core update-workspace`) implements the synchronous
+[Update Workspace API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/update-workspace).
+It requires a nonempty workspace UUID and at least one update:
+
+| Option | Behavior |
+|--------|----------|
+| `workspace-id` | Required workspace UUID; names and name resolution are not supported. |
+| `display-name` | Optional name, up to 256 characters; cannot be empty or whitespace-only. Names must be unique within the tenant; `Admin monitoring` is reserved. |
+| `description` | Optional description, up to 4000 characters. An empty string clears it. |
+
+Omitted or null optional values are not sent and leave those properties unchanged. Supplied text is
+not trimmed. For example, MCP arguments to clear only the description are:
+
+```json
+{ "workspace-id": "<workspace-id>", "description": "" }
+```
+
+The caller needs the **workspace Admin role** and, for delegated access, **Workspace.ReadWrite.All**.
+This mutating tool is unavailable in read-only mode and uses the server's standard destructive-operation
+confirmation. Its result contains `workspace` with only `id`, `displayName`, `type`, and `description`
+when returned by Fabric; an empty returned description remains empty.
+
+The tool makes one application-level PATCH with no application retries, prefetch, follow-up requests,
+polling, or enrichment. The Fabric Core HTTP client does not automatically follow redirects.
+Response URLs are not followed by application code. Capacity, domain,
+identity, permissions, tags, endpoints, items, and data cannot be updated through this tool.
+Failures retain the HTTP status and expose only sanitized messages and validated `Retry-After`
+guidance. If a request times out or returns an invalid success payload, the update might already
+have been applied; verify the workspace before manually retrying.
+
+**Updating item metadata**
+
+`core_update-item` implements [Update Item](https://learn.microsoft.com/rest/api/fabric/core/items/update-item):
+one application-level `PATCH /v1/workspaces/{workspaceId}/items/{itemId}` with a synchronous `200` Item response.
+It requires `workspace-id` and `item-id` as nonempty UUIDs, plus at least one of `display-name` or `description`.
+It does not resolve names, fetch the item first, read item data, or change definitions, permissions, tags, or identity.
+
+Omitted properties remain unchanged. An explicitly empty description clears it; JSON `null` is treated as omitted.
+Descriptions may contain at most 256 characters and are not trimmed. Display names must not be empty or whitespace-only and must follow the item's
+type-specific naming rules; there is no universal display-name length limit enforced by this tool.
+For example, these MCP arguments clear only the description:
+
+```json
+{
+  "workspace-id": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+  "item-id": "5b218778-e7a5-4d73-8187-f10824047715",
+  "description": ""
+}
+```
+
+The result contains an `item` with `id`, `displayName`, `type`, `workspaceId`, and an optional `description`.
+Definitions, data, identities, tags, and workload-specific properties are not returned. Existing server output modes apply:
+the default returns text content; compact and duplicated modes additionally expose the typed output schema and structured content.
+
+The caller needs read and write permission on the item. Delegated callers need `Item.ReadWrite.All` or the corresponding
+item-specific scope, such as `Notebook.ReadWrite.All`. Service-principal and managed-identity support depends on the item type.
+The tool is mutating and idempotent, is unavailable in read-only mode, and uses the existing host authentication and confirmation policies.
+It performs no automatic retry or long-running-operation polling. HTTP failures preserve their status and suppress backend details;
+valid nonnegative integer `Retry-After` values provide wait guidance. After a timeout or invalid response, the update may already
+have completed: verify the item's state before retrying.
+The Fabric Core HTTP client does not automatically follow redirects.
+
+#### Delete a Fabric item
+
+`core_delete-item` sends one [Delete Item API](https://learn.microsoft.com/rest/api/fabric/core/items/delete-item) request. It does not resolve names, inspect item types, retry requests, or poll operations.
+The Fabric Core HTTP client does not automatically follow redirects, including 307/308 responses that would otherwise repeat the DELETE.
+
+| Parameter | Required | Behavior |
+|-----------|----------|----------|
+| `workspace-id` | Yes | Nonempty UUID of the workspace containing the item. |
+| `item-id` | Yes | Nonempty UUID of the item to delete. |
+| `hard-delete` | No | Omit to leave the API parameter unspecified, explicitly pass `false` to send `hardDelete=false`, or explicitly pass `true` to request permanent deletion. |
+
+**Deletion is destructive in every mode.** Omission or `false` uses Fabric's default deletion behavior, which soft-deletes only supported item types. It does not guarantee that the item can be recovered. Rejected default/soft deletions are returned as errors; the tool never falls back to permanent deletion.
+
+**Permanent deletion cannot be recovered.** The CLI requires an explicit value: `--hard-delete true`. A bare `--hard-delete`, invalid value, or repeated occurrence is rejected before authentication or deletion. MCP advertises an optional Boolean input and preserves the existing argument conversion behavior: an explicitly supplied string `"true"` or string array `["true"]` can also bind as one explicit true value. The command does not enforce the original JSON type. Omission, `null`, an empty value, and `false` never enable hard deletion; empty/invalid values are rejected.
+
+Illustrative CLI syntax (replace the placeholders only when intentionally deleting an item):
+
+```powershell
+# Default API deletion behavior; recovery is not guaranteed.
+fabmcp core delete-item --workspace-id "<workspace-uuid>" --item-id "<item-uuid>"
+
+# Explicitly do not request permanent deletion.
+fabmcp core delete-item --workspace-id "<workspace-uuid>" --item-id "<item-uuid>" --hard-delete false
+
+# Explicitly request irreversible permanent deletion.
+fabmcp core delete-item --workspace-id "<workspace-uuid>" --item-id "<item-uuid>" --hard-delete true
+```
+
+Soft deletion requires write permission on the item; hard/permanent deletion requires the workspace **Admin** role. Delegated callers need `Item.ReadWrite.All` or the corresponding item-specific write scope. Service principal and managed identity support depends on the item type. Existing host authentication and destructive-operation consent requirements apply; the tool is unavailable in read-only mode.
+
+On the documented empty HTTP 200 response, the tool returns only `workspaceId`, `itemId`, and `hardDeleteRequested`. These identify the requested target and mode, not item metadata or a recovery guarantee. A 404 or other failure is an error, not a successful deletion. An upstream 400 reports Fabric rejection with item-state, soft-delete support, and tenant-setting guidance, not a missing-ID diagnosis. Throttling responses retain status 429 and include validated `Retry-After` guidance when available, without automatic retries. A genuinely canceled or timed-out request does not confirm deletion, but cancellation arriving after a completed HTTP 200 response does not discard that confirmation.
+
+**Delete Workspace** implements the [Fabric Core Delete Workspace API](https://learn.microsoft.com/rest/api/fabric/core/workspaces/delete-workspace).
+
+> [!WARNING]
+> Deleting a workspace also deletes the items under it. Verify the exact workspace UUID and obtain authorization for that specific deletion before invoking this tool. No recovery, retention, or permanent-deletion semantics are promised by this tool.
+
+The CLI command is `fabmcp core delete-workspace --workspace-id <workspace-uuid>`. Its only option, `workspace-id`, is required and must be a nonempty UUID. Invalid IDs are rejected before authentication or HTTP. Names, fuzzy lookup, implicit target selection, and bulk deletion are not supported.
+
+The caller must have the **Admin** workspace role. Delegated callers additionally require **Workspace.ReadWrite.All**. The API documents support for users, service principals, and managed identities; this does not imply those identity flows have been exercised by the offline tests.
+
+The tool sends one `DELETE /v1/workspaces/{workspaceId}` request with no body or automatic redirects. Only the documented synchronous, empty `200 OK` produces a typed acknowledgement: `{"workspaceId":"<canonical-workspace-uuid>","deleted":true}`. It does not read or deserialize a workspace response body, enumerate or individually delete items, change permissions, retry automatically, or poll. Failures retain their HTTP status and expose sanitized messages; 403 and 404 never count as successful deletion. An upstream 400 advises checking workspace state and tenant restrictions rather than claiming the validated UUID is missing. Validated `Retry-After` guidance can be returned for throttling. A genuinely canceled or timed-out request does not confirm the outcome; check the workspace state before attempting another deletion. A returned HTTP 200 still confirms success if cancellation arrives afterward.
+
+The tool is marked destructive, not read-only, and idempotent in the no-additional-effects sense; repeated requests can still return 404. Read-only MCP servers hide and reject this tool. The existing MCP elicitation gate requires consent and rejects unsupported or declined consent unless explicitly disabled by the host's dangerous configuration. Annotations alone do not guarantee human confirmation, and direct CLI execution does not use the MCP elicitation gate. Implementation or test approval does not authorize real deletion; API-level tests use substituted HTTP and credentials only.
+
+**Workspace capacity assignment**
+
+Example prompt: "Submit a request to assign workspace \<workspace-id> to capacity \<capacity-id>; do not wait for completion."
+
+`fabmcp core assign-workspace-to-capacity` requires both `--workspace-id` and `--capacity-id` as nonempty GUIDs. It uses [Assign To Capacity](https://learn.microsoft.com/rest/api/fabric/core/workspaces/assign-to-capacity) to send one POST with `{ "capacityId": "<target-capacity-id>" }`.
+
+The documented response is **202 Accepted**, with no response body: assignment is in progress. The tool preserves status 202 and returns its own receipt:
+
+```json
+{
+  "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff512",
+  "capacityId": "0f084df7-c13d-451b-af5f-ed0c466403b2",
+  "accepted": true,
+  "state": "Pending"
+}
+```
+
+`capacityId` is the requested target, not a verified current assignment. The tool never reports completion, invents an operation handle, polls, or follows up automatically. A caller can later inspect `capacityId` and `capacityAssignmentProgress` through [Get Workspace](https://learn.microsoft.com/rest/api/fabric/core/workspaces/get-workspace). Assignment can still fail after acceptance.
+
+The caller needs **workspace Admin** and **capacity Contributor or Admin** permissions, with both **Capacity.ReadWrite.All** and **Workspace.ReadWrite.All** scopes. The API supports users, service principals, and managed identities. Authentication uses the server's configured identity provider; remote OBO calls use the caller's permissions.
+
+Workspaces containing Fabric items other than Power BI items cannot migrate across regions. Such workspaces can only be assigned to Fabric, Fabric trial, or Power BI Premium capacity. These restrictions are enforced by Fabric: the tool makes no preflight calls or eligibility guarantees. It does not create workspaces or provision, resize, or activate capacities; creating a workspace with a `capacityId` is a separate API operation.
+
+Failures preserve the service's HTTP status and return sanitized guidance. On throttling, a valid `Retry-After` delay is reported without automatically retrying. If a timeout or network failure prevents confirmation, inspect the workspace before submitting again. The tool never chooses a different target capacity.
 
 ### Data Factory Operations
 
@@ -335,7 +679,15 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 ## Security
 
-The Fabric MCP Server is a **local-first** tool that runs entirely on your machine. It provides API specifications, schemas, and best practices without connecting to live Microsoft Fabric environments.
+The Fabric MCP Server is a **local-first** tool. Its documentation tools provide API specifications, schemas, and best practices without connecting to live Fabric environments. Operational tools, including Get Workspace, make authenticated requests using the server's configured identity and permissions.
+
+`core_create-workspace` creates a real workspace and can assign it to an existing capacity and domain; review those arguments and use an appropriately authorized identity before invoking it.
+
+`core_update-item` modifies an existing item's name or description; review its arguments and item permissions before use.
+
+`core_delete-workspace` can delete a workspace and its items. Review the exact UUID, permissions, and destructive-operation controls before invoking it.
+
+`core_assign-workspace-to-capacity` is a mutating control-plane operation. Verify both target IDs and permissions before invoking it; acceptance does not confirm completion.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to.
 

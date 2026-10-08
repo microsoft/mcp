@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the read-only core_get-capacity tool to retrieve a Fabric capacity by UUID, returning its display name, SKU, region, and state."

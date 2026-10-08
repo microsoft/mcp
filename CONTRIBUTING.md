@@ -216,7 +216,7 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
    - Include tests in the `/tests` folder
    - Ensure all tests pass
    - Follow code style requirements
-   - Run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the new tool description and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts
+   - Run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the new tool description (excluding Fabric MCP tools) and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts
 
 ## Testing
 
