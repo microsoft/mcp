@@ -17,8 +17,11 @@ public sealed class FabricCoreServiceBaselineTests()
 {
     private const string WorkspaceId = "cfafbeb1-8037-4d0c-896e-a46fb27ff229";
 
-    [Fact]
-    public async Task CreateItemAsync_PreservesAuthenticatedRequestAndResponse()
+    [Theory]
+    [InlineData(WorkspaceId)]
+    [InlineData("CFAFBEB180374D0C896EA46FB27FF229")]
+    [InlineData("{CFAFBEB1-8037-4D0C-896E-A46FB27FF229}")]
+    public async Task CreateItemAsync_PreservesAuthenticatedRequestAndResponse(string workspaceId)
     {
         using var response = new HttpResponseMessage(HttpStatusCode.Created)
         {
@@ -42,7 +45,7 @@ public sealed class FabricCoreServiceBaselineTests()
         var credential = CreateCredential();
         var service = new FabricCoreService(client, credential);
 
-        var item = await service.CreateItemAsync(WorkspaceId,
+        var item = await service.CreateItemAsync(workspaceId,
             new CreateItemRequest { DisplayName = "Sales", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
 
         Assert.Equal("item-id", item.Id);
@@ -54,9 +57,32 @@ public sealed class FabricCoreServiceBaselineTests()
     }
 
     [Theory]
-    [InlineData("raw+/%3D%G1")]
-    [InlineData("%41%7e%2D%5f%2E")]
-    public async Task SearchCatalogAsync_PreservesBodyTokensAndDoesNotFollowMetadataUrls(string continuationToken)
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("workspace-name")]
+    [InlineData("not-a-uuid")]
+    [InlineData("../other?token=value")]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    public async Task CreateItemAsync_RejectsInvalidWorkspaceBeforeAuthenticationOrHttp(string? workspaceId)
+    {
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("HTTP must not be called."));
+        using var client = new HttpClient(handler);
+        var credential = CreateCredential();
+        var service = new FabricCoreService(client, credential);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateItemAsync(
+            workspaceId!, new CreateItemRequest { DisplayName = "Sales", Type = "Lakehouse" }, TestContext.Current.CancellationToken));
+
+        Assert.Contains("nonempty UUID", exception.Message);
+        Assert.Empty(credential.ReceivedCalls());
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData("raw+/%3D%G1", null)]
+    [InlineData("%41%7e%2D%5f%2E", 25)]
+    public async Task SearchCatalogAsync_PreservesBodyTokensAndDoesNotFollowMetadataUrls(string continuationToken, int? pageSize)
     {
         using var response = new HttpResponseMessage(HttpStatusCode.OK)
         {
@@ -73,9 +99,16 @@ public sealed class FabricCoreServiceBaselineTests()
         {
             AssertRequest(request, $"{FabricEndpoints.FabricApiBaseUrl}/catalog/search");
             using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
-            Assert.Equal("Sales", body.RootElement.GetProperty("search").GetString());
-            Assert.Equal("Type eq 'Report'", body.RootElement.GetProperty("filter").GetString());
-            Assert.Equal(25, body.RootElement.GetProperty("pageSize").GetInt32());
+            Assert.False(body.RootElement.TryGetProperty("search", out _));
+            Assert.False(body.RootElement.TryGetProperty("filter", out _));
+            if (pageSize is { } size)
+            {
+                Assert.Equal(size, body.RootElement.GetProperty("pageSize").GetInt32());
+            }
+            else
+            {
+                Assert.False(body.RootElement.TryGetProperty("pageSize", out _));
+            }
             Assert.Equal(continuationToken, body.RootElement.GetProperty("continuationToken").GetString());
             return response;
         });
@@ -85,9 +118,7 @@ public sealed class FabricCoreServiceBaselineTests()
 
         var page = await service.SearchCatalogAsync(new CatalogSearchRequest
         {
-            Search = "Sales",
-            Filter = "Type eq 'Report'",
-            PageSize = 25,
+            PageSize = pageSize,
             ContinuationToken = continuationToken
         }, TestContext.Current.CancellationToken);
 
@@ -95,6 +126,32 @@ public sealed class FabricCoreServiceBaselineTests()
         Assert.Equal(continuationToken, page.ContinuationToken);
         Assert.Equal(1, handler.CallCount);
         await AssertCredentialAsync(credential, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData("Sales", null, null)]
+    [InlineData(null, "Type eq 'Report'", null)]
+    [InlineData("", null, null)]
+    [InlineData(null, " ", null)]
+    [InlineData(null, null, 0)]
+    [InlineData(null, null, 1001)]
+    public async Task SearchCatalogAsync_RejectsInvalidContinuationBeforeAuthenticationOrHttp(string? search, string? filter, int? pageSize)
+    {
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("HTTP must not be called."));
+        using var client = new HttpClient(handler);
+        var credential = CreateCredential();
+        var service = new FabricCoreService(client, credential);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.SearchCatalogAsync(new CatalogSearchRequest
+        {
+            Search = search,
+            Filter = filter,
+            PageSize = pageSize,
+            ContinuationToken = "next-page"
+        }, TestContext.Current.CancellationToken));
+
+        Assert.Empty(credential.ReceivedCalls());
+        Assert.Equal(0, handler.CallCount);
     }
 
     [Theory]
@@ -128,16 +185,34 @@ public sealed class FabricCoreServiceBaselineTests()
     [Theory]
     [InlineData(false, HttpStatusCode.BadRequest)]
     [InlineData(true, HttpStatusCode.BadRequest)]
+    [InlineData(false, HttpStatusCode.Unauthorized)]
+    [InlineData(true, HttpStatusCode.Unauthorized)]
     [InlineData(false, HttpStatusCode.Forbidden)]
     [InlineData(true, HttpStatusCode.Forbidden)]
+    [InlineData(false, HttpStatusCode.NotFound)]
+    [InlineData(true, HttpStatusCode.NotFound)]
+    [InlineData(false, HttpStatusCode.Conflict)]
+    [InlineData(true, HttpStatusCode.Conflict)]
     [InlineData(false, HttpStatusCode.TooManyRequests)]
     [InlineData(true, HttpStatusCode.TooManyRequests)]
     [InlineData(false, HttpStatusCode.InternalServerError)]
     [InlineData(true, HttpStatusCode.InternalServerError)]
-    public async Task LegacyOperations_PreserveErrorMessageAndDoNotRetry(bool search, HttpStatusCode status)
+    [InlineData(false, HttpStatusCode.ServiceUnavailable)]
+    [InlineData(true, HttpStatusCode.ServiceUnavailable)]
+    [InlineData(false, HttpStatusCode.TemporaryRedirect)]
+    [InlineData(true, HttpStatusCode.TemporaryRedirect)]
+    [InlineData(false, HttpStatusCode.PermanentRedirect)]
+    [InlineData(true, HttpStatusCode.PermanentRedirect)]
+    public async Task LegacyOperations_PreserveErrorStatusAndMessageAndDoNotRetry(bool search, HttpStatusCode status)
     {
-        const string backendError = """{"errorCode":"OriginalError","message":"original-backend-text"}""";
+        var backendError = status switch
+        {
+            HttpStatusCode.Forbidden => """{"errorCode":"FeatureNotAvailable","message":"Feature is not available"}""",
+            HttpStatusCode.TooManyRequests => """{"errorCode":"CapacityLimitExceeded","message":"Capacity limit exceeded","isRetriable":true}""", // cspell:ignore Retriable
+            _ => """{"errorCode":"OriginalError","message":"original-backend-text"}"""
+        };
         using var response = new HttpResponseMessage(status) { Content = new StringContent(backendError) };
+        response.Headers.Location = new Uri("https://example.invalid/must-not-follow");
         response.Headers.RetryAfter = new(TimeSpan.FromSeconds(45));
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
         using var client = new HttpClient(handler);
@@ -146,7 +221,7 @@ public sealed class FabricCoreServiceBaselineTests()
         var exception = await Assert.ThrowsAsync<HttpRequestException>(() => InvokeAsync(service, search, TestContext.Current.CancellationToken));
 
         Assert.Equal($"Fabric API request failed with status {(int)status} ({status}): {backendError}", exception.Message);
-        Assert.Null(exception.StatusCode);
+        Assert.Equal(status, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 
@@ -186,11 +261,13 @@ public sealed class FabricCoreServiceBaselineTests()
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task LegacyOperations_PropagateTransportFailureWithoutRetry(bool search)
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(false, HttpStatusCode.ServiceUnavailable)]
+    [InlineData(true, HttpStatusCode.ServiceUnavailable)]
+    public async Task LegacyOperations_PropagateTransportFailureWithoutRetry(bool search, HttpStatusCode? status)
     {
-        var failure = new HttpRequestException("transport-failure", null, HttpStatusCode.ServiceUnavailable);
+        var failure = new HttpRequestException("transport-failure", null, status);
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromException<HttpResponseMessage>(failure));
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, CreateCredential());
@@ -198,6 +275,7 @@ public sealed class FabricCoreServiceBaselineTests()
         var exception = await Assert.ThrowsAsync<HttpRequestException>(() => InvokeAsync(service, search, TestContext.Current.CancellationToken));
 
         Assert.Same(failure, exception);
+        Assert.Equal(status, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 

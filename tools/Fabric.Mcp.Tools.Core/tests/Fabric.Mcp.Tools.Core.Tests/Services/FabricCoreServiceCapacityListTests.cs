@@ -477,13 +477,13 @@ public class FabricCoreServiceCapacityListTests()
             using var document = JsonDocument.Parse(await request.Content.ReadAsStringAsync(cancellationToken));
             if (createItem)
             {
-                Assert.Equal("https://api.fabric.microsoft.com/v1/workspaces/workspace/items", request.RequestUri?.AbsoluteUri);
+                Assert.Equal($"https://api.fabric.microsoft.com/v1/workspaces/{WorkspaceTestData.WorkspaceId}/items", request.RequestUri?.AbsoluteUri);
                 Assert.Equal("New item", document.RootElement.GetProperty("displayName").GetString());
                 Assert.Equal("Lakehouse", document.RootElement.GetProperty("type").GetString());
                 return CapacityListTestData.CreateResponse("""{"id":"created-item","displayName":"New item","type":"Lakehouse"}""");
             }
             Assert.Equal("https://api.fabric.microsoft.com/v1/catalog/search", request.RequestUri?.AbsoluteUri);
-            Assert.Equal("Finance", document.RootElement.GetProperty("search").GetString());
+            Assert.False(document.RootElement.TryGetProperty("search", out _));
             Assert.Equal("raw+token%3D", document.RootElement.GetProperty("continuationToken").GetString());
             return CapacityListTestData.CreateResponse("""{"value":[{"id":"catalog-item"}],"continuationToken":"next-page"}""");
         });
@@ -493,13 +493,13 @@ public class FabricCoreServiceCapacityListTests()
         if (createItem)
         {
             var item = await service.CreateItemAsync(
-                "workspace", new CreateItemRequest { DisplayName = "New item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
+                WorkspaceTestData.WorkspaceId, new CreateItemRequest { DisplayName = "New item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
             Assert.Equal("created-item", item.Id);
         }
         else
         {
             var page = await service.SearchCatalogAsync(
-                new CatalogSearchRequest { Search = "Finance", ContinuationToken = "raw+token%3D" }, TestContext.Current.CancellationToken);
+                new CatalogSearchRequest { ContinuationToken = "raw+token%3D" }, TestContext.Current.CancellationToken);
             Assert.Equal("catalog-item", Assert.Single(page.Value).Id);
             Assert.Equal("next-page", page.ContinuationToken);
         }
@@ -520,7 +520,7 @@ public class FabricCoreServiceCapacityListTests()
         {
             if (createItem)
             {
-                await service.CreateItemAsync("workspace", new CreateItemRequest(), TestContext.Current.CancellationToken);
+                await service.CreateItemAsync(WorkspaceTestData.WorkspaceId, new CreateItemRequest(), TestContext.Current.CancellationToken);
             }
             else
             {
@@ -530,7 +530,7 @@ public class FabricCoreServiceCapacityListTests()
 
         Assert.Contains("status 400", exception.Message);
         Assert.Contains("existing-error", exception.Message);
-        Assert.Null(exception.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }
 }

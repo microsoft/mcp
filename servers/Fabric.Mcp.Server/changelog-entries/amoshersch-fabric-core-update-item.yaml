@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_update-item to update a Fabric item display name or description, preserve omitted properties, and clear descriptions with an empty string."

@@ -36,7 +36,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class CapacityListCommand(
     ILogger<CapacityListCommand> logger,
-    IFabricCoreService fabricCoreService) : AuthenticatedCommand<CapacityListOptions, CapacityListCommandResult>
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<CapacityListOptions, CapacityListCommandResult>
 {
     private readonly ILogger<CapacityListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
@@ -64,7 +64,6 @@ public sealed class CapacityListCommand(
         {
             _logger.LogError("Error listing Fabric capacities ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
-            context.Response.Results = null;
         }
 
         return context.Response;
@@ -83,7 +82,7 @@ public sealed class CapacityListCommand(
         HttpStatusCode.Unauthorized => "Authentication failed. Use the configured identity with permission to read Fabric capacities",
         HttpStatusCode.Forbidden => "Access denied. The caller needs capacity administrator or contributor access; delegated calls also require Capacity.Read.All or Capacity.ReadWrite.All",
         HttpStatusCode.NotFound => "The Fabric capacity listing was not found. Check service availability and the caller's access",
-        HttpStatusCode.TooManyRequests when ex is CapacityListThrottledException => ex.Message,
+        HttpStatusCode.TooManyRequests when ex is FabricThrottledException => ex.Message,
         HttpStatusCode.TooManyRequests => "Fabric throttled the request. Wait before retrying",
         HttpStatusCode.RequestTimeout => "The Fabric capacity listing was canceled or timed out",
         HttpStatusCode.GatewayTimeout => "The Fabric capacity listing timed out",

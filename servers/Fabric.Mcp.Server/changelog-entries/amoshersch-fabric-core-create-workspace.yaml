@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_create-workspace to create a Fabric workspace with optional existing capacity and domain assignment in one request."
