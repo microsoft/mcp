@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
         Optionally specify --container for RSV workload items (SQL/HANA).
         The operation is asynchronous; use 'azurebackup job get' to monitor progress.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

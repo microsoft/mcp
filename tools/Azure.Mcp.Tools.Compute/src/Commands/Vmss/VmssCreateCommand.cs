@@ -30,6 +30,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
         For Linux VMSS with SSH, read the user's public key file (e.g., ~/.ssh/id_rsa.pub) and pass its content.
         Do not use this for creating a single standalone VM (use VM create instead).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

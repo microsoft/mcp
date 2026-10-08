@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Name = "create_kusto",
     Title = "Create SRE Agent Kusto Connector",
     Description = "Create or update a Kusto connector on an Azure SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

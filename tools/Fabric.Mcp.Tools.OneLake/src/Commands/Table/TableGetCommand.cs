@@ -16,6 +16,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
     Name = "get-table",
     Title = "Get OneLake Table",
     Description = "Retrieves table definition from OneLake. Use this when the user needs table schema or metadata.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

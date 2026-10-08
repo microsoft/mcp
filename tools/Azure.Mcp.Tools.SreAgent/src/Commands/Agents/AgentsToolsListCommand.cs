@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Agents;
     Name = "list",
     Title = "List SRE Agent Tools",
     Description = "Lists custom tools on a targeted SRE Agent resource. Required: --subscription and --agent.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

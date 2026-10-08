@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     Name = "get",
     Title = "Get Virtual Machine Scale Set(s)",
     Description = "List, show, or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Show all scale sets or get a specific VMSS by name. Get VMSS instance details by instance ID. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information. Do not use this for single standalone VMs (use VM get instead).",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

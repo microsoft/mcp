@@ -164,6 +164,51 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
+    /// Regression test for https://github.com/microsoft/mcp/issues/3768: option types in the CLI
+    /// tools list output must reflect each option's actual value type instead of always reporting
+    /// "string". Verifies that non-string JSON Schema keywords (e.g. boolean, array) are emitted,
+    /// and that array options additionally carry their element type.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_PopulatesOptionTypesFromValueType()
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync();
+
+        // Assert
+        var result = DeserializeCommandsResults(response);
+        Assert.NotNull(result.Commands);
+
+        var options = result.Commands
+            .Where(cmd => cmd.Options is not null)
+            .SelectMany(cmd => cmd.Options!)
+            .ToList();
+
+        var optionTypes = options
+            .Select(option => option.Type)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        // Before the fix, every option reported "string". There must now be multiple distinct
+        // types, including keywords derived from non-string value types.
+        Assert.True(
+            optionTypes.Count > 1,
+            $"Expected multiple option types but found only: {string.Join(", ", optionTypes)}");
+        Assert.Contains("boolean", optionTypes);
+        Assert.Contains("array", optionTypes);
+
+        // Array options must carry a non-empty element type, and scalar options must not.
+        var arrayOptions = options.Where(option => option.Type == "array").ToList();
+        Assert.NotEmpty(arrayOptions);
+        Assert.All(arrayOptions, option => Assert.False(string.IsNullOrEmpty(option.ElementType)));
+        Assert.Contains(arrayOptions, option => option.ElementType == "string");
+
+        var scalarOption = options.FirstOrDefault(option => option.Type == "string");
+        Assert.NotNull(scalarOption);
+        Assert.Null(scalarOption.ElementType);
+    }
+
+    /// <summary>
     /// Verifies that the command handles null service provider gracefully
     /// and returns appropriate error response.
     /// </summary>
@@ -374,6 +419,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(metadata);
+        Assert.Equal(ToolOperationPlane.NotApplicable, metadata.OperationPlane);
         Assert.False(metadata.Destructive, "Tool list command should not be destructive");
         Assert.True(metadata.ReadOnly, "Tool list command should be read-only");
     }
@@ -399,10 +445,11 @@ public class ToolsListCommandTests
             Assert.NotNull(command.Metadata);
 
             // Verify that metadata has the expected properties
-            // Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
+            // OperationPlane, Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
             var metadata = command.Metadata;
 
             // Check that at least the main properties are accessible
+            Assert.True(Enum.IsDefined(metadata.OperationPlane), "OperationPlane should be defined");
             Assert.True(metadata.Destructive || !metadata.Destructive, "Destructive should be defined");
             Assert.True(metadata.ReadOnly || !metadata.ReadOnly, "ReadOnly should be defined");
             Assert.True(metadata.Idempotent || !metadata.Idempotent, "Idempotent should be defined");

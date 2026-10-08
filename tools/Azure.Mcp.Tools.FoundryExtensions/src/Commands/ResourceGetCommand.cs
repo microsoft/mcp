@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         returns the resource inventory in scope. This command is for Foundry resource metadata, not model
         deployment inventory. For Azure OpenAI model deployments inside a Foundry resource, use the 'openai models-list' tool.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
         Lists all runs of a drill in an Azure service group, or gets the drill run by drill run name
         for that drill and service group.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

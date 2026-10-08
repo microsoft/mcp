@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
         Remove the specified SQL server from your Azure subscription, including all associated databases.
         This operation permanently deletes all server data and cannot be reversed.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

@@ -24,6 +24,7 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
         Assert.Equal("update-protection", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+        Assert.DoesNotContain(CommandDefinition.Options, option => option.Name == "--protected-item");
     }
 
     [Fact]

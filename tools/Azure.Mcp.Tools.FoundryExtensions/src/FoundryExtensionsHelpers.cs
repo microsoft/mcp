@@ -18,7 +18,11 @@ internal static class FoundryExtensionsHelpers
         {
             try
             {
-                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
+                EndpointValidator.ValidateAzureServiceEndpoint(
+                    endpoint: endpoint,
+                    serviceType: "foundry",
+                    armEnvironment: cloud,
+                    executingToolNamespaceName: "foundryextensions");
                 return;
             }
             catch (Exception ex)
@@ -27,6 +31,7 @@ internal static class FoundryExtensionsHelpers
             }
         }
 
-        validationResult.Errors.Add(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
+        validationResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}",
+            "Invalid Foundry project endpoint.");
     }
 }

@@ -11,9 +11,7 @@ namespace Azure.Mcp.Tools.Functions.Commands;
 /// AOT-safe JSON serialization context for Functions commands, CDN manifest, and GitHub API.
 /// </summary>
 [JsonSerializable(typeof(LanguageListResult))]
-[JsonSerializable(typeof(List<LanguageListResult>))]
 [JsonSerializable(typeof(ProjectTemplateResult))]
-[JsonSerializable(typeof(List<ProjectTemplateResult>))]
 [JsonSerializable(typeof(TemplateManifest))]
 [JsonSerializable(typeof(TemplateManifestEntry))]
 [JsonSerializable(typeof(TemplateGetCommand.TemplateGetCommandResult))]

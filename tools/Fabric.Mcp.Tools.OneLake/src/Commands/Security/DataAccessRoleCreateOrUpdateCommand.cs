@@ -26,6 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         Caller must be a workspace Admin or Member. Requires OneLake.ReadWrite.All and
         User.Read.All + GroupMember.Read.All for principal resolution.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -33,7 +34,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
     ReadOnly = false,
     Secret = false)]
 public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCreateOrUpdateCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<DataAccessRoleCreateOrUpdateOptions, DataAccessRole>()
+    : AuthenticatedCommand<DataAccessRoleCreateOrUpdateOptions, DataAccessRoleCreateOrUpdateCommand.DataAccessRoleCreateOrUpdateCommandResult>()
 {
     private readonly ILogger<DataAccessRoleCreateOrUpdateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -80,7 +81,8 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 {
                     if (!Guid.TryParse(member, out _) && !member.Contains('@'))
                     {
-                        validationResult.Errors.Add($"Invalid --entra-members value '{member}'. Must be a GUID, email, or UPN.");
+                        validationResult.AddError($"Invalid --entra-members value '{member}'. Must be a GUID, email, or UPN.",
+                            "Invalid OneLake role member.");
                     }
                 }
             }
@@ -91,7 +93,8 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 {
                     if (!string.Equals(action, "Read", StringComparison.OrdinalIgnoreCase))
                     {
-                        validationResult.Errors.Add($"Unsupported --permitted-actions value '{action}'. Only 'Read' is currently supported.");
+                        validationResult.AddError($"Unsupported --permitted-actions value '{action}'. Only 'Read' is currently supported.",
+                            "Unsupported OneLake permitted action.");
                     }
                 }
             }
@@ -116,7 +119,9 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 result = await _oneLakeService.CreateOrUpdateDataAccessRoleAsync(workspaceId!, options.ItemId, options.RoleDefinition!, cancellationToken);
             }
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRole);
+            context.Response.Results = ResponseResult.Create(
+                new DataAccessRoleCreateOrUpdateCommandResult(result),
+                OneLakeJsonContext.Default.DataAccessRoleCreateOrUpdateCommandResult);
         }
         catch (Exception ex)
         {
@@ -192,4 +197,6 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
 
         return JsonSerializer.Serialize(role, OneLakeJsonContext.Default.DataAccessRole);
     }
+
+    public sealed record DataAccessRoleCreateOrUpdateCommandResult(DataAccessRole Role);
 }

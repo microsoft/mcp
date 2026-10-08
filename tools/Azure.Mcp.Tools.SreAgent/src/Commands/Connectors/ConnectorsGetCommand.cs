@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Name = "get",
     Title = "Get SRE Agent Connector",
     Description = "Get details for a connector configured on an Azure SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

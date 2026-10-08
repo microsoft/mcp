@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Name = "list",
     Title = "List SRE Agent Connectors",
     Description = "List connectors configured on an Azure SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

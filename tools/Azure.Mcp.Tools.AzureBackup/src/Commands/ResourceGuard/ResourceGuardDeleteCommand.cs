@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ResourceGuard;
         linked to it. Vaults will need to be re-linked to a different Resource Guard to restore
         MUA protection.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

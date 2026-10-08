@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
     Name = "delete",
     Title = "Delete Common Prompt",
     Description = "Permanently remove and irreversibly delete a named common prompt from an SRE Agent. This action cannot be undone.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

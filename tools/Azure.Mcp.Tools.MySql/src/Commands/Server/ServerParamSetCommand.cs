@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.MySql.Commands.Server;
     Name = "set",
     Title = "Set MySQL Server Parameter",
     Description = "Sets/updates a single MySQL server configuration setting/parameter.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

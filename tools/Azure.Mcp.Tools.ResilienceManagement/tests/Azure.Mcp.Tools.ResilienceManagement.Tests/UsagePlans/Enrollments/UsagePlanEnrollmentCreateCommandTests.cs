@@ -119,6 +119,25 @@ public sealed class UsagePlanEnrollmentCreateCommandTests : SubscriptionCommandU
         Assert.Equal("en1", result.Enrollment.Name);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_HandlesTimeout()
+    {
+        Service.CreateUsagePlanEnrollmentAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TimeoutException("The usage plan enrollment create or update did not complete within 10 minutes."));
+
+        var response = await ExecuteCommandAsync(ValidArgs);
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
+        Assert.Contains("Check the enrollment state", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.Forbidden, "Authorization failed")]
     [InlineData(HttpStatusCode.NotFound, "not found")]

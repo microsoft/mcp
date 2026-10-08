@@ -2,13 +2,21 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Core.Tests.Areas.Server;
+using Azure.Mcp.Tools.Compute.Commands.Vmss;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests;
 using NSubstitute;
@@ -51,6 +59,37 @@ public class CommandFactoryTests
     }
 
     [Fact]
+    public void AllRegisteredCommands_HaveValidUniqueIds()
+    {
+        HashSet<Type> commandsWithLegacyInvalidIds =
+        [
+            typeof(VmssGetCommand),
+            typeof(AutoimportJobCancelCommand),
+            typeof(AutoimportJobDeleteCommand),
+            typeof(ImportJobCancelCommand),
+            typeof(ImportJobDeleteCommand),
+            typeof(ImportJobGetCommand)
+        ];
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
+        var commandIds = new HashSet<Guid>();
+
+        Assert.NotEmpty(commandFactory.AllCommands);
+        Assert.All(commandFactory.AllCommands, entry =>
+        {
+            if (commandsWithLegacyInvalidIds.Contains(entry.Value.GetType()))
+            {
+                return;
+            }
+
+            Assert.True(Guid.TryParse(entry.Value.Id, out var commandId),
+                $"{entry.Key} declares an invalid command ID: '{entry.Value.Id}'.");
+            Assert.NotEqual(Guid.Empty, commandId);
+            Assert.True(commandIds.Add(commandId),
+                $"{entry.Key} declares a duplicate command ID: '{entry.Value.Id}'.");
+        });
+    }
+
+    [Fact]
     public void Separator_Should_Be_Underscore()
     {
         // This test verifies our fix for supporting dashes in command names
@@ -61,6 +100,47 @@ public class CommandFactoryTests
 
         // Assert
         Assert.Equal('_', separator);
+    }
+
+    [Fact]
+    public async Task RootCommand_InvokeCliCommand_UsesClientAwareTelemetry()
+    {
+        using var activity = new Activity("test").Start();
+        _telemetryService.StartActivity(ActivityName.ToolExecuted, null, null).Returns(activity);
+
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns("00000000-0000-0000-0000-000000000001");
+        command.Name.Returns("directCommand");
+        command.GetCommand().Returns(new Command("directCommand"));
+        command.Validate(Arg.Any<CommandResult>(), Arg.Any<CommandResponse?>()).Returns(new ValidationResult());
+        command.ExecuteAsync(
+            Arg.Any<CommandContext>(),
+            Arg.Any<ParseResult>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new CommandResponse { Status = HttpStatusCode.OK });
+
+        var area = Substitute.For<IAreaSetup>();
+        area.Name.Returns("name1");
+        area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(_ =>
+        {
+            var group = new CommandGroup("name1", "Test root");
+            group.Commands.Add("directCommand", command);
+            return group;
+        });
+
+        var factory = new CommandFactory(
+            _serviceProvider,
+            [area],
+            _telemetryService,
+            _configurationOptions,
+            _logger);
+
+        var exitCode = await factory.RootCommand.Parse(["name1", "directCommand"])
+            .InvokeAsync(null, TestContext.Current.CancellationToken);
+
+        Assert.Equal((int)HttpStatusCode.OK, exitCode);
+        _telemetryService.Received(1).StartActivity(ActivityName.ToolExecuted, null, null);
+        Assert.Equal("cli", activity.GetTagItem(TagName.ServerMode));
     }
 
     [Theory]

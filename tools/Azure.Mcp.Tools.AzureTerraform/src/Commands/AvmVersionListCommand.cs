@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         The first version in the list is the latest. Use --module-name to specify
         the module (e.g., avm-res-storage-storageaccount or avm-ptn-aiml-ai-foundry).
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

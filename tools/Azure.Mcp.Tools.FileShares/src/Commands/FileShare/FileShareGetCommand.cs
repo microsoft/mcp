@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Options.FileShare;
@@ -16,7 +15,12 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Id = "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
     Name = "get",
     Title = "Get File Share",
-    Description = "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.",
+    Description = """
+        Get details of a specific Azure File Share or list Azure File Shares in a subscription or resource group.
+        Use this command instead of generic Azure resource listing when the user asks to list file shares.
+        Provide --name and --resource-group to get one file share; omit --name to list file shares.
+        """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -24,7 +28,7 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Secret = false,
     LocalRequired = false)]
 public sealed class FileShareGetCommand(ILogger<FileShareGetCommand> logger, IFileSharesService fileSharesService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(subscriptionResolver)
+    : BaseFileSharesCommand<FileShareGetOptions, FileShareGetCommand.FileShareGetCommandResult>(subscriptionResolver)
 {
     public override void ValidateOptions(FileShareGetOptions options, ValidationResult validationResult)
     {

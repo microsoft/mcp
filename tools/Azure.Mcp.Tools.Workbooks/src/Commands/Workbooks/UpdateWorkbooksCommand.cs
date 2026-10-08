@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
     Name = "update",
     Title = "Update Workbook",
     Description = "Updates properties of an existing Azure Workbook by adding new steps, modifying content, or changing the display name. Returns the updated workbook details.  Requires the workbook resource ID and either new serialized content or a new display name.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

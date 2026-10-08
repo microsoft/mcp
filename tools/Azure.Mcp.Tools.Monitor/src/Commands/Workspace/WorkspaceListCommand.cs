@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Workspace;
         available in the specified Azure subscription, displaying their names, IDs, and other key properties.
         Use this command to identify workspaces before querying their logs or tables.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

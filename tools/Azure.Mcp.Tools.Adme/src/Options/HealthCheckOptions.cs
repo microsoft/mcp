@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options;
 
 /// <summary>
-/// Configures the ADME health check target.
+/// Configures the health check target.
 /// </summary>
 public sealed class HealthCheckOptions
 {
@@ -19,4 +19,7 @@ public sealed class HealthCheckOptions
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
+
+    [Option(Description = "The ADME resource application ID or App ID URI used as the token audience. Omit to use the standard Azure Energy resource.")]
+    public string? AuthAppId { get; set; }
 }

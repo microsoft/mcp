@@ -1,0 +1,25 @@
+// Data template for the Well records seeded once per recorded-test run.
+// The seeder injects id, kind, acl and legal; only the payload lives here.
+{
+  "FacilityID": "MARKER",
+  "FacilityName": "MARKER-well",
+  "Name": "MCP Integration Test Well",
+  "SpatialLocation": {
+    "Wgs84Coordinates": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              1.9,
+              58.4
+            ]
+          },
+          "properties": {}
+        }
+      ]
+    }
+  }
+}

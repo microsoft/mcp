@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using Fabric.Mcp.Tools.OneLake.Commands.Settings;
+using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Mcp.Tests.Client;
+using NSubstitute;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.Settings;
@@ -52,5 +54,22 @@ public class SettingsGetCommandTests : CommandUnitTestsBase<SettingsGetCommand, 
         Assert.False(metadata.OpenWorld);
         Assert.True(metadata.ReadOnly);
         Assert.False(metadata.Secret);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsSettingsWrapper()
+    {
+        const string workspaceId = "32c6efb2-ca3a-4598-83b0-8abe799830cd";
+        Service.GetSettingsAsync(workspaceId, Arg.Any<CancellationToken>())
+            .Returns(new OneLakeSettings
+            {
+                Diagnostics = new OneLakeDiagnosticSettings { Status = "Enabled" }
+            });
+
+        var response = await ExecuteCommandAsync("--workspace-id", workspaceId);
+
+        var result = ValidateAndDeserializeResponse(response, OneLakeJsonContext.Default.SettingsGetCommandResult);
+
+        Assert.Equal("Enabled", result.Settings.Diagnostics?.Status);
     }
 }

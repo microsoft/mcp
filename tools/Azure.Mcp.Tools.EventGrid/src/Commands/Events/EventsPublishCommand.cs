@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
         Event Grid topics with schema validation and delivery guarantees for downstream subscribers. Returns publish operation 
         status. Requires topic, data, and optional schema.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

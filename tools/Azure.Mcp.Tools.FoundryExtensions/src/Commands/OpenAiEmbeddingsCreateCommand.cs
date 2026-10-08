@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         for semantic search, similarity comparisons, clustering, or machine learning. Use this when you need to create
         foundry embeddings, generate vectors from text, or convert text to numerical representations using Azure OpenAI.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -42,9 +43,6 @@ public sealed class OpenAiEmbeddingsCreateCommand(IFoundryExtensionsService foun
                 options.InputText,
                 options.Subscription!,
                 options.ResourceGroup,
-                options.User,
-                options.EncodingFormat!,
-                options.Dimensions,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
                 cancellationToken: cancellationToken);

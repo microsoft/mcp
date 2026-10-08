@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
         Get the configuration and setup details for a load test by its test ID in a Load Testing resource.
         Returns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

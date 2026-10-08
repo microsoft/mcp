@@ -33,6 +33,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         and action settings. Plan descriptions must be 5 to 50 characters. A user-assigned identity update must include the
         existing identity's full resource ID; ask for it when omitted.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -77,7 +78,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
         }
         catch (ArgumentException ex)
         {
-            validationResult.Errors.Add(ex.Message);
+            validationResult.AddError(ex.Message, "Invalid recovery plan configuration.");
         }
 
         if (options.IdentityType != Models.RecoveryPlanIdentityKind.SystemAssigned && string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
@@ -96,7 +97,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             }
             catch (ArgumentException ex)
             {
-                validationResult.Errors.Add(ex.Message);
+                validationResult.AddError(ex.Message, "Invalid recovery plan configuration.");
             }
         }
     }

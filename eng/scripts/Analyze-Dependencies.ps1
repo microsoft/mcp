@@ -1,3 +1,6 @@
+#!/usr/bin/env pwsh
+#Requires -Version 7
+
 <#
 .SYNOPSIS
     Analyzes project.assets.json and writes a dependency report to .work/.
@@ -29,19 +32,15 @@ param(
     [string]$Server
 )
 
+. "$PSScriptRoot/../common/scripts/common.ps1"
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-
-$repoRoot = & git -C $PSScriptRoot rev-parse --show-toplevel 2>$null
-if (-not $repoRoot) {
-    Write-Error "Could not determine repository root"
-    return
-}
 
 # ── Parse Directory.Packages.props ────────────────────────────────────────────
 
 $cpmVersions = @{}
-$propsPath = Join-Path $repoRoot 'Directory.Packages.props'
+$propsPath = Join-Path $RepoRoot 'Directory.Packages.props'
 if (Test-Path $propsPath) {
     $propsXml = [xml](Get-Content $propsPath -Raw)
     foreach ($pv in $propsXml.SelectNodes('//PackageVersion')) {
@@ -321,7 +320,7 @@ function BuildReverseGraph([hashtable]$forwardEdges, [string[]]$serverRoots) {
 $serverExplicit = $PSBoundParameters.ContainsKey('Server')
 
 if ($serverExplicit) {
-    $assetsPath = Join-Path $repoRoot "servers/$Server/src/obj/project.assets.json"
+    $assetsPath = Join-Path $RepoRoot "servers/$Server/src/obj/project.assets.json"
     if (-not (Test-Path $assetsPath)) {
         Write-Error "Assets file not found: $assetsPath`nRun 'dotnet restore' on the $Server project first."
         return
@@ -349,7 +348,7 @@ if ($serverExplicit) {
     }
 }
 else {
-    $serverDirs = Get-ChildItem (Join-Path $repoRoot 'servers') -Directory
+    $serverDirs = Get-ChildItem (Join-Path $RepoRoot 'servers') -Directory
     $results = @()
     foreach ($dir in $serverDirs) {
         $assetsPath = Join-Path $dir.FullName 'src/obj/project.assets.json'
@@ -377,7 +376,7 @@ else {
 }
 
 # Write output
-$workDir = Join-Path $repoRoot '.work'
+$workDir = Join-Path $RepoRoot '.work'
 if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir -Force | Out-Null }
 
 $outPath = Join-Path $workDir 'dependencies.json'

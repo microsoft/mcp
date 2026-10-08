@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
     Description = """
         Get details about a Service Bus subscription. Returns subscription runtime properties including message counts, delivery settings, and other metadata.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

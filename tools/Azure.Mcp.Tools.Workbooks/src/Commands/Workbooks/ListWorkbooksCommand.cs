@@ -30,6 +30,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
         FILTERS: --name-contains, --category, --kind, --source-id, --modified-after for semantic filtering.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

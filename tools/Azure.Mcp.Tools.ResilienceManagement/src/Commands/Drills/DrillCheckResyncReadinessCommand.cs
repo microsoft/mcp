@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Name = "check-resync-readiness",
     Title = "Check Resilience Drill Resync Readiness",
     Description = "Checks whether a resilience drill is ready to resync in a service group. Starts a resync and readiness check that resyncs the drill's configuration and evaluates whether the drill is ready, then returns the operation ID for the started check. Use this to run a resync readiness check and confirm drill readiness before running the drill.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

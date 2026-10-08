@@ -4,9 +4,10 @@
 using System.ClientModel.Primitives;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Azure;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.ResourceManager;
-using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
 
@@ -19,30 +20,7 @@ namespace Azure.Mcp.Core.Services.Azure;
 public abstract class BaseAzureResourceService(IAzureService azureService)
     : BaseAzureService(azureService)
 {
-    /// <summary>
-    /// Gets the tenant resource for the specified subscription.
-    /// </summary>
-    /// <param name="tenantId">The tenant ID from the subscription</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The tenant resource associated with the subscription</returns>
-    private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken = default)
-    {
-        if (tenantId == null)
-        {
-            throw new ArgumentException("Tenant ID cannot be null.", nameof(tenantId));
-        }
-
-        // Get all tenants and find the matching one (GetTenants already has caching)
-        var allTenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == tenantId.Value);
-
-        if (tenantResource == null)
-        {
-            throw new InvalidOperationException($"No accessible tenant found for tenant ID '{tenantId}'");
-        }
-
-        return tenantResource;
-    }
+    private const string ResourceGraphApiVersion = "2024-04-01";
 
     /// <summary>
     /// Validates that the specified resource group exists within the given subscription.
@@ -88,19 +66,96 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
+        ValidateAdditionalFilter(additionalFilter);
 
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
+        var tenantId = subscriptionResource!.Data.TenantId?.ToString()
+            ?? await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
+            ?? throw new InvalidOperationException(
+                $"Subscription '{subscriptionResource.Data.SubscriptionId}' does not have a tenant ID.");
+
+        var queryFilter = BuildResourceQuery(tableName, resourceType, resourceGroup, additionalFilter, limit);
+
+        var queryContent = new ResourceQueryContent(queryFilter)
+        {
+            Subscriptions = { subscriptionResource.Data.SubscriptionId }
+        };
+
+        var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
+
+        if (result.Results.Count == 0 && !string.IsNullOrEmpty(resourceGroup))
+        {
+            // If the query returned no results and a resource group filter was applied, validate that the resource group exists to provide better error handling
+            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
+            {
+                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Executes a Resource Graph query scoped to a management group and returns a list of resources of the specified type.
+    /// </summary>
+    /// <remarks>
+    /// Resource Graph evaluates a query only within the scopes it is given. A subscription-scoped query therefore
+    /// cannot see resources whose IDs live outside any subscription, such as role assignments made directly on a
+    /// management group. Use this overload when the caller asked about a management group scope.
+    /// </remarks>
+    /// <typeparam name="T">The type to convert each resource to</typeparam>
+    /// <param name="resourceType">The Azure resource type to query for</param>
+    /// <param name="managementGroup">The management group ID to scope the query to</param>
+    /// <param name="converter">Function to convert JsonElement to the target type</param>
+    /// <param name="tableName">Optional table name to query (default: "resources")</param>
+    /// <param name="additionalFilter">Optional additional KQL filter condition</param>
+    /// <param name="limit">Maximum number of results to return (default: 50)</param>
+    /// <param name="tenant">Optional tenant to use for the query</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of resources converted to the specified type</returns>
+    protected async Task<ResourceQueryResults<T>> ExecuteManagementGroupResourceQueryAsync<T>(
+        string resourceType,
+        string managementGroup,
+        Func<JsonElement, T> converter,
+        string? tableName = "resources",
+        string? additionalFilter = null,
+        int limit = 50,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(managementGroup), managementGroup));
+        ArgumentNullException.ThrowIfNull(converter);
+        ValidateAdditionalFilter(additionalFilter);
+
+        var tenantId = await ResolveTenantIdAsync(tenant, cancellationToken);
+
+        var queryFilter = BuildResourceQuery(tableName, resourceType, resourceGroup: null, additionalFilter, limit);
+
+        var queryContent = new ResourceQueryContent(queryFilter)
+        {
+            ManagementGroups = { managementGroup }
+        };
+
+        return await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
+    }
+
+    private static void ValidateAdditionalFilter(string? additionalFilter)
+    {
         if (!string.IsNullOrEmpty(additionalFilter) && additionalFilter.Contains('|'))
         {
             throw new ArgumentException(
                 "additionalFilter must not contain the pipe operator '|' to prevent KQL injection.",
                 nameof(additionalFilter));
         }
+    }
 
-        var results = new List<T>();
-
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
-        var tenantResource = await GetTenantResourceAsync(subscriptionResource!.Data.TenantId, cancellationToken);
-
+    private static string BuildResourceQuery(
+        string? tableName,
+        string resourceType,
+        string? resourceGroup,
+        string? additionalFilter,
+        int limit)
+    {
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
         {
@@ -110,36 +165,122 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         {
             queryFilter += $" and {additionalFilter}";
         }
-        queryFilter += $" | limit {limit}";
 
-        var queryContent = new ResourceQueryContent(queryFilter)
-        {
-            Subscriptions = { subscriptionResource.Data.SubscriptionId }
-        };
+        return queryFilter + $" | limit {limit}";
+    }
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        if (result != null && result.Count > 0)
+    private async Task<ResourceQueryResults<T>> ExecuteResourceGraphQueryAsync<T>(
+        ResourceQueryContent queryContent,
+        string tenantId,
+        Func<JsonElement, T> converter,
+        CancellationToken cancellationToken)
+    {
+        var token = await GetArmAccessTokenAsync(tenantId, cancellationToken);
+        using var client = AzureService.GetClient();
+        var clientOptions = AddDefaultPolicies(new ArmClientOptions
         {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            var dataArray = jsonDocument.RootElement;
-            if (dataArray.ValueKind == JsonValueKind.Array)
+            Transport = new HttpClientTransport(client)
+        });
+        var pipeline = HttpPipelineBuilder.Build(clientOptions);
+
+        var requestUri = new Uri(
+            AzureService.CloudConfiguration.ArmEnvironment.Endpoint,
+            $"/providers/Microsoft.ResourceGraph/resources?api-version={ResourceGraphApiVersion}");
+        using var request = pipeline.CreateRequest();
+        request.Method = RequestMethod.Post;
+        request.Uri.Reset(requestUri);
+        request.Headers.Add("Authorization", $"Bearer {token.Token}");
+        request.Headers.Add("Accept", "application/json");
+        request.Headers.Add("Content-Type", "application/json");
+        request.Headers.Add("x-ms-client-request-id", Guid.NewGuid().ToString());
+        request.Headers.Add("x-ms-return-client-request-id", "true");
+        request.Content = CreateResourceGraphRequestContent(queryContent);
+
+        using var response = await pipeline.SendRequestAsync(request, cancellationToken);
+        if (response.IsError)
+        {
+            throw new RequestFailedException(response);
+        }
+
+        await using var responseStream = response.Content.ToStream();
+        using var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+        var root = document.RootElement;
+        var results = new List<T>();
+        if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in data.EnumerateArray())
             {
-                foreach (var item in dataArray.EnumerateArray())
-                {
-                    results.Add(converter(item));
-                }
+                results.Add(converter(item));
             }
         }
-        else if (!string.IsNullOrEmpty(resourceGroup))
+
+        var isTruncated = root.TryGetProperty("resultTruncated", out var resultTruncated)
+            && (resultTruncated.ValueKind == JsonValueKind.True
+                || resultTruncated.ValueKind == JsonValueKind.String
+                && string.Equals(resultTruncated.GetString(), "true", StringComparison.OrdinalIgnoreCase));
+
+        return new ResourceQueryResults<T>(results, isTruncated);
+    }
+
+    /// <summary>
+    /// Resolves the tenant ID to run a query against when no subscription is available to derive it from.
+    /// </summary>
+    private async Task<string> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        var tenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken);
+        if (!string.IsNullOrEmpty(tenantId))
         {
-            // If the query returned no results and a resource group filter was applied, validate that the resource group exists to provide better error handling
-            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
-            {
-                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
-            }
+            return tenantId;
         }
 
-        return new ResourceQueryResults<T>(results, result?.ResultTruncated == ResultTruncated.True);
+        var tenants = await AzureService.GetTenants(cancellationToken);
+        if (tenants.Count == 1)
+        {
+            return tenants[0].Data.TenantId?.ToString()
+                ?? throw new InvalidOperationException("The accessible Azure tenant does not have a tenant ID.");
+        }
+
+        if (tenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible Azure tenants were found for the current credential.");
+        }
+
+        throw new ArgumentException(
+            "Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify the tenant explicitly.",
+            nameof(tenant));
+    }
+
+    private static RequestContent CreateResourceGraphRequestContent(ResourceQueryContent queryContent)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WriteString("query", queryContent.Query);
+            WriteStringArray(writer, "subscriptions", queryContent.Subscriptions);
+            WriteStringArray(writer, "managementGroups", queryContent.ManagementGroups);
+            writer.WriteEndObject();
+        }
+
+        return RequestContent.Create(stream.ToArray());
+    }
+
+    private static void WriteStringArray(
+        Utf8JsonWriter writer,
+        string propertyName,
+        IEnumerable<string> values)
+    {
+        if (!values.Any())
+        {
+            return;
+        }
+
+        writer.WriteStartArray(propertyName);
+        foreach (var value in values)
+        {
+            writer.WriteStringValue(value);
+        }
+        writer.WriteEndArray();
     }
 
     /// <summary>

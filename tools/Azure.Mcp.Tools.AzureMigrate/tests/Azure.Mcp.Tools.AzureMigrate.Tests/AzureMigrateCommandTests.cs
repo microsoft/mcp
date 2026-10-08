@@ -15,7 +15,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Tests;
 public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
-    private const string SanitizedDownloadUrl = "https://sanitized.blob.core.windows.net/artifacts/output.zip?sig=Sanitized";
+    // A public IP placeholder keeps endpoint validation enabled without DNS; playback routes it through the proxy.
+    private const string SanitizedDownloadUrl = "https://8.8.8.8/artifacts/output.zip?sig=Sanitized";
 
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers { get; } =
     [

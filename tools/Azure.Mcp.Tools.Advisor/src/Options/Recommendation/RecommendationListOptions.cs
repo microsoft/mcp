@@ -51,10 +51,7 @@ public class RecommendationListOptions : ISubscriptionOption
         "when specified, it must be ServiceUpgradeAndRetirement.")]
     public string? RetirementDate { get; set; }
 
-    [Option(Description = "Maximum number of items to return. " +
-        "For 'list': defaults to 50, clamped to 1-100 (server-side limit). " +
-        "For 'summary': optional display cap on the number of buckets returned (defaults to all). " +
-        "TotalRecommendations always reflects the complete filtered population regardless of --top.")]
+    [Option(Description = "Maximum number of recommendation records to return. Defaults to 50 and is clamped to the server-side range of 1 through 100.")]
     public int? Top { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]

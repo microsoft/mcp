@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         and moduleType ('resource' or 'pattern').
         The source field can be used directly in Terraform module blocks.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

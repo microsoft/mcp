@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Table;
         List all tables in a Log Analytics workspace. Requires workspace.
         Returns table names and schemas that can be used for constructing KQL queries.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

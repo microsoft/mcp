@@ -1,15 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureBackup.Services;
+
 namespace Azure.Mcp.Tools.AzureBackup.Options;
 
 public static class AzureBackupOptionDefinitions
 {
     internal const string Vault = "The name of the backup vault (Recovery Services vault or Backup vault).";
+    internal const string ContainerListAvailableFilter = "OData filter passed to the protectableContainers API. Defaults to \"backupManagementType eq 'AzureStorage'\" to list Azure File share storage accounts available for registration.";
+    internal const string ContainerStorageAccount = "Optional storage account name or fully qualified ARM resource ID used to filter available Azure File share containers. Cannot be used with a non-AzureStorage --filter.";
+    internal const string ContainerRegisterStorageAccount = "The Azure Storage account to register as an Azure File share backup container. Accepts a bare account name (assumed to live in the vault --resource-group) or a fully qualified ARM resource ID (e.g., '/subscriptions/.../providers/Microsoft.Storage/storageAccounts/{name}').";
+    internal const string ContainerAcquireLock = "Whether to acquire a management lock on the storage account when registering it as a backup container. Defaults to true, which prevents accidental deletion of a storage account that has protected file shares.";
+    internal const string InquireContainer = "The RSV protection container name to inquire (e.g., 'StorageContainer;Storage;{resource-group};{storage-account}'). Mutually exclusive with --storage-account.";
+    internal const string InquireStorageAccount = "The Azure Storage account whose registered container should be inquired for backup-able file shares. Accepts a bare account name (assumed to live in the vault --resource-group) or a fully qualified ARM resource ID. Mutually exclusive with --container.";
     internal const string VaultType = "The type of backup vault: 'rsv' (Recovery Services vault) or 'dpp' (Backup vault / Data Protection). Auto-detected if omitted for existing vaults.";
     internal const string VaultExpand = "Comma-separated list of extra vault posture fields to include in 'vault get' output. Supported values: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit encryption state field), 'mua' (MUA / Resource Guard link), 'all'. Omit to preserve the default (unexpanded) response shape and avoid extra Resource Guard API calls.";
     internal const string ProtectedItem = "The name of the protected item or backup instance.";
     internal const string Container = "The RSV protection container name. Only applicable for Recovery Services vaults.";
+    internal const string ContainerGetContainer = "The RSV protection container name to look up (e.g., 'StorageContainer;Storage;{resource-group};{storage-account}' for Azure File share containers or 'IaasVMContainer;iaasvmcontainerv2;{resource-group};{vm-name}' for IaaS VM containers). Mutually exclusive with --storage-account.";
+    internal const string ContainerGetStorageAccount = "The Azure Storage account name or ARM resource ID to look up. When a bare account name is provided, the storage account is assumed to live in the vault resource group specified by --resource-group. For an ARM resource ID, the storage account resource group is read from the ID and may differ from the vault resource group. The RSV protection container name is derived automatically. Mutually exclusive with --container.";
+    internal const string BackupManagementType = "Backup management type to discover. Allowed: 'AzureStorage' (default, for Azure File shares), 'AzureIaasVM' (Azure VMs), or 'AzureWorkload' (in-guest workloads such as SQL and SAP).";
     internal const string Policy = "The name of the backup policy.";
     internal const string Location = "The Azure region (e.g., 'eastus', 'westus2').";
     internal const string DatasourceId = "The datasource identifier. For VM/FileShare/DPP workloads, use the ARM resource ID (e.g., '/subscriptions/.../virtualMachines/myvm'). For RSV in-guest workloads (SQL/SAPHANA), use the protectable item name from 'protectableitem list' (e.g., 'SAPHanaDatabase;instance;dbname').";
@@ -19,6 +30,9 @@ public static class AzureBackupOptionDefinitions
     internal const string SoftDelete = "Vault soft delete state. 'Off' disables soft delete. 'On' enables soft delete for the configured retention period. 'AlwaysOn' is IRREVERSIBLE - once set, soft delete cannot be disabled.";
     internal const string SoftDeleteRetentionDays = "Soft delete retention period in days (14-180). Required - the Recovery Services API rejects state-only updates on api-version 2026-02-01 and later.";
     internal const string WorkloadType = "Workload type: VM, SQL, SAPHANA, SAPASE, AzureFileShare (RSV types); AzureDisk, AzureBlob, AKS, ElasticSAN, PostgreSQLFlexible, ADLS, CosmosDB (DPP types). Also accepts aliases like AzureVM, SQLDatabase, etc.";
+    // RSV-only alias set accepted by 'protectableitem list', validated by WorkloadTypeNormalizer.
+    // Distinct from the policy-create/protect WorkloadType above, which also covers DPP workloads.
+    internal const string ProtectableItemWorkloadType = $"Filter by workload type. Supported values (case-insensitive): {WorkloadTypeNormalizer.SupportedTokensDescription}.";
     public const string WorkloadTypeName = "workload-type";
     internal const string DailyRetentionDays = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.";
 
@@ -83,6 +97,13 @@ public static class AzureBackupOptionDefinitions
     internal const string PrivateEndpointAutoApprove = "When true, auto-approve the Private Endpoint Connection after creation (requires Microsoft.RecoveryServices/vaults/privateEndpointConnectionsApproval/action).";
     internal const string PrivateEndpointDescription = "Optional description passed to the vault owner when approving or rejecting the connection.";
     internal const string PrivateEndpointAction = "Decision to apply to the pending Private Endpoint Connection: 'approve' or 'reject'.";
+    internal const string PrivateEndpointDnsZoneIds = "Optional comma-separated ARM resource IDs of the private DNS zones to integrate with the Private Endpoint for name resolution (e.g., '/subscriptions/.../providers/Microsoft.Network/privateDnsZones/privatelink.<geo>.backup.windowsazure.com'). For full Backup private connectivity you typically link three zones: the backup zone plus 'privatelink.blob.core.windows.net' and 'privatelink.queue.core.windows.net'. When omitted, no private DNS zone group is created and DNS must be configured separately.";
+    internal const string PrivateEndpointDnsZoneGroupName = "Name of the private DNS zone group created on the Private Endpoint when --private-dns-zone-ids is supplied. Defaults to 'default'.";
+
+    // vault update  -  identity + networking options
+    internal const string VaultUpdateIdentityType = "Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'. When the type includes 'UserAssigned', supply one or more identities with --user-assigned-identity.";
+    internal const string VaultUpdateUserAssignedIdentity = "Comma-separated ARM resource IDs of the user-assigned managed identities to associate with the vault (e.g., '/subscriptions/.../providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}'). Required when --identity-type includes 'UserAssigned'; ignored when the type is 'SystemAssigned' or 'None'.";
+    internal const string VaultUpdatePublicNetworkAccess = "Controls inbound access from public networks: 'Enabled' allows access over public endpoints; 'Disabled' denies public access and requires Private Endpoints. Only supported for Recovery Services vaults (RSV).";
 
     // Selective Disk Backup (IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
     internal const string DiskListSetting = "Disk exclusion mode for IaaS VM backup: 'include' (back up only the LUNs in --disks-list), 'exclude' (back up all disks except the LUNs in --disks-list), or 'resetexclusionsettings' (remove any selective disk configuration and back up all disks). Only supported for RSV IaaS VM protected items.";

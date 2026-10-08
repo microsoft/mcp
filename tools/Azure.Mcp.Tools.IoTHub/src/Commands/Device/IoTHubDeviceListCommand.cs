@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
         Use --max-count to limit results (default 100, maximum 100). Values greater than 100 are rejected with an error; if more devices exist, truncated=true is set.
         Hub names/IDs are case-sensitive and must match exactly.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -48,14 +49,16 @@ public sealed class IoTHubDeviceListCommand(
 
         if (options.MaxCount is < MinMaxCount)
         {
-            validationResult.Errors.Add(
-                $"The entered max-count '{options.MaxCount}' is less than 1 device. Please specify a value of at least 1.");
+            validationResult.AddError(
+                $"The entered max-count '{options.MaxCount}' is less than 1 device. Please specify a value of at least 1.",
+                "Invalid IoT Hub max-count.");
         }
 
         if (options.MaxCount is > MaxMaxCount)
         {
-            validationResult.Errors.Add(
-                $"The entered max-count '{options.MaxCount}' is greater than the maximum of {MaxMaxCount} devices. Please specify a value of at most {MaxMaxCount}.");
+            validationResult.AddError(
+                $"The entered max-count '{options.MaxCount}' is greater than the maximum of {MaxMaxCount} devices. Please specify a value of at most {MaxMaxCount}.",
+                "Invalid IoT Hub max-count.");
         }
     }
 

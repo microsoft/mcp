@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Extension.Options;
+using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -20,15 +20,17 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     Name = "azqr",
     Title = "Azure Quick Review CLI Command",
     Description = "Runs Azure Quick Review CLI (azqr) to scan an Azure subscription (or resource group) for compliance issues and provide compliance recommendations. Generates a compliance and security assessment report that identifies non-compliant configurations and recommends improvements for your Azure resources. Use this whenever a user wants to scan, check, review, or assess a subscription for compliance issues or compliance recommendations, or wants recommendations to fix compliance and security problems. Requires a subscription (ID or name) and optionally a resource group. Returns the generated report file paths (XLSX and JSON). Note: azqr performs compliance and security scans and is different from Azure CLI (az), from Azure Policy assignments, and from Azure Advisor recommendations for cost, security, reliability, operational excellence, and performance improvements.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = true)]
 public sealed class AzqrCommand(
     ILogger<AzqrCommand> logger,
     IAzureService azureService,
+    IAzqrCliService azqrCliService,
     IDateTimeProvider dateTimeProvider,
     IExternalProcessService processService,
     ISubscriptionResolver subscriptionResolver,
@@ -37,10 +39,10 @@ public sealed class AzqrCommand(
 {
     private readonly ILogger<AzqrCommand> _logger = logger;
     private readonly IAzureService _azureService = azureService;
+    private readonly IAzqrCliService _azqrCliService = azqrCliService;
     private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
     private readonly IExternalProcessService _processService = processService;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
-    private static string? s_cachedAzqrPath;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, AzqrOptions options, CancellationToken cancellationToken)
     {
@@ -48,7 +50,7 @@ public sealed class AzqrCommand(
 
         try
         {
-            var azqrPath = FindAzqrCliPath() ?? throw new FileNotFoundException("Azure Quick Review CLI (azqr) executable not found in PATH. Please ensure azqr is installed. Go to https://aka.ms/azqr to learn more about how to install Azure Quick Review CLI.");
+            var azqrPath = _azqrCliService.GetSupportedExecutablePath() ?? throw new FileNotFoundException("Azure Quick Review CLI (azqr) version 3.0.0 or later was not found in PATH. Please ensure a supported version of azqr is installed. Go to https://aka.ms/azqr to learn more about how to install Azure Quick Review CLI.");
 
             var subscription = await _azureService.GetSubscription(options.Subscription!, options.Tenant, cancellationToken: cancellationToken);
 
@@ -101,26 +103,4 @@ public sealed class AzqrCommand(
         }
     }
 
-    private static string? FindAzqrCliPath()
-    {
-        // Return cached path if available and still exists
-        if (!string.IsNullOrEmpty(s_cachedAzqrPath) && File.Exists(s_cachedAzqrPath))
-        {
-            return s_cachedAzqrPath;
-        }
-        var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "azqr.exe" : "azqr";
-        var pathEnv = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrEmpty(pathEnv))
-            return null;
-        foreach (var dir in pathEnv.Split(Path.PathSeparator))
-        {
-            var fullPath = Path.Combine(dir.Trim(), exeName);
-            if (File.Exists(fullPath))
-            {
-                s_cachedAzqrPath = fullPath;
-                return fullPath;
-            }
-        }
-        return null;
-    }
 }

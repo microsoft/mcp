@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -22,12 +23,13 @@ public sealed class SchemaService(
     /// <summary>
     /// Gets the JSON definition for a schema kind.
     /// </summary>
-    public Task<JsonElement> GetSchemaAsync(
+    public Task<AdmeResponse<JsonElement>> GetSchemaAsync(
         string endpoint,
         string dataPartition,
         string kind,
         string? tenant,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
         return AdmeServiceHelper.SendAsync(
@@ -38,13 +40,14 @@ public sealed class SchemaService(
             tenant,
             $"{BasePath}/{Uri.EscapeDataString(kind)}",
             AdmeJsonContext.Default.JsonElement,
-            cancellationToken);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Lists schema descriptors matching the requested filters.
     /// </summary>
-    public Task<SchemaListResponse> ListSchemasAsync(
+    public Task<AdmeResponse<SchemaListResponse>> ListSchemasAsync(
         string endpoint,
         string dataPartition,
         string? tenant,
@@ -59,7 +62,8 @@ public sealed class SchemaService(
         bool latestVersion,
         int? offset,
         int? limit,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         var query = new List<KeyValuePair<string, string>>();
         AdmeServiceHelper.Add(query, "authority", authority);
@@ -85,6 +89,7 @@ public sealed class SchemaService(
             tenant,
             AdmeServiceHelper.AppendQuery(BasePath, query),
             AdmeJsonContext.Default.SchemaListResponse,
-            cancellationToken);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 }

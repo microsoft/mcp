@@ -112,6 +112,9 @@ artifact version, using the `artifactId` returned by the PLZ resource. Do not re
 manifest. The recorded test checks every ZIP entry can be read and that Terraform files are present.
 
 The test's text sanitizers remove live SAS URLs, project identities and configuration identifiers.
+The sanitized download URL uses a public IP placeholder, which the proxy serves during playback.
+This keeps public-target validation enabled without resolving a fake storage hostname or accessing
+the placeholder endpoint.
 **The proxy does not sanitize inside binary ZIP bodies.** Inspect every archived file before pushing
 assets, sanitize identities and secrets in both entry names and contents, and rebuild the recorded ZIP
 with valid sizes and checksums. Preserve representative generated content and verify playback after

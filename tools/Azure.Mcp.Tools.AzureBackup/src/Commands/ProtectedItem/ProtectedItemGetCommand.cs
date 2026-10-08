@@ -4,7 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
+using Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -21,12 +21,15 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     Name = "get",
     Title = "Get Protected Item",
     Description = """
-        Retrieves protected item information. When --protected-item is specified, returns
-        detailed information about a single backup instance including protection status,
-        datasource details, policy assignment, and last backup time. Specify --container
-        for RSV workload items. When --protected-item is omitted, lists all protected items
-        (backup instances) in the vault.
+        Retrieves the complete protected-item representation returned by Azure Backup. When
+        --protected-item is specified, returns detailed information about a single backup
+        instance including datasource and policy details, workload-specific protection and
+        health state, lifecycle and recovery metadata, and any workload-specific extended
+        properties returned by Azure Backup. Specify --container for RSV workload items.
+        When --protected-item is omitted, lists all protected items (backup instances)
+        in the vault.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -34,12 +37,12 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     Secret = false,
     LocalRequired = false)]
 public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
-    : BaseAzureBackupCommand<BaseProtectedItemOptions, ProtectedItemGetCommand.ProtectedItemGetCommandResult>(subscriptionResolver)
+    : BaseAzureBackupCommand<ProtectedItemGetOptions, ProtectedItemGetCommand.ProtectedItemGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseProtectedItemOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectedItemGetOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);

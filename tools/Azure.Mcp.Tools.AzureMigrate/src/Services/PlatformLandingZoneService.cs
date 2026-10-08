@@ -10,6 +10,8 @@ using Azure.Mcp.Tools.AzureMigrate.Constants;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
@@ -23,7 +25,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Services;
 /// it wants to change, echo back the full effective configuration the service computed, and stay free of
 /// reflection-based polymorphic serialization.
 /// </remarks>
-public sealed class PlatformLandingZoneService(IAzureService azureService)
+public sealed class PlatformLandingZoneService(
+    IAzureService azureService,
+    ILogger<PlatformLandingZoneService> logger)
     : BaseAzureResourceService(azureService), IPlatformLandingZoneService
 {
     private static readonly JsonSerializerOptions s_indented = new() { WriteIndented = true };
@@ -274,7 +278,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService)
                 $"Failed to generate a download URL for '{artifactFilePath}' ({(int)result.StatusCode} {result.StatusCode}): {result.Body}");
         }
 
-        var sasUrl = ReadSasUrl(result.Body)
+        var sasUrl = TryGetValidatedDownloadUrl(result.Body, logger)
             ?? throw new InvalidOperationException(
                 $"The download URL response for '{artifactFilePath}' did not contain a SAS URL.");
 
@@ -379,13 +383,20 @@ public sealed class PlatformLandingZoneService(IAzureService azureService)
         return candidate is JsonValue value && value.TryGetValue<int>(out var number) ? number : null;
     }
 
-    private static string? ReadSasUrl(string json)
+    internal static string? TryGetValidatedDownloadUrl(string json, ILogger? logger)
     {
         if (JsonNode.Parse(json) is not JsonObject root)
         {
             return null;
         }
 
-        return ReadString(root, "sasUrl") ?? ReadString(root["properties"] as JsonObject, "sasUrl");
+        var sasUrl = ReadString(root, "sasUrl") ?? ReadString(root["properties"] as JsonObject, "sasUrl");
+        if (string.IsNullOrEmpty(sasUrl))
+        {
+            return null;
+        }
+
+        EndpointValidator.ValidatePublicTargetUrl(sasUrl, logger, "azuremigrate");
+        return sasUrl;
     }
 }

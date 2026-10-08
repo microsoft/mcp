@@ -15,10 +15,13 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Name = "get-pipeline",
     Title = "Get Pipeline",
     Description = "Gets details of a specific pipeline in a Microsoft Fabric workspace. Requires workspace ID and pipeline ID.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class GetPipelineCommand(ILogger<GetPipelineCommand> logger, PipelineHandler handler)
     : AuthenticatedCommand<GetPipelineOptions, GetPipelineCommandResult>
 {

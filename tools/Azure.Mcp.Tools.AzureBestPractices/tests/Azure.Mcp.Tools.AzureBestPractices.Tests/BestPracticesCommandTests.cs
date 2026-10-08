@@ -16,10 +16,10 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "general", "--action", "code-generation");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
-        Assert.Contains("Implement retry logic with exponential backoff for transient failures", result[0]);
-        Assert.Contains("Managed Identity (Azure-hosted)", result[0]);
+        Assert.Contains("Implement retry logic with exponential backoff for transient failures", result.BestPractices[0]);
+        Assert.Contains("Managed Identity (Azure-hosted)", result.BestPractices[0]);
     }
 
     [Fact]
@@ -28,10 +28,10 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "general", "--action", "deployment");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
-        Assert.Contains("Your IaC files must include:", result[0]);
-        Assert.Contains("Quality requirements for IaC files:", result[0]);
+        Assert.Contains("Your IaC files must include:", result.BestPractices[0]);
+        Assert.Contains("Quality requirements for IaC files:", result.BestPractices[0]);
     }
 
     [Fact]
@@ -40,10 +40,10 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "azurefunctions", "--action", "code-generation");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
-        Assert.Contains("Use the latest programming models (v4 for TypeScript/JavaScript, v2 for Python)", result[0]);
-        Assert.Contains("Azure Functions Core Tools for creating Function Apps", result[0]);
+        Assert.Contains("Use the latest programming models (v4 for TypeScript/JavaScript, v2 for Python)", result.BestPractices[0]);
+        Assert.Contains("Azure Functions Core Tools for creating Function Apps", result.BestPractices[0]);
     }
 
     [Fact]
@@ -52,12 +52,12 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "azurefunctions", "--action", "deployment");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
-        Assert.Contains("Flex Consumption plan (FC1)", result[0]);
-        Assert.Contains("Always use Linux OS for Python", result[0]);
-        Assert.Contains("Function authentication", result[0]);
-        Assert.Contains("Application Insights", result[0]);
+        Assert.Contains("Flex Consumption plan (FC1)", result.BestPractices[0]);
+        Assert.Contains("Always use Linux OS for Python", result.BestPractices[0]);
+        Assert.Contains("Function authentication", result.BestPractices[0]);
+        Assert.Contains("Application Insights", result.BestPractices[0]);
     }
 
     [Fact]
@@ -66,12 +66,12 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "static-web-app", "--action", "all");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
-        Assert.Contains("Deployment Path Selection", result[0]);
-        Assert.Contains("**PREFERRED PATH: Azure Developer CLI (azd)**", result[0]);
-        Assert.Contains("**ALTERNATIVE PATH: SWA CLI**", result[0]);
-        Assert.Contains("npx swa deploy --env production", result[0]);
+        Assert.Contains("Deployment Path Selection", result.BestPractices[0]);
+        Assert.Contains("**PREFERRED PATH: Azure Developer CLI (azd)**", result.BestPractices[0]);
+        Assert.Contains("**ALTERNATIVE PATH: SWA CLI**", result.BestPractices[0]);
+        Assert.Contains("npx swa deploy --env production", result.BestPractices[0]);
     }
 
     [Fact]
@@ -80,9 +80,9 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "coding-agent", "--action", "all");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
-        Assert.Contains("azd coding-agent config", result[0]);
+        Assert.Contains("azd coding-agent config", result.BestPractices[0]);
     }
 
     [Fact]
@@ -135,13 +135,13 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "general", "--action", "all");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
         // Should contain content from both code-generation and deployment files
-        Assert.Contains("Implement retry logic with exponential backoff for transient failures", result[0]);
-        Assert.Contains("Managed Identity (Azure-hosted)", result[0]);
-        Assert.Contains("Your IaC files must include:", result[0]);
-        Assert.Contains("Quality requirements for IaC files:", result[0]);
+        Assert.Contains("Implement retry logic with exponential backoff for transient failures", result.BestPractices[0]);
+        Assert.Contains("Managed Identity (Azure-hosted)", result.BestPractices[0]);
+        Assert.Contains("Your IaC files must include:", result.BestPractices[0]);
+        Assert.Contains("Quality requirements for IaC files:", result.BestPractices[0]);
     }
 
     [Fact]
@@ -150,15 +150,15 @@ public class BestPracticesCommandTests : CommandUnitTestsBase<BestPracticesComma
         var response = await ExecuteCommandAsync("--resource", "azurefunctions", "--action", "all");
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.BestPracticesCommandResult);
 
         // Should contain content from both code-generation and deployment files
-        Assert.Contains("Use the latest programming models (v4 for TypeScript/JavaScript, v2 for Python)", result[0]);
-        Assert.Contains("Azure Functions Core Tools for creating Function Apps", result[0]);
-        Assert.Contains("Flex Consumption plan (FC1)", result[0]);
-        Assert.Contains("Always use Linux OS for Python", result[0]);
-        Assert.Contains("Function authentication", result[0]);
-        Assert.Contains("Application Insights", result[0]);
+        Assert.Contains("Use the latest programming models (v4 for TypeScript/JavaScript, v2 for Python)", result.BestPractices[0]);
+        Assert.Contains("Azure Functions Core Tools for creating Function Apps", result.BestPractices[0]);
+        Assert.Contains("Flex Consumption plan (FC1)", result.BestPractices[0]);
+        Assert.Contains("Always use Linux OS for Python", result.BestPractices[0]);
+        Assert.Contains("Function authentication", result.BestPractices[0]);
+        Assert.Contains("Application Insights", result.BestPractices[0]);
     }
 
     [Fact]

@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
         Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.
         Optionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

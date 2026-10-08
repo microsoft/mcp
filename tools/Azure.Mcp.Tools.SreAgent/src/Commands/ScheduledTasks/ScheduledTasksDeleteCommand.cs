@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
     Name = "delete",
     Title = "Delete Scheduled Task",
     Description = "Delete an SRE Agent scheduled task.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

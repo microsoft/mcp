@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
         Returns device identity metadata while intentionally excluding authentication secrets.
         Device names/IDs are case-sensitive and must match exactly.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,

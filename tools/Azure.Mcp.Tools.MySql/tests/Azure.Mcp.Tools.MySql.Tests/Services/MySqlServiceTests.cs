@@ -1,8 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.MySql.Services;
+using Azure.ResourceManager;
+using Azure.ResourceManager.MySql.FlexibleServers;
+using Azure.ResourceManager.MySql.FlexibleServers.Mocking;
+using Azure.ResourceManager.MySql.FlexibleServers.Models;
+using Azure.ResourceManager.Resources;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -92,6 +98,56 @@ public class MySqlServiceTests
             _mysqlService.GetServerParameterAsync("sub123", "missing-rg", "some-server", "some-param", TestContext.Current.CancellationToken));
 
         Assert.Contains("missing-rg", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("system-default", "10")]
+    [InlineData("user-override", "30")]
+    public async Task SetServerParameterAsync_SetsValueAndUserOverrideSource(string source, string currentValue)
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var resourceGroup = Substitute.For<ResourceGroupResource>();
+        var mysqlResourceGroup = Substitute.For<MockableMySqlFlexibleServersResourceGroupResource>();
+        var server = Substitute.For<MySqlFlexibleServerResource>();
+        var configuration = Substitute.For<MySqlFlexibleServerConfigurationResource>();
+        var configurations = Substitute.For<MySqlFlexibleServerConfigurationCollection>();
+        var updatedConfiguration = Substitute.For<MySqlFlexibleServerConfigurationResource>();
+        var operation = Substitute.For<ArmOperation<MySqlFlexibleServerConfigurationResource>>();
+        var response = Substitute.For<Response>();
+
+        _azureService.GetResourceGroupResource("sub123", "rg1", null, cancellationToken)
+            .Returns(resourceGroup);
+        resourceGroup.GetCachedClient(Arg.Any<Func<ArmClient, MockableMySqlFlexibleServersResourceGroupResource>>())
+            .Returns(mysqlResourceGroup);
+        mysqlResourceGroup.GetMySqlFlexibleServerAsync("test-server", cancellationToken)
+            .Returns(Response.FromValue(server, response));
+        configuration.Data.Returns(new MySqlFlexibleServerConfigurationData
+        {
+            Value = currentValue,
+            Source = new MySqlFlexibleServerConfigurationSource(source)
+        });
+        server.GetMySqlFlexibleServerConfigurationAsync("connect_timeout", cancellationToken)
+            .Returns(Response.FromValue(configuration, response));
+        server.GetMySqlFlexibleServerConfigurations().Returns(configurations);
+        updatedConfiguration.Data.Returns(new MySqlFlexibleServerConfigurationData
+        {
+            Value = "20",
+            Source = MySqlFlexibleServerConfigurationSource.UserOverride
+        });
+        operation.Value.Returns(updatedConfiguration);
+        operation.HasCompleted.Returns(true);
+        configurations.CreateOrUpdateAsync(WaitUntil.Started, "connect_timeout",
+            Arg.Any<MySqlFlexibleServerConfigurationData>(), cancellationToken)
+            .Returns(operation);
+
+        var result = await _mysqlService.SetServerParameterAsync(
+            "sub123", "rg1", "test-server", "connect_timeout", "20", cancellationToken);
+
+        Assert.Equal("20", result);
+        await configurations.Received(1).CreateOrUpdateAsync(WaitUntil.Started, "connect_timeout",
+            Arg.Is<MySqlFlexibleServerConfigurationData>(data =>
+                data.Value == "20" && data.Source == MySqlFlexibleServerConfigurationSource.UserOverride),
+            cancellationToken);
     }
 
     [Fact]

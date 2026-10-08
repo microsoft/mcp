@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         State changes are rejected for Security category recommendations, and recommendations already marked as resolved by the Advisor platform.
         Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

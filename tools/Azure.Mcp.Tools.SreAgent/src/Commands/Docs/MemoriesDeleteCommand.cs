@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Name = "memories_delete",
     Title = "Delete Memory",
     Description = "Delete a knowledge base document.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

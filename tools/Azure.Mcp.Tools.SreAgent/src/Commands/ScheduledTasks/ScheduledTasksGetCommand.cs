@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
     Name = "get",
     Title = "Get Scheduled Task",
     Description = "Get an SRE Agent scheduled task.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

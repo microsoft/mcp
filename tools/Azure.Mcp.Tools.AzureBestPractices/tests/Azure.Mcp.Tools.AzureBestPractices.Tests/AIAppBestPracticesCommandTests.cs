@@ -15,13 +15,13 @@ public class AIAppBestPracticesCommandTests : CommandUnitTestsBase<AIAppBestPrac
         var response = await ExecuteCommandAsync([]);
 
         // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.ListString);
+        var result = ValidateAndDeserializeResponse(response, AzureBestPracticesJsonContext.Default.AIAppBestPracticesCommandResult);
 
-        Assert.Contains("Microsoft Agent Framework", result[0]);
-        Assert.Contains("AIProjectClient", result[0]);
-        Assert.Contains("Build and Verification", result[0]);
-        Assert.Contains("Understanding AI Models Hierarchy", result[0]);
-        Assert.Contains("CORRECT Pattern", result[0]);
+        Assert.Contains("Microsoft Agent Framework", result.BestPractices[0]);
+        Assert.Contains("AIProjectClient", result.BestPractices[0]);
+        Assert.Contains("Build and Verification", result.BestPractices[0]);
+        Assert.Contains("Understanding AI Models Hierarchy", result.BestPractices[0]);
+        Assert.Contains("CORRECT Pattern", result.BestPractices[0]);
     }
 
     [Fact]

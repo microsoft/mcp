@@ -33,6 +33,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
         '--plugin-name', '--plugin-version', '--skill-name', '--skill-version', '--tool-name', and '--file-reference'. 
         Use this command from agent hooks in clients like VS Code, Claude Desktop, or Copilot CLI to emit usage metrics.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -254,6 +255,21 @@ public sealed class PluginTelemetryCommand(
 
         if (activity != null)
         {
+            string clientName;
+            if (!string.IsNullOrWhiteSpace(options.ClientName))
+            {
+                clientName = options.ClientName;
+            }
+            else if (!string.IsNullOrWhiteSpace(options.ClientType))
+            {
+                clientName = options.ClientType;
+            }
+            else
+            {
+                clientName = TagConstants.Unknown;
+            }
+            activity.SetTag(TagName.ClientName, clientName);
+
             // Add all fields as tags (FileReference has already been validated in ExecuteAsync)
             var tags = new (string Key, string? Value)[]
             {

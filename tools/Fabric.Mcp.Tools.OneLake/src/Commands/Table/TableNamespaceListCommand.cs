@@ -16,6 +16,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
     Name = "list-table-namespaces",
     Title = "List OneLake Table Namespaces",
     Description = "Lists table namespaces in OneLake. Use this when the user needs to discover available table namespaces.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

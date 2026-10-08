@@ -14,6 +14,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Name = "get",
     Title = "Get SRE Agent Documentation",
     Description = "Return reference documentation for SRE Agent concepts.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

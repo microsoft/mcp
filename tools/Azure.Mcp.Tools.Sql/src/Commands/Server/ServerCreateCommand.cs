@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
         credentials and optional configuration settings. Returns the created server with its properties including the
         fully qualified domain name.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

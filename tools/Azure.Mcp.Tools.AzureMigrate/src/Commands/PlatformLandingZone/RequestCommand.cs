@@ -77,6 +77,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         3. action='wait' - poll until generation finishes (this takes several minutes)
         4. action='download' - retrieve output.zip, then extract it into the workspace root and delete the zip
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

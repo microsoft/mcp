@@ -15,10 +15,13 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Pipeline;
     Name = "create-pipeline",
     Title = "Create Pipeline",
     Description = "Creates a new pipeline in a Microsoft Fabric workspace. Requires workspace ID and display name. Optionally provide a description.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     ReadOnly = false,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CreatePipelineCommand(ILogger<CreatePipelineCommand> logger, PipelineHandler handler)
     : AuthenticatedCommand<CreatePipelineOptions, CreatePipelineCommandResult>
 {

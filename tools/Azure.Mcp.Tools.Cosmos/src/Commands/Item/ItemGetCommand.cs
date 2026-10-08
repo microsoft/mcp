@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Name = "get",
     Title = "Get Cosmos DB Document by Id",
     Description = "Get a single Cosmos DB document by its id in the specified database and container. When a --partition-key is supplied, the query is scoped to a single partition (cheaper than a cross-partition fan-out); otherwise a cross-partition query is executed.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

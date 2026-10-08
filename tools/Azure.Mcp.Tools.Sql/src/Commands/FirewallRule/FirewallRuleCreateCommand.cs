@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.FirewallRule;
         (by setting start and end IP to the same value) or a range of IP addresses. Returns
         the created firewall rule with its properties.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -45,12 +46,14 @@ public sealed class FirewallRuleCreateCommand(ISqlService sqlService, ILogger<Fi
 
         if (!startIpIsValid)
         {
-            validationResult.Errors.Add($"Invalid start IP address format: '{options.StartIpAddress}'. Must be a valid IPv4 address.");
+            validationResult.AddError($"Invalid start IP address format: '{options.StartIpAddress}'. Must be a valid IPv4 address.",
+                "Invalid SQL firewall start IP.");
         }
 
         if (!endIpIsValid)
         {
-            validationResult.Errors.Add($"Invalid end IP address format: '{options.EndIpAddress}'. Must be a valid IPv4 address.");
+            validationResult.AddError($"Invalid end IP address format: '{options.EndIpAddress}'. Must be a valid IPv4 address.",
+                "Invalid SQL firewall end IP.");
         }
 
         if (startIpIsValid && endIpIsValid && IsDangerousRange(options.StartIpAddress, options.EndIpAddress))

@@ -32,6 +32,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
         - Modify tags for resource management
         - Enable/disable zone redundancy (Premium SKU only)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -57,9 +58,13 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
             !options.MaximumThroughputUnits.HasValue &&
             !options.KafkaEnabled.HasValue &&
             !options.ZoneRedundant.HasValue &&
+            !options.DisableLocalAuth.HasValue &&
             string.IsNullOrEmpty(options.Tags))
         {
-            validationResult.Errors.Add("At least one update property must be provided (location, sku-name, sku-tier, sku-capacity, is-auto-inflate-enabled, maximum-throughput-units, kafka-enabled, zone-redundant, or tags).");
+            validationResult.Errors.Add(
+                "At least one update property must be provided (location, sku-name, sku-tier, sku-capacity, " +
+                    "is-auto-inflate-enabled, maximum-throughput-units, kafka-enabled, zone-redundant, " +
+                    "disable-local-auth, or tags).");
         }
 
         // Validate auto-inflate settings
@@ -101,6 +106,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 options.ZoneRedundant,
                 tags,
                 options.Tenant,
+                options.DisableLocalAuth,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

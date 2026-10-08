@@ -5,7 +5,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
-A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. The Fabric MCP Server packages complete OpenAPI specifications into a single context layer for AI-assisted development—without connecting to live Fabric environments.
+A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Documentation tools use bundled specifications without connecting to live Fabric environments; operational tools call Fabric APIs using the configured identity.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-fabric.vscode-fabric-mcp-server)
 
@@ -47,13 +47,13 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 
 # Overview
 
-**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric—all without directly accessing your environment.
+**Microsoft Fabric MCP Server** gives your AI agents the knowledge they need to generate robust, production-ready code for Microsoft Fabric, alongside authenticated tools for working with Fabric resources.
 
 Key capabilities:
 - **Complete API Context**: Full OpenAPI specifications for all supported Fabric item types
 - **Item Definition Knowledge**: JSON schemas for every Fabric item type (Lakehouses, pipelines, semantic models, notebooks, etc.)
 - **Built-in Best Practices**: Embedded guidance on pagination, error handling, and recommended patterns
-- **Local-First Security**: Runs entirely on your machine—never connects to your Fabric environment
+- **Local-First Documentation**: Documentation tools read bundled resources locally; operational tools access Fabric under the configured identity
 - **Data Factory Integration**: Pipeline and Dataflow Gen2 management with M query execution
 
 # Installation
@@ -191,6 +191,16 @@ Use one of the following options to configure your `mcp.json`:
 
 The Fabric MCP Server supercharges your agents with Microsoft Fabric context. Here are some prompts you can try:
 
+### Capacity Discovery
+
+* "List Fabric capacities where I am an administrator or contributor"
+* "Show the IDs, SKUs, regions, and states of my accessible Fabric capacities"
+* "Get the next page of Fabric capacities using the continuation token from the previous response"
+
+`core_list-capacities` returns exactly one page of capacity metadata in `capacities`, with `continuationToken` and `continuationUri` when supplied by Fabric. Pass the token unchanged through `--continuation-token` to request another page. Returned URIs are metadata only and are never followed; the tool does not retrieve all pages automatically.
+
+The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/core/capacities/list-capacities) lists capacities where the calling principal is an administrator or contributor. It supports users, service principals, and managed identities. Delegated calls require `Capacity.Read.All` or `Capacity.ReadWrite.All`; this is not an Azure subscription inventory and takes no subscription parameter.
+
 ### Catalog Discovery
 
 * "Search the OneLake catalog for items related to 'sales revenue'"
@@ -301,8 +311,42 @@ The Fabric MCP Server exposes tools organized into three categories:
 
 | Tool Name | Description |
 |-----------|-------------|
-| `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
 | `core_create-item` | Creates new Fabric items (Lakehouses, Notebooks, etc.). |
+| `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
+| `core_search-catalog` | Searches the OneLake catalog for items across workspaces by name, description, or workspace name. Optionally filter by item type. |
+
+**Get Capacity (`core_get-capacity`)**
+
+Calls [Get Capacity](https://learn.microsoft.com/rest/api/fabric/core/capacities/get-capacity):
+`GET https://api.fabric.microsoft.com/v1/capacities/{capacityId}`.
+The required `capacity-id` argument (`--capacity-id` in the CLI) must be a nonempty UUID, not a capacity name or Azure resource ID. Invalid IDs are rejected before authentication or network access.
+
+```powershell
+fabmcp core get-capacity --capacity-id 96f3f0ff-4fe2-4712-b61b-05a456ba9357
+```
+
+The typed result contains only capacity metadata:
+
+```json
+{
+  "capacity": {
+    "id": "96f3f0ff-4fe2-4712-b61b-05a456ba9357",
+    "displayName": "F4 Capacity",
+    "sku": "F4",
+    "region": "West Central US",
+    "state": "Active"
+  }
+}
+```
+
+All five fields are required. SKU, region, and state remain strings so new service values are preserved. The tool does not list capacities, access ARM or billing, read item data, change capacity settings, assign workspaces, or start or poll long-running operations.
+
+The caller needs **Administrator or Contributor** permission on the capacity. Delegated access requires **Capacity.Read.All** or **Capacity.ReadWrite.All**. The API documents support for users, service principals, and managed identities; this tool uses the server's configured credential without changing authentication behavior.
+
+Failures preserve the service status with sanitized messages. For throttling, valid `Retry-After` guidance is returned without automatic retries. The operation expects a synchronous HTTP 200 response and rejects incomplete or invalid metadata instead of returning an empty success.
+
+Example prompts: "Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357" or "Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357."
 
 ### Data Factory Operations
 

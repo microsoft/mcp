@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
     Description = """
         Gets the details of expansion jobs for an Azure Managed Lustre filesystem. Use this to retrieve the status, progress, and configuration of expansion operations that resize the filesystem storage capacity. If expansion-job-name is provided, returns details of a specific job; otherwise returns all expansion jobs for the filesystem.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -18,10 +18,11 @@ namespace Azure.Mcp.Tools.Communication.Commands.Sms;
         Sends SMS messages to one or more recipients to the given phone-number. You can enable delivery reports and receipt tracking, broadcast SMS, and tag messages for easier tracking.
         Returns message IDs and delivery status for each sent message.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,
-    ReadOnly = true,
+    ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
 public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger, ICommunicationService communicationService)

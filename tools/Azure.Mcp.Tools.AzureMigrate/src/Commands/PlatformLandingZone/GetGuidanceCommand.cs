@@ -55,6 +55,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
         - Use policy-name to search for a specific policy
         - Use list-policies=true to list ALL policies by archetype
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = true,
     Idempotent = true,
     OpenWorld = true,

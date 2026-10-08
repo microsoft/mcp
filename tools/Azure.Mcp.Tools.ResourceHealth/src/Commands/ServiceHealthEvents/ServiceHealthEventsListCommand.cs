@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
     Name = "list",
     Title = "List Service Health Events",
     Description = "List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -40,13 +41,15 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         // Validate event-type enum values
         if (!string.IsNullOrEmpty(options.EventType) && !s_validEventTypes.Contains(options.EventType))
         {
-            validationResult.Errors.Add($"Invalid event-type '{options.EventType}'. Valid values are: {string.Join(", ", s_validEventTypes)}");
+            validationResult.AddError($"Invalid event-type '{options.EventType}'. Valid values are: {string.Join(", ", s_validEventTypes)}",
+                "Invalid service health event type.");
         }
 
         // Validate status enum values
         if (!string.IsNullOrEmpty(options.Status) && !s_validStatuses.Contains(options.Status))
         {
-            validationResult.Errors.Add($"Invalid status '{options.Status}'. Valid values are: {string.Join(", ", s_validStatuses)}");
+            validationResult.AddError($"Invalid status '{options.Status}'. Valid values are: {string.Join(", ", s_validStatuses)}",
+                "Invalid service health event status.");
         }
     }
 

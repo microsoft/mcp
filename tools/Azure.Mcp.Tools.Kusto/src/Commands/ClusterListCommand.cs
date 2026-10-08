@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Name = "list",
     Title = "List Kusto Clusters",
     Description = "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

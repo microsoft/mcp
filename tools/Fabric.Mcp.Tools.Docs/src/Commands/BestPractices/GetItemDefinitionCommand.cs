@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     Name = "item-definitions",
     Title = "Item Definitions",
     Description = "Retrieves the JSON schema definition for a Microsoft Fabric item type. Use this when the user needs to understand an item's structure or validate an item definition. Returns the schema definition for the specified item type.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -22,7 +24,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetItemDefinitionCommand(IFabricPublicApiService service, ILogger<GetItemDefinitionCommand> logger)
-    : AuthenticatedCommand<ItemTypeOptions, string>
+    : AuthenticatedCommand<ItemTypeOptions, GetItemDefinitionCommand.GetItemDefinitionCommandResult>
 {
     private readonly ILogger<GetItemDefinitionCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -33,7 +35,9 @@ public sealed class GetItemDefinitionCommand(IFabricPublicApiService service, IL
         {
             var itemDefinition = _service.GetItemDefinition(options.ItemType);
 
-            context.Response.Results = ResponseResult.Create(itemDefinition, FabricJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(itemDefinition),
+                FabricJsonContext.Default.GetItemDefinitionCommandResult);
         }
         catch (ArgumentException argEx)
         {
@@ -49,4 +53,7 @@ public sealed class GetItemDefinitionCommand(IFabricPublicApiService service, IL
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record GetItemDefinitionCommandResult(
+        [property: JsonPropertyName("definition")] string Definition);
 }

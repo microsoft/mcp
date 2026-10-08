@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
         and other settings. Equivalent to 'az sql db create'.
         Returns the newly created database information including configuration details.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

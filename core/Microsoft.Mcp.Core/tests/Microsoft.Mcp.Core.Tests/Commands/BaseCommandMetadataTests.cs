@@ -20,6 +20,7 @@ public sealed class BaseCommandMetadataTests
         Name = "test-attribute",
         Title = "Test Attribute Command",
         Description = "A command used only in tests.",
+        OperationPlane = ToolOperationPlane.Control,
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
@@ -82,6 +83,13 @@ public sealed class BaseCommandMetadataTests
     // ---------- ToToolMetadata mapping tests ----------
 
     [Fact]
+    public void ToToolMetadata_MapsOperationPlane()
+    {
+        var command = new AttributeBasedCommand();
+        Assert.Equal(ToolOperationPlane.Control, command.Metadata.OperationPlane);
+    }
+
+    [Fact]
     public void ToToolMetadata_MapsDestructive()
     {
         var command = new AttributeBasedCommand();
@@ -124,19 +132,25 @@ public sealed class BaseCommandMetadataTests
     }
 
     [Fact]
-    public void ToToolMetadata_DefaultValues_AreCorrect()
+    public void ToToolMetadata_ExplicitDefaultValues_AreCorrect()
     {
-        // A fresh attribute with only required properties should use spec defaults:
-        // Destructive=true, Idempotent=false, OpenWorld=true, ReadOnly=false, Secret=false, LocalRequired=false
         var attr = new CommandMetadataAttribute
         {
             Id = "00000000-0000-0000-0000-000000000000",
             Name = "default-test",
             Title = "Default Test",
-            Description = "Checks attribute defaults."
+            Description = "Checks attribute defaults.",
+            OperationPlane = ToolOperationPlane.NotApplicable,
+            Destructive = true,
+            Idempotent = false,
+            OpenWorld = true,
+            ReadOnly = false,
+            Secret = false,
+            LocalRequired = false
         };
         var metadata = attr.ToToolMetadata();
 
+        Assert.Equal(ToolOperationPlane.NotApplicable, metadata.OperationPlane);
         Assert.True(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.True(metadata.OpenWorld);

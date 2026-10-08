@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
         (14-180). Retention must be sent every time on api-version 2026-02-01+ or the RP
         rejects the patch.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,

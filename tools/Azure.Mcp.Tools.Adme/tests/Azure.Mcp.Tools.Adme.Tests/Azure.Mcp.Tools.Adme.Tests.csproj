@@ -3,7 +3,7 @@
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
     <HasLiveTests>false</HasLiveTests>
-    <HasUnitTests>true</HasUnitTests>
+    <HasUnitTests>false</HasUnitTests> <!-- Temporary change while ADME is disabled for GA -->
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
@@ -15,5 +15,8 @@
     <PackageReference Include="NSubstitute.Analyzers.CSharp" />
     <PackageReference Include="xunit.v3.mtp-v2" />
     <PackageReference Include="coverlet.MTP" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestData\well-records.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

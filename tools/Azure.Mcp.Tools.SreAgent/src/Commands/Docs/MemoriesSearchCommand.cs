@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Name = "memories_search",
     Title = "Search Memories",
     Description = "Search the SRE Agent knowledge base. Uses semantic search to find relevant documents stored in the agent's knowledge base.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

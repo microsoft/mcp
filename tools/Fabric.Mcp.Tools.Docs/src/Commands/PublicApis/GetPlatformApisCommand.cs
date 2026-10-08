@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     Name = "platform-api-spec",
     Title = "Platform API Specification",
     Description = "Retrieves the OpenAPI specification for core Fabric platform APIs. Use this when the user needs documentation for cross-cutting platform APIs like workspace management. Returns complete platform API specification.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -21,7 +23,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILogger<GetPlatformApisCommand> logger)
-    : AuthenticatedCommand<EmptyOptions, FabricPublicApi>
+    : AuthenticatedCommand<EmptyOptions, GetPlatformApisCommand.GetPlatformApisCommandResult>
 {
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -32,7 +34,9 @@ public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILog
         {
             var apis = await _service.GetPublicApis("platform", cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricPublicApi);
+            context.Response.Results = ResponseResult.Create(
+                new(apis),
+                FabricJsonContext.Default.GetPlatformApisCommandResult);
         }
         catch (Exception ex)
         {
@@ -42,4 +46,7 @@ public sealed class GetPlatformApisCommand(IFabricPublicApiService service, ILog
 
         return context.Response;
     }
+
+    public sealed record GetPlatformApisCommandResult(
+        [property: JsonPropertyName("publicApi")] FabricPublicApi PublicApi);
 }

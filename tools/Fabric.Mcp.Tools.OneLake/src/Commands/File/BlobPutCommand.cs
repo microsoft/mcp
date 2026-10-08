@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     Name = "upload-file",
     Title = "Upload OneLake File",
     Description = "Uploads a file to OneLake storage from inline content or local file path. Use this when the user needs to store data in OneLake. Supports overwrite control and content type specification.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     LocalRequired = false,

@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Job;
         about a single job including operation type, status, start/end times, error codes, and
         datasource details. When omitted, lists all backup jobs in the vault.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -20,6 +20,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Settings;
         Retention days cannot be reduced below the current value. Requires
         OneLake.ReadWrite.All. Caller must be a workspace Admin.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

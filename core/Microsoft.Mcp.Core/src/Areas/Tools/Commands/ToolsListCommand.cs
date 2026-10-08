@@ -9,7 +9,6 @@ using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
 
@@ -23,6 +22,7 @@ namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
         about each command, including its name, description, full command path, available subcommands, and all supported
         arguments. Use --name-only to return only tool names, and --namespace to filter by specific namespaces.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -148,10 +148,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
         var commandDetails = command.GetCommand();
 
         var optionInfos = commandDetails.Options?
-            .Select(arg => new OptionInfo(
-                name: arg.Name,
-                description: arg.Description!,
-                required: arg.Required))
+            .Select(arg => arg.ToOptionInfo())
             .ToList();
 
         var fullCommand = tokenizedName.Replace(CommandFactory.Separator, ' ');

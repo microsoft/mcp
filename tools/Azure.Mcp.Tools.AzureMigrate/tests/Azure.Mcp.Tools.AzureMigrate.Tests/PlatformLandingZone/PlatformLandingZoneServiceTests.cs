@@ -3,6 +3,7 @@
 
 using System.IO.Compression;
 using System.Net;
+using System.Security;
 using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -10,6 +11,7 @@ using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Azure.Mcp.Tools.AzureMigrate.Tests.TestSupport;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -18,12 +20,14 @@ namespace Azure.Mcp.Tools.AzureMigrate.Tests.PlatformLandingZone;
 
 public sealed class PlatformLandingZoneServiceTests()
 {
-    [Fact]
-    public async Task DownloadAsync_UsesRegisteredArtifactVersionAndWritesGeneratedArchive()
+    [Theory]
+    [InlineData("https://8.8.8.8/artifacts/output.zip?sig=test-signature", true)]
+    [InlineData("https://127.0.0.1/output.zip", false)]
+    [InlineData("http://169.254.169.254/metadata/instance", false)]
+    public async Task DownloadAsync_ValidatesTargetAndUsesRegisteredArtifactVersion(string downloadUrl, bool isPublic)
     {
         const string ProjectId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/test-rg/providers/Microsoft.Migrate/migrateProjects/test-project";
         const string ArtifactId = ProjectId + "/artifacts/plz-default";
-        const string DownloadUrl = "https://test.blob.core.windows.net/artifacts/output.zip?sig=test-signature";
         const string Terraform = "terraform { required_version = \">= 1.9\" }";
         var context = new PlatformLandingZoneContext(
             "00000000-0000-0000-0000-000000000001", "test-rg", "test-project", "default");
@@ -41,7 +45,7 @@ public sealed class PlatformLandingZoneServiceTests()
             (HttpMethod.Get, $"https://management.azure.com{ProjectId}/platformLandingZones/default?api-version=2026-02-01-preview"),
             (HttpMethod.Get, $"https://management.azure.com{ArtifactId}?api-version=2026-06-15-preview"),
             (HttpMethod.Post, $"https://management.azure.com{ArtifactId}/generateDownloadUrl?api-version=2026-06-15-preview"),
-            (HttpMethod.Get, DownloadUrl)
+            (HttpMethod.Get, downloadUrl)
         ];
         var requestIndex = 0;
         using var handler = new StubHttpMessageHandler(async (request, cancellationToken) =>
@@ -78,7 +82,7 @@ public sealed class PlatformLandingZoneServiceTests()
             {
                 0 => $$$"""{"name":"default","properties":{"status":"Succeeded","provisioningState":"Succeeded","artifactId":"{{{ArtifactId}}}"}}""",
                 1 => """{"properties":{"latestVersion":1}}""",
-                _ => $$"""{"sasUrl":"{{DownloadUrl}}"}"""
+                _ => $$"""{"sasUrl":"{{downloadUrl}}"}"""
             };
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -94,11 +98,20 @@ public sealed class PlatformLandingZoneServiceTests()
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new ValueTask<AccessToken>(new AccessToken("test-token", DateTimeOffset.MaxValue)));
         azureService.GetTokenCredentialAsync(null, Arg.Any<CancellationToken>()).Returns(credential);
-        var service = new PlatformLandingZoneService(azureService);
+        var service = new PlatformLandingZoneService(azureService, NullLogger<PlatformLandingZoneService>.Instance);
         var outputDirectory = Path.Combine(Path.GetTempPath(), $"plz-download-{Guid.NewGuid():N}");
 
         try
         {
+            if (!isPublic)
+            {
+                await Assert.ThrowsAsync<SecurityException>(() => service.DownloadAsync(
+                    context, outputDirectory, includeDesignDocument: false, TestContext.Current.CancellationToken));
+                Assert.Equal(3, requestIndex);
+                Assert.Empty(Directory.EnumerateFiles(outputDirectory));
+                return;
+            }
+
             var files = await service.DownloadAsync(
                 context, outputDirectory, includeDesignDocument: false, TestContext.Current.CancellationToken);
 

@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 
         Returns message content, properties, and metadata.  Messages remain in the queue after peeking.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

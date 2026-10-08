@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.ElasticPool;
         Returns: JSON array of elastic pools with complete configuration details.
         Equivalent to 'az sql elastic-pool list'.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
         Returns execution details including status, start/end times, progress, metrics, and artifacts.
         Does not return test configuration or resource details.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

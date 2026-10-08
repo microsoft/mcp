@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
         Get (show/view) a single, specific Azure Monitor Health Model by name, within a resource group and subscription.
         Returns the model's metadata and if available, the health state (e.g. Healthy, Degraded, Unhealthy, Unknown) or null if it cannot be provided.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

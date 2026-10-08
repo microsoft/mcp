@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
     Name = "pause",
     Title = "Pause Scheduled Task",
     Description = "Pause an SRE Agent scheduled task.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

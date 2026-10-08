@@ -16,6 +16,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
     Name = "list-tables",
     Title = "List OneLake Tables",
     Description = "Lists tables in OneLake. Use this when the user needs to see available tables.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

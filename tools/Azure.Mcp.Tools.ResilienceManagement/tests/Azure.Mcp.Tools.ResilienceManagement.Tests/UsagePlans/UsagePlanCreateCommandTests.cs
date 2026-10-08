@@ -92,7 +92,12 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new UsagePlanInfo("id1", "up1", "Microsoft.ResilienceManagement/usagePlans", "eastus"));
+            .Returns(new UsagePlanInfo(
+                "id1",
+                "up1",
+                "Microsoft.AzureResilienceManagement/usagePlans",
+                "global",
+                Properties: new("Basic", "Succeeded")));
 
         // Act
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -101,6 +106,25 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.UsagePlanCreateCommandResult);
         Assert.NotNull(result.UsagePlan);
         Assert.Equal("up1", result.UsagePlan.Name);
+        Assert.Equal("Succeeded", result.UsagePlan.Properties?.ProvisioningState);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesTimeout()
+    {
+        Service.CreateUsagePlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UsagePlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TimeoutException("The usage plan create or update did not complete within 10 minutes."));
+
+        var response = await ExecuteCommandAsync(ValidArgs);
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
+        Assert.Contains("Check the usage plan state", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

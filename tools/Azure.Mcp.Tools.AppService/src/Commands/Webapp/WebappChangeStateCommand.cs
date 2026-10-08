@@ -27,6 +27,7 @@ namespace Azure.Mcp.Tools.AppService.Commands.Webapp;
 
         Returns a message indicating the result of the operation.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -52,7 +53,7 @@ public sealed class WebappChangeStateCommand(ILogger<WebappChangeStateCommand> l
 
         if (!ValidateStateChange(options.StateChange, out var errorMessage))
         {
-            validationResult.Errors.Add(errorMessage);
+            validationResult.AddError(errorMessage, "Invalid App Service state change.");
         }
         else
         {

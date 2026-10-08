@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
     Name = "validate",
     Title = "Validate AMLFS subnet against SKU and size",
     Description = "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -41,7 +42,8 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
 
         if (!s_allowedSkus.Contains(options.Sku))
         {
-            validationResult.Errors.Add($"Invalid SKU '{options.Sku}'. Allowed values: {string.Join(", ", s_allowedSkus)}");
+            validationResult.AddError($"Invalid SKU '{options.Sku}'. Allowed values: {string.Join(", ", s_allowedSkus)}",
+                "Invalid Managed Lustre SKU.");
         }
     }
 

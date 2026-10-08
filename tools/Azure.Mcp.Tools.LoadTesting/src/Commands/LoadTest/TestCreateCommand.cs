@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
         This is NOT going to trigger or create any test runs and only will setup your test plan. Also, this is NOT going to create any test resource in azure. 
         It will only create a test in an already existing load test resource.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

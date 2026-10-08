@@ -20,6 +20,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
     Name = "list-item-paths-dfs",
     Title = "List OneLake Items (DFS)",
     Description = "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) API",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
