@@ -28,8 +28,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_list | List Advisor metadata in the ServiceUpgradeAndRetirement subcategory | none |
 | advisor_metadata_list | Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records | none |
-| advisor_recommendation_apply | Apply Advisor recommendations to this ARM template | context-required |
-| advisor_recommendation_apply | Apply Advisor recommendations to this Terraform file for Storage Account | context-required |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription \<subscription> | none |
 | advisor_recommendation_list | List all Advisor recommendations in the subscription \<subscription> | none |
