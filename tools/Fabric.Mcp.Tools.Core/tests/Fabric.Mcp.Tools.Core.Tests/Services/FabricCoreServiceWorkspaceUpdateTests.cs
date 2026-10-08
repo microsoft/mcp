@@ -372,9 +372,11 @@ public class FabricCoreServiceWorkspaceUpdateTests()
             Assert.NotNull(request.Content);
             using var body = JsonDocument.Parse(await request.Content.ReadAsStringAsync(token));
             Assert.Equal("Finance", body.RootElement.GetProperty(create ? "displayName" : "search").GetString());
-            return WorkspaceUpdateTestData.CreateResponse(
-                fail ? "existing-error" : create ? """{"id":"item-id","displayName":"Finance","type":"Lakehouse"}""" : """{"value":[],"continuationToken":"next"}""",
-                fail ? HttpStatusCode.BadRequest : HttpStatusCode.OK);
+            return create && !fail
+                ? FabricOperationTestData.ItemResponse(WorkspaceUpdateTestData.WorkspaceId, "Finance")
+                : WorkspaceUpdateTestData.CreateResponse(
+                    fail ? "existing-error" : """{"value":[],"continuationToken":"next"}""",
+                    fail ? HttpStatusCode.BadRequest : HttpStatusCode.OK);
         });
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, WorkspaceUpdateTestData.CreateCredential());
@@ -384,8 +386,8 @@ public class FabricCoreServiceWorkspaceUpdateTests()
             if (create)
             {
                 var item = await service.CreateItemAsync(
-                    WorkspaceUpdateTestData.WorkspaceId, new() { DisplayName = "Finance", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
-                Assert.Equal("item-id", item.Id);
+                    WorkspaceUpdateTestData.WorkspaceId, new() { DisplayName = "Finance", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
+                Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
             }
             else
             {
@@ -397,8 +399,15 @@ public class FabricCoreServiceWorkspaceUpdateTests()
 
         if (fail)
         {
-            var exception = await Assert.ThrowsAsync<HttpRequestException>(ExecuteAsync);
-            Assert.Contains("existing-error", exception.Message);
+            var exception = await Assert.ThrowsAnyAsync<HttpRequestException>(ExecuteAsync);
+            if (create)
+            {
+                Assert.DoesNotContain("existing-error", exception.Message);
+            }
+            else
+            {
+                Assert.Contains("existing-error", exception.Message);
+            }
             Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         }
         else

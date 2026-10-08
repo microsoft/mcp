@@ -13,10 +13,11 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
-public class FabricCoreService(HttpClient httpClient, TokenCredential? credential = null) : IFabricCoreService
+public partial class FabricCoreService(HttpClient httpClient, TokenCredential? credential = null, TimeProvider? timeProvider = null) : IFabricCoreService
 {
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     private readonly TokenCredential _credential = credential ?? new DefaultAzureCredential();
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
     private const string UserAgentHeaderName = "User-Agent";
     private const string UserAgentHeaderValue = "Fabric Core MCP";
     private const string InvalidUpdateResponseMessage = "Fabric returned an invalid Update Item response.";
@@ -98,7 +99,11 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         }
     }
 
-    public async Task<FabricItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default)
+    public async Task<ItemCreateCommandResult> CreateItemAsync(
+        string workspaceId,
+        CreateItemRequest request,
+        FabricOperationWaitOptions? waitOptions = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (!Guid.TryParse(workspaceId, out var parsedWorkspaceId) || parsedWorkspaceId == Guid.Empty)
@@ -106,10 +111,41 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
             throw new ArgumentException("Workspace ID must be a nonempty UUID.", nameof(workspaceId));
         }
 
+        waitOptions ??= new();
+        waitOptions.Validate();
+        cancellationToken.ThrowIfCancellationRequested();
+
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}/items";
         var jsonContent = JsonSerializer.Serialize(request, CoreJsonContext.Default.CreateItemRequest);
-        var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
-        return await JsonSerializer.DeserializeAsync<FabricItem>(response, CoreJsonContext.Default.FabricItem, cancellationToken) ?? new FabricItem();
+        using var response = await SendFabricHttpRequestAsync(HttpMethod.Post, url, jsonContent,
+            completionOption: HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
+        var contract = new FabricOperationContract<FabricItem>(
+            new HashSet<HttpStatusCode> { HttpStatusCode.Created },
+            value => ReadCreatedItem(value, parsedWorkspaceId));
+        var outcome = await new FabricOperationRunner(_timeProvider).HandleAsync(
+            response, contract, waitOptions, GetOperationStateAsync, GetOperationResultAsync, cancellationToken);
+        return new(outcome.Result, outcome.Operation);
+    }
+
+    private static FabricItem ReadCreatedItem(JsonElement value, Guid workspaceId)
+    {
+        FabricItem? item;
+        try
+        {
+            item = value.Deserialize(CoreJsonContext.Default.FabricItem);
+        }
+        catch (JsonException)
+        {
+            throw new FabricOperationException("InvalidItemMetadata", "Fabric reported completion but returned invalid created item metadata. Check whether creation occurred before retrying.");
+        }
+        if (item is null ||
+            !Guid.TryParse(item.Id, out var itemId) || itemId == Guid.Empty ||
+            !Guid.TryParse(item.WorkspaceId, out var returnedWorkspaceId) || returnedWorkspaceId != workspaceId ||
+            string.IsNullOrWhiteSpace(item.DisplayName) || string.IsNullOrWhiteSpace(item.Type))
+        {
+            throw new FabricOperationException("InvalidItemMetadata", "Fabric reported completion but returned invalid created item metadata. Check whether creation occurred before retrying.");
+        }
+        return item;
     }
 
     public async Task DeleteItemAsync(

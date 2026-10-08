@@ -364,19 +364,19 @@ public class ItemListServiceTests
             Assert.NotNull(request.Content);
             Assert.Equal("application/json", request.Content.Headers.ContentType?.MediaType);
             requests.Add(await request.Content.ReadAsStringAsync(token));
-            return ItemListTestData.Response(request.RequestUri!.AbsolutePath.EndsWith("/items")
-                ? $$"""{"id":"{{ItemListTestData.ItemId}}","displayName":"Created","type":"Lakehouse","workspaceId":"{{ItemListTestData.WorkspaceId}}"}"""
-                : """{"value":[],"continuationToken":"catalog-token"}""");
+            return request.RequestUri!.AbsolutePath.EndsWith("/items")
+                ? FabricOperationTestData.ItemResponse(ItemListTestData.WorkspaceId)
+                : ItemListTestData.Response("""{"value":[],"continuationToken":"catalog-token"}""");
         });
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, ItemListTestData.CreateCredential());
 
         var item = await service.CreateItemAsync(ItemListTestData.WorkspaceId,
-            new CreateItemRequest { DisplayName = "Created", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
+            new CreateItemRequest { DisplayName = "Created", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
         var catalog = await service.SearchCatalogAsync(new CatalogSearchRequest { Search = "Sales", PageSize = 25 },
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(ItemListTestData.ItemId, item.Id);
+        Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
         Assert.Equal("catalog-token", catalog.ContinuationToken);
         Assert.Equal(2, requests.Count);
         Assert.Contains("\"displayName\":\"Created\"", requests[0]);
@@ -393,11 +393,11 @@ public class ItemListServiceTests
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, ItemListTestData.CreateCredential());
 
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
         {
             if (create)
             {
-                await service.CreateItemAsync(ItemListTestData.WorkspaceId, new(), TestContext.Current.CancellationToken);
+                await service.CreateItemAsync(ItemListTestData.WorkspaceId, new(), cancellationToken: TestContext.Current.CancellationToken);
             }
             else
             {
@@ -406,7 +406,14 @@ public class ItemListServiceTests
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
-        Assert.Contains("existing-error", exception.Message);
+        if (create)
+        {
+            Assert.DoesNotContain("existing-error", exception.Message);
+        }
+        else
+        {
+            Assert.Contains("existing-error", exception.Message);
+        }
         Assert.Equal(1, handler.CallCount);
     }
 }

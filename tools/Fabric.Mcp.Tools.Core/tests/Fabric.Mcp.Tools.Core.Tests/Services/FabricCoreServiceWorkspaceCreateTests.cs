@@ -498,12 +498,12 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
     [InlineData(false)]
     public async Task ExistingPostOperations_PreserveRequestAndResponseBehavior(bool createItem)
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(createItem
-                ? $$"""{"id":"item-id","displayName":"Existing item","type":"Lakehouse","workspaceId":"{{WorkspaceCreateTestData.WorkspaceId}}"}"""
-                : """{"value":[{"id":"item-id","displayName":"Existing item","type":"Lakehouse"}],"continuationToken":"cursor"}""")
-        };
+        using var response = createItem
+            ? FabricOperationTestData.ItemResponse(WorkspaceCreateTestData.WorkspaceId, "Existing item")
+            : new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"value":[{"id":"item-id","displayName":"Existing item","type":"Lakehouse"}],"continuationToken":"cursor"}""")
+            };
         using var handler = new FabricCoreHttpMessageHandler(async (request, cancellationToken) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
@@ -531,9 +531,9 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
         if (createItem)
         {
             var result = await service.CreateItemAsync(WorkspaceCreateTestData.WorkspaceId,
-                new() { DisplayName = "Existing item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
-            Assert.Equal("item-id", result.Id);
-            Assert.Equal(WorkspaceCreateTestData.WorkspaceId, result.WorkspaceId);
+                new() { DisplayName = "Existing item", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(FabricOperationTestData.ItemId, result.Item?.Id);
+            Assert.Equal(WorkspaceCreateTestData.WorkspaceId, result.Item?.WorkspaceId);
         }
         else
         {
@@ -555,11 +555,11 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, WorkspaceCreateTestData.CreateCredential());
 
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
         {
             if (createItem)
             {
-                await service.CreateItemAsync(WorkspaceCreateTestData.WorkspaceId, new() { DisplayName = "Item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
+                await service.CreateItemAsync(WorkspaceCreateTestData.WorkspaceId, new() { DisplayName = "Item", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
             }
             else
             {
@@ -567,7 +567,14 @@ public sealed class FabricCoreServiceWorkspaceCreateTests()
             }
         });
 
-        Assert.Contains("existing failure", exception.Message);
+        if (createItem)
+        {
+            Assert.DoesNotContain("existing failure", exception.Message);
+        }
+        else
+        {
+            Assert.Contains("existing failure", exception.Message);
+        }
         Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }

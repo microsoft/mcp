@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Identity;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
@@ -19,14 +20,20 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Description = """
         Creates a Fabric item using a nonempty workspace UUID, display-name, and item-type.
         Supply workspace-id or the backward-compatible workspace UUID alias; workspace names are not resolved.
-        Sends the display name, item type, and optional description in one request and returns item metadata
-        when Fabric responds synchronously. Description is limited to 256 characters; naming rules depend on item type.
+        Sends one creation request. A 201 response returns item metadata; 202 returns a resumable operation receipt.
+        With sync=true, asynchronously wait up to max-wait-seconds (default 120) after acceptance and retrieve
+        the result if available. Both modes immediately return synchronous completion without polling.
+        early-poll=true permits one probe after at most 3 seconds instead of the initial 202 Retry-After;
+        false honors that hint. Later polls and 429/503 retries honor validated hints.
+        Wait expiry returns last-known state, not a failed mutation; client cancellation can stop waiting sooner.
+        Description is limited to 256 characters; naming rules depend on item type.
         Requires Contributor or higher workspace access and, for delegated callers, Item.ReadWrite.All or
         the item-specific ReadWrite.All scope. Non-Power BI items require a supported Fabric capacity and
         tenant/capacity settings that enable Fabric item creation; Power BI items require the appropriate license.
         Service-principal and managed-identity support depends on item type.
-        Does not supply definitions or creation payloads, poll asynchronous creation, or retry automatically.
-        An accepted asynchronous request is not confirmation that creation completed.
+        Does not supply definitions or creation payloads, cancel Fabric operations, or resubmit creation.
+        Only JSON/empty operation responses up to 1 MiB are supported; created item metadata is required.
+        Acceptance is not completion. Resume using get-operation-state and get-operation-result, not another create.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
@@ -42,12 +49,22 @@ public sealed class ItemCreateCommand(
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
 
+    public override JsonTypeInfo<ItemCreateCommandResult> ResultTypeInfo => CoreJsonContext.Default.ItemCreateCommandResult;
+
     public override void ValidateOptions(ItemCreateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
         if (!Guid.TryParse(GetWorkspaceId(options), out var workspaceId) || workspaceId == Guid.Empty)
         {
             validationResult.Errors.Add("Provide a nonempty workspace UUID using --workspace-id or --workspace; workspace names are not supported.");
+        }
+        if (!FabricOperationWaitOptions.IsValidBudget(options.MaxWaitSeconds))
+        {
+            validationResult.Errors.Add("--max-wait-seconds must be finite and greater than zero.");
+        }
+        if (options.Description?.Length > 256)
+        {
+            validationResult.Errors.Add("--description must be at most 256 characters.");
         }
     }
 
@@ -64,17 +81,24 @@ public sealed class ItemCreateCommand(
                 Description = options.Description
             };
 
-            var item = await _fabricCoreService.CreateItemAsync(workspaceId!, request, cancellationToken);
-
-            _logger.LogInformation("Successfully created {ItemType} '{DisplayName}' in workspace {WorkspaceId}",
-                options.ItemType, options.DisplayName, workspaceId);
-
-            context.Response.Results = ResponseResult.Create(new(item), CoreJsonContext.Default.ItemCreateCommandResult);
+            var result = await _fabricCoreService.CreateItemAsync(workspaceId!, request,
+                new(options.Sync, options.MaxWaitSeconds, options.EarlyPoll), cancellationToken);
+            SetResult(context, result);
+            context.Response.Status = result.Operation switch
+            {
+                { Status: FabricOperationStatus.Failed } => HttpStatusCode.BadGateway,
+                { Status: FabricOperationStatus.TrackingStopped or FabricOperationStatus.ResultUnavailable, Issue.HttpStatus: { } status } => (HttpStatusCode)status,
+                { Status: not FabricOperationStatus.Succeeded } => HttpStatusCode.Accepted,
+                _ => HttpStatusCode.OK
+            };
+            if (result.Operation?.Issue is { } issue)
+            {
+                context.Response.Message = issue.Message;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating item '{DisplayName}' in workspace {WorkspaceId}.",
-                options.DisplayName, workspaceId);
+            _logger.LogError("Error creating a Fabric item ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
         }
 
@@ -84,6 +108,11 @@ public sealed class ItemCreateCommand(
     protected override void HandleException(CommandContext context, Exception ex)
     {
         base.HandleException(context, ex);
+        if (ex is FabricOperationCanceledException canceled)
+        {
+            SetResult(context, new(null, canceled.Operation));
+            context.Response.Message = canceled.Message;
+        }
         if (ex is CommandValidationException validationException)
         {
             context.Response.Message = GetValidationErrorMessage(validationException,
@@ -91,10 +120,14 @@ public sealed class ItemCreateCommand(
         }
     }
 
+    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+        ex is FabricOperationCanceledException ? HttpStatusCode.RequestTimeout : base.GetStatusCode(ex);
+
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         CredentialUnavailableException =>
             "Fabric credentials are unavailable. Authenticate the configured Fabric identity before creating an item",
+        FabricOperationException { StatusCode: HttpStatusCode.BadGateway } => ex.Message,
         HttpRequestException { StatusCode: null } =>
             "Service unavailable or network connectivity issues prevented Fabric item creation. Check whether the item was created before retrying",
         OperationCanceledException or TimeoutException =>

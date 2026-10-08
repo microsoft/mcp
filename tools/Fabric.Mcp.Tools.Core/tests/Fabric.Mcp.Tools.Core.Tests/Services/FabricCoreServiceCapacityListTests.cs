@@ -480,7 +480,7 @@ public class FabricCoreServiceCapacityListTests()
                 Assert.Equal($"https://api.fabric.microsoft.com/v1/workspaces/{WorkspaceTestData.WorkspaceId}/items", request.RequestUri?.AbsoluteUri);
                 Assert.Equal("New item", document.RootElement.GetProperty("displayName").GetString());
                 Assert.Equal("Lakehouse", document.RootElement.GetProperty("type").GetString());
-                return CapacityListTestData.CreateResponse("""{"id":"created-item","displayName":"New item","type":"Lakehouse"}""");
+                return FabricOperationTestData.ItemResponse(WorkspaceTestData.WorkspaceId, "New item");
             }
             Assert.Equal("https://api.fabric.microsoft.com/v1/catalog/search", request.RequestUri?.AbsoluteUri);
             Assert.False(document.RootElement.TryGetProperty("search", out _));
@@ -493,8 +493,8 @@ public class FabricCoreServiceCapacityListTests()
         if (createItem)
         {
             var item = await service.CreateItemAsync(
-                WorkspaceTestData.WorkspaceId, new CreateItemRequest { DisplayName = "New item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
-            Assert.Equal("created-item", item.Id);
+                WorkspaceTestData.WorkspaceId, new CreateItemRequest { DisplayName = "New item", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
         }
         else
         {
@@ -516,11 +516,11 @@ public class FabricCoreServiceCapacityListTests()
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, CapacityListTestData.CreateCredential());
 
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
         {
             if (createItem)
             {
-                await service.CreateItemAsync(WorkspaceTestData.WorkspaceId, new CreateItemRequest(), TestContext.Current.CancellationToken);
+                await service.CreateItemAsync(WorkspaceTestData.WorkspaceId, new CreateItemRequest(), cancellationToken: TestContext.Current.CancellationToken);
             }
             else
             {
@@ -528,8 +528,15 @@ public class FabricCoreServiceCapacityListTests()
             }
         });
 
-        Assert.Contains("status 400", exception.Message);
-        Assert.Contains("existing-error", exception.Message);
+        if (createItem)
+        {
+            Assert.DoesNotContain("existing-error", exception.Message);
+        }
+        else
+        {
+            Assert.Contains("status 400", exception.Message);
+            Assert.Contains("existing-error", exception.Message);
+        }
         Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }

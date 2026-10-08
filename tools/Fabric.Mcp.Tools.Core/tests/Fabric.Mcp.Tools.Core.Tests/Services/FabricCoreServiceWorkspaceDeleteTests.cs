@@ -363,10 +363,7 @@ public class FabricCoreServiceWorkspaceDeleteTests()
     [Fact]
     public async Task CreateItemAsync_PreservesExistingAuthenticatedJsonPost()
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.Created)
-        {
-            Content = new StringContent("""{"id":"item-id","displayName":"Example","type":"Lakehouse"}""")
-        };
+        using var response = FabricOperationTestData.ItemResponse(WorkspaceDeleteTestData.WorkspaceId, "Example");
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
@@ -384,10 +381,10 @@ public class FabricCoreServiceWorkspaceDeleteTests()
 
         var item = await service.CreateItemAsync(
             WorkspaceDeleteTestData.WorkspaceId, new CreateItemRequest { DisplayName = "Example", Type = "Lakehouse" },
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal("item-id", item.Id);
-        Assert.Equal("Example", item.DisplayName);
+        Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
+        Assert.Equal("Example", item.Item?.DisplayName);
         Assert.Equal(1, handler.CallCount);
     }
 
@@ -430,11 +427,11 @@ public class FabricCoreServiceWorkspaceDeleteTests()
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, WorkspaceDeleteTestData.CreateCredential());
 
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
         {
             if (createItem)
             {
-                await service.CreateItemAsync(WorkspaceDeleteTestData.WorkspaceId, new CreateItemRequest(), TestContext.Current.CancellationToken);
+                await service.CreateItemAsync(WorkspaceDeleteTestData.WorkspaceId, new CreateItemRequest(), cancellationToken: TestContext.Current.CancellationToken);
             }
             else
             {
@@ -443,8 +440,15 @@ public class FabricCoreServiceWorkspaceDeleteTests()
         });
 
         Assert.Equal(HttpStatusCode.Forbidden, exception.StatusCode);
-        Assert.Contains("403", exception.Message);
-        Assert.Contains("legacy-error", exception.Message);
+        if (createItem)
+        {
+            Assert.DoesNotContain("legacy-error", exception.Message);
+        }
+        else
+        {
+            Assert.Contains("403", exception.Message);
+            Assert.Contains("legacy-error", exception.Message);
+        }
         Assert.Equal(1, handler.CallCount);
     }
 }
