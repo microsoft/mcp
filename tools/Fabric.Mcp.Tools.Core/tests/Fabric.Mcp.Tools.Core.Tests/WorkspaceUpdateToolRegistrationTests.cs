@@ -327,6 +327,7 @@ public class WorkspaceUpdateToolRegistrationTests()
             StructuredOutputMode = mode,
             Transport = transport
         }));
+        services.AddCommandContextAccessor();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
         return services.BuildServiceProvider();

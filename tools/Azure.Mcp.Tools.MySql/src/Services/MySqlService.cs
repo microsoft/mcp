@@ -109,10 +109,10 @@ public sealed class MySqlService(IAzureService azureService)
             ? serverNameOrFullHostname
             : serverNameOrFullHostname + mysqlDnsSuffix;
 
-        return ValidateServerHostname(host, armEnvironment);
+        return ValidateServerHostname(AzureService, host);
     }
 
-    internal static string ValidateServerHostname(string hostname, ArmEnvironment armEnvironment)
+    internal static string ValidateServerHostname(IAzureService azureService, string hostname)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(hostname);
 
@@ -126,11 +126,9 @@ public sealed class MySqlService(IAzureService azureService)
         var endpoint = new Uri($"https://{hostname}", UriKind.Absolute);
         try
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(
+            azureService.ValidateAzureServiceEndpoint(
                 endpoint: endpoint.AbsoluteUri,
-                serviceType: "mysql",
-                armEnvironment: armEnvironment,
-                executingToolNamespaceName: "mysql");
+                serviceType: "mysql");
         }
         catch (SecurityException ex)
         {
@@ -139,7 +137,7 @@ public sealed class MySqlService(IAzureService azureService)
 
         // EndpointValidator permits the allow-listed suffix root, but MySql connection endpoints
         // require a resource-specific server label before that suffix.
-        var mysqlDnsSuffix = GetMySqlDnsSuffix(armEnvironment);
+        string mysqlDnsSuffix = GetMySqlDnsSuffix(azureService.CloudConfiguration.ArmEnvironment);
         if (endpoint.IdnHost.Equals(mysqlDnsSuffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
         {
             throw CreateInvalidServerException(hostname);

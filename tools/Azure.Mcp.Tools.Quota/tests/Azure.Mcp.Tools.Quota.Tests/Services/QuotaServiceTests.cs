@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Azure.ResourceManager;
@@ -20,7 +21,7 @@ public sealed class QuotaServiceTests
     {
         const string resourceType = "Microsoft.UnsupportedProvider/resources";
         TokenCredential credential = Substitute.For<TokenCredential>();
-        IAzureService azureService = Substitute.For<IAzureService>();
+        IAzureService azureService = AzureServiceTestHelpers.CreateAzureService();
         IAzureCloudConfiguration cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
         cloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         azureService.CloudConfiguration.Returns(cloudConfiguration);

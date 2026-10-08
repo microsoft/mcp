@@ -249,6 +249,7 @@ public class WorkspaceAssignToCapacityToolRegistrationTests()
             Transport = transport,
             ReadOnly = readOnly
         }));
+        services.AddCommandContextAccessor();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
         return services.BuildServiceProvider();

@@ -247,9 +247,10 @@ public sealed class AztfexportToolLoadingTests
         });
         var factory = new CommandFactory(services, [new AzureTerraformSetup()], new NoopTelemetryService(),
             serverConfiguration, NullLogger<CommandFactory>.Instance);
+        var contextAccessor = new CommandContextAccessor();
         return namespaceMode
-            ? new NamespaceToolLoader(factory, configuration, NullLogger<NamespaceToolLoader>.Instance)
-            : new CommandFactoryToolLoader(factory, configuration, NullLogger<CommandFactoryToolLoader>.Instance);
+            ? new NamespaceToolLoader(contextAccessor, factory, configuration, NullLogger<NamespaceToolLoader>.Instance)
+            : new CommandFactoryToolLoader(contextAccessor, factory, configuration, NullLogger<CommandFactoryToolLoader>.Instance);
     }
 
     private static RequestContext<CallToolRequestParams> CreateRequest(bool namespaceMode, string tool, string parameters)

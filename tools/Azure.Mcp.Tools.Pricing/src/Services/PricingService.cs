@@ -5,6 +5,7 @@ using System.ClientModel.Primitives;
 using Azure.Mcp.Tools.Pricing.Models;
 using Azure.ResourceManager;
 using AzureRetailPrices;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Pricing.Services;
@@ -13,7 +14,8 @@ namespace Azure.Mcp.Tools.Pricing.Services;
 /// Service implementation for Azure Retail Pricing operations.
 /// </summary>
 public class PricingService(
-    IAzureCloudConfiguration cloudConfiguration) : IPricingService
+    IAzureCloudConfiguration cloudConfiguration,
+    IEndpointValidator endpointValidator) : IPricingService
 {
     private const int MaxResults = 5000;
     private readonly PipelineTransport? _transportForTestInjection;
@@ -22,6 +24,7 @@ public class PricingService(
     /// Initializes a test-only instance with an injectable pipeline transport.
     /// </summary>
     /// <param name="cloudConfiguration">The Azure cloud configuration.</param>
+    /// <param name="endpointValidator">The host's endpoint validator.</param>
     /// <param name="transportForTestInjection">
     /// The pipeline transport used by endpoint-validation tests to observe requests and supply controlled responses.
     /// </param>
@@ -31,7 +34,8 @@ public class PricingService(
     /// </remarks>
     internal PricingService(
         IAzureCloudConfiguration cloudConfiguration,
-        PipelineTransport transportForTestInjection) : this(cloudConfiguration)
+        PipelineTransport transportForTestInjection,
+        IEndpointValidator endpointValidator) : this(cloudConfiguration, endpointValidator)
     {
         ArgumentNullException.ThrowIfNull(transportForTestInjection);
         _transportForTestInjection = transportForTestInjection;
@@ -76,7 +80,7 @@ public class PricingService(
         }
 
         clientOptions.AddPolicy(
-            new RetailPricingEndpointValidationPolicy(armEnvironment),
+            new RetailPricingEndpointValidationPolicy(armEnvironment, endpointValidator),
             PipelinePosition.BeforeTransport);
 
         Uri pricingEndpoint = GetPricingEndpoint(armEnvironment);

@@ -70,6 +70,7 @@ internal static class ItemDeleteTestData
             Namespace = ["core"],
             DangerouslyDisableElicitation = true
         }));
+        services.AddCommandContextAccessor();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
         return services.BuildServiceProvider();

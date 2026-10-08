@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Pricing.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Pricing;
 
@@ -20,6 +21,7 @@ public class PricingSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddEndpointValidation();
         services.AddSingleton<IPricingService, PricingService>();
         services.AddSingleton<PricingGetCommand>();
     }

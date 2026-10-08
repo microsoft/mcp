@@ -614,6 +614,7 @@ public sealed class FabricOperationMcpTests()
         }));
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
+        services.AddSingleton<ICommandContextAccessor, CommandContextAccessor>();
         return services.BuildServiceProvider();
     }
 }

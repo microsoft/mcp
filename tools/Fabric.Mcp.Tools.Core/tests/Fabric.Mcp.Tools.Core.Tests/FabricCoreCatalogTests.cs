@@ -80,17 +80,18 @@ public sealed class FabricCoreCatalogTests()
         }));
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
+        services.AddSingleton<ICommandContextAccessor, CommandContextAccessor>();
         await using var provider = services.BuildServiceProvider();
         var factory = provider.GetRequiredService<ICommandFactory>();
         var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
 
         Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IFabricCoreService));
-        AssertCatalog(factory.AllCommands.Select(pair => (pair.Key, (bool?)pair.Value.Metadata.ReadOnly)), readOnly: false);
+        AssertCatalog(factory.AllCommands.Select(pair => (pair.Key, (bool?)pair.Value.Command.Metadata.ReadOnly)), readOnly: false);
         foreach (var expected in ExpectedTools)
         {
             var descriptor = Assert.Single(services, descriptor => descriptor.ServiceType == expected.CommandType);
             Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
-            var command = factory.AllCommands[expected.Name];
+            var command = factory.AllCommands[expected.Name].Command;
             Assert.IsType(expected.CommandType, command);
             Assert.Same(provider.GetRequiredService(expected.CommandType), command);
         }
@@ -100,7 +101,7 @@ public sealed class FabricCoreCatalogTests()
         AssertCatalog(catalog.Tools.Select(tool => (tool.Name, tool.Annotations?.ReadOnlyHint)), readOnly);
         foreach (var tool in catalog.Tools)
         {
-            var command = factory.AllCommands[tool.Name];
+            var command = factory.AllCommands[tool.Name].Command;
             Assert.Equal(command.Metadata.Destructive, tool.Annotations?.DestructiveHint);
             Assert.Equal(command.Metadata.Idempotent, tool.Annotations?.IdempotentHint);
             Assert.Equal(command.Metadata.OpenWorld, tool.Annotations?.OpenWorldHint);
