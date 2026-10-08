@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Tests;
@@ -15,6 +16,58 @@ public class NetAppFilesCommandTests(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => new()
+    {
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
+        {
+            Regex = "tenantId=(?<tenant>[0-9a-fA-F-]{36})",
+            GroupForReplace = "tenant",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
+        {
+            Regex = "objectId=(?<object>[0-9a-fA-F-]{36})",
+            GroupForReplace = "object",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
+        {
+            Regex = "objectId=(?<object>[0-9a-fA-F-]{36})/.*/(?<locationObject>[0-9a-fA-F-]{36})",
+            GroupForReplace = "locationObject",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-routing-request-id")
+        {
+            Regex = ".*:.*:(?<routingId>[0-9a-fA-F-]{36})",
+            GroupForReplace = "routingId",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-correlation-request-id")
+        {
+            Regex = "(?<correlationId>[0-9a-fA-F-]{36})",
+            GroupForReplace = "correlationId",
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+    };
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers => new()
+    {
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.tags.Owner")
+        {
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.tags.Owners")
+        {
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.id")
+        {
+            Regex = "/resourceGroups/(?<resourceGroup>[^/]+)",
+            GroupForReplace = "resourceGroup",
+            Value = "Sanitized"
+        }),
+    };
+
     [Fact]
     public async Task AccountGet_ReturnsAccount()
     {
