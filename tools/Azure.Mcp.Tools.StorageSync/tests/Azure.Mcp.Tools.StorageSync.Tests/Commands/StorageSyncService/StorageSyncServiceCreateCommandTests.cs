@@ -4,6 +4,7 @@
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.StorageSync.Tests.Commands.StorageSyncService;

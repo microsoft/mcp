@@ -5154,6 +5154,7 @@ azmcp storagesync service create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --name <service-name> \
                                  --location <location> \
+                                 [--incoming-traffic-policy <AllowAllTraffic|AllowVirtualNetworksOnly>] \
                                  [--tags <tag-key=tag-value>]
 
 # Delete a Storage Sync Service (idempotent – succeeds even if the service does not exist)
