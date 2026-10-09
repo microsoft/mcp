@@ -43,5 +43,6 @@ public interface ISearchService
         string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
+        bool? includeReferenceSourceData = null,
         CancellationToken cancellationToken = default);
 }

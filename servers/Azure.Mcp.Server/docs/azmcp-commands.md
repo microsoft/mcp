@@ -579,7 +579,8 @@ azmcp search knowledge base get --service <service>
 azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
-                                     [--messages <messages>]
+                                     [--messages <messages>] \
+                                     [--include-reference-source-data <true|false>]
 
 # Get AI Search knowledge sources (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
