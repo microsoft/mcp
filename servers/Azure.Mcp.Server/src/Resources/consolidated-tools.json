@@ -2978,6 +2978,72 @@
       ]
     },
     {
+      "name": "get_azure_iot_hub_routing_endpoint_health",
+      "description": "Get the current health status that an Azure IoT Hub reports for its message-routing custom endpoints, including the last known error and the last send attempt times.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about Azure IoT Hub routing endpoints without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_routing_endpoint-health"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_routing_endpoint_diagnostics",
+      "description": "Get time-windowed diagnostic evidence for Azure IoT Hub message-routing custom endpoints: routing delivery and latency metrics, current target resource existence, and Azure Monitor metrics from Event Hubs, Service Bus, Storage, and Cosmos DB targets.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about Azure IoT Hub routing endpoints and their targets without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_routing_endpoint-diagnostics"
+      ]
+    },
+    {
       "name": "get_azure_iot_operations",
       "description": "List and get Azure IoT Operations instances (Microsoft.IoTOperations/instances) in a subscription or resource group.",
       "toolMetadata": {

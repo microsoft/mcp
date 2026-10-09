@@ -777,6 +777,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_query_run | Run an IoT Hub device query equivalent to "SELECT * FROM devices" against IoT Hub <hub_name> in resource group <resource_group_name>; do not use the device-list operation | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
+| iothub_routing_endpoint-diagnostics | Show routing endpoint diagnostics evidence for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_routing_endpoint-diagnostics | Get routing endpoint diagnostics metrics for IoT Hub <hub_name> from <start_time> through <end_time> | none |
+| iothub_routing_endpoint-diagnostics | Check whether routing endpoint <endpoint_name> on IoT Hub <hub_name> has a missing target, unavailable metrics, or observed delivery failures in the past six hours | none |
+| iothub_routing_endpoint-diagnostics | Show which routing metrics returned no data for IoT Hub <hub_name> without assuming the hub is idle or healthy | none |
+| iothub_routing_endpoint-health | Show routing endpoint health for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_routing_endpoint-health | Get the current routing endpoint health for endpoint <endpoint_name> on IoT Hub <hub_name> | none |
 
 ## Azure IoT Operations
 

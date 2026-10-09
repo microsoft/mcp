@@ -3213,7 +3213,36 @@ azmcp iothub query run --subscription <subscription> \
                        [--from <source>] \
                        [--logical-operator <operator>] \
                        [--max-count <max-count>]
+
+# Get the current IoT Hub-reported health snapshot for message-routing endpoints
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub routing endpoint-health --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --hub-name <iot-hub-name> \
+                                     [--endpoint-name <endpoint-name>]
+
+# Get factual hub and target metric evidence for IoT Hub message-routing endpoints
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub routing endpoint-diagnostics --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --hub-name <iot-hub-name> \
+                                          [--endpoint-name <endpoint-name>] \
+                                          [--start-time <iso8601-datetime> --end-time <iso8601-datetime>] \
+                                          [--interval <iso8601-duration>]
 ```
+
+Diagnostics defaults to the previous 24 hours with `PT1H` buckets. `--start-time` and `--end-time` must
+be supplied together. The maximum observation window is 30 days, and the selected window and interval
+cannot exceed 720 buckets.
+
+Diagnostics distinguishes values returned, no values returned, failed queries, and partial evidence
+through per-metric availability metadata. Missing metric values do not mean zero traffic. Target
+metrics describe the parent resource and can include other clients; they do not prove endpoint
+delivery. Current target existence is separate from historical metrics, with any existence-check
+error under `target.error`. These routing tools do not determine overall hub health or device ingress
+health. Each routing operation has a
+100-second timeout covering all requests and retries. Expiration returns HTTP 408 rather than
+presenting incomplete work as a successful result; caller cancellation is preserved.
 
 ### Azure IoT Operations
 

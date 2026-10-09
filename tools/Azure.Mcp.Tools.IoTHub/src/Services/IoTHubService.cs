@@ -5,6 +5,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
+using Azure.Mcp.Tools.IoTHub.Routing;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 
@@ -62,7 +63,8 @@ public class IoTHubService(IAzureService azureService, ILogger<IoTHubService> lo
             hub.Sku?.Name ?? string.Empty,
             hub.Sku?.Capacity ?? 0,
             properties?.State ?? string.Empty,
-            properties?.HostName ?? string.Empty
+            properties?.HostName ?? string.Empty,
+            RoutingEndpointMapper.ConvertToRoutingEndpointDetailsList(properties?.Routing?.Endpoints)
         );
     }
 }
