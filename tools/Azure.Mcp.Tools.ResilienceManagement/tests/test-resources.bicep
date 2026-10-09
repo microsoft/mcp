@@ -2,6 +2,8 @@ targetScope = 'resourceGroup'
 
 param baseName string = resourceGroup().name
 
+param zonalLocation string = 'eastus2'
+
 // Deterministic, schema-valid names.
 // Usage plan and enrollment names must match ^[a-zA-Z0-9-]{3,24}$.
 var uniqueSuffix = uniqueString(resourceGroup().id, baseName)
@@ -57,7 +59,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 
 resource managedDisk 'Microsoft.Compute/disks@2024-03-02' = {
   name: managedDiskName
-  location: resourceGroup().location
+  location: zonalLocation
   zones: [
     '1'
   ]
@@ -81,15 +83,6 @@ resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' 
     sku: {
       name: 'Basic'
     }
-  }
-}
-
-// Usage plan (resource-group scoped). This resource type is only available in the 'global' location.
-resource usagePlan 'Microsoft.AzureResilienceManagement/usagePlans@2026-04-01-preview' = {
-  name: usagePlanName
-  location: 'global'
-  properties: {
-    planType: 'Standard'
   }
 }
 
