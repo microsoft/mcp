@@ -88,5 +88,9 @@ internal sealed class LoopbackHttpServer(TcpListener listener, bool redirect = f
         {
             // Stopping the listener can dispose its socket before the pending accept observes cancellation.
         }
+        catch (InvalidOperationException) when (cancellationToken.IsCancellationRequested)
+        {
+            // On macOS, stopping the listener can report that it is no longer listening before accept observes cancellation.
+        }
     }
 }
