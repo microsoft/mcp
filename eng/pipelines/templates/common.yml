@@ -216,6 +216,7 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
+          - template: /eng/pipelines/templates/variables/tool-metadata-exporter.yml
           jobs:
           - template: /eng/pipelines/templates/jobs/release.yml
             parameters:

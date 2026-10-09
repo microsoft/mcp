@@ -1,0 +1,4 @@
+variables:
+  ToolMetadataIngestionEndpoint: https://ingest-ddazureclients.kusto.windows.net
+  ToolMetadataQueryEndpoint: https://ddazureclients.kusto.windows.net
+  ToolMetadataDatabaseName: AzureDevExp

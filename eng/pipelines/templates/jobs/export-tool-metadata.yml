@@ -1,0 +1,50 @@
+parameters:
+- name: ServerName
+  type: string
+- name: DependsOn
+  type: object
+
+jobs:
+- job: ExportToolMetadata
+  displayName: "Export tool metadata"
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: "Download build_info"
+    artifact: build_info
+
+  - download: current
+    displayName: Download binaries_windows_x64
+    artifact: binaries_windows_x64
+
+  - template: /eng/pipelines/templates/steps/install-dotnet.yml
+
+  - task: AzureCLI@2
+    displayName: "Build and run ToolMetadataExporter"
+    env:
+      AppConfig__IngestionEndpoint: $(ToolMetadataIngestionEndpoint)
+      AppConfig__QueryEndpoint: $(ToolMetadataQueryEndpoint)
+      AppConfig__DatabaseName: $(ToolMetadataDatabaseName)
+    inputs:
+      azureSubscription: "Azure SDK Engineering System"
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: $(Build.SourcesDirectory)/eng/scripts/Invoke-ReleaseToolMetadataExport.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -BinariesDirectory '$(Pipeline.Workspace)/binaries_windows_x64'
+        -ServerName '${{ parameters.ServerName }}'
+        -ArtifactDirectory '$(Build.ArtifactStagingDirectory)/tool-metadata-changes'
+        -RuntimeIdentifier 'windows-x64'
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/tool-metadata-changes
+      ArtifactName: tool_metadata_changes
