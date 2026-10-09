@@ -7,6 +7,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
@@ -29,8 +30,9 @@ public sealed class ServerStartSsrfTelemetryTests
         namespaces[0] = "ALL";
         using ServiceProvider provider = services.BuildServiceProvider();
         SsrfProtectionPolicy policy = provider.GetRequiredService<SsrfProtectionPolicy>();
-        Assert.False(policy.AreSsrfProtectionsEnabled("ACR"));
-        Assert.True(policy.AreSsrfProtectionsEnabled("storage"));
+        ICommandContextAccessor contextAccessor = provider.GetRequiredService<ICommandContextAccessor>();
+        Assert.False(AreSsrfProtectionsEnabled(policy, contextAccessor, "ACR"));
+        Assert.True(AreSsrfProtectionsEnabled(policy, contextAccessor, "storage"));
 
         var activity = new Activity("startup");
         ITelemetryService telemetry = Substitute.For<ITelemetryService>();
@@ -38,6 +40,17 @@ public sealed class ServerStartSsrfTelemetryTests
         ServerStartCommand.LogStartTelemetry(telemetry, options, policy);
         Assert.Equal("selected", activity.GetTagItem(TagName.SsrfNamespaceOverrideScope));
         Assert.Equal(1, activity.GetTagItem(TagName.SsrfNamespaceOverrideCount));
+    }
+
+    private static bool AreSsrfProtectionsEnabled(
+        SsrfProtectionPolicy policy,
+        ICommandContextAccessor contextAccessor,
+        string executingToolNamespaceName)
+    {
+        using (contextAccessor.BeginScope(new CommandContext { ToolNamespaceName = executingToolNamespaceName }))
+        {
+            return policy.AreSsrfProtectionsEnabled(contextAccessor);
+        }
     }
 
     /// <summary>

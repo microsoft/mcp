@@ -32,8 +32,8 @@ public class EndpointValidatorTests
         EndpointValidator validator = new(policy, NullLogger<EndpointValidator>.Instance, accessor);
         namespaces[0] = "changed";
 
-        Assert.False(policy.AreSsrfProtectionsEnabled("ACR"));
-        Assert.True(policy.AreSsrfProtectionsEnabled("changed"));
+        Assert.False(AreSsrfProtectionsEnabled(policy, accessor, "ACR"));
+        Assert.True(AreSsrfProtectionsEnabled(policy, accessor, "changed"));
 
         using (accessor.BeginScope(new CommandContext { ToolNamespaceName = "ACR" }))
         {
@@ -88,7 +88,10 @@ public class EndpointValidatorTests
     {
         Assert.Equal(
             expectedEnabled,
-            new SsrfProtectionPolicy([configuredNamespace]).AreSsrfProtectionsEnabled(executingToolNamespaceName));
+            AreSsrfProtectionsEnabled(
+                new SsrfProtectionPolicy([configuredNamespace]),
+                new CommandContextAccessor(),
+                executingToolNamespaceName));
     }
 
     [Theory]
@@ -98,7 +101,28 @@ public class EndpointValidatorTests
     [InlineData("acr")]
     public void AreSsrfProtectionsEnabled_WithoutOverrides(string? executingToolNamespaceName)
     {
-        Assert.True(new SsrfProtectionPolicy(null).AreSsrfProtectionsEnabled(executingToolNamespaceName));
+        Assert.True(AreSsrfProtectionsEnabled(
+            new SsrfProtectionPolicy(null),
+            new CommandContextAccessor(),
+            executingToolNamespaceName));
+    }
+
+    [Fact]
+    public void AreSsrfProtectionsEnabled_RequiresContextAccessor()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            new SsrfProtectionPolicy(null).AreSsrfProtectionsEnabled(null!));
+    }
+
+    private static bool AreSsrfProtectionsEnabled(
+        SsrfProtectionPolicy policy,
+        ICommandContextAccessor contextAccessor,
+        string? executingToolNamespaceName)
+    {
+        using (contextAccessor.BeginScope(new CommandContext { ToolNamespaceName = executingToolNamespaceName }))
+        {
+            return policy.AreSsrfProtectionsEnabled(contextAccessor);
+        }
     }
 
     #region ValidateAzureServiceEndpoint Tests

@@ -18,7 +18,9 @@ namespace Microsoft.Mcp.Core.Helpers;
 /// Never capture an invocation's namespace or override decision when constructing a validator or client.
 /// A missing context or a <see langword="null"/>, empty, or whitespace namespace keeps protection enabled,
 /// including when <see cref="SsrfProtectionPolicy.AllNamespaces"/> is configured.
-/// Proxy routing does not disable endpoint domain validation.
+/// Proxy routing does not disable endpoint validation. In particular,
+/// <see cref="ValidatePublicTargetUrl"/> still validates the original target's resolved addresses;
+/// the URL may be consumed by a downstream service rather than this host's HTTP transport.
 /// </remarks>
 public interface IEndpointValidator
 {

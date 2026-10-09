@@ -586,8 +586,8 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    - Corporate proxy certificates not trusted
 
 3. **Private Endpoint Connectivity**
-   - Resources configured with private endpoints require VPN or ExpressRoute access
-   - DNS resolution issues for private endpoint addresses
+   - Shared HTTP clients reject private and reserved destination addresses by default, even when VPN or ExpressRoute routing is available
+   - Private endpoint DNS resolution can therefore produce an intentional SSRF-protection error instead of a connectivity error
 
 #### Working with Network Administrators
 
@@ -617,10 +617,15 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    export NO_PROXY=localhost,127.0.0.1
    ```
 
-   **Security warning:** Configuring an outgoing HTTP/HTTPS/ALL proxy takes precedence
-   over and disables some SSRF protections, including transport-level DNS/IP checks.
-   This also applies to requests excluded by `NO_PROXY`. Use only trusted proxies with
-   restricted network access; endpoint domain validation remains independently active.
+   **Security warning:** The server selects one explicit outgoing proxy in `ALL_PROXY`,
+   `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+   It disables transport-level DNS/IP checks for the whole configured handler, including
+   requests excluded by `NO_PROXY`. When none of those settings selects a proxy, `.NET`'s
+   `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules
+   for each destination. Actually proxied requests omit those transport checks, while
+   destinations not routed through a proxy retain them. Use only trusted proxies with
+   restricted network access; endpoint validation remains independently active, including
+   public-target validation of the original destination's IPs.
 
 #### Troubleshooting Network Connectivity
 
@@ -632,9 +637,28 @@ curl -I https://management.azure.com
 
 **Check private endpoint DNS resolution:**
 ```bash
-# Should resolve to a private IP (10.x.x.x) if using private endpoints
+# Private endpoints normally resolve to a private IP such as 10.x.x.x.
+# Shared HTTP clients intentionally reject that destination by default.
 nslookup mystorageaccount.blob.core.windows.net
 ```
+
+**Temporarily allow a trusted private endpoint in server mode:**
+```bash
+azmcp server start \
+  --dangerously-disable-ssrf-protections-by-namespace storage
+```
+
+`--dangerously-disable-ssrf-protections-by-namespace` is available only on
+`server start`. Use the tool's original top-level namespace, such as `storage`,
+`keyvault`, `appconfig`, or `acr`; repeat the option for multiple namespaces.
+The special value `ALL` disables protection for every resolved tool namespace.
+This option disables both endpoint validation and transport-level private-address
+checks for those tools, so use it only temporarily in a fully trusted environment.
+Direct CLI commands do not establish a tool namespace context and cannot use this
+override; they remain protected. A trusted outgoing proxy is an alternative when it
+actually routes the destination because proxy routing takes precedence over transport-level
+DNS/IP protection. Endpoint validation remains active unless a namespace override also
+disables it.
 
 **Verify certificate trust:**
 ```bash
@@ -647,6 +671,11 @@ openssl s_client -connect login.microsoftonline.com:443 \
 - ExpressRoute connectivity
 - Point-to-site VPN configuration
 - Bastion host or jump server access
+
+These options provide network routing but do not by themselves disable the shared
+HTTP client's private-address protection. Use server mode with the narrowest
+temporary namespace override, or a trusted outgoing proxy that routes the destination,
+when private endpoint access is required.
 
 #### Questions to Ask Your Network Administrator
 

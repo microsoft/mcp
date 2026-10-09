@@ -17,7 +17,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
 
 > **Security warning:** A recording proxy configured through `TEST_PROXY_URL` or a
 > fixture takes precedence over transport-level AntiSSRF protection so the local
-> proxy can be reached. Domain validation still applies to the original endpoint
+> proxy can be reached. Endpoint validation still applies to the original endpoint
 > before redirection. Use recording proxies only in a trusted test environment.
 
 ## Test Proxy Primer (Relevant Bits)

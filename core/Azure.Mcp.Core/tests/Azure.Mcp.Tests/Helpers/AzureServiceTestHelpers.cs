@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -16,6 +17,29 @@ namespace Azure.Mcp.Tests.Helpers;
 /// </summary>
 public static class AzureServiceTestHelpers
 {
+    /// <summary>
+    /// Configures an Azure service substitute to apply the supplied ARM transport and environment.
+    /// </summary>
+    /// <param name="service">The Azure service substitute.</param>
+    /// <param name="httpClient">The HTTP client used by ARM requests.</param>
+    /// <param name="armEnvironment">The ARM cloud environment.</param>
+    public static void ConfigureArmClientOptions(
+        IAzureService service,
+        HttpClient httpClient,
+        ArmEnvironment armEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(httpClient);
+
+        service.When(value => value.ConfigureArmClientOptions(Arg.Any<ArmClientOptions>()))
+            .Do(call =>
+            {
+                ArmClientOptions options = call.Arg<ArmClientOptions>();
+                options.Transport = new HttpClientTransport(httpClient);
+                options.Environment = armEnvironment;
+            });
+    }
+
     /// <summary>
     /// Creates a substitute with real validation and an independently owned immutable <see cref="SsrfProtectionPolicy"/>.
     /// </summary>

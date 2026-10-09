@@ -325,10 +325,17 @@ The `azmcp server start` command supports the following options:
 
 > **Security warning for outgoing proxy configuration:**
 >
-> HTTP/HTTPS/ALL proxies and debug recording proxies take precedence over and disable
-> some SSRF protections, including transport-level DNS/IP checks. Requests excluded by
-> `NO_PROXY` do not restore those checks. Use only trusted proxies with appropriate network
-> restrictions. Endpoint domain validation remains active unless separately bypassed.
+> Explicit HTTP/HTTPS/ALL proxies and debug recording proxies take precedence over and
+> disable transport-level DNS/IP checks for the whole configured handler. The server selects
+> one explicit proxy in `ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it
+> to both HTTP and HTTPS requests. Requests excluded by `NO_PROXY` do not restore those
+> checks. When none of those settings selects a proxy, `.NET`'s
+> `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules
+> per destination. Actually proxied requests omit transport DNS/IP checks, while destinations
+> for which those rules select no proxy retain them. PAC files call this a `DIRECT` result.
+> Use only trusted proxies with appropriate network restrictions. Endpoint validation remains
+> active unless separately bypassed, including public-target checks of the original
+> destination's IPs.
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
 >

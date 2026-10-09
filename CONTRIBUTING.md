@@ -756,16 +756,28 @@ static. The validator receives `ILogger<EndpointValidator>` through DI for diagn
 rather than requiring callers to pass a logger. Tests can create independent policies
 and accessors, opening actual command scopes to exercise no overrides, selected namespaces,
 or `ALL`; no process-wide setter, reset, or isolated test execution is required.
+Proxy routing does not disable endpoint validation. Public-target validation continues
+to resolve and reject private or reserved addresses for the original URL because callers
+may pass that URL to a downstream Azure service rather than dereference it through the
+local HTTP transport.
 
 Shared factory HTTP transports additionally use `AntiSSRFPolicy` with `ExternalOnlyLatest`.
 Default, named, and ARM clients evaluate the namespace override on every send and keep
-protected and unprotected connection pools separate. Missing contexts remain protected.
+protected, namespace-override, and system-proxy connection pools separate. Without an
+explicit proxy setting, `.NET`'s `HttpClient.DefaultProxy` supplies the environment,
+operating-system, PAC, and bypass rules evaluated for each destination.
+Actually proxied requests omit transport DNS/IP validation because the trusted proxy is
+the network boundary; destinations not routed through a proxy retain protection. Missing contexts remain protected.
 `NoSsrfClientName` is reserved for trusted infrastructure, not tool-input-driven opt-outs.
 
-**Proxy security warning:** Configured HTTP/HTTPS/ALL and debug recording proxies take
-precedence and disable transport-level AntiSSRF protection, including requests excluded
-by `NO_PROXY`. Explicit domain policies remain active unless separately bypassed.
-Use only trusted proxies with appropriate network restrictions.
+**Proxy security warning:** Explicit HTTP/HTTPS/ALL and debug recording proxies take
+precedence and disable transport-level AntiSSRF protection for the whole configured handler,
+including requests excluded by `NO_PROXY`. The factory selects one explicit proxy in
+`ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS
+requests. Only when no explicit proxy is selected does `HttpClient.DefaultProxy` provide
+destination-specific routing; those routes disable transport checks only for requests they
+actually proxy. Endpoint validation remains active unless separately bypassed. Use only
+trusted proxies with appropriate network restrictions.
 
 ### Package README
 
