@@ -10,11 +10,11 @@ namespace Microsoft.Mcp.Core.Extensions;
 /// Extension methods for registering HTTP client services.
 /// </summary>
 /// <remarks>
-/// Explicit proxy environment variables take precedence over transport-level AntiSSRF
-/// protection for the whole configured handler. Without those variables, the runtime system
-/// proxy is evaluated per request and becomes the DNS/IP boundary only for destinations it
-/// actually proxies. Configure only trusted proxies. Endpoint validation in tool services
-/// remains independent of transport routing.
+/// Explicit proxy environment variables take precedence for destinations they route.
+/// <c>NO_PROXY_ACTION</c> controls how explicit-proxy bypasses are handled. Without an explicit
+/// proxy, the runtime system proxy is evaluated per request and becomes the DNS/IP boundary
+/// only for destinations it actually proxies. Configure only trusted proxies. Endpoint
+/// validation in tool services remains independent of transport routing.
 /// </remarks>
 public static class HttpClientServiceCollectionExtensions
 {
@@ -56,6 +56,9 @@ public static class HttpClientServiceCollectionExtensions
             options.HttpProxy = Environment.GetEnvironmentVariable("http_proxy") ?? Environment.GetEnvironmentVariable("HTTP_PROXY");
             options.HttpsProxy = Environment.GetEnvironmentVariable("https_proxy") ?? Environment.GetEnvironmentVariable("HTTPS_PROXY");
             options.NoProxy = Environment.GetEnvironmentVariable("no_proxy") ?? Environment.GetEnvironmentVariable("NO_PROXY");
+            options.NoProxyAction = ParseNoProxyAction(
+                Environment.GetEnvironmentVariable("no_proxy_action") ??
+                Environment.GetEnvironmentVariable("NO_PROXY_ACTION"));
             options.RecordingProxy = recordingProxy;
 
             // Apply custom configuration
@@ -71,5 +74,24 @@ public static class HttpClientServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    internal static NoProxyAction ParseNoProxyAction(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return NoProxyAction.DirectWithIpFiltering;
+        }
+
+        if (Enum.TryParse(value, ignoreCase: true, out NoProxyAction action) &&
+            Enum.IsDefined(action))
+        {
+            return action;
+        }
+
+        string supportedValues = string.Join(", ", Enum.GetNames<NoProxyAction>());
+        throw new ArgumentException(
+            $"NO_PROXY_ACTION must be one of: {supportedValues}.",
+            nameof(value));
     }
 }

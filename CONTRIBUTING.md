@@ -770,14 +770,16 @@ Actually proxied requests omit transport DNS/IP validation because the trusted p
 the network boundary; destinations not routed through a proxy retain protection. Missing contexts remain protected.
 `NoSsrfClientName` is reserved for trusted infrastructure, not tool-input-driven opt-outs.
 
-**Proxy security warning:** Explicit HTTP/HTTPS/ALL and debug recording proxies take
-precedence and disable transport-level AntiSSRF protection for the whole configured handler,
-including requests excluded by `NO_PROXY`. The factory selects one explicit proxy in
-`ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS
-requests. Only when no explicit proxy is selected does `HttpClient.DefaultProxy` provide
-destination-specific routing; those routes disable transport checks only for requests they
-actually proxy. Endpoint validation remains active unless separately bypassed. Use only
-trusted proxies with appropriate network restrictions.
+**Proxy security warning:** The factory selects one explicit proxy in `ALL_PROXY`,
+`HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+Requests routed through it omit transport-level AntiSSRF protection. For `NO_PROXY`
+destinations, `NO_PROXY_ACTION` defaults to `DirectWithIpFiltering`; the other supported
+action is `DirectDangerouslyWithoutIpFiltering`. Only the dangerous action omits transport checks on
+an explicit-proxy bypass. When no explicit proxy is selected, `HttpClient.DefaultProxy`
+provides destination-specific routing and transport checks are omitted only for requests it
+actually proxies. Debug recording proxies remain a handler-wide exception. Endpoint
+validation remains active unless separately bypassed. Use only trusted proxies with
+appropriate network restrictions.
 
 ### Package README
 

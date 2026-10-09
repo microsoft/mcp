@@ -20,8 +20,8 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// A missing or unresolved context always selects protection,
 /// even when <see cref="SsrfProtectionPolicy.AllNamespaces"/> is configured.
 /// Explicit and recording proxies are handled before this handler is constructed.
-/// Destination-specific system and PAC proxy routing is handled by the outer
-/// <see cref="SystemProxyRoutingHandler"/>, so this handler selects only by namespace.
+/// Destination-specific explicit, system, and PAC proxy routing is handled by an outer
+/// <see cref="ProxyRoutingHandler"/>, so this handler selects only by namespace.
 /// </remarks>
 /// <exception cref="ArgumentNullException">
 /// An owned handler, <paramref name="contextAccessor"/>, or <paramref name="ssrfProtectionPolicy"/>

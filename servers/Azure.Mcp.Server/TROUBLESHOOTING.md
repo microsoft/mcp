@@ -615,26 +615,31 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    export HTTP_PROXY=http://proxy.company.com:8080
    export HTTPS_PROXY=http://proxy.company.com:8080
    export NO_PROXY=localhost,127.0.0.1
+   # Optional; DirectWithIpFiltering is the default.
+   export NO_PROXY_ACTION=DirectWithIpFiltering
    ```
 
    **Security warning:** The server selects one explicit outgoing proxy in `ALL_PROXY`,
    `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
-   It disables transport-level DNS/IP checks for all requests using that configuration, including
-   requests excluded by `NO_PROXY`. When none of those settings selects a proxy, `.NET`'s
-   `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules
-   for each destination. Actually proxied requests omit those DNS/IP transport checks, while
-   destinations not routed through a proxy retain them. Use only trusted proxies with
-   restricted network access; endpoint validation remains independently active, including
-   public-target validation of the original destination's IPs.
+   Requests routed through it omit transport-level DNS/IP checks. For destinations excluded
+   by `NO_PROXY`, `NO_PROXY_ACTION` selects the next route. The default,
+   `DirectWithIpFiltering`, connects directly with filtering. When no explicit proxy is
+   configured, `.NET`'s `HttpClient.DefaultProxy` supplies environment, operating-system,
+   PAC, and bypass rules for each destination. Requests actually routed through those rules
+   omit DNS/IP transport checks, while destinations not routed through a proxy retain them.
+   Use only trusted proxies with restricted network access; endpoint validation remains
+   independently active, including public-target validation of the original destination's IPs.
 
    ```mermaid
    flowchart TD
        A[Outgoing HTTP request] --> B{Is an explicit ALL_PROXY,<br/>HTTPS_PROXY, or HTTP_PROXY configured?}
        B -- Yes --> C{Does destination match NO_PROXY?}
-       C -- Yes --> D[Connect directly without the explicit proxy]
        C -- No --> E[Connect through the explicit proxy]
-       D --> F[WARNING: Transport IP address filtering is not used]
        E --> F
+       C -- Yes --> K{NO_PROXY_ACTION}
+       K -- DirectWithIpFiltering<br/>default --> I
+       K -- DirectDangerouslyWithoutIpFiltering --> D[Connect directly without filtering]
+       D --> F
        B -- No --> G{Is the system proxy or a PAC rule applicable for this destination?}
        G -- Yes --> H[Connect through the system proxy or PAC rule]
        H --> F
@@ -643,9 +648,14 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    ```
 
    `NO_PROXY` changes whether an outgoing request is sent through the selected explicit
-   proxy; it does not restore transport IP address filtering. When no explicit proxy is
-   configured, system and PAC rules are evaluated per destination, so filtering remains
-   enabled whenever those rules select no proxy.
+   proxy. `NO_PROXY_ACTION` then chooses one of these behaviors:
+
+   - `DirectWithIpFiltering` (default) connects directly and restores transport IP filtering.
+   - `DirectDangerouslyWithoutIpFiltering` connects directly without transport IP filtering.
+
+   The default matches conventional proxy-bypass behavior—bypass means direct access—while
+   retaining Azure MCP Server's IP filtering. Common `.NET` and Microsoft proxy
+   implementations do not chain a `NO_PROXY` bypass into a second proxy source.
 
 #### Troubleshooting Network Connectivity
 

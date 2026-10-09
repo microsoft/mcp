@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Http;
 using NSubstitute;
@@ -152,8 +153,28 @@ public class HttpClientFactoryConfiguratorTests
 
         Assert.NotEmpty(userAgentValues);
         Assert.Equal(userAgentValues.Length, userAgentValues.Distinct().Count());
-        Assert.IsType<SystemProxyRoutingHandler>(handler);
+        Assert.IsType<ProxyRoutingHandler>(handler);
         Assert.Equal(0, laterResolverCalls);
+    }
+
+    [Theory]
+    [InlineData(null, NoProxyAction.DirectWithIpFiltering)]
+    [InlineData("", NoProxyAction.DirectWithIpFiltering)]
+    [InlineData("DirectWithIpFiltering", NoProxyAction.DirectWithIpFiltering)]
+    [InlineData("DirectDangerouslyWithoutIpFiltering", NoProxyAction.DirectDangerouslyWithoutIpFiltering)]
+    public void ParseNoProxyAction_ParsesSupportedValues(string? value, NoProxyAction expected)
+    {
+        Assert.Equal(expected, HttpClientServiceCollectionExtensions.ParseNoProxyAction(value));
+    }
+
+    [Fact]
+    public void ParseNoProxyAction_RejectsUnsupportedValue()
+    {
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            HttpClientServiceCollectionExtensions.ParseNoProxyAction("fallback"));
+
+        Assert.Contains(nameof(NoProxyAction.DirectWithIpFiltering), exception.Message);
+        Assert.Contains(nameof(NoProxyAction.DirectDangerouslyWithoutIpFiltering), exception.Message);
     }
 
     [Theory]
@@ -262,6 +283,38 @@ public class HttpClientFactoryConfiguratorTests
         Assert.Equal(configureArm ? 1 : 2, server.Requests.Count);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfigureArmHttpClient_AppliesRedirectBehaviorToDangerousNoProxyRoute(bool configureArm)
+    {
+        await using LoopbackHttpServer server = LoopbackHttpServer.Start(redirect: true);
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = "http://127.0.0.1:1";
+            options.NoProxy = "127.0.0.1";
+            options.NoProxyAction = NoProxyAction.DirectDangerouslyWithoutIpFiltering;
+        });
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
+        if (configureArm)
+        {
+            services.ConfigureArmHttpClient();
+        }
+
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(HttpClientFactoryConfigurator.ArmClientName);
+
+        using HttpResponseMessage response = await client.GetAsync(
+            new Uri(server.Endpoint, "first"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(configureArm ? HttpStatusCode.Found : HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(configureArm ? 1 : 2, server.Requests.Count);
+    }
+
     [Fact]
     public void ConfigureArmHttpClient_PreservesRecordingProxyResolver()
     {
@@ -294,7 +347,13 @@ public class HttpClientFactoryConfiguratorTests
             handler = delegating.InnerHandler!;
         }
 
-        return Assert.IsType<SocketsHttpHandler>(handler);
+        return handler switch
+        {
+            SocketsHttpHandler socketsHttpHandler => socketsHttpHandler,
+            ProxyRoutingHandler proxyRoutingHandler => proxyRoutingHandler.ProxiedHandler,
+            _ => throw new Xunit.Sdk.XunitException(
+                $"Expected a sockets or proxy-routing handler, but found {handler.GetType().FullName}.")
+        };
     }
 
     [Theory]

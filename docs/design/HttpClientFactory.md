@@ -81,13 +81,17 @@ The following environment variables are automatically applied:
 - `HTTPS_PROXY`: Explicit proxy used when `ALL_PROXY` is absent
 - `HTTP_PROXY`: Fallback explicit proxy when the other proxy variables are absent
 - `NO_PROXY`: Comma-separated list of hosts that should bypass the proxy
+- `NO_PROXY_ACTION`: How an explicit-proxy bypass is routed:
+  - `DirectWithIpFiltering` (default): connect directly through namespace-aware IP filtering
+  - `DirectDangerouslyWithoutIpFiltering`: connect directly without transport IP filtering
 
-> **Security warning:** Explicit HTTP/HTTPS/ALL proxy settings take precedence and disable
-> transport-level AntiSSRF protection for the entire configured handler. The factory selects
-> one proxy in `ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order and uses it for both HTTP
-> and HTTPS requests; these variables are not retained as separate per-protocol routes.
-> `NO_PROXY` controls whether that selected proxy is used for a destination, but does not
-> restore transport protection. Use only trusted proxies with appropriate network controls.
+> **Security warning:** The factory selects one proxy in `ALL_PROXY`, `HTTPS_PROXY`, then
+> `HTTP_PROXY` order and uses it for both HTTP and HTTPS requests; these variables are not
+> retained as separate per-protocol routes. Requests routed through that proxy omit
+> transport-level AntiSSRF protection. `NO_PROXY` controls whether it applies to a destination,
+> and `NO_PROXY_ACTION` controls the bypass route. The default follows conventional `.NET`
+> bypass semantics by connecting directly, but restores namespace-aware IP filtering.
+> `DirectDangerouslyWithoutIpFiltering` must be used only in a trusted environment.
 >
 > When none of those explicit settings selects a proxy, `.NET`'s
 > `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules.
@@ -101,6 +105,16 @@ The following environment variables are automatically applied:
 >
 > Endpoint validation remains active in both cases. This includes Azure/external host
 > authorization and `ValidatePublicTargetUrl` checks of the original target's resolved IPs.
+
+`NO_PROXY_ACTION` intentionally has no system/PAC fallback mode. In conventional `.NET`
+proxy behavior, a bypass selects a direct connection. In addition,
+[`HttpClient.DefaultProxy`](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy)
+selects environment proxy settings or, only when those are absent, operating-system settings.
+The legacy `WebRequest.GetSystemWebProxy` API does not provide a separate portable fallback
+because its
+[modern implementation delegates to `HttpClient.DefaultProxy`](https://github.com/dotnet/runtime/blob/main/src/libraries/System.Net.Requests/src/System/Net/WebRequest.cs#L548).
+Chaining an explicit `NO_PROXY` match into system/PAC resolution would therefore be both
+unconventional and unavailable as a distinct cross-platform .NET source.
 
 ## Usage
 
@@ -177,6 +191,8 @@ configuration delegates; the recording resolver from the first call is retained.
 # Set proxy environment variables
 export ALL_PROXY=http://proxy.company.com:8080
 export NO_PROXY=localhost,127.0.0.1,*.internal
+# Optional; this is already the default.
+export NO_PROXY_ACTION=DirectWithIpFiltering
 
 # Start Azure MCP - proxy configuration is automatically applied
 ./azmcp server start

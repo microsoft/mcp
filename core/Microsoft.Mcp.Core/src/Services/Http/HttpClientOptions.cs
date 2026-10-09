@@ -7,11 +7,12 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// Configuration options for HttpClient services.
 /// </summary>
 /// <remarks>
-/// The factory selects one explicit proxy in ALL, HTTPS, then HTTP precedence. It disables
-/// transport-level SSRF protection for the whole handler, including requests excluded by
-/// NoProxy. Without an explicit proxy, <see cref="HttpClient.DefaultProxy"/> is evaluated per
-/// request and disables transport protection only when it selects a proxy. Endpoint validation
-/// in callers remains independent. Use only trusted proxies and restrict their network access.
+/// The factory selects one explicit proxy in ALL, HTTPS, then HTTP precedence. Requests that
+/// use it omit transport-level SSRF protection. <see cref="NoProxyAction"/> controls how
+/// destinations excluded by <see cref="NoProxy"/> are routed. Without an explicit proxy,
+/// <see cref="HttpClient.DefaultProxy"/> is evaluated per request and disables transport
+/// protection only when it selects a proxy. Endpoint validation in callers remains independent.
+/// Use only trusted proxies and restrict their network access.
 /// </remarks>
 public sealed class HttpClientOptions
 {
@@ -31,7 +32,8 @@ public sealed class HttpClientOptions
     /// </summary>
     /// <remarks>
     /// The factory selects one handler-wide proxy in ALL_PROXY, HTTPS_PROXY, HTTP_PROXY order.
-    /// Configuring an explicit proxy disables the shared handler's transport SSRF protection.
+    /// Requests routed through it omit transport SSRF protection; <see cref="NoProxyAction"/>
+    /// controls excluded destinations.
     /// </remarks>
     public string? HttpProxy { get; set; }
 
@@ -40,7 +42,8 @@ public sealed class HttpClientOptions
     /// </summary>
     /// <remarks>
     /// The factory selects one handler-wide proxy in ALL_PROXY, HTTPS_PROXY, HTTP_PROXY order.
-    /// Configuring an explicit proxy disables the shared handler's transport SSRF protection.
+    /// Requests routed through it omit transport SSRF protection; <see cref="NoProxyAction"/>
+    /// controls excluded destinations.
     /// </remarks>
     public string? HttpsProxy { get; set; }
 
@@ -49,15 +52,21 @@ public sealed class HttpClientOptions
     /// </summary>
     /// <remarks>
     /// The factory selects one handler-wide proxy in ALL_PROXY, HTTPS_PROXY, HTTP_PROXY order.
-    /// Configuring an explicit proxy disables the shared handler's transport SSRF protection.
+    /// Requests routed through it omit transport SSRF protection; <see cref="NoProxyAction"/>
+    /// controls excluded destinations.
     /// </remarks>
     public string? AllProxy { get; set; }
 
     /// <summary>
     /// Gets or sets the comma-separated list of hostnames that should bypass the proxy. Can be set via NO_PROXY environment variable.
     /// </summary>
-    /// <remarks>Bypassing a configured proxy does not restore transport-level SSRF checks.</remarks>
     public string? NoProxy { get; set; }
+
+    /// <summary>
+    /// Gets or sets how requests excluded from an explicit proxy by <see cref="NoProxy"/> are routed.
+    /// Can be set via the <c>NO_PROXY_ACTION</c> environment variable.
+    /// </summary>
+    public NoProxyAction NoProxyAction { get; set; } = NoProxyAction.DirectWithIpFiltering;
 
     /// <summary>
     /// Gets or sets the default timeout for HTTP requests. Defaults to 100 seconds.

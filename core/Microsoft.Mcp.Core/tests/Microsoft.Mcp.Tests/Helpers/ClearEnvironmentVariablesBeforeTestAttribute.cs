@@ -32,6 +32,8 @@ namespace Microsoft.Mcp.Tests.Helpers
             "HTTP_PROXY",
             "HTTPS_PROXY",
             "NO_PROXY",
+            "NO_PROXY_ACTION",
+            "no_proxy_action",
         ];
 
         public override void Before(MethodInfo methodUnderTest, IXunitTest test)
