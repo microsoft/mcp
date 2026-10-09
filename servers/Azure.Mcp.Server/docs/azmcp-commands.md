@@ -550,6 +550,16 @@ azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
 # confidence, effort, and output type.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
+
+# Get Azure Advisor Status and Insights per Service Group: criticality tier, Status, StatusDescription and Insight KPIs
+# (zonal resiliency, idle resources, service retirement). Omit --service-group for all groups visible to the caller.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor statusinsights get [--service-group <service-group>] \
+                                [--criticality-tier <criticality-tier>] \
+                                [--status <status>] \
+                                [--insight-name <insight-name>] \
+                                [--include <status|insights|both>] \
+                                [--continuation-token <continuation-token>]
 ```
 
 ### Azure AI Search Operations

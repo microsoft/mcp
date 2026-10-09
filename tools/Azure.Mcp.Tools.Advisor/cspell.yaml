@@ -10,6 +10,8 @@ words:
   - advisorresources
   - applicationgatewaywebapplicationfirewallpolicies
   - aseries
+  - atrisk
+  - attentionneeded
   - connectedclusters
   - containerregistry
   - databaseaccounts
@@ -30,10 +32,14 @@ words:
   - managedinstances
   - rdma
   - scom
+  - servicegroupintelligence
+  - servicegroups
   - serviceupgradeandretirement
   - startofday
   - staticsites
+  - statusinsights
   - subtag
+  - tobool
   - todatetime
   - tolower
   - undercount
