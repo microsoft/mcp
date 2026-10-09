@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.StatusInsights;
@@ -26,5 +27,8 @@ public sealed class StatusInsightsGetOptions
 
     [Option(Description = "Optional continuation token returned by a previous partial result.")]
     public string? ContinuationToken { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
 
 }

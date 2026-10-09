@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
@@ -34,21 +35,20 @@ public sealed class ServiceGroupIntelligenceService(IAzureService azureService)
         bool includeStatus,
         bool includeInsights,
         string? continuationToken,
+        string? tenant,
         CancellationToken cancellationToken = default)
     {
         var query = BuildQuery(NormalizeServiceGroupIds(serviceGroups), insightNames);
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        var tenant = tenants.Count > 0
-            ? tenants[0]
-            : throw new InvalidOperationException("No accessible Azure tenants were found.");
+        var tenantResource = await GetTenantResourceAsync(tenant, cancellationToken);
 
         var matched = new List<ServiceGroupStatusInsight>();
         var token = continuationToken;
+        var truncatedWithoutToken = false;
 
         // Bounded paging keeps one call useful without an unbounded Resource Graph scan.
         for (var page = 0; page < MaxPages; page++)
         {
-            var response = await tenant.GetResourcesAsync(
+            var response = await tenantResource.GetResourcesAsync(
                 new ResourceQueryContent(query)
                 {
                     Options = new ResourceQueryRequestOptions { Top = PageSize, SkipToken = token }
@@ -68,6 +68,8 @@ public sealed class ServiceGroupIntelligenceService(IAzureService azureService)
             var next = response.Value.SkipToken;
             if (string.IsNullOrEmpty(next) || next == token)
             {
+                // A truncated page without a new token cannot be continued; report it as partial, not complete.
+                truncatedWithoutToken = response.Value.ResultTruncated == ResultTruncated.True;
                 token = null;
                 break;
             }
@@ -77,7 +79,7 @@ public sealed class ServiceGroupIntelligenceService(IAzureService azureService)
 
         var results = FilterAndProject(matched, criticalityTiers, statuses, includeStatus, includeInsights);
 
-        return new(results, token is not null, token);
+        return new(results, token is not null || truncatedWithoutToken, token);
     }
 
     internal static List<ServiceGroupStatusInsight> FilterAndProject(
@@ -104,6 +106,31 @@ public sealed class ServiceGroupIntelligenceService(IAzureService azureService)
                 Insights = includeInsights ? item.Insights : null,
             })
             .ToList();
+    }
+
+    // Mirrors BaseAzureResourceService: an explicit tenant is resolved; otherwise the tenant must be unambiguous.
+    private async Task<TenantResource> GetTenantResourceAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        var tenants = await AzureService.GetTenants(cancellationToken);
+        if (tenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible Azure tenants were found for the current credential.");
+        }
+
+        if (string.IsNullOrWhiteSpace(tenant))
+        {
+            return tenants.Count == 1
+                ? tenants[0]
+                : throw new ArgumentException(
+                    "Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify the tenant explicitly.",
+                    nameof(tenant));
+        }
+
+        var resolvedTenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
+            ?? throw new InvalidOperationException($"Could not resolve tenant '{tenant}'.");
+        var tenantId = Guid.Parse(resolvedTenantId);
+        return tenants.FirstOrDefault(candidate => candidate.Data.TenantId == tenantId)
+            ?? throw new InvalidOperationException($"No accessible tenant found for tenant '{tenant}'.");
     }
 
     internal static string[] NormalizeServiceGroupIds(string[]? serviceGroups) =>
@@ -149,14 +176,14 @@ public sealed class ServiceGroupIntelligenceService(IAzureService azureService)
             | where serviceGroupScope startswith '{ServiceGroupPrefix}'{scopeFilter}
             | where isempty(tostring(properties.isDeleted)) or tobool(properties.isDeleted) == false{insightFilter}
             | project id, name, type, properties, serviceGroupScope
-            | summarize records = make_list(pack_all()) by serviceGroupScope
-            | order by serviceGroupScope asc
+            | summarize records = make_list(pack_all()) by id = serviceGroupScope
+            | order by id asc
             """.ReplaceLineEndings("\n");
     }
 
     internal static ServiceGroupStatusInsight? Normalize(JsonElement row, bool includeStatus, bool includeInsights)
     {
-        var scope = Str(row, "serviceGroupScope");
+        var scope = Str(row, "id");
         if (scope is null || !row.TryGetProperty("records", out var records) || records.ValueKind != JsonValueKind.Array)
         {
             return null;

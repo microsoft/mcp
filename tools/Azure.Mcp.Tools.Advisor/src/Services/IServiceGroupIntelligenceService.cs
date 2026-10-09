@@ -18,5 +18,6 @@ public interface IServiceGroupIntelligenceService
         bool includeStatus,
         bool includeInsights,
         string? continuationToken,
+        string? tenant,
         CancellationToken cancellationToken = default);
 }

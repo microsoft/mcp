@@ -73,6 +73,7 @@ public sealed class StatusInsightsGetCommand(ILogger<StatusInsightsGetCommand> l
                 include != "insights",
                 include != "status",
                 options.ContinuationToken,
+                options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

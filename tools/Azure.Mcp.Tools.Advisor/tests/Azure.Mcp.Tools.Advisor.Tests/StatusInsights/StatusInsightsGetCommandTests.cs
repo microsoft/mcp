@@ -24,7 +24,7 @@ public class StatusInsightsGetCommandTests : CommandUnitTestsBase<StatusInsights
     {
         Service.GetStatusInsightsAsync(
             Arg.Any<string[]?>(), Arg.Any<string[]?>(), Arg.Any<string[]?>(), Arg.Any<string[]?>(),
-            Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ServiceGroupStatusInsightsPage([], false, null));
 
         var response = await ExecuteCommandAsync(args);
@@ -38,7 +38,7 @@ public class StatusInsightsGetCommandTests : CommandUnitTestsBase<StatusInsights
         var group = new ServiceGroupStatusInsight("sg1", "/providers/microsoft.management/servicegroups/sg1", "0", "Mission-critical", "At Risk", "desc", "impact", null);
         Service.GetStatusInsightsAsync(
             Arg.Any<string[]?>(), Arg.Any<string[]?>(), Arg.Any<string[]?>(), Arg.Any<string[]?>(),
-            Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new ServiceGroupStatusInsightsPage([group], true, "tok"));
 
         var response = await ExecuteCommandAsync("--service-group sg1");

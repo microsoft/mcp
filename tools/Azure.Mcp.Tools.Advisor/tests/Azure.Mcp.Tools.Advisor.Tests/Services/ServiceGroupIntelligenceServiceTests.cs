@@ -36,7 +36,7 @@ public class ServiceGroupIntelligenceServiceTests
     public void Normalize_StatusAndInsights_ReturnsNewestStatusAndInsightKpis()
     {
         const string json = """
-            {"serviceGroupScope":"/providers/microsoft.management/servicegroups/sg1","records":[
+            {"id":"/providers/microsoft.management/servicegroups/sg1","records":[
               {"id":"/x/Health","type":"microsoft.advisor/servicegroupintelligence","properties":{"intelligenceName":"Health","criticality":"1","lastUpdatedTime":"2024-01-01T00:00:00Z",
                 "intelligenceDetail":[{"kpiName":"Status","kpiValue":"Critical"}]}},
               {"id":"/x/Health","type":"microsoft.advisor/servicegroupintelligence","properties":{"intelligenceName":"Health","criticality":"1","lastUpdatedTime":"2024-02-01T00:00:00Z",
