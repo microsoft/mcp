@@ -108,7 +108,7 @@ public sealed class ServiceGroupIntelligenceService(IAzureService azureService)
             .ToList();
     }
 
-    // Mirrors BaseAzureResourceService: an explicit tenant is resolved; otherwise the tenant must be unambiguous.
+    // Mirrors AdvisorService: an explicit tenant is resolved; otherwise the first accessible tenant is used.
     private async Task<TenantResource> GetTenantResourceAsync(string? tenant, CancellationToken cancellationToken)
     {
         var tenants = await AzureService.GetTenants(cancellationToken);
@@ -119,11 +119,7 @@ public sealed class ServiceGroupIntelligenceService(IAzureService azureService)
 
         if (string.IsNullOrWhiteSpace(tenant))
         {
-            return tenants.Count == 1
-                ? tenants[0]
-                : throw new ArgumentException(
-                    "Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify the tenant explicitly.",
-                    nameof(tenant));
+            return tenants[0];
         }
 
         var resolvedTenantId = await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
