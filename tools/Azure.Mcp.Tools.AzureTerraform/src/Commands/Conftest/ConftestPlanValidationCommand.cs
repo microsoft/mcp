@@ -15,11 +15,14 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands.Conftest;
     Name = "plan",
     Title = "Validate Terraform Plan with Conftest",
     Description = """
-        Generates a conftest command to validate a Terraform plan JSON file against Azure policies.
+        Generates a conftest command to validate an already generated Terraform plan JSON file (tfplan.json)
+        against Azure policies. Use this tool only when the request names a Terraform plan or plan JSON file,
+        not a folder of Terraform .tf configuration files.
         Returns the command and arguments for the agent to execute locally.
         Uses the Azure policy library (policy-library-avm) for validation with configurable policy sets.
         Specify --plan-folder with the path to the folder containing tfplan.json. Optionally configure the policy set
         ('all', 'Azure-Proactive-Resiliency-Library-v2', or 'avmsec'), severity filter (for avmsec), and custom policy paths.
+        To validate Terraform .tf source files in a workspace folder instead, use the conftest workspace command.
         If conftest is not installed locally, returns installation instructions instead.
         """,
     OperationPlane = ToolOperationPlane.NotApplicable,
