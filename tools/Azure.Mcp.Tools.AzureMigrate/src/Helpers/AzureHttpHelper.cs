@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.AzureMigrate.Models;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
 
@@ -59,6 +60,28 @@ public sealed class AzureHttpHelper(IAzureService azureService)
         var response = await client.PostAsync(url, null, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Sends an authenticated request carrying an optional JSON body and returns the raw outcome
+    /// without throwing, so the caller can map individual status codes onto actionable guidance.
+    /// </summary>
+    public async Task<HttpResult> SendJsonAsync(
+        HttpMethod method,
+        string url,
+        string? json,
+        CancellationToken cancellationToken = default)
+    {
+        using var client = await GetAuthenticatedClientAsync(cancellationToken);
+        using var request = new HttpRequestMessage(method, url);
+        if (json is not null)
+        {
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        }
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        return new HttpResult(response.StatusCode, body);
     }
 
     /// <summary>
