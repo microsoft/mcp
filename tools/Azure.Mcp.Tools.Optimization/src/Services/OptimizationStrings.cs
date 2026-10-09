@@ -31,12 +31,12 @@ internal static class OptimizationStrings
         "resolved to its id internally with a single targeted Azure Resource Graph lookup. Do NOT call the 'subscription " +
         "list' tool (or any list-subscriptions tool) to resolve the id first.";
 
-    // List subscription option: optional; omitting it queries every subscription accessible to the caller.
+    // List subscription option: optional; omitting it queries every accessible subscription in the tenant.
     public const string ListSubscriptionOptionDescription =
         "Optional Azure subscription id (GUID) or subscription name. Pass whatever the user gives you directly \u2014 a " +
         "name is resolved to its id internally. Omit it when the user does not name a subscription to query all " +
-        "subscriptions accessible to the caller. Do NOT call the 'subscription list' tool (or any list-subscriptions " +
-        "tool) first.";
+        "accessible subscriptions in the tenant (--tenant, or the only accessible tenant). Do NOT call the " +
+        "'subscription list' tool (or any list-subscriptions tool) first.";
 
     // ---- Alternative recommendations ----
     public const string AltInvalidResourceIdMessage = "Invalid resourceId.";

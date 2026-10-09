@@ -37,9 +37,8 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         // Windows, LF on Linux), which otherwise breaks recorded-test playback matching.
         var query = $"{OptimizationKqlQueries.TopCostSavingsQuery.ReplaceLineEndings("\r\n")}\n| limit {top}";
 
-        // Without a subscription, the queries are not scoped and cover every subscription the caller can access.
         string? subscriptionId = null;
-        Guid? queryTenantId = Guid.TryParse(tenant, out var parsedTenant) ? parsedTenant : null;
+        string? queryTenantId;
         if (!string.IsNullOrWhiteSpace(subscription))
         {
             (subscriptionId, queryTenantId, var candidates) = await ResolveSubscriptionAsync(
@@ -49,6 +48,11 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             {
                 return new CostSavingsResult([], false, candidates);
             }
+        }
+        else
+        {
+            // Without a subscription, the queries are not scoped and cover every accessible subscription in one tenant.
+            queryTenantId = await ResolveUnscopedQueryTenantIdAsync(tenant, cancellationToken);
         }
 
         var tenantResource = await GetTenantResourceAsync(queryTenantId, cancellationToken);
@@ -333,13 +337,15 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
     /// true and the name matches more than one subscription, the candidates are returned so the
     /// caller can ask the user to select the correct one; otherwise an exception is thrown.
     /// </summary>
-    private async Task<(string? SubscriptionId, Guid? TenantId, IReadOnlyList<SubscriptionOption>? Candidates)> ResolveSubscriptionAsync(
+    private async Task<(string? SubscriptionId, string? TenantId, IReadOnlyList<SubscriptionOption>? Candidates)> ResolveSubscriptionAsync(
         string subscription,
         string? tenant,
         bool returnCandidatesOnMultipleMatch,
         CancellationToken cancellationToken)
     {
-        var tenantId = Guid.TryParse(tenant, out var parsedTenant) ? parsedTenant : (Guid?)null;
+        var tenantId = string.IsNullOrWhiteSpace(tenant)
+            ? null
+            : await AzureService.GetTenantId(tenant, cancellationToken);
 
         if (Guid.TryParse(subscription, out _))
         {
@@ -387,31 +393,50 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
 
         var subscriptionId = GetString(matches[0], "subscriptionId")
             ?? throw new KeyNotFoundException($"Could not find subscription with name '{subscription}'.");
-        var resolvedTenantId = Guid.TryParse(GetString(matches[0], "tenantId"), out var matchTenant)
-            ? matchTenant
-            : tenantId;
+        var resolvedTenantId = GetString(matches[0], "tenantId") ?? tenantId;
 
         return (subscriptionId, resolvedTenantId, null);
     }
 
-    private async Task<TenantResource> GetTenantResourceAsync(Guid? tenantId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Resolves the tenant for a query that is not scoped to a subscription. An explicit tenant id or display
+    /// name is resolved (an unknown name throws); otherwise the only accessible tenant is used. When several
+    /// tenants are accessible the tenant cannot be inferred, so the caller must specify one.
+    /// </summary>
+    private async Task<string> ResolveUnscopedQueryTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(tenant))
+        {
+            return await AzureService.GetTenantId(tenant, cancellationToken);
+        }
+
         var tenants = await AzureService.GetTenants(cancellationToken);
-        if (tenants.Count == 0)
+        return tenants.Count switch
         {
-            throw new InvalidOperationException("No accessible Azure tenants were found.");
+            0 => throw new InvalidOperationException("No accessible Azure tenants were found for the current credential."),
+            1 => tenants[0].Data.TenantId?.ToString()
+                ?? throw new InvalidOperationException("The accessible Azure tenant does not have a tenant ID."),
+            _ => throw new ArgumentException(
+                "Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify --tenant, or pass " +
+                "--subscription to query a single subscription.",
+                nameof(tenant)),
+        };
+    }
+
+    /// <summary>
+    /// Returns a <see cref="TenantResource"/> whose client authenticates against <paramref name="tenantId"/>
+    /// (or the default tenant when null). Resource Graph queries use the client's credential, so the client
+    /// must be created for the target tenant rather than selecting a tenant from the default client.
+    /// </summary>
+    private async Task<TenantResource> GetTenantResourceAsync(string? tenantId, CancellationToken cancellationToken)
+    {
+        var armClient = await CreateArmClientAsync(tenantId, cancellationToken: cancellationToken);
+        await foreach (var tenant in armClient.GetTenants().GetAllAsync(cancellationToken))
+        {
+            return tenant;
         }
 
-        if (tenantId is { } id)
-        {
-            var match = tenants.FirstOrDefault(t => t.Data.TenantId == id);
-            if (match is not null)
-            {
-                return match;
-            }
-        }
-
-        return tenants[0];
+        throw new InvalidOperationException("No accessible Azure tenants were found for the current credential.");
     }
 
     private static CostSavingsRecommendation ConvertToCostSavings(JsonElement item) => new(

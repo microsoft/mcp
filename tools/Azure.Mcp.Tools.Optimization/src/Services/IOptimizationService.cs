@@ -9,8 +9,10 @@ public interface IOptimizationService
 {
     /// <summary>
     /// Returns the top cost-saving recommendations, ranked by impact and currency-normalized annual
-    /// savings. When <paramref name="subscription"/> is null or empty, all subscriptions accessible to the
-    /// caller are queried. When the subscription name matches more than one subscription, the returned
+    /// savings. When <paramref name="subscription"/> is null or empty, every subscription accessible to the
+    /// caller in a single tenant is queried: <paramref name="tenant"/> (id or display name) when given, otherwise
+    /// the only accessible tenant; an <see cref="ArgumentException"/> is thrown when several tenants are accessible
+    /// and none is specified. When the subscription name matches more than one subscription, the returned
     /// result carries the candidate subscriptions instead.
     /// </summary>
     Task<CostSavingsResult> ListCostSavingsAsync(

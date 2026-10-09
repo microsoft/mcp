@@ -159,4 +159,55 @@ public class RecommendationListCommandTests
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutSubscriptionAndMultipleTenants_ReturnsBadRequest()
+    {
+        Service.ListCostSavingsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify --tenant."));
+
+        var response = await ExecuteCommandAsync("--top", "5");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--tenant", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PassesTenantToService()
+    {
+        Service.ListCostSavingsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new CostSavingsResult([], false));
+
+        var response = await ExecuteCommandAsync("--tenant", "Contoso");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListCostSavingsAsync(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<int>(),
+            "Contoso",
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UnknownTenantOrSubscription_ReturnsNotFound()
+    {
+        Service.ListCostSavingsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Could not find tenant with name Contoso"));
+
+        var response = await ExecuteCommandAsync("--tenant", "Contoso");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+    }
 }

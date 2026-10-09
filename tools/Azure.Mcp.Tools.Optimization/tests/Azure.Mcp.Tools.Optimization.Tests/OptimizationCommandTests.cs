@@ -145,6 +145,9 @@ public sealed class OptimizationCommandTests(ITestOutputHelper output, TestProxy
 
             AssertOptionalNonNegativeNumber(recommendation, "savingsAmount");
             AssertOptionalNonNegativeNumber(recommendation, "annualSavingsAmount");
+
+            var impact = AssertNonEmptyString(recommendation, "impact");
+            Assert.Contains(impact, new[] { "high", "medium", "low" });
         }
 
         // The summary is only returned when unattached-disk recommendations exist.

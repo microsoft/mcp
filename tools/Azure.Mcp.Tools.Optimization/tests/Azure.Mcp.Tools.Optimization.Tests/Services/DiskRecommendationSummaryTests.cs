@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cSpell:ignore tobool Recomm
+
 using System.Text.Json;
 using Azure.Mcp.Tools.Optimization.Services;
 using Xunit;
@@ -76,6 +78,36 @@ public class DiskRecommendationSummaryTests
         Assert.Contains(
             $"== '{OptimizationKqlQueries.UnattachedDiskRecommendationTypeId}'",
             OptimizationKqlQueries.UnattachedDiskSummaryQuery);
+    }
+
+    [Fact]
+    public void TopCostSavingsQuery_ProjectsImpact()
+    {
+        var projection = OptimizationKqlQueries.TopCostSavingsQuery[OptimizationKqlQueries.TopCostSavingsQuery.LastIndexOf("| project", StringComparison.Ordinal)..];
+
+        Assert.Matches(@"(?m)^\s*impact,\s*$", projection);
+    }
+
+    [Fact]
+    public void UnattachedDiskSummaryQuery_AppliesSameActiveFiltersAsTopCostSavingsQuery()
+    {
+        string[] sharedFilters =
+        [
+            "where isempty(properties.tracked) or properties.tracked == false",
+            "where type =~ 'microsoft.advisor/suppressions'",
+            "where expirationTimeStamp > now()",
+            "project subscriptionId, excludeRecomm = properties.exclude",
+            "project subscriptionId, resourceGroup, excludeProperty = properties.exclude",
+        ];
+
+        Assert.All(sharedFilters, filter =>
+        {
+            Assert.Contains(filter, OptimizationKqlQueries.TopCostSavingsQuery);
+            Assert.Contains(filter, OptimizationKqlQueries.UnattachedDiskSummaryQuery);
+        });
+        Assert.Contains("where isempty(excludeRecomm) or tobool(excludeRecomm) == false", OptimizationKqlQueries.UnattachedDiskSummaryQuery);
+        Assert.Contains("where isempty(excludeProperty) or tobool(excludeProperty) == false", OptimizationKqlQueries.UnattachedDiskSummaryQuery);
+        Assert.Contains("where isnull(expirationTimeStamp) or isempty(expirationTimeStamp)", OptimizationKqlQueries.UnattachedDiskSummaryQuery);
     }
 
     private static List<JsonElement> ParseRows(string json)

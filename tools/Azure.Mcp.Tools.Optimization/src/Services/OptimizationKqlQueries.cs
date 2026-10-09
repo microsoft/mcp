@@ -17,6 +17,34 @@ internal static class OptimizationKqlQueries
 
     private static string EscapeKql(string value) => value.Replace("'", "''", StringComparison.Ordinal);
 
+    // Shared filters so the curated list and the unattached-disk summary hide the same recommendations.
+    // Joined on stableId: suppressions (snoozed/dismissed) that have not yet expired.
+    private const string ActiveSuppressionsSubquery = """
+advisorresources
+    | where type =~ 'microsoft.advisor/suppressions'
+    | extend tokens = split(id, '/')
+    | extend stableId = iff(array_length(tokens) > 3, tokens[array_length(tokens) - 3], '')
+    | extend expirationTimeStamp = todatetime(iff(strcmp(tostring(properties.ttl), '-1') == 0, '9999-12-31', properties.expirationTimeStamp))
+    | where expirationTimeStamp > now()
+    | project suppressionId = tostring(properties.suppressionId), stableId, expirationTimeStamp
+""";
+
+    // Joined on subscriptionId: subscription-level Advisor configuration (exclusion and low-CPU threshold).
+    private const string SubscriptionConfigurationSubquery = """
+advisorresources
+    | where type =~ 'microsoft.advisor/configurations'
+    | where isempty(resourceGroup)
+    | project subscriptionId, excludeRecomm = properties.exclude, lowCpuThreshold = properties.lowCpuThreshold
+""";
+
+    // Joined on subscriptionId and resourceGroup: resource-group-level Advisor exclusion.
+    private const string ResourceGroupConfigurationSubquery = """
+advisorresources
+    | where type =~ 'microsoft.advisor/configurations'
+    | where isnotempty(resourceGroup)
+    | project subscriptionId, resourceGroup, excludeProperty = properties.exclude
+""";
+
     /// <summary>ARG query resolving a subscription id (and owning tenant) from a subscription name.</summary>
     public static string BuildSubscriptionIdByNameQuery(string subscriptionName) =>
         "resourcecontainers " +
@@ -38,7 +66,7 @@ internal static class OptimizationKqlQueries
         "advisorresources " +
         "| where type =~ 'microsoft.advisor/recommendations' " +
         $"| where properties.resourceMetadata.resourceId == '{EscapeKql(resourceId)}' " +
-        $"| where properties.category == 'Cost'"+
+        $"| where properties.category == 'Cost'" +
         "| project id, resourceGroup, subscriptionId,properties = bag_remove_keys(properties, dynamic(['impact']))";
 
     /// <summary>
@@ -57,20 +85,11 @@ advisorresources
 | where iff(properties.recommendationTypeId in ('0169a2e1-c7bf-4c37-90b8-0714811c82d3', '06ad499a-0952-48d3-b061-ec81c9cabb8b', '0d524e8d-4cfd-4db5-9f91-8b4bb5235a8e', '0eb54047-acd9-4f26-8ffb-8cec713782d6', '10aedd06-621e-4b4f-a45c-5256573e0191', '148cdd60-97e8-426b-a7b9-141b7cb4bc2f', '171f87ad-4ead-42fc-8f32-a3b18d451837', '1b8c5187-32a6-4a2f-8ca1-b0b7d6ce9e86', '32755df6-aa2f-48d7-9ab7-92b8a80352ea', '3327646a-c325-417f-a3e3-36ae7119da69', '3f6c5689-6a05-4896-a6e0-c6f8a22a44c2', '407b6ad6-8e0b-40e7-9384-643520cae0ed', '5b8ddf04-be28-44ec-ab2c-a63a34d1de13', '680a5388-28aa-44e8-88af-32e3598dc869', '6dcd6657-7a07-404a-b462-db76946f6a97', '84b1a508-fc21-49da-979e-96894f1665df', '885cd4f5-dfa0-4d68-bbfd-00f89fc2b69c', '8ee30d6b-2c73-452a-b4ad-e4386cd6f7d0', 'a205074f-8049-48b3-903f-556f5e530ae3', 'a8fd63ce-4600-43eb-af33-a6d5481f5930', 'db621e98-4a20-4942-b174-c455dc71dbae', 'f0382960-6906-4b0d-add3-ed12690bff31', '89515250-1243-43d1-b4e7-f9437cedffd8'), riFilterCondition, true)
 | project id, stableId = name, subscriptionId, resourceGroup, properties, tenantId
 | join kind=leftouter (
-    advisorresources
-    | where type =~ 'microsoft.advisor/suppressions'
-    | extend tokens = split(id, '/')
-    | extend stableId = iff(array_length(tokens) > 3, tokens[array_length(tokens) - 3], '')
-    | extend expirationTimeStamp = todatetime(iff(strcmp(tostring(properties.ttl), '-1') == 0, '9999-12-31', properties.expirationTimeStamp))
-    | where expirationTimeStamp > now()
-    | project suppressionId = tostring(properties.suppressionId), stableId, expirationTimeStamp
+    {{ActiveSuppressionsSubquery}}
 ) on stableId
 | project id, stableId, subscriptionId, resourceGroup, properties, expirationTimeStamp, suppressionId, tenantId
 | join kind=leftouter (
-    advisorresources
-    | where type =~ 'microsoft.advisor/configurations'
-    | where isempty(resourceGroup)
-    | project subscriptionId, excludeRecomm = properties.exclude, lowCpuThreshold = properties.lowCpuThreshold
+    {{SubscriptionConfigurationSubquery}}
 ) on subscriptionId
 | extend isActive1 = iff(isempty(excludeRecomm), true, tobool(excludeRecomm) == false)
 | extend isActive2 = iff(
@@ -84,10 +103,7 @@ advisorresources
 )
 | where isActive1 and isActive2
 | join kind=leftouter (
-    advisorresources
-    | where type =~ 'microsoft.advisor/configurations'
-    | where isnotempty(resourceGroup)
-    | project subscriptionId, resourceGroup, excludeProperty = properties.exclude
+    {{ResourceGroupConfigurationSubquery}}
 ) on subscriptionId, resourceGroup
 | extend isActive3 = iff(isempty(excludeProperty), true, tobool(excludeProperty) == false)
 | where isActive3
@@ -179,12 +195,15 @@ advisorresources
     solution,
     impactedField,
     impactedValue,
+    impact,
     resourceId
 """;
 
     /// <summary>
     /// ARG query summarizing unattached-disk cost recommendations as a single row with the count and
-    /// the subscriptions they are in. Subscription scoping, when requested, is applied via the query content.
+    /// the subscriptions they are in. Applies the same tracked, suppression, and subscription/resource-group
+    /// exclusion filters as <see cref="TopCostSavingsQuery"/>. Subscription scoping, when requested, is
+    /// applied via the query content.
     /// </summary>
     public const string UnattachedDiskSummaryQuery = $$"""
 advisorresources
@@ -192,8 +211,23 @@ advisorresources
 | where properties.category == 'Cost'
 | where properties.impactedField contains 'Microsoft.Compute/disks'
 | where properties.recommendationStatus == 'New'
+| where isempty(properties.tracked) or properties.tracked == false
 | extend recommendationTypeId = tostring(properties.recommendationTypeId)
 | where recommendationTypeId == '{{UnattachedDiskRecommendationTypeId}}'
+| project id, stableId = name, subscriptionId, resourceGroup
+| join kind=leftouter (
+    {{ActiveSuppressionsSubquery}}
+) on stableId
+| join kind=leftouter (
+    {{SubscriptionConfigurationSubquery}}
+) on subscriptionId
+| where isempty(excludeRecomm) or tobool(excludeRecomm) == false
+| join kind=leftouter (
+    {{ResourceGroupConfigurationSubquery}}
+) on subscriptionId, resourceGroup
+| where isempty(excludeProperty) or tobool(excludeProperty) == false
+| summarize expirationTimeStamp = max(expirationTimeStamp) by id, subscriptionId
+| where isnull(expirationTimeStamp) or isempty(expirationTimeStamp)
 | summarize unattachedDiskCount = count(), subscriptionIds = make_set(tolower(subscriptionId))
 """;
 }

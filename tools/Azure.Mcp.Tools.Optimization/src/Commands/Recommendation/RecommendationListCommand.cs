@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
     Name = "list",
     Title = "List Top Cost-Saving Recommendations",
     Description = "Get Azure cost-saving / cost-optimization recommendations (a.k.a. top optimization recommendations) " +
-        "for a subscription or, when no subscription is given, across all subscriptions accessible to the caller, " +
+        "for a subscription or, when no subscription is given, across all accessible subscriptions in the tenant, " +
         "ranked by impact and currency-normalized annual savings, by running a curated Azure " +
         "Resource Graph (ARG) query over cost recommendations. Call this whenever the user asks about " +
         "'cost savings recommendation(s)', 'cost optimization recommendation(s)', or the 'top optimization " +
@@ -31,7 +31,8 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
         "tool with that row's resourceId and recommendationTypeId. " +
         "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +
         "NOT call the 'subscription list' tool first. If the user does not name a subscription, omit --subscription (do not " +
-        "ask for one or pick a default) and tell the user the results cover all accessible subscriptions.",
+        "ask for one or pick a default) and tell the user the results cover all accessible subscriptions in the tenant; " +
+        "if the call reports that multiple tenants are accessible, ask the user which tenant to use and pass it to --tenant.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
@@ -93,6 +94,12 @@ public sealed class RecommendationListCommand(
             $"Authorization failed accessing cost-saving recommendations. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        _ => base.GetStatusCode(ex)
     };
 
     public sealed record RecommendationListResult(
