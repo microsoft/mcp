@@ -49,7 +49,7 @@ resource capacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01'
   location: location
   properties: {
     serviceLevel: 'Standard'
-    size: 4398046511104
+    size: 1099511627776
   }
 }
 

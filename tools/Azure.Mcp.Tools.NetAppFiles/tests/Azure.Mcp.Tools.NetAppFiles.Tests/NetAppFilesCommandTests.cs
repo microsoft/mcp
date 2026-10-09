@@ -17,7 +17,7 @@ public class NetAppFilesCommandTests(
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
     string location = "westus";
-    int sizeInTiB = 4;
+    int sizeInTiB = 1;
     string serviceLevel = "Standard";
 
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => new()
@@ -203,7 +203,7 @@ public class NetAppFilesCommandTests(
         pool.AssertProperty("name");
         pool.AssertProperty("id");
         Assert.Equal(location, pool.AssertProperty("location").GetString());
-        Assert.Equal(4_398_046_511_104, pool.AssertProperty("sizeInBytes").GetInt64());
+        Assert.Equal(1_099_511_627_776, pool.AssertProperty("sizeInBytes").GetInt64());
         Assert.Equal(serviceLevel, pool.AssertProperty("serviceLevel").GetString());
         Assert.Equal("Succeeded", pool.AssertProperty("provisioningState").GetString());
     }
@@ -231,7 +231,7 @@ public class NetAppFilesCommandTests(
         pool.AssertProperty("name");
         pool.AssertProperty("id");
         Assert.Equal(location, pool.AssertProperty("location").GetString());
-        Assert.Equal(4_398_046_511_104, pool.AssertProperty("sizeInBytes").GetInt64());
+        Assert.Equal(1_099_511_627_776, pool.AssertProperty("sizeInBytes").GetInt64());
         Assert.Equal(serviceLevel, pool.AssertProperty("serviceLevel").GetString());
         Assert.Equal("Succeeded", pool.AssertProperty("provisioningState").GetString());
     }
@@ -273,7 +273,7 @@ public class NetAppFilesCommandTests(
         pool.AssertProperty("name");
         pool.AssertProperty("id");
         Assert.Equal(location, pool.AssertProperty("location").GetString());
-        Assert.Equal(4_398_046_511_104, pool.AssertProperty("sizeInBytes").GetInt64());
+        Assert.Equal(1_099_511_627_776, pool.AssertProperty("sizeInBytes").GetInt64());
         Assert.Equal(serviceLevel, pool.AssertProperty("serviceLevel").GetString());
         Assert.Equal("pool-update", pool.AssertProperty("tags").AssertProperty("recorded-test").GetString());
         Assert.Equal("Succeeded", pool.AssertProperty("provisioningState").GetString());

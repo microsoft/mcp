@@ -98,9 +98,9 @@ public sealed class PoolUpdateCommand(
         }
 
         if (options.Size is not null &&
-            (options.Size <= 0 || options.Size % 4 != 0 || options.Size > long.MaxValue / BytesPerTebibyte))
+            (options.Size <= 0 || options.Size > 2048))
         {
-            validationResult.Errors.Add("--size must be a positive multiple of 4 TiB and small enough to represent in bytes.");
+            validationResult.Errors.Add("--size must be greater than 0 and less than or equal to 2048.");
         }
 
         if (options.QosType is not null && !s_qosTypes.Contains(options.QosType, StringComparer.OrdinalIgnoreCase))

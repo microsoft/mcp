@@ -102,9 +102,9 @@ public sealed class PoolCreateCommand(
             validationResult.Errors.Add(Validation.PoolNameValidator.ErrorMessage);
         }
 
-        if (options.Size <= 0 || options.Size % 4 != 0 || options.Size > long.MaxValue / BytesPerTebibyte)
+        if (options.Size <= 0 || options.Size > 2048)
         {
-            validationResult.Errors.Add("--size must be a positive multiple of 4 TiB and small enough to represent in bytes.");
+            validationResult.Errors.Add("--size must be greater than 0 and less than or equal to 2048.");
         }
 
         if (!Contains(s_serviceLevels, options.ServiceLevel))
