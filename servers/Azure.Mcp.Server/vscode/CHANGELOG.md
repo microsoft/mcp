@@ -1,6 +1,101 @@
 # Release History
 
 
+## 3.0.0 (2026-10-08)
+
+**🚀 New Major Release — Azure MCP Server 3.0**
+
+We're excited to announce the third major release of the Azure MCP Server! Version 3.0 builds on the 2.0 release with a broader and more consistent tool surface, secure-by-default resource creation, stricter input and endpoint validation, richer Azure Backup, Advisor, and resiliency capabilities, and a new MCP protocol and tool design foundation. This release spans 50 beta iterations and hundreds of contributions.
+
+### Key Features & Improvements
+
+- **More Tools and Services**: Added new namespaces and major toolset expansions, including:
+    - Azure Backup – `azurebackup`: vaults, policies, protection, protectable items and containers, recovery points, jobs, governance (soft delete, immutability, Multi-User Authorization, Resource Guards), customer-managed key encryption, private endpoints, and cross-region restore
+    - Azure Resilience Management – `resiliency`: goals, usage plans and enrollments, recovery plans, recovery jobs, readiness and failover validation, and resilience drills
+    - Azure SRE Agent – `sreagent`: 55 commands to manage agents, skills, connectors, hooks, threads, scheduled tasks, incidents, and workflows
+    - Azure Terraform – `azureterraform`: AzureRM/AzAPI provider documentation, Azure Verified Modules, `aztfexport` export, and `conftest` policy validation
+    - Azure Optimization – `optimization`: cost-saving recommendations, alternative VM/VMSS SKU options, and utilization explanations
+    - Azure IoT Hub – `iothub` and Azure IoT Operations – `iotoperations`
+    - Azure Insights – `insights`: infrastructure insights from Azure Resource Graph aggregation and MCP sampling
+    - Azure Advisor – `advisor`: recommendation list, summary, update, apply-to-IaC, metadata, and remediation tools
+    - Azure Cosmos DB – `cosmos`, Azure Compute – `compute` (VM power state and creation validation), Azure App Service – `appservice` (web app change-state), Azure Monitor – `monitor` (batch metrics and Log Analytics table search), and Azure Managed Lustre – `managedlustre` (filesystem expansion) received new tools
+- **Secure by Default**: New resources are created with safer defaults, including Storage accounts with Shared Key authentication disabled, Event Hubs namespaces with local authentication disabled, NFS file shares with `RootSquash` and encrypted transit, and Recovery Services vaults with public network access disabled
+- **Security Hardening**: Cloud-specific endpoint validation based on `Microsoft.Security.AntiSSRF` across data-plane and management-plane tools, namespace-scoped validation overrides, and telemetry that no longer records option values
+- **Cleaner, More Accurate Tool Contracts**: Unused parameters, custom retry policy options, and confirmation-only options were removed from tools across all namespaces, unknown parameters are rejected, result payloads were normalized, and input schemas are generated with richer, spec-accurate `System.Text.Json` schemas
+- **Structured Output**: Tools can advertise an `outputSchema` and return `structuredContent` in all server modes with `--structured-output-mode`
+- **Latest MCP Protocol**: Migrated to the MCP 2026-07-28 stateless protocol with automatic backward compatibility for clients using the 2025-11-25 protocol
+- **More Flexible Server Options**: Added `--disable-proxy-tools`, learn-mode discovery for `azmcp` commands, an `operationPlane` field in `tools list` output, and Azure Pipelines workload identity federation authentication
+- **Improved Reliability and Diagnostics**: More accurate HTTP status codes and actionable error messages, clearer credential errors, additional telemetry, and startup, concurrency, and resource usage benchmarks
+
+### Documentation
+
+- [Complete Command Reference](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Authentication](https://github.com/microsoft/mcp/blob/release/azure/3.x/docs/Authentication.md)
+- [Remote Server Deployment](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/README.md#remote-mcp-server-preview)
+- [Connecting to Sovereign Clouds](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/README.md#sovereign-cloud-support)
+- [Troubleshooting](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)
+- [Contributing Guidelines](https://github.com/microsoft/mcp/blob/release/azure/3.x/CONTRIBUTING.md)
+
+### Thank You
+
+This release was made possible by the incredible efforts of our engineering team, partners, contributors, and the invaluable feedback from our users and the open-source community. We want to extend a huge thank you to everyone who contributed, tested, and provided feedback throughout the development of Azure MCP Server 3.0!
+
+For a complete history of changes included in this release, see entries for versions [3.0.1](#301-2026-04-01-pre-release) through [3.0.50](#3050-2026-10-06-pre-release).
+
+---
+
+### Other Changes since 2.0.0
+
+#### Breaking Changes
+
+**Tool Contract Cleanup**:
+
+- Removed unused parameters (such as `subscription`, `resource-group`, `tenant`, `auth-method`, `user`, and `sender-name`) from tools across nearly all namespaces, including Advisor, AKS, App Configuration, App Lens, Application Insights, Azure Migrate, Communication, Compute, Confidential Ledger, Container Apps, Deploy, Event Grid, Event Hubs, Foundry Extensions, Key Vault, Load Testing, Managed Lustre, MySQL, PostgreSQL, Quota, Redis, Resource Health, Search, Service Bus, SQL, Storage, and others. Update any scripts or saved prompts that pass these options
+- Removed custom retry policy options from all tools and shared Azure service APIs; the Azure SDK retry defaults are used instead
+- Removed the confirmation-only `--force` parameter from `sql server delete` and `--confirm` parameters from SRE Agent delete tools
+- Tool calls with unknown parameters are now explicitly rejected
+- Normalized result payloads for several tools in Advisor, best practices, Functions, Monitor, Search, SQL, and Well-Architected Framework to consistent, named result objects (for example `{ rules }`, `{ bestPractices }`, `{ healthModels }`, `{ results }`, `{ servers }`, and `{ guidance }`)
+
+**Namespace, Tool, and Option Renames**:
+
+- Renamed the Azure Resilience Management CLI namespace from `azmcp resilience` to `azmcp resiliency`, and all MCP tool name prefixes from `resilience_*` to `resiliency_*`. The recovery plan and recovery job command groups were also renamed to `recoveryplan` and `recoveryjob`, and the `/resilience-recovery-operations` skill was renamed to `/resilience-management-operations`
+- Renamed `advisor_recommendation-type_list` to `advisor_metadata_list`
+- Replaced `monitor healthmodels entity get` with `monitor healthmodels list` and `monitor healthmodels get`
+- Renamed `azurebackup security configure-mua` to `azurebackup security enable-mua`
+- Changed server property names in `appsettings.json` to be scoped under `MicrosoftMcp` instead of the root level
+- Updated internal .NET namespaces to the `Microsoft.Mcp.Core` convention (for example `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands`)
+
+**Secure-by-Default Behavior**:
+
+- New Storage accounts disable Shared Key authentication by default, while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access
+- New Event Hubs namespaces disable local authentication by default
+- New NFS file shares default to `RootSquash` with encrypted transit
+- Recovery Services vault creation disables public network access by default
+- Azure Backup vault creation now rejects existing vaults instead of updating them; use `azurebackup vault update` to modify existing vaults
+- `compute vm create` and `compute vmss create` now require `--image`, and the `Win2019Datacenter` and `Ubuntu2004` image aliases were removed
+- The MySQL and PostgreSQL `database query` tools are now marked destructive and non-read-only, and no longer filter statements by SQL verb. The signed-in user's database permissions determine what a statement may do. In consolidated mode they moved to a new `execute_azure_database_query` tool
+
+**Miscellaneous**:
+
+- Removed the Azure Data Manager for Energy (ADME) tools temporarily for the GA release
+- Removed the resiliency goal template get tool
+- Removed `Unspecified` from `ToolOperationPlane`; tool metadata now defaults to `NotApplicable`
+
+#### Bugs Fixed
+
+- Fixed not-found conditions returning HTTP 500/400 instead of 404 and command validation failures returning HTTP 500 instead of 400
+- Fixed numerous Azure Backup, Cosmos DB, Event Hubs, Key Vault, MySQL, PostgreSQL, Redis, SQL, and Storage tool issues found through telemetry and live testing
+- Fixed CLI log messages and exceptions being written to stdout instead of stderr, which could corrupt JSON and JSON-RPC output
+- Fixed trimmed and packaged distributions failing to bind options for some tools
+- Fixed the npm wrapper modifying the calling project's `package.json` and lockfile when auto-installing a platform package
+
+#### Other Changes
+
+- Migrated tools to the new tool design and updated to the latest `ModelContextProtocol` packages
+- Improved CLI startup time for targeted command invocations by ~39%
+- Added telemetry for tool source, learn usage, tool parameters, and annotations, with improved privacy protections for validation failures
+- Extensive tool description improvements across namespaces for better LLM selection accuracy
+
 ## 3.0.50 (2026-10-06) (pre-release)
 
 ### Changed
