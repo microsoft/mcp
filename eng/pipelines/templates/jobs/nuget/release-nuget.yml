@@ -77,7 +77,7 @@ jobs:
               Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-              MainPublisher: 'ESRPRELPACMAN'
+              MainPublisher: 'ESRPRELPACMANTEST'
 
           - task: EsrpRelease@14
             displayName: Publish wrapper Nuget to Prod Feed via ESRP
@@ -97,7 +97,7 @@ jobs:
               Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-              MainPublisher: 'ESRPRELPACMAN'
+              MainPublisher: 'ESRPRELPACMANTEST'
 
           # Publish platform-specific packages first to ensure they are available before publishing wrapper package
           - task: 1ES.PublishNuget@1
