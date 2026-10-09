@@ -586,7 +586,7 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    - Corporate proxy certificates not trusted
 
 3. **Private Endpoint Connectivity**
-   - Shared HTTP clients reject private and reserved destination addresses by default, even when VPN or ExpressRoute routing is available
+   - Azure MCP Server rejects outgoing requests to private and reserved destination addresses by default, even when VPN or ExpressRoute routing is available
    - Private endpoint DNS resolution can therefore produce an intentional SSRF-protection error instead of a connectivity error
 
 #### Working with Network Administrators
@@ -619,13 +619,33 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
 
    **Security warning:** The server selects one explicit outgoing proxy in `ALL_PROXY`,
    `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
-   It disables transport-level DNS/IP checks for the whole configured handler, including
+   It disables transport-level DNS/IP checks for all requests using that configuration, including
    requests excluded by `NO_PROXY`. When none of those settings selects a proxy, `.NET`'s
    `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules
-   for each destination. Actually proxied requests omit those transport checks, while
+   for each destination. Actually proxied requests omit those DNS/IP transport checks, while
    destinations not routed through a proxy retain them. Use only trusted proxies with
    restricted network access; endpoint validation remains independently active, including
    public-target validation of the original destination's IPs.
+
+   ```mermaid
+   flowchart TD
+       A[Outgoing HTTP request] --> B{Is an explicit ALL_PROXY,<br/>HTTPS_PROXY, or HTTP_PROXY configured?}
+       B -- Yes --> C{Does destination match NO_PROXY?}
+       C -- Yes --> D[Connect directly without the explicit proxy]
+       C -- No --> E[Connect through the explicit proxy]
+       D --> F[WARNING: Transport IP address filtering is not used]
+       E --> F
+       B -- No --> G{Is the system proxy or a PAC rule applicable for this destination?}
+       G -- Yes --> H[Connect through the system proxy or PAC rule]
+       H --> F
+       G -- No --> I[Connect directly to destination]
+       I --> J[SAFE: Transport IP address filtering is used]
+   ```
+
+   `NO_PROXY` changes whether an outgoing request is sent through the selected explicit
+   proxy; it does not restore transport IP address filtering. When no explicit proxy is
+   configured, system and PAC rules are evaluated per destination, so filtering remains
+   enabled whenever those rules select no proxy.
 
 #### Troubleshooting Network Connectivity
 
@@ -638,7 +658,7 @@ curl -I https://management.azure.com
 **Check private endpoint DNS resolution:**
 ```bash
 # Private endpoints normally resolve to a private IP such as 10.x.x.x.
-# Shared HTTP clients intentionally reject that destination by default.
+# Azure MCP Server intentionally rejects that destination by default.
 nslookup mystorageaccount.blob.core.windows.net
 ```
 
@@ -672,10 +692,10 @@ openssl s_client -connect login.microsoftonline.com:443 \
 - Point-to-site VPN configuration
 - Bastion host or jump server access
 
-These options provide network routing but do not by themselves disable the shared
-HTTP client's private-address protection. Use server mode with the narrowest
-temporary namespace override, or a trusted outgoing proxy that routes the destination,
-when private endpoint access is required.
+These options provide network routing but do not by themselves allow Azure MCP Server
+to send requests to private addresses. Use server mode with the narrowest temporary
+namespace override, or a trusted outgoing proxy that routes the destination, when private
+endpoint access is required.
 
 #### Questions to Ask Your Network Administrator
 
