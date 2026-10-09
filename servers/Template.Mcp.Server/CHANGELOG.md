@@ -1,5 +1,15 @@
 # CHANGELOG 📝
 
+## 0.0.13 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
 ## 0.0.12 (Unreleased)
 
 ### Features Added
