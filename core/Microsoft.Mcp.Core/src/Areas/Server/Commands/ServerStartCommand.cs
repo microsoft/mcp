@@ -418,7 +418,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         AuthenticationBuilder authBuilder = services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddMicrosoftIdentityWebApiAot(
-                options => azureAdSection.Bind(options),
+                options => MicrosoftIdentityApplicationOptionsBinder.Bind(azureAdSection, options),
                 JwtBearerDefaults.AuthenticationScheme,
                 jwtOptions =>
                 {
