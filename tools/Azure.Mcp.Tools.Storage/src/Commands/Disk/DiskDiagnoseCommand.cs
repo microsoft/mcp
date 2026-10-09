@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore FFFFFFF sszzz Fzzz
 
 using System.Globalization;
 using System.Text.Json;
