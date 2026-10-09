@@ -161,19 +161,23 @@ public class RecommendationListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutSubscriptionAndMultipleTenants_ReturnsBadRequest()
+    public async Task ExecuteAsync_WithoutSubscriptionOrTenant_UsesSignedInDefaultTenant()
     {
         Service.ListCostSavingsAsync(
             Arg.Any<string?>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify --tenant."));
+            .Returns(new CostSavingsResult([], false));
 
         var response = await ExecuteCommandAsync("--top", "5");
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("--tenant", response.Message);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListCostSavingsAsync(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            5,
+            Arg.Is<string?>(t => string.IsNullOrEmpty(t)),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

@@ -51,8 +51,11 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         }
         else
         {
-            // Without a subscription, the queries are not scoped and cover every accessible subscription in one tenant.
-            queryTenantId = await ResolveUnscopedQueryTenantIdAsync(tenant, cancellationToken);
+            // Without a subscription, the queries are not scoped and cover every accessible subscription in the
+            // --tenant tenant, or in the signed-in session's default tenant when none is given (null tenant id).
+            queryTenantId = string.IsNullOrWhiteSpace(tenant)
+                ? null
+                : await AzureService.GetTenantId(tenant, cancellationToken);
         }
 
         var tenantResource = await GetTenantResourceAsync(queryTenantId, cancellationToken);
@@ -396,31 +399,6 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         var resolvedTenantId = GetString(matches[0], "tenantId") ?? tenantId;
 
         return (subscriptionId, resolvedTenantId, null);
-    }
-
-    /// <summary>
-    /// Resolves the tenant for a query that is not scoped to a subscription. An explicit tenant id or display
-    /// name is resolved (an unknown name throws); otherwise the only accessible tenant is used. When several
-    /// tenants are accessible the tenant cannot be inferred, so the caller must specify one.
-    /// </summary>
-    private async Task<string> ResolveUnscopedQueryTenantIdAsync(string? tenant, CancellationToken cancellationToken)
-    {
-        if (!string.IsNullOrWhiteSpace(tenant))
-        {
-            return await AzureService.GetTenantId(tenant, cancellationToken);
-        }
-
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        return tenants.Count switch
-        {
-            0 => throw new InvalidOperationException("No accessible Azure tenants were found for the current credential."),
-            1 => tenants[0].Data.TenantId?.ToString()
-                ?? throw new InvalidOperationException("The accessible Azure tenant does not have a tenant ID."),
-            _ => throw new ArgumentException(
-                "Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify --tenant, or pass " +
-                "--subscription to query a single subscription.",
-                nameof(tenant)),
-        };
     }
 
     /// <summary>

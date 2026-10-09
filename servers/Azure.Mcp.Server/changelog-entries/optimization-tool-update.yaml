@@ -2,7 +2,7 @@ changes:
   - section: "Other Changes"
     description: "Updated Azure optimization tool descriptions to refer to results as cost optimization recommendations instead of Azure Advisor."
   - section: "Features Added"
-    description: "Updated `optimization recommendation list` to make `--subscription` optional. When it is omitted, all accessible subscriptions in the tenant given by `--tenant` (or the only accessible tenant) are queried. Results now include a `diskRecommendationSummary` with the number of unattached-disk recommendations and a link to take action in the Azure portal, and use retail savings when a recommendation has no extended savings data."
+    description: "Updated `optimization recommendation list` to make `--subscription` optional. When it is omitted, all accessible subscriptions in the signed-in session's default tenant (or the tenant given by `--tenant`) are queried. Results now include a `diskRecommendationSummary` with the number of unattached-disk recommendations and a link to take action in the Azure portal, and use retail savings when a recommendation has no extended savings data."
   - section: "Breaking Changes"
     description: "`optimization recommendation list` no longer returns unattached-disk recommendations as individual rows in `recommendations`; they are reported only through the new `diskRecommendationSummary`, which applies the same suppression and exclusion filters as the list."
   - section: "Bugs Fixed"
