@@ -22,6 +22,7 @@ internal static class OptimizationKqlQueries
     private const string ActiveSuppressionsSubquery = """
 advisorresources
     | where type =~ 'microsoft.advisor/suppressions'
+    | where isempty(properties.serviceGroupId)
     | extend tokens = split(id, '/')
     | extend stableId = iff(array_length(tokens) > 3, tokens[array_length(tokens) - 3], '')
     | extend expirationTimeStamp = todatetime(iff(strcmp(tostring(properties.ttl), '-1') == 0, '9999-12-31', properties.expirationTimeStamp))
@@ -33,6 +34,7 @@ advisorresources
     private const string SubscriptionConfigurationSubquery = """
 advisorresources
     | where type =~ 'microsoft.advisor/configurations'
+    | where isempty(properties.serviceGroupId)
     | where isempty(resourceGroup)
     | project subscriptionId, excludeRecomm = properties.exclude, lowCpuThreshold = properties.lowCpuThreshold
 """;
@@ -41,6 +43,7 @@ advisorresources
     private const string ResourceGroupConfigurationSubquery = """
 advisorresources
     | where type =~ 'microsoft.advisor/configurations'
+    | where isempty(properties.serviceGroupId)
     | where isnotempty(resourceGroup)
     | project subscriptionId, resourceGroup, excludeProperty = properties.exclude
 """;
@@ -56,6 +59,7 @@ advisorresources
     public static string BuildAlternativesQuery(string resourceId) =>
         "advisorresources " +
         "| where type =~ 'microsoft.advisor/recommendations' " +
+        "| where isempty(properties.serviceGroupId) " +
         $"| where properties.resourceMetadata.resourceId =~ '{EscapeKql(resourceId)}' " +
         $"| where properties.category == 'Cost'" +
         "| extend alternatives = parse_json(properties.extendedProperties.alternatives) " +
@@ -65,6 +69,7 @@ advisorresources
     public static string BuildAdvisorRecommendationQuery(string resourceId) =>
         "advisorresources " +
         "| where type =~ 'microsoft.advisor/recommendations' " +
+        "| where isempty(properties.serviceGroupId) " +
         $"| where properties.resourceMetadata.resourceId == '{EscapeKql(resourceId)}' " +
         $"| where properties.category == 'Cost'" +
         "| project id, resourceGroup, subscriptionId,properties = bag_remove_keys(properties, dynamic(['impact']))";
@@ -76,6 +81,7 @@ advisorresources
     public const string TopCostSavingsQuery = $$"""
 advisorresources
 | where type =~ 'microsoft.advisor/recommendations'
+| where isempty(properties.serviceGroupId)
 | where isempty(properties.tracked) or properties.tracked == false
 // Unattached disks are summarized by UnattachedDiskSummaryQuery.
 | where tostring(properties.recommendationTypeId) != '{{UnattachedDiskRecommendationTypeId}}'
@@ -208,6 +214,7 @@ advisorresources
     public const string UnattachedDiskSummaryQuery = $$"""
 advisorresources
 | where type =~ 'microsoft.advisor/recommendations'
+| where isempty(properties.serviceGroupId)
 | where properties.category == 'Cost'
 | where properties.impactedField contains 'Microsoft.Compute/disks'
 | where properties.recommendationStatus == 'New'

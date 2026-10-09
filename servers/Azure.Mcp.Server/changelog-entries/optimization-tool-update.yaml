@@ -7,3 +7,5 @@ changes:
     description: "`optimization recommendation list` no longer returns unattached-disk recommendations as individual rows in `recommendations`; they are reported only through the new `diskRecommendationSummary`, which applies the same suppression and exclusion filters as the list."
   - section: "Bugs Fixed"
     description: "Fixed `optimization recommendation` tools querying Azure Resource Graph with a token for the default tenant instead of the tenant passed in `--tenant` or the subscription's own tenant; tenant display names are now also accepted."
+  - section: "Other Changes"
+    description: "`optimization recommendation` tools now ignore service-group-scoped Advisor records (recommendations, suppressions, and configurations whose `properties.serviceGroupId` is set) in every Resource Graph query."
