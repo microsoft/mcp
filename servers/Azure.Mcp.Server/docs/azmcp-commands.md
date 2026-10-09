@@ -2595,9 +2595,9 @@ azmcp cosmos database container item vector-search --subscription <subscription>
 #### Optimization Recommendations
 
 ```bash
-# List top Azure Advisor cost-saving recommendations for a subscription
+# List top cost-saving recommendations for a subscription, or across all accessible subscriptions in the signed-in tenant (or --tenant) when --subscription is omitted
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp optimization recommendation list --subscription <subscription> \
+azmcp optimization recommendation list [--subscription <subscription>] \
                                        [--top <top>] \
                                        [--tenant <tenant>]
 

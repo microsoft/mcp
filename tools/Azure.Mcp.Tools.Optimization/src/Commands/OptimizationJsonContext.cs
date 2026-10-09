@@ -13,6 +13,7 @@ namespace Azure.Mcp.Tools.Optimization.Commands;
 [JsonSerializable(typeof(AlternativeRecommendation))]
 [JsonSerializable(typeof(CostSavingsRecommendation))]
 [JsonSerializable(typeof(SubscriptionOption))]
+[JsonSerializable(typeof(DiskRecommendationSummary))]
 [JsonSerializable(typeof(RecommendationUtilization))]
 [JsonSerializable(typeof(SkuConfiguration))]
 [JsonSerializable(typeof(UtilizationThresholds))]
