@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -65,8 +66,14 @@ public static class HttpClientFactoryConfigurator
     /// <remarks>
     /// Protection uses <see cref="PolicyConfigOptions.ExternalOnlyLatest"/> and evaluates namespace overrides on every send.
     /// The explicit <see cref="NoSsrfClientName"/> and configured HTTP or recording proxies omit AntiSSRF.
-    /// Proxy routing takes precedence even for destinations excluded by <c>NO_PROXY</c>; callers'
-    /// explicit domain checks remain independent of this transport exception.
+    /// Configured proxies are selected in <c>ALL_PROXY</c>, <c>HTTPS_PROXY</c>, then
+    /// <c>HTTP_PROXY</c> precedence and apply to the whole handler.
+    /// System and PAC proxies are evaluated per request: proxied requests omit transport DNS/IP
+    /// validation, while destinations not routed through a proxy retain it. When no configured
+    /// proxy is selected, <see cref="HttpClient.DefaultProxy"/> supplies those runtime rules.
+    /// Explicit proxy configuration remains a handler-wide exception, including destinations
+    /// excluded by <c>NO_PROXY</c>.
+    /// Callers' endpoint validation remains independent of every transport proxy exception.
     /// Repeated calls are ignored so client and handler configuration delegates are registered
     /// exactly once. The first <paramref name="recordingProxyResolver"/> is retained.
     /// </remarks>
@@ -87,6 +94,7 @@ public static class HttpClientFactoryConfigurator
         // this DI marker pattern to prevent duplicate execution. This makes ConfigureDefaultHttpClient
         // idempotent on the whole when its individual steps are not.
         services.AddSingleton<DefaultHttpClientConfigurationMarker>();
+        services.TryAddSingleton(_ => new SystemProxyProvider(HttpClient.DefaultProxy));
         services.ConfigureHttpClientDefaults(builder => ConfigureHttpClientBuilder(builder, recordingProxyResolver));
 
         services.AddCommandContextAccessor();
@@ -145,6 +153,9 @@ public static class HttpClientFactoryConfigurator
                     case NamespaceAwareHttpHandler namespaceHandler:
                         namespaceHandler.DisableAutomaticRedirects();
                         break;
+                    case SystemProxyRoutingHandler systemProxyHandler:
+                        systemProxyHandler.DisableAutomaticRedirects();
+                        break;
                     case AntiSSRFHandler antiSsrfHandler:
                         antiSsrfHandler.AllowAutoRedirect = false;
                         break;
@@ -191,6 +202,7 @@ public static class HttpClientFactoryConfigurator
         WebProxy? proxy = CreateProxy(options);
         if (proxy != null)
         {
+            // A configured proxy replaces the runtime default for the whole handler.
             handler.Proxy = proxy;
             handler.UseProxy = true;
         }
@@ -199,7 +211,9 @@ public static class HttpClientFactoryConfigurator
         Uri? recordingProxy = ResolveRecordingProxy(options.RecordingProxy, recordingProxyResolver);
         if (recordingProxy != null)
         {
-            LogProxyProtectionWarning(serviceProvider, clientName);
+            // The inner handler retains either the configured proxy above or, when Proxy is
+            // null, SocketsHttpHandler's automatic use of HttpClient.DefaultProxy.
+            LogProxyProtection(serviceProvider, clientName);
             return new RecordingRedirectHandler(recordingProxy)
             {
                 InnerHandler = handler
@@ -209,27 +223,41 @@ public static class HttpClientFactoryConfigurator
 
         if (proxy != null)
         {
-            LogProxyProtectionWarning(serviceProvider, clientName);
+            LogProxyProtection(serviceProvider, clientName);
             return handler;
         }
 
         if (clientName == NoSsrfClientName)
         {
+            // A null Proxy still uses HttpClient.DefaultProxy; this branch opts out only from
+            // AntiSSRF composition, not from the runtime's normal proxy behavior.
             return handler;
         }
 
-        // Keep independent pools: a private connection opened under an override must never
-        // be reused by a later protected request on the same cached SDK client.
+        // Resolve the same runtime proxy object for both route selection and network transport.
+        // PAC and bypass rules are destination-specific, so they cannot be decided at construction.
+        IWebProxy systemProxy = serviceProvider.GetRequiredService<SystemProxyProvider>().Proxy;
+        handler.Proxy = systemProxy;
+        handler.UseProxy = true;
+
+        // Keep all three pools independent: neither a namespace override nor a system-proxied
+        // request may contribute a private connection to a later protected direct request.
         var policy = new AntiSSRFPolicy(PolicyConfigOptions.ExternalOnlyLatest);
-        return new NamespaceAwareHttpHandler(
-            policy.GetHandler(), handler, serviceProvider.GetRequiredService<ICommandContextAccessor>(),
+        var namespaceHandler = new NamespaceAwareHttpHandler(
+            policy.GetHandler(),
+            new SocketsHttpHandler { UseProxy = false },
+            serviceProvider.GetRequiredService<ICommandContextAccessor>(),
             serviceProvider.GetRequiredService<SsrfProtectionPolicy>());
+        return new SystemProxyRoutingHandler(namespaceHandler, handler, systemProxy);
     }
 
-    private static void LogProxyProtectionWarning(IServiceProvider serviceProvider, string? clientName)
-        => serviceProvider.GetRequiredService<ILoggerFactory>()
+    private static void LogProxyProtection(IServiceProvider serviceProvider, string? clientName)
+    {
+        // Handler pools can be recreated for the same client, so this debug event may be logged repeatedly.
+        serviceProvider.GetRequiredService<ILoggerFactory>()
             .CreateLogger(typeof(HttpClientFactoryConfigurator).FullName!)
-            .LogWarning("Proxy configuration takes precedence for HTTP client {ClientName} and disables transport-level AntiSSRF protections. Endpoint domain validation remains enabled unless separately bypassed.", clientName);
+            .LogDebug("Proxy configuration takes precedence for HTTP client {ClientName} and disables transport-level AntiSSRF protections. Endpoint validation remains enabled unless separately bypassed.", clientName);
+    }
 
 #if DEBUG
     /// <summary>
@@ -280,6 +308,11 @@ public static class HttpClientFactoryConfigurator
         if (string.IsNullOrEmpty(proxyAddress))
         {
             return null;
+        }
+
+        if (!proxyAddress.Contains("://", StringComparison.Ordinal))
+        {
+            proxyAddress = $"http://{proxyAddress}";
         }
 
         if (!Uri.TryCreate(proxyAddress, UriKind.Absolute, out var proxyUri))

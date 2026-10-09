@@ -19,7 +19,9 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// during construction: SDK clients and factory handlers can outlive the command that created them.
 /// A missing or unresolved context always selects protection,
 /// even when <see cref="SsrfProtectionPolicy.AllNamespaces"/> is configured.
-/// Proxies are handled before this handler is constructed and do not enter either branch.
+/// Explicit and recording proxies are handled before this handler is constructed.
+/// Destination-specific system and PAC proxy routing is handled by the outer
+/// <see cref="SystemProxyRoutingHandler"/>, so this handler selects only by namespace.
 /// </remarks>
 /// <exception cref="ArgumentNullException">
 /// An owned handler, <paramref name="contextAccessor"/>, or <paramref name="ssrfProtectionPolicy"/>
@@ -87,7 +89,7 @@ internal sealed class NamespaceAwareHttpHandler(
     }
 
     private HttpMessageInvoker SelectTransport()
-        => _ssrfProtectionPolicy.AreSsrfProtectionsEnabled(_contextAccessor.CurrentContext?.ToolNamespaceName)
+        => _ssrfProtectionPolicy.AreSsrfProtectionsEnabled(_contextAccessor)
             ? _protected
             : _unprotected;
 }

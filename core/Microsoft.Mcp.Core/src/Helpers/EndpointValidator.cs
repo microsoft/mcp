@@ -50,7 +50,7 @@ public sealed partial class EndpointValidator(
         string serviceType,
         ArmEnvironment armEnvironment)
     {
-        if (!_ssrfProtectionPolicy.AreSsrfProtectionsEnabled(_contextAccessor.CurrentContext?.ToolNamespaceName))
+        if (!_ssrfProtectionPolicy.AreSsrfProtectionsEnabled(_contextAccessor))
         {
             return;
         }
@@ -189,7 +189,7 @@ public sealed partial class EndpointValidator(
     /// <inheritdoc/>
     public void ValidatePublicTargetUrl(string url)
     {
-        if (!_ssrfProtectionPolicy.AreSsrfProtectionsEnabled(_contextAccessor.CurrentContext?.ToolNamespaceName))
+        if (!_ssrfProtectionPolicy.AreSsrfProtectionsEnabled(_contextAccessor))
         {
             return;
         }
@@ -225,6 +225,9 @@ public sealed partial class EndpointValidator(
         }
         else
         {
+            // Validate the original target independently of local proxy routing. Some callers pass
+            // this URL to an Azure service that dereferences it elsewhere, so a local proxy must not
+            // turn a private or unresolvable destination into an authorized public target.
             // Normalize FQDN trailing dot (e.g., "nip.io." -> "nip.io")
             // to prevent blocklist bypass via DNS absolute form
             var normalizedHost = uri.Host.TrimEnd('.');

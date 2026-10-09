@@ -7,9 +7,11 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// Configuration options for HttpClient services.
 /// </summary>
 /// <remarks>
-/// Configured HTTP/HTTPS/ALL proxies take precedence and disable transport-level SSRF
-/// protection, including requests excluded by NoProxy. Domain validation in callers remains
-/// independent. Use only trusted proxies and restrict their network access.
+/// The factory selects one explicit proxy in ALL, HTTPS, then HTTP precedence. It disables
+/// transport-level SSRF protection for the whole handler, including requests excluded by
+/// NoProxy. Without an explicit proxy, <see cref="HttpClient.DefaultProxy"/> is evaluated per
+/// request and disables transport protection only when it selects a proxy. Endpoint validation
+/// in callers remains independent. Use only trusted proxies and restrict their network access.
 /// </remarks>
 public sealed class HttpClientOptions
 {
@@ -20,26 +22,35 @@ public sealed class HttpClientOptions
     /// A fixture resolver result that is not <see langword="null"/> takes precedence.
     /// Release builds ignore this setting.
     /// Tests can configure it per provider without changing the process environment.
-    /// Configuring a recording proxy disables transport-level SSRF protection, not endpoint domain validation.
+    /// Configuring a recording proxy disables transport-level SSRF protection, not endpoint validation.
     /// </remarks>
     public string? RecordingProxy { get; set; }
 
     /// <summary>
-    /// Gets or sets the HTTP proxy address. Can be set via HTTP_PROXY environment variable.
+    /// Gets or sets the fallback explicit proxy address from the HTTP_PROXY environment variable.
     /// </summary>
-    /// <remarks>Configuring a proxy disables the shared transport's SSRF protection.</remarks>
+    /// <remarks>
+    /// The factory selects one handler-wide proxy in ALL_PROXY, HTTPS_PROXY, HTTP_PROXY order.
+    /// Configuring an explicit proxy disables the shared handler's transport SSRF protection.
+    /// </remarks>
     public string? HttpProxy { get; set; }
 
     /// <summary>
-    /// Gets or sets the HTTPS proxy address. Can be set via HTTPS_PROXY environment variable.
+    /// Gets or sets the middle-precedence explicit proxy address from the HTTPS_PROXY environment variable.
     /// </summary>
-    /// <remarks>Configuring a proxy disables the shared transport's SSRF protection.</remarks>
+    /// <remarks>
+    /// The factory selects one handler-wide proxy in ALL_PROXY, HTTPS_PROXY, HTTP_PROXY order.
+    /// Configuring an explicit proxy disables the shared handler's transport SSRF protection.
+    /// </remarks>
     public string? HttpsProxy { get; set; }
 
     /// <summary>
-    /// Gets or sets the proxy address for all protocols. Can be set via ALL_PROXY environment variable.
+    /// Gets or sets the highest-precedence explicit proxy address from the ALL_PROXY environment variable.
     /// </summary>
-    /// <remarks>Configuring a proxy disables the shared transport's SSRF protection.</remarks>
+    /// <remarks>
+    /// The factory selects one handler-wide proxy in ALL_PROXY, HTTPS_PROXY, HTTP_PROXY order.
+    /// Configuring an explicit proxy disables the shared handler's transport SSRF protection.
+    /// </remarks>
     public string? AllProxy { get; set; }
 
     /// <summary>

@@ -10,9 +10,11 @@ namespace Microsoft.Mcp.Core.Extensions;
 /// Extension methods for registering HTTP client services.
 /// </summary>
 /// <remarks>
-/// Proxy environment variables take precedence over transport-level AntiSSRF protections.
-/// Configure only trusted proxies; their network access controls become the DNS/IP boundary.
-/// Domain validation in tool services is not disabled by proxy configuration.
+/// Explicit proxy environment variables take precedence over transport-level AntiSSRF
+/// protection for the whole configured handler. Without those variables, the runtime system
+/// proxy is evaluated per request and becomes the DNS/IP boundary only for destinations it
+/// actually proxies. Configure only trusted proxies. Endpoint validation in tool services
+/// remains independent of transport routing.
 /// </remarks>
 public static class HttpClientServiceCollectionExtensions
 {

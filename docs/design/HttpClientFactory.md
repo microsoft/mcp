@@ -10,7 +10,7 @@ Azure MCP uses the standard .NET `IHttpClientFactory` for centralized HTTP clien
 
 - **Handler Pooling**: `HttpMessageHandler` instances are pooled and reused (2-minute default lifetime)
 - **DNS Refresh**: Handlers are recycled periodically to pick up DNS changes
-- **Proxy Support**: Automatic proxy configuration from environment variables
+- **Proxy Support**: Explicit environment proxies plus destination-specific operating-system and PAC proxy routing
 - **Consistent Configuration**: All HttpClient instances share the same timeout, UserAgent, and proxy settings
 - **Test Recording Support**: Built-in support for test proxy redirection in debug builds
 - **SSRF Protection**: Default and named clients use `AntiSSRFPolicy(PolicyConfigOptions.ExternalOnlyLatest)` for HTTPS and DNS-to-IP enforcement
@@ -43,6 +43,9 @@ tool services supply only the endpoint and its service allow-list key to `IAzure
 which uses its own configured cloud. Direct `IEndpointValidator` calls retain an explicit
 cloud argument for lower-level validation. No caller-supplied namespace can select a bypass,
 and cached validators and SDK policies retain the accessor rather than an invocation's namespace.
+Proxy routing does not disable this validation. Public-target validation still resolves and
+checks the original target's addresses because some validated URLs are dereferenced by downstream
+Azure services rather than by the local factory transport.
 
 `NoSsrfClientName` is an explicit client without AntiSSRF
 for trusted infrastructure. It retains timeout, user-agent, proxy, and recording defaults,
@@ -74,15 +77,30 @@ on `ILogger` warnings.
 
 The following environment variables are automatically applied:
 
-- `ALL_PROXY`: Global proxy for all protocols
-- `HTTP_PROXY`: Proxy for HTTP requests only
-- `HTTPS_PROXY`: Proxy for HTTPS requests only
+- `ALL_PROXY`: Highest-precedence explicit proxy
+- `HTTPS_PROXY`: Explicit proxy used when `ALL_PROXY` is absent
+- `HTTP_PROXY`: Fallback explicit proxy when the other proxy variables are absent
 - `NO_PROXY`: Comma-separated list of hosts that should bypass the proxy
 
-> **Security warning:** Configured HTTP/HTTPS/ALL proxies take precedence and disable
-> transport-level AntiSSRF protections. This also applies to requests excluded by
-> `NO_PROXY`. Use only trusted proxies with appropriate network access controls.
-> Explicit domain validation remains active unless separately bypassed.
+> **Security warning:** Explicit HTTP/HTTPS/ALL proxy settings take precedence and disable
+> transport-level AntiSSRF protection for the entire configured handler. The factory selects
+> one proxy in `ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order and uses it for both HTTP
+> and HTTPS requests; these variables are not retained as separate per-protocol routes.
+> `NO_PROXY` controls whether that selected proxy is used for a destination, but does not
+> restore transport protection. Use only trusted proxies with appropriate network controls.
+>
+> When none of those explicit settings selects a proxy, `.NET`'s
+> `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules.
+> Those rules are evaluated for every destination. A request actually routed through that
+> proxy uses an isolated transport without DNS/IP enforcement because the trusted proxy
+> becomes that network boundary. A destination for which those rules select no proxy retains
+> AntiSSRF protection. PAC files call this a `DIRECT` result. Recording and explicitly
+> unprotected clients also retain `.NET`'s normal `HttpClient.DefaultProxy` behavior when
+> their transport has no explicit `Proxy`. Proxy values without a URI scheme are interpreted
+> as HTTP proxies for compatibility with .NET proxy handling.
+>
+> Endpoint validation remains active in both cases. This includes Azure/external host
+> authorization and `ValidatePublicTargetUrl` checks of the original target's resolved IPs.
 
 ## Usage
 
@@ -139,7 +157,7 @@ _httpClientFactory = TestHttpClientFactoryProvider.Create(fixture);
 
 > **Security warning:** Debug recording proxies, whether supplied by a fixture or
 > `TEST_PROXY_URL`, also take precedence over transport-level AntiSSRF checks.
-> Upstream domain validation remains active before requests are rewritten.
+> Upstream endpoint validation remains active before requests are rewritten.
 > Use recording proxies only in trusted test environments.
 
 The `TEST_PROXY_URL` fallback is captured into `HttpClientOptions.RecordingProxy`

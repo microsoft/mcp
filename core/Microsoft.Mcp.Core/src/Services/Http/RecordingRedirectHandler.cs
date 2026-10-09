@@ -17,7 +17,8 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// <remarks>
 /// Recording proxy configuration takes precedence over transport-level SSRF protection.
 /// The factory deliberately omits that handler for this chain so the local test proxy remains
-/// reachable. Explicit endpoint policies still validate the upstream URI before this rewrite.
+/// reachable. Endpoint validation remains independent and authorizes the original upstream
+/// target before this rewrite.
 /// Use recording proxies only in a trusted test environment.
 /// </remarks>
 internal sealed class RecordingRedirectHandler(Uri proxyUri) : DelegatingHandler

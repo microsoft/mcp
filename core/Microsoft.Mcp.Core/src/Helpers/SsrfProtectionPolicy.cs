@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Frozen;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
@@ -45,22 +46,23 @@ public sealed class SsrfProtectionPolicy(IEnumerable<string>? dangerouslyDisable
     /// <summary>
     /// Determines whether this host's namespace policy keeps SSRF protection enabled.
     /// </summary>
-    /// <param name="executingToolNamespaceName">
-    /// The original registered tool namespace, not the endpoint service key or caller-provided routing name.
-    /// A <see langword="null"/>, empty, or whitespace namespace cannot enable an override,
-    /// including <see cref="AllNamespaces"/>.
+    /// <param name="contextAccessor">
+    /// The ambient command context accessor. The policy evaluates the original registered tool namespace,
+    /// not the endpoint service key or caller-provided routing name.
     /// </param>
     /// <returns>
-    /// <see langword="true"/> unless <paramref name="executingToolNamespaceName"/> matches
-    /// an emergency override. Missing or unresolved namespaces always keep protection enabled,
-    /// including under <see cref="AllNamespaces"/>.
+    /// <see langword="true"/> unless the current executing tool namespace matches an emergency override.
+    /// Missing or unresolved contexts and namespaces always keep protection enabled, including under
+    /// <see cref="AllNamespaces"/>.
     /// </returns>
     /// <remarks>
     /// Evaluate on every request using the current command context. This does not account for
-    /// transport-specific proxy exceptions, which do not disable endpoint domain validation.
+    /// transport-specific proxy exceptions, which do not disable endpoint validation.
     /// </remarks>
-    public bool AreSsrfProtectionsEnabled(string? executingToolNamespaceName)
+    public bool AreSsrfProtectionsEnabled(ICommandContextAccessor contextAccessor)
     {
+        ArgumentNullException.ThrowIfNull(contextAccessor);
+        string? executingToolNamespaceName = contextAccessor.CurrentContext?.ToolNamespaceName;
         if (string.IsNullOrWhiteSpace(executingToolNamespaceName))
         {
             // Always enable SSRF protections when we don't know the
@@ -68,7 +70,7 @@ public sealed class SsrfProtectionPolicy(IEnumerable<string>? dangerouslyDisable
             return true;
         }
 
-        // Enable SSRF protections 
+        // Enable SSRF protections unless the current namespace has an emergency override.
         return !_disabledNamespaces.Contains(AllNamespaces) &&
             !_disabledNamespaces.Contains(executingToolNamespaceName);
     }
