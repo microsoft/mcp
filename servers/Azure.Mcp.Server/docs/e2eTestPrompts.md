@@ -98,6 +98,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | none |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
 | advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
+| advisor_statusinsights_get | What is the Status of my Service Groups? | none |
+| advisor_statusinsights_get | Which Mission-critical Service Groups are At Risk or Critical? | none |
+| advisor_statusinsights_get | Show zonal resiliency insights for Service Group \<service-group> | none |
 
 ## Azure AI Search
 

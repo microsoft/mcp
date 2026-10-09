@@ -962,6 +962,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Show Advisor service retirements on or after March 31, 2026"
 * "Get Advisor metadata for a recommendation type id"
 * "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
+* "Show Status and Insights for all of my Advisor Service Groups"
 
 ### 🔎 Azure AI Search
 
