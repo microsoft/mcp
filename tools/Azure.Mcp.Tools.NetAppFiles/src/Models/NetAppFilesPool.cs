@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.NetAppFiles.Models;
 
-public record NetAppFilesPool(
+public sealed record NetAppFilesPool(
     string Name,
     string Id,
     string Location,

@@ -16,6 +16,10 @@ public class NetAppFilesCommandTests(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    string location = "westus";
+    int sizeInTiB = 4;
+    string serviceLevel = "Standard";
+
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => new()
     {
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
@@ -66,20 +70,30 @@ public class NetAppFilesCommandTests(
             GroupForReplace = "resourceGroup",
             Value = "Sanitized"
         }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.poolId")
+        {
+            Value = "00000000-0000-0000-0000-000000000000"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.resourceName")
+        {
+            Regex = "/resourceGroups/(?<resourceGroup>[^/]+)",
+            GroupForReplace = "resourceGroup",
+            Value = "Sanitized"
+        }),
     };
 
     [Fact]
     public async Task AccountGet_ReturnsAccount()
     {
         var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = Settings.ResourceGroupName;
 
         await CallToolAsync(
             "netappfiles_account_create",
             new()
             {
                 { "account", accountName },
-                { "location", "eastus" },
+                { "location", location },
                 { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
@@ -99,7 +113,7 @@ public class NetAppFilesCommandTests(
         Assert.Equal(JsonValueKind.Object, account.ValueKind);
         account.AssertProperty("name");
         account.AssertProperty("id");
-        Assert.Equal("eastus", account.AssertProperty("location").GetString());
+        Assert.Equal(location, account.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
     }
 
@@ -107,14 +121,14 @@ public class NetAppFilesCommandTests(
     public async Task AccountCreate_ReturnsCreatedAccount()
     {
         var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = Settings.ResourceGroupName;
 
         var result = await CallToolAsync(
             "netappfiles_account_create",
             new()
             {
                 { "account", accountName },
-                { "location", "eastus" },
+                { "location", location },
                 { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
@@ -124,7 +138,7 @@ public class NetAppFilesCommandTests(
         Assert.Equal(JsonValueKind.Object, account.ValueKind);
         account.AssertProperty("name");
         account.AssertProperty("id");
-        Assert.Equal("eastus", account.AssertProperty("location").GetString());
+        Assert.Equal(location, account.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
     }
 
@@ -132,14 +146,14 @@ public class NetAppFilesCommandTests(
     public async Task AccountUpdate_ReturnsUpdatedAccount()
     {
         var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = Settings.ResourceGroupName;
 
         await CallToolAsync(
             "netappfiles_account_create",
             new()
             {
                 { "account", accountName },
-                { "location", "eastus" },
+                { "location", location },
                 { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
@@ -160,33 +174,26 @@ public class NetAppFilesCommandTests(
         Assert.Equal(JsonValueKind.Object, account.ValueKind);
         account.AssertProperty("name");
         account.AssertProperty("id");
-        Assert.Equal("eastus", account.AssertProperty("location").GetString());
+        Assert.Equal(location, account.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
     }
 
     [Fact]
     public async Task PoolCreate_ReturnsCreatedPool()
     {
-        await CallToolAsync(
-            "netappfiles_account_create",
-            new()
-            {
-                { "account", Settings.ResourceBaseName },
-                { "location", "eastus" },
-                { "resource-group", Settings.ResourceGroupName },
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
-            });
+        var accountName = $"{Settings.ResourceBaseName}-account";
+        var poolName = RegisterOrRetrieveVariable("createdNetAppPool", $"test-Pool-{DateTime.UtcNow:MMddHHmmss}");
+        var resourceGroupName = Settings.ResourceGroupName;
 
         var result = await CallToolAsync(
             "netappfiles_pool_create",
             new()
             {
-                { "account", Settings.ResourceBaseName },
-                { "pool", $"{Settings.ResourceBaseName}-pool" },
-                { "size", 4 },
-                { "service-level", "Premium" },
-                { "resource-group", Settings.ResourceGroupName },
+                { "account", accountName },
+                { "pool", poolName },
+                { "size", sizeInTiB },
+                { "service-level", serviceLevel },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -195,46 +202,26 @@ public class NetAppFilesCommandTests(
         Assert.Equal(JsonValueKind.Object, pool.ValueKind);
         pool.AssertProperty("name");
         pool.AssertProperty("id");
-        Assert.Equal("eastus", pool.AssertProperty("location").GetString());
+        Assert.Equal(location, pool.AssertProperty("location").GetString());
         Assert.Equal(4_398_046_511_104, pool.AssertProperty("sizeInBytes").GetInt64());
-        Assert.Equal("Premium", pool.AssertProperty("serviceLevel").GetString());
+        Assert.Equal(serviceLevel, pool.AssertProperty("serviceLevel").GetString());
         Assert.Equal("Succeeded", pool.AssertProperty("provisioningState").GetString());
     }
 
     [Fact]
     public async Task PoolGet_ReturnsPool()
     {
-        await CallToolAsync(
-            "netappfiles_account_create",
-            new()
-            {
-                { "account", Settings.ResourceBaseName },
-                { "location", "eastus" },
-                { "resource-group", Settings.ResourceGroupName },
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
-            });
-
-        await CallToolAsync(
-            "netappfiles_pool_create",
-            new()
-            {
-                { "account", Settings.ResourceBaseName },
-                { "pool", $"{Settings.ResourceBaseName}-pool" },
-                { "size", 4 },
-                { "service-level", "Premium" },
-                { "resource-group", Settings.ResourceGroupName },
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
-            });
+        var accountName = $"{Settings.ResourceBaseName}-account";
+        var poolName = $"{Settings.ResourceBaseName}-pool";
+        var resourceGroupName = Settings.ResourceGroupName;
 
         var result = await CallToolAsync(
             "netappfiles_pool_get",
             new()
             {
-                { "account", Settings.ResourceBaseName },
-                { "pool", $"{Settings.ResourceBaseName}-pool" },
-                { "resource-group", Settings.ResourceGroupName },
+                { "account", accountName },
+                { "pool", poolName },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -243,35 +230,28 @@ public class NetAppFilesCommandTests(
         Assert.Equal(JsonValueKind.Object, pool.ValueKind);
         pool.AssertProperty("name");
         pool.AssertProperty("id");
-        Assert.Equal("eastus", pool.AssertProperty("location").GetString());
+        Assert.Equal(location, pool.AssertProperty("location").GetString());
         Assert.Equal(4_398_046_511_104, pool.AssertProperty("sizeInBytes").GetInt64());
-        Assert.Equal("Premium", pool.AssertProperty("serviceLevel").GetString());
+        Assert.Equal(serviceLevel, pool.AssertProperty("serviceLevel").GetString());
         Assert.Equal("Succeeded", pool.AssertProperty("provisioningState").GetString());
     }
 
     [Fact]
     public async Task PoolUpdate_ReturnsUpdatedPool()
     {
-        await CallToolAsync(
-            "netappfiles_account_create",
-            new()
-            {
-                { "account", Settings.ResourceBaseName },
-                { "location", "eastus" },
-                { "resource-group", Settings.ResourceGroupName },
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
-            });
+        var accountName = $"{Settings.ResourceBaseName}-account";
+        var poolName = RegisterOrRetrieveVariable("createdNetAppPool", $"test-Pool-{DateTime.UtcNow:MMddHHmmss}");
+        var resourceGroupName = Settings.ResourceGroupName;
 
         await CallToolAsync(
             "netappfiles_pool_create",
             new()
             {
-                { "account", Settings.ResourceBaseName },
-                { "pool", $"{Settings.ResourceBaseName}-pool" },
-                { "size", 4 },
-                { "service-level", "Premium" },
-                { "resource-group", Settings.ResourceGroupName },
+                { "account", accountName },
+                { "pool", poolName },
+                { "size", sizeInTiB },
+                { "service-level", serviceLevel },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -280,10 +260,10 @@ public class NetAppFilesCommandTests(
             "netappfiles_pool_update",
             new()
             {
-                { "account", Settings.ResourceBaseName },
-                { "pool", $"{Settings.ResourceBaseName}-pool" },
+                { "account", accountName },
+                { "pool", poolName },
                 { "tags", "{\"recorded-test\":\"pool-update\"}" },
-                { "resource-group", Settings.ResourceGroupName },
+                { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
             });
@@ -292,9 +272,9 @@ public class NetAppFilesCommandTests(
         Assert.Equal(JsonValueKind.Object, pool.ValueKind);
         pool.AssertProperty("name");
         pool.AssertProperty("id");
-        Assert.Equal("eastus", pool.AssertProperty("location").GetString());
+        Assert.Equal(location, pool.AssertProperty("location").GetString());
         Assert.Equal(4_398_046_511_104, pool.AssertProperty("sizeInBytes").GetInt64());
-        Assert.Equal("Premium", pool.AssertProperty("serviceLevel").GetString());
+        Assert.Equal(serviceLevel, pool.AssertProperty("serviceLevel").GetString());
         Assert.Equal("pool-update", pool.AssertProperty("tags").AssertProperty("recorded-test").GetString());
         Assert.Equal("Succeeded", pool.AssertProperty("provisioningState").GetString());
     }
