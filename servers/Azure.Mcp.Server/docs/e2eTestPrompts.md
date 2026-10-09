@@ -757,6 +757,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform | none |
 | insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? | none |
 
+## Azure Device Provisioning Service
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
+| deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
+| deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
+
 ## Azure IoT Hub
 
 | Tool Name | Test Prompt | Interaction |

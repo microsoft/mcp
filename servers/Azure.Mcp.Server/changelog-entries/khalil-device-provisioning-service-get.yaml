@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added a read-only Azure Device Provisioning Service tool for retrieving service configuration and linked IoT Hub metadata without exposing connection strings or keys."

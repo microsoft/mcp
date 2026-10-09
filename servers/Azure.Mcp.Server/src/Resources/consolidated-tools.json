@@ -2945,6 +2945,39 @@
       ]
     },
     {
+      "name": "get_azure_device_provisioning_service",
+      "description": "Get details about an Azure Device Provisioning Service instance, including service state, endpoints, ID scope, allocation policy, network access, data residency, and linked IoT Hub metadata. Connection strings, authorization policies, and keys are not returned.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about an Azure Device Provisioning Service instance without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Calling this tool multiple times with the same parameters returns the current resource details without causing side effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool interacts only with Azure Resource Manager."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only reads Azure Device Provisioning Service resource information."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool excludes connection strings, authorization policies, and keys from its response."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "deviceprovisioning_service_get"
+      ]
+    },
+    {
       "name": "get_azure_iot_hub",
       "description": "Get details about an Azure IoT Hub.",
       "toolMetadata": {
