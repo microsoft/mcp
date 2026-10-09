@@ -31,21 +31,73 @@ jobs:
       deploy:
         steps:
           # Publish platform-specific packages first to ensure they are available before publishing wrapper package
-          - task: 1ES.PublishNuget@1
-            displayName: Publish platform-specific Nugets to Prod Feed
-            inputs:
-              packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
-              nuGetFeedType: external
-              publishFeedCredentials: Nuget.org
 
-          - task: 1ES.PublishNuget@1
-            displayName: Publish wrapper Nuget to Prod Feed
+          - pwsh: |
+              $packageGroups = @(
+                @{
+                  Source = '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform'
+                  Destination = '$(Pipeline.Workspace)/esrp/${{ parameters.ServerName }}/platform'
+                }
+                @{
+                  Source = '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper'
+                  Destination = '$(Pipeline.Workspace)/esrp/${{ parameters.ServerName }}/wrapper'
+                }
+              )
+
+              foreach ($packageGroup in $packageGroups) {
+                Remove-Item -Recurse -Force $packageGroup.Destination -ErrorAction SilentlyContinue
+                New-Item -ItemType Directory -Path $packageGroup.Destination | Out-Null
+
+                $packages = @(
+                  Get-ChildItem -Path $packageGroup.Source -Filter '*.nupkg' -File |
+                  Where-Object Name -NotLike '*.symbols.nupkg'
+                )
+                if ($packages.Count -eq 0) {
+                  throw "No product NuGet packages found in $($packageGroup.Source)"
+                }
+                $packages | Copy-Item -Destination $packageGroup.Destination
+              }
+            displayName: Stage NuGet packages for ESRP
+
+          - task: EsrpRelease@14
+            displayName: Publish platform-specific Nugets to Prod Feed via ESRP
             inputs:
-              packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
-              nuGetFeedType: external
-              publishFeedCredentials: Nuget.org
+              ConnectedServiceName: 'Azure SDK PME Managed Identity'
+              ClientId: '5f81938c-2544-4f1f-9251-dd9de5b8a81b'
+              DomainTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+              UseManagedIdentity: true
+              KeyVaultName: 'kv-azuresdk-codesign'
+              SignCertName: 'azure-sdk-esrp-release-certificate'
+              Intent: 'PackageDistribution'
+              ContentType: 'NuGet'
+              OrganizationName: 'azure-sdk'
+              ContentSource: 'Folder'
+              FolderLocation: '$(Pipeline.Workspace)/esrp/${{ parameters.ServerName }}/platform'
+              WaitForReleaseCompletion: true
+              Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+              MainPublisher: 'ESRPRELPACMANTEST'
+
+          - task: EsrpRelease@14
+            displayName: Publish wrapper Nuget to Prod Feed via ESRP
+            inputs:
+              ConnectedServiceName: 'Azure SDK PME Managed Identity'
+              ClientId: '5f81938c-2544-4f1f-9251-dd9de5b8a81b'
+              DomainTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+              UseManagedIdentity: true
+              KeyVaultName: 'kv-azuresdk-codesign'
+              SignCertName: 'azure-sdk-esrp-release-certificate'
+              Intent: 'PackageDistribution'
+              ContentType: 'NuGet'
+              OrganizationName: 'azure-sdk'
+              ContentSource: 'Folder'
+              FolderLocation: '$(Pipeline.Workspace)/esrp/${{ parameters.ServerName }}/wrapper'
+              WaitForReleaseCompletion: true
+              Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+              MainPublisher: 'ESRPRELPACMANTEST'
 
           # Publish platform-specific packages first to ensure they are available before publishing wrapper package
           - task: 1ES.PublishNuget@1
