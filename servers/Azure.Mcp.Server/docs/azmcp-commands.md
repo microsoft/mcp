@@ -5135,6 +5135,47 @@ azmcp storage blob upload --account <account> \
                           --local-file-path <path-to-local-file>
 ```
 
+#### Disk Diagnostics
+
+Disk diagnostics use an Azure public cloud Storage Intelligence endpoint and application scope by
+default.
+Server operators can override them with `AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT` and
+`AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE`. Each value defaults independently; operators should set the
+endpoint and application scope supplied for their Storage Intelligence deployment. No sovereign-cloud
+endpoint mappings are built in. For local single-tenant credentials, optionally configure
+`AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID`. Leave the tenant unset for remote HTTP on-behalf-of
+authentication so the authenticated caller tenant is used.
+
+Direct VM scale set selection requires the canonical nested instance resource ID:
+`/subscriptions/{subscription}/resourceGroups/{resource-group}/providers/Microsoft.Compute/virtualMachineScaleSets/{scale-set}/virtualMachines/{instance}`.
+The optional `--disk` argument accepts at most 64 attached disk names. Timestamps must use ISO 8601
+with an explicit `Z` or UTC offset, such as `2026-07-19T00:00:00Z` or
+`2026-07-19T00:00:00.1234567+05:30`. Provide `--start-time` and `--end-time` together, or omit both
+to analyze the previous 24 hours. A provisional 10 MiB client safety cap rejects larger successful
+responses with a sanitized upstream-service error. High-cardinality responses may require this cap to
+be revised after Storage Intelligence publishes or measures its maximum response size.
+Host-side latency metrics depend on Storage Intelligence telemetry support. The recorded test uses a
+`Standard_D2ds_v6` VM in `westus2` to exercise the V6 host-telemetry path.
+
+```bash
+# Diagnose VM or managed disk performance using Storage Intelligence
+# Requires the caller to be authorized for the Storage Intelligence Disk.Read scope and have Reader and Monitoring Reader access to the target resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+
+# Diagnose a VM by friendly name, optionally selecting attached disks by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --vm <virtual-machine-name> \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+```
+
 #### Table Storage
 
 ```bash

@@ -14,6 +14,26 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+@description('The owner tag applied to test resources.')
+param ownerTag string = 'AzureMcpTests'
+
+@description('Admin username for the disk diagnosis test VM.')
+param adminUsername string = 'azureuser'
+
+@description('Admin password for the disk diagnosis test VM.')
+@secure()
+param adminPassword string = newGuid()
+
+@allowed([
+  'eastus2'
+  'westus2'
+])
+@description('The Azure region for the V6 disk diagnosis test VM.')
+param diskTestLocation string = 'westus2'
+
+@description('The size of the disk diagnosis test VM.')
+param vmSize string = 'Standard_D2ds_v6'
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: baseName
   location: location
@@ -22,8 +42,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
   kind: 'StorageV2'
   properties: {
+    allowBlobPublicAccess: false
     allowSharedKeyAccess: false
     isHnsEnabled: true
+  }
+  tags: {
+    Owner: ownerTag
   }
 
   resource blobServices 'blobServices' = {
@@ -47,6 +71,98 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
 }
 
+resource diskTestVnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+  name: '${baseName}-disk-vnet'
+  location: diskTestLocation
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'default'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: ownerTag
+  }
+}
+
+resource diskTestNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+  name: '${baseName}-disk-nic'
+  location: diskTestLocation
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: diskTestVnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: ownerTag
+  }
+}
+
+resource diskTestVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+  name: '${baseName}-disk-vm'
+  location: diskTestLocation
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'Canonical'
+        offer: '0001-com-ubuntu-server-jammy'
+        sku: '22_04-lts-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+      diskControllerType: 'NVMe'
+    }
+    osProfile: {
+      computerName: '${baseName}-disk-vm'
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+      linuxConfiguration: {
+        disablePasswordAuthentication: false
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: diskTestNic.id
+          properties: {
+            primary: true
+          }
+        }
+      ]
+    }
+  }
+  tags: {
+    Owner: ownerTag
+    environment: 'test'
+    purpose: 'storage-disk-diagnosis'
+  }
+}
+
 resource blobContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
   // This is the Storage Blob Data Contributor role.
@@ -64,3 +180,8 @@ resource appBlobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     description: 'Blob Contributor for testApplicationOid'
   }
 }
+
+output vmName string = diskTestVm.name
+output vmResourceId string = diskTestVm.id
+output diskTestVmSize string = vmSize
+output diskTestVmLocation string = diskTestLocation
