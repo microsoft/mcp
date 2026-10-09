@@ -48,6 +48,7 @@ public class HttpClientFactoryConfiguratorTests
         services.ConfigureDefaultHttpClient();
         using ServiceProvider provider = services.BuildServiceProvider();
         SocketsHttpHandler handler = GetTerminalHandler(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("custom"));
+        Assert.False(handler.AllowAutoRedirect);
         Assert.Equal(new Uri("http://127.0.0.1:9000"), handler.Proxy!.GetProxy(new Uri("https://management.azure.com")));
         Assert.True(handler.Proxy.IsBypassed(new Uri("https://host.internal")));
         Assert.Contains(logger.ReceivedCalls(), call =>
@@ -201,10 +202,8 @@ public class HttpClientFactoryConfiguratorTests
             validator.ValidatePublicTargetUrl("http://127.0.0.1"));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ConfigureArmHttpClient_DisablesOnlyArmRedirectsAndPreservesDefaults(bool configureArm)
+    [Fact]
+    public void ConfigureDefaultHttpClient_DisablesRedirectsForAllClientNamesAndPreservesDefaults()
     {
         var services = new ServiceCollection();
         services.AddLogging().AddHttpClient();
@@ -214,10 +213,7 @@ public class HttpClientFactoryConfiguratorTests
             options.DefaultTimeout = TimeSpan.FromSeconds(42);
         });
         services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
-        if (configureArm)
-        {
-            services.ConfigureArmHttpClient();
-        }
+        services.ConfigureArmHttpClient();
 
         // Defaults may be registered later by a recording fixture.
         services.ConfigureDefaultHttpClient();
@@ -225,8 +221,10 @@ public class HttpClientFactoryConfiguratorTests
         IHttpMessageHandlerFactory handlers = provider.GetRequiredService<IHttpMessageHandlerFactory>();
         SocketsHttpHandler armHandler = GetTerminalHandler(handlers.CreateHandler(HttpClientFactoryConfigurator.ArmClientName));
         SocketsHttpHandler defaultHandler = GetTerminalHandler(handlers.CreateHandler(string.Empty));
-        Assert.Equal(!configureArm, armHandler.AllowAutoRedirect);
-        Assert.True(defaultHandler.AllowAutoRedirect);
+        SocketsHttpHandler customHandler = GetTerminalHandler(handlers.CreateHandler("custom"));
+        Assert.False(armHandler.AllowAutoRedirect);
+        Assert.False(defaultHandler.AllowAutoRedirect);
+        Assert.False(customHandler.AllowAutoRedirect);
         Assert.Equal(new Uri("http://127.0.0.1:9000"), armHandler.Proxy?.GetProxy(new Uri("https://management.azure.com")));
 
         using HttpClient client = provider.GetRequiredService<IHttpClientFactory>()
@@ -235,41 +233,33 @@ public class HttpClientFactoryConfiguratorTests
         Assert.NotEmpty(client.DefaultRequestHeaders.UserAgent);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ConfigureArmHttpClient_AppliesRedirectBehaviorToSystemProxyPool(bool configureArm)
+    [Fact]
+    public async Task ConfigureDefaultHttpClient_DisablesRedirectsForSystemProxyPool()
     {
         await using LoopbackHttpServer server = LoopbackHttpServer.Start(redirect: true);
         var services = new ServiceCollection();
         services.AddLogging().AddHttpClient();
         services.AddSingleton(new SystemProxyProvider(new WebProxy(server.Endpoint)));
         services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
-        if (configureArm)
-        {
-            services.ConfigureArmHttpClient();
-        }
-
         services.ConfigureDefaultHttpClient();
         using ServiceProvider provider = services.BuildServiceProvider();
         using HttpClient client = provider.GetRequiredService<IHttpClientFactory>()
-            .CreateClient(HttpClientFactoryConfigurator.ArmClientName);
+            .CreateClient("custom");
 
         using HttpResponseMessage response = await client.GetAsync(
             "http://example.com/first", TestContext.Current.CancellationToken);
 
-        Assert.Equal(configureArm ? HttpStatusCode.Found : HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(configureArm ? 1 : 2, server.Requests.Count);
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Single(server.Requests);
     }
 
     [Fact]
-    public void ConfigureArmHttpClient_PreservesRecordingProxyResolver()
+    public void ConfigureDefaultHttpClient_DisablesRedirectsAndPreservesRecordingProxyResolver()
     {
         var services = new ServiceCollection();
         services.AddLogging().AddHttpClient();
         services.Configure<HttpClientOptions>(options => options.AllProxy = "http://127.0.0.1:9000");
         services.Configure<ServerRuntimeConfiguration>(_ => { });
-        services.ConfigureArmHttpClient();
         bool resolved = false;
         services.ConfigureDefaultHttpClient(() =>
         {
@@ -278,7 +268,7 @@ public class HttpClientFactoryConfiguratorTests
         });
         using ServiceProvider provider = services.BuildServiceProvider();
         HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>()
-            .CreateHandler(HttpClientFactoryConfigurator.ArmClientName);
+            .CreateHandler("custom");
         Assert.False(GetTerminalHandler(handler).AllowAutoRedirect);
 #if DEBUG
         Assert.True(resolved);

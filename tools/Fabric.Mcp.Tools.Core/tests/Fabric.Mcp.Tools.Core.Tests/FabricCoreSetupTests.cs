@@ -18,7 +18,7 @@ public class FabricCoreSetupTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void ConfigureServices_DisablesRedirectsWithoutReplacingConfiguredTransport(bool recordingProxy)
+    public void ConfigureServices_PreservesGloballyConfiguredTransport(bool recordingProxy)
     {
         var services = new ServiceCollection();
         services.Configure<HttpClientOptions>(options =>
@@ -53,7 +53,7 @@ public class FabricCoreSetupTests
         }
 #endif
         var unrelated = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("unrelated");
-        Assert.True(Assert.IsType<SocketsHttpHandler>(GetTransport(unrelated)).AllowAutoRedirect);
+        Assert.False(Assert.IsType<SocketsHttpHandler>(GetTransport(unrelated)).AllowAutoRedirect);
     }
 
     [Fact]

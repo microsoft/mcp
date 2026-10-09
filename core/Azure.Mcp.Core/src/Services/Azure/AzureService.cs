@@ -81,8 +81,7 @@ public sealed class AzureService(
     /// <remarks>
     /// The factory transport evaluates the executing namespace on each send, not here.
     /// This preserves protection when a shared SDK client outlives the invocation that
-    /// created it. The reserved <see cref="HttpClientFactoryConfigurator.NoSsrfClientName"/>
-    /// is an explicit trusted-only escape hatch.
+    /// created it.
     /// </remarks>
     public HttpClient GetClient(string? name = null) =>
         _httpClientFactory.CreateClient(name ?? Microsoft.Extensions.Options.Options.DefaultName);

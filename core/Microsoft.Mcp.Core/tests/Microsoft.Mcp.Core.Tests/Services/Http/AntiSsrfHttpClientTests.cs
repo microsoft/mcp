@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
@@ -88,17 +89,22 @@ public sealed class AntiSsrfHttpClientTests
     }
 
     [Fact]
-    public async Task Factory_ExplicitUnprotectedClientRetainsDefaultsAndCanReachLoopback()
+    public async Task Factory_NamespaceOverrideDoesNotFollowRedirects()
     {
-        await using LoopbackHttpServer server = LoopbackHttpServer.Start();
-        using ServiceProvider provider = CreateProvider();
-        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>()
-            .CreateClient(HttpClientFactoryConfigurator.NoSsrfClientName);
-        using HttpResponseMessage response = await client.GetAsync(server.Endpoint, TestContext.Current.CancellationToken);
-        Assert.True(response.IsSuccessStatusCode);
-        Assert.Equal(TimeSpan.FromSeconds(42), client.Timeout);
-        Assert.NotEmpty(client.DefaultRequestHeaders.UserAgent);
-        Assert.DoesNotContain("X-Forwarded-For", Assert.Single(server.Requests), StringComparison.OrdinalIgnoreCase);
+        await using LoopbackHttpServer server = LoopbackHttpServer.Start(redirect: true);
+        using ServiceProvider provider = CreateProvider(
+            ssrfProtectionPolicy: new SsrfProtectionPolicy(["storage"]));
+        ICommandContextAccessor accessor = provider.GetRequiredService<ICommandContextAccessor>();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("custom");
+
+        using (accessor.BeginScope(new CommandContext { ToolNamespaceName = "storage" }))
+        {
+            using HttpResponseMessage response = await client.GetAsync(
+                server.Endpoint, TestContext.Current.CancellationToken);
+            Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        }
+
+        Assert.Single(server.Requests);
     }
 
     [Fact]

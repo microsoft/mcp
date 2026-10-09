@@ -107,6 +107,7 @@ public interface IAzureService
     /// <item><description>Record/playback handler</description></item>
     /// <item><description>Timeout configuration</description></item>
     /// <item><description>User-Agent header</description></item>
+    /// <item><description>Automatic redirects disabled</description></item>
     /// <item><description>
     /// <see cref="PolicyConfigOptions.ExternalOnlyLatest"/> AntiSSRF protection,
     /// unless overridden by proxy configuration or the executing namespace.
@@ -125,8 +126,6 @@ public interface IAzureService
     /// Namespace overrides are evaluated on each send using the original registered command
     /// namespace, including when SDK clients are reused. Without an active context, or when
     /// its namespace is unresolved, no namespace override applies.
-    /// The reserved <see cref="HttpClientFactoryConfigurator.NoSsrfClientName"/> deliberately
-    /// omits AntiSSRF and must be used only for trusted infrastructure, never untrusted tool input.
     /// </para>
     /// <para>
     /// Configured HTTP and debug recording proxies take precedence over transport protection.

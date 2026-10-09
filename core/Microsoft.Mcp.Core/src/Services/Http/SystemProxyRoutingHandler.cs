@@ -45,7 +45,7 @@ internal sealed class SystemProxyRoutingHandler(
     private readonly HttpMessageInvoker _proxied = new(proxiedHandler);
 
     /// <summary>
-    /// Disables redirects on the non-proxied and proxied pools before publishing the ARM transport.
+    /// Disables redirects on the non-proxied and proxied pools before publishing the transport.
     /// </summary>
     internal void DisableAutomaticRedirects()
     {

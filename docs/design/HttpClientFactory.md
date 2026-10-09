@@ -12,6 +12,7 @@ Azure MCP uses the standard .NET `IHttpClientFactory` for centralized HTTP clien
 - **DNS Refresh**: Handlers are recycled periodically to pick up DNS changes
 - **Proxy Support**: Explicit environment proxies plus destination-specific operating-system and PAC proxy routing
 - **Consistent Configuration**: All HttpClient instances share the same timeout, UserAgent, and proxy settings
+- **Redirect Protection**: Factory-created clients do not automatically follow HTTP redirects
 - **Test Recording Support**: Built-in support for test proxy redirection in debug builds
 - **SSRF Protection**: Default and named clients use `AntiSSRFPolicy(PolicyConfigOptions.ExternalOnlyLatest)` for HTTPS and DNS-to-IP enforcement
 
@@ -20,8 +21,8 @@ Azure MCP uses the standard .NET `IHttpClientFactory` for centralized HTTP clien
 The default client, service-named clients, and the shared `ArmClientName`
 use external-only AntiSSRF protection. Shared ARM SDK clients also retain their
 `EndpointValidator` domain policy on every send, even without a command context,
-and disable automatic redirects in server mode. Missing contexts cannot enable a
-namespace bypass. Ordinary, explicit unprotected, and proxy-routed transports use
+and all factory-created clients disable automatic redirects. Missing contexts cannot
+enable a namespace bypass. Namespace-overridden and proxy-routed transports use
 `SocketsHttpHandler` directly; protected transports retain the AntiSSRF handler.
 
 `--dangerously-disable-ssrf-protections-by-namespace` applies to both domain checks and
@@ -46,11 +47,6 @@ and cached validators and SDK policies retain the accessor rather than an invoca
 Proxy routing does not disable this validation. Public-target validation still resolves and
 checks the original target's addresses because some validated URLs are dereferenced by downstream
 Azure services rather than by the local factory transport.
-
-`NoSsrfClientName` is an explicit client without AntiSSRF
-for trusted infrastructure. It retains timeout, user-agent, proxy, and recording defaults,
-but does not disable domain checks in callers. Tool implementations must not select it
-from untrusted input or use it instead of the namespace override mechanism.
 
 ### Startup Usage Telemetry
 
@@ -94,10 +90,10 @@ The following environment variables are automatically applied:
 > Those rules are evaluated for every destination. A request actually routed through that
 > proxy uses an isolated transport without DNS/IP enforcement because the trusted proxy
 > becomes that network boundary. A destination for which those rules select no proxy retains
-> AntiSSRF protection. PAC files call this a `DIRECT` result. Recording and explicitly
-> unprotected clients also retain `.NET`'s normal `HttpClient.DefaultProxy` behavior when
-> their transport has no explicit `Proxy`. Proxy values without a URI scheme are interpreted
-> as HTTP proxies for compatibility with .NET proxy handling.
+> AntiSSRF protection. PAC files call this a `DIRECT` result. Recording transports also
+> retain `.NET`'s normal `HttpClient.DefaultProxy` behavior when their inner transport has
+> no explicit `Proxy`. Proxy values without a URI scheme are interpreted as HTTP proxies
+> for compatibility with .NET proxy handling.
 >
 > Endpoint validation remains active in both cases. This includes Azure/external host
 > authorization and `ValidatePublicTargetUrl` checks of the original target's resolved IPs.

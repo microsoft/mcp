@@ -39,11 +39,11 @@ internal sealed class NamespaceAwareHttpHandler(
     private readonly SsrfProtectionPolicy _ssrfProtectionPolicy = ssrfProtectionPolicy ?? throw new ArgumentNullException(nameof(ssrfProtectionPolicy));
 
     /// <summary>
-    /// Disables redirects on both pools before the factory publishes the ARM transport.
+    /// Disables redirects on both pools before the factory publishes the transport.
     /// </summary>
     /// <remarks>
     /// Configure once during handler creation, never after sending a request. Keeping both
-    /// branches aligned prevents a namespace override from changing ARM redirect behavior.
+    /// branches aligned prevents a namespace override from changing redirect behavior.
     /// </remarks>
     internal void DisableAutomaticRedirects()
     {

@@ -17,7 +17,7 @@ namespace Microsoft.Mcp.Core.Tests.Services.Http;
 public sealed class AllNamespaceHttpBypassTests
 {
     [Fact]
-    public async Task All_RequiresResolvedContextAndDoesNotChangeExplicitNamedClient()
+    public async Task All_RequiresResolvedContext()
     {
         await using LoopbackHttpServer server = LoopbackHttpServer.Start();
         using ServiceProvider provider = AntiSsrfHttpClientTests.CreateProvider(ssrfProtectionPolicy: new SsrfProtectionPolicy(["all"]));
@@ -41,9 +41,6 @@ public sealed class AllNamespaceHttpBypassTests
 
         await Assert.ThrowsAsync<AntiSSRFException>(() =>
             client.GetAsync(server.Endpoint, TestContext.Current.CancellationToken));
-        using HttpClient unprotected = factory.CreateClient(HttpClientFactoryConfigurator.NoSsrfClientName);
-        using HttpResponseMessage unprotectedResponse = await unprotected.GetAsync(server.Endpoint, TestContext.Current.CancellationToken);
-        Assert.True(unprotectedResponse.IsSuccessStatusCode);
-        Assert.Equal(2, server.Requests.Count);
+        Assert.Single(server.Requests);
     }
 }

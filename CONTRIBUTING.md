@@ -737,8 +737,8 @@ Shared ARM clients created through `AzureHelper.CreateArmClientAsync` call
 `IAzureService.ConfigureArmClientOptions` to configure cloud, transport, and endpoint
 validation. Its injected validator reads the accessor on every send, including retries
 and paging, so cached ARM resources never retain the creating invocation's namespace. In server
-mode this ARM transport disables automatic redirects. The domain policy validates every
-send, including direct CLI calls and background work using the shared pipeline.
+mode the domain policy validates every send, including direct CLI calls and background work
+using the shared pipeline. All factory-created HTTP clients disable automatic redirects.
 Missing contexts and unresolved namespaces cannot enable a namespace bypass, including
 `ALL`. Raw ARM HTTP requests and independently created SDK clients without the policy
 remain outside its scope.
@@ -768,7 +768,6 @@ explicit proxy setting, `.NET`'s `HttpClient.DefaultProxy` supplies the environm
 operating-system, PAC, and bypass rules evaluated for each destination.
 Actually proxied requests omit transport DNS/IP validation because the trusted proxy is
 the network boundary; destinations not routed through a proxy retain protection. Missing contexts remain protected.
-`NoSsrfClientName` is reserved for trusted infrastructure, not tool-input-driven opt-outs.
 
 **Proxy security warning:** Explicit HTTP/HTTPS/ALL and debug recording proxies take
 precedence and disable transport-level AntiSSRF protection for the whole configured handler,

@@ -49,8 +49,8 @@ public sealed class NamespaceHttpBypassTests
 
                 await using LoopbackHttpServer ordinaryRedirect = LoopbackHttpServer.Start(redirect: true);
                 using HttpResponseMessage ordinaryResponse = await client.GetAsync(ordinaryRedirect.Endpoint, TestContext.Current.CancellationToken);
-                Assert.True(ordinaryResponse.IsSuccessStatusCode);
-                Assert.Equal(2, ordinaryRedirect.Requests.Count);
+                Assert.Equal(System.Net.HttpStatusCode.Found, ordinaryResponse.StatusCode);
+                Assert.Single(ordinaryRedirect.Requests);
             }
 
             async Task SendAsync(string? namespaceName, bool bypass)

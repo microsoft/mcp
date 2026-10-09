@@ -311,7 +311,7 @@ The `azmcp server start` command supports the following options:
 > - The values identify tool namespaces such as `acr` or `loadtesting`, not endpoint service types
 > - Shared ARM SDK clients use the executing command's original setup namespace in every server mode, including consolidated and single-tool mode. Their ARM policy validates every send, including direct CLI and background sends through the shared pipeline. Missing contexts and unresolved namespaces cannot enable a bypass, including `ALL`.
 > - Default and named factory HTTP clients use `AntiSSRFPolicy` with `ExternalOnlyLatest` to require HTTPS and block private/reserved DNS-to-IP destinations. Namespace overrides are checked on every send, including cached clients; missing or unresolved execution contexts remain protected even for `ALL`.
-> - The shared server-mode ARM transport does not automatically follow HTTP redirects, including during namespace overrides. Its domain policy does not cover raw ARM HTTP requests or SDK clients created outside the shared ARM helper, although factory-created transports still receive DNS/IP protection.
+> - Factory-created HTTP clients do not automatically follow HTTP redirects, including during namespace overrides. The shared ARM domain policy does not cover raw ARM HTTP requests or SDK clients created outside the shared ARM helper, although factory-created transports still receive DNS/IP protection.
 > - Repeat the option for multiple namespaces, or provide multiple space-delimited values (e.g. `--dangerously-disable-ssrf-protections-by-namespace acr loadtesting`)
 > - The special value `ALL` disables these protections for every namespace
 > - Only use this option temporarily in a fully trusted environment
