@@ -129,6 +129,24 @@ foreach ($tool in $toolsData.results) {
     }
 }
 
+# Azqr is conditionally registered at runtime (only when a supported azqr CLI
+# is installed on PATH), so it may be absent from `azmcp tools list` output
+# (e.g. in CI). Include its metadata explicitly so the docs stay in sync.
+
+if (-not $commandMetadata.ContainsKey("extension azqr")) {
+    # azqr is only registered when the azqr CLI is installed, so it is absent
+    # from `azmcp tools list` in environments without it (e.g. CI). Load its
+    # metadata from the checked-in manifest instead of hardcoding a copy.
+    $manifestPath = Join-Path $PSScriptRoot "..\..\servers\Azure.Mcp.Server\src\Resources\consolidated-tools.json"
+    $azqrEntry = (Get-Content $manifestPath -Raw | ConvertFrom-Json).consolidated_tools |
+        Where-Object { $_.mappedToolList -contains "extension_azqr" } |
+        Select-Object -First 1
+    if ($azqrEntry) {
+        $commandMetadata["extension azqr"] = $azqrEntry.toolMetadata
+    } else {
+        Write-Warning "azqr metadata not found in consolidated-tools.json; azqr docs will not be annotated."
+    }
+}
 Write-Host "Found $($commandMetadata.Count) tools with metadata" -ForegroundColor Green
 
 # Read the docs file
