@@ -333,8 +333,13 @@ The `azmcp server start` command supports the following options:
 > per destination. Requests routed through a system proxy or PAC rule omit transport DNS/IP
 > checks, while destinations for which those rules select no proxy retain them. PAC files
 > call this a `DIRECT` result. Debug recording proxies remain a handler-wide exception.
-> Use only trusted proxies with appropriate network restrictions. Endpoint validation remains
-> active unless separately bypassed, including public-target checks of the original destination's IPs.
+> System and PAC rules are evaluated once to select a transport and again by the selected
+> proxy transport while connecting. If a dynamic configuration changes from proxy to direct
+> between those evaluations, the direct connection remains on the proxy-designated transport
+> and does not receive direct-route DNS/IP filtering. Use only trusted, stable proxy
+> configurations with appropriate network restrictions whose routing decision does not change
+> during a request. Endpoint validation remains active unless separately bypassed, including
+> public-target checks of the original destination's IPs.
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
 >

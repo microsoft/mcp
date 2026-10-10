@@ -617,35 +617,45 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    export NO_PROXY=localhost,127.0.0.1
    ```
 
-   **Security warning:** The server selects one explicit outgoing proxy in `ALL_PROXY`,
-   `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
-   Requests actually routed through that proxy omit transport-level DNS/IP checks because
-   the trusted proxy becomes the network boundary. Requests excluded by `NO_PROXY` use the
-   protected direct route and retain those checks. When none of those settings selects a
-   proxy, `.NET`'s `HttpClient.DefaultProxy` supplies environment, operating-system, PAC,
-   and bypass rules with the same behavior. Use only trusted proxies with restricted network
-   access; endpoint validation remains independently active, including public-target validation
-   of the original destination's IPs.
+**Security warning:** The server selects one explicit outgoing proxy in `ALL_PROXY`,
+`HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+Requests actually routed through that proxy omit transport-level DNS/IP checks because
+the trusted proxy becomes the network boundary. Requests excluded by `NO_PROXY` use the
+protected direct route and retain those checks. When none of those settings selects a
+proxy, `.NET`'s `HttpClient.DefaultProxy` supplies environment, operating-system, PAC,
+and bypass rules with the same behavior. Use only trusted proxies with restricted network
+access; endpoint validation remains independently active, including public-target validation
+of the original destination's IPs.
 
-   ```mermaid
-   flowchart TD
-       A[Outgoing HTTP request] --> B{Is an explicit ALL_PROXY,<br/>HTTPS_PROXY, or HTTP_PROXY configured?}
-       B -- Yes --> C{Does destination match NO_PROXY?}
-       C -- Yes --> D[Connect through the protected direct route]
-       C -- No --> E[Connect through the explicit proxy]
-       D --> J[SAFE: Transport IP address filtering is used]
-       E --> F[WARNING: Transport IP address filtering is not used]
-       B -- No --> G{Is the system proxy or a PAC rule applicable for this destination?}
-       G -- Yes --> H[Connect through the system proxy or PAC rule]
-       H --> F
-       G -- No --> I[Connect directly to destination]
-       I --> J[SAFE: Transport IP address filtering is used]
-   ```
+```mermaid
+flowchart TD
+    A[Outgoing HTTP request] --> B{Is an explicit ALL_PROXY,<br/>HTTPS_PROXY, or HTTP_PROXY configured?}
+    B -- Yes --> C{Does destination match NO_PROXY?}
+    C -- Yes --> D[Connect through the protected direct route]
+    C -- No --> E[Connect through the explicit proxy]
+    D --> J[SAFE: Transport IP address filtering is used]
+    E --> F[WARNING: Transport IP address filtering is not used]
+    B -- No --> G{Is the system proxy or a PAC rule applicable for this destination?}
+    G -- Yes --> H[Connect through the system proxy or PAC rule]
+    H --> F
+    G -- No --> I[Connect directly to destination]
+    I --> J[SAFE: Transport IP address filtering is used]
+```
 
-   `NO_PROXY` changes whether an outgoing request is sent through the selected explicit
-   proxy. Matching destinations use the protected direct route, so transport IP address
-   filtering remains enabled. System and PAC rules are also evaluated per destination,
-   with filtering enabled whenever those rules select no proxy.
+`NO_PROXY` changes whether an outgoing request is sent through the selected explicit
+proxy. Matching destinations use the protected direct route, so transport IP address
+filtering remains enabled. System and PAC rules are also evaluated per destination,
+with filtering enabled whenever their initial routing decision selects no proxy, subject
+to the dynamic-rule limitation described below.
+
+**Known limitation:** System and PAC proxy rules are evaluated once to select the protected
+direct or proxy transport, and the selected proxy transport evaluates the same rules again
+when connecting. If a dynamic proxy configuration changes its answer between those evaluations,
+routing can differ from the initial security decision. In particular, if the first evaluation
+selects a proxy but the later evaluation bypasses it, the resulting direct connection uses the
+proxy-designated transport and does not receive direct-route DNS/IP filtering. Use only trusted,
+stable system and PAC proxy configurations whose routing decision for a destination does not
+change during a request.
 
 #### Troubleshooting Network Connectivity
 

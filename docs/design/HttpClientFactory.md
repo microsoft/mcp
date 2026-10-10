@@ -95,6 +95,14 @@ The following environment variables are automatically applied:
 > no explicit `Proxy`. Proxy values without a URI scheme are interpreted as HTTP proxies
 > for compatibility with .NET proxy handling.
 >
+> **Known limitation:** The routing handler calls `IWebProxy.GetProxy` to choose the
+> protected-direct or proxy transport, after which `SocketsHttpHandler` evaluates the same
+> proxy again while connecting. Dynamic system or PAC configuration can return different
+> decisions across those evaluations. If routing initially selects a proxy but the transport
+> later selects direct, that connection remains on the proxy-designated transport and therefore
+> does not receive direct-route DNS/IP filtering. Hosts must use trusted, stable proxy
+> configurations whose decision for a destination does not change during a request.
+>
 > Use only trusted proxies with appropriate network controls. Endpoint validation remains
 > active for proxied and direct requests. This includes Azure/external host
 > authorization and `ValidatePublicTargetUrl` checks of the original target's resolved IPs.

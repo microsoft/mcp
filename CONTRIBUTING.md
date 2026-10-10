@@ -777,7 +777,10 @@ Requests actually routed through that proxy omit transport checks; requests excl
 and bypass routing with the same protected-direct behavior. Debug recording proxies still
 take precedence over transport protection for every rewritten request. Endpoint validation
 remains active unless separately bypassed. Use only trusted proxies with appropriate network
-restrictions.
+restrictions. System and PAC routing is evaluated once when selecting a transport and again
+by the proxy transport while connecting. A dynamic proxy-to-direct change between evaluations
+uses the proxy-designated transport without direct-route DNS/IP filtering, so configurations
+must provide a stable decision for each destination during a request.
 
 ### Package README
 
