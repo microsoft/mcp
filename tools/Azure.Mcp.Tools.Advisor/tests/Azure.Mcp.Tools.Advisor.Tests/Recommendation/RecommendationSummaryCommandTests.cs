@@ -33,6 +33,29 @@ public class RecommendationSummaryCommandTests
     }
 
     [Theory]
+    [InlineData("Start with this tool and --group-by recommendation-type")]
+    [InlineData("broad top, prioritized, important, most critical")]
+    [InlineData("highest-impact, top recommendation actions")]
+    [InlineData("'what should I fix first'")]
+    [InlineData("including Cost and Security")]
+    [InlineData("show or view affected resources or records for a selected group")]
+    [InlineData("--recommendation-type-id set to the summary group key")]
+    [InlineData("preserving the scope, category, and other filters")]
+    public void Description_RoutesOverviewAndResourceDrillDownRequests(string guidance)
+    {
+        Assert.Contains(guidance, Command.GetCommand().Description);
+    }
+
+    [Fact]
+    public void GroupByDescription_ExplainsDefaultAndGroupKeys()
+    {
+        var groupBy = Assert.Single(Command.GetCommand().Options, option => option.Name == "--group-by");
+
+        Assert.Contains("Defaults to 'category' when omitted", groupBy.Description);
+        Assert.Contains("recommendation type ID GUID keys and English labels", groupBy.Description);
+    }
+
+    [Theory]
     [InlineData("--subscription sub1", true)]
     [InlineData("--subscription sub1 --group-by recommendation-type", true)]
     [InlineData("--subscription sub1 --group-by status", true)]

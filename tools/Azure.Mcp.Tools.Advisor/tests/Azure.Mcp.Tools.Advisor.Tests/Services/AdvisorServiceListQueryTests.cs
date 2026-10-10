@@ -19,6 +19,71 @@ public class AdvisorServiceListQueryTests
     private static RecommendationQueryScope ServiceGroupScope() =>
         RecommendationQueryScope.ForServiceGroup("commerce");
 
+    [Theory]
+    [InlineData("category", "tostring(properties.recommendationCategory) =~ 'HighAvailability'")]
+    [InlineData("impact", "tostring(properties.recommendationImpact) =~ 'High'")]
+    [InlineData("resourceType", "tostring(properties.supportedResourceType) =~ 'Microsoft.Storage/storageAccounts'")]
+    [InlineData("subCategory", "tostring(properties.recommendationSubCategory) =~ 'ZoneResiliency'")]
+    [InlineData("trackingIds", "tostring(trackingId) in~ ('QNY1-''HB8', '9G0V-_G8')")]
+    [InlineData("retirementDate", "startofday(todatetime(properties.sourceProperties.serviceRetirement.retirementDate)) <= datetime(2026-03-31)")]
+    public void BuildListQueries_MetadataFiltersUseInnerJoin(string filter, string expectedPredicate)
+    {
+        var filters = filter switch
+        {
+            "category" => new RecommendationFilters(Category: " HighAvailability "),
+            "impact" => new RecommendationFilters(Impact: " High "),
+            "resourceType" => new RecommendationFilters(ResourceType: " Microsoft.Storage/storageAccounts "),
+            "subCategory" => new RecommendationFilters(SubCategory: " ZoneResiliency "),
+            "trackingIds" => new RecommendationFilters(TrackingIds: [" QNY1-'HB8 ", "qny1-'hb8", "", "9G0V-_G8"]),
+            "retirementDate" => new RecommendationFilters(RetirementDateOperator: "le", RetirementDate: new DateOnly(2026, 3, 31)),
+            _ => throw new ArgumentException("Unknown filter.", nameof(filter)),
+        };
+
+        foreach (var scope in new[] { SubscriptionScope(), ServiceGroupScope() })
+        {
+            foreach (var prioritized in new[] { false, true })
+            {
+                var query = prioritized
+                    ? AdvisorService.BuildPrioritizedRecommendationListQuery(scope, null, 51, filters)
+                    : AdvisorService.BuildRecommendationListQuery(scope, null, 51, Language, filters);
+                var metadataBranch = query[query.IndexOf("| join kind=inner (", StringComparison.Ordinal)..];
+                metadataBranch = metadataBranch[..metadataBranch.IndexOf(") on joinTypeId", StringComparison.Ordinal)];
+
+                Assert.Contains(expectedPredicate, metadataBranch);
+                Assert.Contains("tostring(properties.language) =~ 'en'", metadataBranch);
+                Assert.DoesNotContain("arg_max", metadataBranch);
+                Assert.DoesNotContain("lastRefreshed", metadataBranch, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("tostring(properties.recommendationTypeId) in~", query);
+                Assert.Equal(filter == "trackingIds", metadataBranch.Contains("| distinct *", StringComparison.Ordinal));
+                if (filter is "trackingIds" or "retirementDate")
+                {
+                    Assert.Contains("tostring(properties.recommendationSubCategory) =~ 'ServiceUpgradeAndRetirement'", metadataBranch);
+                }
+                if (filter == "trackingIds")
+                {
+                    Assert.Contains("| mv-expand trackingId = properties.sourceProperties.serviceRetirement.serviceHealth.trackingIds", metadataBranch);
+                    Assert.True(metadataBranch.IndexOf("| distinct *", StringComparison.Ordinal) >
+                        metadataBranch.IndexOf("| project joinTypeId,", StringComparison.Ordinal));
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BuildListQueries_InstanceOnlyFiltersKeepLeftJoin(bool prioritized)
+    {
+        var filters = new RecommendationFilters(Resource: "storage", Search: "encrypt", Status: RecommendationStatus.Completed);
+        var query = prioritized
+            ? AdvisorService.BuildPrioritizedRecommendationListQuery(ServiceGroupScope(), null, 51, filters)
+            : AdvisorService.BuildRecommendationListQuery(SubscriptionScope(), null, 51, Language, filters);
+
+        Assert.Contains("| join kind=leftouter (", query);
+        Assert.DoesNotContain("| distinct", query);
+        Assert.DoesNotContain("| mv-expand", query);
+    }
+
     [Fact]
     public void IsPrioritized_ReflectsFilterFlag()
     {
@@ -34,7 +99,6 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 25,
             language: Language);
 
@@ -54,8 +118,7 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("| project id, name, type, properties", query);
         Assert.EndsWith("| limit 25", query);
 
-        // priorityScore is projected only as an internal metadata sort column, never merged into properties.
-        Assert.Contains("metadataPriorityScore = todouble(properties.priorityScore)", query);
+        Assert.DoesNotContain("metadataPriorityScore", query);
         Assert.DoesNotContain("pack('priorityScore'", query);
     }
 
@@ -65,7 +128,6 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 50,
             language: Language);
 
@@ -85,7 +147,6 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 50,
             language: Language);
 
@@ -97,7 +158,7 @@ public class AdvisorServiceListQueryTests
         Assert.Contains(
             "iff(updateSubCategory, pack('extendedProperties', bag_merge(pack('recommendationSubCategory', metadataSubCategory), properties.extendedProperties)), dynamic({}))",
             query);
-        Assert.DoesNotContain("retirementDate", query);
+        Assert.DoesNotContain("pack('retirementDate'", query);
         Assert.DoesNotContain("retirementFeatureName", query);
         Assert.DoesNotContain("coalesce(properties.extendedProperties", query);
     }
@@ -108,7 +169,6 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 50,
             language: Language);
 
@@ -131,42 +191,126 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 25,
             language: Language);
 
         Assert.DoesNotContain("criticality", query);
         Assert.DoesNotContain("order by", query);
+        Assert.DoesNotContain("suppressionIds", query);
+        Assert.DoesNotContain("properties.tracked", query);
+        Assert.DoesNotContain("!~ 'Security'", query);
+        Assert.DoesNotContain("arg_max", query);
+        Assert.DoesNotContain("metadataRetirementDate", query);
     }
 
     [Fact]
-    public void BuildRecommendationListQuery_Prioritized_RanksByPriorityThenCriticalityBeforeProjectionAndLimit()
+    public void BuildPrioritizedRecommendationListQuery_FiltersThenSortsThenLimits()
     {
-        var query = AdvisorService.BuildRecommendationListQuery(
+        var query = AdvisorService.BuildPrioritizedRecommendationListQuery(
             SubscriptionScope(),
-            predicates: "strlen(name) == 64",
-            prioritized: true,
-            limit: 10,
-            language: Language);
+            predicates: "strlen(name) == 64 and isempty(properties.serviceGroupId) and tostring(properties.recommendationStatus) =~ 'Completed'",
+            limit: 51);
 
-        // Prioritized still returns only criticality-scored recommendations.
-        Assert.Contains("isnotempty(tostring(properties.criticality))", query);
-        Assert.Contains("isnotnull(properties.criticalityScore)", query);
-
-        // Ranked by the type's metadata priority score, then criticality, then the type's display name, then id.
+        Assert.Contains("tostring(properties.recommendationStatus) =~ 'Completed'", query);
+        Assert.DoesNotContain("'New'", query);
+        Assert.DoesNotContain("suppressionIds", query);
+        Assert.DoesNotContain("properties.tracked", query);
+        Assert.Contains("isempty(properties.serviceGroupId)", query);
+        Assert.Contains("tostring(properties.language) =~ 'en'", query);
+        Assert.DoesNotContain("isempty(properties.language)", query);
+        Assert.DoesNotContain("startswith 'en-'", query);
+        Assert.DoesNotContain("arg_max", query);
+        Assert.DoesNotContain("lastRefreshed", query, StringComparison.OrdinalIgnoreCase);
+        Assert.EndsWith("| take 51 | project id, name, type, properties", query);
+        Assert.DoesNotContain("metadataPriorityScore", query);
+        Assert.Contains("join kind=leftouter", query);
         Assert.Contains(
-            "| order by metadataPriorityScore desc, todouble(properties.criticalityScore) desc, metadataDisplayName asc, id asc",
+            "metadataRetirementDate = todatetime(properties.sourceProperties.serviceRetirement.retirementDate)",
             query);
-        Assert.DoesNotContain("metadataImpactRank", query);
+        Assert.DoesNotContain("!~ 'Security'", query);
+        Assert.DoesNotContain("isnotempty(tostring(properties.criticality))", query);
+        Assert.DoesNotContain("isnotnull(properties.criticalityScore)", query);
+        Assert.Contains("strlen(name) == 64", query);
+        Assert.Contains("instanceScore = coalesce(todouble(properties.criticalityScore), 0.0)", query);
+        Assert.Contains("retirementDate = coalesce(todatetime(properties.extendedProperties.retirementDate), metadataRetirementDate)", query);
+        Assert.Contains("resourceNameSort = tolower(tostring(properties.impactedValue))", query);
+        Assert.Contains("| order by instanceScore desc nulls last, retirementDate asc nulls last, resourceNameSort asc | take", query);
+        Assert.DoesNotContain(", id asc", query);
+        Assert.DoesNotContain("summarize", query);
+        Assert.True(query.IndexOf("bag_merge(metadataOverrides, properties)", StringComparison.Ordinal) <
+            query.IndexOf("| order by", StringComparison.Ordinal));
+    }
 
-        var orderIndex = query.IndexOf("order by", StringComparison.Ordinal);
-        var projectIndex = query.IndexOf("| project id, name, type, properties", StringComparison.Ordinal);
-        var limitIndex = query.IndexOf("| limit", StringComparison.Ordinal);
+    [Theory]
+    [InlineData("Cost")]
+    [InlineData("HighAvailability")]
+    [InlineData("Performance")]
+    [InlineData("OperationalExcellence")]
+    public void BuildPrioritizedRecommendationListQuery_DoesNotFilterOnScoringInputs(string category)
+    {
+        var query = AdvisorService.BuildPrioritizedRecommendationListQuery(
+            SubscriptionScope(),
+            predicates: $"tostring(properties.category) =~ '{category}'",
+            limit: 11);
 
-        // Ordering runs before the projection (so join-only sort keys survive) and before the limit.
-        Assert.True(orderIndex < projectIndex, "Ordering must precede the projection so join-only sort keys remain available.");
-        Assert.True(projectIndex < limitIndex, "Projection must precede the limit.");
-        Assert.EndsWith("| limit 10", query);
+        Assert.DoesNotContain("isnotempty(tostring(properties.criticality))", query);
+        Assert.DoesNotContain("isnotnull(properties.criticalityScore)", query);
+        Assert.DoesNotContain("!~ 'Security'", query);
+        Assert.DoesNotContain("Savings", query);
+        Assert.Contains($"tostring(properties.category) =~ '{category}'", query);
+    }
+
+    [Fact]
+    public void BuildPrioritizedRecommendationListQuery_Security_IsRetained()
+    {
+        var query = AdvisorService.BuildPrioritizedRecommendationListQuery(
+            SubscriptionScope(),
+            predicates: "tostring(properties.category) =~ 'Security'",
+            limit: 11);
+
+        Assert.DoesNotContain("!~ 'Security'", query);
+        Assert.Contains("tostring(properties.category) =~ 'Security'", query);
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("HighAvailability", false)]
+    [InlineData("Security", false)]
+    [InlineData("Cost", true)]
+    [InlineData(" cost ", true)]
+    [InlineData("COST", true)]
+    public void BuildPrioritizedRecommendationListQuery_OnlyExplicitCostSelectsFiniteSavings(string? category, bool useSavings)
+    {
+        foreach (var scope in new[] { SubscriptionScope(), ServiceGroupScope() })
+        {
+            var query = AdvisorService.BuildPrioritizedRecommendationListQuery(
+                scope, null, 101, new RecommendationFilters(Category: category, RecommendationTypeId: "cost-type"));
+
+            Assert.Equal(useSavings, query.Contains("dailySavings =", StringComparison.Ordinal));
+            Assert.Equal(!useSavings, query.Contains("coalesce(todouble(properties.criticalityScore), 0.0)", StringComparison.Ordinal));
+            if (useSavings)
+            {
+                Assert.Contains("dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))", query);
+                Assert.Contains("annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))", query);
+                Assert.Contains("coalesce(iff(isfinite(dailySavings), dailySavings, real(null)), iff(isfinite(annualSavings), annualSavings, real(null)))", query);
+                Assert.DoesNotContain("dailySavings > 0", query);
+            }
+            Assert.EndsWith("| take 101 | project id, name, type, properties", query);
+        }
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(51)]
+    [InlineData(101)]
+    public void BuildPrioritizedRecommendationListQuery_OutputOptionsDoNotChangeQuery(int limit)
+    {
+        var filters = new RecommendationFilters(Prioritized: true, ShowPrioritizationSignals: false);
+        var query = AdvisorService.BuildPrioritizedRecommendationListQuery(SubscriptionScope(), null, limit, filters);
+
+        Assert.Equal(query, AdvisorService.BuildPrioritizedRecommendationListQuery(
+            SubscriptionScope(), null, limit, filters with { ShowPrioritizationSignals = true }));
+        Assert.EndsWith($"| take {limit} | project id, name, type, properties", query);
     }
 
     [Fact]
@@ -175,7 +319,6 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope(),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 50,
             language: Language);
 
@@ -188,7 +331,6 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             SubscriptionScope("rg'inject"),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 50,
             language: Language);
 
@@ -201,7 +343,6 @@ public class AdvisorServiceListQueryTests
         var query = AdvisorService.BuildRecommendationListQuery(
             ServiceGroupScope(),
             predicates: "strlen(name) == 64",
-            prioritized: false,
             limit: 50,
             language: Language);
 

@@ -27,6 +27,149 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     }
 
     [Theory]
+    [InlineData("'top recommendations'")]
+    [InlineData("'most important recommendations'")]
+    [InlineData("'what should I fix first'")]
+    [InlineData("start with recommendation summary --group-by recommendation-type")]
+    [InlineData("view affected records for a selected recommendation type")]
+    [InlineData("--recommendation-type-id set to the group key")]
+    [InlineData("preserving the scope, category, and other filters")]
+    [InlineData("Use summary for counts and grouped overviews")]
+    public void Description_RoutesOverviewAndResourceDrillDownRequests(string guidance)
+    {
+        Assert.Contains(guidance, Command.GetCommand().Description);
+    }
+
+    [Theory]
+    [InlineData("criticalityScore descending, treating missing scores as zero")]
+    [InlineData("Only an explicit --category Cost selects savings ordering")]
+    [InlineData("savings.retail.dailyPotentialSavings descending")]
+    [InlineData("falling back to extendedProperties.annualSavingsAmount")]
+    [InlineData("Missing, invalid, or non-finite savings sort last; zero is valid")]
+    [InlineData("effective retirement date ascending")]
+    [InlineData("then resource name A-Z (case-insensitive)")]
+    public void PrioritizedDescription_ExplainsIndividualRecordOrdering(string guidance)
+    {
+        var command = Command.GetCommand();
+        var prioritized = Assert.Single(command.Options, option => option.Name == "--prioritized");
+
+        Assert.Contains(guidance, prioritized.Description);
+    }
+
+    [Fact]
+    public void PrioritizedDescription_ExplainsDefaultAndScope()
+    {
+        var prioritized = Assert.Single(Command.GetCommand().Options, option => option.Name == "--prioritized");
+
+        Assert.Contains("Defaults to false; when false, no explicit ordering is applied", prioritized.Description);
+        Assert.Contains("both subscription and Service Group scopes", prioritized.Description);
+    }
+
+    [Fact]
+    public void ShowPrioritizationSignalsDescription_ExplainsPrerequisiteAndOutputOnlyBehavior()
+    {
+        var command = Command.GetCommand();
+        var option = Assert.Single(command.Options, option => option.Name == "--show-prioritization-signals");
+
+        Assert.Contains("properties.signalBreakdown", option.Description);
+        Assert.Contains("Defaults to false", option.Description);
+        Assert.Contains("requires --prioritized true", option.Description);
+        Assert.Contains("does not change filtering or ordering", option.Description);
+        Assert.Contains("omitted when signals are unavailable", option.Description);
+        Assert.Contains("--show-prioritization-signals true requires --prioritized true", command.Description);
+    }
+
+    [Theory]
+    [InlineData("--category", "English recommendation metadata")]
+    [InlineData("--impact", "English recommendation metadata")]
+    [InlineData("--resource-type", "exact match against the supported resource type")]
+    [InlineData("--resource-type", "substring match in the instance resource ID")]
+    [InlineData("--resource", "substring of the impacted resource's full ARM resource ID")]
+    [InlineData("--search", "Prefer a structured filter")]
+    [InlineData("--search", "original instance problem text before metadata enrichment")]
+    [InlineData("--retirement-date", "service-retirement date in English recommendation metadata")]
+    public void FilterDescriptions_ExplainMatchingBehavior(string optionName, string guidance)
+    {
+        var option = Assert.Single(Command.GetCommand().Options, option => option.Name == optionName);
+
+        Assert.Contains(guidance, option.Description);
+    }
+
+    [Fact]
+    public void Description_ExplainsOutputWithoutDuplicatingOrderingDetails()
+    {
+        var description = Command.GetCommand().Description;
+
+        Assert.Contains("ARM resource shape and a truncation indicator", description);
+        Assert.Contains("Each record's name is its recommendation ID", description);
+        Assert.Contains("order matching records with --prioritized", description);
+        Assert.DoesNotContain("dailyPotentialSavings", description);
+        Assert.DoesNotContain("criticalityScore", description);
+    }
+
+    [Theory]
+    [InlineData(false, null, null)]
+    [InlineData(false, null, "false")]
+    [InlineData(false, null, "true")]
+    [InlineData(false, false, null)]
+    [InlineData(false, false, "false")]
+    [InlineData(false, false, "true")]
+    [InlineData(false, true, null)]
+    [InlineData(false, true, "false")]
+    [InlineData(false, true, "true")]
+    [InlineData(true, false, null)]
+    [InlineData(true, false, "false")]
+    [InlineData(true, false, "true")]
+    [InlineData(true, true, null)]
+    [InlineData(true, true, "false")]
+    [InlineData(true, true, "true")]
+    [InlineData(true, null, null)]
+    [InlineData(true, null, "false")]
+    [InlineData(true, null, "true")]
+    public async Task ExecuteAsync_ValidatesAndForwardsShowPrioritizationSignals(
+        bool serviceGroupScope, bool? prioritized, string? showSignals)
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(filters => captured = filters),
+            Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+        var args = new List<string>
+        {
+            serviceGroupScope ? "--service-group" : "--subscription",
+            serviceGroupScope ? "commerce" : "sub123",
+        };
+        if (prioritized is { } prioritizedValue)
+        {
+            args.AddRange(["--prioritized", prioritizedValue ? "true" : "false"]);
+        }
+        if (showSignals is not null)
+        {
+            args.AddRange(["--show-prioritization-signals", showSignals]);
+        }
+
+        var response = await ExecuteCommandAsync(args.ToArray());
+
+        if (showSignals == "true" && prioritized != true)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.Contains("--show-prioritization-signals true requires --prioritized true", response.Message);
+            Assert.Null(captured);
+            await Service.DidNotReceive().ListRecommendationsAsync(
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Models.RecommendationFilters?>(),
+                Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+            return;
+        }
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(showSignals is null ? (bool?)null : bool.Parse(showSignals), captured.ShowPrioritizationSignals);
+        Assert.Equal(prioritized, captured.Prioritized);
+        Assert.Equal(serviceGroupScope ? "commerce" : null, captured.ServiceGroup);
+    }
+
+    [Theory]
     [InlineData("--subscription sub1 --resource-group rg1", true)]
     [InlineData("--subscription sub1", true)]  // Missing resource-group
     [InlineData("", false)]                    // Missing all required options
@@ -826,6 +969,29 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.NotNull(captured);
         Assert.Null(captured!.Prioritized);
         Assert.Null(captured.ServiceGroup);
+    }
+
+    [Theory]
+    [InlineData("New")]
+    [InlineData("Postponed")]
+    [InlineData("Dismissed")]
+    [InlineData("Completed")]
+    public async Task ExecuteAsync_PrioritizedForwardsRequestedStatus(string status)
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--prioritized", "true", "--status", status);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListRecommendationsAsync(
+            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is<Models.RecommendationFilters?>(filters =>
+                filters != null && filters.Prioritized == true && filters.Status.ToString() == status),
+            Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
