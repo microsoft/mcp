@@ -16,4 +16,5 @@ public sealed record RecommendationFilters(
     string? RetirementDateOperator = null,
     DateOnly? RetirementDate = null,
     string? ServiceGroup = null,
-    bool? Prioritized = null);
+    bool? Prioritized = null,
+    bool? ShowPrioritizationSignals = null);

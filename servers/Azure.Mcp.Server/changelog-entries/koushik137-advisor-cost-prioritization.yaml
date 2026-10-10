@@ -1,0 +1,13 @@
+changes:
+  - section: "Features Added"
+    description: "Added --show-prioritization-signals to Advisor recommendation listing to optionally return the original signalBreakdown when available. Defaults to false; enabling signals requires --prioritized true in subscription and Service Group scopes. Requests with signals enabled and prioritized false or omitted are rejected before querying Azure."
+  - section: "Bugs Fixed"
+    description: "Prioritized and ordinary listing share the existing scope and 64-character recommendation name filters. Service Group scope matches the full canonical ARM serviceGroupId."
+  - section: "Bugs Fixed"
+    description: "Prioritized Advisor listing sorts individual records in ARG by criticalityScore descending, treating missing scores as zero. An explicit Cost category sorts by daily potential savings with annual savings fallback; missing or invalid savings sort last and zero remains valid. Ties use effective retirement date ascending with unknown dates last, then case-insensitive resource name. Both listing modes retain the same matching records, including Security and tracked recommendations. Non-prioritized ordering is unchanged."
+  - section: "Other Changes"
+    description: "Combined Advisor recommendation metadata filtering and enrichment into one server-side ARG join using English metadata for both listing modes and scopes. Prioritized listing sorts and selects top + 1 records in ARG to detect truncation without fetching every page. Removed the client-side ranking models and pagination helpers."
+  - section: "Other Changes"
+    description: "Route broad priority and top recommendation requests to summary grouped by recommendation type. Affected-resource follow-ups use list with the selected group key while preserving scope, category, and filters."
+  - section: "Other Changes"
+    description: "Simplified Advisor list tool descriptions to focus on tool selection, scope, and output. Clarified filter matching in option descriptions and documented ordering, signals, and truncation separately in the command reference."

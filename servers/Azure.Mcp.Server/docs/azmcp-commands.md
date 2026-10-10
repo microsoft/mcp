@@ -459,21 +459,23 @@ azmcp adme storage record version list --endpoint <endpoint> \
 ### Azure Advisor Operations
 
 ```bash
-# List Advisor recommendations in a subscription, with optional filters
-# Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
-# --tracking-ids and --retirement-date can be used independently or together
-# --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
-# Scope is either a subscription (--subscription, optionally narrowed by --resource-group) or an Azure Service Group
-# (--service-group, provided as the name segment of its ARM resource ID); specify either --subscription or --service-group,
-# not both, and the configured default subscription is used when neither is supplied. --resource-group applies only to subscription scope
-# --prioritized true returns only recommendations with contextual criticality scoring for both scopes and ranks them by
-# metadata priority score, then contextual criticality score, then recommendation display name; defaults to false
-# Each result uses the standard ARM resource shape; name contains the stable recommendation ID
+# List individual Azure Advisor recommendation records and their affected-resource details.
+# Use summary --group-by recommendation-type for broad top/important recommendation requests
+# and grouped overviews. To inspect a selected group, use --recommendation-type-id with its
+# group key, preserving scope, category, and other filters.
+#
+# Choose subscription or Service Group scope. --resource-group applies only to subscriptions.
+# If neither scope is supplied, the configured default subscription is used.
+# Status defaults to New. --top defaults to 50 and is clamped to 1-100.
+# --prioritized optionally orders matching records; --show-prioritization-signals optionally
+# includes available signal details. Both default to false; signals require --prioritized true.
+# Returns recommendation records in ARM resource shape and a truncation indicator.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation list [--subscription <subscription>] \
                                   [--resource-group <resource-group>] \
                                   [--service-group <service-group>] \
                                   [--prioritized <true|false>] \
+                                  [--show-prioritization-signals <true|false>] \
                                   [--top <top>] \
                                   [--category <category>] \
                                   [--impact <impact>] \
@@ -485,7 +487,28 @@ azmcp advisor recommendation list [--subscription <subscription>] \
                                   [--sub-category <sub-category>] \
                                   [--tracking-ids <tracking-id1> <tracking-id2> ...] \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
+```
 
+#### Recommendation list behavior
+
+| Setting | Behavior |
+| --- | --- |
+| `--prioritized false` or omitted | No explicit ordering is applied. |
+| `--prioritized true` | Orders by `criticalityScore` descending, treating missing scores as zero. |
+| Prioritized with explicit `--category Cost` | Orders by `savings.retail.dailyPotentialSavings` descending, falling back to `extendedProperties.annualSavingsAmount`. Missing, invalid, or non-finite savings sort last; zero remains valid. A recommendation type ID alone does not select savings ordering. |
+| Ordering ties | Effective retirement date ascending (instance date with metadata fallback), unknown dates last, then case-insensitive resource name ascending. Exact ties have no guaranteed relative order. |
+| `--show-prioritization-signals true` | Requires `--prioritized true`; rejected if prioritized is false or omitted. Includes the original `properties.signalBreakdown` when available; unavailable signals are omitted. Including signals does not change filtering or ordering. |
+| Result limit | ARG selects up to `top + 1` records after filtering and optional ordering. The extra record is removed and used to detect truncation. ARG truncation signals also set `areResultsTruncated`. No additional pages are fetched. |
+
+- Specify either `--subscription` or `--service-group`, not both. Supply the Service Group name segment from its ARM resource ID.
+- Status defaults to `New`; both listing modes also support explicit `Postponed`, `Dismissed`, and `Completed`.
+- Category, impact, resource type, subcategory, tracking IDs, and retirement-date filters require matching English recommendation metadata. Without these filters, records without matching metadata remain eligible.
+- Resource type also requires a substring match in the instance resource ID. `--resource` searches that ID, while `--search` matches the original instance problem text before metadata enrichment. Prefer structured filters when they express the request.
+- Tracking IDs and retirement-date filters can be combined. They imply `ServiceUpgradeAndRetirement`; an explicitly supplied subcategory must match it.
+- Retirement-date filtering uses the metadata date, not the effective date used for ordering.
+- Results are individual recommendation records, not distinct resources. Each record's `name` is its recommendation ID.
+
+```bash
 # Update the customer-provided state of an Advisor recommendation in a subscription or service group.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
 # or omit both to use the configured default subscription. Do not specify both. --recommendation-id
@@ -504,6 +527,10 @@ azmcp advisor recommendation update [--subscription <subscription>] \
                                     [--tenant <tenant>]
 
 # Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group.
+# Start here with --group-by recommendation-type for broad top, prioritized, important, most critical,
+# highest-impact, top recommendation actions, or "what should I fix first" requests, including Cost and Security.
+# Follow up with advisor recommendation list --recommendation-type-id <summary-group-key> to show affected resources
+# or records for a selected group, preserving the scope, category, and other filters.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
 # or omit both to use the configured default subscription. Do not specify both.
 # --resource-group can only be used with subscription scope.
