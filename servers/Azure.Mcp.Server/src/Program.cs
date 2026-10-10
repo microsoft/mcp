@@ -211,6 +211,7 @@ internal class Program
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Functions.FunctionsSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
+            new Azure.Mcp.Tools.InfraIq.InfraIqSetup(),
             new Azure.Mcp.Tools.Insights.InsightsSetup(),
             new Azure.Mcp.Tools.IoTHub.IoTHubSetup(),
             new Azure.Mcp.Tools.IoTOperations.IoTOperationsSetup(),
