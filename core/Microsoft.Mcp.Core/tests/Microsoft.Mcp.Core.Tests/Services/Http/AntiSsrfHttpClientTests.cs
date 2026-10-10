@@ -159,25 +159,70 @@ public sealed class AntiSsrfHttpClientTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Factory_ConfiguredProxyAndExclusionsOmitProtection(bool bypassProxy)
+    public async Task Factory_ConfiguredProxyRoutesRequestsWithoutIpFiltering(bool synchronous)
     {
         await using LoopbackHttpServer server = LoopbackHttpServer.Start();
         var services = new ServiceCollection();
         services.AddLogging().AddHttpClient();
-        services.Configure<HttpClientOptions>(options =>
-        {
-            options.AllProxy = server.Endpoint.AbsoluteUri;
-            options.NoProxy = bypassProxy ? "127.0.0.1" : null;
-        });
+        services.Configure<HttpClientOptions>(options => options.AllProxy = server.Endpoint.AbsoluteUri);
         services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
         services.ConfigureDefaultHttpClient();
         using ServiceProvider provider = services.BuildServiceProvider();
         using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
-        Uri endpoint = bypassProxy ? server.Endpoint : new Uri("http://example.com/test");
-        using HttpResponseMessage response = await client.GetAsync(endpoint, TestContext.Current.CancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "http://example.com/test");
+        using HttpResponseMessage response = synchronous
+            ? client.Send(request, TestContext.Current.CancellationToken)
+            : await client.SendAsync(request, TestContext.Current.CancellationToken);
+
         Assert.True(response.IsSuccessStatusCode);
-        string request = Assert.Single(server.Requests);
-        Assert.Contains(bypassProxy ? "GET / " : "GET http://example.com/test ", request);
+        Assert.Contains("GET http://example.com/test ", Assert.Single(server.Requests));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Factory_ConfiguredProxyBypassRetainsIpFiltering(bool synchronous)
+    {
+        await using LoopbackHttpServer server = LoopbackHttpServer.Start();
+        using ServiceProvider provider = CreateExplicitProxyProvider(
+            proxy: server.Endpoint,
+            noProxy: "127.0.0.1");
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, server.Endpoint);
+
+        if (synchronous)
+        {
+            Assert.Throws<AntiSSRFException>(() =>
+                client.Send(request, TestContext.Current.CancellationToken));
+        }
+        else
+        {
+            await Assert.ThrowsAsync<AntiSSRFException>(() =>
+                client.SendAsync(request, TestContext.Current.CancellationToken));
+        }
+
+        Assert.Empty(server.Requests);
+    }
+
+    [Fact]
+    public async Task Factory_ConfiguredProxyBypassHonorsNamespaceOverride()
+    {
+        await using LoopbackHttpServer server = LoopbackHttpServer.Start();
+        using ServiceProvider provider = CreateExplicitProxyProvider(
+            proxy: new Uri("http://127.0.0.1:1"),
+            noProxy: "127.0.0.1",
+            ssrfProtectionPolicy: new SsrfProtectionPolicy(["storage"]));
+        ICommandContextAccessor accessor = provider.GetRequiredService<ICommandContextAccessor>();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+        using (accessor.BeginScope(new CommandContext { ToolNamespaceName = "storage" }))
+        {
+            using HttpResponseMessage response = await client.GetAsync(
+                server.Endpoint, TestContext.Current.CancellationToken);
+            Assert.True(response.IsSuccessStatusCode);
+        }
+
+        Assert.Contains("GET / ", Assert.Single(server.Requests));
     }
 
     [Fact]
@@ -219,6 +264,24 @@ public sealed class AntiSsrfHttpClientTests
         services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
         services.ConfigureArmHttpClient();
         services.ConfigureDefaultHttpClient(recordingProxyResolver ?? (() => null));
+        return services.BuildServiceProvider();
+    }
+
+    private static ServiceProvider CreateExplicitProxyProvider(
+        Uri proxy,
+        string noProxy,
+        SsrfProtectionPolicy? ssrfProtectionPolicy = null)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(ssrfProtectionPolicy ?? new SsrfProtectionPolicy(null));
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = proxy.AbsoluteUri;
+            options.NoProxy = noProxy;
+        });
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
+        services.ConfigureDefaultHttpClient();
         return services.BuildServiceProvider();
     }
 }

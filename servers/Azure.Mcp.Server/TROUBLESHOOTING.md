@@ -619,22 +619,22 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
 
    **Security warning:** The server selects one explicit outgoing proxy in `ALL_PROXY`,
    `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
-   It disables transport-level DNS/IP checks for all requests using that configuration, including
-   requests excluded by `NO_PROXY`. When none of those settings selects a proxy, `.NET`'s
-   `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules
-   for each destination. Actually proxied requests omit those DNS/IP transport checks, while
-   destinations not routed through a proxy retain them. Use only trusted proxies with
-   restricted network access; endpoint validation remains independently active, including
-   public-target validation of the original destination's IPs.
+   Requests actually routed through that proxy omit transport-level DNS/IP checks because
+   the trusted proxy becomes the network boundary. Requests excluded by `NO_PROXY` use the
+   protected direct route and retain those checks. When none of those settings selects a
+   proxy, `.NET`'s `HttpClient.DefaultProxy` supplies environment, operating-system, PAC,
+   and bypass rules with the same behavior. Use only trusted proxies with restricted network
+   access; endpoint validation remains independently active, including public-target validation
+   of the original destination's IPs.
 
    ```mermaid
    flowchart TD
        A[Outgoing HTTP request] --> B{Is an explicit ALL_PROXY,<br/>HTTPS_PROXY, or HTTP_PROXY configured?}
        B -- Yes --> C{Does destination match NO_PROXY?}
-       C -- Yes --> D[Connect directly without the explicit proxy]
+       C -- Yes --> D[Connect through the protected direct route]
        C -- No --> E[Connect through the explicit proxy]
-       D --> F[WARNING: Transport IP address filtering is not used]
-       E --> F
+       D --> J[SAFE: Transport IP address filtering is used]
+       E --> F[WARNING: Transport IP address filtering is not used]
        B -- No --> G{Is the system proxy or a PAC rule applicable for this destination?}
        G -- Yes --> H[Connect through the system proxy or PAC rule]
        H --> F
@@ -643,9 +643,9 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    ```
 
    `NO_PROXY` changes whether an outgoing request is sent through the selected explicit
-   proxy; it does not restore transport IP address filtering. When no explicit proxy is
-   configured, system and PAC rules are evaluated per destination, so filtering remains
-   enabled whenever those rules select no proxy.
+   proxy. Matching destinations use the protected direct route, so transport IP address
+   filtering remains enabled. System and PAC rules are also evaluated per destination,
+   with filtering enabled whenever those rules select no proxy.
 
 #### Troubleshooting Network Connectivity
 

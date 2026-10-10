@@ -763,20 +763,21 @@ local HTTP transport.
 
 Shared factory HTTP transports additionally use `AntiSSRFPolicy` with `ExternalOnlyLatest`.
 Default, named, and ARM clients evaluate the namespace override on every send and keep
-protected, namespace-override, and system-proxy connection pools separate. Without an
-explicit proxy setting, `.NET`'s `HttpClient.DefaultProxy` supplies the environment,
-operating-system, PAC, and bypass rules evaluated for each destination.
+protected, namespace-override, and proxied connection pools separate. Explicit proxy
+settings and `.NET`'s `HttpClient.DefaultProxy` are evaluated for each destination.
 Actually proxied requests omit transport DNS/IP validation because the trusted proxy is
-the network boundary; destinations not routed through a proxy retain protection. Missing contexts remain protected.
+the network boundary; `NO_PROXY`, operating-system bypass, and PAC `DIRECT` routes retain
+protection. Missing contexts remain protected.
 
-**Proxy security warning:** Explicit HTTP/HTTPS/ALL and debug recording proxies take
-precedence and disable transport-level AntiSSRF protection for the whole configured handler,
-including requests excluded by `NO_PROXY`. The factory selects one explicit proxy in
-`ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS
-requests. Only when no explicit proxy is selected does `HttpClient.DefaultProxy` provide
-destination-specific routing; those routes disable transport checks only for requests they
-actually proxy. Endpoint validation remains active unless separately bypassed. Use only
-trusted proxies with appropriate network restrictions.
+**Proxy security warning:** The factory selects one explicit proxy in `ALL_PROXY`,
+`HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+Requests actually routed through that proxy omit transport checks; requests excluded by
+`NO_PROXY` connect through the protected direct transport. When no explicit proxy is selected,
+`HttpClient.DefaultProxy` supplies destination-specific environment, operating-system, PAC,
+and bypass routing with the same protected-direct behavior. Debug recording proxies still
+take precedence over transport protection for every rewritten request. Endpoint validation
+remains active unless separately bypassed. Use only trusted proxies with appropriate network
+restrictions.
 
 ### Package README
 

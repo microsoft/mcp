@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Reflection;
 using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -153,6 +154,10 @@ public class FabricCoreSetupTests
         {
             handler = innerHandler;
         }
-        return handler;
+
+        PropertyInfo? proxiedHandlerProperty = handler.GetType().GetProperty(
+            "ProxiedHandler",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        return proxiedHandlerProperty?.GetValue(handler) as HttpMessageHandler ?? handler;
     }
 }

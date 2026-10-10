@@ -78,12 +78,12 @@ The following environment variables are automatically applied:
 - `HTTP_PROXY`: Fallback explicit proxy when the other proxy variables are absent
 - `NO_PROXY`: Comma-separated list of hosts that should bypass the proxy
 
-> **Security warning:** Explicit HTTP/HTTPS/ALL proxy settings take precedence and disable
-> transport-level AntiSSRF protection for the entire configured handler. The factory selects
-> one proxy in `ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order and uses it for both HTTP
-> and HTTPS requests; these variables are not retained as separate per-protocol routes.
-> `NO_PROXY` controls whether that selected proxy is used for a destination, but does not
-> restore transport protection. Use only trusted proxies with appropriate network controls.
+> **Security warning:** The factory selects one proxy in `ALL_PROXY`, `HTTPS_PROXY`, then
+> `HTTP_PROXY` order and uses it for both HTTP and HTTPS requests; these variables are not
+> retained as separate per-protocol routes. A request actually routed through that proxy
+> uses an isolated transport without DNS/IP enforcement because the trusted proxy becomes
+> the network boundary. A destination excluded by `NO_PROXY` instead uses the protected
+> direct transport, including namespace-aware emergency overrides.
 >
 > When none of those explicit settings selects a proxy, `.NET`'s
 > `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules.
@@ -95,7 +95,8 @@ The following environment variables are automatically applied:
 > no explicit `Proxy`. Proxy values without a URI scheme are interpreted as HTTP proxies
 > for compatibility with .NET proxy handling.
 >
-> Endpoint validation remains active in both cases. This includes Azure/external host
+> Use only trusted proxies with appropriate network controls. Endpoint validation remains
+> active for proxied and direct requests. This includes Azure/external host
 > authorization and `ValidatePublicTargetUrl` checks of the original target's resolved IPs.
 
 ## Usage

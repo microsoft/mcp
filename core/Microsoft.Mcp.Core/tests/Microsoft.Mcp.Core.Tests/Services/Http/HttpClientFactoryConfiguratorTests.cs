@@ -153,7 +153,7 @@ public class HttpClientFactoryConfiguratorTests
 
         Assert.NotEmpty(userAgentValues);
         Assert.Equal(userAgentValues.Length, userAgentValues.Distinct().Count());
-        Assert.IsType<SystemProxyRoutingHandler>(handler);
+        Assert.IsType<ProxyRoutingHandler>(handler);
         Assert.Equal(0, laterResolverCalls);
     }
 
@@ -234,6 +234,29 @@ public class HttpClientFactoryConfiguratorTests
     }
 
     [Fact]
+    public void ConfigureDefaultHttpClient_CachesIndependentHandlerGraphsPerClientName()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IHttpMessageHandlerFactory handlers = provider.GetRequiredService<IHttpMessageHandlerFactory>();
+
+        HttpMessageHandler first = handlers.CreateHandler("first");
+        HttpMessageHandler firstAgain = handlers.CreateHandler("first");
+        HttpMessageHandler second = handlers.CreateHandler("second");
+
+        Assert.Same(first, firstAgain);
+        Assert.NotSame(first, second);
+
+        ProxyRoutingHandler firstRouter = Assert.IsType<ProxyRoutingHandler>(GetPrimaryHandler(first));
+        ProxyRoutingHandler secondRouter = Assert.IsType<ProxyRoutingHandler>(GetPrimaryHandler(second));
+        Assert.NotSame(firstRouter, secondRouter);
+        Assert.NotSame(firstRouter.ProxiedHandler, secondRouter.ProxiedHandler);
+    }
+
+    [Fact]
     public async Task ConfigureDefaultHttpClient_DisablesRedirectsForSystemProxyPool()
     {
         await using LoopbackHttpServer server = LoopbackHttpServer.Start(redirect: true);
@@ -279,12 +302,23 @@ public class HttpClientFactoryConfiguratorTests
 
     private static SocketsHttpHandler GetTerminalHandler(HttpMessageHandler handler)
     {
+        handler = GetPrimaryHandler(handler);
+
+        return handler switch
+        {
+            ProxyRoutingHandler proxyRoutingHandler => proxyRoutingHandler.ProxiedHandler,
+            _ => Assert.IsType<SocketsHttpHandler>(handler)
+        };
+    }
+
+    private static HttpMessageHandler GetPrimaryHandler(HttpMessageHandler handler)
+    {
         while (handler is DelegatingHandler delegating)
         {
             handler = delegating.InnerHandler!;
         }
 
-        return Assert.IsType<SocketsHttpHandler>(handler);
+        return handler;
     }
 
     [Theory]

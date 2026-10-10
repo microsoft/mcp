@@ -8,15 +8,12 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// <summary>
 /// Selects an isolated proxied or non-proxied transport for each outgoing request.
 /// </summary>
+/// <param name="proxiedHandler">
+/// The transport configured with an explicit or runtime-provided proxy and no transport DNS/IP validation.
+/// </param>
 /// <param name="nonProxiedHandler">
 /// The namespace-aware non-proxy transport that retains transport DNS/IP validation unless
 /// the current tool namespace has an emergency override.
-/// </param>
-/// <param name="proxiedHandler">
-/// The transport configured with the runtime-provided system proxy and no transport DNS/IP validation.
-/// </param>
-/// <param name="systemProxy">
-/// The runtime-provided proxy whose operating-system, PAC, and bypass rules are evaluated per destination.
 /// </param>
 /// <remarks>
 /// Proxy applicability cannot be determined when the DI container or handler is constructed because
@@ -27,22 +24,32 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// and remain active.
 /// </remarks>
 /// <exception cref="ArgumentNullException">
-/// <paramref name="nonProxiedHandler"/>, <paramref name="proxiedHandler"/>, or
-/// <paramref name="systemProxy"/> is <see langword="null"/>.
+/// <paramref name="nonProxiedHandler"/> or <paramref name="proxiedHandler"/> is <see langword="null"/>.
 /// </exception>
-internal sealed class SystemProxyRoutingHandler(
-    NamespaceAwareHttpHandler nonProxiedHandler,
+/// <exception cref="ArgumentException">
+/// <paramref name="proxiedHandler"/> does not have proxy use enabled with an explicit
+/// <see cref="IWebProxy"/> instance.
+/// </exception>
+internal sealed class ProxyRoutingHandler(
     SocketsHttpHandler proxiedHandler,
-    IWebProxy systemProxy) : HttpMessageHandler
+    NamespaceAwareHttpHandler nonProxiedHandler) : HttpMessageHandler
 {
-    private readonly NamespaceAwareHttpHandler _nonProxiedHandler =
-        nonProxiedHandler ?? throw new ArgumentNullException(nameof(nonProxiedHandler));
     private readonly SocketsHttpHandler _proxiedHandler =
         proxiedHandler ?? throw new ArgumentNullException(nameof(proxiedHandler));
-    private readonly IWebProxy _systemProxy =
-        systemProxy ?? throw new ArgumentNullException(nameof(systemProxy));
+    private readonly NamespaceAwareHttpHandler _nonProxiedHandler =
+        nonProxiedHandler ?? throw new ArgumentNullException(nameof(nonProxiedHandler));
+    private readonly IWebProxy _proxy = GetProxy(proxiedHandler);
     private readonly HttpMessageInvoker _nonProxied = new(nonProxiedHandler);
     private readonly HttpMessageInvoker _proxied = new(proxiedHandler);
+
+    /// <summary>
+    /// Gets the terminal transport used for requests routed through the proxy.
+    /// </summary>
+    /// <remarks>
+    /// Exposed internally so unit tests can inspect transport configuration and verify
+    /// that different factory client names receive independent connection pools.
+    /// </remarks>
+    internal SocketsHttpHandler ProxiedHandler => _proxiedHandler;
 
     /// <summary>
     /// Disables redirects on the non-proxied and proxied pools before publishing the transport.
@@ -82,10 +89,24 @@ internal sealed class SystemProxyRoutingHandler(
 
     private bool ShouldUseProxy(Uri requestUri)
     {
-        // Evaluate the destination once because PAC resolution can be expensive and destination-specific.
-        // IWebProxy permits null or the original destination to represent no proxy; requiring a
-        // distinct proxy URI prevents a no-proxy PAC result from disabling transport IP validation.
-        Uri? proxyUri = _systemProxy.GetProxy(requestUri);
+        // Evaluate the same proxy object used by the transport so routing cannot disagree
+        // because independently supplied proxy instances have different PAC or bypass state.
+        // Null or the original destination represents a direct route, which must retain filtering.
+        Uri? proxyUri = _proxy.GetProxy(requestUri);
         return proxyUri is not null && proxyUri != requestUri;
+    }
+
+    private static IWebProxy GetProxy(SocketsHttpHandler proxiedHandler)
+    {
+        ArgumentNullException.ThrowIfNull(proxiedHandler);
+
+        if (!proxiedHandler.UseProxy || proxiedHandler.Proxy is not IWebProxy proxy)
+        {
+            throw new ArgumentException(
+                "The proxied transport must enable proxy use with an explicit proxy instance.",
+                nameof(proxiedHandler));
+        }
+
+        return proxy;
     }
 }
