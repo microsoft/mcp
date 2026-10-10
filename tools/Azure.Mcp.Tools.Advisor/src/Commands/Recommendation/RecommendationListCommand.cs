@@ -16,30 +16,16 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "e3f09221-523a-4107-a715-823cebd97902",
     Name = "list",
     Title = "List Advisor Recommendations",
-    Description = "List, show, search, or find individual Azure Advisor recommendation records in a subscription or Azure service group, including affected resource details when available. " +
-        "Use this when the user wants actual recommendation contents or details in the Cost, Security, Performance, HighAvailability, or OperationalExcellence categories. " +
-        "Filter by category, business impact, recommendation type ID, impacted Azure resource type (for example, Microsoft.Storage/storageAccounts), resource name or ID, recommendation text, subcategory, Service Health tracking IDs, or retirement date. " +
-        "Do NOT use this to answer aggregate questions like 'how many', 'top N resource types', 'breakdown by category', " +
-        "or 'which impact has the most' — for those, call the 'summary' tool instead (it aggregates server-side over the " +
-        "entire population, while 'list' returns at most 100 records and reports when results are truncated). " +
-        "Do not use list to summarize, count, or group service retirements by retirement date; use summary for aggregate retirement requests. " +
-        "Filter by --status to return New, Postponed, Dismissed, or Completed recommendations; status defaults to New when omitted. " +
-        "--tracking-ids accepts multiple Service Health tracking IDs and returns recommendations matching any of them. " +
-        "--tracking-ids and --retirement-date can be used independently or together. With either filter, --sub-category " +
-        "is optional; when specified, it must be ServiceUpgradeAndRetirement. " +
-        "Scope is either a subscription (--subscription, optionally narrowed by --resource-group) or an Azure Service Group " +
-        "(--service-group). Specify either --subscription or --service-group, not both; --resource-group applies only to the " +
-        "subscription scope, and the configured default subscription is used when neither is supplied. Both scopes return the " +
-        "same recommendation shape, including the contextual criticality fields (criticality, criticalityScore) on the subset " +
-        "of recommendations that carry them. " +
-        "--prioritized is an orthogonal modifier that applies to whichever scope is selected. Set --prioritized true whenever " +
-        "the user asks for a prioritized, ranked, or 'what should I fix/address first' view, or for the most critical, " +
-        "highest-impact, or top recommendations: it returns only the recommendations that have contextual criticality scoring " +
-        "and ranks them by metadata priority score (highest first), then contextual criticality score (highest first), then " +
-        "recommendation display name. --prioritized defaults to false, which returns every matching " +
-        "recommendation in the default order. " +
-        "Each result uses the standard ARM resource shape; its name is the stable recommendation ID accepted by tools that operate on a recommendation. " +
-        "--top caps the number of returned items (default 50, max 100).",
+    Description = "List individual Azure Advisor recommendation records and their affected-resource details in a subscription or Azure Service Group. " +
+        "Use this tool to inspect or search recommendation details, or to view affected records for a selected recommendation type. " +
+        "For broad requests such as 'top recommendations', 'most important recommendations', or 'what should I fix first', " +
+        "start with recommendation summary --group-by recommendation-type. Use summary for counts and grouped overviews. " +
+        "To drill into a selected summary group, use this tool with --recommendation-type-id set to the group key, " +
+        "preserving the scope, category, and other filters. " +
+        "Optionally order matching records with --prioritized and include available prioritization signals with --show-prioritization-signals. " +
+        "--show-prioritization-signals true requires --prioritized true. " +
+        "Choose subscription or Service Group scope; resource-group filtering applies only to subscriptions. " +
+        "Returns recommendation records in ARM resource shape and a truncation indicator. Each record's name is its recommendation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
@@ -95,7 +81,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 RetirementDateOperator: retirementDateOperator,
                 RetirementDate: retirementDate,
                 ServiceGroup: options.ServiceGroup?.Trim(),
-                Prioritized: options.Prioritized);
+                Prioritized: options.Prioritized,
+                ShowPrioritizationSignals: options.ShowPrioritizationSignals);
 
             var recommendations = await _advisorService.ListRecommendationsAsync(
                 options.Subscription,
@@ -111,13 +98,14 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceGroup: {ServiceGroup}, Prioritized: {Prioritized}, " +
+                "Error listing Advisor recommendations. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ServiceGroup: {ServiceGroup}, Prioritized: {Prioritized}, ShowPrioritizationSignals: {ShowPrioritizationSignals}, " +
                 "Category: {Category}, Impact: {Impact}, Status: {Status}, RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
                 "SubCategory: {SubCategory}, TrackingIdCount: {TrackingIdCount}, RetirementDate: {RetirementDate}, Top: {Top}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ResourceGroup,
                 options.ServiceGroup,
                 options.Prioritized,
+                options.ShowPrioritizationSignals,
                 options.Category,
                 options.Impact,
                 options.Status,

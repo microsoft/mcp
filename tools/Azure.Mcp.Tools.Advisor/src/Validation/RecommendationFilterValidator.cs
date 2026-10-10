@@ -9,6 +9,9 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 
 internal static class RecommendationFilterValidator
 {
+    internal const string PrioritizationSignalsRequiresPrioritized =
+        "--show-prioritization-signals true requires --prioritized true.";
+
     internal static readonly string[] AllowedCategories =
     [
         "Cost",
@@ -30,6 +33,11 @@ internal static class RecommendationFilterValidator
 
     internal static void Validate(RecommendationListOptions options, ValidationResult validationResult)
     {
+        if (options.ShowPrioritizationSignals == true && options.Prioritized != true)
+        {
+            validationResult.Errors.Add(PrioritizationSignalsRequiresPrioritized);
+        }
+
         ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);
         ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
         ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
