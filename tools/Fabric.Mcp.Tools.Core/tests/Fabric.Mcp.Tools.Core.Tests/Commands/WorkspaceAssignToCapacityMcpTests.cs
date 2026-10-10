@@ -28,6 +28,8 @@ public class WorkspaceAssignToCapacityMcpTests
     private const string CapacityId = "0f084df7-c13d-451b-af5f-ed0c466403b2";
     private const string ToolName = "core_assign-workspace-to-capacity";
 
+    private readonly ICommandContextAccessor _contextAccessor = new CommandContextAccessor();
+
     [Theory]
     [InlineData(null)]
     [InlineData(StructuredOutputMode.Duplicated)]
@@ -145,13 +147,17 @@ public class WorkspaceAssignToCapacityMcpTests
         string mode, StructuredOutputMode? outputMode, bool readOnly = false, string transport = TransportTypes.StdIo)
     {
         var factory = Substitute.For<ICommandFactory>();
-        factory.AllCommands.Returns(new Dictionary<string, IBaseCommand> { [ToolName] = Command });
+        var registration = new CommandRegistration(Command, "core");
+        IReadOnlyDictionary<string, CommandRegistration> registrations =
+            new Dictionary<string, CommandRegistration> { [ToolName] = registration };
+        factory.AllCommands.Returns(registrations);
         factory.GroupCommands(Arg.Any<string[]>())
-            .Returns(new Dictionary<string, IBaseCommand> { [ToolName] = Command });
+            .Returns(registrations);
+        factory.FindCommandRegistration(ToolName).Returns(registration);
         factory.FindCommandByName(ToolName).Returns(Command);
         factory.GetServiceArea(ToolName).Returns("core");
         var core = new CommandGroup("core", "Core test commands");
-        core.AddCommand(Command.Name, Command);
+        core.AddCommand(Command.Name, registration);
         var root = new CommandGroup("root", "Offline test commands");
         root.AddSubGroup(core);
         factory.RootGroup.Returns(root);
@@ -165,9 +171,9 @@ public class WorkspaceAssignToCapacityMcpTests
         });
         return mode switch
         {
-            "all" => new CommandFactoryToolLoader(factory, options, NullLogger<CommandFactoryToolLoader>.Instance),
-            "namespace" => new NamespaceToolLoader(factory, options, NullLogger<NamespaceToolLoader>.Instance),
-            "single" => new SingleProxyToolLoader(factory, NullLogger<SingleProxyToolLoader>.Instance, options,
+            "all" => new CommandFactoryToolLoader(_contextAccessor, factory, options, NullLogger<CommandFactoryToolLoader>.Instance),
+            "namespace" => new NamespaceToolLoader(_contextAccessor, factory, options, NullLogger<NamespaceToolLoader>.Instance),
+            "single" => new SingleProxyToolLoader(_contextAccessor, factory, NullLogger<SingleProxyToolLoader>.Instance, options,
                 OptionsFactory.Create(new McpServerConfiguration
                 {
                     RootCommandGroupName = "fabmcp",

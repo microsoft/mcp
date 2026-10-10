@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.Pricing.Services;
 /// <summary>
 /// Validates each final Azure Retail Prices request immediately before network transport.
 /// </summary>
-internal sealed class RetailPricingEndpointValidationPolicy(ArmEnvironment armEnvironment) : PipelinePolicy
+internal sealed class RetailPricingEndpointValidationPolicy(ArmEnvironment armEnvironment, IEndpointValidator endpointValidator) : PipelinePolicy
 {
     private readonly ArmEnvironment _armEnvironment = armEnvironment;
 
@@ -46,17 +46,16 @@ internal sealed class RetailPricingEndpointValidationPolicy(ArmEnvironment armEn
     /// <exception cref="System.Security.SecurityException">
     /// Thrown when the request URI is not an allowed Azure Retail Prices endpoint for the configured cloud.
     /// </exception>
-    private static void ValidateRequestUri(Uri? requestUri, ArmEnvironment armEnvironment)
+    private void ValidateRequestUri(Uri? requestUri, ArmEnvironment armEnvironment)
     {
         ArgumentNullException.ThrowIfNull(requestUri);
 
         // The generated client escapes MCP-controlled values as query parameters on the configured endpoint,
         // but pagination resets the complete URI from the service's NextPageLink. Validate the exact final URI
         // before transport so neither query construction nor a compromised continuation can replace the host.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        endpointValidator.ValidateAzureServiceEndpoint(
             endpoint: requestUri.AbsoluteUri,
             serviceType: "pricing",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "pricing");
+            armEnvironment: armEnvironment);
     }
 }

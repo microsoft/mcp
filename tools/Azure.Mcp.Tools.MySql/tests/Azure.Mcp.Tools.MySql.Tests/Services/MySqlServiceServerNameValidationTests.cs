@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.MySql.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -20,7 +21,7 @@ public class MySqlServiceServerNameValidationTests
 
     public MySqlServiceServerNameValidationTests()
     {
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
         cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);
         cloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
@@ -62,7 +63,7 @@ public class MySqlServiceServerNameValidationTests
             _ => ArmEnvironment.AzurePublicCloud
         };
 
-        Assert.Equal(hostname, MySqlService.ValidateServerHostname(hostname, armEnvironment));
+        Assert.Equal(hostname, MySqlService.ValidateServerHostname(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), hostname));
     }
 
     [Theory]
@@ -73,7 +74,7 @@ public class MySqlServiceServerNameValidationTests
     public void ValidateServerHostname_InvalidPublicCloudHost_ThrowsArgumentException(string hostname)
     {
         Assert.Throws<ArgumentException>(() =>
-            MySqlService.ValidateServerHostname(hostname, ArmEnvironment.AzurePublicCloud));
+            MySqlService.ValidateServerHostname(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), hostname));
     }
 
     [Theory]
@@ -90,7 +91,7 @@ public class MySqlServiceServerNameValidationTests
         };
 
         Assert.Throws<ArgumentException>(() =>
-            MySqlService.ValidateServerHostname(hostname, armEnvironment));
+            MySqlService.ValidateServerHostname(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), hostname));
     }
 
     [Theory]

@@ -6,6 +6,7 @@ using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -24,7 +25,7 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
     private const string Sanitized = "Sanitized";
     private readonly ServiceProvider _serviceProvider = TestHttpClientFactoryProvider.Create(
         fixture,
-        serviceCollection => serviceCollection.AddSingleton<IAzureService, AzureService>());
+        serviceCollection => serviceCollection.AddCommandContextAccessor().AddSingleton<IAzureService, AzureService>());
 
     public override List<BodyKeySanitizer> BodyKeySanitizers { get; } =
     [

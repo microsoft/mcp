@@ -76,16 +76,16 @@ public class CommandFactoryTests
         Assert.NotEmpty(commandFactory.AllCommands);
         Assert.All(commandFactory.AllCommands, entry =>
         {
-            if (commandsWithLegacyInvalidIds.Contains(entry.Value.GetType()))
+            if (commandsWithLegacyInvalidIds.Contains(entry.Value.Command.GetType()))
             {
                 return;
             }
 
-            Assert.True(Guid.TryParse(entry.Value.Id, out var commandId),
-                $"{entry.Key} declares an invalid command ID: '{entry.Value.Id}'.");
+            Assert.True(Guid.TryParse(entry.Value.Command.Id, out var commandId),
+                $"{entry.Key} declares an invalid command ID: '{entry.Value.Command.Id}'.");
             Assert.NotEqual(Guid.Empty, commandId);
             Assert.True(commandIds.Add(commandId),
-                $"{entry.Key} declares a duplicate command ID: '{entry.Value.Id}'.");
+                $"{entry.Key} declares a duplicate command ID: '{entry.Value.Command.Id}'.");
         });
     }
 
@@ -124,7 +124,7 @@ public class CommandFactoryTests
         area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(_ =>
         {
             var group = new CommandGroup("name1", "Test root");
-            group.Commands.Add("directCommand", command);
+            group.AddCommand("directCommand", command);
             return group;
         });
 
@@ -367,7 +367,7 @@ public class CommandFactoryTests
         var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
         // The leaf command is in the subgroup Commands collection
         var leafCommand = name1Group.Commands.Values.FirstOrDefault();
-        var leafSystemCommand = leafCommand?.GetCommand();
+        var leafSystemCommand = leafCommand?.Command.GetCommand();
         var learnOption = leafSystemCommand?.Options.FirstOrDefault(CommandFactory.IsLearnOption);
 
         // Assert
@@ -592,12 +592,12 @@ public class CommandFactoryTests
         directCommand4.GetCommand().Returns(new Command(nameof(directCommand4)));
 
         // Add commands to each group
-        group.Commands.Add(nameof(directCommand), directCommand);
+        group.AddCommand(nameof(directCommand), directCommand);
 
-        subGroup.Commands.Add(nameof(directCommand2), directCommand2);
-        subGroup.Commands.Add(nameof(directCommand3), directCommand3);
+        subGroup.AddCommand(nameof(directCommand2), directCommand2);
+        subGroup.AddCommand(nameof(directCommand3), directCommand3);
 
-        subGroup2.Commands.Add(nameof(directCommand4), directCommand4);
+        subGroup2.AddCommand(nameof(directCommand4), directCommand4);
 
         // Make subgroups
         group.SubGroup.Add(subGroup);
@@ -626,7 +626,7 @@ public class CommandFactoryTests
         baseCommand.Name.Returns("directCommand");
         baseCommand.GetCommand().Returns(command);
 
-        group.Commands.Add("directCommand", baseCommand);
+        group.AddCommand("directCommand", baseCommand);
         return group;
     }
 }

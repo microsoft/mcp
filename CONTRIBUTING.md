@@ -710,6 +710,78 @@ The Azure MCP Server implements the [Model Context Protocol specification](https
 - Handle errors according to MCP specifications
 - Provide proper argument suggestions
 
+#### Executing command context
+
+Injected services can use `ICommandContextAccessor.CurrentContext` to access the current
+`CommandContext` during an in-process MCP command invocation. `ToolNamespaceName` is the
+command's original registered `IAreaSetup.Name`, even in single-tool or consolidated mode.
+`CommandFactory` stores this identity alongside the command in an immutable
+`CommandRegistration`. Tool loaders use the selected registration directly; consolidation
+preserves that same registration under its new routing name.
+Do not derive this identity from proxy names, request arguments, or telemetry tags.
+
+The local tool loaders enter an execution scope around the awaited command execution.
+Discovery, learn responses, sampling, and elicitation do not create a scope; a real
+command selected through sampling receives its own execution context. Direct CLI
+execution and external proxy forwarding do not populate the accessor.
+
+The accessor is a singleton with asynchronous-flow-local state, not per-command instance
+state. Do not retain `CurrentContext` or its response after execution. Scope disposal
+clears inherited context for work that outlives the invocation. Only one command execution
+scope can be active in an asynchronous flow; nested scopes are rejected. Dispose the scope
+in the same asynchronous flow that created it. `CurrentContext` is null outside execution.
+An active context can have a null namespace if the original identity is unresolved;
+command registration logs a warning rather than inferring an identity from the displayed group.
+
+Shared ARM clients created through `AzureHelper.CreateArmClientAsync` call
+`IAzureService.ConfigureArmClientOptions` to configure cloud, transport, and endpoint
+validation. Its injected validator reads the accessor on every send, including retries
+and paging, so cached ARM resources never retain the creating invocation's namespace. In server
+mode the domain policy validates every send, including direct CLI calls and background work
+using the shared pipeline. All factory-created HTTP clients disable automatic redirects.
+Missing contexts and unresolved namespaces cannot enable a namespace bypass, including
+`ALL`. Raw ARM HTTP requests and independently created SDK clients without the policy
+remain outside its scope.
+
+Endpoint validation uses a DI-registered `IEndpointValidator` implemented by
+`EndpointValidator` and an immutable `SsrfProtectionPolicy` owned by each host. Tool services should call
+`AzureService.ValidateAzureServiceEndpoint` with the completed URL, endpoint service
+key. The facade supplies its own configured cloud. The validator resolves the original
+tool namespace through the host's `ICommandContextAccessor` on every validation call; callers cannot supply
+a namespace to select an override. Static helpers must receive the Azure service or
+`IEndpointValidator` explicitly; do not create a separate policy at a production
+validation boundary. `IAzureService.ValidatePublicTargetUrl` shares the same policy
+for deliberately arbitrary public targets. Pure external-host and IP helpers remain
+static. The validator receives `ILogger<EndpointValidator>` through DI for diagnostics,
+rather than requiring callers to pass a logger. Tests can create independent policies
+and accessors, opening actual command scopes to exercise no overrides, selected namespaces,
+or `ALL`; no process-wide setter, reset, or isolated test execution is required.
+Proxy routing does not disable endpoint validation. Public-target validation continues
+to resolve and reject private or reserved addresses for the original URL because callers
+may pass that URL to a downstream Azure service rather than dereference it through the
+local HTTP transport.
+
+Shared factory HTTP transports additionally use `AntiSSRFPolicy` with `ExternalOnlyLatest`.
+Default, named, and ARM clients evaluate the namespace override on every send and keep
+protected, namespace-override, and proxied connection pools separate. Explicit proxy
+settings and `.NET`'s `HttpClient.DefaultProxy` are evaluated for each destination.
+Actually proxied requests omit transport DNS/IP validation because the trusted proxy is
+the network boundary; `NO_PROXY`, operating-system bypass, and PAC `DIRECT` routes retain
+protection. Missing contexts remain protected.
+
+**Proxy security warning:** The factory selects one explicit proxy in `ALL_PROXY`,
+`HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+Requests actually routed through that proxy omit transport checks; requests excluded by
+`NO_PROXY` connect through the protected direct transport. When no explicit proxy is selected,
+`HttpClient.DefaultProxy` supplies destination-specific environment, operating-system, PAC,
+and bypass routing with the same protected-direct behavior. Debug recording proxies still
+take precedence over transport protection for every rewritten request. Endpoint validation
+remains active unless separately bypassed. Use only trusted proxies with appropriate network
+restrictions. System and PAC routing is evaluated once when selecting a transport and again
+by the proxy transport while connecting. A dynamic proxy-to-direct change between evaluations
+uses the proxy-designated transport without direct-route DNS/IP filtering, so configurations
+must provide a stable decision for each destination during a request.
+
 ### Package README
 
 A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion when processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`

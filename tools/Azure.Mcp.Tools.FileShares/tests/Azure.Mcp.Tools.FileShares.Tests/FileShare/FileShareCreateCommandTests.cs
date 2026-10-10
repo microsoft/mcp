@@ -4,8 +4,10 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.FileShares.Commands.FileShare;
 using Azure.Mcp.Tools.FileShares.Models;
 using Azure.Mcp.Tools.FileShares.Services;
@@ -98,6 +100,8 @@ public class FileShareCreateCommandTests : SubscriptionCommandUnitTestsBase<File
         azureService.GetClient().Returns(httpClient);
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
         azureService.CloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            azureService, httpClient, ArmEnvironment.AzurePublicCloud);
         var service = new FileSharesService(azureService, NullLogger<FileSharesService>.Instance);
 
         await service.CreateOrUpdateFileShareAsync(

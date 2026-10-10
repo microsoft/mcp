@@ -4,8 +4,10 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Azure.ResourceManager;
@@ -84,6 +86,8 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
         azureService.GetClient().Returns(httpClient);
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
         azureService.CloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            azureService, httpClient, ArmEnvironment.AzurePublicCloud);
         var service = new EventHubsService(azureService, NullLogger<EventHubsService>.Instance);
 
         await service.CreateOrUpdateNamespaceAsync(

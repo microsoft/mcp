@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Reflection;
 using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,7 @@ public class FabricCoreSetupTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void ConfigureServices_DisablesRedirectsWithoutReplacingConfiguredTransport(bool recordingProxy)
+    public void ConfigureServices_PreservesGloballyConfiguredTransport(bool recordingProxy)
     {
         var services = new ServiceCollection();
         services.Configure<HttpClientOptions>(options =>
@@ -37,7 +38,7 @@ public class FabricCoreSetupTests
 
         using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(IFabricCoreService));
         Assert.NotNull(configuredHandler);
-        var transport = Assert.IsType<HttpClientHandler>(GetTransport(configuredHandler));
+        SocketsHttpHandler transport = Assert.IsType<SocketsHttpHandler>(GetTransport(configuredHandler));
         Assert.Same(transport, GetTransport(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(nameof(IFabricCoreService))));
         Assert.False(transport.AllowAutoRedirect);
         Assert.True(transport.UseProxy);
@@ -53,7 +54,7 @@ public class FabricCoreSetupTests
         }
 #endif
         var unrelated = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("unrelated");
-        Assert.True(Assert.IsType<HttpClientHandler>(GetTransport(unrelated)).AllowAutoRedirect);
+        Assert.False(Assert.IsType<SocketsHttpHandler>(GetTransport(unrelated)).AllowAutoRedirect);
     }
 
     [Fact]
@@ -153,6 +154,10 @@ public class FabricCoreSetupTests
         {
             handler = innerHandler;
         }
-        return handler;
+
+        PropertyInfo? proxiedHandlerProperty = handler.GetType().GetProperty(
+            "ProxiedHandler",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        return proxiedHandlerProperty?.GetValue(handler) as HttpMessageHandler ?? handler;
     }
 }

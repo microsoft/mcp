@@ -9,6 +9,9 @@ using Azure.Core;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -26,7 +29,7 @@ public sealed class StorageServiceTests
     {
         var handler = JsonHandler(HttpStatusCode.OK, $$"""{"id":"{{RecordId}}","kind":"{{TestConstants.WellKind}}"}""");
         var provider = CreateCredentialProvider("token-abc", TestConstants.Tenant);
-        var service = new StorageService(provider, new FakeHttpClientFactory(handler));
+        var service = new StorageService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
 
         var result = await service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null,
@@ -352,7 +355,7 @@ public sealed class StorageServiceTests
     }
 
     private static StorageService CreateService(StubHttpMessageHandler handler) =>
-        new(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        new(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
     private static IAzureTokenCredentialProvider CreateCredentialProvider(
         string token = "fake-token", string? tenant = null)

@@ -52,6 +52,11 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// <summary>
     /// Gets the Azure service for interacting with Azure resources and obtaining credentials.
     /// </summary>
+    /// <remarks>
+    /// Obtain HTTP clients through <see cref="IAzureService.GetClient"/>. Shared factory
+    /// transports apply the current command's namespace override at send time, including
+    /// clients used by reusable SDK objects. Do not cache an override decision in a service.
+    /// </remarks>
     protected IAzureService AzureService { get; } = azureService ?? throw new ArgumentNullException(nameof(azureService));
 
     /// <summary>

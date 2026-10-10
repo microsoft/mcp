@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Azure.ResourceManager;
 using Xunit;
@@ -24,10 +25,9 @@ public class IoTHubDeviceServiceEndpointValidationTests
             _ => ArmEnvironment.AzurePublicCloud
         };
 
-        var endpoint = IoTHubDeviceService.CreateValidatedDataPlaneUri(
+        Uri endpoint = IoTHubDeviceService.CreateValidatedDataPlaneUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment),
             hostname,
-            "/devices?api-version=2021-04-12",
-            armEnvironment);
+            "/devices?api-version=2021-04-12");
 
         Assert.Equal($"https://{hostname}/devices?api-version=2021-04-12", endpoint.AbsoluteUri);
     }
@@ -40,9 +40,8 @@ public class IoTHubDeviceServiceEndpointValidationTests
     public void CreateValidatedDataPlaneUri_InvalidPublicCloudHost_ThrowsSecurityException(string hostname)
     {
         Assert.Throws<SecurityException>(() =>
-            IoTHubDeviceService.CreateValidatedDataPlaneUri(
+            IoTHubDeviceService.CreateValidatedDataPlaneUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
                 hostname,
-                "/devices?api-version=2021-04-12",
-                ArmEnvironment.AzurePublicCloud));
+                "/devices?api-version=2021-04-12"));
     }
 }

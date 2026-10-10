@@ -3,6 +3,7 @@
 
 using System.Security;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
@@ -121,7 +122,7 @@ public sealed class SpeechEndpointBoundaryTests
 
     private static IAzureService CreateAzureService(ArmEnvironment armEnvironment)
     {
-        IAzureService azureService = Substitute.For<IAzureService>();
+        IAzureService azureService = AzureServiceTestHelpers.CreateAzureService();
         IAzureCloudConfiguration cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
         cloudConfiguration.ArmEnvironment.Returns(armEnvironment);
         azureService.CloudConfiguration.Returns(cloudConfiguration);

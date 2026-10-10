@@ -59,11 +59,9 @@ public sealed class ServiceBusService(IAzureService azureService)
         // HTTPS is an authorization-only representation here, not a transport choice for ServiceBusClient.
         // Reuse the shared cloud and namespace-bypass policy, then pass only the parsed host to
         // ServiceBusAdministrationClient or ServiceBusClient so each receives the authorized destination.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        AzureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "servicebus",
-            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
-            executingToolNamespaceName: "servicebus");
+            serviceType: "servicebus");
 
         return endpoint.IdnHost;
     }

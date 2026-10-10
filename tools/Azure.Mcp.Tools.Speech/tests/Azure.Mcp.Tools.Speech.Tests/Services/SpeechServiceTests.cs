@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
@@ -22,7 +23,7 @@ public class SpeechServiceTests
 
     public SpeechServiceTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _logger = Substitute.For<ILogger<SpeechService>>();
         _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
