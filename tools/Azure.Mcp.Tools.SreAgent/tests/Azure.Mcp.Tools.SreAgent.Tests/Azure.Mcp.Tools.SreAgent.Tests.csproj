@@ -2,9 +2,6 @@
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
     <HasLiveTests>true</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
