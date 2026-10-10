@@ -239,6 +239,14 @@ public sealed class CommandFactoryToolLoader(
                     : () => StructuredOutputHelper.TryBuildStructuredContent(commandResponse.Results),
                 isError);
 
+            if (commandResponse.McpContent is { Count: > 0 })
+            {
+                foreach (var contentBlock in commandResponse.McpContent)
+                {
+                    callToolResult.Content.Add(contentBlock);
+                }
+            }
+
             return McpHelper.InjectToolIdMetadata(callToolResult, command.Id);
         }
         catch (Exception ex)

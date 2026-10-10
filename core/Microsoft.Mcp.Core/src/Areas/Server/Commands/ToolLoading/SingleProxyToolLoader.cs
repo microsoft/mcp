@@ -639,12 +639,22 @@ public sealed class SingleProxyToolLoader(
                 };
             }
 
-            return new CallToolResult
+            var result = new CallToolResult
             {
                 Content = [new TextContentBlock { Text = jsonResponse }],
                 IsError = isError,
                 Meta = new([new(McpHelper.ToolIdMetaKey, baseCommand.Id)])
             };
+
+            if (commandResponse.McpContent is { Count: > 0 })
+            {
+                foreach (var contentBlock in commandResponse.McpContent)
+                {
+                    result.Content.Add(contentBlock);
+                }
+            }
+
+            return result;
         }
         catch (Exception ex)
         {

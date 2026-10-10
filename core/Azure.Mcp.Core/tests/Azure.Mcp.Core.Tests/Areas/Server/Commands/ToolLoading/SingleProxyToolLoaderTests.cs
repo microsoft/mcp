@@ -568,6 +568,59 @@ public class SingleProxyToolLoaderTests
     }
 
     [Fact]
+    public async Task CallToolHandler_WithLocalCommandMcpContent_AppendsNativeBlocks()
+    {
+        var embedded = new EmbeddedResourceBlock
+        {
+            Resource = new TextResourceContents
+            {
+                Uri = "file:///tmp/report.md",
+                MimeType = "text/markdown",
+                Text = "# Report"
+            }
+        };
+        var link = new ResourceLinkBlock
+        {
+            Uri = "file:///tmp/report.md",
+            Name = "report.md"
+        };
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns("storage_account_list");
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
+        command.GetCommand().Returns(new Command("account_list", "List storage accounts"));
+        command.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
+            .Returns(new CommandResponse
+            {
+                Status = System.Net.HttpStatusCode.OK,
+                Message = "Managed command executed",
+                McpContent = [embedded, link]
+            });
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        var rootGroup = new CommandGroup("azure", "Azure Server");
+        rootGroup.AddSubGroup(new CommandGroup("storage", "Storage tools"));
+        commandFactory.RootGroup.Returns(rootGroup);
+        commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.SequenceEqual(new[] { "storage" })))
+            .Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
+        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
+        var toolLoader = new SingleProxyToolLoader(
+            commandFactory,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["storage"] }),
+            CreateServerConfigurationOptions(),
+            Substitute.For<IMcpDiscoveryStrategy>());
+
+        CallToolResult result = await toolLoader.CallToolHandler(
+            CreateCallToolRequestWithToolAndCommand("storage", "account_list"),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError ?? false);
+        Assert.IsType<TextContentBlock>(result.Content[0]);
+        Assert.Same(embedded, result.Content[1]);
+        Assert.Same(link, result.Content[2]);
+    }
+
+    [Fact]
     public async Task CallToolHandler_CompactGuidanceReturnsAggregateMessage()
     {
         var (toolLoader, _, _) = CreateToolLoader(
