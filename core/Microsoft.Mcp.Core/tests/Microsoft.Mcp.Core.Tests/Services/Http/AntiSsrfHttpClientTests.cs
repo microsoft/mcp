@@ -255,6 +255,9 @@ public sealed class AntiSsrfHttpClientTests
     {
         var services = new ServiceCollection();
         services.AddSingleton(ssrfProtectionPolicy ?? new SsrfProtectionPolicy(null));
+        // Strict transport tests must not inherit a build agent's system proxy, which would
+        // intentionally route requests through the proxy branch without direct-route filtering.
+        services.AddSingleton(new SystemProxyProvider(new WebProxy()));
         services.AddLogging().AddHttpClient();
         services.Configure<HttpClientOptions>(options =>
         {

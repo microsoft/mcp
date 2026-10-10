@@ -78,6 +78,8 @@ public sealed class ArmNamespaceBypassTests
         using var server = new MockHttpTestServer();
         var services = new ServiceCollection();
         services.AddLogging().AddHttpClient();
+        // This test verifies protected direct routing independently of the host machine's proxy.
+        services.AddSingleton(new SystemProxyProvider(new WebProxy()));
         services.AddSingleton<ICommandContextAccessor>(accessor);
         services.AddSingleton(ssrfPolicy);
         services.Configure<HttpClientOptions>(_ => { });
