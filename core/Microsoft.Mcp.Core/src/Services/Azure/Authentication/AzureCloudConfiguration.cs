@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +22,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
         AzurePublicCloud,
         AzureChinaCloud,
         AzureUSGovernmentCloud,
+        CustomCloud,
     }
 
     /// <summary>
@@ -44,7 +46,12 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
             ?? configuration["Cloud"]
             ?? Environment.GetEnvironmentVariable("AZURE_CLOUD");
 
-        (AuthorityHost, ArmEnvironment, CloudType) = ParseCloudValue(cloudValue);
+        var customCloudConfig = runtimeConfiguration?.Value?.CustomCloudConfig
+            ?? configuration["CUSTOM_CLOUD_CONFIG"]
+            ?? Environment.GetEnvironmentVariable("CUSTOM_CLOUD_CONFIG");
+
+        (AuthorityHost, ArmEnvironment, CloudType, LogAnalyticsEndpoint, LogAnalyticsScope, ApplicationInsightsEndpoint) =
+            ParseCloudValue(cloudValue, customCloudConfig);
 
         logger?.LogDebug(
             "Azure cloud configuration initialized. Cloud value: '{CloudValue}', AuthorityHost: '{AuthorityHost}', ArmEnvironment: '{ArmEnvironment}'",
@@ -61,25 +68,82 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
 
     public AzureCloud CloudType { get; }
 
-    private static (Uri authorityHost, ArmEnvironment armEnvironment, AzureCloud cloudType) ParseCloudValue(string? cloudValue)
+    public Uri LogAnalyticsEndpoint { get; }
+
+    /// <inheritdoc/>
+    public string LogAnalyticsScope { get; }
+
+    public Uri ApplicationInsightsEndpoint { get; }
+
+    private static (Uri authorityHost, ArmEnvironment armEnvironment, AzureCloud cloudType, Uri logAnalyticsEndpoint, string logAnalyticsScope, Uri applicationInsightsEndpoint) ParseCloudValue(
+        string? cloudValue,
+        string? customCloudConfig)
     {
         if (string.IsNullOrWhiteSpace(cloudValue))
         {
-            return (AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud);
+            return CreateBuiltIn(AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud, "https://api.loganalytics.io", "https://api.applicationinsights.io");
         }
 
         // Map common sovereign cloud names to authority hosts and ARM environments
         return cloudValue.ToLowerInvariant() switch
         {
             "azurecloud" or "azurepubliccloud" or "public" or "azurepublic" =>
-                (AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud),
+                CreateBuiltIn(AzureAuthorityHosts.AzurePublicCloud, ArmEnvironment.AzurePublicCloud, AzureCloud.AzurePublicCloud, "https://api.loganalytics.io", "https://api.applicationinsights.io"),
             "azurechinacloud" or "china" or "azurechina" =>
-                (AzureAuthorityHosts.AzureChina, ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud),
+                CreateBuiltIn(AzureAuthorityHosts.AzureChina, ArmEnvironment.AzureChina, AzureCloud.AzureChinaCloud, "https://api.loganalytics.azure.cn", "https://api.applicationinsights.azure.cn"),
             "azureusgovernment" or "azureusgovernmentcloud" or "usgov" or "usgovernment" =>
-                (AzureAuthorityHosts.AzureGovernment, ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud),
+                CreateBuiltIn(AzureAuthorityHosts.AzureGovernment, ArmEnvironment.AzureGovernment, AzureCloud.AzureUSGovernmentCloud, "https://api.loganalytics.us", "https://api.applicationinsights.us"),
+            "custom" => LoadCustomCloud(customCloudConfig),
             _ => throw new ArgumentException(
-                $"Unrecognized cloud value '{cloudValue}'. Supported values are: AzureCloud, AzurePublicCloud, Public, AzurePublic, AzureChinaCloud, China, AzureChina, AzureUSGovernment, AzureUSGovernmentCloud, USGov, USGovernment.",
+                $"Unrecognized cloud value '{cloudValue}'. Supported values are: AzureCloud, AzurePublicCloud, Public, AzurePublic, AzureChinaCloud, China, AzureChina, AzureUSGovernment, AzureUSGovernmentCloud, USGov, USGovernment, custom.",
                 nameof(cloudValue))
         };
+    }
+
+    private static (Uri, ArmEnvironment, AzureCloud, Uri, string, Uri) CreateBuiltIn(
+        Uri authorityHost,
+        ArmEnvironment armEnvironment,
+        AzureCloud cloudType,
+        string logAnalyticsEndpoint,
+        string applicationInsightsEndpoint) =>
+        (authorityHost, armEnvironment, cloudType, new Uri(logAnalyticsEndpoint), $"{new Uri(logAnalyticsEndpoint).AbsoluteUri.TrimEnd('/')}/.default", new Uri(applicationInsightsEndpoint));
+
+    private static (Uri, ArmEnvironment, AzureCloud, Uri, string, Uri) LoadCustomCloud(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new ArgumentException("A custom cloud configuration file is required when cloud is 'custom'.", nameof(path));
+        }
+
+        var metadata = JsonSerializer.Deserialize(
+            File.ReadAllText(path),
+            CustomCloudMetadataJsonContext.Default.CustomCloudMetadata)
+            ?? throw new ArgumentException("The custom cloud configuration file is empty.", nameof(path));
+
+        var authorityHost = ParseHttpsUri(metadata.AuthorityHost, nameof(metadata.AuthorityHost));
+        var armEndpoint = ParseHttpsUri(metadata.ArmEndpoint, nameof(metadata.ArmEndpoint));
+        var logAnalyticsEndpoint = ParseHttpsUri(metadata.LogAnalyticsEndpoint, nameof(metadata.LogAnalyticsEndpoint));
+        var applicationInsightsEndpoint = ParseHttpsUri(metadata.ApplicationInsightsEndpoint, nameof(metadata.ApplicationInsightsEndpoint));
+        if (string.IsNullOrWhiteSpace(metadata.ResourceManagerAudience))
+        {
+            throw new ArgumentException("Custom cloud metadata must specify resourceManagerAudience.", nameof(path));
+        }
+
+        if (string.IsNullOrWhiteSpace(metadata.LogAnalyticsScope))
+        {
+            throw new ArgumentException("Custom cloud metadata must specify logAnalyticsScope.", nameof(path));
+        }
+
+        return (authorityHost, new ArmEnvironment(armEndpoint, metadata.ResourceManagerAudience), AzureCloud.CustomCloud, logAnalyticsEndpoint, metadata.LogAnalyticsScope, applicationInsightsEndpoint);
+    }
+
+    private static Uri ParseHttpsUri(string? value, string propertyName)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new ArgumentException($"Custom cloud metadata property '{propertyName}' must be an absolute HTTPS URI.", propertyName);
+        }
+
+        return uri;
     }
 }

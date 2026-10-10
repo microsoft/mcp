@@ -54,6 +54,7 @@ public static partial class ServiceCollectionExtensions
             ReadOnly = serverStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serverStartOptions.DangerouslyDisableElicitation,
             Cloud = serverStartOptions.Cloud,
+            CustomCloudConfig = serverStartOptions.CustomCloudConfig,
             StructuredOutputMode = serverStartOptions.StructuredOutputMode
         };
 

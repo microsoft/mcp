@@ -379,4 +379,78 @@ public class AzureCloudConfigurationTests
         // Assert
         Assert.Equal(new Uri("https://management.usgovcloudapi.net"), cloudConfig.ArmEnvironment.Endpoint);
     }
+
+    [Fact]
+    public void ParseCloudValue_CustomCloud_LoadsConfiguredMetadata()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, """
+                {
+                  "authorityHost": "https://login.custom.example",
+                  "armEndpoint": "https://management.custom.example",
+                  "resourceManagerAudience": "https://management.custom.example/",
+                  "logAnalyticsEndpoint": "https://logs.custom.example",
+                  "logAnalyticsScope": "https://logs.custom.example/.default",
+                  "applicationInsightsEndpoint": "https://insights.custom.example"
+                }
+                """);
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "custom" })
+                .Build();
+            var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { CustomCloudConfig = path });
+
+            var cloudConfig = new AzureCloudConfiguration(config, options);
+
+            Assert.Equal(AzureCloudConfiguration.AzureCloud.CustomCloud, cloudConfig.CloudType);
+            Assert.Equal(new Uri("https://management.custom.example"), cloudConfig.ArmEnvironment.Endpoint);
+            Assert.Equal(new Uri("https://logs.custom.example"), cloudConfig.LogAnalyticsEndpoint);
+            Assert.Equal("https://logs.custom.example/.default", cloudConfig.LogAnalyticsScope);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ParseCloudValue_CustomCloudWithoutConfig_ThrowsArgumentException()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "custom" })
+            .Build();
+
+        Assert.Throws<ArgumentException>(() => new AzureCloudConfiguration(config));
+    }
+
+    [Fact]
+    public void ParseCloudValue_CustomCloudWithoutLogAnalyticsScope_ThrowsArgumentException()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, """
+                {
+                  "authorityHost": "https://login.custom.example",
+                  "armEndpoint": "https://management.custom.example",
+                  "resourceManagerAudience": "https://management.custom.example/",
+                  "logAnalyticsEndpoint": "https://logs.custom.example",
+                  "applicationInsightsEndpoint": "https://insights.custom.example"
+                }
+                """);
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "custom" })
+                .Build();
+            var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { CustomCloudConfig = path });
+
+            var exception = Assert.Throws<ArgumentException>(() => new AzureCloudConfiguration(config, options));
+
+            Assert.Contains("logAnalyticsScope", exception.Message);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 }
