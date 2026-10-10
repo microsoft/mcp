@@ -262,9 +262,9 @@ public class FabricCoreServiceItemDeleteTests()
             Assert.Equal(createItem
                 ? $"https://api.fabric.microsoft.com/v1/workspaces/{ItemDeleteTestData.WorkspaceId}/items"
                 : "https://api.fabric.microsoft.com/v1/catalog/search", request.RequestUri?.AbsoluteUri);
-            return Task.FromResult(ItemDeleteTestData.CreateResponse(body: createItem
-                ? $$"""{"id":"{{ItemDeleteTestData.ItemId}}","displayName":"Notebook","type":"Notebook"}"""
-                : """{"value":[]}"""));
+            return Task.FromResult(createItem
+                ? FabricOperationTestData.ItemResponse(ItemDeleteTestData.WorkspaceId, "Notebook", "Notebook")
+                : ItemDeleteTestData.CreateResponse(body: """{"value":[]}"""));
         });
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, ItemDeleteTestData.CreateCredential());
@@ -272,8 +272,8 @@ public class FabricCoreServiceItemDeleteTests()
         if (createItem)
         {
             var item = await service.CreateItemAsync(ItemDeleteTestData.WorkspaceId,
-                new CreateItemRequest { DisplayName = "Notebook", Type = "Notebook" }, TestContext.Current.CancellationToken);
-            Assert.Equal(ItemDeleteTestData.ItemId, item.Id);
+                new CreateItemRequest { DisplayName = "Notebook", Type = "Notebook" }, cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
         }
         else
         {

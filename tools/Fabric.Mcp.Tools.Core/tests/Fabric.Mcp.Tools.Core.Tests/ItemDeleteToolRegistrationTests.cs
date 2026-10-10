@@ -351,7 +351,7 @@ public class ItemDeleteToolRegistrationTests()
         Assert.DoesNotContain(listed.Tools, tool => tool.Name == ItemDeleteTestData.ToolName);
         Assert.Contains(listed.Tools, tool => tool.Name == "core_search-catalog");
         Assert.Equal(
-            ["core_get-capacity", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
+            ["core_get-capacity", "core_get-operation-result", "core_get-operation-state", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
             listed.Tools.Select(tool => tool.Name).Order());
         Assert.All(listed.Tools, tool => Assert.True(tool.Annotations?.ReadOnlyHint));
 

@@ -43,7 +43,7 @@ public sealed class WorkspaceCreateToolRegistrationTests()
         var tools = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
 
         Assert.Equal(
-            ["core_assign-workspace-to-capacity", "core_create-item", "core_create-workspace", "core_delete-item", "core_delete-workspace", "core_get-capacity", "core_get-workspace",
+            ["core_assign-workspace-to-capacity", "core_create-item", "core_create-workspace", "core_delete-item", "core_delete-workspace", "core_get-capacity", "core_get-operation-result", "core_get-operation-state", "core_get-workspace",
              "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog",
              "core_update-item", "core_update-workspace"],
             tools.Tools.Select(static tool => tool.Name).Order());
@@ -191,7 +191,7 @@ public sealed class WorkspaceCreateToolRegistrationTests()
 
         Assert.DoesNotContain(tools.Tools, static tool => tool.Name == ToolName);
         Assert.Equal(
-            ["core_get-capacity", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
+            ["core_get-capacity", "core_get-operation-result", "core_get-operation-state", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
             tools.Tools.Select(static tool => tool.Name).Order());
         Assert.True(result.IsError);
         Assert.Contains("read-only", GetText(result));

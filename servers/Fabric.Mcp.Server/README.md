@@ -351,11 +351,13 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | Tool Name | Description |
 |-----------|-------------|
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
-| `core_create-item` | Creates a Fabric item in a workspace identified by UUID, using its display name, item type, and optional description. |
+| `core_create-item` | Creates a Fabric item by workspace UUID. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
+| `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
@@ -378,9 +380,71 @@ fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --di
 
 The caller needs **Contributor or higher workspace access**. Delegated calls require `Item.ReadWrite.All` or the item-specific `ReadWrite.All` scope. Non-Power BI items require a supported Fabric capacity and [tenant/capacity settings that enable Fabric item creation](https://learn.microsoft.com/fabric/admin/fabric-switch); Power BI items require the appropriate license. Service-principal and managed-identity support depends on the item type. Item types remain strings rather than a fixed client-side list.
 
-Display names must follow the item's naming rules, and descriptions allow at most 256 characters. The tool does not supply item definitions, creation payloads, folders, or sensitivity-label settings. Item types that require a definition or creation payload need a different creation path. A synchronous response returns the existing typed `results.item` payload. The tool does not poll long-running operations or confirm completion from HTTP 202; an accepted asynchronous request is not a completed creation.
+Display names must follow the item's naming rules, and descriptions allow at most 256 characters. The tool does not supply item definitions, creation payloads, folders, or sensitivity-label settings. Item types that require a definition or creation payload need a different creation path.
 
-Failures preserve the original status and return sanitized guidance without raw exception messages, API bodies, types, stack traces, or local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; HTTP 429 advises retrying later without an automatic retry. Network failures retain HTTP 503. After a timeout, cancellation, network failure, or invalid response, check whether the item was created before retrying.
+Create Item supports both outcomes documented by its endpoint: **201** returns validated metadata in the existing `results.item` shape; **202** returns an explicit `results.operation` receipt, never an empty/default item. Both modes return a synchronous 201 result immediately, without operation reads or requiring an operation ID. Other success codes, including 200 and 204, are not part of this endpoint's contract: they produce a sanitized unconfirmed-outcome error with guidance to check whether creation occurred. The shared LRO infrastructure also supports synchronous 200 for future adapters whose endpoints document it; it does not accept arbitrary success codes.
+
+| Optional argument | Default | Behavior |
+|-------------------|---------|----------|
+| `sync` | `false` | False sends one POST and returns completed metadata or an accepted receipt, with zero follow-up reads. True asynchronously waits after 202 and retrieves the created item when available. It does not use blocking HTTP I/O. |
+| `max-wait-seconds` | `120` | Finite positive local wait budget after 202, including delays, authentication, and in-flight status/result reads. Validated before submitting creation, even when `sync=false`. |
+| `early-poll` | `true` | Allows one first status probe after at most 3 seconds, or sooner if the initial server hint is shorter. False honors the initial validated `Retry-After` instead. |
+
+Choose the mode **before the single creation request**. This is an alternative to the earlier creation example, not a way to resume an already accepted creation:
+
+```powershell
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Sales" --item-type Lakehouse --sync true --max-wait-seconds 120 --early-poll false
+```
+
+The early first probe is a deliberate exception to the **initial successful 202** `Retry-After` guidance (often 20 seconds); it is not a claim that every server hint is honored. The receipt keeps `serverRetryAfterSeconds` separate from `recommendedPollAfterSeconds`. After that first probe, subsequent polls honor validated returned hints. Only safe operation GETs can be retried on HTTP 429/503, within the remaining budget; those hints are never shortened by the early-probe exception. Missing, malformed, multiple, negative, or overflowing hints use a conservative 20-second fallback. Valid HTTP-date hints are supported; zero/past hints have a one-second scheduling floor to prevent a tight loop.
+
+Creation is **never automatically resubmitted**. Stopping MCP waiting does not cancel Fabric's operation, and no detached job continues polling. Client cancellation or a shorter HTTP/client timeout can end the wait sooner than the configured budget. A local budget expiry is not a failed mutation: resume using the operation ID, rather than increasing the budget by issuing another create call.
+
+| Outcome | Command status and payload |
+|---------|----------------------------|
+| Immediate 201 completion | HTTP 200 command response with `results.item`, preserving the existing completed shape. |
+| Accepted or wait budget expired while unconfirmed | HTTP 202 with `operation.status` `Accepted` or `Pending`; `lastState` is included only after a state read. Acceptance does not invent `Running`. |
+| Accepted without a usable `x-ms-operation-id` | HTTP 202 with `AcceptedWithoutOperationId` and an explicit issue. Check whether creation occurred; do not automatically resubmit. `Location` is not used to recover a missing ID. |
+| Wait observes `Succeeded` and retrieves valid item metadata | HTTP 200 with `item` and a `Succeeded` operation receipt. |
+| Wait observes `Failed` | HTTP 502 with a `Failed` receipt and safe operation error details. No result fetch or new POST is attempted. |
+| A state read fails | A sanitized error with a `TrackingStopped` receipt, preserving the ID and last-known state; this is not evidence that Fabric's operation failed. |
+| Operation succeeded but the result was not retrieved | `ResultUnavailable`, preserving `lastState.status=Succeeded` when observed. Budget expiry returns HTTP 202; read/validation failures retain their error status. Do not recreate the item. |
+| Caller cancels a post-acceptance wait | HTTP 408 with a receipt when the client can still receive it, distinguishing caller cancellation from budget expiry. Confirmed completion is not downgraded to running. |
+
+Failures suppress raw backend messages, exception details, stack traces, and local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; status-less network failures retain HTTP 503. Before acceptance is known, a timeout, cancellation, network failure, or invalid response can leave the mutation outcome uncertain; check whether creation occurred before retrying.
+
+**Long-running operation tools**
+
+The [Get Operation State](https://learn.microsoft.com/rest/api/fabric/core/long-running-operations/get-operation-state) and [Get Operation Result](https://learn.microsoft.com/rest/api/fabric/core/long-running-operations/get-operation-result) tools each take only `operation-id`, a nonempty UUID. Each invocation performs **one GET**, with no implicit polling, retries, mutation, or cancellation. URLs are constructed from the fixed Fabric API base and the validated ID. Returned links are not followed or returned as action URLs, and a response cannot replace the requested operation ID.
+
+An agent-driven flow starts with the receipt from the original `sync=false` creation:
+
+```json
+{
+  "operation": {
+    "status": "Accepted",
+    "operationId": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+    "serverRetryAfterSeconds": 20,
+    "recommendedPollAfterSeconds": 3
+  }
+}
+```
+
+Wait for the recommendation, then make one state read. If still pending, wait for that response's guidance before the next read. After `Succeeded`, fetch the result for Create Item, which is a result-bearing API:
+
+```powershell
+fabmcp core get-operation-state --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6
+# Only after the state says Succeeded:
+fabmcp core get-operation-result --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6
+```
+
+A state GET returning HTTP 200 means the **read** succeeded, not necessarily the mutation. The returned `state.status` can be `Undefined`, `NotStarted`, `Running`, `Succeeded`, `Failed`, or a future string. Unknown states are preserved and handled conservatively, never interpreted as successful completion. Progress (0-100) and timestamps are optional. Failed states expose only a safe error code and request UUID, not backend error text or nested details.
+
+The generic result is not assumed to be a Fabric item. It uses `{ "operationId": "...", "hasBody": true, "value": ... }` for JSON objects, arrays, or scalars. JSON `null` remains `hasBody=true, value=null`; an actually empty HTTP 200 body uses `hasBody=false` with `value` omitted. Nonempty bodies require `application/json`. **Binary (`application/octet-stream`) and other media are explicitly unsupported, even if empty.** JSON responses are limited to **1 MiB (1,048,576 bytes)**, including streamed responses without `Content-Length`; oversized or malformed content produces a sanitized error, never truncation or fabricated success.
+
+As described in the [Fabric LRO guidance](https://learn.microsoft.com/rest/api/fabric/articles/long-running-operation), not every operation has a result. For an API explicitly documented as having no result, confirmed `Succeeded` is sufficient; do not fetch `/result`. Neither HTTP 404 nor an absent `Location` proves successful no-result completion. The shared dispatcher/poller supports explicit result-bearing and no-result adapters; **workspace capacity assignment retains its existing submit-only contract** and is not retrofitted with sync waiting in this release.
+
+Both read tools require the **same resource permissions and delegated scopes as the initiating API**. Read-only discovery is not an authorization grant. Credential resolution remains per call, including every poll and result read, with the configured caller's identity.
 
 **Catalog Search (`core_search-catalog`)**
 

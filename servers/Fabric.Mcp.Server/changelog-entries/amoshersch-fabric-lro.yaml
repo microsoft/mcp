@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: Added `core_get-operation-state` and `core_get-operation-result` for single-read operation tracking and bounded JSON or empty results, plus optional bounded asynchronous waiting for Create Item with configurable early polling.
+  - section: Bugs Fixed
+    description: Create Item now returns an explicit resumable receipt for HTTP 202 instead of an empty item, validates documented synchronous completion metadata, and preserves operation references when waiting or result retrieval cannot finish.

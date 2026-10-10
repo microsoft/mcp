@@ -119,13 +119,13 @@ public class WorkspaceAssignToCapacityToolRegistrationTests()
 
         string[] readOnlyNames =
         [
-            "core_get-capacity", "core_get-workspace", "core_list-capacities",
+            "core_get-capacity", "core_get-operation-result", "core_get-operation-state", "core_get-workspace", "core_list-capacities",
             "core_list-items", "core_list-workspaces", "core_search-catalog"
         ];
         string[] allNames =
         [
             ToolName, "core_create-item", "core_create-workspace", "core_delete-item", "core_delete-workspace",
-            "core_get-capacity", "core_get-workspace", "core_list-capacities", "core_list-items",
+            "core_get-capacity", "core_get-operation-result", "core_get-operation-state", "core_get-workspace", "core_list-capacities", "core_list-items",
             "core_list-workspaces", "core_search-catalog", "core_update-item", "core_update-workspace"
         ];
         Assert.Equal(readOnly ? readOnlyNames : allNames, catalog.Tools.Select(tool => tool.Name).Order());

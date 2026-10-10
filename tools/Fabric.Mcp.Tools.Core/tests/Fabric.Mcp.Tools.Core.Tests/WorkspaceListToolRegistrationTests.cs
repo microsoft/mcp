@@ -47,7 +47,7 @@ public class WorkspaceListToolRegistrationTests()
         var tool = Assert.Single(listed.Tools, static candidate => candidate.Name == "core_list-workspaces");
         Assert.DoesNotContain(listed.Tools, static candidate => candidate.Name == "core_create-item");
         Assert.Equal(
-            ["core_get-capacity", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
+            ["core_get-capacity", "core_get-operation-result", "core_get-operation-state", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
             listed.Tools.Select(static candidate => candidate.Name).Order());
         Assert.True(tool.Annotations?.ReadOnlyHint);
         Assert.True(tool.Annotations?.IdempotentHint);

@@ -16,7 +16,17 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
-    Task<FabricItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default);
+    Task<ItemCreateCommandResult> CreateItemAsync(
+        string workspaceId,
+        CreateItemRequest request,
+        FabricOperationWaitOptions? waitOptions = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads operation state once, without polling or interpreting HTTP success as operation success.</summary>
+    Task<OperationStateResult> GetOperationStateAsync(string operationId, CancellationToken cancellationToken);
+
+    /// <summary>Reads one bounded JSON or empty result, without polling or following response URLs.</summary>
+    Task<OperationResult> GetOperationResultAsync(string operationId, CancellationToken cancellationToken);
 
     Task DeleteItemAsync(
         string workspaceId,
