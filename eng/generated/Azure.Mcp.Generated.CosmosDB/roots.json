@@ -1,0 +1,51 @@
+{
+  "operations": [
+    {
+      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.get",
+      "sdkMembers": [
+        "ResourceGroupResource.GetCosmosDBAccountAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Cosmos/src/Services/CosmosService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.list",
+      "sdkMembers": [
+        "SubscriptionResource.GetCosmosDBAccountsAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Cosmos/src/Services/CosmosService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup",
+      "sdkMembers": [
+        "ResourceGroupResource.GetCosmosDBAccounts",
+        "CosmosDBAccountCollection.GetAllAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Cosmos/src/Services/CosmosService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listKeys",
+      "sdkMembers": [
+        "CosmosDBAccountResource.GetKeysAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Cosmos/src/Services/CosmosService.cs"
+      ]
+    },
+    {
+      "methodId": "Microsoft.DocumentDB.LocationGetResults.list",
+      "sdkMembers": [
+        "SubscriptionResource.GetCosmosDBLocations",
+        "CosmosDBLocationCollection.GetAllAsync"
+      ],
+      "usedBy": [
+        "tools/Azure.Mcp.Tools.Quota/src/Services/Util/AzureRegionChecker.cs"
+      ]
+    }
+  ]
+}

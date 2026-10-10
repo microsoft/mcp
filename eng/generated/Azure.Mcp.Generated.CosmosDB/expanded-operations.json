@@ -1,0 +1,55 @@
+{
+  "selectionPolicy": "minimumHierarchyClosure",
+  "directRootCount": 5,
+  "resources": [
+    {
+      "resourceType": "Microsoft.DocumentDB/databaseAccounts",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.list",
+          "kind": "List",
+          "operationPath": "/subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/databaseAccounts",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listByResourceGroup",
+          "kind": "List",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts",
+          "reason": "Direct MCP usage"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.DatabaseAccounts.listKeys",
+          "kind": "Action",
+          "operationPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DocumentDB/databaseAccounts/{accountName}/listKeys",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    },
+    {
+      "resourceType": "Microsoft.DocumentDB/locations",
+      "reason": "Owns a direct MCP root operation",
+      "operations": [
+        {
+          "methodId": "Microsoft.DocumentDB.LocationGetResults.get",
+          "kind": "Read",
+          "operationPath": "/subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/locations/{location}",
+          "reason": "Required Read for selected resource hierarchy"
+        },
+        {
+          "methodId": "Microsoft.DocumentDB.LocationGetResults.list",
+          "kind": "List",
+          "operationPath": "/subscriptions/{subscriptionId}/providers/Microsoft.DocumentDB/locations",
+          "reason": "Direct MCP usage"
+        }
+      ]
+    }
+  ],
+  "nonResourceOperations": []
+}
