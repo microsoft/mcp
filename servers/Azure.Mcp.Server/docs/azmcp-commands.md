@@ -2932,6 +2932,19 @@ azmcp eventhubs namespace update --subscription <subscription> \
 
 ### Azure File Shares Operations
 
+For new NFS shares created with `--protocol NFS`, omitting `--nfs-root-squash`
+defaults to `RootSquash`, and omitting `--nfs-encryption-in-transit` defaults to
+`Enabled`. These secure defaults replace the previous unspecified settings.
+Explicit values override the defaults; `NoRootSquash` retains client root
+privileges, and `Disabled` allows unencrypted traffic.
+
+When `fileshares fileshare create` operates on an existing share, or when using
+`fileshares fileshare update`, omitted NFS options preserve the current settings.
+
+The `fileshares fileshare create` command also merges supplied `--tags` with
+existing tags: matching keys are overwritten, and other existing tags are
+preserved.
+
 ```bash
 # Get a specific Azure File Share or list Azure File Shares in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
