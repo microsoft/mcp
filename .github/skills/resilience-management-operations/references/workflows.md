@@ -62,7 +62,7 @@ These tools do not create or mutate goals.
 
 ## Create a Recovery Plan
 
-1. Require plan name, `Zonal` plan type, description, and identity choice.
+1. Require plan name, `Zonal` or `Regional` plan type, description, and identity choice.
 2. For `UserAssigned` or `SystemAndUserAssigned`, require the full identity ARM ID.
 3. Build group/action JSON using [payload reference](./payloads.md).
 4. Create the plan with `mcp_azure_mcp_ser_resiliency_recoveryplan_create`.

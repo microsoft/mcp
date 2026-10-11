@@ -363,14 +363,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             : null;
         RecoveryGroupsSetting recoveryGroups = CreateRecoveryGroupsSetting(existingRecoveryGroups, defaultGroupDescription, additionalGroups, defaultGroupPreActions, defaultGroupPostActions);
         ManagedServiceIdentity identity = CreateRecoveryPlanIdentity(identityType, userAssignedIdentity, existingPlan.HasValue ? existingPlan.Value?.Data?.Identity : null);
-        var data = new RecoveryPlanData
-        {
-            Identity = identity,
-            Properties = new RecoveryPlanProperties(
-                new RecoveryPlanType(planType.ToString()),
-                effectivePlanDescription,
-                recoveryGroups)
-        };
+        RecoveryPlanData data = CreateRecoveryPlanData(planType, effectivePlanDescription, recoveryGroups, identity);
 
         ArmOperation<RecoveryPlanResource> operation = await recoveryPlans.CreateOrUpdateAsync(
             WaitUntil.Started,
@@ -381,6 +374,20 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         return CreateRecoveryPlanInfo(operation.Value.Data);
     }
+
+    internal static RecoveryPlanData CreateRecoveryPlanData(
+        RecoveryPlanKind planType,
+        string planDescription,
+        RecoveryGroupsSetting recoveryGroups,
+        ManagedServiceIdentity identity)
+        => new()
+        {
+            Identity = identity,
+            Properties = new RecoveryPlanProperties(
+                new RecoveryPlanType(planType.ToString()),
+                planDescription,
+                recoveryGroups)
+        };
 
     internal static RecoveryPlanInfo CreateRecoveryPlanInfo(RecoveryPlanData recoveryPlan)
     {

@@ -25,11 +25,17 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
         Assert.Equal("create", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
+        Assert.Contains("Zonal or Regional", command.Description, StringComparison.Ordinal);
+
+        var planTypeOption = Assert.Single(command.Options, option => option.Name == "--plan-type");
+        Assert.Equal(typeof(string), planTypeOption.ValueType);
+        Assert.Contains("Zonal and Regional", planTypeOption.Description, StringComparison.Ordinal);
     }
 
     [Theory]
     [InlineData(ValidArgs, true)]
     [InlineData("--service-group sg1 --recoveryplan plan1 --plan-type Zonal --plan-description description --identity-type SystemAssigned", true)]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --plan-type Regional --plan-description description --identity-type SystemAssigned", true)]
     [InlineData("--service-group sg1 --recoveryplan plan1 --plan-type Zonal --identity-type SystemAssigned", true)]
     [InlineData("--service-group sg1 --recoveryplan plan1 --plan-type Zonal --plan-description description", false)]
     [InlineData("--recoveryplan plan1 --plan-type Zonal --plan-description description --default-group-description default", false)]
@@ -257,19 +263,20 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
     }
 
     [Fact]
-    public async Task ExecuteAsync_RejectsUnsupportedRegionalPlanTypeDuringBinding()
+    public async Task ExecuteAsync_RejectsUnknownPlanTypeDuringBinding()
     {
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
             "--recoveryplan", "plan1",
-            "--plan-type", "Regional",
+            "--plan-type", "Global",
             "--plan-description", "description",
             "--identity-type", "SystemAssigned",
             "--default-group-description", "default");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Invalid --plan-type 'Regional'", response.Message);
+        Assert.Contains("Invalid --plan-type 'Global'", response.Message);
         Assert.Contains("Zonal", response.Message);
+        Assert.Contains("Regional", response.Message);
         await Service.DidNotReceive().CreateRecoveryPlanAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -279,6 +286,44 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsRegionalRecoveryPlanAndForwardsPlanType()
+    {
+        Service.CreateRecoveryPlanAsync(
+            "sg1",
+            "plan1",
+            RecoveryPlanKind.Regional,
+            "description",
+            RecoveryPlanIdentityKind.SystemAssigned,
+            null,
+            null,
+            null,
+            null,
+            cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(Element("plan1", "Regional"));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--plan-type", "Regional",
+            "--plan-description", "description",
+            "--identity-type", "SystemAssigned");
+
+        var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryPlanCreateCommandResult);
+        Assert.Equal("Regional", result.RecoveryPlan.PlanType);
+        await Service.Received(1).CreateRecoveryPlanAsync(
+            "sg1",
+            "plan1",
+            RecoveryPlanKind.Regional,
+            "description",
+            RecoveryPlanIdentityKind.SystemAssigned,
+            null,
+            null,
+            null,
+            null,
             cancellationToken: Arg.Any<CancellationToken>());
     }
 
@@ -760,10 +805,10 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
         Assert.DoesNotContain("Internal timeout details", response.Message);
     }
 
-    private static RecoveryPlanInfo Element(string name) => new(
+    private static RecoveryPlanInfo Element(string name, string planType = "Zonal") => new(
         "id1",
         name,
-        "Zonal",
+        planType,
         "description",
         null,
         null,
