@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "90da933a-bbf3-48ec-a03b-5db38e0c0a3b",
     Name = "validate-for-execution",
     Title = "Validate Resilience Drill For Execution",
-    Description = "Validates a named resilience drill for execution from specified physical source locations. Use this command to validate, preflight, or check drill execution readiness before running the drill. It starts validation and returns the operation ID; it does not get or list drill definitions or resources. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
+    Description = "Validates a named resilience drill for execution from specified Azure regions or physical zones. Use this command to validate, preflight, or check drill execution readiness before running the drill. It starts validation and returns the operation ID; it does not get or list drill definitions or resources. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
