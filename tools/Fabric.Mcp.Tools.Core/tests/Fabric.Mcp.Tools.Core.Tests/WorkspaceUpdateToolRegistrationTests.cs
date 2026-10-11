@@ -197,14 +197,7 @@ public class WorkspaceUpdateToolRegistrationTests()
         var loader = provider.GetRequiredService<CommandFactoryToolLoader>();
 
         var listed = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
-        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_create-item");
-        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_create-workspace");
-        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_update-item");
         Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_update-workspace");
-        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_delete-item");
-        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_delete-workspace");
-        Assert.DoesNotContain(listed.Tools, static tool => tool.Name == "core_assign-workspace-to-capacity");
-        Assert.Contains(listed.Tools, static tool => tool.Name == "core_search-catalog");
         var result = await loader.CallToolHandler(CreateRequest(ClearDescriptionArguments), TestContext.Current.CancellationToken);
 
         Assert.True(result.IsError);

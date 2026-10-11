@@ -7,12 +7,15 @@ Offline tests for the Fabric Core toolset.
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
-- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Cumulative Core discovery/schema/read-only invariants and assignment consent and validation through real registration with substituted HTTP and credentials
+- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Assignment schemas, consent, validation, and read-only rejection through real registration with substituted HTTP and credentials
 - **Commands/CapacityListCommandTests.cs**: Tests for the `list-capacities` contract, metadata, option binding, cancellation, and sanitized failures
 - **Services/FabricCoreServiceCapacityListTests.cs**: Offline HTTP tests for single-page requests, opaque continuation tokens, metadata validation, status/Retry-After handling, disposal, concurrent identities, and existing POST regressions
 - **Models/CapacityListSerializationTests.cs**: Source-generated capacity output and unchanged continuation information
 - **CapacityListToolRegistrationTests.cs**: Registered MCP handler tests with substituted HTTP and credentials, including input/output schemas and structured output modes
 - **Commands/ItemCreateCommandTests.cs**: Tests for the `create-item` command
+- **Commands/ItemGetCommandTests.cs**: Get Item UUID and required-option validation, sanitized parser/service errors, typed metadata, and cancellation forwarding
+- **Services/FabricCoreServiceItemGetTests.cs**: One normalized authenticated GET, metadata whitelisting, required fields and matching IDs, validated throttling guidance, cancellation/disposal, and per-request credentials
+- **ItemGetToolRegistrationTests.cs**: Get Item discovery and schemas, read-only filtering, legacy/compact/duplicated output, and sanitized failures with substituted HTTP and credentials
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
 - **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
 - **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
@@ -45,10 +48,24 @@ Offline tests for the Fabric Core toolset.
 - **Commands/WorkspaceDeleteCommandTests.cs**: Required UUID validation, destructive metadata, typed deletion acknowledgement, and sanitized failures
 - **Services/FabricCoreServiceWorkspaceDeleteTests.cs**: Substituted HTTP tests for the exact DELETE request, empty 200 response, status and retry guidance, cancellation, disposal, concurrency, and existing create/search regressions
 - **WorkspaceDeleteToolRegistrationTests.cs**: Registered MCP handler tests for consent, read-only discovery/execution restrictions, input/output schemas, and legacy/compact/duplicated output
-- **FabricCoreSetupTests.cs**: Tests for service registration and cumulative command setup
+- **FabricCoreCatalogTests.cs**: Exact Core catalog and read-only membership, singleton command registration, discovery annotations, and schema consistency
+- **FabricCoreSetupTests.cs**: Setup identity and configured HTTP transport, proxy, timeout, and redirect behavior
 - **Services/FabricCoreServiceBaselineTests.cs**: Direct HTTP tests preserving create/search authentication, JSON bodies, responses, error handling, cancellation, and single-request behavior
 - **Services/FabricCoreHttpHelpersTests.cs**: Validated `Retry-After` parsing and continuation-token encoding checked against constructed HTTP request URIs
 - **Models/FabricCapacityMetadataTests.cs**: Source-generated five-field capacity serialization/schema and required metadata validation
+
+## Catalog Expectations
+
+`FabricCoreCatalogTests.ExpectedTools` is the single test-owned catalog manifest. When adding a Core
+tool, add one entry with its MCP name, command type, and read-only eligibility. The expected normal
+and read-only catalogs are derived only from this manifest, never from production registration or
+command metadata. Exact comparisons reject missing, unexpected, duplicate, or misclassified tools;
+focused regression cases verify those failures in both modes.
+
+Keep each tool's registration tests focused on its own options, input/output schemas, annotations,
+operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
+catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
+representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
 
 ## Shared Core Building Blocks
 
@@ -63,6 +80,18 @@ Offline tests for the Fabric Core toolset.
 `FabricCapacityMetadata` is the shared capacity contract: required `Guid Id` followed by required string `DisplayName`, `Sku`, `Region`, and `State`. `IsValid` rejects null metadata, an empty ID, and blank strings without closing the string values to enums. A get operation must additionally compare the returned ID with its requested ID. Workspace and item response models remain operation-specific.
 
 `TestSupport/FabricCoreHttpMessageHandler` accepts an asynchronous request/cancellation callback and exposes a thread-safe `CallCount`. Reuse it for offline HTTP tests; inspect or capture request details inside the callback rather than introducing per-tool handler copies. Keep specialized content/cancellation doubles and all operation-specific assertions.
+
+## Item Metadata
+
+Get Item reuses `FabricCoreCommand`, the shared authenticated sender with `ResponseHeadersRead`,
+`FabricCoreHttpHelpers.GetRetryAfter`, and `FabricThrottledException`. It returns only the five-field
+metadata contract, requires both returned IDs to match the request, and retains nonempty future item
+types. Optional descriptions may be absent, null, or explicitly empty. It makes no definition/data
+requests, follows no returned URLs, and does not retry. Tests reuse `FabricCoreHttpMessageHandler`
+and an existing stream cancellation double, without introducing another sender, handler, or exception.
+
+All Get Item coverage here is offline. Registered-handler transport configuration does not establish
+live Fabric behavior, real OBO/RBAC authorization, or recorded playback.
 
 ## Item Listing
 
@@ -109,6 +138,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run specific test
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemCreateCommandTests"
+
+# Run Get Item command, service, and registered-handler tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemGet*'
 
 # Run only Get Capacity command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*CapacityGetCommandTests"

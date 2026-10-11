@@ -112,6 +112,49 @@ public class FabricCoreService(HttpClient httpClient, TokenCredential? credentia
         return await JsonSerializer.DeserializeAsync<FabricItem>(response, CoreJsonContext.Default.FabricItem, cancellationToken) ?? new FabricItem();
     }
 
+    /// <inheritdoc />
+    public async Task<FabricItemMetadata> GetItemAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(workspaceId, out var parsedWorkspaceId) || parsedWorkspaceId == Guid.Empty)
+        {
+            throw new ArgumentException("Workspace ID must be a nonempty UUID.", nameof(workspaceId));
+        }
+
+        if (!Guid.TryParse(itemId, out var parsedItemId) || parsedItemId == Guid.Empty)
+        {
+            throw new ArgumentException("Item ID must be a nonempty UUID.", nameof(itemId));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{parsedWorkspaceId:D}/items/{parsedItemId:D}";
+        using var response = await SendFabricHttpRequestAsync(
+            HttpMethod.Get, url, completionOption: HttpCompletionOption.ResponseHeadersRead, cancellationToken: cancellationToken);
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            if (response.StatusCode == HttpStatusCode.TooManyRequests &&
+                FabricCoreHttpHelpers.GetRetryAfter(response) is { } retryAfter)
+            {
+                throw new FabricThrottledException(retryAfter);
+            }
+
+            var statusCode = response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode;
+            throw new HttpRequestException("Unable to retrieve Fabric item metadata.", null, statusCode);
+        }
+
+        await using var content = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var item = await JsonSerializer.DeserializeAsync(content, CoreJsonContext.Default.FabricItemMetadata, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (item is null || item.Id != parsedItemId || item.WorkspaceId != parsedWorkspaceId ||
+            string.IsNullOrWhiteSpace(item.DisplayName) || string.IsNullOrWhiteSpace(item.Type))
+        {
+            throw new JsonException("Fabric returned invalid item metadata.");
+        }
+
+        return item;
+    }
+
     public async Task DeleteItemAsync(
         string workspaceId,
         string itemId,

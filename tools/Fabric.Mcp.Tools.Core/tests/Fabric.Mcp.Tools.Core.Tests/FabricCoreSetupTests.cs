@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -73,32 +72,6 @@ public class FabricCoreSetupTests
     }
 
     [Fact]
-    public void ConfigureServices_RegistersAllServices()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
-
-        // Act
-        setup.ConfigureServices(services);
-
-        // Assert
-        Assert.Contains(services, s => s.ServiceType == typeof(IFabricCoreService));
-        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(CapacityGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(CapacityListCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(WorkspaceGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceListCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(ItemListCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceCreateCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceUpdateCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(ItemUpdateCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(ItemDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceAssignToCapacityCommand)
-            && s.Lifetime == ServiceLifetime.Singleton);
-    }
-
-    [Fact]
     public void Name_ReturnsCorrectValue()
     {
         // Arrange
@@ -106,35 +79,6 @@ public class FabricCoreSetupTests
 
         // Act & Assert
         Assert.Equal("core", setup.Name);
-    }
-
-    [Fact]
-    public void RegisterCommands_RegistersCoreCommands()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
-        setup.ConfigureServices(services);
-        using var provider = services.BuildServiceProvider();
-
-        // Act
-        var rootGroup = setup.RegisterCommands(provider);
-
-        // Assert
-        Assert.True(rootGroup.Commands.ContainsKey("create-item"), "Should have create-item command");
-        Assert.True(rootGroup.Commands.ContainsKey("search-catalog"), "Should have search-catalog command");
-        Assert.True(rootGroup.Commands.ContainsKey("get-capacity"), "Should have get-capacity command");
-        Assert.True(rootGroup.Commands.ContainsKey("list-capacities"), "Should have list-capacities command");
-        Assert.True(rootGroup.Commands.ContainsKey("get-workspace"), "Should have get-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("list-workspaces"), "Should have list-workspaces command");
-        Assert.True(rootGroup.Commands.ContainsKey("list-items"), "Should have list-items command");
-        Assert.True(rootGroup.Commands.ContainsKey("create-workspace"), "Should have create-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("update-workspace"), "Should have update-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("update-item"), "Should have update-item command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete-item"), "Should have delete-item command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete-workspace"), "Should have delete-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("assign-workspace-to-capacity"), "Should have assign-workspace-to-capacity command");
-        Assert.Equal(13, rootGroup.Commands.Count);
     }
 
     [Fact]

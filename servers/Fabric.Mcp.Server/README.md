@@ -240,6 +240,8 @@ The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/cor
 
 ### Development Workflows
 
+* "Get the metadata for Fabric item '<item-id>' in workspace '<workspace-id>' without reading its data or definition"
+* "Show the display name, description, and type of Fabric item '<item-id>' in workspace '<workspace-id>'"
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
 * "Create a Microsoft Fabric workspace called Sales Planning"
@@ -356,6 +358,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
@@ -397,6 +400,36 @@ fabmcp core search-catalog --continuation-token '<token from the preceding page>
 A continuation token already carries the original search, filter, and page size. Combining `continuation-token` with `search` or `filter` is rejected locally with HTTP 400 before service, authentication, or network calls; supplied criteria are never silently dropped. `page-size` remains optional and must be between 1 and 1000 when supplied, including with a token.
 
 Success keeps the existing nested command envelope: entries are in `results.results.value`, and the next token is in `results.results.continuationToken`. Entries retain their typed metadata and available `hierarchy.workspace` information. There is no all-pages fetch, polling, or automatic retry. HTTP failures retain their original status with sanitized messages, while status-less network failures retain HTTP 503; raw exception details are not included in public error results.
+
+**Get Item (`core_get-item`)**
+
+Calls the [Get Item API](https://learn.microsoft.com/rest/api/fabric/core/items/get-item) once.
+Both `workspace-id` and `item-id` are required nonempty UUIDs, normalized before authentication or HTTP.
+The result contains an `item` object with `id`, `displayName`, `type`, `workspaceId`, and `description`
+when available. Missing/null descriptions are omitted and an explicitly empty description is preserved.
+The returned item and workspace IDs must match the requested IDs. Unlike workspace metadata, item
+`type` is required; future nonempty type strings are accepted.
+
+```powershell
+fabmcp core get-item --workspace-id <workspace-id> --item-id <item-id>
+```
+
+The caller needs read permission for the item. Delegated callers also need `Item.Read.All`,
+`Item.ReadWrite.All`, or an appropriate item-specific read scope. Authentication uses the host's
+configured credential provider and preserves the caller's context; the tool does not grant permissions.
+
+This read-only tool does not resolve names, retrieve definitions or data, return workload-specific
+properties, or request default-identity information. Use `core_search-catalog` to discover an unknown
+item ID. Only the documented HTTP 200 metadata response is accepted.
+
+For MCP clients, `--structured-output-mode compact` or `--structured-output-mode duplicated` exposes
+the typed output schema and `structuredContent.item`. The default mode keeps content-only responses
+with `results.item`.
+
+Command validation uses the shared sanitized handling; service errors do not expose raw backend
+bodies. HTTP 429 includes a valid `Retry-After` delay in seconds or retry time in UTC when supplied.
+Missing, malformed, negative, out-of-range, or multiple headers produce generic retry guidance.
+The tool does not retry automatically or follow redirects.
 
 **Get Capacity (`core_get-capacity`)**
 
