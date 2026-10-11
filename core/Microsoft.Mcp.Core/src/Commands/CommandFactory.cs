@@ -342,12 +342,19 @@ public class CommandFactory : ICommandFactory
                     response.Results = ResponseResult.Create([], JsonSourceGenerationContext.Default.ListString);
                 }
 
+                var isError = response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous;
+
                 if (implementation is not ServerStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
                 }
+                else if (isError)
+                {
+                    // stdout is reserved for the stdio transport, so report server start failures on stderr.
+                    parseResult.InvocationConfiguration.Error.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
+                }
 
-                if (response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous)
+                if (isError)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error)
                         ?.SetTagIfNotExists(TagName.ExceptionType, "ToolCallError")
