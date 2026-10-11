@@ -172,7 +172,7 @@ Use the shared bounded LRO helper when waiting is part of the contract. Propagat
 
 ### Operation IDs
 
-Generate an operation ID once per accepted action, pass that exact value to the SDK, and return the same value in the MCP result. Tests must arrange a known operation ID and assert exact serialization, not merely non-empty output.
+Expose an optional caller-owned operation ID for recoveryplan, recoveryjob, drill, and drill-run long-running or state-changing actions. Require canonical GUID D format when supplied, normalize it once, pass that exact value through the command and service to the generated SDK, and return the same value in the MCP result. Generate a new canonical GUID only when the caller omits the option. Tests must cover both a known supplied ID and generated fallback behavior, not merely non-empty output.
 
 The Drills backend uses operation IDs for asynchronous work. Before implementing a new asynchronous action, inspect the generated SDK request and service contract to determine whether the ID is required in the `operation-id` header, the `operationId` query parameter, or both. When both are required but the SDK emits only the header, use `CreateArmClientOptionsWithOperationIdPolicy` and `OperationIdQueryParameterPolicy`. The policy mirrors the existing header value into the query only when absent. Do not apply the policy without verifying the new operation's generated request.
 

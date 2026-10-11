@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         Backup, generic Site Recovery discovery, or CLI generation. Optionally provide selected recovery-resource
         IDs; when omitted, the command validates all qualified resources in the plan. It reports per-resource
         eligibility and blocking reasons without executing reprotect or updating resources.
+        Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
@@ -40,6 +41,7 @@ public sealed class RecoveryPlanValidateForReprotectCommand(
     public override void ValidateOptions(RecoveryPlanValidateForReprotectOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
         RecoveryPlanValidation.ValidateSelectedResourceIds(
@@ -58,6 +60,7 @@ public sealed class RecoveryPlanValidateForReprotectCommand(
                 options.RecoveryPlan,
                 options.SelectedResourceIds,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

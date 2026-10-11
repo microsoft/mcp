@@ -24,7 +24,7 @@ For operational Azure Resilience Management requests, use the Azure Resilience M
 3. Use a tenant or subscription only when supplied by the user, available from the active environment, or returned by a preceding tool call.
 4. Treat an explicit user request for a named mutation as authorization for that mutation. Ask only for missing choices that cannot be inferred safely.
 5. Before irreversible deletion, identify the exact resource. A request such as “delete X” is sufficient confirmation; an ambiguous request is not.
-6. Report operation IDs and recovery job IDs returned by asynchronous operations. Use the corresponding get tool to inspect status when requested.
+6. For recoveryplan, recoveryjob, drill, and drill-run actions that accept `operation-id`, choose one canonical GUID per logical request and reuse it when safely retrying or resuming that request. Report the returned operation ID and any recovery job ID. Use the corresponding get tool to inspect status when requested.
 7. Do not claim an accepted asynchronous operation has completed.
 8. Do not retry stale jobs to represent a fresh operation. Start a new readiness or validation operation when current state must be assessed.
 9. If a prerequisite fails, report per-resource blockers and do not start the dependent destructive operation.
@@ -84,7 +84,7 @@ For operational Azure Resilience Management requests, use the Azure Resilience M
 
 ### Monitor asynchronous operations
 
-1. Preserve every returned operation ID and recovery job ID.
+1. Preserve every caller-owned or returned operation ID and every recovery job ID.
 2. Use recovery-job get for job state and drill-run get for drill execution history.
 3. If a response is `Accepted`, say “accepted” or “started,” not “completed.”
 4. On timeout, query state once if a suitable get tool and identifier exist; otherwise report that completion is unknown.

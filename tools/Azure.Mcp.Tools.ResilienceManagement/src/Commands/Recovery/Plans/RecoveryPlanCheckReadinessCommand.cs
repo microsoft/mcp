@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "6f991f5e-0218-46b5-8d6d-8b59defb1143",
     Name = "checkreadiness",
     Title = "Check Resilience Recoveryplan Readiness",
-    Description = "Checks whether a resilience recoveryplan and its protected resources are ready for recovery operations in an Azure service group.",
+    Description = "Checks whether a resilience recoveryplan and its protected resources are ready for recovery operations in an Azure service group. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
@@ -32,6 +32,7 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
     public override void ValidateOptions(RecoveryPlanCheckReadinessOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
     }
@@ -44,6 +45,7 @@ public sealed class RecoveryPlanCheckReadinessCommand(ILogger<RecoveryPlanCheckR
                 options.ServiceGroup,
                 options.RecoveryPlan,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
