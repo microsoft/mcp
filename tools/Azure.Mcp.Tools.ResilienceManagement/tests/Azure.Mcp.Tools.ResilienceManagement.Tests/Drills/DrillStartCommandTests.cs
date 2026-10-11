@@ -90,27 +90,29 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
     }
 
     [Fact]
-    public async Task ExecuteAsync_NormalizesAndForwardsCallerOperationId()
+    public async Task ExecuteAsync_PreservesAndForwardsCallerOperationId()
     {
-        const string normalizedOperationId = "abcdefab-cdef-abcd-efab-cdefabcdefab";
-        Service.StartDrillAsync("sg1", "drill1", "Failover", null, normalizedOperationId, Arg.Any<CancellationToken>())
-            .Returns(normalizedOperationId);
+        const string callerOperationId = "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB";
+        Service.StartDrillAsync("sg1", "drill1", "Failover", null, callerOperationId, Arg.Any<CancellationToken>())
+            .Returns(callerOperationId);
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
             "--drill", "drill1",
             "--mode", "Failover",
-            "--operation-id", "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB");
+            "--operation-id", callerOperationId);
 
         var result = ValidateAndDeserializeResponse(
             response,
             ResilienceManagementJsonContext.Default.DrillStartCommandResult);
-        Assert.Equal(normalizedOperationId, result.OperationId);
+        Assert.Equal(callerOperationId, result.OperationId);
     }
 
     [Theory]
     [InlineData("abcdefabcdefabcdefabcdefabcdefab")]
     [InlineData("{abcdefab-cdef-abcd-efab-cdefabcdefab}")]
+    [InlineData(" abcdefab-cdef-abcd-efab-cdefabcdefab")]
+    [InlineData("abcdefab-cdef-abcd-efab-cdefabcdefab ")]
     [InlineData("not-a-guid")]
     [InlineData("")]
     public async Task ExecuteAsync_RejectsNonCanonicalOperationId(string operationId)

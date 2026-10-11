@@ -37,12 +37,12 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             return Guid.NewGuid().ToString("D");
         }
 
-        if (!Guid.TryParseExact(operationId, "D", out Guid parsedOperationId))
+        if (operationId.Length != 36 || !Guid.TryParseExact(operationId, "D", out _))
         {
             throw new ArgumentException("The operation ID must be a GUID in canonical D format.", nameof(operationId));
         }
 
-        return parsedOperationId.ToString("D");
+        return operationId;
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalAssignmentsAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default)
