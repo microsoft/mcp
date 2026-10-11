@@ -139,7 +139,7 @@ Validation must reject malformed input before constructing an SDK request. Unit 
 
 - Validate every ARM path name as a non-empty single path segment. Apply the stricter service limits when known; do not rely only on slash checks.
 - Validate enum-like values against the exact wire values. Important drill values include `Failover`, `TestFailover`, `Success`, `Failed`, `Enable`, `Disable`, `FaultInjection`, `Failover`, and `Reprotect`.
-- Validate physical source locations as `<region>-az<positive-zone-number>`, for example `westus2-az1`. A normal Azure location such as `westus2` is not a physical zone selector.
+- Accept source locations as either Azure regions (for Regional drills), such as `westus2`, or physical zones (for Zonal drills), such as `westus2-az1`.
 - Validate cross-field rules explicitly. Drill update requires at least one change, and `subscription` and `region` must be supplied together.
 - Parse ARM IDs with `ResourceIdentifier` and verify the complete expected hierarchy and resource types. For selected recovery-resource IDs, verify service group ownership, recovery-plan parentage, `recoveryResources` type, and that the leaf `parsed.Name` is a GUID. A syntactically valid ARM ID with a leaf such as `resource1` is invalid for this SDK contract.
 - Validate JSON with `JsonDocument`/`Utf8JsonWriter` and deserialize with `ModelReaderWriter`; do not assemble payloads by string concatenation. Enforce object/array shape, required fields, non-empty IDs, enum values, positive durations, and payload-size limits before service invocation.
@@ -187,7 +187,7 @@ Use this sequence when a future tool participates in the manual failover/reprote
 1. Create and prepare an isolated drill and include its resources.
 2. Run readiness/resync and validation as required.
 3. Start the drill in `Failover` mode and preserve its operation ID.
-4. Start drill-run failover with physical source locations and `auto-failover` disabled when testing manual stage progression.
+4. Start drill-run failover with source regions for Regional drills or physical zones for Zonal drills, and use `auto-failover` disabled when testing manual stage progression.
 5. Wait until `FaultInjection` offers `MarkAsComplete`; call mark-complete with the exact wire value `FaultInjection`.
 6. Wait until `Failover` offers `Start`; call resume.
 7. Wait until `Failover` offers `MarkAsComplete`; call mark-complete with `Failover`.

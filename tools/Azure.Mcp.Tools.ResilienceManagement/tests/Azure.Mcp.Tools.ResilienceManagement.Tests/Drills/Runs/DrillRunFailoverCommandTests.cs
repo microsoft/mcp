@@ -67,10 +67,11 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     }
 
     [Theory]
-    [InlineData("eastus")]
     [InlineData("eastus-az")]
     [InlineData("eastus-az0")]
     [InlineData("east_us-az1")]
+    [InlineData("east us")]
+    [InlineData("eastus/2")]
     public async Task ExecuteAsync_RejectsInvalidSourceLocation(string sourceLocation)
     {
         var response = await ExecuteCommandAsync(
@@ -80,7 +81,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--source-locations", sourceLocation);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("physical Azure zone format", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Azure region", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -132,7 +133,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--drill", Drill,
             "--drill-run", DrillRun,
             "--source-locations", SourceLocation,
-            "--source-locations", "westus2-az2",
+            "--source-locations", "westus2",
             "--selected-resource-ids", SelectedResourceId,
             "--auto-failover", "true");
 
@@ -145,7 +146,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             ServiceGroup,
             Drill,
             DrillRun,
-            Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation, "westus2-az2" })),
+            Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation, "westus2" })),
             Arg.Is<IEnumerable<string>>(resourceIds => resourceIds.SequenceEqual(new[] { SelectedResourceId })),
             true,
             null,

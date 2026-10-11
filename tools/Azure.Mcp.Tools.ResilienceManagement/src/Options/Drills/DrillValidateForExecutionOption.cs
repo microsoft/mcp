@@ -14,7 +14,7 @@ public sealed class DrillValidateForExecutionOptions : ResilienceManagementOpera
     [Option(Description = ResilienceManagementOptionDescriptions.Drill)]
     public required string Drill { get; set; }
 
-    [Option(Description = "The physical source locations from which resources will be failed over or faulted.")]
+    [Option(Description = "The Azure regions or physical zones from which resources will be failed over or faulted.")]
     public required string[] SourceLocations { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

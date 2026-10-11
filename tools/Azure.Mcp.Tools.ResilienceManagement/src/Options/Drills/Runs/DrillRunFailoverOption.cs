@@ -17,7 +17,7 @@ public sealed class DrillRunFailoverOptions : ResilienceManagementOperationOptio
     [Option(Description = "The name of the drill run on which to initiate failover.")]
     public required string DrillRun { get; set; }
 
-    [Option(Description = "The physical Azure zones from which resources will be failed over, using values such as 'eastus-az1'.")]
+    [Option(Description = "The Azure regions or physical Azure zones from which resources will be failed over, using values such as 'eastus2' or 'eastus2-az1'.")]
     public required string[] SourceLocations { get; set; }
 
     [Option(Description = "The ARM IDs of recovery resources to fail over. Omit this option to process all qualified resources in the source locations.")]
