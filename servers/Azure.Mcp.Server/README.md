@@ -1105,23 +1105,6 @@ Example prompts that generate Azure CLI commands:
 * "Search documents in container 'items' from database 'mydb' where 'description' contains 'wireless headphones'"
 * "Find documents similar to 'noise cancelling earbuds' in container 'items' of database 'mydb' using vector property 'embedding'"
 
-### Azure Data Manager for Energy
-
-* "Check authentication and connectivity for my ADME endpoint and data partition"
-* "Check health for my customer-hosted ADME endpoint using its resource application ID as the token audience"
-* "Get an ADME schema by kind"
-* "List shared Well schemas from my ADME data partition"
-* "Find ADME records matching an indexed-field Lucene query across multiple or wildcard kinds"
-* "Aggregate ADME search results by kind and sort them by id"
-* "Start a point-in-time ADME search snapshot to process more than 10,000 records"
-* "Continue an ADME snapshot search from its cursor"
-* "Fetch multiple OSDU records by id from my ADME data partition"
-* "Get an OSDU record by id or version from my ADME data partition"
-* "List OSDU record ids for a kind in my ADME data partition"
-* "List all versions of an OSDU record in my ADME data partition"
-
-For customer-hosted ADME instances, pass the resource application ID or App ID URI with `--auth-app-id`. The server requests the corresponding `/.default` scope; when this option is omitted, it uses the standard Azure Energy resource audience.
-
 ### 🧮 Azure Data Explorer
 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
@@ -1434,7 +1417,6 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
-- **Azure Data Manager for Energy** - Health checks and OSDU schema, record search, retrieval, and version history operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
