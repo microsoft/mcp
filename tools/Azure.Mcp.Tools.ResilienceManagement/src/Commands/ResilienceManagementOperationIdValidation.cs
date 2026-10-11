@@ -9,12 +9,12 @@ internal static class ResilienceManagementOperationIdValidation
 {
     public static void Validate(string? operationId, ValidationResult validationResult)
     {
-        if (operationId is not null && !Guid.TryParseExact(operationId, "D", out _))
+        if (operationId is not null &&
+            (operationId.Length != 36 || !Guid.TryParseExact(operationId, "D", out _)))
         {
             validationResult.Errors.Add("The operation ID must be a GUID in canonical D format, such as 11111111-1111-1111-1111-111111111111.");
         }
     }
 
-    public static string? Normalize(string? operationId) =>
-        operationId is null ? null : Guid.ParseExact(operationId, "D").ToString("D");
+    public static string? Normalize(string? operationId) => operationId;
 }

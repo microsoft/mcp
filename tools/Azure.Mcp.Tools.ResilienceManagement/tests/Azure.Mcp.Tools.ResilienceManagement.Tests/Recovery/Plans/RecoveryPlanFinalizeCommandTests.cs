@@ -35,21 +35,21 @@ public sealed class RecoveryPlanFinalizeCommandTests : CommandUnitTestsBase<Reco
     }
 
     [Fact]
-    public async Task ExecuteAsync_NormalizesAndForwardsCallerOperationId()
+    public async Task ExecuteAsync_PreservesAndForwardsCallerOperationId()
     {
-        const string normalizedOperationId = "abcdefab-cdef-abcd-efab-cdefabcdefab";
-        var expected = new RecoveryPlanFinalizeResult(normalizedOperationId);
-        Service.FinalizeRecoveryPlanAsync("sg1", "plan1", null, normalizedOperationId, Arg.Any<CancellationToken>())
+        const string callerOperationId = "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB";
+        var expected = new RecoveryPlanFinalizeResult(callerOperationId);
+        Service.FinalizeRecoveryPlanAsync("sg1", "plan1", null, callerOperationId, Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
             "--recoveryplan", "plan1",
-            "--operation-id", "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB");
+            "--operation-id", callerOperationId);
 
         RecoveryPlanFinalizeResult result = ValidateAndDeserializeResponse(
             response,
             ResilienceManagementJsonContext.Default.RecoveryPlanFinalizeResult);
-        Assert.Equal(normalizedOperationId, result.OperationId);
+        Assert.Equal(callerOperationId, result.OperationId);
     }
 }

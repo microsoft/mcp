@@ -25,11 +25,11 @@ public sealed class ResilienceManagementServiceTests
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
-    public void ResolveOperationId_NormalizesCallerOwnedGuid()
+    public void ResolveOperationId_PreservesCallerOwnedGuid()
     {
         string result = ResilienceManagementService.ResolveOperationId("ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB");
 
-        Assert.Equal("abcdefab-cdef-abcd-efab-cdefabcdefab", result);
+        Assert.Equal("ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB", result);
     }
 
     [Fact]
@@ -46,6 +46,8 @@ public sealed class ResilienceManagementServiceTests
     [Theory]
     [InlineData("abcdefabcdefabcdefabcdefabcdefab")]
     [InlineData("{abcdefab-cdef-abcd-efab-cdefabcdefab}")]
+    [InlineData(" abcdefab-cdef-abcd-efab-cdefabcdefab")]
+    [InlineData("abcdefab-cdef-abcd-efab-cdefabcdefab ")]
     [InlineData("not-a-guid")]
     [InlineData("")]
     public void ResolveOperationId_RejectsNonCanonicalGuid(string operationId)
