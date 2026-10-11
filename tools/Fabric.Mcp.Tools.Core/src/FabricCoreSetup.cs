@@ -40,6 +40,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<ItemCreateCommand>();
         services.AddSingleton<ItemDeleteCommand>(CreateItemDeleteCommand);
+        services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemListCommand>();
         services.AddSingleton<ItemUpdateCommand>();
         services.AddSingleton<CatalogSearchCommand>();
@@ -60,6 +61,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List accessible Fabric capacities and their metadata\n" +
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Get metadata for an existing Fabric workspace by ID\n" +
+            "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
@@ -75,6 +77,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDeleteCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
