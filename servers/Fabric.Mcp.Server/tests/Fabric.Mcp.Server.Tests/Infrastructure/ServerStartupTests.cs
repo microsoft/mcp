@@ -296,6 +296,22 @@ public class ServerStartupTests
         var hardDelete = itemDelete.GetProperty("inputSchema").GetProperty("properties").GetProperty("hard-delete");
         Assert.Equal(["boolean", "null"], hardDelete.GetProperty("type").EnumerateArray().Select(value => value.GetString()));
         Assert.False(hardDelete.TryGetProperty("default", out _));
+        foreach (var name in new[] { "core_get-operation-state", "core_get-operation-result" })
+        {
+            var operation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == name);
+            Assert.True(operation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(operation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(operation.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal("operation-id", Assert.Single(operation.GetProperty("inputSchema").GetProperty("required").EnumerateArray()).GetString());
+            Assert.Equal("operation-id", Assert.Single(operation.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()).Name);
+        }
+        var itemCreate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-item");
+        var creationOptions = itemCreate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("boolean", creationOptions.GetProperty("sync").GetProperty("type").GetString());
+        Assert.Equal("boolean", creationOptions.GetProperty("early-poll").GetProperty("type").GetString());
+        Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());
+        Assert.Equal(["display-name", "item-type"], itemCreate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)

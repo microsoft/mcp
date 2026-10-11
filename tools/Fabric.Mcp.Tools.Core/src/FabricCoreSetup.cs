@@ -43,6 +43,8 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemListCommand>();
         services.AddSingleton<ItemUpdateCommand>();
+        services.AddSingleton<OperationStateGetCommand>();
+        services.AddSingleton<OperationResultGetCommand>();
         services.AddSingleton<CatalogSearchCommand>();
         services.AddSingleton<WorkspaceAssignToCapacityCommand>();
         services.AddSingleton<WorkspaceCreateCommand>();
@@ -65,6 +67,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
+            "- Track accepted long-running operations and read their JSON or empty results\n" +
             "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
             "- Rename a known workspace or update or clear its description\n" +
             "- Delete a known Fabric item, with permanent deletion only by explicit opt-in\n" +
@@ -80,6 +83,8 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
+        fabricCore.AddCommand<OperationStateGetCommand>(serviceProvider);
+        fabricCore.AddCommand<OperationResultGetCommand>(serviceProvider);
         fabricCore.AddCommand<CatalogSearchCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceAssignToCapacityCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceCreateCommand>(serviceProvider);
