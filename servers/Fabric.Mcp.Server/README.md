@@ -390,7 +390,7 @@ Create Item supports both outcomes documented by its endpoint: **201** returns v
 | Optional argument | Default | Behavior |
 |-------------------|---------|----------|
 | `sync` | `false` | False sends one POST and returns completed metadata or an accepted receipt, with zero follow-up reads. True asynchronously waits after 202 and retrieves the created item when available. It does not use blocking HTTP I/O. |
-| `max-wait-seconds` | `120` | Finite positive local wait budget after 202, including delays, authentication, and in-flight status/result reads. Validated before submitting creation, even when `sync=false`. |
+| `max-wait-seconds` | `120` | Finite positive local wait budget after 202, up to **600 seconds (10 minutes)** inclusive. Fractional seconds are allowed. Includes delays, authentication, and in-flight status/result reads. Larger values are rejected, not clamped, before submitting creation, even when `sync=false`. |
 | `early-poll` | `true` | Allows one first status probe after at most 3 seconds, or sooner if the initial server hint is shorter. False honors the initial validated `Retry-After` instead. |
 
 Choose the mode **before the single creation request**. This is an alternative to the earlier creation example, not a way to resume an already accepted creation:
@@ -400,6 +400,8 @@ fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --di
 ```
 
 The early first probe is a deliberate exception to the **initial successful 202** `Retry-After` guidance (often 20 seconds); it is not a claim that every server hint is honored. The receipt keeps `serverRetryAfterSeconds` separate from `recommendedPollAfterSeconds`. After that first probe, subsequent polls honor validated returned hints. Only safe operation GETs can be retried on HTTP 429/503, within the remaining budget; those hints are never shortened by the early-probe exception. Missing, malformed, multiple, negative, or overflowing hints use a conservative 20-second fallback. Valid HTTP-date hints are supported; zero/past hints have a one-second scheduling floor to prevent a tight loop.
+
+The 600-second maximum is a server-enforced operational guard on **MCP waiting**, not a Fabric API requirement or a limit on how long the Fabric operation may run. The shared service validation enforces it even when invoked without the command binding layer.
 
 Creation is **never automatically resubmitted**. Stopping MCP waiting does not cancel Fabric's operation, and no detached job continues polling. Client cancellation or a shorter HTTP/client timeout can end the wait sooner than the configured budget. A local budget expiry is not a failed mutation: resume using the operation ID, rather than increasing the budget by issuing another create call.
 

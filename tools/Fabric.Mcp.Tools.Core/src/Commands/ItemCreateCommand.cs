@@ -21,8 +21,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         Creates a Fabric item using a nonempty workspace UUID, display-name, and item-type.
         Supply workspace-id or the backward-compatible workspace UUID alias; workspace names are not resolved.
         Sends one creation request. A 201 response returns item metadata; 202 returns a resumable operation receipt.
-        With sync=true, asynchronously wait up to max-wait-seconds (default 120) after acceptance and retrieve
-        the result if available. Both modes immediately return synchronous completion without polling.
+        With sync=true, asynchronously wait up to max-wait-seconds (default 120, server maximum 600 seconds)
+        after acceptance and retrieve the result if available. Both modes immediately return synchronous completion without polling.
         early-poll=true permits one probe after at most 3 seconds instead of the initial 202 Retry-After;
         false honors that hint. Later polls and 429/503 retries honor validated hints.
         Wait expiry returns last-known state, not a failed mutation; client cancellation can stop waiting sooner.
@@ -60,7 +60,8 @@ public sealed class ItemCreateCommand(
         }
         if (!FabricOperationWaitOptions.IsValidBudget(options.MaxWaitSeconds))
         {
-            validationResult.Errors.Add("--max-wait-seconds must be finite and greater than zero.");
+            validationResult.Errors.Add(FormattableString.Invariant(
+                $"--max-wait-seconds must be finite, greater than zero, and at most {FabricOperationWaitOptions.MaximumWaitSeconds} seconds."));
         }
         if (options.Description?.Length > 256)
         {

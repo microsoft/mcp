@@ -69,7 +69,8 @@ public sealed class FabricOperationMcpTests()
                 ["--workspace-id", FabricOperationTestData.WorkspaceId, "--display-name", "Created", "--item-type", "Lakehouse"]));
             Assert.False(bound.Sync);
             Assert.True(bound.EarlyPoll);
-            Assert.Equal(FabricOperationWaitOptions.DefaultMaxWaitSeconds, bound.MaxWaitSeconds);
+            Assert.Equal(120, bound.MaxWaitSeconds);
+            Assert.Equal(600, FabricOperationWaitOptions.MaximumWaitSeconds);
             Assert.NotNull(create.OutputSchema);
             Assert.False(create.Annotations?.ReadOnlyHint);
             Assert.False(create.Annotations?.IdempotentHint);
@@ -338,27 +339,78 @@ public sealed class FabricOperationMcpTests()
     }
 
     [Theory]
-    [InlineData("max-wait-seconds", 0d)]
-    [InlineData("max-wait-seconds", -1d)]
-    [InlineData("max-wait-seconds", "NaN")]
-    [InlineData("max-wait-seconds", "Infinity")]
-    [InlineData("sync", "private-invalid-boolean")]
-    [InlineData("early-poll", "private-invalid-boolean")]
-    public async Task CreateItem_RejectsInvalidWaitOptionsBeforeMutation(string option, object value)
+    [InlineData(false, "max-wait-seconds", 0d)]
+    [InlineData(true, "max-wait-seconds", 0d)]
+    [InlineData(false, "max-wait-seconds", -1d)]
+    [InlineData(true, "max-wait-seconds", -1d)]
+    [InlineData(false, "max-wait-seconds", "NaN")]
+    [InlineData(true, "max-wait-seconds", "NaN")]
+    [InlineData(false, "max-wait-seconds", "Infinity")]
+    [InlineData(true, "max-wait-seconds", "Infinity")]
+    [InlineData(false, "max-wait-seconds", "-Infinity")]
+    [InlineData(true, "max-wait-seconds", "-Infinity")]
+    [InlineData(false, "max-wait-seconds", 600.0000000000001)]
+    [InlineData(true, "max-wait-seconds", 600.0000000000001)]
+    [InlineData(false, "max-wait-seconds", double.MaxValue)]
+    [InlineData(true, "max-wait-seconds", double.MaxValue)]
+    [InlineData(false, "sync", "private-invalid-boolean")]
+    [InlineData(true, "sync", "private-invalid-boolean")]
+    [InlineData(false, "early-poll", "private-invalid-boolean")]
+    [InlineData(true, "early-poll", "private-invalid-boolean")]
+    public async Task CreateItem_RejectsInvalidWaitOptionsBeforeMutation(bool sync, string option, object value)
     {
         using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("No HTTP expected."));
         var credential = FabricOperationTestData.Credential();
         await using var provider = Services(handler, credential, StructuredOutputMode.Compact);
         var arguments = CreateArguments();
+        arguments["sync"] = sync;
         arguments[option] = value;
 
         var result = await provider.GetRequiredService<CommandFactoryToolLoader>().CallToolHandler(
             McpTestUtilities.CreateToolCallRequest("core_create-item", arguments), TestContext.Current.CancellationToken);
 
         Assert.True(result.IsError);
+        using var response = JsonDocument.Parse(Text(result));
+        Assert.Equal(400, response.RootElement.GetProperty("status").GetInt32());
+        if (option == "max-wait-seconds" && value is not ("Infinity" or "-Infinity"))
+        {
+            Assert.Contains("at most 600 seconds", response.RootElement.GetProperty("message").GetString());
+        }
         Assert.DoesNotContain("private-invalid", Text(result));
         Assert.Equal(0, handler.CallCount);
         Assert.Empty(credential.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(false, 0.1)]
+    [InlineData(true, 0.1)]
+    [InlineData(false, 600d)]
+    [InlineData(true, 600d)]
+    public async Task CreateItem_AcceptsDefaultAndBudgetsWithinServerLimit(bool sync, double? seconds)
+    {
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            return Task.FromResult(FabricOperationTestData.ItemResponse());
+        });
+        var credential = FabricOperationTestData.Credential();
+        await using var provider = Services(handler, credential, StructuredOutputMode.Compact);
+        var arguments = CreateArguments();
+        arguments["sync"] = sync;
+        if (seconds is { } budget)
+        {
+            arguments["max-wait-seconds"] = budget;
+        }
+
+        var result = await provider.GetRequiredService<CommandFactoryToolLoader>().CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("core_create-item", arguments), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(FabricOperationTestData.ItemId, Payload(result, StructuredOutputMode.Compact).GetProperty("item").GetProperty("id").GetString());
+        Assert.Equal(1, handler.CallCount);
+        await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), TestContext.Current.CancellationToken);
     }
 
     private static Dictionary<string, object?> CreateArguments() => new()

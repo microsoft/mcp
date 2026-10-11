@@ -26,7 +26,7 @@ public class ItemCreateOptions
     [Option(Description = "Wait asynchronously for accepted creation to complete. Defaults to false, returning an operation receipt without polling.", DefaultValue = false)]
     public bool Sync { get; set; }
 
-    [Option(Description = "Finite positive local wait budget in seconds after an accepted response when sync is true. Defaults to 120. Expiry returns a resumable receipt and does not cancel Fabric's operation.", DefaultValue = FabricOperationWaitOptions.DefaultMaxWaitSeconds)]
+    [Option(Description = "Finite positive local wait budget in seconds after an accepted response when sync is true. Defaults to 120; the server rejects values above 600 (10 minutes), without clamping. Fractional seconds are allowed. Expiry returns a resumable receipt and does not cancel Fabric's operation.", DefaultValue = FabricOperationWaitOptions.DefaultMaxWaitSeconds)]
     public double MaxWaitSeconds { get; set; } = FabricOperationWaitOptions.DefaultMaxWaitSeconds;
 
     [Option(Description = "Allow one early status probe after at most 3 seconds, even if the initial 202 Retry-After is longer. Defaults to true; false honors the initial hint. Later polls and 429/503 retries honor validated hints.", DefaultValue = true)]

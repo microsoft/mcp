@@ -78,38 +78,58 @@ public sealed class FabricCoreServiceItemCreateLroTests()
     }
 
     [Theory]
-    [InlineData(double.NaN)]
-    [InlineData(double.PositiveInfinity)]
-    [InlineData(double.NegativeInfinity)]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public async Task CreateItem_RejectsInvalidBudgetBeforeMutationEvenWithoutWaiting(double seconds)
+    [InlineData(false, double.NaN)]
+    [InlineData(true, double.NaN)]
+    [InlineData(false, double.PositiveInfinity)]
+    [InlineData(true, double.PositiveInfinity)]
+    [InlineData(false, double.NegativeInfinity)]
+    [InlineData(true, double.NegativeInfinity)]
+    [InlineData(false, 0)]
+    [InlineData(true, 0)]
+    [InlineData(false, -1)]
+    [InlineData(true, -1)]
+    [InlineData(false, 600.0000000000001)]
+    [InlineData(true, 600.0000000000001)]
+    [InlineData(false, double.MaxValue)]
+    [InlineData(true, double.MaxValue)]
+    public async Task CreateItem_RejectsInvalidBudgetBeforeAuthenticationInBothModes(bool sync, double seconds)
     {
         using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("No HTTP expected."));
         using var client = new HttpClient(handler);
         var credential = FabricOperationTestData.Credential();
         var service = new FabricCoreService(client, credential);
 
-        await Assert.ThrowsAsync<ArgumentException>(() => CreateAsync(service, new(MaxWaitSeconds: seconds), TestContext.Current.CancellationToken));
+        var error = await Assert.ThrowsAsync<ArgumentException>(() =>
+            CreateAsync(service, new(Sync: sync, MaxWaitSeconds: seconds), TestContext.Current.CancellationToken));
 
+        Assert.Equal(nameof(FabricOperationWaitOptions.MaxWaitSeconds), error.ParamName);
+        Assert.Contains("finite, greater than zero, and at most 600 seconds", error.Message);
         Assert.Equal(0, handler.CallCount);
         Assert.Empty(credential.ReceivedCalls());
     }
 
     [Theory]
-    [InlineData(0.1)]
-    [InlineData(600)]
-    [InlineData(double.MaxValue)]
-    public async Task CreateItem_AllowsFinitePositiveBudgetsWithoutArbitraryPublicCap(double seconds)
+    [InlineData(false, 0.1)]
+    [InlineData(true, 0.1)]
+    [InlineData(false, 120)]
+    [InlineData(true, 120)]
+    [InlineData(false, 599.9)]
+    [InlineData(true, 599.9)]
+    [InlineData(false, 600)]
+    [InlineData(true, 600)]
+    public async Task CreateItem_AllowsFinitePositiveBudgetsUpToMaximum(bool sync, double seconds)
     {
-        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(FabricOperationTestData.Accepted()));
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(FabricOperationTestData.ItemResponse()));
         using var client = new HttpClient(handler);
-        var service = new FabricCoreService(client, FabricOperationTestData.Credential());
+        var credential = FabricOperationTestData.Credential();
+        var service = new FabricCoreService(client, credential);
 
-        var result = await CreateAsync(service, new(MaxWaitSeconds: seconds), TestContext.Current.CancellationToken);
+        var result = await CreateAsync(service, new(Sync: sync, MaxWaitSeconds: seconds), TestContext.Current.CancellationToken);
 
-        Assert.Equal(FabricOperationStatus.Accepted, result.Operation?.Status);
+        Assert.Equal(FabricOperationTestData.ItemId, result.Item?.Id);
+        Assert.Null(result.Operation);
         Assert.Equal(1, handler.CallCount);
+        await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -157,16 +177,19 @@ public sealed class FabricCoreServiceItemCreateLroTests()
         Assert.Equal(1, handler.CallCount);
     }
 
-    [Fact]
-    public async Task BudgetShorterThanInitialDelay_ReturnsAcceptedReferenceWithoutStartingGet()
+    [Theory]
+    [InlineData(0.25)]
+    [InlineData(1)]
+    public async Task BudgetShorterThanInitialDelay_ReturnsAcceptedReferenceWithoutStartingGet(double seconds)
     {
         var clock = new OperationTestTimeProvider();
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(FabricOperationTestData.Accepted()));
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, FabricOperationTestData.Credential(), clock);
 
-        var task = CreateAsync(service, new(Sync: true, MaxWaitSeconds: 1), TestContext.Current.CancellationToken);
-        clock.Advance(1);
+        var task = CreateAsync(service, new(Sync: true, MaxWaitSeconds: seconds), TestContext.Current.CancellationToken);
+        await clock.WaitForTimerAsync(seconds, TestContext.Current.CancellationToken);
+        clock.Advance(seconds);
         var result = await task.WaitAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(FabricOperationStatus.Pending, result.Operation?.Status);
@@ -175,6 +198,44 @@ public sealed class FabricCoreServiceItemCreateLroTests()
         Assert.Equal("WaitBudgetExpired", result.Operation?.Issue?.Code);
         Assert.Equal(1, handler.CallCount);
         Assert.Empty(clock.Timers);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MaximumWaitBudget_ReturnsPendingAtDeadlineWithoutFurtherRequests(bool earlyPoll)
+    {
+        var clock = new OperationTestTimeProvider();
+        var requests = new List<(HttpMethod Method, double Seconds)>();
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            requests.Add((request.Method, (clock.GetUtcNow() - FabricOperationTestData.Epoch).TotalSeconds));
+            return Task.FromResult(request.Method == HttpMethod.Post
+                ? FabricOperationTestData.Accepted()
+                : FabricOperationTestData.JsonResponse("""{"status":"Running","percentComplete":25}""", retryAfter: "600"));
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential(), clock);
+
+        var task = CreateAsync(service, new(Sync: true, MaxWaitSeconds: 600, EarlyPoll: earlyPoll), TestContext.Current.CancellationToken);
+        var firstDelay = earlyPoll ? 3 : 20;
+        await clock.WaitForTimerAsync(firstDelay, TestContext.Current.CancellationToken);
+        clock.Advance(firstDelay);
+        await clock.WaitForTimerAsync(600 - firstDelay, TestContext.Current.CancellationToken);
+        clock.Advance(600 - firstDelay);
+        var result = await task.WaitAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(600, (clock.GetUtcNow() - FabricOperationTestData.Epoch).TotalSeconds);
+        Assert.Equal(FabricOperationStatus.Pending, result.Operation?.Status);
+        Assert.Equal(Guid.Parse(FabricOperationTestData.OperationId), result.Operation?.OperationId);
+        Assert.Equal("Running", result.Operation?.LastState?.Status);
+        Assert.Equal(25, result.Operation?.LastState?.PercentComplete);
+        Assert.Equal("WaitBudgetExpired", result.Operation?.Issue?.Code);
+        Assert.Null(result.Item);
+        Assert.Equal([(HttpMethod.Post, 0d), (HttpMethod.Get, (double)firstDelay)], requests);
+        Assert.Empty(clock.Timers);
+        clock.Advance(600);
+        Assert.Equal(2, handler.CallCount);
     }
 
     [Theory]
