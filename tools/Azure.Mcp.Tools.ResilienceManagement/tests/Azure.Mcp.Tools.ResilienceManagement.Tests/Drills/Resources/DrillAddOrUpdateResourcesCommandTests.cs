@@ -46,7 +46,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
                 Arg.Any<string>(),
                 Arg.Any<AddOrUpdateResourcesContent>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
         }
 
@@ -63,7 +63,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
             Drill,
             Arg.Any<AddOrUpdateResourcesContent>(),
             "tenant1",
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
 
         var response = await ExecuteCommandAsync(
@@ -163,7 +163,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
             Arg.Any<string>(),
             Arg.Any<AddOrUpdateResourcesContent>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(

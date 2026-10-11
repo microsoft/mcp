@@ -54,7 +54,7 @@ public sealed class DrillRunMarkCompleteCommandTests
             DrillRun,
             Stage,
             "tenant1",
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new DrillRunMarkCompleteResult("operation1", false));
 
         var response = await ExecuteCommandAsync(
@@ -87,7 +87,7 @@ public sealed class DrillRunMarkCompleteCommandTests
             DrillRun,
             "FaultInjection",
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public sealed class DrillRunMarkCompleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -144,7 +144,7 @@ public sealed class DrillRunMarkCompleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(

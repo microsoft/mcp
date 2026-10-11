@@ -26,11 +26,30 @@ public sealed class RecoveryPlanFinalizeCommandTests : CommandUnitTestsBase<Reco
     public async Task ExecuteAsync_ForwardsRequestAndReturnsOperationId()
     {
         var expected = new RecoveryPlanFinalizeResult("11111111-1111-1111-1111-111111111111");
-        Service.FinalizeRecoveryPlanAsync("sg1", "plan1", null, Arg.Any<CancellationToken>()).Returns(expected);
+        Service.FinalizeRecoveryPlanAsync("sg1", "plan1", null, null, Arg.Any<CancellationToken>()).Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1");
 
         RecoveryPlanFinalizeResult result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryPlanFinalizeResult);
         Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NormalizesAndForwardsCallerOperationId()
+    {
+        const string normalizedOperationId = "abcdefab-cdef-abcd-efab-cdefabcdefab";
+        var expected = new RecoveryPlanFinalizeResult(normalizedOperationId);
+        Service.FinalizeRecoveryPlanAsync("sg1", "plan1", null, normalizedOperationId, Arg.Any<CancellationToken>())
+            .Returns(expected);
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--operation-id", "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB");
+
+        RecoveryPlanFinalizeResult result = ValidateAndDeserializeResponse(
+            response,
+            ResilienceManagementJsonContext.Default.RecoveryPlanFinalizeResult);
+        Assert.Equal(normalizedOperationId, result.OperationId);
     }
 }

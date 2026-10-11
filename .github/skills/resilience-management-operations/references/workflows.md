@@ -50,11 +50,11 @@ These tools do not create or mutate goals.
 ## Execute a Drill
 
 1. Get the drill and confirm it is not already running.
-2. Run `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` when configuration may be stale or a current readiness result is required; retain the operation ID and do not treat acceptance as readiness.
+2. Choose a canonical operation GUID and run `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` with that operation ID when configuration may be stale or a current readiness result is required; retain the operation ID and do not treat acceptance as readiness.
 3. Validate with `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution` using the intended physical source locations.
 4. Stop and report blockers when validation does not qualify the drill for execution.
 5. Ask for `Failover` versus `TestFailover` if not explicit.
-6. Start with `mcp_azure_mcp_ser_resiliency_drill_start` and retain the operation ID.
+6. Start with `mcp_azure_mcp_ser_resiliency_drill_start`, supplying a canonical operation GUID for the logical request, and retain the operation ID.
 7. Inspect runs with `mcp_azure_mcp_ser_resiliency_drill_run_get` when status is requested.
 8. Inspect run targets with `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` when per-resource results are needed.
 9. Use `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` only when the user explicitly wants to stop retries for the named active stage and allow the run to proceed.

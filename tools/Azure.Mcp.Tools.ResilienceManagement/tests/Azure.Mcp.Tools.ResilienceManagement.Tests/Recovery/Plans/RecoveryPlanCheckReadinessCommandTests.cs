@@ -38,7 +38,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(CreateSuccessfulResult());
         }
 
@@ -60,7 +60,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             "sg1",
             "plan1",
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(CreateSuccessfulResult());
 
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -106,7 +106,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             "sg1",
             "plan1",
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new RecoveryPlanReadinessResult(
                 "operation-1",
                 "job-1",
@@ -143,7 +143,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -161,7 +161,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -180,7 +180,7 @@ public sealed class RecoveryPlanCheckReadinessCommandTests : CommandUnitTestsBas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(internalDetails));
 
         var response = await ExecuteCommandAsync(ValidArgs);

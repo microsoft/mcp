@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
         Marks a stage of a resilience drill run as complete, disabling further retries on that stage so the drill run can
         proceed. Provide the drill run stage to complete (for example FaultInjection). It starts the operation and returns
         the operation ID.
+        Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -41,6 +42,7 @@ public sealed class DrillRunMarkCompleteCommand(ILogger<DrillRunMarkCompleteComm
     public override void ValidateOptions(DrillRunMarkCompleteOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
 
         ValidatePathSegment(options.ServiceGroup, "--service-group", validationResult);
         ValidatePathSegment(options.Drill, "--drill", validationResult);
@@ -64,6 +66,7 @@ public sealed class DrillRunMarkCompleteCommand(ILogger<DrillRunMarkCompleteComm
                 options.DrillRun,
                 stage,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
