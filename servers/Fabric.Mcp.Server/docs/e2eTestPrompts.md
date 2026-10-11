@@ -37,6 +37,9 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 | core_get-capacity | Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | What is the display name of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357? | none |
+| core_get-item | Get the metadata for Fabric item '<item-id>' in workspace '<workspace-id>' without reading its data or definition. | none |
+| core_get-item | Show the display name, description, and type of Fabric item '<item-id>' in workspace '<workspace-id>'. | none |
+| core_get-item | Inspect the existing Fabric item '<item-id>' in workspace '<workspace-id>' and return only its generic metadata. Do not modify it. | none |
 | core_get-operation-result | Get the JSON result of completed Fabric operation 0acd697c-1550-43cd-b998-91bfbfbd47c6. | none |
 | core_get-operation-result | The Fabric item creation operation in the previous receipt succeeded. Retrieve its result using that operation ID. | context-required |
 | core_get-operation-state | Check the current state and progress of Fabric operation 0acd697c-1550-43cd-b998-91bfbfbd47c6 once. | none |

@@ -29,7 +29,7 @@ public sealed record RemediationProperties
     public string? Confidence { get; init; }
 
     [JsonPropertyName("version")]
-    public int? Version { get; init; }
+    public double? Version { get; init; }
 
     [JsonPropertyName("artifacts")]
     public List<RemediationArtifact>? Artifacts { get; init; }

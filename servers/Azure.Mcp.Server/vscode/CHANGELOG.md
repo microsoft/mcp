@@ -824,7 +824,7 @@
 - Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
 - Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
 
-## 2.0.2 (2026-04-24)
+## 2.0.43 (2026-04-24)
 
 ### Changed
 
