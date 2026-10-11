@@ -49,7 +49,7 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | Tool | Purpose | Parameters |
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_get` | List plans or get one | **`service-group`**, `name?`, `tenant?` |
-| `mcp_azure_mcp_ser_resiliency_recoveryplan_create` | Create/update plan identity, groups, and actions | **`service-group`**, **`recoveryplan`**, **`plan-type`** (`Zonal`), **`identity-type`**, `plan-description?`, `user-assigned-identity?`, `default-group-description?`, `default-group-pre-actions?`, `default-group-post-actions?`, `additional-groups?`, `tenant?`. Creation requires a 5–50 character `plan-description`; update preserves it when omitted. |
+| `mcp_azure_mcp_ser_resiliency_recoveryplan_create` | Create/update plan identity, groups, and actions | **`service-group`**, **`recoveryplan`**, **`plan-type`** (`Zonal` or `Regional`), **`identity-type`**, `plan-description?`, `user-assigned-identity?`, `default-group-description?`, `default-group-pre-actions?`, `default-group-post-actions?`, `additional-groups?`, `tenant?`. Creation requires a 5–50 character `plan-description`; update preserves it when omitted. |
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_delete` | Permanently delete a plan | **`service-group`**, **`recoveryplan`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_checkreadiness` | Check plan/resource readiness | **`service-group`**, **`recoveryplan`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_validateforoperation` | Run operation-level plan state/readiness/permission validation; distinct from per-resource failover qualification | **`service-group`**, **`recoveryplan`**, **`operation-name`**, `tenant?` |

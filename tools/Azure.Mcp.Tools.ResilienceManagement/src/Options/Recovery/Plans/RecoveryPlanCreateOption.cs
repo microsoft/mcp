@@ -15,7 +15,7 @@ public sealed class RecoveryPlanCreateOptions
     [Option(Name = "recoveryplan", Description = "The name of the recoveryplan to create or fully update.")]
     public required string RecoveryPlan { get; set; }
 
-    [Option(Description = "The recoveryplan type. Supported value: Zonal. The type cannot be changed after creation.")]
+    [Option(Description = "The recoveryplan type. Supported values: Zonal and Regional. The type cannot be changed after creation.")]
     public required RecoveryPlanKind PlanType { get; set; }
 
     [Option(Description =
