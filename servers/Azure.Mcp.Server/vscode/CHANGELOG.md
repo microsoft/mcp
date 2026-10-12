@@ -1,7 +1,7 @@
 # Release History
 
 
-## 3.0.0 (2026-10-08)
+## 3.0.51 (2026-10-12)
 
 **🚀 New Major Release — Azure MCP Server 3.0**
 
