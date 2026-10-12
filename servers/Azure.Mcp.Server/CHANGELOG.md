@@ -10,7 +10,7 @@ We're excited to announce the third major release of the Azure MCP Server! Versi
 
 ### Key Features & Improvements
 
-- **More Tools and Services**: Added new namespaces and major toolset expansions, including:
+- **More Tools and Services**: Introduced new namespaces since 2.0 and expanded existing toolsets, including:
   - Azure Backup – `azurebackup`: vaults, policies, protection, protectable items and containers, recovery points, jobs, governance (soft delete, immutability, Multi-User Authorization, Resource Guards), customer-managed key encryption, private endpoints, and cross-region restore
   - Azure Resilience Management – `resiliency`: goals, usage plans and enrollments, recovery plans, recovery jobs, readiness and failover validation, and resilience drills
   - Azure SRE Agent – `sreagent`: 55 commands to manage agents, skills, connectors, hooks, threads, scheduled tasks, incidents, and workflows
@@ -73,34 +73,22 @@ For a complete history of changes included in this release, see entries for vers
 
 - Removed unused parameters (such as `subscription`, `resource-group`, `tenant`, `auth-method`, `user`, and `sender-name`) from tools across nearly all namespaces, including Advisor, AKS, App Configuration, App Lens, Application Insights, Azure Migrate, Communication, Compute, Confidential Ledger, Container Apps, Deploy, Event Grid, Event Hubs, Foundry Extensions, Key Vault, Load Testing, Managed Lustre, MySQL, PostgreSQL, Quota, Redis, Resource Health, Search, Service Bus, SQL, Storage, and others. Update any scripts or saved prompts that pass these options
 - Removed custom retry policy options from all tools and shared Azure service APIs; the Azure SDK retry defaults are used instead
-- Removed the confirmation-only `--force` parameter from `sql server delete` and `--confirm` parameters from SRE Agent delete tools
+- Removed the confirmation-only `--force` parameter from `sql server delete`
 - Tool calls with unknown parameters are now explicitly rejected
-- Normalized result payloads for several tools in Advisor, best practices, Functions, Monitor, Search, SQL, and Well-Architected Framework to consistent, named result objects (for example `{ rules }`, `{ bestPractices }`, `{ healthModels }`, `{ results }`, `{ servers }`, and `{ guidance }`)
+- Normalized result payloads for several tools in best practices, Functions, Monitor, Search, SQL, and Well-Architected Framework to consistent, named result objects (for example `{ bestPractices }`, `{ results }`, `{ servers }`, and `{ guidance }`)
 
 **Namespace, Tool, and Option Renames**:
 
-- Renamed the Azure Resilience Management CLI namespace from `azmcp resilience` to `azmcp resiliency`, and all MCP tool name prefixes from `resilience_*` to `resiliency_*`. The recovery plan and recovery job command groups were also renamed to `recoveryplan` and `recoveryjob`, and the `/resilience-recovery-operations` skill was renamed to `/resilience-management-operations`
-- Renamed `advisor_recommendation-type_list` to `advisor_metadata_list`
 - Replaced `monitor healthmodels entity get` with `monitor healthmodels list` and `monitor healthmodels get`
-- Renamed `azurebackup security configure-mua` to `azurebackup security enable-mua`
-- Changed server property names in `appsettings.json` to be scoped under `MicrosoftMcp` instead of the root level
-- Updated internal .NET namespaces to the `Microsoft.Mcp.Core` convention (for example `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands`)
+- Moved shared server code from `Azure.Mcp.Core.*` to `Microsoft.Mcp.Core.*` namespaces (for example `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands`). Because logger categories are derived from type namespaces, any logging configuration that targets the old categories (for example `Logging:LogLevel:Azure.Mcp.Core` entries in `appsettings.json` or log filters in environment variables) must be updated to the new `Microsoft.Mcp.Core` categories to keep applying
 
 **Secure-by-Default Behavior**:
 
 - New Storage accounts disable Shared Key authentication by default, while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access
 - New Event Hubs namespaces disable local authentication by default
 - New NFS file shares default to `RootSquash` with encrypted transit
-- Recovery Services vault creation disables public network access by default
-- Azure Backup vault creation now rejects existing vaults instead of updating them; use `azurebackup vault update` to modify existing vaults
 - `compute vm create` and `compute vmss create` now require `--image`, and the `Win2019Datacenter` and `Ubuntu2004` image aliases were removed
 - The MySQL and PostgreSQL `database query` tools are now marked destructive and non-read-only, and no longer filter statements by SQL verb. The signed-in user's database permissions determine what a statement may do. In consolidated mode they moved to a new `execute_azure_database_query` tool
-
-**Miscellaneous**:
-
-- Removed the Azure Data Manager for Energy (ADME) tools temporarily for the GA release
-- Removed the resiliency goal template get tool
-- Removed `Unspecified` from `ToolOperationPlane`; tool metadata now defaults to `NotApplicable`
 
 #### Bugs Fixed
 
