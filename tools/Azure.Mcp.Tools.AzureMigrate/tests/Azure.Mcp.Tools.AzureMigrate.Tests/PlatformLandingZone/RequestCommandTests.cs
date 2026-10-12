@@ -18,6 +18,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Tests.PlatformLandingZone;
 
 public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestCommand, IPlatformLandingZoneService>
 {
+    private const string Subscription = "sub123";
+    private const string ResourceGroup = "rg1";
+    private const string ProjectName = "project1";
+
     public RequestCommandTests()
     {
         Services.AddSingleton(Substitute.For<IAzureService>());
@@ -31,77 +35,49 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
         Assert.Equal("request", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("update", command.Description);
-        Assert.Contains("generate", command.Description);
+        Assert.Contains("create", command.Description);
+        Assert.Contains("wait", command.Description);
         Assert.Contains("download", command.Description);
-        Assert.Contains("status", command.Description);
+        Assert.Contains("--ddos", command.Description);
     }
 
     [Theory]
-    [InlineData("--action update --subscription sub123 --resource-group rg1 --migrate-project-name project1 --region-type multi", true)]
+    [InlineData("--action get --subscription sub123 --resource-group rg1 --migrate-project-name project1", true)]
+    [InlineData("--action list --subscription sub123 --resource-group rg1 --migrate-project-name project1", true)]
+    [InlineData("--action create --subscription sub123 --resource-group rg1 --migrate-project-name project1 --ddos disabled", true)]
     [InlineData("--action download --subscription sub123 --resource-group rg1 --migrate-project-name project1", true)]
-    [InlineData("--action generate --subscription sub123 --resource-group rg1 --migrate-project-name project1", true)]
-    [InlineData("--action status --subscription sub123 --resource-group rg1 --migrate-project-name project1", true)]
     [InlineData("--subscription sub123 --resource-group rg1 --migrate-project-name project1", false)] // Missing action
-    [InlineData("--action update --resource-group rg1 --migrate-project-name project1", false)] // Missing subscription
-    [InlineData("--action update --subscription sub123 --migrate-project-name project1", false)] // Missing resource group
-    [InlineData("--action update --subscription sub123 --resource-group rg1", false)] // Missing migrate project name
+    [InlineData("--action get --resource-group rg1 --migrate-project-name project1", false)] // Missing subscription
+    [InlineData("--action get --subscription sub123 --migrate-project-name project1", false)] // Missing resource group
+    [InlineData("--action get --subscription sub123 --resource-group rg1", false)] // Missing migrate project name
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            var parameters = new PlatformLandingZoneParameters
-            {
-                RegionType = "multi",
-                FireWallType = "azurefirewall",
-                NetworkArchitecture = "hubspoke",
-                IdentitySubscriptionId = "id-sub",
-                ManagementSubscriptionId = "mgmt-sub",
-                ConnectivitySubscriptionId = "conn-sub",
-                Regions = "eastus,westus",
-                EnvironmentName = "prod",
-                VersionControlSystem = "github",
-                OrganizationName = "myorg",
-                CachedAt = DateTime.UtcNow
-            };
+            var view = CreateView();
 
-            Service.UpdateParametersAsync(
+            Service.GetAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
+                .Returns(view);
+
+            Service.ListAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
+                .Returns([view]);
+
+            Service.CreateOrUpdateAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
+                Arg.Any<Options.PlatformLandingZone.RequestOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns(parameters);
+                .Returns(view);
 
             Service.DownloadAsync(
                 Arg.Any<PlatformLandingZoneContext>(),
                 Arg.Any<string>(),
+                Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
-                .Returns("/path/to/downloaded/file.zip");
-
-            Service.GenerateAsync(
-                Arg.Any<PlatformLandingZoneContext>(),
-                Arg.Any<CancellationToken>())
-                .Returns("https://download.url/file.zip");
-
-            Service.GetParameterStatus(Arg.Any<PlatformLandingZoneContext>())
-                .Returns("Status message");
-
-            Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-                .Returns([]);
+                .Returns(new[] { "/path/to/output.zip" });
         }
 
-        // Act
         var response = await ExecuteCommandAsync(args);
 
-        // Assert
         if (shouldSucceed)
         {
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -115,243 +91,197 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateAction_UpdatesParameters()
+    public async Task ExecuteAsync_CreateAction_PassesToggleOptionsThrough()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-        var regionType = "multi";
-        var fireWallType = "azurefirewall";
-
-        var updatedParameters = new PlatformLandingZoneParameters
-        {
-            RegionType = regionType,
-            FireWallType = fireWallType,
-            NetworkArchitecture = "hubspoke",
-            IdentitySubscriptionId = subscription,
-            ManagementSubscriptionId = subscription,
-            ConnectivitySubscriptionId = subscription,
-            Regions = "eastus",
-            EnvironmentName = "prod",
-            VersionControlSystem = "local",
-            OrganizationName = "contoso",
-            CachedAt = DateTime.UtcNow
-        };
-
-        Service.UpdateParametersAsync(
-            Arg.Is<PlatformLandingZoneContext>(ctx =>
-                ctx.SubscriptionId == subscription &&
-                ctx.ResourceGroupName == resourceGroup &&
-                ctx.MigrateProjectName == projectName),
-            Arg.Is(regionType),
-            Arg.Is(fireWallType),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
-            .Returns(updatedParameters);
-
-        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns([]);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--action", "update",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName,
-            "--region-type", regionType,
-            "--firewall-type", fireWallType);
-
-        // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.Contains("Parameters updated successfully", result.Message);
-        Assert.Contains("Complete: True", result.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_DownloadAction_DownloadsFiles()
-    {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-        var downloadedPath = "/path/to/downloaded/file.zip";
-
-        Service.DownloadAsync(
-            Arg.Is<PlatformLandingZoneContext>(ctx =>
-                ctx.SubscriptionId == subscription &&
-                ctx.ResourceGroupName == resourceGroup &&
-                ctx.MigrateProjectName == projectName),
-            Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
-            .Returns(downloadedPath);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--action", "download",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
-
-        // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.Contains("downloaded successfully", result.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_GenerateAction_GeneratesLandingZone()
-    {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-        var downloadUrl = "https://download.url/landingzone.zip";
-
-        // Mock that all parameters are provided
-        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns([]);
-
-        Service.GenerateAsync(
-            Arg.Is<PlatformLandingZoneContext>(ctx =>
-                ctx.SubscriptionId == subscription &&
-                ctx.ResourceGroupName == resourceGroup &&
-                ctx.MigrateProjectName == projectName),
-            Arg.Any<CancellationToken>())
-            .Returns(downloadUrl);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--action", "generate",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
-
-        // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.Contains("Platform Landing zone generated successfully", result.Message);
-        Assert.Contains(downloadUrl, result.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_GenerateAction_WithDefaultParameters_Succeeds()
-    {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-
-        // Mock that defaults are applied (no missing parameters)
-        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns([]);
-
-        Service.GenerateAsync(
+        Service.CreateOrUpdateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<Options.PlatformLandingZone.RequestOptions>(),
             Arg.Any<CancellationToken>())
-            .Returns("https://download.url/landingzone.zip");
+            .Returns(CreateView());
 
-        // Act
         var response = await ExecuteCommandAsync(
-            "--action", "generate",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
+            "--action", "create",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName,
+            "--ddos", "disabled",
+            "--bastion", "disabled",
+            "--private-dns", "disabled",
+            "--express-route", "disabled");
 
-        // Assert
         var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
+        Assert.Contains("was submitted", result.Message);
 
-        Assert.Contains("Platform Landing zone generated successfully", result.Message);
-
-        // Verify GenerateAsync was called
-        await Service.Received(1).GenerateAsync(
-            Arg.Any<PlatformLandingZoneContext>(),
+        await Service.Received(1).CreateOrUpdateAsync(
+            Arg.Is<PlatformLandingZoneContext>(ctx =>
+                ctx.SubscriptionId == Subscription &&
+                ctx.ResourceGroupName == ResourceGroup &&
+                ctx.MigrateProjectName == ProjectName),
+            Arg.Is<Options.PlatformLandingZone.RequestOptions>(options =>
+                options.Ddos == "disabled" &&
+                options.Bastion == "disabled" &&
+                options.PrivateDns == "disabled" &&
+                options.ExpressRoute == "disabled"),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_GenerateAction_HandlesTimeout()
+    public async Task ExecuteAsync_AlwaysUsesDefaultLandingZoneName()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
+        Service.GetAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
+            .Returns(CreateView());
 
-        // Mock that all parameters are provided
-        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns([]);
+        await ExecuteCommandAsync(
+            "--action", "get",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
 
-        Service.GenerateAsync(
-            Arg.Any<PlatformLandingZoneContext>(),
-            Arg.Any<CancellationToken>())
-            .Returns((string?)null);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--action", "generate",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
-
-        // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.Contains("in progress", result.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.Received(1).GetAsync(
+            Arg.Is<PlatformLandingZoneContext>(ctx => ctx.LandingZoneName == "default"),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_StatusAction_ReturnsParameterStatus()
+    public void Command_DoesNotExposeALandingZoneNameOption()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-        var statusMessage = "Parameters for sub123:rg1:project1:\n  Cached at: 2025-12-10\n  Complete: True";
+        // A migrate project holds exactly one Platform Landing Zone, always named 'default',
+        // so the tool must not offer a name parameter.
+        var command = Command.GetCommand();
 
-        Service.GetParameterStatus(
-            Arg.Is<PlatformLandingZoneContext>(ctx =>
-                ctx.SubscriptionId == subscription &&
-                ctx.ResourceGroupName == resourceGroup &&
-                ctx.MigrateProjectName == projectName))
-            .Returns(statusMessage);
+        Assert.DoesNotContain(command.Options, option => option.Name == "landing-zone-name");
+    }
 
-        // Act
+    [Fact]
+    public async Task ExecuteAsync_GetAction_ReportsMissingLandingZone()
+    {
+        Service.GetAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
+            .Returns((PlatformLandingZoneView?)null);
+
         var response = await ExecuteCommandAsync(
-            "--action", "status",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
+            "--action", "get",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
 
-        // Assert
         var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
+        Assert.Contains("No Platform Landing Zone exists", result.Message);
+    }
 
-        Assert.Equal(statusMessage, result.Message);
+    [Fact]
+    public async Task ExecuteAsync_GetAction_ShowsEffectiveConfiguration()
+    {
+        Service.GetAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
+            .Returns(CreateView());
+
+        var response = await ExecuteCommandAsync(
+            "--action", "get",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
+
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
+        Assert.Contains("Generation status: Succeeded", result.Message);
+        Assert.Contains("\"deploymentMode\": \"Disabled\"", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListAction_ReportsEmptyCollection()
+    {
+        Service.ListAsync(Arg.Any<PlatformLandingZoneContext>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync(
+            "--action", "list",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
+
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
+        Assert.Contains("No Platform Landing Zone exists", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WaitAction_UsesSuppliedTimeout()
+    {
+        Service.WaitForTerminalAsync(
+            Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<CancellationToken>())
+            .Returns(CreateView());
+
+        var response = await ExecuteCommandAsync(
+            "--action", "wait",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName,
+            "--timeout-minutes", "5");
+
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
+        Assert.Contains("finished generating", result.Message);
+
+        await Service.Received(1).WaitForTerminalAsync(
+            Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Is<TimeSpan>(timeout => timeout == TimeSpan.FromMinutes(5)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WaitAction_ReportsFailedGeneration()
+    {
+        Service.WaitForTerminalAsync(
+            Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<TimeSpan>(),
+            Arg.Any<CancellationToken>())
+            .Returns(CreateView(status: "Failed"));
+
+        var response = await ExecuteCommandAsync(
+            "--action", "wait",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
+
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
+        Assert.Contains("failed to generate", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DownloadAction_ListsDownloadedFiles()
+    {
+        Service.DownloadAsync(
+            Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<string>(),
+            Arg.Any<bool>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new[] { "/path/project1-default-output.zip", "/path/project1-default-design-document.md" });
+
+        var response = await ExecuteCommandAsync(
+            "--action", "download",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName,
+            "--include-design-document");
+
+        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
+        Assert.Contains("project1-default-output.zip", result.Message);
+        Assert.Contains("project1-default-design-document.md", result.Message);
+
+        await Service.Received(1).DownloadAsync(
+            Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<string>(),
+            Arg.Is(true),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_InvalidAction_ReturnsError()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-
-        // Act
         var response = await ExecuteCommandAsync(
             "--action", "invalid-action",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
 
-        // Assert
         Assert.NotNull(response);
         Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
         Assert.Contains("Invalid action", response.Message);
@@ -360,25 +290,19 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-
         Service.DownloadAsync(
             Arg.Any<PlatformLandingZoneContext>(),
             Arg.Any<string>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
-        // Act
         var response = await ExecuteCommandAsync(
             "--action", "download",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
 
-        // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Service error", response.Message);
     }
@@ -386,27 +310,18 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
     [Fact]
     public async Task ExecuteAsync_HandlesHttpRequestException()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-
-        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns([]);
-
-        Service.GenerateAsync(
+        Service.CreateOrUpdateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<Options.PlatformLandingZone.RequestOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("HTTP request failed"));
 
-        // Act
         var response = await ExecuteCommandAsync(
-            "--action", "generate",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
+            "--action", "create",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
 
-        // Assert
         Assert.True(response.Status == HttpStatusCode.BadGateway || response.Status == HttpStatusCode.ServiceUnavailable);
         Assert.Contains("HTTP request failed", response.Message);
     }
@@ -414,146 +329,81 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
     [Fact]
     public async Task ExecuteAsync_HandlesInvalidOperationException()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-
-        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns([]);
-
-        Service.GenerateAsync(
+        Service.CreateOrUpdateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
+            Arg.Any<Options.PlatformLandingZone.RequestOptions>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new InvalidOperationException("Missing required parameters"));
+            .ThrowsAsync(new InvalidOperationException("a generation run is still in progress"));
 
-        // Act
         var response = await ExecuteCommandAsync(
-            "--action", "generate",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName);
+            "--action", "create",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName);
 
-        // Assert
         Assert.True(response.Status == HttpStatusCode.UnprocessableEntity || response.Status == HttpStatusCode.InternalServerError);
-        Assert.Contains("Missing required parameters", response.Message);
+        Assert.Contains("a generation run is still in progress", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesArgumentException()
     {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-
-        Service.UpdateParametersAsync(
+        Service.CreateOrUpdateAsync(
             Arg.Any<PlatformLandingZoneContext>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<Options.PlatformLandingZone.RequestOptions>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new ArgumentException("regionType must be 'single' or 'multi'"));
+            .ThrowsAsync(new ArgumentException("Invalid ddos value 'maybe'"));
 
-        // Act
         var response = await ExecuteCommandAsync(
-            "--action", "update",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName,
-            "--region-type", "invalid");
+            "--action", "create",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName,
+            "--ddos", "maybe");
 
-        // Assert
         Assert.True(response.Status == HttpStatusCode.BadRequest || response.Status == HttpStatusCode.InternalServerError);
-        Assert.Contains("regionType must be 'single' or 'multi'", response.Message);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_UpdateAction_WithAllParameters_ReturnsComplete()
-    {
-        // Arrange
-        var subscription = "sub123";
-        var resourceGroup = "rg1";
-        var projectName = "project1";
-
-        var completeParameters = new PlatformLandingZoneParameters
-        {
-            RegionType = "multi",
-            FireWallType = "azurefirewall",
-            NetworkArchitecture = "hubspoke",
-            IdentitySubscriptionId = "id-sub-123",
-            ManagementSubscriptionId = "mgmt-sub-456",
-            ConnectivitySubscriptionId = "conn-sub-789",
-            Regions = "eastus,westus",
-            EnvironmentName = "prod",
-            VersionControlSystem = "github",
-            OrganizationName = "myorg",
-            CachedAt = DateTime.UtcNow
-        };
-
-        Service.UpdateParametersAsync(
-            Arg.Any<PlatformLandingZoneContext>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
-            .Returns(completeParameters);
-
-        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>())
-            .Returns([]);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--action", "update",
-            "--subscription", subscription,
-            "--resource-group", resourceGroup,
-            "--migrate-project-name", projectName,
-            "--region-type", "multi",
-            "--firewall-type", "azurefirewall",
-            "--network-architecture", "hubspoke",
-            "--identity-subscription-id", "id-sub-123",
-            "--management-subscription-id", "mgmt-sub-456",
-            "--connectivity-subscription-id", "conn-sub-789",
-            "--regions", "eastus,westus",
-            "--environment-name", "prod",
-            "--version-control-system", "github",
-            "--organization-name", "myorg");
-
-        // Assert
-        var result = ValidateAndDeserializeResponse(response, AzureMigrateJsonContext.Default.RequestCommandResult);
-
-        Assert.Contains("Complete: True", result.Message);
+        Assert.Contains("Invalid ddos value", response.Message);
     }
 
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
-        // Arrange & Act
         var args = CommandDefinition.Parse([
-            "--action", "update",
-            "--subscription", "sub123",
-            "--resource-group", "rg1",
-            "--migrate-project-name", "project1",
-            "--region-type", "multi",
+            "--action", "create",
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--migrate-project-name", ProjectName,
+            "--network-architecture", "hubspoke",
             "--firewall-type", "azurefirewall",
-            "--network-architecture", "hubspoke"
+            "--bastion", "disabled",
+            "--ddos", "disabled",
+            "--private-dns", "disabled",
+            "--express-route", "disabled",
+            "--vpn-gateway", "disabled",
+            "--scale-tier", "full",
+            "--regions", "eastus,westus2",
+            "--version-control-system", "github",
+            "--organization-name", "contoso",
+            "--service-name", "payments",
+            "--timeout-minutes", "10"
         ]);
 
-        // Assert
         Assert.Empty(args.Errors);
     }
+
+    private static PlatformLandingZoneView CreateView(string name = "default", string status = "Succeeded") =>
+        new(
+            Name: name,
+            ProvisioningState: "Succeeded",
+            Status: status,
+            ArtifactId: $"/subscriptions/{Subscription}/resourceGroups/{ResourceGroup}/providers/Microsoft.Migrate/migrateProjects/{ProjectName}/artifacts/plz-{name}",
+            EffectiveProperties: """
+                {
+                  "connectivity": {
+                    "ddosProtection": {
+                      "deploymentMode": "Disabled"
+                    }
+                  }
+                }
+                """);
 }

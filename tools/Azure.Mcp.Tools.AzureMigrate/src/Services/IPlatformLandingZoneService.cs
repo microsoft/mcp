@@ -2,87 +2,52 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureMigrate.Models;
+using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
-/// Service interface for platform landing zone operations.
+/// Operations against the Platform Landing Zone ARM resource and the artifact it produces.
 /// </summary>
 public interface IPlatformLandingZoneService
 {
     /// <summary>
-    /// Updates the cached parameters for a platform landing zone.
+    /// Creates a landing zone, or updates an existing one by layering the supplied options over its
+    /// current configuration.
     /// </summary>
-    /// <param name="context">The landing zone context.</param>
-    /// <param name="regionType">The region type (single or multi).</param>
-    /// <param name="fireWallType">The firewall type (azurefirewall, nva, or none).</param>
-    /// <param name="networkArchitecture">The network architecture (hubspoke or vwan).</param>
-    /// <param name="identitySubscriptionId">The identity subscription ID.</param>
-    /// <param name="managementSubscriptionId">The management subscription ID.</param>
-    /// <param name="connectivitySubscriptionId">The connectivity subscription ID.</param>
-    /// <param name="regions">The regions.</param>
-    /// <param name="environmentName">The environment name.</param>
-    /// <param name="versionControlSystem">The version control system.</param>
-    /// <param name="organizationName">The organization name.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The updated parameters.</returns>
-    Task<PlatformLandingZoneParameters> UpdateParametersAsync(
+    Task<PlatformLandingZoneView> CreateOrUpdateAsync(
         PlatformLandingZoneContext context,
-        string? regionType = null,
-        string? fireWallType = null,
-        string? networkArchitecture = null,
-        string? identitySubscriptionId = null,
-        string? managementSubscriptionId = null,
-        string? connectivitySubscriptionId = null,
-        string? regions = null,
-        string? environmentName = null,
-        string? versionControlSystem = null,
-        string? organizationName = null,
+        RequestOptions options,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if a platform landing zone already exists for the given context.
+    /// Reads a landing zone, returning null when it does not exist.
     /// </summary>
-    /// <param name="context">The landing zone context.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>True if platform landing zone exists, false otherwise.</returns>
-    Task<bool> CheckExistingAsync(
+    Task<PlatformLandingZoneView?> GetAsync(
         PlatformLandingZoneContext context,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Generates a platform landing zone.
+    /// Lists the landing zones under the migrate project.
     /// </summary>
-    /// <param name="context">The landing zone context.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The download URL if successful, null otherwise.</returns>
-    Task<string?> GenerateAsync(
+    Task<IReadOnlyList<PlatformLandingZoneView>> ListAsync(
         PlatformLandingZoneContext context,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Downloads the generated platform landing zone.
+    /// Polls until generation reaches a terminal state, or the timeout elapses.
     /// </summary>
-    /// <param name="context">The platform landing zone context.</param>
-    /// <param name="outputPath">The output path for the downloaded file.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The path to the downloaded file.</returns>
-    Task<string> DownloadAsync(
+    Task<PlatformLandingZoneView> WaitForTerminalAsync(
         PlatformLandingZoneContext context,
-        string outputPath,
+        TimeSpan timeout,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets the status of cached parameters.
+    /// Downloads the generated artifact files into <paramref name="outputDirectory"/>.
     /// </summary>
-    /// <param name="context">The platform landing zone context.</param>
-    /// <returns>A message describing the parameter status.</returns>
-    string GetParameterStatus(PlatformLandingZoneContext context);
-
-    /// <summary>
-    /// Gets a list of missing required parameters.
-    /// </summary>
-    /// <param name="context">The platform landing zone context.</param>
-    /// <returns>A list of missing parameter names.</returns>
-    List<string> GetMissingParameters(PlatformLandingZoneContext context);
+    Task<IReadOnlyList<string>> DownloadAsync(
+        PlatformLandingZoneContext context,
+        string outputDirectory,
+        bool includeDesignDocument,
+        CancellationToken cancellationToken = default);
 }
