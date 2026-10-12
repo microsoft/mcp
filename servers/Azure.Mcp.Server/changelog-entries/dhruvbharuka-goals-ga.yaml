@@ -1,0 +1,6 @@
+changes:
+  - section: Features Added
+    description: Added resilience goal assignment create, update, delete, recommend-capacity, refresh-resources, and update-resources tools for service-group-scoped zonal resiliency, service-level targets, participation, attestation, and user confirmation.
+  - section: Other Changes
+    subsection: Dependency Updates
+    description: Updated Azure.ResourceManager.ResilienceManagement to 1.0.0-alpha.20261012.1 for API version 2026-10-01, Azure.Core to 1.63.0, and System.ClientModel to 1.16.0. The locally supplied alpha SDK is not available from the configured public feed; clean CI restore is blocked until it is available. Existing preview recordings also require GA re-recording.

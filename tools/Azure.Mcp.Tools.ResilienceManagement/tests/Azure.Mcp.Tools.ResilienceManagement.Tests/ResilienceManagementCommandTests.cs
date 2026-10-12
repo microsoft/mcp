@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 /// Live / recorded integration tests for the Resilience Management toolset.
 /// Resources are provisioned by test-resources.bicep + test-resources-post.ps1.
 /// </summary>
-public class ResilienceManagementCommandTests(
+public partial class ResilienceManagementCommandTests(
     ITestOutputHelper output,
     TestProxyFixture fixture,
     LiveServerFixture liveServerFixture)

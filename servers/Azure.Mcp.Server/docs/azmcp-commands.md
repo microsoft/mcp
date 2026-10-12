@@ -4198,17 +4198,184 @@ azmcp redis list --subscription <subscription>
 
 ### Azure Resilience Management Operations
 
+#### Goals: GA API contract
+
+Goals use API version `2026-10-01` through `Azure.ResourceManager.ResilienceManagement`
+`1.0.0-alpha.20261012.1`, requiring `Azure.Core` `1.63.0` and
+`System.ClientModel` `1.16.0`. The API is GA, but this NuGet package is still an
+alpha. The public-feed check confirmed this exact package version is absent:
+**clean CI restore is blocked**. Local restore with the supplied package is not
+proof of public availability. No package binaries or local feed configuration are
+included in the repository.
+
+Assignment names must match `^[a-zA-Z0-9-]{3,24}$`: 3-24 ASCII letters, digits, or
+hyphens. The six mutation commands reject invalid names before calling Azure.
+
+All Goals commands are service-group-scoped: use `--service-group`, the assignment
+selector, and optional `--tenant`, not `--subscription`. Assignment GET uses
+`--name`; the six mutation commands use `--goal-assignment`. Tool names join
+command groups with underscores and retain verb hyphens, for example
+`resiliency_goal_assignment_recommend-capacity`.
+
+- Assignment GET returns ID/name summaries without `--name`. Detailed GET and
+  create/update results expose `properties.requireZonalResiliency`,
+  `properties.serviceLevelResources[].serviceLevelIndicatorResourceId`, and
+  provisioning state. No goal template is required or selectable.
+- Resource GET returns ID/name summaries without `--name`. Detailed results expose
+  `properties.resourceArmId` and `properties.zonalResiliency` (participation,
+  attestation, exclusion reason, and user confirmations). Do not use legacy flat
+  HA/DR fields as the GA contract; retained compatibility fields may be null.
+- All six SDK mutation methods return untyped `ArmOperation`. Create, update, and
+  delete wait for completion with a ten-minute bound and caller cancellation.
+  Create/update then GET the hydrated assignment. Delete returns `deleted: true`
+  when removed or `false` when already absent; underlying Azure resources and the
+  service group are not deleted.
+- Create replaces configuration; omitted service-level targets become an empty
+  list. GA PATCH cannot change `requireZonalResiliency`. Update requires exactly
+  one of a non-empty `--service-level-resource-ids` array or
+  `--clear-service-level-resources true`. It GETs the assignment and preserves its
+  zonal requirement through the SDK's real `UpdateAsync`. Clear removes only SLI
+  associations, not the SLI resources.
+- Service-level IDs must identify existing `Microsoft.Monitor/slis` resources in
+  the **same service group**, with caller read access. Service-source validation
+  permits at most one SLI per category; do not invent IDs or fixtures. Resource ID
+  lists must contain unique, complete ARM IDs and are ordinary arrays, not JSON
+  strings.
+- Recommend-capacity, refresh-resources, and update-resources return an `operation`
+  containing `serviceGroup`, `goalAssignment`, the service `operationId`, `status`
+  (`Accepted` or already-completed `Succeeded`), and `hasCompleted`. Acceptance
+  does not prove completion. A synchronously completed operation may have no ID.
+  Re-read assignment/member state when appropriate; there is no Goals operation
+  status tool. On timeout, completion is unknown; inspect state before retrying.
+
 ```bash
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal assignment get --service-group <service-group> \
-                                     [--name <name>]
+                                     [--name <name>] [--tenant <tenant>]
+
+# Create a goal assignment; the service requires zonal resiliency
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment create --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --require-zonal-resiliency true \
+                                        [--service-level-resource-ids <existing-sli-arm-id> ...] [--tenant <tenant>]
+
+# Replace SLI associations on an existing assignment; preserve the zonal requirement
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --service-level-resource-ids <existing-sli-arm-id> ... [--tenant <tenant>]
+
+# Alternatively clear associations, not SLI resources; never combine the two update options
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --clear-service-level-resources true [--tenant <tenant>]
+
+# Delete only the assignment and its tracked goal members, not underlying resources
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment delete --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> [--tenant <tenant>]
+
+# Start a capacity assessment; omit IDs to discover non-resilient resources automatically
+# Up to 50 unique underlying Azure resource ARM IDs; does not provision or resize resources
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment recommend-capacity --service-group <service-group> \
+                                                    --goal-assignment <goal-assignment> \
+                                                    [--resource-ids <arm-id> ...] [--tenant <tenant>]
+
+# Rediscover tracked members after service-group membership changes
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment refresh-resources --service-group <service-group> \
+                                                   --goal-assignment <goal-assignment> [--tenant <tenant>]
+
+# Change zonal participation, attestation, or user confirmation using a GA JSON array
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update-resources --service-group <service-group> \
+                                                  --goal-assignment <goal-assignment> \
+                                                  --resources '<resources-json>' [--tenant <tenant>]
 
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal resource get --service-group <service-group> \
                                    --goal-assignment <goal-assignment> \
-                                   [--name <name>]
+                                   [--name <name>] [--tenant <tenant>]
+```
+
+`update-resources` accepts a non-empty JSON array of at most 1 MB. Each entry
+requires a unique underlying resource ARM ID and at least one zonal change:
+
+```json
+[
+  {
+    "properties": {
+      "resourceArmId": "/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vm}",
+      "zonalResiliency": {
+        "goalParticipation": "Excluded",
+        "attestationStatus": "NotAttested"
+      }
+    }
+  }
+]
+```
+
+Allowed case-sensitive values:
+
+| Field inside `zonalResiliency` | Values |
+|---|---|
+| `goalParticipation` | `Included`, `Excluded` |
+| `attestationStatus` | `NotAttested`, `ManuallyAttested` |
+| `userConfirmation[].solutionDisplayName` | `ZonePinnedVmWithZrsDisk`, `VmInMultiZoneVmss` |
+| `userConfirmation[].confirmationStatus` | `ApprovedByUser`, `ApprovalPending`, `ApprovalNotNeeded`, `RejectedByUser` |
+| `userConfirmation[].reasonForRequestingConfirmation` (optional) | `ZonePinnedZrsDataDisksConditional`, `VmInMultiZoneScaleSetStatelessOnly` |
+
+When supplied, `userConfirmation` must be non-empty; each entry requires a unique
+solution name and confirmation status. Attest manually only after verifying actual
+resilience. Unknown or duplicate fields, flat HA/DR payloads, and empty zonal
+changes are rejected. See the [payload reference](../../../.github/skills/resilience-management-operations/references/payloads.md#goal-resource-updates-ga)
+for a user-confirmation example.
+
+##### Goals validation status and dedicated fixtures
+
+Default-route SDK PATCH probes with `requireZonalResiliency: true` plus an empty SLI list,
+and with `requireZonalResiliency: false`, both returned HTTP 400
+`RHUBUserErrorInvalidRequestParameter`. An explicit ECY diagnostic retry through
+`https://eastus2euap.management.azure.com` with
+`x-ms-rhub-routing-location: eastus2euap` accepted the unchanged true-plus-empty-list
+body, reached `Succeeded`, and returned the expected properties on independent GET.
+That empty-before/empty-after result does not prove nonempty SLI replacement.
+The MCP default route is unchanged; it does not silently target Canary.
+The opt-in Debug ECY recording also passes the real MCP assignment lifecycle,
+including terminal PATCH success and independent GET. See the
+[recording procedure](../../../.github/skills/resilience-management-operations/references/development.md#goals-canary-recording-and-playback);
+the storage-only fixture does not test nonempty SLI replacement.
+Resource updates retain the nested GA schema and have live exclusion/re-inclusion
+persistence evidence; do not substitute a legacy flat payload.
+Tool-selection evaluation is blocked while `AOAI_ENDPOINT` is absent.
+Report blockers and failures, never convert them into skipped or passing checks.
+
+Use the dedicated
+[Goals lifecycle fixture](../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/goal-lifecycle-resources.bicep)
+in a dedicated resource group tagged `purpose=mcp-goals-ga-lifecycle`, with an
+explicitly approved service group and a unique storage account name. The template
+creates one storage account and resource-group membership; it does not create
+SLIs or the service group. If a parent service group exceeds the 500-member limit,
+use a separately approved, small child service group rather than the oversized
+parent. Provision valid same-group SLIs separately only through a supported,
+approved process; the storage fixture is not an SLI fixture.
+
+Retain fixtures while live validation or investigation is active and track cleanup
+as pending. After approval, use
+[the dedicated cleanup script](../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/remove-goal-lifecycle-resources.ps1)
+with `-SubscriptionId`, `-ResourceGroupName`, and `-ApprovedCleanup`. It checks the
+resource-group tag and deletes that dedicated group, not the service group.
+Remove any separately created service group only through separately approved
+cleanup. Do not check in personal fixture IDs or absolute local paths.
+
+#### Usage plans, drills, and recovery
+
+```bash
 
 # Get a resilience usage plan, or list usage plans (omit --name; omit --resource-group to list across the subscription)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

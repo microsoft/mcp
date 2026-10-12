@@ -55,7 +55,7 @@ public sealed class RecoveryPlanValidateForOperationCommand(
     {
         try
         {
-            _ = TryGetOperationName(options.OperationName, out RecoveryOperationNames operationName);
+            _ = TryGetOperationName(options.OperationName, out RecoveryOperationName operationName);
             RecoveryPlanValidateForOperationResult result = await _resilienceManagementService.ValidateRecoveryPlanForOperationAsync(
                 options.ServiceGroup,
                 options.RecoveryPlan,
@@ -78,35 +78,35 @@ public sealed class RecoveryPlanValidateForOperationCommand(
         return context.Response;
     }
 
-    private static bool TryGetOperationName(string operationName, out RecoveryOperationNames value)
+    private static bool TryGetOperationName(string operationName, out RecoveryOperationName value)
     {
         if (string.Equals(operationName, "Failover", StringComparison.OrdinalIgnoreCase))
         {
-            value = RecoveryOperationNames.Failover;
+            value = RecoveryOperationName.Failover;
             return true;
         }
 
         if (string.Equals(operationName, "FailoverCommit", StringComparison.OrdinalIgnoreCase))
         {
-            value = RecoveryOperationNames.FailoverCommit;
+            value = RecoveryOperationName.FailoverCommit;
             return true;
         }
 
         if (string.Equals(operationName, "Reprotect", StringComparison.OrdinalIgnoreCase))
         {
-            value = RecoveryOperationNames.Reprotect;
+            value = RecoveryOperationName.Reprotect;
             return true;
         }
 
         if (string.Equals(operationName, "TestFailover", StringComparison.OrdinalIgnoreCase))
         {
-            value = RecoveryOperationNames.TestFailover;
+            value = RecoveryOperationName.TestFailover;
             return true;
         }
 
         if (string.Equals(operationName, "TestFailoverCleanup", StringComparison.OrdinalIgnoreCase))
         {
-            value = RecoveryOperationNames.TestFailoverCleanup;
+            value = RecoveryOperationName.TestFailoverCleanup;
             return true;
         }
 

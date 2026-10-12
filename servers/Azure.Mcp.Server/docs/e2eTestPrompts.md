@@ -1112,9 +1112,22 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
-| resiliency_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
+| resiliency_goal_assignment_get | Get goal assignment <goal_assignment_name> in service group <service_group>, including its zonal resiliency requirement, service-level indicator targets, and provisioning state | none |
+| resiliency_goal_assignment_create | Create resilience goal assignment <goal_assignment_name> in service group <service_group> with zonal resiliency required and no service-level targets | none |
+| resiliency_goal_assignment_create | Create a new resilience goal assignment <goal_assignment_name> in service group <service_group> with zonal resiliency required and existing Microsoft.Monitor/slis resource <existing_sli_arm_id> in that same service group; I have read access to it | none |
+| resiliency_goal_assignment_update | Clear all service-level indicator associations of existing goal assignment <goal_assignment_name> in service group <service_group>, preserving its zonal requirement and not deleting the indicators | none |
+| resiliency_goal_assignment_update | Replace only the service-level indicator associations of goal assignment <goal_assignment_name> in service group <service_group> with existing Microsoft.Monitor/slis resource <existing_sli_arm_id> in that same service group, retaining its zonal requirement; I have read access to the indicator | none |
+| resiliency_goal_assignment_delete | Delete goal assignment <goal_assignment_name> from service group <service_group>, leaving its underlying Azure resources intact | none |
+| resiliency_goal_assignment_delete | Remove resilience goal assignment <goal_assignment_name> in service group <service_group> and report whether it existed or was already absent | none |
+| resiliency_goal_assignment_recommend-capacity | Recommend zonal resiliency capacity for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>, without provisioning capacity | none |
+| resiliency_goal_assignment_recommend-capacity | Start a capacity assessment for automatically discovered non-resilient resources in goal assignment <goal_assignment_name> in service group <service_group> and return the operation ID | none |
+| resiliency_goal_assignment_refresh-resources | Refresh the tracked resources of goal assignment <goal_assignment_name> in service group <service_group> after new members were added to the service group | none |
+| resiliency_goal_assignment_refresh-resources | Rediscover resources for resilience goal assignment <goal_assignment_name> in service group <service_group> after membership removals, without changing manual attestations | none |
+| resiliency_goal_assignment_update-resources | Exclude resource <resource_arm_id> from zonal goal participation in assignment <goal_assignment_name> in service group <service_group> without deleting the resource | none |
+| resiliency_goal_assignment_update-resources | Record ManuallyAttested zonal resiliency for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>; I have verified its resilience | none |
+| resiliency_goal_assignment_update-resources | Record ApprovedByUser confirmation for the ZonePinnedVmWithZrsDisk solution on resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
-| resiliency_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> | none |
+| resiliency_goal_resource_get | Get goal resource <resource_name> for assignment <goal_assignment_name> in service group <service_group> and show its resourceArmId and nested zonalResiliency participation, attestation, and user confirmation | none |
 | resiliency_recoveryjob_get | List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |

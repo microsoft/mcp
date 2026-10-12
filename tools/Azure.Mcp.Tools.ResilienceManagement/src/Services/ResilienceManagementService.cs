@@ -14,7 +14,7 @@ using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 
-public sealed class ResilienceManagementService(IAzureService azureService)
+public sealed partial class ResilienceManagementService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
@@ -32,7 +32,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalAssignmentsAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateGoalArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
 
         var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
@@ -50,26 +50,32 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task<GoalAssignmentInfo> GetGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateGoalArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
 
         var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
-        GoalAssignmentResource resource = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
+        Response<GoalAssignmentResource> response = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
 
-        return MapGoalAssignment(resource.Data);
+        return MapGoalAssignment(response.Value.Data, response.GetRawResponse().Content);
     }
 
-    private static GoalAssignmentInfo MapGoalAssignment(GoalAssignmentData data)
+    internal static GoalAssignmentInfo MapGoalAssignment(GoalAssignmentData data, BinaryData responseContent)
     {
         var props = data.Properties;
         var systemData = data.SystemData;
+        using var document = JsonDocument.Parse(responseContent);
+        JsonElement rawProperties = GetOptionalObject(document.RootElement, "properties");
 
         var mappedProperties = props is null
             ? null
             : new GoalAssignmentInfoProperties(
-                GoalAssignmentType: props.GoalAssignmentType.ToString(),
-                GoalTemplateId: props.GoalTemplateId?.ToString() ?? string.Empty,
-                ProvisioningState: props.ProvisioningState?.ToString() ?? string.Empty);
+                GoalAssignmentType: GetOptionalString(rawProperties, "goalAssignmentType"),
+                GoalTemplateId: GetOptionalString(rawProperties, "goalTemplateId"),
+                ProvisioningState: props.ProvisioningState?.ToString() ?? string.Empty,
+                RequireZonalResiliency: GetOptionalBoolean(rawProperties, "requireZonalResiliency"),
+                ServiceLevelResources: props.ServiceLevelResources
+                    .Select(target => new GoalServiceLevelTargetInfo(target.ServiceLevelIndicatorResourceId.ToString()))
+                    .ToList());
 
         var mappedSystemData = systemData is null
             ? null
@@ -252,7 +258,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalResourcesAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateGoalArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
 
         var goalAssignmentId = GoalAssignmentResource.CreateResourceIdentifier(serviceGroup, goalAssignment);
         GoalMembersCollection goalMembers = armClient.GetGoalAssignmentResource(goalAssignmentId).GetAllGoalMembers();
@@ -270,37 +276,47 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task<GoalResourceInfo> GetGoalResourceAsync(string serviceGroup, string goalAssignment, string goalResource, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateGoalArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
 
         var goalMemberId = GoalMembersResource.CreateResourceIdentifier(serviceGroup, goalAssignment, goalResource);
-        GoalMembersResource resource = await armClient.GetGoalMembersResource(goalMemberId).GetAsync(cancellationToken);
+        Response<GoalMembersResource> response = await armClient.GetGoalMembersResource(goalMemberId).GetAsync(cancellationToken);
 
-        return MapGoalResource(resource.Data);
+        return MapGoalResource(response.Value.Data, response.GetRawResponse().Content);
     }
 
-    private static GoalResourceInfo MapGoalResource(GoalMembersData data)
+    internal static GoalResourceInfo MapGoalResource(GoalMembersData data, BinaryData responseContent)
     {
         var props = data.Properties;
         var systemData = data.SystemData;
+        using var document = JsonDocument.Parse(responseContent);
+        JsonElement rawProperties = GetOptionalObject(document.RootElement, "properties");
 
         var mappedProperties = props is null
             ? null
             : new GoalResourceInfoProperties(
-                DisasterRecoveryAttestationStatus: props.DisasterRecoveryAttestationStatus.ToString() ?? string.Empty,
-                DisasterRecoveryGoalParticipation: props.DisasterRecoveryGoalParticipation.ToString() ?? string.Empty,
-                ExclusionReasonForDisasterRecoveryGoals: props.ExclusionReasonForDisasterRecoveryGoals.ToString() ?? string.Empty,
-                ExclusionReasonForHighAvailabilityGoals: props.ExclusionReasonForHighAvailabilityGoals.ToString() ?? string.Empty,
-                HighAvailabilityAttestationStatus: props.HighAvailabilityAttestationStatus.ToString() ?? string.Empty,
-                HighAvailabilityGoalParticipation: props.HighAvailabilityGoalParticipation.ToString() ?? string.Empty,
+                DisasterRecoveryAttestationStatus: GetOptionalString(rawProperties, "disasterRecoveryAttestationStatus"),
+                DisasterRecoveryGoalParticipation: GetOptionalString(rawProperties, "disasterRecoveryGoalParticipation"),
+                ExclusionReasonForDisasterRecoveryGoals: GetOptionalString(rawProperties, "exclusionReasonForDisasterRecoveryGoals"),
+                ExclusionReasonForHighAvailabilityGoals: GetOptionalString(rawProperties, "exclusionReasonForHighAvailabilityGoals"),
+                HighAvailabilityAttestationStatus: GetOptionalString(rawProperties, "highAvailabilityAttestationStatus"),
+                HighAvailabilityGoalParticipation: GetOptionalString(rawProperties, "highAvailabilityGoalParticipation"),
                 ProvisioningState: props.ProvisioningState?.ToString() ?? string.Empty,
                 ResourceArmId: props.ResourceArmId?.ToString() ?? string.Empty,
-                ServiceGroupMemberships: props.ServiceGroupMemberships is null || props.ServiceGroupMemberships.Count == 0
-                    ? null
-                    : props.ServiceGroupMemberships
+                ServiceGroupMemberships: rawProperties.TryGetProperty("serviceGroupMemberships", out JsonElement memberships) &&
+                    memberships.ValueKind == JsonValueKind.Array
+                    ? memberships.EnumerateArray()
                         .Select(m => new GoalResourceServiceGroupMembership(
-                            MembershipType: m.MembershipType.ToString() ?? string.Empty,
-                            ServiceGroupId: m.ServiceGroupId?.ToString() ?? string.Empty))
-                        .ToList());
+                            MembershipType: GetOptionalString(m, "membershipType") ?? string.Empty,
+                            ServiceGroupId: GetOptionalString(m, "serviceGroupId") ?? string.Empty))
+                        .ToList()
+                    : null,
+                ZonalResiliency: props.ZonalResiliency is not { } zonal ? null : new GoalResourceResiliencyInfo(
+                    zonal.GoalParticipation?.ToString(),
+                    zonal.AttestationStatus?.ToString(),
+                    zonal.ExclusionReason?.ToString(),
+                    zonal.UserConfirmation.Select(c => new GoalResourceConfirmationInfo(
+                        c.SolutionDisplayName.ToString(), c.ConfirmationStatus.ToString(),
+                        c.ReasonForRequestingConfirmation?.ToString())).ToList()));
 
         var mappedSystemData = systemData is null
             ? null
@@ -606,7 +622,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         IReadOnlyList<string>? selectedResourceIds,
         string? userConsent)
     {
-        var properties = new FailoverRequestProperties(sourceLocations);
+        var properties = new ResilienceManagementFailoverProperties(sourceLocations);
         foreach (string selectedResourceId in selectedResourceIds ?? [])
         {
             properties.SelectedResourceIds.Add(new ResourceIdentifier(selectedResourceId));
@@ -614,10 +630,10 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         if (userConsent is not null)
         {
-            properties.ExecutionConfigurationsUserConsent = new UserConsent(userConsent);
+            properties.ExecutionConfigurationsUserConsent = new RecoveryActionUserConsent(userConsent);
         }
 
-        return new ResilienceManagementFailoverContent(FailoverDirectionTypes.FromSpecificLocations)
+        return new ResilienceManagementFailoverContent(ResilienceManagementFailoverDirection.FromSpecificLocations)
         {
             FailoverRequestProperties = properties
         };
@@ -712,7 +728,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             {
                 RecoveryMembersData? resource = qualification?.RecoveryResource;
                 RecoveryResourceProperties? resourceProperties = resource?.Properties;
-                OperationQualificationDetails? details = qualification?.OperationQualificationDetails;
+                RecoveryOperationQualificationDetails? details = qualification?.OperationQualificationDetails;
                 return new RecoveryPlanFailoverQualification(
                     resource?.Id?.ToString() ?? string.Empty,
                     resourceProperties?.RecoveryResourceUniqueId ?? resource?.Name ?? string.Empty,
@@ -776,7 +792,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return content;
     }
 
-    public Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant = null, CancellationToken cancellationToken = default)
+    public Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationName operationName, string? tenant = null, CancellationToken cancellationToken = default)
     {
         return ExecuteWithTimeoutAsync(
             token => ValidateRecoveryPlanForOperationCoreAsync(serviceGroup, recoveryPlan, operationName, tenant, token),
@@ -785,7 +801,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             cancellationToken);
     }
 
-    private async Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationCoreAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant, CancellationToken cancellationToken)
+    private async Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationCoreAsync(string serviceGroup, string recoveryPlan, RecoveryOperationName operationName, string? tenant, CancellationToken cancellationToken)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
 
@@ -1138,14 +1154,14 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
     }
 
-    internal static RecoveryPlanReadinessError? CreateReadinessError(JobErrorInfo? error)
+    internal static RecoveryPlanReadinessError? CreateReadinessError(ResilienceManagementJobErrorInfo? error)
     {
         return error is null
             ? null
             : new RecoveryPlanReadinessError(error.ErrorCode, error.ErrorMessage, error.Recommendations ?? []);
     }
 
-    private static List<RecoveryPlanReadinessFailedTask> GetFailedTasks(IReadOnlyList<JobTaskDetail>? tasks)
+    private static List<RecoveryPlanReadinessFailedTask> GetFailedTasks(IReadOnlyList<ResilienceManagementJobTaskDetail>? tasks)
     {
         var failedTasks = new List<RecoveryPlanReadinessFailedTask>();
         if (tasks is not null)
@@ -1156,9 +1172,9 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return failedTasks;
     }
 
-    private static void AddFailedTasks(IReadOnlyList<JobTaskDetail> tasks, List<RecoveryPlanReadinessFailedTask> failedTasks)
+    private static void AddFailedTasks(IReadOnlyList<ResilienceManagementJobTaskDetail> tasks, List<RecoveryPlanReadinessFailedTask> failedTasks)
     {
-        foreach (JobTaskDetail task in tasks)
+        foreach (ResilienceManagementJobTaskDetail task in tasks)
         {
             string status = task.Status?.ToString() ?? string.Empty;
             if (string.Equals(status, "Failed", StringComparison.OrdinalIgnoreCase))
@@ -1825,7 +1841,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
         ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
-        ValidateForExecutionContent content = ArmResilienceManagementModelFactory.ValidateForExecutionContent(sourceLocations);
+        ValidateForExecutionContent content = CreateDrillValidateForExecutionContent(sourceLocations);
         string operationId = Guid.NewGuid().ToString();
 
         var operation = await drillResource.ValidateForExecutionAsync(
@@ -1836,6 +1852,10 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         return new DrillValidateForExecutionResult(operationId, operation.HasCompleted);
     }
+
+    internal static ValidateForExecutionContent CreateDrillValidateForExecutionContent(IEnumerable<string> sourceLocations) =>
+        ArmResilienceManagementModelFactory.ValidateForExecutionContent(
+            ArmResilienceManagementModelFactory.ValidateForExecutionProperties(sourceLocations: sourceLocations));
 
     public async Task<DrillAddOrUpdateResourcesResult> AddOrUpdateDrillResourcesAsync(
         string serviceGroup,
@@ -1931,7 +1951,12 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         DrillTargetCollection drillTargets = drillInstanceResource.GetDrillTargets();
         Response<DrillTargetResource> response = await drillTargets.GetAsync(drillResource, cancellationToken);
 
-        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        return MapDrillResource(response.GetRawResponse().Content);
+    }
+
+    internal static DrillResourceInfo MapDrillResource(BinaryData responseContent)
+    {
+        using JsonDocument document = JsonDocument.Parse(responseContent.ToMemory());
         JsonElement root = document.RootElement;
 
         return new DrillResourceInfo(
@@ -1997,18 +2022,18 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     {
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
-        var requestProperties = new FailoverRequestProperties(sourceLocations);
+        var requestProperties = new ResilienceManagementFailoverProperties(sourceLocations);
         foreach (string resourceId in selectedResourceIds ?? [])
         {
             requestProperties.SelectedResourceIds.Add(new ResourceIdentifier(resourceId));
         }
 
-        var failoverProperties = new ResilienceManagementFailoverContent(FailoverDirectionTypes.FromSpecificLocations)
+        var failoverProperties = new ResilienceManagementFailoverContent(ResilienceManagementFailoverDirection.FromSpecificLocations)
         {
             FailoverRequestProperties = requestProperties
         };
         var content = new DrillRunFailoverContent(
-            autoFailover ? AutoFailover.Enable : AutoFailover.Disable,
+            autoFailover ? DrillRunAutoFailover.Enable : DrillRunAutoFailover.Disable,
             failoverProperties);
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
@@ -2038,7 +2063,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
-        var content = new MarkAsCompleteContent(new DrillRunSubtasks(stage));
+        var content = new MarkAsCompleteContent(new DrillRunStage(stage));
         string operationId = Guid.NewGuid().ToString();
 
         var operation = await drillRunResource.MarkAsCompleteAsync(WaitUntil.Started, operationId, content, cancellationToken);
@@ -2054,7 +2079,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
         string operationId = Guid.NewGuid().ToString();
 
-        await drillRunResource.ReprotectAsync(WaitUntil.Started, operationId, cancellationToken);
+        await drillRunResource.ReprotectAsync(WaitUntil.Started, operationId, cancellationToken: cancellationToken);
 
         return operationId;
     }
@@ -2136,7 +2161,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
                 PlanType = planType switch
                 {
                     UsagePlanKind.Standard => UsagePlanType.Standard,
-                    UsagePlanKind.Basic => UsagePlanType.Basic,
+                    // Preserve the released Basic wire value, which the new extensible SDK enum no longer names.
+                    UsagePlanKind.Basic => new UsagePlanType("Basic"),
                     _ => throw new ArgumentOutOfRangeException(nameof(planType), planType, "Unsupported plan type.")
                 }
             }
@@ -2190,7 +2216,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         var enrollmentData = new UsagePlanEnrollmentData
         {
-            Properties = new EnrollmentProperties(serviceGroupId)
+            Properties = new UsagePlanEnrollmentProperties(serviceGroupId)
         };
 
         ArmOperation<UsagePlanEnrollmentResource> operation = await enrollments.CreateOrUpdateAsync(WaitUntil.Started, enrollment, enrollmentData, cancellationToken);

@@ -44,7 +44,6 @@ $planLifecycleEnrollmentName = $DeploymentOutputs['PLANLIFECYCLEENROLLMENTNAME']
 $planLifecycleServiceGroupName = $DeploymentOutputs['PLANLIFECYCLESERVICEGROUPNAME']
 $workflowEnrollmentName = $DeploymentOutputs['WORKFLOWENROLLMENTNAME']
 $workflowServiceGroupName = $DeploymentOutputs['WORKFLOWSERVICEGROUPNAME']
-$goalTemplateName = $DeploymentOutputs['GOALTEMPLATENAME']
 $goalAssignmentName = $DeploymentOutputs['GOALASSIGNMENTNAME']
 $recoveryPlanName = $DeploymentOutputs['RECOVERYPLANNAME']
 $workflowRecoveryPlanName = $DeploymentOutputs['WORKFLOWRECOVERYPLANNAME']
@@ -60,6 +59,7 @@ $location = $DeploymentOutputs['LOCATION']
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
 $resilienceApiVersion = '2026-04-01-preview'
+$goalsApiVersion = '2026-10-01'
 
 $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
 $serviceGroupResilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
@@ -374,36 +374,20 @@ Invoke-ResilienceRestPut -Path $workflowEnrollmentPath -Body @{
 } | Out-Null
 Wait-ResilienceProvisioning -Path $workflowEnrollmentPath
 
-# 4) Create a goal template on the service group.
-$goalTemplatePath = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName`?api-version=$resilienceApiVersion"
-Invoke-ResilienceRestPut -Path $goalTemplatePath -Body @{
-    properties = @{
-        goalType                       = 'Resiliency'
-        requireHighAvailability        = 'Required'
-        requireDisasterRecovery        = 'NotRequired'
-        regionalRecoveryPointObjective = 'PT15M'
-        regionalRecoveryTimeObjective  = 'PT30M'
-    }
-} | Out-Null
-Wait-ResilienceProvisioning -Path $goalTemplatePath -WaitForAuthorization
-
-# 5) Assign the goal template to the service group.
-$goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$resilienceApiVersion"
-$goalTemplateId = "$serviceGroupResilienceBase/goalTemplates/$goalTemplateName"
+# GA assignments contain their goal requirements directly; no template is provisioned.
+$goalAssignmentPath = "$serviceGroupResilienceBase/goalAssignments/$goalAssignmentName`?api-version=$goalsApiVersion"
 $existingGoalAssignment = Invoke-AzRestMethod -Method GET -Path $goalAssignmentPath
 if ($existingGoalAssignment.StatusCode -eq 404) {
     Invoke-ResilienceRestPut -Path $goalAssignmentPath -Body @{
         properties = @{
-            goalAssignmentType = 'Resiliency'
-            goalTemplateId     = $goalTemplateId
+            requireZonalResiliency = $true
         }
     } | Out-Null
     Wait-ResilienceProvisioning -Path $goalAssignmentPath -WaitForAuthorization
 }
 elseif ($existingGoalAssignment.StatusCode -eq 200) {
     $goalAssignment = $existingGoalAssignment.Content | ConvertFrom-Json
-    if ($goalAssignment.properties.goalAssignmentType -ne 'Resiliency' -or
-        $goalAssignment.properties.goalTemplateId -ne $goalTemplateId -or
+    if ($goalAssignment.properties.requireZonalResiliency -ne $true -or
         $goalAssignment.properties.provisioningState -ne 'Succeeded') {
         throw "Existing goal assignment '$goalAssignmentName' does not match the requested test configuration."
     }
@@ -849,4 +833,4 @@ $DeploymentOutputs['DRILLRUNRESOURCENAME'] = $drillRunResource.name
 
 New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
 
-Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal template: $goalTemplateName, goal assignment: $goalAssignmentName, recoveryplan: $recoveryPlanName, drill: $drillName, drill run: $($drillRun.name))."
+Write-Host "Resilience test resources are ready (service group: $serviceGroupName, usage plan: $usagePlanName, enrollment: $enrollmentName, goal assignment: $goalAssignmentName, recoveryplan: $recoveryPlanName, drill: $drillName, drill run: $($drillRun.name))."

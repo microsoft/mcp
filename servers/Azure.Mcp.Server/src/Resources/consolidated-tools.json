@@ -46,7 +46,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
+      "description": "Create, update, or delete Azure Resilience Management resources, including goal assignments and zonal goal resource participation or attestation, usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -74,6 +74,10 @@
         }
       },
       "mappedToolList": [
+        "resiliency_goal_assignment_create",
+        "resiliency_goal_assignment_update",
+        "resiliency_goal_assignment_delete",
+        "resiliency_goal_assignment_update-resources",
         "resiliency_drill_update",
         "resiliency_drill_create",
         "resiliency_usageplan_create",
@@ -85,6 +89,40 @@
         "resiliency_recoveryplan_resource_update",
         "resiliency_drill_resource_add-or-update",
         "resiliency_drill_run_mark-complete"
+      ]
+    },
+    {
+      "name": "assess_azure_resilience_goal_resources",
+      "description": "Start zonal capacity recommendations or refresh tracked resources for an Azure resilience goal assignment in a service group. Recommend capacity for up to 50 selected Azure resource ARM IDs or discover non-resilient resources automatically; refresh resources after service-group membership changes. Does not provision capacity or change inclusion and attestation settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete underlying Azure resources or change their inclusion or attestation settings."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new capacity assessment or resource rediscovery operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to the specified service group and goal assignment."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts asynchronous work that updates assessment or tracked membership state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resiliency_goal_assignment_recommend-capacity",
+        "resiliency_goal_assignment_refresh-resources"
       ]
     },
     {

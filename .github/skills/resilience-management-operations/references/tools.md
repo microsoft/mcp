@@ -2,7 +2,7 @@
 
 <!-- cspell:words reprotect reprotection -->
 
-This reference lists all 37 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
+This reference lists all 47 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it. The `mcp_azure_mcp_ser_` prefix is the client display prefix; registered tool names start at `resiliency_`. Verb hyphens are preserved.
 
 ## Usage Plans
 
@@ -22,9 +22,59 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 | Tool | Purpose | Parameters |
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_create` | Create an assignment; wait and return hydrated assignment | **`service-group`**, **`goal-assignment`**, **`require-zonal-resiliency`** (`true`, required by the service), `service-level-resource-ids?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_update` | Replace or clear SLI associations, preserving the zonal requirement | **`service-group`**, **`goal-assignment`**, `service-level-resource-ids?` (non-empty string array), `clear-service-level-resources?` (boolean), `tenant?`. Exactly one of IDs or clear set to `true` is required. |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_delete` | Delete assignment and tracked members, not underlying Azure resources | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_recommend-capacity` | Start zonal capacity recommendations; does not provision capacity | **`service-group`**, **`goal-assignment`**, `resource-ids?` (at most 50 unique underlying ARM IDs; omit for automatic discovery), `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_refresh-resources` | Rediscover tracked resources from current service-group membership | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_update-resources` | Change zonal participation, attestation, or user confirmation | **`service-group`**, **`goal-assignment`**, **`resources`** (non-empty GA JSON array, at most 1 MB), `tenant?`. See [payloads](./payloads.md#goal-resource-updates-ga). |
 | `mcp_azure_mcp_ser_resiliency_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
 
-These tools are read-only. Omit `name` to list IDs and names; provide it for full details.
+Only the two GET tools are read-only. Omit `name` for ID/name summaries; provide it
+for full details. Assignments expose `requireZonalResiliency` and
+`serviceLevelResources`; members expose `resourceArmId` and nested
+`zonalResiliency`. No Goals command takes `subscription` or a goal template.
+Create/update/delete wait at most ten minutes; create/update then GET the hydrated
+assignment. Delete reports whether it existed. Other mutations return an operation
+with service operation ID, `Accepted`/`Succeeded`, and `hasCompleted`; acceptance
+is not completion. Recommend-capacity and refresh-resources are non-idempotent.
+Create/update/delete/update-resources are mutating, destructive, and idempotent.
+Service-level resource arrays are ordinary unique ARM ID arrays, not JSON strings.
+IDs must be existing `Microsoft.Monitor/slis` resources in the same service group,
+readable by the caller; service-source validation allows at most one per category.
+Assignment names must match `^[a-zA-Z0-9-]{3,24}$`. The GA service rejects longer
+names and characters other than ASCII letters, digits, and hyphens.
+Create sets initial targets (none when omitted); it cannot replace an existing assignment.
+PUT may retry failed provisioning, so create retains conservative destructive metadata.
+Update GETs the assignment and calls
+SDK `UpdateAsync`, preserving its zonal requirement; GA PATCH cannot change that
+flag. Clear removes associations, not SLI resources. Never invent SLI fixture IDs.
+
+The GA API is `2026-10-01`; SDK package `1.0.0-alpha.20261012.1` remains a NuGet
+alpha and requires Azure.Core `1.63.0` and System.ClientModel `1.16.0`. Public-feed
+checking confirmed this exact package is absent, blocking clean CI restore.
+Live SDK PATCH probes with a true zonal flag plus empty SLI list and with a false
+flag both returned 400 `RHUBUserErrorInvalidRequestParameter`. A controlled probe
+also sent only `{"properties":{"serviceLevelResources":[]}}` directly to the GA
+endpoint, bypassing SDK serialization. Both the minimal request and SDK request
+returned the same 400 immediately and after a 120-second settling interval.
+Independent GETs before and after PATCH returned `Succeeded`, the unchanged
+true zonal requirement, and an empty SLI list; this is not proof of an update.
+The service source accepts explicit empty SLI arrays, but the deployed rejection's
+exact validation gate is unconfirmed. Do not add a payload-stripping policy,
+blind retry, PUT fallback, or success-shaped clear result based on these probes.
+Those probes used the default ARM route. A subsequent explicit Canary retry used
+`https://eastus2euap.management.azure.com` with
+`x-ms-rhub-routing-location: eastus2euap`, as documented by the service API toolkit.
+The unchanged true-plus-empty-list PATCH returned 202, reached `Succeeded`, and
+an independent GET confirmed the true requirement and empty list. This establishes
+ECY acceptance of `[]`, not `null`, and not substantive nonempty SLI replacement.
+The MCP default route remains unchanged. Debug-only, opt-in ECY recording now
+exercises the real MCP assignment lifecycle, including terminal PATCH success and
+independent GET; the old default-route failure is archived outside the active recordings.
+Do not silently route production tools to Canary. A real SLI fixture is still required
+for the complete replacement/persistence lifecycle. Evaluation is blocked without
+`AOAI_ENDPOINT`; do not treat blockers as skipped or passing checks.
 
 ## Drills
 
@@ -41,6 +91,10 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | `mcp_azure_mcp_ser_resiliency_drill_resource_get` | List drill targets or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_resource_add-or-update` | Include, update, or exclude drill resources and fault settings | **`service-group`**, **`drill`**, **`fault-duration-minutes`**, `include-resources?`, `update-resources?`, `exclude-resources?`, `force-inclusion-and-update?` (`Enable` or `Disable`), `tenant?`. Supply at least one include, update, or exclude payload. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_get` | List drill runs or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_add-notes` | Append notes to a drill run | **`service-group`**, **`drill`**, **`drill-run`**, **`notes`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_failover` | Start drill-run failover from physical zones | **`service-group`**, **`drill`**, **`drill-run`**, **`source-locations`** (such as `eastus-az1`), `selected-resource-ids?`, `auto-failover?` (default `false`), `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_resume` | Resume a paused drill run after fault injection | **`service-group`**, **`drill`**, **`drill-run`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_reprotect` | Reprotect failed-over drill-run resources | **`service-group`**, **`drill`**, **`drill-run`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` | Mark a drill-run stage complete and disable further retries | **`service-group`**, **`drill`**, **`drill-run`**, **`stage`** (`FaultInjection`, `Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`), `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` | List run targets or get one | **`service-group`**, **`drill`**, **`drill-run`**, `name?`, `tenant?` |
 
