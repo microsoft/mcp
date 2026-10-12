@@ -100,7 +100,7 @@ public class FabricCoreSetupTests
         }
 
         // 2026-10-11 by @vukelich: Microsoft.Mcp.Core.Services.Http.HttpClientFactoryConfigurator.ConfigureDefaultHttpClient()
-        // was rewritten to better handle the security of HTTP rquests that don't go through a proxy. The method
+        // was rewritten to better handle the security of HTTP requests that don't go through a proxy. The method
         // dynamically calls one of two HttpMessageHandler instances per HTTP request based on if the proxy opts
         // for a bypass.
         // The below reflection code grabs the HttpMessageHandler that represents the proxy, as is used in the
