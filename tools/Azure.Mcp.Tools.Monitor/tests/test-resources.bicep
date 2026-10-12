@@ -388,6 +388,15 @@ module healthModelsModule 'test-resources.healthmodels.module.bicep' = {
   }
 }
 
+// Traces (Azure Monitor Workspace + traceContainers/default)
+module tracesModule 'test-resources.traces.module.bicep' = {
+  name: 'traces-module'
+  params: {
+    baseName: baseName
+    testApplicationOid: testApplicationOid
+  }
+}
+
 output healthModelParentName string = healthModelsModule.outputs.healthModelAName
 output healthModelChildName string = healthModelsModule.outputs.healthModelBName
 output logSearchWorkspaceName string = workspace.name
@@ -398,3 +407,5 @@ output logSearchAnalyticsTableName string = logSearchAnalyticsTable.name
 output logSearchAuxiliaryLastPlanModifiedDate string = logSearchAuxiliaryTable.properties.lastPlanModifiedDate
 output logSearchDcrImmutableId string = logSearchDataCollectionRule.properties.immutableId
 output logSearchIngestionEndpoint string = logSearchDataCollectionRule.properties.endpoints.logsIngestion
+output traceAccountName string = tracesModule.outputs.traceAccountName
+output traceAccountResourceId string = tracesModule.outputs.traceAccountResourceId

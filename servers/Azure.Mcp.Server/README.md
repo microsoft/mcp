@@ -1242,6 +1242,11 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Search a Basic or Auxiliary table in my Log Analytics workspace over the last day"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
+* "List the distributed trace accounts in my subscription"
+* "Show me the trace and span schema fields for trace account 'my-trace-account'"
+* "Query the last 30 minutes of distributed traces in 'my-trace-account' where duration exceeds 100ms"
+* "Cancel the running distributed trace query with operation id '<operation-id>'"
+* _Distributed trace commands require an Azure Monitor Workspace onboarded to Trace Store, which is in private preview._
 
 ### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
@@ -1453,7 +1458,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, distributed tracing (Trace Store), health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)

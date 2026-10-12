@@ -11,11 +11,13 @@ using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
+using Azure.Mcp.Tools.Monitor.Commands.Traces;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Models.HealthModels;
 using Azure.Mcp.Tools.Monitor.Models.Log;
+using Azure.Mcp.Tools.Monitor.Models.Traces;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
@@ -60,6 +62,18 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
 [JsonSerializable(typeof(WorkspaceLogQueryCommand.WorkspaceLogQueryCommandResult))]
 [JsonSerializable(typeof(WorkspaceLogSearchResult))]
+[JsonSerializable(typeof(TraceAccountListCommand.TraceAccountListCommandResult))]
+[JsonSerializable(typeof(TraceFieldListCommand.TraceFieldListCommandResult))]
+[JsonSerializable(typeof(TraceQueryRunCommand.TraceQueryRunCommandResult))]
+[JsonSerializable(typeof(TraceQueryCancelCommand.TraceQueryCancelCommandResult))]
+[JsonSerializable(typeof(TraceAccountInfo))]
+[JsonSerializable(typeof(List<TraceAccountInfo>))]
+[JsonSerializable(typeof(TraceFieldName))]
+[JsonSerializable(typeof(List<TraceFieldName>))]
+[JsonSerializable(typeof(TraceFieldNames))]
+[JsonSerializable(typeof(TraceQueryResult))]
+[JsonSerializable(typeof(TraceQueryRequest))]
+[JsonSerializable(typeof(TraceQueryCancelResult))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]
 [JsonSerializable(typeof(object))]

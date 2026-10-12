@@ -3760,6 +3760,46 @@ azmcp monitor webtests get --subscription <subscription> \
 
 ```
 
+#### Traces (Trace Store)
+
+> [!NOTE]
+> Azure Monitor Trace Store is in **private preview**. These commands only work against an Azure
+> Monitor Workspace that has been onboarded to Trace Store — `monitor traces account list` lists
+> only onboarded workspaces, and the other commands fail if the workspace publishes no trace query
+> endpoint. Reach out to the Azure Monitor team for the onboarding guide.
+
+
+```bash
+# List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces account list --subscription <subscription> \
+                                  [--resource-group <resource-group>]
+
+# List the trace and span schema field names for a distributed-trace account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces field list --subscription <subscription> \
+                                --account <account-name-or-resource-id>
+
+# Run a KQL query against a distributed-trace account; polls up to 180s then returns
+# `status: "Running"` with an operationId — pass `--operation-id <id>` to resume
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query run --subscription <subscription> \
+                               --account <account-name-or-resource-id> \
+                               [--query <kql-query>] \
+                               [--operation-id <operation-id>] \
+                               [--start-time <iso-8601>] \
+                               [--end-time <iso-8601>] \
+                               [--max-results <n>] \
+                               [--include-spans <true|false>]
+
+# Cancel an in-flight distributed-trace query operation
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query cancel --subscription <subscription> \
+                                  --account <account-name-or-resource-id> \
+                                  --operation-id <operation-id>
+
+```
+
 ### Azure Monitor Instrumentation Operations
 
 ```bash

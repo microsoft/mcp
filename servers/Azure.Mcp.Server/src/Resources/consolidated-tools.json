@@ -984,6 +984,9 @@
         "monitor_resource_log_query",
         "monitor_table_list",
         "monitor_table_type_list",
+        "monitor_traces_account_list",
+        "monitor_traces_field_list",
+        "monitor_traces_query_run",
         "monitor_webtests_get",
         "monitor_workspace_log_query",
         "monitor_workspace_log_search",
@@ -1022,6 +1025,39 @@
       },
       "mappedToolList": [
         "monitor_webtests_createorupdate"
+      ]
+    },
+    {
+      "name": "cancel_azure_monitor_trace_query",
+      "description": "Cancel an in-flight distributed trace query operation on an Azure Monitor Workspace Trace Store account.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "monitor_traces_query_cancel"
       ]
     },
     {
