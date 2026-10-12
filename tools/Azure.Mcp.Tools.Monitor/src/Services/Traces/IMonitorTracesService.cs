@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
 
 namespace Azure.Mcp.Tools.Monitor.Services.Traces;
 
 public interface IMonitorTracesService
 {
-    Task<List<TraceAccountInfo>> ListAccountsAsync(
+    Task<ResourceQueryResults<TraceAccountInfo>> ListAccountsAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,

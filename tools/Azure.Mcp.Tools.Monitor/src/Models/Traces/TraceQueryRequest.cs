@@ -19,15 +19,3 @@ internal sealed class TraceQueryRequest
 
     public required TraceQueryOptionsBody Options { get; init; }
 }
-
-internal sealed class TraceQueryTimeRange
-{
-    public required string StartTime { get; init; }
-
-    public required string EndTime { get; init; }
-}
-
-internal sealed class TraceQueryOptionsBody
-{
-    public required int MaxResults { get; init; }
-}

@@ -3768,6 +3768,11 @@ azmcp monitor webtests get --subscription <subscription> \
 > only onboarded workspaces, and the other commands fail if the workspace publishes no trace query
 > endpoint. Reach out to the Azure Monitor team for the onboarding guide.
 
+Account list returns `accounts` and `areResultsTruncated`. If the workspace discovery query is
+truncated, the trace-enabled accounts may be incomplete; narrow the scope with `--resource-group`.
+
+For query run, supply exactly one of `--query` (new query) or `--operation-id` (resume polling).
+Both modes require `--account`; the two options are mutually exclusive.
 
 ```bash
 # List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription

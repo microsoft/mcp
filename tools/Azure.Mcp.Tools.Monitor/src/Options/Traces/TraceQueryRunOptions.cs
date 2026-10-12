@@ -68,7 +68,7 @@ public sealed class TraceQueryRunOptions : ISubscriptionOption
     [Option(Description = "Provide EITHER --query (new query) OR --operation-id (resume). " + KqlQueryGuidance)]
     public string? Query { get; set; }
 
-    [Option(Description = "Operation id from a previous 'monitor traces query run' that returned status=Running. When given, --query is ignored and the command resumes polling.")]
+    [Option(Description = "Operation id from a previous 'monitor traces query run' that returned status=Running. Resumes polling. Mutually exclusive with --query; supply exactly one.")]
     public string? OperationId { get; set; }
 
     [Option(Description = "Query start time in UTC ISO 8601 (e.g. 2026-07-24T20:00:00Z). Defaults to 30 minutes before end-time.")]

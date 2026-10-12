@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Traces;
@@ -28,7 +29,7 @@ public sealed class TraceAccountListCommandTests : SubscriptionCommandUnitTestsB
         if (shouldSucceed)
         {
             Service.ListAccountsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-                .Returns([]);
+                .Returns(new ResourceQueryResults<TraceAccountInfo>([], false));
         }
 
         var response = await ExecuteCommandAsync(args);
@@ -36,8 +37,10 @@ public sealed class TraceAccountListCommandTests : SubscriptionCommandUnitTestsB
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_ReturnsAccounts()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_ReturnsAccountsAndTruncationStatus(bool areResultsTruncated)
     {
         var accounts = new List<TraceAccountInfo>
         {
@@ -45,7 +48,7 @@ public sealed class TraceAccountListCommandTests : SubscriptionCommandUnitTestsB
             new() { Name = "acct2", ResourceId = "/subscriptions/s/resourceGroups/rg/providers/Microsoft.Monitor/accounts/acct2", ResourceGroup = "rg", Location = "westus", TraceDurationWindowInSeconds = 3600 }
         };
         Service.ListAccountsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(accounts);
+            .Returns(new ResourceQueryResults<TraceAccountInfo>(accounts, areResultsTruncated));
 
         var response = await ExecuteCommandAsync($"--subscription {KnownSubscription}");
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceAccountListCommandResult);
@@ -53,6 +56,7 @@ public sealed class TraceAccountListCommandTests : SubscriptionCommandUnitTestsB
         Assert.Equal(2, result.Accounts.Count);
         Assert.Equal("acct1", result.Accounts[0].Name);
         Assert.Equal(3600, result.Accounts[1].TraceDurationWindowInSeconds);
+        Assert.Equal(areResultsTruncated, result.AreResultsTruncated);
     }
 
     [Fact]
@@ -60,7 +64,7 @@ public sealed class TraceAccountListCommandTests : SubscriptionCommandUnitTestsB
     {
         const string resourceGroup = "trace-rg";
         Service.ListAccountsAsync(Arg.Any<string>(), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(new ResourceQueryResults<TraceAccountInfo>([], false));
 
         var response = await ExecuteCommandAsync($"--subscription {KnownSubscription} --resource-group {resourceGroup}");
 

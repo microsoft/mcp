@@ -51,7 +51,7 @@ public sealed class TraceAccountListCommand(
                 cancellationToken).ConfigureAwait(false);
 
             context.Response.Results = ResponseResult.Create(
-                new TraceAccountListCommandResult(accounts),
+                new TraceAccountListCommandResult(accounts.Results, accounts.AreResultsTruncated),
                 MonitorJsonContext.Default.TraceAccountListCommandResult);
         }
         catch (Exception ex)
@@ -63,5 +63,5 @@ public sealed class TraceAccountListCommand(
         return context.Response;
     }
 
-    public sealed record TraceAccountListCommandResult(List<TraceAccountInfo> Accounts);
+    public sealed record TraceAccountListCommandResult(List<TraceAccountInfo> Accounts, bool AreResultsTruncated);
 }

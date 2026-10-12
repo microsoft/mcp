@@ -97,7 +97,7 @@ public sealed class MonitorTracesService(
             inner: null,
             statusCode: (System.Net.HttpStatusCode)response.Status);
 
-    public async Task<List<TraceAccountInfo>> ListAccountsAsync(
+    public async Task<ResourceQueryResults<TraceAccountInfo>> ListAccountsAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
@@ -115,7 +115,7 @@ public sealed class MonitorTracesService(
 
         if (workspaces.Results.Count == 0)
         {
-            return [];
+            return new([], workspaces.AreResultsTruncated);
         }
 
         var armClient = await CreateArmClientWithApiVersionAsync(
@@ -134,7 +134,7 @@ public sealed class MonitorTracesService(
                 probed[index] = await TryLoadContainerAsync(armClient, rows[index], ct).ConfigureAwait(false);
             }).ConfigureAwait(false);
 
-        return [.. probed.OfType<TraceAccountInfo>()];
+        return new([.. probed.OfType<TraceAccountInfo>()], workspaces.AreResultsTruncated);
     }
 
     public async Task<TraceFieldNames> ListFieldNamesAsync(
