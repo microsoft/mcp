@@ -5,15 +5,55 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.5.0 (Unreleased)
+## 1.5.0 (2026-10-12)
 
 ### Features Added
 
+- Added the `--disable-proxy-tools` server start option to disable tools loaded via `registry.json`. [[#3287](https://github.com/microsoft/mcp/pull/3287)]
+- Added `core_assign-workspace-to-capacity` to submit workspace capacity assignments and return a 202 accepted/pending receipt without polling or automatic retries. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_create-workspace` to create a Fabric workspace with optional existing capacity and domain assignment in one request. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_delete-workspace` to delete one explicitly identified Fabric workspace and the items under it, with required UUID validation, destructive-operation metadata, and a typed deletion acknowledgement. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added the read-only `core_get-capacity` tool to retrieve a Fabric capacity by UUID, returning its display name, SKU, region, and state. [[#3846](https://github.com/microsoft/mcp/pull/3846)]
+- Added the read-only `core_get-workspace` tool to retrieve workspace metadata by UUID, including optional capacity, domain, identity, tags, and workspace-specific endpoint information. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_list-capacities` to return one page of accessible Fabric capacity metadata and continuation information. [[#3852](https://github.com/microsoft/mcp/pull/3852)]
+- Added `core_list-items` to list one page of Fabric item metadata within a workspace or folder, with item-type filtering, recursive listing, and continuation information. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_list-workspaces` to list one page of accessible Fabric workspace management metadata, with role filtering, continuation information, and optional workspace-specific API endpoints. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_update-item` to update a Fabric item display name or description, preserve omitted properties, and clear descriptions with an empty string. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_update-workspace` to rename Fabric workspaces and update or clear descriptions without overwriting omitted properties. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added the `core_delete-item` tool with explicit permanent-deletion opt-in, validated workspace and item UUIDs, and minimal deletion confirmation. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_get-operation-state` and `core_get-operation-result` for single-read operation tracking and bounded JSON or empty results, plus optional asynchronous waiting for Create Item with configurable early polling, a 120-second default budget, and a server-enforced 600-second maximum. [[#3892](https://github.com/microsoft/mcp/pull/3892)]
+- Added the read-only `core_get-item` tool to retrieve generic Fabric item metadata by workspace ID and item ID, with input validation and typed output. [[#3701](https://github.com/microsoft/mcp/pull/3701)]
+
 ### Breaking Changes
+
+- Normalized result payloads for the following tools: [[#3165](https://github.com/microsoft/mcp/pull/3165)]
+  - `docs best-practices` now returns the resulting best practices in a `{ bestPractices }` object.
+  - `docs item-definitions` now returns the resulting definition string in a `{ definition }` object.
+  - `docs platform-api-spec` and `docs item-api-spec` now return the produced public API in a `{ publicApi }` object.
+  - `onelake create-or-update-data-access-role` and `onelake get-data-access-role` now return the produced role in a `{ role }` object.
+  - `onelake list-data-access-roles` now returns `{ roles }` instead of `{ value }`.
+  - `onelake get settings` now returns the produced settings in a `{ settings }` object.
+  - `onelake create shortcut` and `onelake get shortcut` now return the produced shortcut in a `{ shortcut }` object.
+  - `onelake list shortcuts` now returns `{ shortcuts }` instead of `{ value }`.
+- Removed the unused `target-table-name` parameter from the `onelake create-shortcut-dataverse` tool. [[#3650](https://github.com/microsoft/mcp/pull/3650)]
 
 ### Bugs Fixed
 
+- `--mode single` no longer spawns child processes for tools managed in the repository. [[#3466](https://github.com/microsoft/mcp/pull/3466)]
+- Single-proxy mode enforces namespace filters for learning and execution. [[#3749](https://github.com/microsoft/mcp/pull/3749)]
+- Create Item now returns an explicit resumable receipt for HTTP 202 instead of an empty item, validates documented synchronous completion metadata, and preserves operation references when waiting or result retrieval cannot finish. [[#3892](https://github.com/microsoft/mcp/pull/3892)]
+- Preserved Create Item and Catalog Search HTTP error statuses while sanitizing public exception details and providing actionable feature-availability and throttling guidance. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Validated Create Item workspace UUIDs while retaining the workspace alias, corrected Catalog Search continuation requests, and clarified tool requirements and limitations. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Fixed duplicate punctuation before troubleshooting guidance in Update Item errors. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Accepted workspace responses without an optional type in Get, List, Create, and Update operations. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Disabled automatic Fabric Core HTTP redirects, preserved confirmed deletions during late cancellation, and clarified upstream deletion rejection messages. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Improved Create Item validation errors to identify missing required options without exposing private input or exception details. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Sanitized shared Fabric Core parser failures, including invalid Boolean values and unknown options, while retaining guidance for known required options. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- The npm wrapper no longer writes its platform package into the calling project's `package.json` and lockfile when it auto-installs a missing platform package. The install now targets a private directory inside the wrapper package, or a per-user cache directory when that is not writable. Later runs reuse that install, and npm output no longer goes to stdout, which carries the MCP protocol stream during server startup. [[#3184](https://github.com/microsoft/mcp/pull/3184)]
+
 ### Other Changes
+
+- Updated Fabric REST API specifications and item definition documentation. [[#3914](https://github.com/microsoft/mcp/pull/3914)]
 
 ## 1.4.0 (2026-08-27)
 

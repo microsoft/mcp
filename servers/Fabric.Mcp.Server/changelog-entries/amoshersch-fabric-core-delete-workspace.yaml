@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added core_delete-workspace to delete one explicitly identified Fabric workspace and the items under it, with required UUID validation, destructive-operation metadata, and a typed deletion acknowledgement."

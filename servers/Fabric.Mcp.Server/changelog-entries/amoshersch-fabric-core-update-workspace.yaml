@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added core_update-workspace to rename Fabric workspaces and update or clear descriptions without overwriting omitted properties."
