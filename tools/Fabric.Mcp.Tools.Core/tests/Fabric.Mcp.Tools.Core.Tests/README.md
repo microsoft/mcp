@@ -7,12 +7,19 @@ Offline tests for the Fabric Core toolset.
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
-- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Cumulative Core discovery/schema/read-only invariants and assignment consent and validation through real registration with substituted HTTP and credentials
+- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Assignment schemas, consent, validation, and read-only rejection through real registration with substituted HTTP and credentials
 - **Commands/CapacityListCommandTests.cs**: Tests for the `list-capacities` contract, metadata, option binding, cancellation, and sanitized failures
 - **Services/FabricCoreServiceCapacityListTests.cs**: Offline HTTP tests for single-page requests, opaque continuation tokens, metadata validation, status/Retry-After handling, disposal, concurrent identities, and existing POST regressions
 - **Models/CapacityListSerializationTests.cs**: Source-generated capacity output and unchanged continuation information
 - **CapacityListToolRegistrationTests.cs**: Registered MCP handler tests with substituted HTTP and credentials, including input/output schemas and structured output modes
 - **Commands/ItemCreateCommandTests.cs**: Tests for the `create-item` command
+- **Services/FabricOperationServiceTests.cs**: Single-read state/result contracts, UUID validation, safe failures, exact URLs, progress/timestamps, JSON-null versus empty results, byte limits, and response/stream disposal
+- **Services/FabricOperationRunnerTests.cs**: Hybrid synchronous 200/201 adapters in both modes, explicit result/no-result contracts, early/strict polling, 429/503 backoff, failed/future states, invalid receipts, and bounded pending outcomes
+- **Services/FabricCoreServiceItemCreateLroTests.cs**: Real service with substituted HTTP/credentials, one POST, 201/202 handling, cancellation/deadlines during headers/body reads, completed operations with results not retrieved, and concurrent per-call identity isolation
+- **FabricOperationMcpTests.cs**: Real registration, command binding, discovery, read-only enforcement, typed schemas, and legacy/compact/duplicated operation/Create Item payloads
+- **Commands/ItemGetCommandTests.cs**: Get Item UUID and required-option validation, sanitized parser/service errors, typed metadata, and cancellation forwarding
+- **Services/FabricCoreServiceItemGetTests.cs**: One normalized authenticated GET, metadata whitelisting, required fields and matching IDs, validated throttling guidance, cancellation/disposal, and per-request credentials
+- **ItemGetToolRegistrationTests.cs**: Get Item discovery and schemas, read-only filtering, legacy/compact/duplicated output, and sanitized failures with substituted HTTP and credentials
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
 - **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
 - **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
@@ -45,16 +52,30 @@ Offline tests for the Fabric Core toolset.
 - **Commands/WorkspaceDeleteCommandTests.cs**: Required UUID validation, destructive metadata, typed deletion acknowledgement, and sanitized failures
 - **Services/FabricCoreServiceWorkspaceDeleteTests.cs**: Substituted HTTP tests for the exact DELETE request, empty 200 response, status and retry guidance, cancellation, disposal, concurrency, and existing create/search regressions
 - **WorkspaceDeleteToolRegistrationTests.cs**: Registered MCP handler tests for consent, read-only discovery/execution restrictions, input/output schemas, and legacy/compact/duplicated output
-- **FabricCoreSetupTests.cs**: Tests for service registration and cumulative command setup
+- **FabricCoreCatalogTests.cs**: Exact Core catalog and read-only membership, singleton command registration, discovery annotations, and schema consistency
+- **FabricCoreSetupTests.cs**: Setup identity and configured HTTP transport, proxy, timeout, and redirect behavior
 - **Services/FabricCoreServiceBaselineTests.cs**: Direct HTTP tests preserving create/search authentication, JSON bodies, responses, error handling, cancellation, and single-request behavior
 - **Services/FabricCoreHttpHelpersTests.cs**: Validated `Retry-After` parsing and continuation-token encoding checked against constructed HTTP request URIs
 - **Models/FabricCapacityMetadataTests.cs**: Source-generated five-field capacity serialization/schema and required metadata validation
+
+## Catalog Expectations
+
+`FabricCoreCatalogTests.ExpectedTools` is the single test-owned catalog manifest. When adding a Core
+tool, add one entry with its MCP name, command type, and read-only eligibility. The expected normal
+and read-only catalogs are derived only from this manifest, never from production registration or
+command metadata. Exact comparisons reject missing, unexpected, duplicate, or misclassified tools;
+focused regression cases verify those failures in both modes.
+
+Keep each tool's registration tests focused on its own options, input/output schemas, annotations,
+operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
+catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
+representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
 
 ## Shared Core Building Blocks
 
 `FabricCoreCommand` replaces raw parser failures with fixed guidance and reports missing options only when their names exactly match registered required options. Get Workspace, List Items, and List Workspaces tests exercise real option binding with private invalid Boolean values and unknown options, verify sanitized public responses, and assert that the service is not called. Create Item and Catalog Search retain their command-specific validation guidance.
 
-`FabricCoreService.SendFabricHttpRequestAsync` performs one authenticated send and returns the response to its caller. The caller owns disposal, status handling, and deserialization. Its default completion option is `ResponseContentRead`; operations that explicitly need headers first can select `ResponseHeadersRead`. Existing create/search operations keep their legacy stream wrapper and error behavior.
+`FabricCoreService.SendFabricHttpRequestAsync` performs one authenticated send and returns the response to its caller. The caller owns disposal, status handling, and deserialization. Its default completion option is `ResponseContentRead`; operations that explicitly need headers first can select `ResponseHeadersRead`. Catalog Search keeps its legacy stream wrapper and error behavior. Create Item uses `ResponseHeadersRead` and the shared LRO dispatcher.
 
 `FabricCoreHttpHelpers.GetRetryAfter` returns a single valid nonnegative delta or HTTP date, or `null` for a missing, malformed, or multiple-valued header. It does not interpret status codes, retry, format messages, or treat backend response text as safe output. Keep tool-specific exception types, integer bounds, date support, and uncertain-mutation outcomes in the owning operation/command.
 
@@ -63,6 +84,30 @@ Offline tests for the Fabric Core toolset.
 `FabricCapacityMetadata` is the shared capacity contract: required `Guid Id` followed by required string `DisplayName`, `Sku`, `Region`, and `State`. `IsValid` rejects null metadata, an empty ID, and blank strings without closing the string values to enums. A get operation must additionally compare the returned ID with its requested ID. Workspace and item response models remain operation-specific.
 
 `TestSupport/FabricCoreHttpMessageHandler` accepts an asynchronous request/cancellation callback and exposes a thread-safe `CallCount`. Reuse it for offline HTTP tests; inspect or capture request details inside the callback rather than introducing per-tool handler copies. Keep specialized content/cancellation doubles and all operation-specific assertions.
+
+## Long-running Operations
+
+`FabricOperationRunner` dispatches endpoint-specific synchronous success or accepted 202 responses. An adapter supplies its documented success codes and a typed result reader; an explicitly absent reader declares a no-result API. Create Item accepts only 201/202, while generic tests cover both 200 and 201, with and without results, in both sync modes. An absent result URL or 404 never selects the no-result contract.
+
+Public operation commands and the poller share the same low-level methods in `FabricCoreService.Operations.cs`. Requests continue through the existing authenticated sender; the poller cannot submit mutations or follow arbitrary URLs. `FabricOperationHttp` bounds JSON reads to 1 MiB and reuses the existing validated Retry-After parser. Each returned JSON element outlives its disposed response/stream.
+
+`OperationTestTimeProvider` and its BCL `ITimer` double advance virtual time deterministically. Tests do not sleep for the 3-second early probe, 20-second fallback, or 120-second default budget. Request budget timers cancel authentication, headers, and body reads; caller cancellation is distinct and retains a known operation reference. Late confirmed completion remains completed even when the result cannot be retrieved before the deadline.
+
+The shared wait options enforce a 600-second server maximum while keeping the 120-second default and positive fractional budgets. Command and service tests reject invalid and over-limit budgets before authentication or POST in both sync modes. Virtual-clock cases verify that waiting for the allowed 600 seconds returns `Pending` with the last-known state and never sends another GET after the deadline; the limit does not cancel Fabric's operation.
+
+All LRO/Create Item coverage is offline. It does not call real Fabric, validate real OBO permissions, deploy resources, run recorded tests, or establish production latency percentiles. Capacity assignment and Catalog Search retain their pre-existing published contracts and operation-specific tests.
+
+## Item Metadata
+
+Get Item reuses `FabricCoreCommand`, the shared authenticated sender with `ResponseHeadersRead`,
+`FabricCoreHttpHelpers.GetRetryAfter`, and `FabricThrottledException`. It returns only the five-field
+metadata contract, requires both returned IDs to match the request, and retains nonempty future item
+types. Optional descriptions may be absent, null, or explicitly empty. It makes no definition/data
+requests, follows no returned URLs, and does not retry. Tests reuse `FabricCoreHttpMessageHandler`
+and an existing stream cancellation double, without introducing another sender, handler, or exception.
+
+All Get Item coverage here is offline. Registered-handler transport configuration does not establish
+live Fabric behavior, real OBO/RBAC authorization, or recorded playback.
 
 ## Item Listing
 
@@ -109,6 +154,12 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run specific test
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemCreateCommandTests"
+
+# Run LRO service, polling, command/schema, and Create Item integration tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricOperation*' '*ItemCreate*'
+
+# Run Get Item command, service, and registered-handler tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemGet*'
 
 # Run only Get Capacity command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*CapacityGetCommandTests"

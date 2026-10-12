@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.ResourceManager;
 using Xunit;
@@ -19,7 +20,7 @@ public class StorageServiceEndpointValidationTests
         var armEnvironment = GetArmEnvironment(cloud);
         var uri = new Uri(endpoint);
 
-        Assert.Same(uri, StorageService.ValidateBlobEndpoint(uri, armEnvironment));
+        Assert.Same(uri, StorageService.ValidateBlobEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), uri));
     }
 
     [Theory]
@@ -31,7 +32,7 @@ public class StorageServiceEndpointValidationTests
     public void ValidateBlobEndpoint_InvalidPublicCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            StorageService.ValidateBlobEndpoint(new Uri(endpoint), ArmEnvironment.AzurePublicCloud));
+            StorageService.ValidateBlobEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), new Uri(endpoint)));
     }
 
     [Theory]
@@ -43,7 +44,7 @@ public class StorageServiceEndpointValidationTests
         var armEnvironment = GetArmEnvironment(cloud);
         var uri = new Uri(endpoint);
 
-        Assert.Same(uri, StorageService.ValidateTableEndpoint(uri, armEnvironment));
+        Assert.Same(uri, StorageService.ValidateTableEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), uri));
     }
 
     [Theory]
@@ -55,7 +56,7 @@ public class StorageServiceEndpointValidationTests
     public void ValidateTableEndpoint_InvalidPublicCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            StorageService.ValidateTableEndpoint(new Uri(endpoint), ArmEnvironment.AzurePublicCloud));
+            StorageService.ValidateTableEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), new Uri(endpoint)));
     }
 
     private static ArmEnvironment GetArmEnvironment(string cloud) => cloud switch

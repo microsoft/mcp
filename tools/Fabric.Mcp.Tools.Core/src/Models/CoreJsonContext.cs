@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Fabric.Mcp.Tools.Core.Models;
@@ -16,6 +17,8 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(CreateItemRequest))]
 [JsonSerializable(typeof(ItemCreateCommandResult))]
 [JsonSerializable(typeof(ItemDeleteCommandResult))]
+[JsonSerializable(typeof(FabricItemMetadata))]
+[JsonSerializable(typeof(ItemGetCommandResult))]
 [JsonSerializable(typeof(FabricItemSensitivityLabel))]
 [JsonSerializable(typeof(FabricItemSummary))]
 [JsonSerializable(typeof(FabricItemTag))]
@@ -46,10 +49,15 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(UpdateItemRequest))]
 [JsonSerializable(typeof(WorkspaceDeleteCommandResult))]
 [JsonSerializable(typeof(WorkspaceAssignToCapacityCommandResult))]
+[JsonSerializable(typeof(FabricOperationError))]
+[JsonSerializable(typeof(FabricOperationIssue))]
+[JsonSerializable(typeof(FabricOperationReceipt))]
+[JsonSerializable(typeof(FabricOperationState))]
+[JsonSerializable(typeof(OperationStateResult))]
+[JsonSerializable(typeof(OperationResult))]
+[JsonSerializable(typeof(JsonElement))]
 public partial class CoreJsonContext : JsonSerializerContext
 {
 }
-
-public sealed record ItemCreateCommandResult(FabricItem Item);
 
 public sealed record CatalogSearchCommandResult(CatalogSearchResponse Results);

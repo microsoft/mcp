@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -17,7 +18,7 @@ public class CommunicationServiceTests
 
     public CommunicationServiceTests()
     {
-        _mockAzureService = Substitute.For<IAzureService>();
+        _mockAzureService = AzureServiceTestHelpers.CreateAzureService();
         _mockLogger = Substitute.For<ILogger<CommunicationService>>();
         _service = new CommunicationService(_mockAzureService, _mockLogger);
     }

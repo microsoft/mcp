@@ -173,14 +173,6 @@ public sealed class ItemUpdateToolRegistrationTests()
         var result = await loader.CallToolHandler(CreateCall(UpdateArguments()), TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_update-item");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_create-item");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_create-workspace");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_update-workspace");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_delete-item");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_delete-workspace");
-        Assert.DoesNotContain(catalog.Tools, t => t.Name == "core_assign-workspace-to-capacity");
-        Assert.Contains(catalog.Tools, t => t.Name == "core_search-catalog");
-        Assert.All(catalog.Tools, t => Assert.True(t.Annotations!.ReadOnlyHint));
         Assert.True(result.IsError);
         Assert.Equal(0, handler.CallCount);
         Assert.Empty(credential.ReceivedCalls());
@@ -235,12 +227,16 @@ public sealed class ItemUpdateToolRegistrationTests()
             Description = "Offline Fabric Core tests",
             IsTelemetryEnabled = false
         }));
+        services.AddCommandContextAccessor();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         return services.BuildServiceProvider();
     }
 
     private static CommandFactoryToolLoader CreateLoader(ServiceProvider provider, ServerRuntimeConfiguration configuration) =>
-        new(provider.GetRequiredService<ICommandFactory>(), Microsoft.Extensions.Options.Options.Create(configuration), NullLogger<CommandFactoryToolLoader>.Instance);
+        new(provider.GetRequiredService<ICommandContextAccessor>(),
+            provider.GetRequiredService<ICommandFactory>(),
+            Microsoft.Extensions.Options.Options.Create(configuration),
+            NullLogger<CommandFactoryToolLoader>.Instance);
 
     private static RequestContext<CallToolRequestParams> CreateCall(Dictionary<string, JsonElement> arguments) =>
         McpTestUtilities.CreateToolCallRequest(

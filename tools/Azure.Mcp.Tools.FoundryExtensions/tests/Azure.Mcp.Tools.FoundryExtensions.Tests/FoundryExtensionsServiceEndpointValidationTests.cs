@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -25,7 +26,7 @@ public class FoundryExtensionsServiceEndpointValidationTests
 
     private static FoundryExtensionsService CreateService(ArmEnvironment armEnvironment)
     {
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
         cloudConfig.ArmEnvironment.Returns(armEnvironment);
         azureService.CloudConfiguration.Returns(cloudConfig);

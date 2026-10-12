@@ -71,17 +71,18 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     [Fact]
     public async Task ExecuteAsync_ReturnsItem_WhenCreationSucceeds()
     {
-        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new FabricItem { Id = "item-id", DisplayName = "Sales", Type = "Lakehouse", WorkspaceId = WorkspaceId });
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>())
+            .Returns(new ItemCreateCommandResult(new FabricItem { Id = "item-id", DisplayName = "Sales", Type = "Lakehouse", WorkspaceId = WorkspaceId }));
 
         var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
 
         var result = ValidateAndDeserializeResponse(response, CoreJsonContext.Default.ItemCreateCommandResult);
+        Assert.NotNull(result.Item);
         Assert.Equal("item-id", result.Item.Id);
         Assert.Equal("Sales", result.Item.DisplayName);
         Assert.Equal("Lakehouse", result.Item.Type);
         Assert.Equal(WorkspaceId, result.Item.WorkspaceId);
-        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -95,7 +96,7 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     [InlineData(HttpStatusCode.ServiceUnavailable, "HTTP 503")]
     public async Task ExecuteAsync_PreservesHttpStatusAndProvidesGuidance(HttpStatusCode status, string guidance)
     {
-        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException(FabricCoreErrorTestData.PrivateDetails, null, status));
 
         var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
@@ -104,13 +105,13 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
         Assert.Contains(guidance, response.Message);
         Assert.DoesNotContain("Service unavailable or network connectivity issues", response.Message);
         FabricCoreErrorTestData.AssertSanitized(response);
-        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_PreservesNetworkFallback_WhenHttpStatusIsMissing()
     {
-        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException(FabricCoreErrorTestData.PrivateDetails));
 
         var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
@@ -119,7 +120,7 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
         Assert.Contains("network connectivity", response.Message);
         Assert.Contains("Check whether the item was created before retrying", response.Message);
         FabricCoreErrorTestData.AssertSanitized(response);
-        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -135,14 +136,14 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     [InlineData("unexpected", HttpStatusCode.InternalServerError)]
     public async Task ExecuteAsync_SanitizesOtherFailuresWithoutChangingStatus(string failure, HttpStatusCode status)
     {
-        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(FabricCoreErrorTestData.CreateException(failure));
 
         var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
 
         Assert.Equal(status, response.Status);
         FabricCoreErrorTestData.AssertSanitized(response);
-        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -199,7 +200,7 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
         {
             missingOptions.AddRange(["--item-type", "--item-type"]);
         }
-        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new CommandValidationException(FabricCoreErrorTestData.PrivateDetails, missingOptions: missingOptions));
 
         var response = await ExecuteCommandAsync("--workspace-id", WorkspaceId, "--display-name", "Sales", "--item-type", "Lakehouse");
@@ -210,7 +211,7 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
             : "Invalid item creation request. Provide a nonempty workspace UUID, display name, and item type; check option names and values.",
             response.Message);
         FabricCoreErrorTestData.AssertSanitized(response);
-        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), TestContext.Current.CancellationToken);
+        await Service.Received(1).CreateItemAsync(WorkspaceId, Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -242,14 +243,14 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     [InlineData("--workspace")]
     public async Task ExecuteAsync_AcceptsWorkspaceUuidAndCompatibilityAlias(string option)
     {
-        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new FabricItem());
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>())
+            .Returns(new ItemCreateCommandResult(new FabricItem()));
 
         var response = await ExecuteCommandAsync(option, WorkspaceId, "--display-name", "Sales", "--item-type", "FutureItemType");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).CreateItemAsync(WorkspaceId,
-            Arg.Is<CreateItemRequest>(request => request.Type == "FutureItemType"), TestContext.Current.CancellationToken);
+            Arg.Is<CreateItemRequest>(request => request.Type == "FutureItemType"), Arg.Any<FabricOperationWaitOptions>(), TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -269,14 +270,14 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     [InlineData(" ", WorkspaceId, WorkspaceId)]
     public async Task ExecuteAsync_PreservesWorkspaceIdPrecedence(string workspaceId, string workspace, string expected)
     {
-        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new FabricItem());
+        Service.CreateItemAsync(Arg.Any<string>(), Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), Arg.Any<CancellationToken>())
+            .Returns(new ItemCreateCommandResult(new FabricItem()));
 
         var response = await ExecuteCommandAsync("--workspace-id", workspaceId, "--workspace", workspace,
             "--display-name", "Sales", "--item-type", "Lakehouse");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).CreateItemAsync(expected, Arg.Any<CreateItemRequest>(), TestContext.Current.CancellationToken);
+        await Service.Received(1).CreateItemAsync(expected, Arg.Any<CreateItemRequest>(), Arg.Any<FabricOperationWaitOptions>(), TestContext.Current.CancellationToken);
     }
 
     [Fact]

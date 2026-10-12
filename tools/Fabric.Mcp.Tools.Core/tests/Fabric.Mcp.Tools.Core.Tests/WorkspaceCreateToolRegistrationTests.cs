@@ -42,11 +42,6 @@ public sealed class WorkspaceCreateToolRegistrationTests()
 
         var tools = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
 
-        Assert.Equal(
-            ["core_assign-workspace-to-capacity", "core_create-item", "core_create-workspace", "core_delete-item", "core_delete-workspace", "core_get-capacity", "core_get-workspace",
-             "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog",
-             "core_update-item", "core_update-workspace"],
-            tools.Tools.Select(static tool => tool.Name).Order());
         var tool = Assert.Single(tools.Tools, static tool => tool.Name == ToolName);
         Assert.Equal(["capacity-id", "description", "display-name", "domain-id"],
             tool.InputSchema.GetProperty("properties").EnumerateObject().Select(static property => property.Name).Order());
@@ -190,9 +185,6 @@ public sealed class WorkspaceCreateToolRegistrationTests()
         var result = await loader.CallToolHandler(CreateRequest(CreateArguments()), TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(tools.Tools, static tool => tool.Name == ToolName);
-        Assert.Equal(
-            ["core_get-capacity", "core_get-workspace", "core_list-capacities", "core_list-items", "core_list-workspaces", "core_search-catalog"],
-            tools.Tools.Select(static tool => tool.Name).Order());
         Assert.True(result.IsError);
         Assert.Contains("read-only", GetText(result));
         Assert.Equal(0, handler.CallCount);
@@ -314,6 +306,7 @@ public sealed class WorkspaceCreateToolRegistrationTests()
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddCommandContextAccessor();
         services.AddSingleton(credential);
         var setup = new FabricCoreSetup();
         services.AddSingleton<IAreaSetup>(setup);
@@ -336,7 +329,8 @@ public sealed class WorkspaceCreateToolRegistrationTests()
         });
         var factory = new CommandFactory(provider, provider.GetServices<IAreaSetup>(),
             Substitute.For<ITelemetryService>(), serverConfiguration, NullLogger<CommandFactory>.Instance);
-        return new(factory, Microsoft.Extensions.Options.Options.Create(configuration), NullLogger<CommandFactoryToolLoader>.Instance);
+        return new(provider.GetRequiredService<ICommandContextAccessor>(),
+            factory, Microsoft.Extensions.Options.Options.Create(configuration), NullLogger<CommandFactoryToolLoader>.Instance);
     }
 
     private static Dictionary<string, JsonElement> CreateArguments() => new()

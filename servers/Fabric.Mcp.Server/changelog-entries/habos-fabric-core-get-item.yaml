@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added the read-only core_get-item tool to retrieve generic Fabric item metadata by workspace ID and item ID, with input validation and typed output.

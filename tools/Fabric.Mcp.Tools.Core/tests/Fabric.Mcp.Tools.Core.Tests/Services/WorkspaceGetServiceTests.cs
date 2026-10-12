@@ -326,11 +326,12 @@ public class WorkspaceGetServiceTests()
     public async Task ExistingOperations_PreserveRequestsAndResponseHandling(bool createItem, bool failure)
     {
         var credential = WorkspaceTestData.CreateCredential();
-        using var response = new HttpResponseMessage(failure ? HttpStatusCode.BadRequest : HttpStatusCode.OK)
-        {
-            Content = new StringContent(failure ? "legacy-service-error" :
-                createItem ? """{"id":"item-id","displayName":"Lakehouse","type":"Lakehouse"}""" : """{"value":[],"continuationToken":"next-page"}""")
-        };
+        using var response = createItem && !failure
+            ? FabricOperationTestData.ItemResponse(WorkspaceTestData.WorkspaceId, "Lakehouse")
+            : new HttpResponseMessage(failure ? HttpStatusCode.BadRequest : HttpStatusCode.OK)
+            {
+                Content = new StringContent(failure ? "legacy-service-error" : """{"value":[],"continuationToken":"next-page"}""")
+            };
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
@@ -348,24 +349,31 @@ public class WorkspaceGetServiceTests()
 
         if (failure)
         {
-            var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+            var exception = await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
             {
                 if (createItem)
                 {
-                    await service.CreateItemAsync(WorkspaceTestData.WorkspaceId, new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
+                    await service.CreateItemAsync(WorkspaceTestData.WorkspaceId, new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
                 }
                 else
                 {
                     await service.SearchCatalogAsync(new() { Search = "Finance" }, TestContext.Current.CancellationToken);
                 }
             });
-            Assert.Contains("legacy-service-error", exception.Message);
+            if (createItem)
+            {
+                Assert.DoesNotContain("legacy-service-error", exception.Message);
+            }
+            else
+            {
+                Assert.Contains("legacy-service-error", exception.Message);
+            }
             Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         }
         else if (createItem)
         {
-            var item = await service.CreateItemAsync(WorkspaceTestData.WorkspaceId, new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
-            Assert.Equal("item-id", item.Id);
+            var item = await service.CreateItemAsync(WorkspaceTestData.WorkspaceId, new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
         }
         else
         {

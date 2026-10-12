@@ -32,9 +32,8 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
-        Uri serviceEndpoint = SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(
-            endpoint,
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri serviceEndpoint = SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(AzureService,
+            endpoint);
 
         if (string.IsNullOrEmpty(language) || !LocaleSupport.IsSupportedInRealtimeTranscription(language))
         {

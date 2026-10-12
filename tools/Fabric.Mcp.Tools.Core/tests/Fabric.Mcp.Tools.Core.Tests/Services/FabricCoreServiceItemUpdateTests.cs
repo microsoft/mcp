@@ -376,7 +376,7 @@ public sealed class FabricCoreServiceItemUpdateTests()
     public static async Task ExistingPostOperations_PreserveRequestsAndResults(bool create)
     {
         using var response = create
-            ? ItemUpdateTestData.Response()
+            ? FabricOperationTestData.ItemResponse(ItemUpdateTestData.WorkspaceId, "Existing behavior")
             : ItemUpdateTestData.Response(json: """{"value":[],"continuationToken":"next"}""");
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
@@ -396,8 +396,8 @@ public sealed class FabricCoreServiceItemUpdateTests()
             var result = await service.CreateItemAsync(
                 ItemUpdateTestData.WorkspaceId,
                 new() { DisplayName = "Existing behavior", Type = "Lakehouse" },
-                TestContext.Current.CancellationToken);
-            Assert.Equal(ItemUpdateTestData.ItemId, result.Id);
+                cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(FabricOperationTestData.ItemId, result.Item?.Id);
         }
         else
         {
@@ -418,11 +418,11 @@ public sealed class FabricCoreServiceItemUpdateTests()
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, ItemUpdateTestData.Credential());
 
-        var error = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        var error = await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
         {
             if (create)
             {
-                await service.CreateItemAsync(ItemUpdateTestData.WorkspaceId, new(), TestContext.Current.CancellationToken);
+                await service.CreateItemAsync(ItemUpdateTestData.WorkspaceId, new(), cancellationToken: TestContext.Current.CancellationToken);
             }
             else
             {
@@ -430,7 +430,14 @@ public sealed class FabricCoreServiceItemUpdateTests()
             }
         });
 
-        Assert.Contains("existing error", error.Message);
+        if (create)
+        {
+            Assert.DoesNotContain("existing error", error.Message);
+        }
+        else
+        {
+            Assert.Contains("existing error", error.Message);
+        }
         Assert.Equal(HttpStatusCode.BadRequest, error.StatusCode);
         Assert.Equal(1, handler.CallCount);
     }

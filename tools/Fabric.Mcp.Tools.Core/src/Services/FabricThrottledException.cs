@@ -9,6 +9,8 @@ namespace Fabric.Mcp.Tools.Core.Services;
 internal sealed class FabricThrottledException(RetryConditionHeaderValue retryAfter)
     : HttpRequestException(CreateMessage(retryAfter), null, HttpStatusCode.TooManyRequests)
 {
+    internal RetryConditionHeaderValue RetryAfter { get; } = retryAfter;
+
     private static string CreateMessage(RetryConditionHeaderValue retryAfter) =>
         retryAfter.Delta is { } delay
             ? FormattableString.Invariant($"Fabric throttled the request. Wait at least {delay.TotalSeconds:0} seconds before retrying")
