@@ -36,15 +36,11 @@
 ### Fixed
 
 - `--mode single` no longer spawns child processes for tools managed in the repository. [[#3466](https://github.com/microsoft/mcp/pull/3466)]
-- Single-proxy mode enforces namespace filters for learning and execution. [[#3749](https://github.com/microsoft/mcp/pull/3749)]
-- Create Item now returns an explicit resumable receipt for HTTP 202 instead of an empty item, validates documented synchronous completion metadata, and preserves operation references when waiting or result retrieval cannot finish. [[#3892](https://github.com/microsoft/mcp/pull/3892)]
-- Preserved Create Item and Catalog Search HTTP error statuses while sanitizing public exception details and providing actionable feature-availability and throttling guidance. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
-- Validated Create Item workspace UUIDs while retaining the workspace alias, corrected Catalog Search continuation requests, and clarified tool requirements and limitations. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
-- Fixed duplicate punctuation before troubleshooting guidance in Update Item errors. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
-- Accepted workspace responses without an optional type in Get, List, Create, and Update operations. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
-- Disabled automatic Fabric Core HTTP redirects, preserved confirmed deletions during late cancellation, and clarified upstream deletion rejection messages. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
-- Improved Create Item validation errors to identify missing required options without exposing private input or exception details. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
-- Sanitized shared Fabric Core parser failures, including invalid Boolean values and unknown options, while retaining guidance for known required options. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Fixed the VS Code extension namespace selector to offer `core`, `docs`, `onelake`, and `datafactory` instead of the obsolete `publicapis` option. [[#3916](https://github.com/microsoft/mcp/pull/3916)]
+- Create Item now returns a resumable operation receipt for HTTP 202 responses instead of treating an accepted operation as a completed item. [[#3892](https://github.com/microsoft/mcp/pull/3892)]
+- Preserved HTTP error statuses and sanitized public errors for Create Item and Catalog Search, including invalid or missing options, with actionable feature-availability and throttling guidance. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Validated Create Item workspace UUIDs while retaining the workspace alias, and corrected Catalog Search continuation handling so continuation tokens are not combined with search or filter values. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Disabled automatic HTTP redirects for Create Item and Catalog Search. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
 - The npm wrapper no longer writes its platform package into the calling project's `package.json` and lockfile when it auto-installs a missing platform package. The install now targets a private directory inside the wrapper package, or a per-user cache directory when that is not writable. Later runs reuse that install, and npm output no longer goes to stdout, which carries the MCP protocol stream during server startup. [[#3184](https://github.com/microsoft/mcp/pull/3184)]
 
 ## 1.4.0 (2026-08-27) (pre-release)
