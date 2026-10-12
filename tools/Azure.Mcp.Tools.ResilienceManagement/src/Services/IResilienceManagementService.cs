@@ -15,6 +15,12 @@ public interface IResilienceManagementService
 
     Task<bool> DeleteGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
 
+    Task<GoalAssignmentOperationResult> RecommendGoalAssignmentCapacityAsync(string serviceGroup, string goalAssignment, IReadOnlyList<string>? resourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<GoalAssignmentOperationResult> RefreshGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<GoalAssignmentOperationResult> UpdateGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string resources, string? tenant = null, CancellationToken cancellationToken = default);
+
     Task<IEnumerable<ResourceSummary>> ListUsagePlansAsync(string resourceGroup, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<UsagePlanInfo> GetUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, CancellationToken cancellationToken = default);

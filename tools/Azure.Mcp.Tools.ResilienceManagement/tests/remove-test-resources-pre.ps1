@@ -116,6 +116,8 @@ $planLifecycleEnrollmentName = Get-OutputValue -Name 'planLifecycleEnrollmentNam
 $workflowEnrollmentName = Get-OutputValue -Name 'workflowEnrollmentName'
 $goalAssignmentName = Get-OutputValue -Name 'goalAssignmentName'
 $goalTemplateName = Get-OutputValue -Name 'goalTemplateName'
+$goalResourceAssignmentName = Get-OutputValue -Name 'goalResourceAssignmentName'
+$goalResourceTemplateName = Get-OutputValue -Name 'goalResourceTemplateName'
 $drillName = Get-OutputValue -Name 'drillName'
 
 $requiredOutputs = @{
@@ -152,7 +154,13 @@ if (![string]::IsNullOrWhiteSpace($workflowServiceGroupName)) {
     Remove-RecoveryPlans -ServiceGroupId $workflowServiceGroupId
 }
 Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $resilienceApiVersion
+if (![string]::IsNullOrWhiteSpace($goalResourceAssignmentName)) {
+    Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalResourceAssignmentName" -ApiVersion $resilienceApiVersion
+}
 Remove-Resource -ResourceId "$resilienceBase/goalTemplates/$goalTemplateName" -ApiVersion $resilienceApiVersion
+if (![string]::IsNullOrWhiteSpace($goalResourceTemplateName)) {
+    Remove-Resource -ResourceId "$resilienceBase/goalTemplates/$goalResourceTemplateName" -ApiVersion $resilienceApiVersion
+}
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$enrollmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleEnrollmentName" -ApiVersion $resilienceApiVersion
 if (![string]::IsNullOrWhiteSpace($planLifecycleEnrollmentName)) {
