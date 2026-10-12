@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.InfraIq.Services;
 internal interface IInfraIqArmClient
 {
     /// <summary>
-    /// Calls the Private.InfraIQ recommendVmSku action for a canonical subscription ID and normalized location.
+    /// Calls the Microsoft.AIInfraOptimization recommendVmSku action for a canonical subscription ID and normalized location.
     /// </summary>
     Task<VmSkuRecommendResult> RecommendVmSkuAsync(
         string subscriptionId,

@@ -10,8 +10,9 @@ namespace Azure.Mcp.Tools.InfraIq.Configuration;
 public sealed class InfraIqOptions
 {
     /// <summary>
-    /// Gets or sets the ARM/RPaaS ingress origin used for Private.InfraIQ calls (<c>InfraIq:ArmIngressOrigin</c>).
-    /// Defaults to the approved development origin when the configuration value is absent or blank.
+    /// Gets or sets the ARM ingress origin used for Microsoft.AIInfraOptimization calls (<c>InfraIq:ArmIngressOrigin</c>).
+    /// When absent or blank, calls go to global ARM and fall back to the Canary endpoint while the action is unavailable
+    /// there. An approved value pins calls to that origin with no fallback.
     /// </summary>
     public string? ArmIngressOrigin { get; set; }
 }

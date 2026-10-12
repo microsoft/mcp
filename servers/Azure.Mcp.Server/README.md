@@ -1176,6 +1176,20 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Get provisioning recommendations for my file share workload"
 * "Get usage data and metrics for my file share"
 
+### 🧮 Azure InfraIQ
+
+Azure InfraIQ VM SKU recommendation is an infrastructure planning capability for Linux AI inference workloads. It converts model, workload, region, deployment, and optimization inputs into an ordered portfolio of Azure GPU VM options. Each option includes advisory readiness, estimated nodes and accelerators, and hourly cost. Callers can also request subscription quota, placement, and subscription-specific pricing evidence, which requires the Contributor role on the subscription. The tool is advisory: it does not deploy resources, reserve capacity, configure an inference runtime, or guarantee throughput, latency, or availability.
+
+* "Recommend Azure GPU VM options in East US for serving meta-llama/Llama-3.1-70B-Instruct at FP16 with one concurrent request per replica. Rank by cost."
+* "Recommend a VM topology in West Europe for a 70 billion parameter FP16 model with 80 layers, 8 KV heads, and head dimension 128."
+* "For mistralai/Mistral-7B-Instruct-v0.3 in West Europe, rank suitable GPU VM options by lowest deployment cost."
+* "For meta-llama/Llama-3.1-70B-Instruct at FP16 in East US, prioritize latency when ranking the VM topology options."
+* "Compare only Standard_NC24ads_A100_v4 and Standard_ND96isr_H100_v5 for serving meta-llama/Llama-3.1-8B-Instruct at FP16 in East US."
+* "Using subscription 'my-subscription', recommend VM options for meta-llama/Llama-3.1-70B-Instruct in East US and include current quota evidence."
+* "Using subscription 'my-subscription', recommend VM options for meta-llama/Llama-3.1-70B-Instruct in East US and include both quota and placement evidence."
+* "Using subscription 'my-subscription', recommend the lowest-cost VM options for microsoft/Phi-3-mini-4k-instruct in West US 2 and include subscription-specific pricing."
+* "Recommend Spot VM options in East US for meta-llama/Llama-3.1-8B-Instruct at FP16."
+
 ### 💡 Azure Insights
 
 * "Generate insights from my current subscription"
@@ -1444,6 +1458,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
+- 🧮 **Azure InfraIQ** - GPU VM SKU and topology recommendations for AI inference workloads
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
 - 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
 - 🏭 **Azure IoT Operations** - IoT Operations instance discovery and details

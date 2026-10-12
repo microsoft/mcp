@@ -49,36 +49,34 @@ public class InfraIqSetupOptionsTests
             validator => validator is InfraIqOptionsValidator);
     }
 
-    [Fact]
-    public void StartupValidation_Succeeds_ForApprovedLocalOrigin()
+    [Theory]
+    [InlineData("https://management.azure.com")]
+    [InlineData("https://eastus2euap.management.azure.com")]
+    public void StartupValidation_Succeeds_ForApprovedOrigin(string origin)
     {
-        using var provider = BuildProvider("https://eastus2euap.management.azure.com");
+        using var provider = BuildProvider(origin);
 
         provider.GetRequiredService<IStartupValidator>().Validate();
     }
 
     [Fact]
-    public void StartupValidation_Succeeds_WhenOriginMissing_AndDefaultsToApprovedOrigin()
+    public void StartupValidation_Succeeds_WhenOriginMissing_AndSelectsAutomaticRouting()
     {
         using var provider = BuildProvider(null);
 
         provider.GetRequiredService<IStartupValidator>().Validate();
-        Assert.Equal(
-            InfraIqArmIngress.DevelopmentOrigin,
-            provider.GetRequiredService<IOptions<InfraIqOptions>>().Value.ArmIngressOrigin);
+        Assert.Null(provider.GetRequiredService<IOptions<InfraIqOptions>>().Value.ArmIngressOrigin);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void ConfigureServices_DefaultsBlankOriginToApprovedOrigin(string blank)
+    public void ConfigureServices_MapsBlankOriginToAutomaticRouting(string blank)
     {
         using var provider = BuildProvider(blank);
 
         provider.GetRequiredService<IStartupValidator>().Validate();
-        Assert.Equal(
-            "https://eastus2euap.management.azure.com",
-            provider.GetRequiredService<IOptions<InfraIqOptions>>().Value.ArmIngressOrigin);
+        Assert.Null(provider.GetRequiredService<IOptions<InfraIqOptions>>().Value.ArmIngressOrigin);
     }
 
     [Fact]

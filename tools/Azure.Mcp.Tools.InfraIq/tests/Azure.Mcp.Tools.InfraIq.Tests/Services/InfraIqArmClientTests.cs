@@ -108,6 +108,13 @@ public class InfraIqArmClientTests
 
     private readonly IAzureService _azureService = Substitute.For<IAzureService>();
     private readonly FakeTokenCredential _credential = new();
+    private readonly ManualTimeProvider _timeProvider = new();
+    private readonly InfraIqIngressFallbackCache _fallbackCache;
+
+    public InfraIqArmClientTests()
+    {
+        _fallbackCache = new(_timeProvider);
+    }
 
     private static InfraIqRecommendVmSkuRequestBody Body => new()
     {
@@ -130,7 +137,10 @@ public class InfraIqArmClientTests
         _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(_credential);
         _azureService.GetClient(Arg.Any<string?>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
 
-        return new InfraIqArmClient(_azureService, Microsoft.Extensions.Options.Options.Create(new InfraIqOptions { ArmIngressOrigin = origin }));
+        return new InfraIqArmClient(
+            _azureService,
+            Microsoft.Extensions.Options.Options.Create(new InfraIqOptions { ArmIngressOrigin = origin }),
+            _fallbackCache);
     }
 
     private static Task<Models.VmSku.VmSkuRecommendResult> CallAsync(InfraIqArmClient client, CancellationToken cancellationToken = default) =>
@@ -147,7 +157,7 @@ public class InfraIqArmClientTests
         var request = Assert.Single(handler.Requests);
         Assert.Equal(HttpMethod.Post, request.Method);
         Assert.Equal(
-            $"{ApprovedOrigin}/subscriptions/{SubscriptionId}/providers/Private.InfraIQ/locations/eastus2euap/recommendVmSku?api-version=2026-06-01-preview",
+            $"{ApprovedOrigin}/subscriptions/{SubscriptionId}/providers/Microsoft.AIInfraOptimization/locations/eastus2euap/recommendVmSku?api-version=2026-06-01-preview",
             request.Uri!.AbsoluteUri);
         Assert.Equal("Bearer", request.AuthorizationScheme);
         Assert.Equal("test-token", request.AuthorizationParameter);
@@ -333,13 +343,12 @@ public class InfraIqArmClientTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
     [InlineData("http://eastus2euap.management.azure.com")]
     [InlineData("https://evil.example.com")]
     [InlineData("https://eastus2euap.management.azure.com:8443")]
     [InlineData("https://eastus2euap.management.azure.com@evil.example.com")]
     [InlineData("https://eastus2euap.management.azure.com/path")]
+    [InlineData("https://centraluseuap.management.azure.com")]
     public async Task RecommendVmSkuAsync_RejectsUnapprovedOriginBeforeTokenOrTransport(string? origin)
     {
         var handler = RecordingHttpMessageHandler.Json(MinimalPayload);
@@ -458,14 +467,159 @@ public class InfraIqArmClientTests
         Assert.Equal(0, _credential.CallCount);
     }
 
-    [Fact]
-    public void CreateAndValidateRequestUri_BuildsExactEscapedDestination()
+    [Theory]
+    [InlineData("https://management.azure.com")]
+    [InlineData("https://eastus2euap.management.azure.com")]
+    public void CreateAndValidateRequestUri_BuildsExactEscapedDestination(string origin)
     {
-        var uri = InfraIqArmClient.CreateAndValidateRequestUri(ApprovedOrigin + "/", SubscriptionId.ToUpperInvariant(), "eastus2euap");
+        var uri = InfraIqArmClient.CreateAndValidateRequestUri(origin + "/", SubscriptionId.ToUpperInvariant(), "eastus2euap");
 
         Assert.Equal(
-            $"{ApprovedOrigin}/subscriptions/{SubscriptionId}/providers/Private.InfraIQ/locations/eastus2euap/recommendVmSku?api-version=2026-06-01-preview",
+            $"{origin}/subscriptions/{SubscriptionId}/providers/Microsoft.AIInfraOptimization/locations/eastus2euap/recommendVmSku?api-version=2026-06-01-preview",
             uri.AbsoluteUri);
+    }
+
+    private const string GlobalOrigin = "https://management.azure.com";
+
+    private static RecordingHttpMessageHandler Sequence(params (HttpStatusCode Status, string Body)[] responses)
+    {
+        var queue = new Queue<(HttpStatusCode Status, string Body)>(responses);
+        return new(() =>
+        {
+            var (status, body) = queue.Dequeue();
+            return new HttpResponseMessage(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+        });
+    }
+
+    private static string ArmError(string code) => $$"""{ "error": { "code": "{{code}}", "message": "raw" } }""";
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_CallsGlobalArmOnlyWhenItSucceeds(string? origin)
+    {
+        var handler = Sequence((HttpStatusCode.OK, MinimalPayload));
+        var client = CreateClient(handler, origin);
+
+        await CallAsync(client, TestContext.Current.CancellationToken);
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal("management.azure.com", request.Uri!.Host);
+        Assert.Equal(1, _credential.CallCount);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest, "NoResourceTypeEndpointAvailable")]
+    [InlineData(HttpStatusCode.BadRequest, "InvalidResourceType")]
+    [InlineData(HttpStatusCode.NotFound, "InvalidResourceType")]
+    [InlineData(HttpStatusCode.BadRequest, "NoRegisteredProviderFound")]
+    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_FallsBackToCanaryWhenGlobalEndpointUnavailable(
+        HttpStatusCode status,
+        string code)
+    {
+        var handler = Sequence((status, ArmError(code)), (HttpStatusCode.OK, MinimalPayload));
+        var client = CreateClient(handler, origin: null);
+
+        var result = await CallAsync(client, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(result.Response);
+        Assert.Equal(2, handler.CallCount);
+        Assert.Equal("management.azure.com", handler.Requests[0].Uri!.Host);
+        Assert.Equal("eastus2euap.management.azure.com", handler.Requests[1].Uri!.Host);
+        Assert.Equal(handler.Requests[0].Uri!.PathAndQuery, handler.Requests[1].Uri!.PathAndQuery);
+        Assert.Equal(handler.Requests[0].Body, handler.Requests[1].Body);
+        Assert.Equal("test-token", handler.Requests[1].AuthorizationParameter);
+        Assert.NotEqual(
+            handler.Requests[0].Headers["x-ms-client-request-id"],
+            handler.Requests[1].Headers["x-ms-client-request-id"]);
+        Assert.Equal(1, _credential.CallCount);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest, "InvalidArgument")]
+    [InlineData(HttpStatusCode.BadRequest, "MissingSubscriptionRegistration")]
+    [InlineData(HttpStatusCode.Unauthorized, "InvalidAuthenticationToken")]
+    [InlineData(HttpStatusCode.Forbidden, "AuthorizationFailed")]
+    [InlineData(HttpStatusCode.NotFound, "SubscriptionNotFound")]
+    [InlineData(HttpStatusCode.Conflict, "NoResourceTypeEndpointAvailable")]
+    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_DoesNotFallBackForOtherErrors(HttpStatusCode status, string code)
+    {
+        var handler = Sequence((status, ArmError(code)), (HttpStatusCode.OK, MinimalPayload));
+        var client = CreateClient(handler, origin: null);
+
+        var exception = await Assert.ThrowsAsync<InfraIqArmException>(() => CallAsync(client, TestContext.Current.CancellationToken));
+
+        Assert.Equal((int)status, exception.Status);
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal("management.azure.com", request.Uri!.Host);
+    }
+
+    [Fact]
+    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_ReturnsSanitizedCanaryErrorWhenFallbackFails()
+    {
+        var handler = Sequence(
+            (HttpStatusCode.BadRequest, ArmError("NoResourceTypeEndpointAvailable")),
+            (HttpStatusCode.Forbidden, ArmError("AuthorizationFailed")));
+        var client = CreateClient(handler, origin: null);
+
+        var exception = await Assert.ThrowsAsync<InfraIqArmException>(() => CallAsync(client, TestContext.Current.CancellationToken));
+
+        Assert.Equal(403, exception.Status);
+        Assert.Equal("AuthorizationFailed", exception.Code);
+        Assert.DoesNotContain("raw", exception.Message);
+        Assert.Equal(2, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task RecommendVmSkuAsync_ConfiguredGlobalOrigin_NeverFallsBack()
+    {
+        var handler = Sequence(
+            (HttpStatusCode.BadRequest, ArmError("NoResourceTypeEndpointAvailable")),
+            (HttpStatusCode.OK, MinimalPayload));
+        var client = CreateClient(handler, GlobalOrigin);
+
+        var exception = await Assert.ThrowsAsync<InfraIqArmException>(() => CallAsync(client, TestContext.Current.CancellationToken));
+
+        Assert.Equal("NoResourceTypeEndpointAvailable", exception.Code);
+        Assert.Equal("management.azure.com", Assert.Single(handler.Requests).Uri!.Host);
+    }
+
+    [Fact]
+    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_RemembersUnavailableGlobalRouteUntilExpiry()
+    {
+        var handler = Sequence(
+            (HttpStatusCode.BadRequest, ArmError("NoResourceTypeEndpointAvailable")),
+            (HttpStatusCode.OK, MinimalPayload),
+            (HttpStatusCode.OK, MinimalPayload),
+            (HttpStatusCode.OK, MinimalPayload));
+        var client = CreateClient(handler, origin: null);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await CallAsync(client, cancellationToken);
+        await CallAsync(client, cancellationToken);
+        Assert.Equal("eastus2euap.management.azure.com", handler.Requests[2].Uri!.Host);
+
+        await client.RecommendVmSkuAsync(SubscriptionId, "westeurope", Body, tenant: null, cancellationToken);
+        Assert.Equal("management.azure.com", handler.Requests[3].Uri!.Host);
+
+        _timeProvider.Advance(InfraIqIngressFallbackCache.EntryLifetime);
+        var recovered = Sequence((HttpStatusCode.OK, MinimalPayload));
+        var recoveredClient = CreateClient(recovered, origin: null);
+        await CallAsync(recoveredClient, cancellationToken);
+        Assert.Equal("management.azure.com", Assert.Single(recovered.Requests).Uri!.Host);
+    }
+
+    [Fact]
+    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_RejectsSovereignCloudBeforeTokenOrTransport()
+    {
+        var handler = Sequence((HttpStatusCode.OK, MinimalPayload));
+        var client = CreateClient(handler, origin: null, ArmEnvironment.AzureChina);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => CallAsync(client, TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, _credential.CallCount);
+        Assert.Equal(0, handler.CallCount);
     }
 
     [Fact]

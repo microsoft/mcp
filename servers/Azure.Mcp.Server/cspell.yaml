@@ -58,11 +58,13 @@ words:
   - httproute
   - hyperparameters
   - imageanalysis
+  - infraiq
   - inspektor
   - irql
   - kubernetesconfiguration
   - managedcluster
   - managedinstances
+  - mistralai
   - mypass
   - mysvc
   - myuser
@@ -102,5 +104,6 @@ words:
   - toolsets
   - toplist
   - virtualmachinescalesets
+  - vmsku
   - webjobs
   - wellarchitectedframework

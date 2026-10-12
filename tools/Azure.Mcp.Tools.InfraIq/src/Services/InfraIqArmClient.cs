@@ -20,14 +20,18 @@ using Microsoft.Extensions.Options;
 namespace Azure.Mcp.Tools.InfraIq.Services;
 
 /// <summary>
-/// Raw ARM client for the single Private.InfraIQ recommendVmSku action. The completed destination is validated
+/// Raw ARM client for the single Microsoft.AIInfraOptimization recommendVmSku action. The completed destination is validated
 /// before any token is requested, and the caller's ARM credential is the only credential used.
 /// </summary>
-internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<InfraIqOptions> options)
+internal sealed class InfraIqArmClient(
+    IAzureService azureService,
+    IOptions<InfraIqOptions> options,
+    InfraIqIngressFallbackCache fallbackCache)
     : BaseAzureService(azureService), IInfraIqArmClient
 {
     public const string HttpClientName = "InfraIqArm";
     public const string ApiVersion = "2026-06-01-preview";
+    public const string ProviderNamespace = "Microsoft.AIInfraOptimization";
     public const string UnsupportedCloudMessage =
         "InfraIQ is only available in the Azure public cloud. Configure the Azure MCP Server for the public cloud to use this tool.";
 
@@ -39,7 +43,15 @@ internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<Infr
     private const int MaxErrorBodyBytes = 1024 * 1024;
     private const int MaxRetryAfterDigits = 10;
 
+    private static readonly string[] EndpointUnavailableCodes =
+    [
+        "NoResourceTypeEndpointAvailable",
+        "InvalidResourceType",
+        "NoRegisteredProviderFound",
+    ];
+
     private readonly IOptions<InfraIqOptions> _options = options;
+    private readonly InfraIqIngressFallbackCache _fallbackCache = fallbackCache;
 
     public async Task<VmSkuRecommendResult> RecommendVmSkuAsync(
         string subscriptionId,
@@ -51,7 +63,17 @@ internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<Infr
         ArgumentNullException.ThrowIfNull(body);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var requestUri = CreateAndValidateRequestUri(_options.Value.ArmIngressOrigin, subscriptionId, location);
+        // With no configured origin, global ARM is primary and Canary is the fallback. Both completed destinations
+        // are validated before any token is requested.
+        var configuredOrigin = _options.Value.ArmIngressOrigin;
+        var useFallback = string.IsNullOrWhiteSpace(configuredOrigin);
+        var primaryUri = CreateAndValidateRequestUri(
+            useFallback ? InfraIqArmIngress.DefaultOrigin : configuredOrigin,
+            subscriptionId,
+            location);
+        var fallbackUri = useFallback
+            ? CreateAndValidateRequestUri(InfraIqArmIngress.CanaryOrigin, subscriptionId, location)
+            : null;
         EnsurePublicCloud(AzureService.CloudConfiguration.ArmEnvironment);
 
         var accessToken = await GetArmAccessTokenAsync(tenant, cancellationToken);
@@ -61,7 +83,46 @@ internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<Infr
         var clientOptions = AddDefaultPolicies(new InfraIqArmClientOptions());
         clientOptions.Transport = new HttpClientTransport(httpClient);
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
+        var content = JsonSerializer.SerializeToUtf8Bytes(body, InfraIqJsonContext.Default.InfraIqRecommendVmSkuRequestBody);
 
+        if (fallbackUri is null)
+        {
+            return await SendAsync(pipeline, primaryUri, accessToken, content, cancellationToken);
+        }
+
+        var routeKey = primaryUri.AbsolutePath;
+        if (_fallbackCache.IsPrimaryUnavailable(routeKey))
+        {
+            return await SendAsync(pipeline, fallbackUri, accessToken, content, cancellationToken);
+        }
+
+        try
+        {
+            return await SendAsync(pipeline, primaryUri, accessToken, content, cancellationToken);
+        }
+        catch (InfraIqArmException ex) when (IsEndpointUnavailable(ex))
+        {
+            _fallbackCache.MarkPrimaryUnavailable(routeKey);
+            return await SendAsync(pipeline, fallbackUri, accessToken, content, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Returns whether ARM rejected the call because no endpoint serves the action on that ARM host. Only these
+    /// routing errors trigger the Canary fallback; validation, auth, throttling, and server errors never do.
+    /// </summary>
+    internal static bool IsEndpointUnavailable(InfraIqArmException exception) =>
+        exception.Status is 400 or 404
+        && exception.Code is not null
+        && EndpointUnavailableCodes.Contains(exception.Code, StringComparer.OrdinalIgnoreCase);
+
+    private static async Task<VmSkuRecommendResult> SendAsync(
+        HttpPipeline pipeline,
+        Uri requestUri,
+        AccessToken accessToken,
+        byte[] content,
+        CancellationToken cancellationToken)
+    {
         var clientRequestId = Guid.NewGuid().ToString();
         using var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Post;
@@ -71,9 +132,7 @@ internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<Infr
         request.Headers.SetValue("Authorization", $"Bearer {accessToken.Token}");
         request.Headers.SetValue("Accept", "application/json");
         request.Headers.SetValue("Content-Type", "application/json");
-        request.Content = RequestContent.Create(JsonSerializer.SerializeToUtf8Bytes(
-            body,
-            InfraIqJsonContext.Default.InfraIqRecommendVmSkuRequestBody));
+        request.Content = RequestContent.Create(content);
 
         using var response = await pipeline.SendRequestAsync(request, cancellationToken);
 
@@ -109,6 +168,7 @@ internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<Infr
 
         // Validate the completed destination before a token can be requested or attached.
         if (!InfraIqArmIngress.IsApprovedAuthority(requestUri)
+            || !string.Equals(requestUri.Host, originUri.Host, StringComparison.OrdinalIgnoreCase)
             || requestUri.Fragment.Length > 0
             || requestUri.Query != $"?api-version={ApiVersion}"
             || requestUri.AbsolutePath != expectedPath)
@@ -120,7 +180,7 @@ internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<Infr
     }
 
     /// <summary>
-    /// The fixed ingress is the public-cloud canary, so the active cloud must be Azure public cloud before the
+    /// Every approved ingress is an Azure public-cloud ARM endpoint, so the active cloud must be Azure public cloud before the
     /// cloud-specific ARM token scope is requested. Every other cloud fails closed with a static message.
     /// </summary>
     internal static void EnsurePublicCloud(ArmEnvironment armEnvironment)
@@ -155,7 +215,7 @@ internal sealed class InfraIqArmClient(IAzureService azureService, IOptions<Infr
     }
 
     private static string BuildPath(string subscriptionId, string location) =>
-        $"/subscriptions/{Uri.EscapeDataString(subscriptionId)}/providers/Private.InfraIQ/locations/{Uri.EscapeDataString(location)}/recommendVmSku";
+        $"/subscriptions/{Uri.EscapeDataString(subscriptionId)}/providers/{ProviderNamespace}/locations/{Uri.EscapeDataString(location)}/recommendVmSku";
 
     private static bool IsSafeRouteSegment(string value)
     {

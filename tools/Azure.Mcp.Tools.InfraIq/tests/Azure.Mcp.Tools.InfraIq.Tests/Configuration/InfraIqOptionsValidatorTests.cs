@@ -18,6 +18,8 @@ public class InfraIqOptionsValidatorTests
     [InlineData("https://eastus2euap.management.azure.com")]
     [InlineData("https://eastus2euap.management.azure.com/")]
     [InlineData("HTTPS://EastUS2EUAP.Management.Azure.com")]
+    [InlineData("https://management.azure.com")]
+    [InlineData("https://Management.Azure.com/")]
     public void Validate_Succeeds_ForUnsetOrApprovedOrigin(string? origin)
     {
         var result = _validator.Validate(null, new InfraIqOptions { ArmIngressOrigin = origin });
@@ -34,7 +36,14 @@ public class InfraIqOptionsValidatorTests
     [InlineData("https://eastus2euap.management.azure.com/?x=1")]
     [InlineData("https://eastus2euap.management.azure.com?x=1")]
     [InlineData("https://eastus2euap.management.azure.com/#fragment")]
-    [InlineData("https://management.azure.com")]
+    [InlineData("http://management.azure.com")]
+    [InlineData("https://management.azure.com/subscriptions")]
+    [InlineData("https://management.azure.com:8443")]
+    [InlineData("https://management.azure.com@evil.example.com")]
+    [InlineData("https://management.azure.com.evil.example.com")]
+    [InlineData("https://centraluseuap.management.azure.com")]
+    [InlineData("https://management.chinacloudapi.cn")]
+    [InlineData("https://management.usgovcloudapi.net")]
     [InlineData("https://eastus2euap.management.azure.com.evil.example.com")]
     [InlineData("https://evil.example.com")]
     [InlineData("https://eastus2euap.management.azure.com:8443")]
@@ -54,32 +63,34 @@ public class InfraIqOptionsValidatorTests
         Assert.DoesNotContain("evil", result.FailureMessage);
     }
 
-    [Fact]
-    public void TryParseOrigin_ReturnsCanonicalOrigin_ForApprovedValue()
+    [Theory]
+    [InlineData("https://EastUS2EUAP.management.azure.com/", InfraIqArmIngress.CanaryOrigin)]
+    [InlineData("https://Management.Azure.com", InfraIqArmIngress.DefaultOrigin)]
+    public void TryParseOrigin_ReturnsCanonicalOrigin_ForApprovedValue(string configured, string expected)
     {
-        var parsed = InfraIqArmIngress.TryParseOrigin("https://EastUS2EUAP.management.azure.com/", out var uri, out var error);
+        var parsed = InfraIqArmIngress.TryParseOrigin(configured, out var uri, out var error);
 
         Assert.True(parsed);
         Assert.Null(error);
-        Assert.Equal(InfraIqArmIngress.DevelopmentOrigin + "/", uri!.AbsoluteUri);
+        Assert.Equal(expected + "/", uri!.AbsoluteUri);
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("  ")]
-    public void ResolveConfiguredOrigin_DefaultsAbsentOrBlankToApprovedOrigin(string? configured)
+    public void NormalizeConfiguredOrigin_MapsAbsentOrBlankToAutomaticRouting(string? configured)
     {
-        Assert.Equal("https://eastus2euap.management.azure.com", InfraIqArmIngress.ResolveConfiguredOrigin(configured));
+        Assert.Null(InfraIqArmIngress.NormalizeConfiguredOrigin(configured));
     }
 
     [Theory]
     [InlineData("https://evil.example.com")]
     [InlineData("http://eastus2euap.management.azure.com")]
     [InlineData(" https://eastus2euap.management.azure.com")]
-    public void ResolveConfiguredOrigin_PreservesNonBlankValuesSoValidationStillRejectsThem(string configured)
+    public void NormalizeConfiguredOrigin_PreservesNonBlankValuesSoValidationStillRejectsThem(string configured)
     {
-        var resolved = InfraIqArmIngress.ResolveConfiguredOrigin(configured);
+        var resolved = InfraIqArmIngress.NormalizeConfiguredOrigin(configured);
 
         Assert.Equal(configured, resolved);
         Assert.True(_validator.Validate(null, new InfraIqOptions { ArmIngressOrigin = resolved }).Failed);

@@ -6,24 +6,27 @@ using System.Diagnostics.CodeAnalysis;
 namespace Azure.Mcp.Tools.InfraIq.Configuration;
 
 /// <summary>
-/// Exact-destination rules for the InfraIQ ARM/RPaaS ingress. Local development accepts only
-/// <see cref="DevelopmentOrigin"/>, an externally approved integration assumption.
+/// Exact-destination rules for the InfraIQ ARM ingress. Only the global Azure public-cloud ARM endpoint
+/// (<see cref="DefaultOrigin"/>) and the East US 2 EUAP Canary ARM endpoint (<see cref="CanaryOrigin"/>) are approved.
 /// </summary>
 internal static class InfraIqArmIngress
 {
     public const string ConfigurationKey = "InfraIq:ArmIngressOrigin";
-    public const string DevelopmentOrigin = "https://eastus2euap.management.azure.com";
+    public const string DefaultOrigin = "https://" + DefaultHost;
+    public const string CanaryOrigin = "https://" + CanaryHost;
     public const string MissingOriginMessage =
         "The InfraIQ ARM ingress origin is not configured. Set 'InfraIq:ArmIngressOrigin' to an approved origin.";
 
-    private const string DevelopmentHost = "eastus2euap.management.azure.com";
+    private const string DefaultHost = "management.azure.com";
+    private const string CanaryHost = "eastus2euap.management.azure.com";
 
     /// <summary>
-    /// Returns the configured origin, or the approved development origin when the value is absent or blank.
-    /// Non-blank values are returned unchanged so unsafe values still fail validation.
+    /// Returns <see langword="null"/> when the value is absent or blank, which selects automatic routing: global ARM
+    /// first, with Canary fallback while the action is unavailable there. Non-blank values are returned unchanged so
+    /// unsafe values still fail validation and an approved value pins that single origin.
     /// </summary>
-    public static string ResolveConfiguredOrigin(string? configuredOrigin) =>
-        string.IsNullOrWhiteSpace(configuredOrigin) ? DevelopmentOrigin : configuredOrigin;
+    public static string? NormalizeConfiguredOrigin(string? configuredOrigin) =>
+        string.IsNullOrWhiteSpace(configuredOrigin) ? null : configuredOrigin;
 
     /// <summary>
     /// Parses and validates a configured ingress origin.
@@ -46,7 +49,7 @@ internal static class InfraIqArmIngress
 
         if (!HasOnlySafeCharacters(origin)
             || !Uri.TryCreate(origin, UriKind.Absolute, out var parsed)
-            || !IsApprovedAuthority(parsed)
+            || !TryGetApprovedHost(parsed, out var approvedHost)
             || parsed.AbsolutePath != "/"
             || parsed.Query.Length > 0
             || parsed.Fragment.Length > 0)
@@ -55,21 +58,34 @@ internal static class InfraIqArmIngress
             return false;
         }
 
-        originUri = new Uri(DevelopmentOrigin);
+        originUri = new Uri("https://" + approvedHost);
         error = null;
         return true;
     }
 
     /// <summary>
-    /// Returns whether a completed request URI targets exactly the approved HTTPS authority.
+    /// Returns whether a completed request URI targets exactly an approved HTTPS authority.
     /// </summary>
-    public static bool IsApprovedAuthority(Uri uri) =>
-        uri.IsAbsoluteUri
-        && uri.Scheme == Uri.UriSchemeHttps
-        && uri.UserInfo.Length == 0
-        && uri.IsDefaultPort
-        && string.Equals(uri.Host, DevelopmentHost, StringComparison.OrdinalIgnoreCase)
-        && string.Equals(uri.IdnHost, DevelopmentHost, StringComparison.OrdinalIgnoreCase);
+    public static bool IsApprovedAuthority(Uri uri) => TryGetApprovedHost(uri, out _);
+
+    private static bool TryGetApprovedHost(Uri uri, [NotNullWhen(true)] out string? approvedHost)
+    {
+        approvedHost = null;
+        if (!uri.IsAbsoluteUri
+            || uri.Scheme != Uri.UriSchemeHttps
+            || uri.UserInfo.Length != 0
+            || !uri.IsDefaultPort)
+        {
+            return false;
+        }
+
+        approvedHost = IsHost(uri, DefaultHost) ? DefaultHost : IsHost(uri, CanaryHost) ? CanaryHost : null;
+        return approvedHost is not null;
+    }
+
+    private static bool IsHost(Uri uri, string host) =>
+        string.Equals(uri.Host, host, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(uri.IdnHost, host, StringComparison.OrdinalIgnoreCase);
 
     private static bool HasOnlySafeCharacters(string value)
     {

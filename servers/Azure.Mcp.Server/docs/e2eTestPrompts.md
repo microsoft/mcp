@@ -745,6 +745,20 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | functions_template_get | Generate a MCP Tool trigger in TypeScript for Node.js 22 | none |
 | functions_template_get | Show me all the Go Azure Function templates | none |
 
+## Azure InfraIQ
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| infraiq_vmsku_recommend | Recommend an Azure GPU VM for meta-llama/Llama-3.1-70B-Instruct at FP16 in eastus. Rank by cost. | none |
+| infraiq_vmsku_recommend | Recommend a VM in westeurope for a 405000000000 parameter FP16 model with 126 layers, 8 KV heads, and head dimension 128. | none |
+| infraiq_vmsku_recommend | Recommend GPU VM options for mistralai/Mistral-7B-Instruct-v0.3 in westeurope and prioritize latency. | none |
+| infraiq_vmsku_recommend | Compare only Standard_NC24ads_A100_v4 and Standard_ND96isr_H100_v5 for meta-llama/Llama-3.1-8B-Instruct at FP16 in eastus. | none |
+| infraiq_vmsku_recommend | For subscription <subscription_id>, recommend VM options for meta-llama/Llama-3.1-70B-Instruct in eastus and include quota. | none |
+| infraiq_vmsku_recommend | For subscription <subscription_id>, recommend VM options for meta-llama/Llama-3.1-70B-Instruct in eastus and include quota and placement. | none |
+| infraiq_vmsku_recommend | For subscription <subscription_id>, recommend the cheapest VM options for microsoft/Phi-3-mini-4k-instruct in westus2 and include subscription pricing. | none |
+| infraiq_vmsku_recommend | Recommend a GPU VM for my model in eastus. | clarification-required |
+| infraiq_vmsku_recommend | Recommend a VM in eastus for a 70 billion parameter FP16 model. | clarification-required |
+
 ## Azure Insights
 
 | Tool Name | Test Prompt | Interaction |

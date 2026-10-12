@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.InfraIq.Configuration;
 using Azure.Mcp.Tools.InfraIq.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -20,11 +21,11 @@ public class InfraIqSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // Manual key mapping keeps options binding AOT-safe. An absent or blank origin defaults to the approved
-        // development origin; any other configured value must be approved or startup validation fails.
+        // Manual key mapping keeps options binding AOT-safe. An absent or blank origin selects automatic routing
+        // (global ARM with Canary fallback); any other configured value must be approved or startup validation fails.
         services.AddOptions<InfraIqOptions>()
             .Configure<IConfiguration>((options, configuration) =>
-                options.ArmIngressOrigin = InfraIqArmIngress.ResolveConfiguredOrigin(
+                options.ArmIngressOrigin = InfraIqArmIngress.NormalizeConfiguredOrigin(
                     configuration[InfraIqArmIngress.ConfigurationKey]))
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<InfraIqOptions>, InfraIqOptionsValidator>();
@@ -33,6 +34,8 @@ public class InfraIqSetup : IAreaSetup
             .ConfigureHttpClient(client => client.Timeout = InfraIqArmClient.ClientTimeout)
             .ConfigurePrimaryHttpMessageHandler(CreateNoRedirectHandler);
 
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<InfraIqIngressFallbackCache>();
         services.AddSingleton<IInfraIqArmClient, InfraIqArmClient>();
         services.AddSingleton<IInfraIqService, InfraIqService>();
         services.AddSingleton<VmSkuRecommendCommand>();

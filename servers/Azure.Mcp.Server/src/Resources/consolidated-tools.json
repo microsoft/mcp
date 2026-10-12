@@ -5569,6 +5569,39 @@
       "mappedToolList": [
         "insights_get"
       ]
+    },
+    {
+      "name": "recommend_azure_inference_vm_skus",
+      "description": "Recommend and rank Azure GPU VM SKUs and estimated node-count topology for a Linux AI inference workload before deployment. Provide an Azure subscription and location, a Hugging Face model ID or explicit model architecture, workload and deployment constraints, a Cost or Latency ranking preference, optional candidate VM sizes, and optional quota, placement, or subscription-pricing checks. Returns up to 10 ordered options with resolved memory sizing, readiness, topology, hourly cost, and applicable evidence. Unlike Azure Advisor recommendations for existing resources, this capability plans what to provision from model and workload inputs. It does not deploy resources, reserve capacity, configure runtimes, or guarantee performance.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "infraiq_vmsku_recommend"
+      ]
     }
   ]
 }

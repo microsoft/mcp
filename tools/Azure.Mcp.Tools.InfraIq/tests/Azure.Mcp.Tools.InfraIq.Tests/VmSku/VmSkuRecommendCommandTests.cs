@@ -97,6 +97,7 @@ public class VmSkuRecommendCommandTests : SubscriptionCommandUnitTestsBase<VmSku
             Assert.DoesNotContain("preview", text, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("allowlist", text, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("Private.InfraIQ", text, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("AIInfraOptimization", text, StringComparison.OrdinalIgnoreCase);
         }
     }
 
