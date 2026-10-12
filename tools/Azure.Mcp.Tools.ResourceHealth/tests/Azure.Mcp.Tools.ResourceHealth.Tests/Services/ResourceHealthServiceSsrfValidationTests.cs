@@ -6,6 +6,7 @@ using System.Security;
 using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Azure.ResourceManager;
@@ -26,7 +27,7 @@ public class ResourceHealthServiceSsrfValidationTests
 
     public ResourceHealthServiceSsrfValidationTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _service = new ResourceHealthService(_azureService);
     }
 
@@ -36,8 +37,7 @@ public class ResourceHealthServiceSsrfValidationTests
     [InlineData("Government", "management.usgovcloudapi.net")]
     public void CreateAndValidateRequestUri_UsesConfiguredCloudEndpoint(string cloud, string expectedHost)
     {
-        Uri requestUri = ResourceHealthService.CreateAndValidateRequestUri(
-            GetArmEnvironment(cloud),
+        Uri requestUri = ResourceHealthService.CreateAndValidateRequestUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
             "/subscriptions/test/providers/Microsoft.ResourceHealth/events?api-version=2025-05-01");
 
         Assert.Equal(expectedHost, requestUri.Host);
@@ -52,8 +52,7 @@ public class ResourceHealthServiceSsrfValidationTests
     public void CreateAndValidateRequestUri_RejectsDisallowedEndpoint(string requestPath)
     {
         Assert.Throws<SecurityException>(() =>
-            ResourceHealthService.CreateAndValidateRequestUri(
-                ArmEnvironment.AzurePublicCloud,
+            ResourceHealthService.CreateAndValidateRequestUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
                 requestPath));
     }
 

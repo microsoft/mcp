@@ -10,18 +10,102 @@ Azure MCP uses the standard .NET `IHttpClientFactory` for centralized HTTP clien
 
 - **Handler Pooling**: `HttpMessageHandler` instances are pooled and reused (2-minute default lifetime)
 - **DNS Refresh**: Handlers are recycled periodically to pick up DNS changes
-- **Proxy Support**: Automatic proxy configuration from environment variables
+- **Proxy Support**: Explicit environment proxies plus destination-specific operating-system and PAC proxy routing
 - **Consistent Configuration**: All HttpClient instances share the same timeout, UserAgent, and proxy settings
+- **Redirect Protection**: Factory-created clients do not automatically follow HTTP redirects
 - **Test Recording Support**: Built-in support for test proxy redirection in debug builds
+- **SSRF Protection**: Default and named clients use `AntiSSRFPolicy(PolicyConfigOptions.ExternalOnlyLatest)` for HTTPS and DNS-to-IP enforcement
+
+## Transport Protection
+
+The default client, service-named clients, and the shared `ArmClientName`
+use external-only AntiSSRF protection. Shared ARM SDK clients also retain their
+`EndpointValidator` domain policy on every send, even without a command context,
+and all factory-created clients disable automatic redirects. Missing contexts cannot
+enable a namespace bypass. Namespace-overridden and proxy-routed transports use
+`SocketsHttpHandler` directly; protected transports retain the AntiSSRF handler.
+
+`--dangerously-disable-ssrf-protections-by-namespace` applies to both domain checks and
+the shared HTTP transport. The original executing namespace is checked on every send,
+not when a client is created. Protected and unprotected connection pools are isolated,
+so cached SDK clients cannot retain another command's bypass or private connections.
+Missing or unresolved contexts remain protected, including when `ALL` is configured.
+
+Each host owns one immutable, DI-registered `SsrfProtectionPolicy`. Its namespace
+configuration is copied during host composition and shared by `EndpointValidator`,
+the HTTP transports, and namespace override startup telemetry. Direct CLI registrations
+default to no overrides. Independent hosts and test providers can configure different
+policies concurrently without process-global initialization or resets.
+
+`EndpointValidator` is injected as `IEndpointValidator` and shares the host's singleton
+`ICommandContextAccessor` with command loaders and HTTP transports. Both Azure endpoint
+and public-target validation resolve the original executing namespace on every call;
+tool services supply only the endpoint and its service allow-list key to `IAzureService`,
+which uses its own configured cloud. Direct `IEndpointValidator` calls retain an explicit
+cloud argument for lower-level validation. No caller-supplied namespace can select a bypass,
+and cached validators and SDK policies retain the accessor rather than an invocation's namespace.
+Proxy routing does not disable this validation. Public-target validation still resolves and
+checks the original target's addresses because some validated URLs are dereferenced by downstream
+Azure services rather than by the local factory transport.
+
+### Startup Usage Telemetry
+
+When telemetry is enabled, the `ServerStarted` activity includes a privacy-safe
+summary of configured namespace overrides:
+
+| Tag | Values |
+| --- | --- |
+| `SsrfNamespaceOverrideScope` | `none`, `selected`, or `all` |
+| `SsrfNamespaceOverrideCount` | Count of distinct, non-blank configured entries, ignoring case; includes the `ALL` marker |
+
+The count describes configuration entries, not the number of tools actually affected.
+Names are not trimmed into different override values.
+
+The summary does not attest to per-request enforcement; missing contexts still cannot
+enable a namespace override.
+
+Raw override namespace strings are not included in these tags. Existing telemetry
+opt-outs remain effective. The activity uses the trace pipeline, including
+Microsoft-owned usage telemetry in release builds when enabled, rather than relying
+on `ILogger` warnings.
 
 ## Environment Variables
 
 The following environment variables are automatically applied:
 
-- `ALL_PROXY`: Global proxy for all protocols
-- `HTTP_PROXY`: Proxy for HTTP requests only
-- `HTTPS_PROXY`: Proxy for HTTPS requests only
+- `ALL_PROXY`: Highest-precedence explicit proxy
+- `HTTPS_PROXY`: Explicit proxy used when `ALL_PROXY` is absent
+- `HTTP_PROXY`: Fallback explicit proxy when the other proxy variables are absent
 - `NO_PROXY`: Comma-separated list of hosts that should bypass the proxy
+
+> **Security warning:** The factory selects one proxy in `ALL_PROXY`, `HTTPS_PROXY`, then
+> `HTTP_PROXY` order and uses it for both HTTP and HTTPS requests; these variables are not
+> retained as separate per-protocol routes. A request actually routed through that proxy
+> uses an isolated transport without DNS/IP enforcement because the trusted proxy becomes
+> the network boundary. A destination excluded by `NO_PROXY` instead uses the protected
+> direct transport, including namespace-aware emergency overrides.
+>
+> When none of those explicit settings selects a proxy, `.NET`'s
+> `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules.
+> Those rules are evaluated for every destination. A request actually routed through that
+> proxy uses an isolated transport without DNS/IP enforcement because the trusted proxy
+> becomes that network boundary. A destination for which those rules select no proxy retains
+> AntiSSRF protection. PAC files call this a `DIRECT` result. Recording transports also
+> retain `.NET`'s normal `HttpClient.DefaultProxy` behavior when their inner transport has
+> no explicit `Proxy`. Proxy values without a URI scheme are interpreted as HTTP proxies
+> for compatibility with .NET proxy handling.
+>
+> **Known limitation:** The routing handler calls `IWebProxy.GetProxy` to choose the
+> protected-direct or proxy transport, after which `SocketsHttpHandler` evaluates the same
+> proxy again while connecting. Dynamic system or PAC configuration can return different
+> decisions across those evaluations. If routing initially selects a proxy but the transport
+> later selects direct, that connection remains on the proxy-designated transport and therefore
+> does not receive direct-route DNS/IP filtering. Hosts must use trusted, stable proxy
+> configurations whose decision for a destination does not change during a request.
+>
+> Use only trusted proxies with appropriate network controls. Endpoint validation remains
+> active for proxied and direct requests. This includes Azure/external host
+> authorization and `ValidatePublicTargetUrl` checks of the original target's resolved IPs.
 
 ## Usage
 
@@ -75,6 +159,22 @@ Use `TestHttpClientFactoryProvider` for tests requiring recording support:
 ```csharp
 _httpClientFactory = TestHttpClientFactoryProvider.Create(fixture);
 ```
+
+> **Security warning:** Debug recording proxies, whether supplied by a fixture or
+> `TEST_PROXY_URL`, also take precedence over transport-level AntiSSRF checks.
+> Upstream endpoint validation remains active before requests are rewritten.
+> Use recording proxies only in trusted test environments.
+
+The `TEST_PROXY_URL` fallback is captured into `HttpClientOptions.RecordingProxy`
+when HTTP services are registered, rather than read during handler construction.
+Set the environment variable before host composition. In-process tests should
+configure this option per provider instead of modifying the process environment.
+Fixture callbacks remain deferred until handler construction and a non-null result
+takes precedence over the captured fallback.
+
+`ConfigureDefaultHttpClient` registers shared client and handler defaults once per
+service collection. Repeated calls are ignored rather than stacking duplicate
+configuration delegates; the recording resolver from the first call is retained.
 
 ## Example: Proxy Configuration
 

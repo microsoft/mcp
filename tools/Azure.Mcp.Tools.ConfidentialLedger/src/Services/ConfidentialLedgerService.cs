@@ -137,11 +137,9 @@ public class ConfidentialLedgerService(IAzureService azureService)
                 $"https://{ledgerName}.confidential-ledger.azure.com"
         });
 
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        AzureService.ValidateAzureServiceEndpoint(
             endpoint: ledgerUri.AbsoluteUri,
-            serviceType: "confidential-ledger",
-            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
-            executingToolNamespaceName: "confidentialledger");
+            serviceType: "confidential-ledger");
 
         return ledgerUri;
     }

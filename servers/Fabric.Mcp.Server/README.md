@@ -7,7 +7,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 
 A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Documentation tools use bundled specifications without connecting to live Fabric environments; operational tools call Fabric APIs using the configured identity.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
-[![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-fabric.vscode-fabric-mcp-server)
+[![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/fabric.vscode-fabric-mcp-server)
 
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=6e3fa3)](https://github.com/microsoft/mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Fabric.Mcp.*&style=flat-square&color=6e3fa3)](https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-)
@@ -16,34 +16,36 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)
-  - [IDE](#ide)
-    - [VS Code (Recommended)](#vs-code-recommended)
-    - [Manual Setup](#manual-setup)
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_ide_toc -->
+    - [IDE](#ide)
+        - [VS Code (Recommended)](#vs-code-recommended)
+        - [Manual Setup](#manual-setup)<!-- remove-section: end remove_ide_toc -->
+    - [Docker](#docker)
 - [Usage](#usage)
-  - [Getting Started](#getting-started)
-  - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
-    - [Catalog Discovery](#catalog-discovery)
-    - [Fabric Item Types & APIs](#fabric-item-types--apis)
-    - [Resource Definitions & Schemas](#resource-definitions--schemas)
-    - [Best Practices & Examples](#best-practices--examples)
-    - [Development Workflows](#development-workflows)
-  - [Workspace Metadata](#workspace-metadata)
-  - [Available Tools](#available-tools)
-    - [API Documentation & Best Practices](#api-documentation--best-practices)
-    - [OneLake Data Operations](#onelake-data-operations)
-    - [OneLake Security — Data Access Roles](#onelake-security--data-access-roles)
-    - [OneLake Shortcuts](#onelake-shortcuts)
-    - [OneLake Settings](#onelake-settings)
-    - [Core Fabric Operations](#core-fabric-operations)
-    - [Data Factory Operations](#data-factory-operations)
+    - [Getting Started](#getting-started)
+    - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
+        - [Capacity Discovery](#capacity-discovery)
+        - [Catalog Discovery](#catalog-discovery)
+        - [Fabric Item Types & APIs](#fabric-item-types--apis)
+        - [Resource Definitions & Schemas](#resource-definitions--schemas)
+        - [Best Practices & Examples](#best-practices--examples)
+        - [Development Workflows](#development-workflows)
+    - [Workspace Metadata](#workspace-metadata)
+    - [Available Tools](#available-tools)
+        - [API Documentation & Best Practices](#api-documentation--best-practices)
+        - [OneLake Data Operations](#onelake-data-operations)
+        - [OneLake Security — Data Access Roles](#onelake-security--data-access-roles)
+        - [OneLake Shortcuts](#onelake-shortcuts)
+        - [OneLake Settings](#onelake-settings)
+        - [Core Fabric Operations](#core-fabric-operations)
+        - [Data Factory Operations](#data-factory-operations)
 - [Support and Reference](#support-and-reference)
-  - [Documentation](#documentation)
-  - [Feedback and Support](#feedback-and-support)
-  - [Security](#security)
-  - [Data Collection](#data-collection)
-  - [Contributing](#contributing)
-  - [Code of Conduct](#code-of-conduct)
+    - [Documentation](#documentation)
+    - [Feedback and Support](#feedback-and-support)
+    - [Security](#security)
+    - [Data Collection](#data-collection)
+    - [Contributing](#contributing)
+    - [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
 # Overview
@@ -59,6 +61,9 @@ Key capabilities:
 - **Data Factory Integration**: Pipeline and Dataflow Gen2 management with M query execution
 
 # Installation
+
+The manual configuration examples use `mcpServers` as the root object. In Visual Studio and Visual Studio Code, use `servers` instead.
+
 <!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
 <!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can configure MCP servers to start automatically using the `chat.mcp.autostart` setting.}} -->
@@ -80,6 +85,9 @@ Key capabilities:
 <!-- insert-section: vsix {{- (Optional) Configure server behavior in VS Code settings (search for "Fabric MCP")}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You're all set! Fabric MCP Server is now ready to help you work smarter with Microsoft Fabric in VS Code.}} -->
+
+When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
+
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 
@@ -103,27 +111,26 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: end remove_ide_sub_section -->
 <!-- remove-section: start npm remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
-#### Option 1: Configure using .NET (build from source)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- You must have the latest [.NET 10 SDK LTS](https://dotnet.microsoft.com/download/dotnet) installed.
-  To verify the .NET version, run: `dotnet --version`
-- Clone and build the repository:
+#### Option 1: Configure using the .NET tool (NuGet)<!-- remove-section: end remove_dotnet_config_sub_header -->
+- Install the [.NET 10 SDK or later](https://dotnet.microsoft.com/download/dotnet). Verify it with `dotnet --version`.
+- Install the published [Microsoft.Fabric.Mcp](https://www.nuget.org/packages/Microsoft.Fabric.Mcp) tool:
 
-    ```bash
-    git clone https://github.com/microsoft/mcp.git
-    cd mcp
-    dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
+    ```powershell
+    dotnet tool install --global Microsoft.Fabric.Mcp --source https://api.nuget.org/v3/index.json
     ```
 
-- Configure the `mcp.json` file with the following:
+- Ensure the .NET global tools directory is on the `PATH` available to your MCP client, then configure `mcp.json`:
 
     ```json
     {
         "mcpServers": {
             "Fabric MCP Server": {
-                "command": "/path/to/repo/servers/Fabric.Mcp.Server/src/bin/Release/fabmcp",
+                "command": "fabmcp",
                 "args": [
                     "server",
-                    "start"
+                    "start",
+                    "--mode",
+                    "all"
                 ],
                 "type": "stdio"
             }
@@ -131,36 +138,52 @@ Use one of the following options to configure your `mcp.json`:
     }
     ```
 
-> **Platform Notes:**
-> - **macOS/Linux**: Use the path as-is
-> - **Windows**: Use backslashes and add `.exe` extension: `C:\path\to\repo\servers\Fabric.Mcp.Server\src\bin\Release\fabmcp.exe`
+Alternatively, .NET 10 supports running the published package on demand with [`dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec), without a permanent tool installation:
+
+```powershell
+dnx Microsoft.Fabric.Mcp --source https://api.nuget.org/v3/index.json -- server start --mode all
+```
+
+Both commands use the latest published stable package unless you specify a version. To pin a released version, use `--version <version>` with `dotnet tool install`, or `Microsoft.Fabric.Mcp@<version>` with `dnx`.
 <!-- remove-section: end remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend the latest Node.js LTS version. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
--  Configure the `mcp.json` file with the following:
+- Install a supported Node.js LTS version **22.0.0 or later**, with `npm` and `npx` available on your system `PATH`. Verify your installation with `node --version`, `npm --version`, and `npx --version`.
+- Configure the `mcp.json` file with the following:
 
     ```json
     {
         "mcpServers": {
             "fabric-mcp-server": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@microsoft/fabric-mcp@latest",
-                "server",
-                "start",
-                "--mode",
-                "all"
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@microsoft/fabric-mcp@latest",
+                    "server",
+                    "start",
+                    "--mode",
+                    "all"
                 ]
             }
         }
     }
     ```
 <!-- remove-section: end remove_node_config_sub_section -->
-<!-- remove-section: start nuget remove_custom_client_config_table -->
-**Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
+<!-- remove-section: start nuget;npm remove_source_build_sub_section -->
+
+#### Build from source (contributors)
+
+Building the repository is a separate development workflow, not required to use the published packages:
+
+```bash
+git clone https://github.com/microsoft/mcp.git
+cd mcp
+dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
+```
+
+Use the built `servers/Fabric.Mcp.Server/src/bin/Release/fabmcp` executable as your MCP client's `command`, with `["server", "start", "--mode", "all"]` as its arguments. On Windows, use backslashes and the `.exe` extension.
+<!-- remove-section: end remove_source_build_sub_section -->
 
 **Client-Specific Configuration**
 | IDE | File Location | Documentation Link |
@@ -170,11 +193,49 @@ Use one of the following options to configure your `mcp.json`:
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
-<!-- remove-section: end remove_custom_client_config_table -->
 <!-- remove-section: start nuget;npm remove_closing_details -->
 </details>
 <!-- remove-section: end remove_closing_details -->
 <!-- remove-section: end remove_entire_installation_sub_section -->
+
+## Docker
+
+The published container image is available from [Microsoft Container Registry](https://mcr.microsoft.com/artifact/mar/fabric/fabric-mcp) as `mcr.microsoft.com/fabric/fabric-mcp`. Use Docker with Linux containers. The `latest` tag selects the most recently published image; when pinning a version, choose a tag that already exists in the registry.
+
+The container does **not** inherit your host's `az login` session. For operational tools, configure an identity supported by the Fabric APIs you intend to call and grant it the required Fabric permissions. For example, supply a service principal using a local environment file stored outside your repository:
+
+```text
+AZURE_TENANT_ID=<tenant-id>
+AZURE_CLIENT_ID=<client-id>
+AZURE_CLIENT_SECRET=<client-secret>
+AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
+```
+
+Never commit this file or put its secret values in `mcp.json`. See [environment credential options](https://learn.microsoft.com/dotnet/api/azure.identity.environmentcredential) for other supported credential settings.
+
+Configure your MCP client, replacing the environment-file placeholder with an absolute path:
+
+```json
+{
+    "mcpServers": {
+        "fabric-mcp-server": {
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "--env-file",
+                "<absolute-path-to-env-file>",
+                "mcr.microsoft.com/fabric/fabric-mcp:latest",
+                "--mode",
+                "all"
+            ]
+        }
+    }
+}
+```
+
+Keep stdin open with `-i`, without allocating a TTY. The image entrypoint already runs `server start`; do not repeat those arguments after the image name.
 
 # Usage
 
@@ -240,6 +301,8 @@ The [Fabric List Capacities API](https://learn.microsoft.com/rest/api/fabric/cor
 
 ### Development Workflows
 
+* "Get the metadata for Fabric item '<item-id>' in workspace '<workspace-id>' without reading its data or definition"
+* "Show the display name, description, and type of Fabric item '<item-id>' in workspace '<workspace-id>'"
 * "Generate a data pipeline configuration with sample data sources"
 * "Help me scaffold a Fabric workspace with Lakehouse and notebooks"
 * "Create a Microsoft Fabric workspace called Sales Planning"
@@ -275,10 +338,9 @@ The tool does not list workspaces or items, read item data or definitions, modif
 
 By default, the MCP text response contains the command envelope with `results.workspace`. With `--structured-output-mode compact` or `--structured-output-mode duplicated`, the server also advertises the typed output schema and returns `structuredContent.workspace`.
 
-<!-- remove-section: start vsix remove_available_tools_section -->
 ## Available Tools
 
-The Fabric MCP Server exposes tools organized into three categories:
+The Fabric MCP Server exposes four toolsets: `core`, `docs`, `onelake`, and `datafactory`.
 
 ### API Documentation & Best Practices
 
@@ -351,11 +413,14 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | Tool Name | Description |
 |-----------|-------------|
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
-| `core_create-item` | Creates a Fabric item in a workspace identified by UUID, using its display name, item type, and optional description. |
+| `core_create-item` | Creates a Fabric item by workspace UUID. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
+| `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
+| `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
@@ -378,9 +443,73 @@ fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --di
 
 The caller needs **Contributor or higher workspace access**. Delegated calls require `Item.ReadWrite.All` or the item-specific `ReadWrite.All` scope. Non-Power BI items require a supported Fabric capacity and [tenant/capacity settings that enable Fabric item creation](https://learn.microsoft.com/fabric/admin/fabric-switch); Power BI items require the appropriate license. Service-principal and managed-identity support depends on the item type. Item types remain strings rather than a fixed client-side list.
 
-Display names must follow the item's naming rules, and descriptions allow at most 256 characters. The tool does not supply item definitions, creation payloads, folders, or sensitivity-label settings. Item types that require a definition or creation payload need a different creation path. A synchronous response returns the existing typed `results.item` payload. The tool does not poll long-running operations or confirm completion from HTTP 202; an accepted asynchronous request is not a completed creation.
+Display names must follow the item's naming rules, and descriptions allow at most 256 characters. The tool does not supply item definitions, creation payloads, folders, or sensitivity-label settings. Item types that require a definition or creation payload need a different creation path.
 
-Failures preserve the original status and return sanitized guidance without raw exception messages, API bodies, types, stack traces, or local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; HTTP 429 advises retrying later without an automatic retry. Network failures retain HTTP 503. After a timeout, cancellation, network failure, or invalid response, check whether the item was created before retrying.
+Create Item supports both outcomes documented by its endpoint: **201** returns validated metadata in the existing `results.item` shape; **202** returns an explicit `results.operation` receipt, never an empty/default item. Both modes return a synchronous 201 result immediately, without operation reads or requiring an operation ID. Other success codes, including 200 and 204, are not part of this endpoint's contract: they produce a sanitized unconfirmed-outcome error with guidance to check whether creation occurred. The shared LRO infrastructure also supports synchronous 200 for future adapters whose endpoints document it; it does not accept arbitrary success codes.
+
+| Optional argument | Default | Behavior |
+|-------------------|---------|----------|
+| `sync` | `false` | False sends one POST and returns completed metadata or an accepted receipt, with zero follow-up reads. True asynchronously waits after 202 and retrieves the created item when available. It does not use blocking HTTP I/O. |
+| `max-wait-seconds` | `120` | Finite positive local wait budget after 202, up to **600 seconds (10 minutes)** inclusive. Fractional seconds are allowed. Includes delays, authentication, and in-flight status/result reads. Larger values are rejected, not clamped, before submitting creation, even when `sync=false`. |
+| `early-poll` | `true` | Allows one first status probe after at most 3 seconds, or sooner if the initial server hint is shorter. False honors the initial validated `Retry-After` instead. |
+
+Choose the mode **before the single creation request**. This is an alternative to the earlier creation example, not a way to resume an already accepted creation:
+
+```powershell
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Sales" --item-type Lakehouse --sync true --max-wait-seconds 120 --early-poll false
+```
+
+The early first probe is a deliberate exception to the **initial successful 202** `Retry-After` guidance (often 20 seconds); it is not a claim that every server hint is honored. The receipt keeps `serverRetryAfterSeconds` separate from `recommendedPollAfterSeconds`. After that first probe, subsequent polls honor validated returned hints. Only safe operation GETs can be retried on HTTP 429/503, within the remaining budget; those hints are never shortened by the early-probe exception. Missing, malformed, multiple, negative, or overflowing hints use a conservative 20-second fallback. Valid HTTP-date hints are supported; zero/past hints have a one-second scheduling floor to prevent a tight loop.
+
+The 600-second maximum is a server-enforced operational guard on **MCP waiting**, not a Fabric API requirement or a limit on how long the Fabric operation may run. The shared service validation enforces it even when invoked without the command binding layer.
+
+Creation is **never automatically resubmitted**. Stopping MCP waiting does not cancel Fabric's operation, and no detached job continues polling. Client cancellation or a shorter HTTP/client timeout can end the wait sooner than the configured budget. A local budget expiry is not a failed mutation: resume using the operation ID, rather than increasing the budget by issuing another create call.
+
+| Outcome | Command status and payload |
+|---------|----------------------------|
+| Immediate 201 completion | HTTP 200 command response with `results.item`, preserving the existing completed shape. |
+| Accepted or wait budget expired while unconfirmed | HTTP 202 with `operation.status` `Accepted` or `Pending`; `lastState` is included only after a state read. Acceptance does not invent `Running`. |
+| Accepted without a usable `x-ms-operation-id` | HTTP 202 with `AcceptedWithoutOperationId` and an explicit issue. Check whether creation occurred; do not automatically resubmit. `Location` is not used to recover a missing ID. |
+| Wait observes `Succeeded` and retrieves valid item metadata | HTTP 200 with `item` and a `Succeeded` operation receipt. |
+| Wait observes `Failed` | HTTP 502 with a `Failed` receipt and safe operation error details. No result fetch or new POST is attempted. |
+| A state read fails | A sanitized error with a `TrackingStopped` receipt, preserving the ID and last-known state; this is not evidence that Fabric's operation failed. |
+| Operation succeeded but the result was not retrieved | `ResultUnavailable`, preserving `lastState.status=Succeeded` when observed. Budget expiry returns HTTP 202; read/validation failures retain their error status. Do not recreate the item. |
+| Caller cancels a post-acceptance wait | HTTP 408 with a receipt when the client can still receive it, distinguishing caller cancellation from budget expiry. Confirmed completion is not downgraded to running. |
+
+Failures suppress raw backend messages, exception details, stack traces, and local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; status-less network failures retain HTTP 503. Before acceptance is known, a timeout, cancellation, network failure, or invalid response can leave the mutation outcome uncertain; check whether creation occurred before retrying.
+
+**Long-running operation tools**
+
+The [Get Operation State](https://learn.microsoft.com/rest/api/fabric/core/long-running-operations/get-operation-state) and [Get Operation Result](https://learn.microsoft.com/rest/api/fabric/core/long-running-operations/get-operation-result) tools each take only `operation-id`, a nonempty UUID. Each invocation performs **one GET**, with no implicit polling, retries, mutation, or cancellation. URLs are constructed from the fixed Fabric API base and the validated ID. Returned links are not followed or returned as action URLs, and a response cannot replace the requested operation ID.
+
+An agent-driven flow starts with the receipt from the original `sync=false` creation:
+
+```json
+{
+  "operation": {
+    "status": "Accepted",
+    "operationId": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+    "serverRetryAfterSeconds": 20,
+    "recommendedPollAfterSeconds": 3
+  }
+}
+```
+
+Wait for the recommendation, then make one state read. If still pending, wait for that response's guidance before the next read. After `Succeeded`, fetch the result for Create Item, which is a result-bearing API:
+
+```powershell
+fabmcp core get-operation-state --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6
+# Only after the state says Succeeded:
+fabmcp core get-operation-result --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6
+```
+
+A state GET returning HTTP 200 means the **read** succeeded, not necessarily the mutation. The returned `state.status` can be `Undefined`, `NotStarted`, `Running`, `Succeeded`, `Failed`, or a future string. Unknown states are preserved and handled conservatively, never interpreted as successful completion. Progress (0-100) and timestamps are optional. Failed states expose only a safe error code and request UUID, not backend error text or nested details.
+
+The generic result is not assumed to be a Fabric item. It uses `{ "operationId": "...", "hasBody": true, "value": ... }` for JSON objects, arrays, or scalars. JSON `null` remains `hasBody=true, value=null`; an actually empty HTTP 200 body uses `hasBody=false` with `value` omitted. Nonempty bodies require `application/json`. **Binary (`application/octet-stream`) and other media are explicitly unsupported, even if empty.** JSON responses are limited to **1 MiB (1,048,576 bytes)**, including streamed responses without `Content-Length`; oversized or malformed content produces a sanitized error, never truncation or fabricated success.
+
+As described in the [Fabric LRO guidance](https://learn.microsoft.com/rest/api/fabric/articles/long-running-operation), not every operation has a result. For an API explicitly documented as having no result, confirmed `Succeeded` is sufficient; do not fetch `/result`. Neither HTTP 404 nor an absent `Location` proves successful no-result completion. The shared dispatcher/poller supports explicit result-bearing and no-result adapters; **workspace capacity assignment retains its existing submit-only contract** and is not retrofitted with sync waiting in this release.
+
+Both read tools require the **same resource permissions and delegated scopes as the initiating API**. Read-only discovery is not an authorization grant. Credential resolution remains per call, including every poll and result read, with the configured caller's identity.
 
 **Catalog Search (`core_search-catalog`)**
 
@@ -397,6 +526,36 @@ fabmcp core search-catalog --continuation-token '<token from the preceding page>
 A continuation token already carries the original search, filter, and page size. Combining `continuation-token` with `search` or `filter` is rejected locally with HTTP 400 before service, authentication, or network calls; supplied criteria are never silently dropped. `page-size` remains optional and must be between 1 and 1000 when supplied, including with a token.
 
 Success keeps the existing nested command envelope: entries are in `results.results.value`, and the next token is in `results.results.continuationToken`. Entries retain their typed metadata and available `hierarchy.workspace` information. There is no all-pages fetch, polling, or automatic retry. HTTP failures retain their original status with sanitized messages, while status-less network failures retain HTTP 503; raw exception details are not included in public error results.
+
+**Get Item (`core_get-item`)**
+
+Calls the [Get Item API](https://learn.microsoft.com/rest/api/fabric/core/items/get-item) once.
+Both `workspace-id` and `item-id` are required nonempty UUIDs, normalized before authentication or HTTP.
+The result contains an `item` object with `id`, `displayName`, `type`, `workspaceId`, and `description`
+when available. Missing/null descriptions are omitted and an explicitly empty description is preserved.
+The returned item and workspace IDs must match the requested IDs. Unlike workspace metadata, item
+`type` is required; future nonempty type strings are accepted.
+
+```powershell
+fabmcp core get-item --workspace-id <workspace-id> --item-id <item-id>
+```
+
+The caller needs read permission for the item. Delegated callers also need `Item.Read.All`,
+`Item.ReadWrite.All`, or an appropriate item-specific read scope. Authentication uses the host's
+configured credential provider and preserves the caller's context; the tool does not grant permissions.
+
+This read-only tool does not resolve names, retrieve definitions or data, return workload-specific
+properties, or request default-identity information. Use `core_search-catalog` to discover an unknown
+item ID. Only the documented HTTP 200 metadata response is accepted.
+
+For MCP clients, `--structured-output-mode compact` or `--structured-output-mode duplicated` exposes
+the typed output schema and `structuredContent.item`. The default mode keeps content-only responses
+with `results.item`.
+
+Command validation uses the shared sanitized handling; service errors do not expose raw backend
+bodies. HTTP 429 includes a valid `Retry-After` delay in seconds or retry time in UTC when supplied.
+Missing, malformed, negative, out-of-range, or multiple headers produce generic retry guidance.
+The tool does not retry automatically or follow redirects.
 
 **Get Capacity (`core_get-capacity`)**
 
@@ -661,7 +820,6 @@ Failures preserve the service's HTTP status and return sanitized guidance. On th
 | `datafactory_execute-query` | Executes an M (Power Query) query against a dataflow. |
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
-<!-- remove-section: end remove_available_tools_section -->
 
 # Support and Reference
 

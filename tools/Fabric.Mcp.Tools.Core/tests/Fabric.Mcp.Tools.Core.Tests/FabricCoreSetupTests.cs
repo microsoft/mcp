@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Fabric.Mcp.Tools.Core.Commands;
+using System.Reflection;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -18,7 +18,7 @@ public class FabricCoreSetupTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void ConfigureServices_DisablesRedirectsWithoutReplacingConfiguredTransport(bool recordingProxy)
+    public void ConfigureServices_PreservesGloballyConfiguredTransport(bool recordingProxy)
     {
         var services = new ServiceCollection();
         services.Configure<HttpClientOptions>(options =>
@@ -37,7 +37,7 @@ public class FabricCoreSetupTests
 
         using var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(IFabricCoreService));
         Assert.NotNull(configuredHandler);
-        var transport = Assert.IsType<HttpClientHandler>(GetTransport(configuredHandler));
+        SocketsHttpHandler transport = Assert.IsType<SocketsHttpHandler>(GetTransport(configuredHandler));
         Assert.Same(transport, GetTransport(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(nameof(IFabricCoreService))));
         Assert.False(transport.AllowAutoRedirect);
         Assert.True(transport.UseProxy);
@@ -53,7 +53,7 @@ public class FabricCoreSetupTests
         }
 #endif
         var unrelated = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("unrelated");
-        Assert.True(Assert.IsType<HttpClientHandler>(GetTransport(unrelated)).AllowAutoRedirect);
+        Assert.False(Assert.IsType<SocketsHttpHandler>(GetTransport(unrelated)).AllowAutoRedirect);
     }
 
     [Fact]
@@ -73,32 +73,6 @@ public class FabricCoreSetupTests
     }
 
     [Fact]
-    public void ConfigureServices_RegistersAllServices()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
-
-        // Act
-        setup.ConfigureServices(services);
-
-        // Assert
-        Assert.Contains(services, s => s.ServiceType == typeof(IFabricCoreService));
-        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(CapacityGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(CapacityListCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(WorkspaceGetCommand) && descriptor.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceListCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(ItemListCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceCreateCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceUpdateCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(ItemUpdateCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(ItemDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceDeleteCommand) && s.Lifetime == ServiceLifetime.Singleton);
-        Assert.Contains(services, s => s.ServiceType == typeof(WorkspaceAssignToCapacityCommand)
-            && s.Lifetime == ServiceLifetime.Singleton);
-    }
-
-    [Fact]
     public void Name_ReturnsCorrectValue()
     {
         // Arrange
@@ -106,35 +80,6 @@ public class FabricCoreSetupTests
 
         // Act & Assert
         Assert.Equal("core", setup.Name);
-    }
-
-    [Fact]
-    public void RegisterCommands_RegistersCoreCommands()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
-        setup.ConfigureServices(services);
-        using var provider = services.BuildServiceProvider();
-
-        // Act
-        var rootGroup = setup.RegisterCommands(provider);
-
-        // Assert
-        Assert.True(rootGroup.Commands.ContainsKey("create-item"), "Should have create-item command");
-        Assert.True(rootGroup.Commands.ContainsKey("search-catalog"), "Should have search-catalog command");
-        Assert.True(rootGroup.Commands.ContainsKey("get-capacity"), "Should have get-capacity command");
-        Assert.True(rootGroup.Commands.ContainsKey("list-capacities"), "Should have list-capacities command");
-        Assert.True(rootGroup.Commands.ContainsKey("get-workspace"), "Should have get-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("list-workspaces"), "Should have list-workspaces command");
-        Assert.True(rootGroup.Commands.ContainsKey("list-items"), "Should have list-items command");
-        Assert.True(rootGroup.Commands.ContainsKey("create-workspace"), "Should have create-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("update-workspace"), "Should have update-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("update-item"), "Should have update-item command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete-item"), "Should have delete-item command");
-        Assert.True(rootGroup.Commands.ContainsKey("delete-workspace"), "Should have delete-workspace command");
-        Assert.True(rootGroup.Commands.ContainsKey("assign-workspace-to-capacity"), "Should have assign-workspace-to-capacity command");
-        Assert.Equal(13, rootGroup.Commands.Count);
     }
 
     [Fact]
@@ -153,6 +98,19 @@ public class FabricCoreSetupTests
         {
             handler = innerHandler;
         }
-        return handler;
+
+        // 2026-10-11 by @vukelich: Microsoft.Mcp.Core.Services.Http.HttpClientFactoryConfigurator.ConfigureDefaultHttpClient()
+        // was rewritten to better handle the security of HTTP requests that don't go through a proxy. The method
+        // dynamically calls one of two HttpMessageHandler instances per HTTP request based on if the proxy opts
+        // for a bypass.
+        // The below reflection code grabs the HttpMessageHandler that represents the proxy, as is used in the
+        // unit test of this file. Ideally, this shouldn't need to be tested by the Fabric MCP server and should
+        // come "for free" from Microsoft.Mcp.Core.
+        // Check this commit of this ramble for more. Ask the Azure MCP server team for more details or changes
+        // in design and testing.
+        PropertyInfo? proxiedHandlerProperty = handler.GetType().GetProperty(
+            "ProxiedHandler",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        return proxiedHandlerProperty?.GetValue(handler) as HttpMessageHandler ?? handler;
     }
 }

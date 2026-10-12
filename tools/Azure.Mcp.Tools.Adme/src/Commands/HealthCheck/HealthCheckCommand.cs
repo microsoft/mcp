@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Options;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
@@ -28,7 +29,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.HealthCheck;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class HealthCheckCommand(IHealthService healthService)
+public sealed class HealthCheckCommand(IEndpointValidator endpointValidator, IHealthService healthService)
     : AuthenticatedCommand<HealthCheckOptions, HealthCheckResult>
 {
     private readonly IHealthService _healthService = healthService;
@@ -36,7 +37,7 @@ public sealed class HealthCheckCommand(IHealthService healthService)
     public override void ValidateOptions(HealthCheckOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
+        AdmeServiceValidator.ValidateTarget(endpointValidator, options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
     }
 
     /// <summary>

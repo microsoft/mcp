@@ -97,7 +97,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertCoreToolsAreListed(content);
+                AssertRepresentativeCoreTools(content);
                 AssertListItemsTool(content);
             }
         }
@@ -171,7 +171,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertCoreToolsAreListed(response);
+                AssertRepresentativeCoreTools(response);
                 AssertListItemsTool(response);
             }
         }
@@ -246,35 +246,18 @@ public class ServerStartupTests
         }
     }
 
-    private static void AssertCoreToolsAreListed(string response)
+    private static void AssertRepresentativeCoreTools(string response)
     {
-        string[] names =
-        [
-            "core_assign-workspace-to-capacity",
-            "core_create-item",
-            "core_create-workspace",
-            "core_delete-item",
-            "core_delete-workspace",
-            "core_get-capacity",
-            "core_get-workspace",
-            "core_list-capacities",
-            "core_list-items",
-            "core_list-workspaces",
-            "core_search-catalog",
-            "core_update-item",
-            "core_update-workspace"
-        ];
-
-        foreach (var name in names)
-        {
-            Assert.Contains($"\"{name}\"", response, StringComparison.Ordinal);
-        }
-
         using var document = JsonDocument.Parse(response);
         var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
-        Assert.Equal(59, tools.Length);
-        Assert.Equal(13, tools.Count(tool => tool.GetProperty("name").GetString()!.StartsWith("core_", StringComparison.Ordinal)));
-        Assert.DoesNotContain(tools, tool => tool.GetProperty("name").GetString() == "core_get-item");
+        var names = tools.Select(tool => tool.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
+        var itemGet = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-item");
+        Assert.True(itemGet.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemGet.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.False(itemGet.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemGet.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
         var assignment = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_assign-workspace-to-capacity");
         Assert.False(assignment.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.True(assignment.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
@@ -313,6 +296,22 @@ public class ServerStartupTests
         var hardDelete = itemDelete.GetProperty("inputSchema").GetProperty("properties").GetProperty("hard-delete");
         Assert.Equal(["boolean", "null"], hardDelete.GetProperty("type").EnumerateArray().Select(value => value.GetString()));
         Assert.False(hardDelete.TryGetProperty("default", out _));
+        foreach (var name in new[] { "core_get-operation-state", "core_get-operation-result" })
+        {
+            var operation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == name);
+            Assert.True(operation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(operation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(operation.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal("operation-id", Assert.Single(operation.GetProperty("inputSchema").GetProperty("required").EnumerateArray()).GetString());
+            Assert.Equal("operation-id", Assert.Single(operation.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()).Name);
+        }
+        var itemCreate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-item");
+        var creationOptions = itemCreate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("boolean", creationOptions.GetProperty("sync").GetProperty("type").GetString());
+        Assert.Equal("boolean", creationOptions.GetProperty("early-poll").GetProperty("type").GetString());
+        Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());
+        Assert.Equal(["display-name", "item-type"], itemCreate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)

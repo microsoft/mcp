@@ -438,9 +438,9 @@ public class FabricCoreServiceWorkspaceListTests()
     [InlineData(false)]
     public async Task SharedRequestHelper_PreservesExistingPostOperations(bool createItem)
     {
-        using var response = WorkspaceListTestData.CreateResponse(createItem
-            ? $$"""{"id":"item","displayName":"Lakehouse","type":"Lakehouse","workspaceId":"{{WorkspaceListTestData.WorkspaceId}}"}"""
-            : """{"value":[]}""");
+        using var response = createItem
+            ? FabricOperationTestData.ItemResponse(WorkspaceListTestData.WorkspaceId, "Lakehouse")
+            : WorkspaceListTestData.CreateResponse("""{"value":[]}""");
         using var handler = new FabricCoreHttpMessageHandler(async (request, cancellationToken) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
@@ -455,8 +455,8 @@ public class FabricCoreServiceWorkspaceListTests()
 
         if (createItem)
         {
-            var item = await service.CreateItemAsync(WorkspaceListTestData.WorkspaceId, new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
-            Assert.Equal("item", item.Id);
+            var item = await service.CreateItemAsync(WorkspaceListTestData.WorkspaceId, new() { DisplayName = "Lakehouse", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
         }
         else
         {

@@ -27,9 +27,8 @@ public class ResourceHealthService(IAzureService azureService)
 
         // Parse and validate resource ID format using Azure SDK
         ResourceIdentifier parsedResourceId = ResourceIdentifier.Parse(resourceId);
-        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
         string relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
-        Uri requestUri = CreateAndValidateRequestUri(armEnvironment, relativePath);
+        Uri requestUri = CreateAndValidateRequestUri(AzureService, relativePath);
 
         AccessToken token = await GetArmAccessTokenAsync(null, cancellationToken);
 
@@ -57,11 +56,10 @@ public class ResourceHealthService(IAzureService azureService)
         string subscriptionId = subscriptionResource.Id.SubscriptionId
             ?? throw new InvalidOperationException("The resolved subscription does not have a subscription ID.");
         string escapedSubscriptionId = Uri.EscapeDataString(subscriptionId);
-        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
         string relativePath = resourceGroup != null
             ? $"/subscriptions/{escapedSubscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}"
             : $"/subscriptions/{escapedSubscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
-        Uri requestUri = CreateAndValidateRequestUri(armEnvironment, relativePath);
+        Uri requestUri = CreateAndValidateRequestUri(AzureService, relativePath);
 
         AccessToken token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
@@ -147,8 +145,7 @@ public class ResourceHealthService(IAzureService azureService)
             relativePath += $"&$filter={Uri.EscapeDataString(combinedFilter)}";
         }
 
-        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
-        Uri requestUri = CreateAndValidateRequestUri(armEnvironment, relativePath);
+        Uri requestUri = CreateAndValidateRequestUri(AzureService, relativePath);
 
         AccessToken token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
@@ -174,7 +171,7 @@ public class ResourceHealthService(IAzureService azureService)
     /// <summary>
     /// Creates and authorizes a Resource Health request URI under the configured Azure Resource Manager endpoint.
     /// </summary>
-    /// <param name="armEnvironment">The configured Azure cloud environment.</param>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="relativePath">
     /// The rooted or relative ARM request path. Absolute and network-path values are rejected unless they resolve
     /// to the configured cloud's exact ARM host.
@@ -186,19 +183,17 @@ public class ResourceHealthService(IAzureService azureService)
     /// <exception cref="System.Security.SecurityException">
     /// Thrown when the completed request URI is not an HTTPS Azure Resource Manager endpoint for the configured cloud.
     /// </exception>
-    internal static Uri CreateAndValidateRequestUri(ArmEnvironment armEnvironment, string relativePath)
+    internal static Uri CreateAndValidateRequestUri(IAzureService azureService, string relativePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
 
-        Uri requestUri = new(armEnvironment.Endpoint, relativePath);
+        Uri requestUri = new(azureService.CloudConfiguration.ArmEnvironment.Endpoint, relativePath);
 
         // Uri resolution accepts absolute and network-path inputs that can replace the configured ARM authority.
         // Validate the completed URI before acquiring the raw request's token so input cannot redirect that token.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: requestUri.AbsoluteUri,
-            serviceType: "arm",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "resourcehealth");
+            serviceType: "arm");
 
         return requestUri;
     }

@@ -4,6 +4,7 @@
 using System.Data.Common;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -27,7 +28,7 @@ public class PostgresServiceConnectionStringInjectionTests
 
     public PostgresServiceConnectionStringInjectionTests()
     {
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         var entraTokenAuth = Substitute.For<IEntraTokenProvider>();
