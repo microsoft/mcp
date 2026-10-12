@@ -5,12 +5,23 @@
             "title": "Microsoft Documentation Search",
             "description": "Search official Microsoft/Azure documentation to find the most relevant and trustworthy content for a user's query. This tool returns up to 10 high-quality content chunks (each max 500 tokens), extracted from Microsoft Learn and other official sources. Each result includes the article title, URL, and a self-contained content excerpt optimized for fast retrieval and reasoning. Always use this tool to quickly ground your answers in accurate, first-party Microsoft/Azure knowledge."
         },
+        "bestprice": {
+            "url": "https://mcp.bestprice.gr/mcp",
+            "title": "BestPrice Shopping",
+            "description": "Read-only Greek shopping decision support from BestPrice. Search the catalog, get a recommendation grounded in the BestPrice Shopping Brain, compare current merchant offers and delivered costs, and inspect price history. The service is public and requires no account or API key.",
+            "toolPrefix": "bestprice_"
+        },
         "azd": {
             "type": "stdio",
             "command": "azd",
-            "args": ["mcp", "start"],
+            "args": [
+                "mcp",
+                "start"
+            ],
             "minVersion": "1.20.0",
-            "versionArgs": ["version"],
+            "versionArgs": [
+                "version"
+            ],
             "title": "Azure Developer CLI",
             "description": "Azure Developer CLI (azd) includes a suite of tools to help build, modernize, and manage applications on Azure. It simplifies the process of developing cloud applications by providing commands for project initialization, resource provisioning, deployment, and monitoring. Use this tool to streamline your Azure development workflow and manage your cloud resources efficiently.",
             "installInstructions": "To install or upgrade the Azure Developer CLI (azd), follow the instructions at https://aka.ms/azd/install\n\nAfter installation you may need to restart the Azure MCP server and your IDE."
@@ -20,14 +31,18 @@
             "title": "Microsoft Foundry MCP",
             "description": "MCP server to manage Microsoft Foundry models, deployments, agents, evaluations, sessions, project connections, monitoring, and data-generation jobs. Do not use this tool for knowledge indexes or OpenAI-compatible inference; use `foundryextensions` instead.",
             "toolPrefix": "foundry_",
-            "oauthScopes": ["https://mcp.ai.azure.com/Foundry.Mcp.Tools"]
+            "oauthScopes": [
+                "https://mcp.ai.azure.com/Foundry.Mcp.Tools"
+            ]
         },
         "arm": {
             "url": "https://mcp.management.azure.com",
             "title": "Azure Resource Manager MCP",
             "description": "MCP server with tools to use Azure Resource Graph to retrieve and filter information about Azure resources in a customer's subscription, and tools to manage ARM template deployments.",
             "toolPrefix": "arm_",
-            "oauthScopes": ["22bfbae3-f4e7-485f-be43-8cee15065084/.default"]
+            "oauthScopes": [
+                "22bfbae3-f4e7-485f-be43-8cee15065084/.default"
+            ]
         }
     }
 }
