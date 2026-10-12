@@ -9,6 +9,7 @@ import:
 words:
   - agentic
   - aigateway
+  - aiinfraoptimization
   - airunway
   - appconfiguration
   - applicationgatewaywebapplicationfirewallpolicies
@@ -58,7 +59,6 @@ words:
   - httproute
   - hyperparameters
   - imageanalysis
-  - infraiq
   - inspektor
   - irql
   - kubernetesconfiguration

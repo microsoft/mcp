@@ -5600,7 +5600,7 @@
         }
       },
       "mappedToolList": [
-        "infraiq_vmsku_recommend"
+        "aiinfraoptimization_vmsku_recommend"
       ]
     }
   ]

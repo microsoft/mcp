@@ -565,6 +565,61 @@ azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
 azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
 ```
 
+### Azure AI Infra Optimization Operations
+
+```bash
+# Recommend and rank Azure GPU VM SKUs and estimated node-count topology for a Linux AI inference workload before deployment.
+# Provide the model with --hugging-face-model-id, or with --parameter-count plus --num-layers, --num-key-value-heads, and --head-dim.
+# When --hugging-face-model-id is omitted, --parameter-count and all three architecture options are required and must be positive.
+# --weight-precision accepts FP32, FP16, BF16, FP8, INT8, INT4, or FP4 (default FP16).
+# --prompt-tokens and --max-output-tokens must be supplied together and total 1 through 131072.
+# --max-deployment-cost-per-hour-amount requires --max-deployment-cost-per-hour-currency-code USD.
+# --target-vm-size can be repeated or list multiple values (1 to 50 distinct VM sizes) to rank only those candidates.
+# --include-quota, --include-placement, and --include-pricing add subscription quota, placement, and pricing evidence; each is off by default and requires the Contributor role on the subscription.
+# Returns ranked options with resolved memory sizing, readiness, topology, and hourly cost. The recommendation is advisory: it does not deploy resources, reserve capacity, configure a runtime, or guarantee performance.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp aiinfraoptimization vmsku recommend --subscription <subscription> \
+                              --location <location> \
+                              [--hugging-face-model-id <hugging-face-model-id>] \
+                              [--parameter-count <parameter-count>] \
+                              [--weight-precision <FP32|FP16|BF16|FP8|INT8|INT4|FP4>] \
+                              [--num-layers <num-layers>] \
+                              [--num-key-value-heads <num-key-value-heads>] \
+                              [--head-dim <head-dim>] \
+                              [--max-concurrent-requests-per-replica <max-concurrent-requests-per-replica>] \
+                              [--prompt-tokens <prompt-tokens>] \
+                              [--max-output-tokens <max-output-tokens>] \
+                              [--replica-count <replica-count>] \
+                              [--procurement-option <OnDemand|Spot>] \
+                              [--ranking-preference <Cost|Latency>] \
+                              [--max-deployment-cost-per-hour-amount <amount>] \
+                              [--max-deployment-cost-per-hour-currency-code <USD>] \
+                              [--target-vm-size <vm-size1> <vm-size2> ...] \
+                              [--include-quota] \
+                              [--include-placement] \
+                              [--include-pricing] \
+                              [--tenant <tenant>]
+
+# Example: Recommend the lowest-cost GPU VM options for a Hugging Face model
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp aiinfraoptimization vmsku recommend --subscription <subscription> \
+                              --location eastus \
+                              --hugging-face-model-id meta-llama/Llama-3.1-70B-Instruct \
+                              --weight-precision FP16 \
+                              --ranking-preference Cost
+
+# Example: Recommend VM options from explicit model architecture and include quota and placement evidence
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp aiinfraoptimization vmsku recommend --subscription <subscription> \
+                              --location westeurope \
+                              --parameter-count 70000000000 \
+                              --num-layers 80 \
+                              --num-key-value-heads 8 \
+                              --head-dim 128 \
+                              --include-quota \
+                              --include-placement
+```
+
 ### Azure AI Search Operations
 
 ```bash
@@ -3148,61 +3203,6 @@ azmcp functions project get --language <language>
 azmcp functions template get --language <language> \
                              [--template <template-name>] \
                              [--runtime-version <runtime-version>]
-```
-
-### Azure InfraIQ Operations
-
-```bash
-# Recommend and rank Azure GPU VM SKUs and estimated node-count topology for a Linux AI inference workload before deployment.
-# Provide the model with --hugging-face-model-id, or with --parameter-count plus --num-layers, --num-key-value-heads, and --head-dim.
-# When --hugging-face-model-id is omitted, --parameter-count and all three architecture options are required and must be positive.
-# --weight-precision accepts FP32, FP16, BF16, FP8, INT8, INT4, or FP4 (default FP16).
-# --prompt-tokens and --max-output-tokens must be supplied together and total 1 through 131072.
-# --max-deployment-cost-per-hour-amount requires --max-deployment-cost-per-hour-currency-code USD.
-# --target-vm-size can be repeated or list multiple values (1 to 50 distinct VM sizes) to rank only those candidates.
-# --include-quota, --include-placement, and --include-pricing add subscription quota, placement, and pricing evidence; each is off by default and requires the Contributor role on the subscription.
-# Returns ranked options with resolved memory sizing, readiness, topology, and hourly cost. The recommendation is advisory: it does not deploy resources, reserve capacity, configure a runtime, or guarantee performance.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp infraiq vmsku recommend --subscription <subscription> \
-                              --location <location> \
-                              [--hugging-face-model-id <hugging-face-model-id>] \
-                              [--parameter-count <parameter-count>] \
-                              [--weight-precision <FP32|FP16|BF16|FP8|INT8|INT4|FP4>] \
-                              [--num-layers <num-layers>] \
-                              [--num-key-value-heads <num-key-value-heads>] \
-                              [--head-dim <head-dim>] \
-                              [--max-concurrent-requests-per-replica <max-concurrent-requests-per-replica>] \
-                              [--prompt-tokens <prompt-tokens>] \
-                              [--max-output-tokens <max-output-tokens>] \
-                              [--replica-count <replica-count>] \
-                              [--procurement-option <OnDemand|Spot>] \
-                              [--ranking-preference <Cost|Latency>] \
-                              [--max-deployment-cost-per-hour-amount <amount>] \
-                              [--max-deployment-cost-per-hour-currency-code <USD>] \
-                              [--target-vm-size <vm-size1> <vm-size2> ...] \
-                              [--include-quota] \
-                              [--include-placement] \
-                              [--include-pricing] \
-                              [--tenant <tenant>]
-
-# Example: Recommend the lowest-cost GPU VM options for a Hugging Face model
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp infraiq vmsku recommend --subscription <subscription> \
-                              --location eastus \
-                              --hugging-face-model-id meta-llama/Llama-3.1-70B-Instruct \
-                              --weight-precision FP16 \
-                              --ranking-preference Cost
-
-# Example: Recommend VM options from explicit model architecture and include quota and placement evidence
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp infraiq vmsku recommend --subscription <subscription> \
-                              --location westeurope \
-                              --parameter-count 70000000000 \
-                              --num-layers 80 \
-                              --num-key-value-heads 8 \
-                              --head-dim 128 \
-                              --include-quota \
-                              --include-placement
 ```
 
 ### Azure Insights Operations

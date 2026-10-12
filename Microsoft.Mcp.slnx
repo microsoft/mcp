@@ -120,6 +120,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Advisor/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Advisor/tests/Azure.Mcp.Tools.Advisor.Tests/Azure.Mcp.Tools.Advisor.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AIInfraOptimization/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.AIInfraOptimization/src/">
+    <Project Path="tools/Azure.Mcp.Tools.AIInfraOptimization/src/Azure.Mcp.Tools.AIInfraOptimization.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.AIInfraOptimization/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.AIInfraOptimization/tests/Azure.Mcp.Tools.AIInfraOptimization.Tests/Azure.Mcp.Tools.AIInfraOptimization.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Aks/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Aks/src/">
     <Project Path="tools/Azure.Mcp.Tools.Aks/src/Azure.Mcp.Tools.Aks.csproj" />
@@ -322,13 +329,6 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Grafana/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Grafana/tests/Azure.Mcp.Tools.Grafana.Tests/Azure.Mcp.Tools.Grafana.Tests.csproj" />
-  </Folder>
-  <Folder Name="/tools/Azure.Mcp.Tools.InfraIq/" />
-  <Folder Name="/tools/Azure.Mcp.Tools.InfraIq/src/">
-    <Project Path="tools/Azure.Mcp.Tools.InfraIq/src/Azure.Mcp.Tools.InfraIq.csproj" />
-  </Folder>
-  <Folder Name="/tools/Azure.Mcp.Tools.InfraIq/tests/">
-    <Project Path="tools/Azure.Mcp.Tools.InfraIq/tests/Azure.Mcp.Tools.InfraIq.Tests/Azure.Mcp.Tools.InfraIq.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Insights/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Insights/src/">
