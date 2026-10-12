@@ -13,7 +13,11 @@ Each run:
 ## Prerequisites
 
 - The repository's configured .NET SDK.
-- An MCP executable that supports `server info` and `tools list`.
+- An MCP executable that implements both commands. The exporter is server-agnostic but depends on their contracts:
+  - `server info` returns JSON with the server `name` and `version`. If it is missing or not valid JSON, the exporter falls back to `--help` (name from the line after `Description:`) and `--version`.
+  - `tools list` returns the JSON tool catalog. The run fails if it returns no JSON.
+
+  Events are keyed by the reported server name, and the comparison against Kusto is scoped to that name.
 - A Kusto cluster, database, and identity with query access. Ingestion also requires table ingestion access.
 
 Run [`src\Resources\queries\CreateTable.kql`](src/Resources/queries/CreateTable.kql) against the target database before the first export.
@@ -65,7 +69,7 @@ Authentication uses Azure CLI credentials or an interactive Microsoft Entra prom
 az login
 ```
 
-The Azure MCP public release pipeline uses [`Invoke-ReleaseToolMetadataExport.ps1`](../../scripts/Invoke-ReleaseToolMetadataExport.ps1) after publishing the signed NuGet package. The script extracts the `win-x64` executable, builds the exporter, records its metadata, and publishes generated `*_tool_changes_*.json` files as the `tool_metadata_changes` artifact.
+The release pipeline uses [`Invoke-ReleaseToolMetadataExport.ps1`](../../scripts/Invoke-ReleaseToolMetadataExport.ps1) after publishing the NuGet package. The script locates the server executable from `build_info.json`, builds the exporter, records its metadata, and publishes generated `*_tool_changes_*.json` files as the `tool_metadata_changes` artifact. Releases of `Template.Mcp.Server` always run with `--IsDryRun true` so test releases never ingest events.
 
 Release configuration comes from [`tool-metadata-exporter.yml`](../../pipelines/templates/variables/tool-metadata-exporter.yml):
 
