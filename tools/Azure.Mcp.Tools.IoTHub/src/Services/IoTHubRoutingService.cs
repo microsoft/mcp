@@ -17,7 +17,6 @@ using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
@@ -873,7 +872,7 @@ public class IoTHubRoutingService(
         cancellationToken.ThrowIfCancellationRequested();
         // Reject untrusted destinations, including ARM continuation links, before any credential work.
         var requestUri = BuildArmRequestUri(
-            AzureService.CloudConfiguration.ArmEnvironment,
+            AzureService,
             resourcePathOrUrl,
             apiVersion);
         TokenCredential credential;
@@ -910,14 +909,14 @@ public class IoTHubRoutingService(
     }
 
     internal static Uri BuildArmRequestUri(
-        ArmEnvironment armEnvironment,
+        IAzureService azureService,
         string resourcePathOrNextLink,
         string? apiVersion)
     {
         // Classify rooted ARM paths first: on Linux and macOS, Uri.TryCreate parses "/subscriptions/..."
         // as an absolute file:// URI.
         var url = resourcePathOrNextLink.StartsWith('/')
-            ? $"{armEnvironment.Endpoint.AbsoluteUri.TrimEnd('/')}{resourcePathOrNextLink}"
+            ? $"{azureService.CloudConfiguration.ArmEnvironment.Endpoint.AbsoluteUri.TrimEnd('/')}{resourcePathOrNextLink}"
             : resourcePathOrNextLink;
         if (!string.IsNullOrEmpty(apiVersion))
         {
@@ -926,11 +925,9 @@ public class IoTHubRoutingService(
 
         // Initial requests and ARM continuation links must both target the configured cloud's ARM host
         // before the bearer token is attached.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: url,
-            serviceType: "arm",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "iothub");
+            serviceType: "arm");
         return new Uri(url);
     }
 

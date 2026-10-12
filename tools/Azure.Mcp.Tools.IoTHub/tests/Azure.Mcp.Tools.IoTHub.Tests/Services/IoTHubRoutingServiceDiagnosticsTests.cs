@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.IoTHub.Models;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Azure.ResourceManager;
@@ -288,7 +289,7 @@ public class IoTHubRoutingServiceDiagnosticsTests()
     {
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         using var handler = CreateHandler((_, _) => Metrics());
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         var service = CreateService(handler, azureService);
         if (credentialStage)
         {
@@ -619,7 +620,7 @@ public class IoTHubRoutingServiceDiagnosticsTests()
 
     private static IoTHubRoutingService CreateService(HttpMessageHandler handler, IAzureService? azureService = null)
     {
-        azureService ??= Substitute.For<IAzureService>();
+        azureService ??= AzureServiceTestHelpers.CreateAzureService();
         var configuration = Substitute.For<IAzureCloudConfiguration>();
         configuration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         azureService.CloudConfiguration.Returns(configuration);
@@ -628,7 +629,8 @@ public class IoTHubRoutingServiceDiagnosticsTests()
             .Returns(new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1)));
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(credential));
-        azureService.GetClient(Arg.Any<string?>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            azureService, new HttpClient(handler, disposeHandler: false), ArmEnvironment.AzurePublicCloud);
         var subscription = Substitute.For<SubscriptionResource>();
         subscription.Data.Returns(ResourceManagerModelFactory.SubscriptionData(subscriptionId: Subscription));
         azureService.GetSubscription(Subscription, null, Arg.Any<CancellationToken>()).Returns(subscription);

@@ -5,6 +5,7 @@ using System.Net;
 using System.Security;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.IoTHub.Services;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
@@ -202,7 +203,7 @@ public class IoTHubRoutingServiceTests()
     [Fact]
     public async Task GetRoutingEndpointsHealthAsync_UsesConfiguredCloudAndTenant()
     {
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         var credential = Substitute.For<TokenCredential>();
         using var handler = new SequenceHttpMessageHandler(
             new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("""{"value":[]}""") });
@@ -226,7 +227,7 @@ public class IoTHubRoutingServiceTests()
     [Fact]
     public async Task GetRoutingEndpointsHealthAsync_RejectsForeignNextLinkBeforeResolvingCredential()
     {
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         using var handler = new SequenceHttpMessageHandler(
             new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -248,7 +249,7 @@ public class IoTHubRoutingServiceTests()
     public void BuildArmRequestUri_ResolvesResourcePathAgainstArmEndpoint()
     {
         var uri = IoTHubRoutingService.BuildArmRequestUri(
-            ArmEnvironment.AzureGovernment,
+            AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzureGovernment),
             "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Devices/IotHubs/hub1/routingEndpointsHealth",
             "2023-06-30");
 
@@ -267,7 +268,7 @@ public class IoTHubRoutingServiceTests()
             "https://management.azure.com/subscriptions/sub1/next?api-version=2023-06-30&$skiptoken=abc";
 
         var uri = IoTHubRoutingService.BuildArmRequestUri(
-            ArmEnvironment.AzurePublicCloud,
+            AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
             nextLink,
             apiVersion: null);
 
@@ -283,7 +284,7 @@ public class IoTHubRoutingServiceTests()
     {
         Assert.Throws<SecurityException>(() =>
             IoTHubRoutingService.BuildArmRequestUri(
-                ArmEnvironment.AzurePublicCloud,
+                AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
                 link,
                 apiVersion: null));
     }
@@ -294,7 +295,7 @@ public class IoTHubRoutingServiceTests()
         ArmEnvironment? environment = null,
         TokenCredential? credential = null)
     {
-        azureService ??= Substitute.For<IAzureService>();
+        azureService ??= AzureServiceTestHelpers.CreateAzureService();
         var logger = Substitute.For<ILogger<IoTHubRoutingService>>();
 
         var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
