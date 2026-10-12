@@ -314,6 +314,7 @@ public sealed class WorkspaceCreateToolRegistrationTests()
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddCommandContextAccessor();
         services.AddSingleton(credential);
         var setup = new FabricCoreSetup();
         services.AddSingleton<IAreaSetup>(setup);
@@ -336,7 +337,8 @@ public sealed class WorkspaceCreateToolRegistrationTests()
         });
         var factory = new CommandFactory(provider, provider.GetServices<IAreaSetup>(),
             Substitute.For<ITelemetryService>(), serverConfiguration, NullLogger<CommandFactory>.Instance);
-        return new(factory, Microsoft.Extensions.Options.Options.Create(configuration), NullLogger<CommandFactoryToolLoader>.Instance);
+        return new(provider.GetRequiredService<ICommandContextAccessor>(),
+            factory, Microsoft.Extensions.Options.Options.Create(configuration), NullLogger<CommandFactoryToolLoader>.Instance);
     }
 
     private static Dictionary<string, JsonElement> CreateArguments() => new()

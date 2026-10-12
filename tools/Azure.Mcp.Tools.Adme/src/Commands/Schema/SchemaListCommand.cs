@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.Adme.Models.Schema;
 using Azure.Mcp.Tools.Adme.Options.Schema;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Adme.Commands.Schema;
@@ -29,7 +30,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Schema;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class SchemaListCommand(ISchemaService schemaService)
+public sealed class SchemaListCommand(IEndpointValidator endpointValidator, ISchemaService schemaService)
     : AuthenticatedCommand<SchemaListOptions, SchemaListResponse>
 {
     private readonly ISchemaService _schemaService = schemaService;
@@ -37,7 +38,7 @@ public sealed class SchemaListCommand(ISchemaService schemaService)
     public override void ValidateOptions(SchemaListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
+        AdmeServiceValidator.ValidateTarget(endpointValidator, options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
 
         if (options.LatestVersion && options.SchemaVersionMinor.HasValue && !options.SchemaVersionMajor.HasValue)
         {

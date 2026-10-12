@@ -309,6 +309,9 @@ The `azmcp server start` command supports the following options:
 > This option disables endpoint SSRF validation used by tools in the selected namespaces, including protocol, hostname allow-list, and private-network checks. When used:
 > - Untrusted tool input may cause requests to attacker-controlled or internal endpoints
 > - The values identify tool namespaces such as `acr` or `loadtesting`, not endpoint service types
+> - Shared ARM SDK clients use the executing command's original setup namespace in every server mode, including consolidated and single-tool mode. Their ARM policy validates every send, including direct CLI and background sends through the shared pipeline. Missing contexts and unresolved namespaces cannot enable a bypass, including `ALL`.
+> - Default and named factory HTTP clients use `AntiSSRFPolicy` with `ExternalOnlyLatest` to require HTTPS and block private/reserved DNS-to-IP destinations. Namespace overrides are checked on every send, including cached clients; missing or unresolved execution contexts remain protected even for `ALL`.
+> - Factory-created HTTP clients do not automatically follow HTTP redirects, including during namespace overrides. The shared ARM domain policy does not cover raw ARM HTTP requests or SDK clients created outside the shared ARM helper, although factory-created transports still receive DNS/IP protection.
 > - Repeat the option for multiple namespaces, or provide multiple space-delimited values (e.g. `--dangerously-disable-ssrf-protections-by-namespace acr loadtesting`)
 > - The special value `ALL` disables these protections for every namespace
 > - Only use this option temporarily in a fully trusted environment
@@ -319,6 +322,24 @@ The `azmcp server start` command supports the following options:
 >     --dangerously-disable-ssrf-protections-by-namespace acr \
 >     --dangerously-disable-ssrf-protections-by-namespace loadtesting
 > ```
+
+> **Security warning for outgoing proxy configuration:**
+>
+> The server selects one explicit proxy in `ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY`
+> order and applies it to both HTTP and HTTPS requests. Requests actually routed through
+> that proxy omit transport-level DNS/IP checks; requests excluded by `NO_PROXY` use the
+> protected direct route and retain those checks. When none of those settings selects a proxy, `.NET`'s
+> `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules
+> per destination. Requests routed through a system proxy or PAC rule omit transport DNS/IP
+> checks, while destinations for which those rules select no proxy retain them. PAC files
+> call this a `DIRECT` result. Debug recording proxies remain a handler-wide exception.
+> System and PAC rules are evaluated once to select a transport and again by the selected
+> proxy transport while connecting. If a dynamic configuration changes from proxy to direct
+> between those evaluations, the direct connection remains on the proxy-designated transport
+> and does not receive direct-route DNS/IP filtering. Use only trusted, stable proxy
+> configurations with appropriate network restrictions whose routing decision does not change
+> during a request. Endpoint validation remains active unless separately bypassed, including
+> public-target checks of the original destination's IPs.
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
 >

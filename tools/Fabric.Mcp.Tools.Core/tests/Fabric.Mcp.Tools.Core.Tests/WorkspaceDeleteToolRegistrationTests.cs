@@ -300,6 +300,7 @@ public class WorkspaceDeleteToolRegistrationTests()
             Transport = transport,
             DangerouslyDisableElicitation = dangerouslyDisableElicitation
         }));
+        services.AddCommandContextAccessor();
         services.AddSingleton<ICommandFactory, CommandFactory>();
         services.AddSingleton<CommandFactoryToolLoader>();
         return services.BuildServiceProvider();
