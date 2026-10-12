@@ -31,7 +31,7 @@ param(
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..' '..'))
 $resourcePath = Join-Path 'tools' 'Fabric.Mcp.Tools.Docs' 'src' 'Resources'
 $destination = Join-Path $repoRoot $resourcePath
-$managedDirectories = @('fabric-rest-api-specs', 'item-definitions', 'fabric-rest-apis-docs')
+$managedDirectories = @('fabric-rest-api-specs', 'item-definitions')
 $gitRoot = & git -c core.longpaths=true -C $repoRoot rev-parse --show-toplevel
 if ($LASTEXITCODE -ne 0 -or [System.IO.Path]::GetFullPath($gitRoot) -ne $repoRoot) {
     throw 'Run this script from its location in a microsoft/mcp Git checkout.'
@@ -85,33 +85,16 @@ try {
     foreach ($name in $managedDirectories) {
         [System.IO.Directory]::CreateDirectory((Join-Path $staging $name)) | Out-Null
     }
-    foreach ($file in $rest.Files) {
-        $relative = if ($file.path -ceq 'LICENSE.txt') { 'LICENSE.txt' } else { "contents/$($file.path)" }
-        $target = Join-Path $staging 'fabric-rest-api-specs' $relative
+    foreach ($file in $rest.Files | Where-Object path -CNE 'LICENSE.txt') {
+        $target = Join-Path $staging 'fabric-rest-api-specs' 'contents' $file.path
         [System.IO.Directory]::CreateDirectory((Split-Path $target -Parent)) | Out-Null
         [System.IO.File]::Copy((Join-Path $rest.Directory $file.path), $target)
     }
-    Write-ResourceProvenance (Join-Path $staging 'fabric-rest-api-specs' 'source.json') (
-        [ordered]@{ repository = $rest.Repository; commit = $rest.Commit })
-
-    $attribution = foreach ($file in $articles.Files | Where-Object path -CNE 'LICENSE' | Sort-Object path -CaseSensitive) {
+    foreach ($file in $articles.Files | Where-Object path -CNE 'LICENSE' | Sort-Object path -CaseSensitive) {
         $name = [System.IO.Path]::GetFileName($file.path)
         $converted = Convert-FabricItemDefinition ([System.IO.File]::ReadAllText((Join-Path $articles.Directory $file.path))) $name
-        [System.IO.File]::WriteAllText((Join-Path $staging 'item-definitions' $name), $converted.Content, [System.Text.UTF8Encoding]::new($false))
-        [ordered]@{ file = $name; author = $converted.Author; microsoftAuthor = $converted.MicrosoftAuthor }
+        [System.IO.File]::WriteAllText((Join-Path $staging 'item-definitions' $name), $converted, [System.Text.UTF8Encoding]::new($false))
     }
-    [System.IO.File]::Copy((Join-Path $articles.Directory 'LICENSE'), (Join-Path $staging 'fabric-rest-apis-docs' 'LICENSE.txt'))
-    Write-ResourceProvenance (Join-Path $staging 'fabric-rest-apis-docs' 'source.json') ([ordered]@{
-        repository = $articles.Repository
-        commit = $articles.Commit
-        source = "$($articles.Repository)/tree/$($articles.Commit)/docs-ref-conceptual/item-management/definitions"
-        attribution = 'Microsoft and the attributed MicrosoftDocs/fabric-rest-apis-docs contributors'
-        license = 'CC-BY-4.0'
-        licenseUrl = 'https://creativecommons.org/licenses/by/4.0/'
-        changes = @('Removed YAML front matter and dedicated platform sections.',
-            'Converted relative links to Microsoft Learn URLs, preserving valid same-page anchors.')
-        articles = @($attribution)
-    })
 
     $expected = Get-ManagedSnapshot $staging $managedDirectories
     $changes = @(Get-SnapshotChange $original $expected)
@@ -133,7 +116,6 @@ try {
             Modified = @($articleChanges | Where-Object Change -EQ 'Modified').Count
             Removed = @($articleChanges | Where-Object Change -EQ 'Removed').Count
         }
-        MetadataChanges = $changes.Count - $restChanges.Count - $articleChanges.Count
         Applied = $false
         Changes = $changes
     }

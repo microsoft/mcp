@@ -282,7 +282,8 @@ try {
         Assert-True ($result.RestApi.Added -eq 4 -and $result.RestApi.Modified -eq 1 -and $result.RestApi.Removed -eq 4) 'Incorrect API change counts.'
         Assert-True ($result.ItemDefinitions.Files -eq 3 -and $result.ItemDefinitions.Added -eq 2 -and
             $result.ItemDefinitions.Modified -eq 1 -and $result.ItemDefinitions.Removed -eq 1) 'Incorrect article change counts.'
-        Assert-True ($result.MetadataChanges -eq 4 -and $result.Changes.Count -eq 17) 'Incorrect metadata or path reporting.'
+        Assert-True ($result.Changes.Count -eq 13) 'Incorrect resource path reporting.'
+        Assert-True ($result.RestApi.Commit -ceq $script:commit -and $result.ItemDefinitions.Commit -ceq $script:articleCommit) 'Missing source revisions in the returned results.'
         Assert-True ($script:fixtureState.ResolutionCount -eq 0 -and $script:fixtureState.ArticleResolutionCount -eq 0) 'An explicit revision must not resolve main.'
         foreach ($path in $script:sourceFiles.Keys | Where-Object { $_.EndsWith('.json') -and $_ -notlike '.*' -and $_.Contains('/') }) {
             $actual = [System.IO.File]::ReadAllBytes((Join-Path $script:resources 'contents' $path))
@@ -297,13 +298,13 @@ try {
         $notebook = [System.IO.File]::ReadAllText((Join-Path $script:resourceRoot 'item-definitions' 'notebook-definition.md'))
         Assert-True ($notebook.StartsWith('# Notebook definition') -and $notebook.Contains('### Payload example') -and
             -not $notebook.Contains('## Platform part')) 'Article transformation removed the title or payload example.'
-        $provenance = Get-Content (Join-Path $script:resourceRoot 'fabric-rest-apis-docs' 'source.json') -Raw | ConvertFrom-Json
-        Assert-True ($provenance.commit -ceq $script:articleCommit -and $provenance.license -ceq 'CC-BY-4.0' -and
-            $provenance.articles.Count -eq 3 -and $provenance.articles[0].author -ceq 'contributor') 'Missing source, license, or creator attribution.'
         $first = Get-FixtureSnapshot
         $again = Invoke-FixtureRefresh
         Assert-True (-not $again.Applied -and $again.Changes.Count -eq 0) 'Rerun was not a no-op.'
         Assert-True ((Get-FixtureSnapshot) -ceq $first) 'Rerun changed bytes or paths.'
+        Assert-True (-not (Test-Path (Join-Path $script:resources 'source.json'))) 'Created an unwanted source manifest.'
+        Assert-True (-not (Test-Path (Join-Path $script:resources 'LICENSE.txt'))) 'Copied the temporary upstream license into resources.'
+        Assert-True (-not (Test-Path (Join-Path $script:resourceRoot 'fabric-rest-apis-docs'))) 'Created an unwanted metadata directory.'
     }
     Test-Refresh 'Main resolves once and preview does not change resources' {
         $result = Invoke-FixtureRefresh -RestApiRevision main -ItemDefinitionRevision main -WhatIf
@@ -512,10 +513,9 @@ Remove through EOF.
 ```
 '@
     $converted = Convert-FabricItemDefinition $article 'example-definition.md'
-    Assert-True ($converted.Content.TrimEnd().Replace("`r`n", "`n") -ceq $expected.TrimEnd().Replace("`r`n", "`n")) 'Article transformation did not match the golden Markdown.'
-    Assert-True ($converted.Author -ceq 'contributor' -and $converted.MicrosoftAuthor -ceq 'alias') 'Lost article creator attribution.'
+    Assert-True ($converted.TrimEnd().Replace("`r`n", "`n") -ceq $expected.TrimEnd().Replace("`r`n", "`n")) 'Article transformation did not match the golden Markdown.'
     $script:passed++
-    Write-Host 'PASS: Golden title, section-boundary, code, attribution, and link transformations'
+    Write-Host 'PASS: Golden title, section-boundary, code, and link transformations'
 
     $article = @'
 ---
@@ -532,9 +532,9 @@ Remove.
 Kept.
 '@
     $converted = Convert-FabricItemDefinition $article 'example-definition.md'
-    Assert-True ($converted.Content.Contains('(#description-for-dynamic_executor_allocation-contents)') -and
-        $converted.Content.Contains('### Description for dynamic_executor_allocation Contents') -and
-        -not $converted.Content.Contains('Remove.')) 'Underlined heading removal or underscore anchors failed.'
+    Assert-True ($converted.Contains('(#description-for-dynamic_executor_allocation-contents)') -and
+        $converted.Contains('### Description for dynamic_executor_allocation Contents') -and
+        -not $converted.Contains('Remove.')) 'Underlined heading removal or underscore anchors failed.'
     $script:passed++
     Write-Host 'PASS: Underlined platform heading and valid underscore anchor'
 

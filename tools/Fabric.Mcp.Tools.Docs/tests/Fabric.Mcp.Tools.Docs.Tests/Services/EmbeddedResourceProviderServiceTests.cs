@@ -200,8 +200,11 @@ public class EmbeddedResourceProviderServiceTests
             Assert.NotNull(stream);
             using var document = JsonDocument.Parse(stream);
         });
-        Assert.Contains("Resources/fabric-rest-api-specs/LICENSE.txt", names);
-        Assert.Contains("Resources/fabric-rest-api-specs/source.json", names);
+        Assert.DoesNotContain("Resources/fabric-rest-api-specs/LICENSE.txt", names);
+        Assert.DoesNotContain("Resources/fabric-rest-api-specs/source.json", names);
+        Assert.DoesNotContain("Resources/fabric-rest-apis-docs/LICENSE.txt", names);
+        Assert.DoesNotContain("Resources/fabric-rest-apis-docs/source.json", names);
+        Assert.Contains("Resources/fabric-rest-api-specs/contents/eventstream/definitions/source.json", names);
     }
 
     [Theory]

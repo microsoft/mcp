@@ -6,7 +6,7 @@
 Run from the repository root with PowerShell 7, Git, and the GitHub CLI (`gh`).
 Authenticate `gh` with read access to both upstream repositories: the article
 source requires authorized access. The updater uses that credential only for
-GitHub API requests and archive downloads, never writing it to provenance.
+GitHub API requests and archive downloads, never writing it to resource files.
 No Fabric login or deployment is needed. This is a manual process, not a
 scheduled workflow.
 
@@ -46,9 +46,9 @@ nested examples, and supporting schemas. Root repository documentation,
 governance files, and every `owners.txt` are excluded. Source bytes, relative
 paths, and case are preserved, without formatting or spelling corrections.
 
-The adjacent `source.json` records the repository and commit. `LICENSE.txt` is
-the unmodified upstream Microsoft attribution and MIT license. They remain outside
-`contents` so they cannot become API item categories.
+Microsoft Fabric APIs Specification: Copyright (c) Microsoft Corporation.
+The specifications are distributed under the [MIT License](../../LICENSE),
+whose permission and disclaimer terms are retained in the repository license.
 
 ### Item-definition articles
 
@@ -77,16 +77,16 @@ The transformation follows earlier Fabric resource refreshes:
   relative DocFX YAML link stops the refresh rather than becoming a broken
   article URL.
 
-Articles use **CC BY 4.0**, not the REST specification's MIT license.
-`src\Resources\fabric-rest-apis-docs\LICENSE.txt` retains the full upstream
-license. Its `source.json` records the source revision/link, creator attribution
-from each article's front matter, license link, and performed transformations.
-This metadata is embedded outside the item-definition article directory.
+Articles are adapted from Microsoft and the
+[MicrosoftDocs/fabric-rest-apis-docs contributors](https://github.com/MicrosoftDocs/fabric-rest-apis-docs/graphs/contributors)
+under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+The adaptations remove front matter and platform sections and convert links as
+described above; the visible titles and remaining article content are retained.
 
 ### Scope and local-edit safety
 
-Only these three subdirectories of `src\Resources` are managed:
-`fabric-rest-api-specs`, `item-definitions`, and `fabric-rest-apis-docs`.
+Only these two directories under `src\Resources` are managed:
+`fabric-rest-api-specs` and `item-definitions`.
 Do not put hand-maintained files inside them. Other conceptual Markdown and
 Core tools are untouched; new API categories do not imply new executable tools.
 
@@ -97,8 +97,10 @@ Staging protects against download/conversion failures, but a local disk/write
 failure during application can leave a partial worktree. Such failures are
 reported as errors and must be inspected before retrying.
 
-The result includes per-step addition/modification/removal counts, metadata
-changes, and individual paths in `Changes`; `-Verbose` prints the paths. Counts
+The result includes each source commit SHA, per-step addition/modification/removal
+counts, and individual paths in `Changes`; `-Verbose` prints the paths. Record
+both SHAs in the PR description. No source manifests or license resource files
+are generated; upstream licenses are checked only in temporary staging. Counts
 compare raw bytes. Scoped `.gitattributes` rules disable line-ending conversion
 only for these managed trees, preserving source bytes in commits and checkouts.
 On a checkout created before those rules existed, the first refresh can also

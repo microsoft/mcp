@@ -141,13 +141,7 @@ function Save-UpstreamSnapshot {
     finally {
         $archive.Dispose()
     }
-    return [pscustomobject]@{ Repository = "https://github.com/$Repository"; Commit = $Revision; Directory = $Directory; Files = $files }
-}
-
-function Write-ResourceProvenance {
-    param([string] $Path, [System.Collections.IDictionary] $Value)
-    $json = $Value | ConvertTo-Json -Depth 5
-    [System.IO.File]::WriteAllText($Path, $json.Replace("`r`n", "`n") + "`n", [System.Text.UTF8Encoding]::new($false))
+    return [pscustomobject]@{ Commit = $Revision; Directory = $Directory; Files = $files }
 }
 
 function Resolve-ArticleLink {
@@ -279,9 +273,5 @@ function Convert-FabricItemDefinition {
         }
         $result.Append((Convert-ArticleLink $line.Text.Substring($offset) $articleUri $anchors)) | Out-Null
     }
-    return [pscustomobject]@{
-        Content = $result.ToString()
-        Author = [regex]::Match($frontMatter.Value, '(?m)^author:[ \t]*(.*)').Groups[1].Value.Trim()
-        MicrosoftAuthor = [regex]::Match($frontMatter.Value, '(?m)^ms\.author:[ \t]*(.*)').Groups[1].Value.Trim()
-    }
+    return $result.ToString()
 }
