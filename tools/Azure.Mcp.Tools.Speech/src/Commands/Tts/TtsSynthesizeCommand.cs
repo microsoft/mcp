@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Speech.Options.Tts;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Tts;
@@ -28,8 +29,8 @@ namespace Azure.Mcp.Tools.Speech.Commands.Tts;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService)
-    : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>()
+public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator)
+    : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>(endpointValidator)
 {
     public sealed record TtsSynthesizeCommandResult(SynthesisResult Result);
 

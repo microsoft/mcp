@@ -374,9 +374,8 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         metricsClientOptions.Audience = GetMetricsClientAudience();
         metricsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
-        var metricsEndpoint = ValidateMetricsEndpoint(
-            new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"),
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri metricsEndpoint = ValidateMetricsEndpoint(AzureService,
+            new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"));
         var metricsClient = new MetricsClient(metricsEndpoint, credential, metricsClientOptions);
 
         var queryOptions = new MetricsQueryResourcesOptions
@@ -487,18 +486,16 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
     /// <summary>
     /// Validates that the given Monitor Metrics endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="endpoint">The URI of the Monitor Metrics endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
     /// <returns>The validated URI of the Monitor Metrics endpoint.</returns>
-    internal static Uri ValidateMetricsEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    internal static Uri ValidateMetricsEndpoint(IAzureService azureService, Uri endpoint)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
 
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "monitor-metrics",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "monitor");
+            serviceType: "monitor-metrics");
         return endpoint;
     }
 

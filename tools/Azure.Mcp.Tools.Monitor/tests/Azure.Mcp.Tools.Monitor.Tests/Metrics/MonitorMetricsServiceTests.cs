@@ -4,6 +4,7 @@
 using System.Security;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager;
 using NSubstitute;
@@ -28,7 +29,7 @@ public class MonitorMetricsServiceTests
     public MonitorMetricsServiceTests()
     {
         _resourceResolverService = Substitute.For<IResourceResolverService>();
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _service = new MonitorMetricsService(_resourceResolverService, _azureService);
 
         // Setup default behaviors
@@ -304,7 +305,7 @@ public class MonitorMetricsServiceTests
         };
         var endpointUri = new Uri(endpoint);
 
-        var result = MonitorMetricsService.ValidateMetricsEndpoint(endpointUri, armEnvironment);
+        Uri result = MonitorMetricsService.ValidateMetricsEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), endpointUri);
 
         Assert.Same(endpointUri, result);
     }
@@ -318,9 +319,8 @@ public class MonitorMetricsServiceTests
     public void ValidateMetricsEndpoint_InvalidPublicCloudHost_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            MonitorMetricsService.ValidateMetricsEndpoint(
-                new Uri(endpoint),
-                ArmEnvironment.AzurePublicCloud));
+            MonitorMetricsService.ValidateMetricsEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+                new Uri(endpoint)));
     }
 
     #endregion

@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
+public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver, IEndpointValidator endpointValidator)
     : BaseCosmosCommand<ItemVectorSearchOptions, ItemVectorSearchCommand.ItemVectorSearchCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ItemVectorSearchCommand> _logger = logger;
@@ -77,7 +77,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
     private static readonly ArmEnvironment[] s_openAIEndpointClouds =
         [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
 
-    private static void ValidateOpenAIEndpoint(string? endpoint, ValidationResult validationResult)
+    private void ValidateOpenAIEndpoint(string? endpoint, ValidationResult validationResult)
     {
         if (string.IsNullOrWhiteSpace(endpoint))
         {
@@ -94,11 +94,10 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             {
                 try
                 {
-                    EndpointValidator.ValidateAzureServiceEndpoint(
+                    endpointValidator.ValidateAzureServiceEndpoint(
                         endpoint: endpoint,
                         serviceType: serviceType,
-                        armEnvironment: cloud,
-                        executingToolNamespaceName: "cosmos");
+                        armEnvironment: cloud);
                     return;
                 }
                 catch (Exception ex) when (ex is SecurityException or ArgumentException)

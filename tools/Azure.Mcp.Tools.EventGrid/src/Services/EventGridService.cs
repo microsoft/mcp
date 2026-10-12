@@ -112,7 +112,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
         }
 
-        var uri = ValidateEventGridEndpoint(topic.Data.Endpoint, AzureService.CloudConfiguration.ArmEnvironment);
+        Uri uri = ValidateEventGridEndpoint(AzureService, topic.Data.Endpoint);
 
         // Get credential using standardized method from base class for Azure AD authentication
         var credential = await GetCredential(tenant, cancellationToken);
@@ -127,7 +127,7 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
             Transport = new HttpClientTransport(httpClient)
         };
         clientOptions.AddPolicy(
-            new EventGridEndpointValidationPolicy(AzureService.CloudConfiguration.ArmEnvironment),
+            new EventGridEndpointValidationPolicy(AzureService),
             HttpPipelinePosition.BeforeTransport);
         var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential, clientOptions);
 
@@ -565,17 +565,15 @@ public class EventGridService(IAzureService azureService, ILogger<EventGridServi
     /// <summary>
     /// Validates that the given EventGrid endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="requestUri">The URI of the EventGrid endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
     /// <returns>The validated URI of the EventGrid endpoint.</returns>
-    internal static Uri ValidateEventGridEndpoint(Uri? requestUri, ArmEnvironment armEnvironment)
+    internal static Uri ValidateEventGridEndpoint(IAzureService azureService, Uri? requestUri)
     {
         ArgumentNullException.ThrowIfNull(requestUri);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: requestUri.AbsoluteUri,
-            serviceType: "eventgrid",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "eventgrid");
+            serviceType: "eventgrid");
         return requestUri;
     }
 }

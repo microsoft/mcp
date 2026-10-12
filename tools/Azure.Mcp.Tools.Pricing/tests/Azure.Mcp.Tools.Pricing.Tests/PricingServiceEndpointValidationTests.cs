@@ -9,6 +9,9 @@ using Azure.Mcp.Tools.Pricing.Models;
 using Azure.Mcp.Tools.Pricing.Services;
 using Azure.Mcp.Tools.Pricing.Tests.TestSupport;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -101,7 +104,7 @@ public sealed class PricingServiceEndpointValidationTests
         HttpClientPipelineTransport transport = new(
             new HttpClient(handler, disposeHandler: false));
 
-        return new PricingService(cloudConfiguration, transport);
+        return new PricingService(cloudConfiguration, transport, new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()));
     }
 
     private static ArmEnvironment GetArmEnvironment(string cloud) => cloud switch
