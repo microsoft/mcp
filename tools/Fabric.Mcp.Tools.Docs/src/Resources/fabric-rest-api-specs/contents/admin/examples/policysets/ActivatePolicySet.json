@@ -1,0 +1,10 @@
+{
+    "parameters": {
+        "workspaceId": "7f4496db-9929-47bd-89c0-d7eb2f517a98",
+        "policySetId": "f51b705f-a409-4d40-9197-c5d5f349e2ef",
+        "allowReplace": true
+    },
+    "responses": {
+        "200": {}
+    }
+}

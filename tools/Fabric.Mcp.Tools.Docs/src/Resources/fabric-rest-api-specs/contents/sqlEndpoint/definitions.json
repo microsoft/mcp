@@ -39,7 +39,7 @@
       "description": "The request payload for refreshing a SQL analytics endpoint.",
       "properties": {
         "timeout": {
-          "description": "The request duration before timing out. The default value is 15 minutes.",
+          "description": "The amount of time the request can run before timing out. Defaults to 15 minutes, with a maximum of 24 hours.",
           "$ref": "../common/definitions.json#/definitions/Duration"
         },
         "recreateTables": {
