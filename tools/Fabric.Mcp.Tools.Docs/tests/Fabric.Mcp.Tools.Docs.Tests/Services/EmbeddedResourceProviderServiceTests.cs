@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore policyset
 
-using System.Text.Json;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -163,62 +161,5 @@ public class EmbeddedResourceProviderServiceTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => EmbeddedResourceProviderService.GetEmbeddedResource(nonExistentResource));
-    }
-
-    [Fact]
-    public async Task RefreshedRestApiResources_ExposePolicySetsWithoutMaintenanceFiles()
-    {
-        var apiService = new FabricPublicApiService(Substitute.For<ILogger<FabricPublicApiService>>(), _service);
-        var itemTypes = await apiService.ListItemTypesAsync(TestContext.Current.CancellationToken);
-
-        Assert.Contains("policySet", itemTypes);
-        Assert.DoesNotContain("common", itemTypes);
-        Assert.DoesNotContain("source.json", itemTypes);
-        Assert.DoesNotContain("LICENSE.txt", itemTypes);
-
-        var api = await apiService.GetPublicApis("policySet", TestContext.Current.CancellationToken);
-        using var swagger = JsonDocument.Parse(api.apiSpecification);
-        Assert.Equal("2.0", swagger.RootElement.GetProperty("swagger").GetString());
-        Assert.Contains("definitions.json", api.apiModelDefinitions.Keys);
-
-        var examples = await apiService.GetExamplesAsync("policySet", TestContext.Current.CancellationToken);
-        Assert.Contains("CreatePolicySet.json", examples.Keys);
-    }
-
-    [Fact]
-    public void BundledRestApiResources_ContainValidJsonAndNoOwnerFiles()
-    {
-        var assembly = typeof(EmbeddedResourceProviderService).Assembly;
-        var names = assembly.GetManifestResourceNames();
-        var apiResources = names.Where(name => name.StartsWith("Resources/fabric-rest-api-specs/contents/", StringComparison.Ordinal)).ToArray();
-
-        Assert.NotEmpty(apiResources);
-        Assert.All(apiResources, name =>
-        {
-            Assert.EndsWith(".json", name);
-            using var stream = assembly.GetManifestResourceStream(name);
-            Assert.NotNull(stream);
-            using var document = JsonDocument.Parse(stream);
-        });
-        Assert.DoesNotContain("Resources/fabric-rest-api-specs/LICENSE.txt", names);
-        Assert.DoesNotContain("Resources/fabric-rest-api-specs/source.json", names);
-        Assert.DoesNotContain("Resources/fabric-rest-apis-docs/LICENSE.txt", names);
-        Assert.DoesNotContain("Resources/fabric-rest-apis-docs/source.json", names);
-        Assert.Contains("Resources/fabric-rest-api-specs/contents/eventstream/definitions/source.json", names);
-    }
-
-    [Theory]
-    [InlineData("policyset-definition.md", "# Policy")]
-    [InlineData("ontology-old-definition.md", "# Ontology definition (JSON/old experience)")]
-    [InlineData("notebook-definition.md", "### Example of ipynb format payload")]
-    [InlineData("environment-definition.md", "### Example of spark public libraries")]
-    public async Task RefreshedItemDefinitions_PreserveTitlesAndPayloadExamples(string name, string expectedContent)
-    {
-        var article = await _service.GetResource($"item-definitions/{name}", TestContext.Current.CancellationToken);
-
-        Assert.StartsWith("# ", article);
-        Assert.Contains(expectedContent, article);
-        Assert.DoesNotContain("## Platform part", article);
-        Assert.DoesNotContain("## PlatformDetails", article);
     }
 }
