@@ -51,7 +51,7 @@ safe-outputs:
   add-comment:
     max: 1
   add-labels:
-    max: 5
+    max: 10
   set-issue-type:
     max: 1
   set-issue-field:
@@ -110,7 +110,7 @@ Use only labels verified to exist in the live repository:
 - Recommend special labels such as `Service Attention`, `tracking-external-issue`, `blocked`, `blocking-release`, `breaking-change`, `agentic-workflows`, or `customer-reported` only when their semantics and evidence match. Do not infer priority from a label.
 - For likely duplicates, search open issues beyond this report only when symptoms, affected component, or expected resolution overlap. Call something a duplicate only when all three match with high confidence; otherwise identify it as a related candidate for human comparison. Never close or redirect an issue solely because an external component is involved.
 - Keep workflow labels as state: do not remove `needs-triage` while author/team triage remains; do not add `issue-addressed` without maintainer evidence that it is fixed or ready to close.
-- Add all verified labels using as many `add-labels` calls as needed, split into reasonable chunks that fit the safe-output per-call limit. Add classification and narrow scope labels first, then add the remaining verified labels; do not leave labels unset merely to avoid multiple calls.
+- Add all verified labels, up to the ten-label safe-output budget. Split them into reasonable `add-labels` calls of at most five labels each, adding classification and narrow scope labels first, then the remaining verified labels. Do not leave verified labels unset merely to avoid multiple calls.
 
 ### 3) Issue Type field
 
