@@ -6,7 +6,8 @@ Builds ToolMetadataExporter and runs it against an executable from a signed NuGe
 
 .DESCRIPTION
 Resolves a server from build_info.json, extracts its platform NuGet package, locates the packaged
-executable through DotnetToolSettings.xml, and runs ToolMetadataExporter against it.
+executable through DotnetToolSettings.xml, and runs ToolMetadataExporter against it. The server must
+implement `server info` and `tools list`. Template.Mcp.Server releases run in dry-run mode (no Kusto ingestion).
 
 .PARAMETER BuildInfoPath
 Path to the pipeline build_info.json artifact.
@@ -92,10 +93,16 @@ if ($LASTEXITCODE -ne 0) {
 $env:AppConfig__WorkDirectory = [System.IO.Path]::GetFullPath($ArtifactDirectory)
 Write-Host "Exporter output directory: '$env:AppConfig__WorkDirectory'."
 
+$exporterArguments = @('--AzmcpExe', $executablePath)
+if ($ServerName -eq 'Template.Mcp.Server') {
+    Write-Host "Template server release: running exporter in dry-run mode."
+    $exporterArguments += @('--IsDryRun', 'true')
+}
+
 $exporterExitCode = 0
 Push-Location (Split-Path $projectPath -Parent)
 try {
-    & dotnet run --project $projectPath --configuration Release --no-build --no-launch-profile -- --AzmcpExe $executablePath
+    & dotnet run --project $projectPath --configuration Release --no-build --no-launch-profile -- @exporterArguments
     $exporterExitCode = $LASTEXITCODE
 }
 finally {

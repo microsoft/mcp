@@ -45,7 +45,7 @@ public class AppConfiguration
     public bool IsDryRun { get; set; }
 
     /// <summary>
-    /// Path to the Azure MCP executable (azmcp.exe) to analyze.
+    /// Path to the MCP server executable to analyze. It must implement `server info` and `tools list`.
     /// </summary>
     public string? AzmcpExe { get; set; }
 
