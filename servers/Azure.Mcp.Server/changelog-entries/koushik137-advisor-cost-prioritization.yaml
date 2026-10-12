@@ -10,4 +10,4 @@ changes:
   - section: "Other Changes"
     description: "Route broad priority and top recommendation requests to summary grouped by recommendation type. Affected-resource follow-ups use list with the selected group key while preserving scope, category, and filters."
   - section: "Other Changes"
-    description: "Simplified Advisor list tool descriptions to focus on tool selection, scope, and output. Clarified filter matching in option descriptions and documented ordering, signals, and truncation separately in the command reference."
+    description: "Clarified summary-first routing for broad prioritization requests and direct filtered listing for generic queries or specific drill-downs. Kept record-ordering and signal prerequisites in option descriptions and corrected test prompts to distinguish recommendation records from distinct affected resources."

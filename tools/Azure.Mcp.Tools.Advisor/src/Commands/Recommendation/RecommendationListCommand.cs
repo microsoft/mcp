@@ -16,16 +16,15 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "e3f09221-523a-4107-a715-823cebd97902",
     Name = "list",
     Title = "List Advisor Recommendations",
-    Description = "List individual Azure Advisor recommendation records and their affected-resource details in a subscription or Azure Service Group. " +
-        "Use this tool to inspect or search recommendation details, or to view affected records for a selected recommendation type. " +
-        "For broad requests such as 'top recommendations', 'most important recommendations', or 'what should I fix first', " +
-        "start with recommendation summary --group-by recommendation-type. Use summary for counts and grouped overviews. " +
-        "To drill into a selected summary group, use this tool with --recommendation-type-id set to the group key, " +
-        "preserving the scope, category, and other filters. " +
-        "Optionally order matching records with --prioritized and include available prioritization signals with --show-prioritization-signals. " +
-        "--show-prioritization-signals true requires --prioritized true. " +
-        "Choose subscription or Service Group scope; resource-group filtering applies only to subscriptions. " +
-        "Returns recommendation records in ARM resource shape and a truncation indicator. Each record's name is its recommendation ID.",
+    Description = "List, show, or search individual Azure Advisor recommendations and their affected-resource details in a subscription or Azure Service Group. " +
+        "Supports filters for category, subcategory, impact, recommendation status such as New, Postponed, Dismissed, or Completed, recommendation type ID, affected resource, resource type, free text, tracking ID, retirement date, and scope. " +
+        "For status-filtered requests, use this tool to retrieve individual recommendations; use summary only for status counts or grouped analysis. " +
+        "If the request contains top, critical, important, prioritized, priority, or equivalent prioritization intent, do not use this tool; route to recommendation summary with --group-by recommendation-type. " +
+        "For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters; a prior summary call is not required. " +
+        "Use summary for counts, totals, rankings, distributions, or grouped analysis rather than aggregating this tool's limited results. " +
+        "After a summary, use this tool to retrieve individual recommendations or affected resources for a selected group by passing its key as --recommendation-type-id and preserving the applicable filters. " +
+        "For a selected recommendation type, this tool can also order the matching individual recommendations. " +
+        "Returns recommendations in ARM resource shape and a truncation indicator. Each recommendation's name is its recommendation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,

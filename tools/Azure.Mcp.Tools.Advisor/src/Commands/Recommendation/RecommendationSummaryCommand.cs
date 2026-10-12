@@ -18,8 +18,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Title = "Summarize Advisor Recommendations",
     Description = "Summarize the key themes from Azure Advisor recommendation instances in a subscription or Azure service group using server-side counts, totals, rankings, and distributions. " +
         "This is the aggregate-only tool for questions such as how many, count, breakdown, distribution, top, most common, which has the most, or how many overdue service-retirement Advisor recommendations are still active. " +
-        "Start with this tool and --group-by recommendation-type for broad top, prioritized, important, most critical, " +
-        "highest-impact, top recommendation actions, or 'what should I fix first' requests, including Cost and Security. " +
+        "Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must route to this tool with --group-by recommendation-type, across all categories and subcategories. " +
+        "When the user specifies a result count, pass it as --top. Do not start with recommendation list for these requests. " +
+        "For non-prioritized requests to retrieve individual recommendations, use recommendation list directly with all applicable filters and without a prior summary call. " +
+        "A lifecycle status such as New, Postponed, Dismissed, or Completed does not by itself require summary; use recommendation list unless the request asks for status counts, grouping, or another aggregate. " +
+        "After a summary, use recommendation list to retrieve individual recommendations or affected resources for a selected group, optionally filtering by status, ordering them, and including available signals behind their scores. " +
         "Use it for an executive summary or main themes, counts by category or business impact, top recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
         "Count active service-retirement Advisor recommendations with retirement dates on, before, or after a specified date, including overdue recommendations that are still active, or group them by retirement date. " +
         "Use this tool to answer how many overdue service-retirement Advisor recommendations are still active. " +

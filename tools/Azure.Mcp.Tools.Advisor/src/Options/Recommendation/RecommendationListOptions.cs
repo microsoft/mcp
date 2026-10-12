@@ -20,7 +20,8 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     public RecommendationStatus? Status { get; set; }
 
     [Option(Description = "Filter recommendations by the recommendation type ID GUID. " +
-        "Uses a case-insensitive exact match and can be combined with other filters.")]
+        "Uses a case-insensitive exact match and can be combined with other filters without a prior summary call. " +
+        "For a summary drill-down, use the selected group key and preserve the scope, category, and other filters.")]
     public string? RecommendationTypeId { get; set; }
 
     [Option(Description = "Filter recommendations by impacted Azure resource type (e.g., 'Microsoft.Storage/storageAccounts'). " +
@@ -53,17 +54,22 @@ public class RecommendationListOptions : IRecommendationScopeOptions
         "when specified, it must be ServiceUpgradeAndRetirement.")]
     public string? RetirementDate { get; set; }
 
-    [Option(Description = "Maximum number of recommendation records to return. Defaults to 50 and is clamped to the server-side range of 1 through 100.")]
+    [Option(Description = "Maximum number of individual recommendation records to return, not distinct affected resources or recommendation groups. " +
+        "Do not use this option for any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language; summary --group-by recommendation-type must be the only initial tool call, with the requested count passed to summary --top. " +
+        "Defaults to 50 and is clamped to the server-side range of 1 through 100. This is a result limit, not aggregate prioritization.")]
     public int? Top { get; set; }
 
     [Option(Description = "List recommendations for an Azure Service Group instead of a subscription, " +
         "provided as the name segment of its ARM resource ID (the '{serviceGroupName}' in " +
         "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'). " +
-        "Specify either --service-group or --subscription, not both; --resource-group applies only to subscription scope. " +
+        "Specify either --service-group or --subscription, not both. If both are omitted, the configured default subscription is used. " +
+        "--resource-group applies only to subscription scope. " +
         "Other filters (category, impact, status, search, etc.) and --prioritized still apply.")]
     public string? ServiceGroup { get; set; }
 
-    [Option(Description = "Sort individual records by criticalityScore descending, treating missing scores as zero. " +
+    [Option(Description = "Apply ordering to individual matching records, not recommendation groups. Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must use summary --group-by recommendation-type as the only initial tool call. " +
+        "Use this option only for a subsequent specific recommendation-type drill-down. " +
+        "Sort individual records by criticalityScore descending, treating missing scores as zero. " +
         "Only an explicit --category Cost selects savings ordering: savings.retail.dailyPotentialSavings descending, " +
         "falling back to extendedProperties.annualSavingsAmount. Missing, invalid, or non-finite savings sort last; zero is valid. " +
         "Ties sort by effective retirement date ascending (instance date with metadata fallback, missing dates last), " +

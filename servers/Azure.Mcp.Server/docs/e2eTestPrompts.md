@@ -65,16 +65,16 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show me 10 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show up to 100 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations in subscription \<subscription> under tenant \<tenant> | none |
-| advisor_recommendation_list | What does Advisor recommend for my-web-app in subscription \<subscription>? | none |
+| advisor_recommendation_list | List existing Azure Advisor recommendation records for resource my-web-app in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for resource group \<resource-group> in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_list | Show dismissed recommendations of type \<recommendation-type-id> in subscription \<subscription>, most critical first, with the signals behind their scores | none |
-| advisor_recommendation_list | Show the resources affected by Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, most critical first, and include the signals behind their scores | none |
-| advisor_recommendation_list | Show the resources affected by that recommendation, most critical first, with the signals behind each score | context-required |
-| advisor_recommendation_list | Show those recommendations again, still most critical first, but without the signal details | context-required |
-| advisor_recommendation_list | Show those recommendations again without prioritizing them or including score signals | context-required |
-| advisor_recommendation_list | Show the resources affected by that cost recommendation, largest savings first, with any available prioritization signals | context-required |
+| advisor_recommendation_list | Show dismissed recommendations of type \<recommendation-type-id> in subscription \<subscription>, with the signals behind their scores | none |
+| advisor_recommendation_list | Show the resources affected by Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, and include the signals behind their scores | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, with available prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, without prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, with prioritization and signal output disabled | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by savings, with available prioritization signals | none |
 | advisor_recommendation_list | Show me low-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List completed Advisor recommendations in subscription \<subscription> | none |
@@ -83,7 +83,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show Advisor high availability recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor operational excellence recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor cost recommendations for storage accounts in subscription \<subscription> | none |
-| advisor_recommendation_list | Find Advisor recommendations mentioning "right-size" in subscription \<subscription> | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records whose recommendation text contains "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List Advisor security recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show recommendations of type \<recommendation-type-id> in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations about service retirements in subscription \<subscription> | none |
@@ -91,37 +91,37 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show Advisor reservation recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for Service Health tracking ID QNY1-HB8 in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for either Service Health tracking ID QNY1-HB8 or 9G0V-_G8 in subscription \<subscription> | none |
-| advisor_recommendation_list | Show Advisor recommendations for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 with retirement dates on or after March 31, 2027 in subscription \<subscription> | none |
-| advisor_recommendation_list | Which resources in subscription \<subscription> are affected by Service Health tracking ID QNY1-HB8? | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records matching either Service Health tracking ID QNY1-HB8 or 9G0V-_G8 and a retirement date on or after March 31, 2027 in subscription \<subscription> | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records and their affected-resource details matching Service Health tracking ID QNY1-HB8 in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for services retiring on or before March 31, 2027 in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for services retiring after March 31, 2027 in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for services retiring on or after March 31, 2027 in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for services retiring before March 31, 2027 in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for services retiring on March 31, 2027 in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for resource \<resource-id> in subscription \<subscription> | none |
-| advisor_recommendation_list | Find Advisor recommendations about encryption in subscription \<subscription> | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records whose recommendation text contains "encryption" in subscription \<subscription> | none |
 | advisor_recommendation_list | Show high-impact Advisor security recommendations for storage accounts in subscription \<subscription> | none |
-| advisor_recommendation_list | Show me five storage accounts affected by that cost recommendation | context-required |
+| advisor_recommendation_list | Show me five recommendation records affecting storage accounts for that cost recommendation | context-required |
 | advisor_recommendation_list | Show high-impact Advisor security recommendations about encryption in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations for resource \<resource-id> related to Service Health tracking ID QNY1-HB8 in subscription \<subscription> | none |
-| advisor_recommendation_list | Show recommendations of type \<recommendation-type-id> related to Service Health tracking ID QNY1-HB8 in subscription \<subscription> | none |
-| advisor_recommendation_list | Which resources are affected by the first recommendation you showed me? | context-required |
-| advisor_recommendation_list | Show me the recommendations behind that group | context-required |
+| advisor_recommendation_list | List Azure Advisor recommendation records matching recommendation type \<recommendation-type-id> and Service Health tracking ID QNY1-HB8 in subscription \<subscription> | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for the recommendation type of the first Advisor recommendation you showed me, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | List individual Azure Advisor recommendation records for the recommendation-type group selected from the summary, keeping the same scope and filters | context-required |
 | advisor_recommendation_list | List Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show Advisor cost recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show Advisor high availability recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | Show the resources affected by that recommendation in service group \<service-group>, most critical first | context-required |
+| advisor_recommendation_list | Show the resources affected by that recommendation in service group \<service-group> | context-required |
 | advisor_recommendation_list | Show the resources affected by that cost recommendation in service group \<service-group>, largest savings first | context-required |
-| advisor_recommendation_list | Show the resources affected by that retirement recommendation, still limited to retirements before March 31, 2027 | context-required |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, filtered to retirement dates before March 31, 2027 | none |
 | advisor_recommendation_list | Show completed recommendations for that retirement type in the same service group | context-required |
-| advisor_recommendation_list | Show postponed recommendations of that type, most critical first | context-required |
-| advisor_recommendation_list | Show dismissed recommendations of that type, most critical first | context-required |
-| advisor_recommendation_list | Show completed recommendations of that type, most critical first | context-required |
-| advisor_recommendation_list | Which resources are affected by that cost recommendation, and which offer the largest savings? | context-required |
-| advisor_recommendation_list | Show the resources affected by that security recommendation, most critical first | context-required |
-| advisor_recommendation_list | Show the top 10 affected resources for that recommendation | context-required |
-| advisor_recommendation_list | Show the top 10 affected resources for Advisor recommendation type \<recommendation-type-id> in service group \<service-group> | none |
+| advisor_recommendation_list | List postponed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List dismissed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List completed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by largest savings first | none |
+| advisor_recommendation_list | Show the resources affected by that security recommendation | context-required |
+| advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
 | advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_list | Show postponed Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show Advisor recommendations for Service Health tracking ID QNY1-HB8 in service group \<service-group> | none |
@@ -149,11 +149,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | Show prioritized Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Which Advisor recommendations have the highest priority in subscription \<subscription>? | none |
 | advisor_recommendation_summary | Show the top recommendation actions from Azure Advisor for subscription \<subscription> | none |
 | advisor_recommendation_summary | What are the top recommendation actions I should address first for service group \<service-group>? | none |
 | advisor_recommendation_summary | What should I fix first in subscription \<subscription>? Show my Advisor recommendations | none |
 | advisor_recommendation_summary | Which Advisor recommendations are most important for service group \<service-group>? | none |
 | advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show the most important reliability recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show prioritized service-retirement Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show the top cost optimization actions from Advisor in subscription \<subscription> | none |
 | advisor_recommendation_summary | What are the highest-impact Advisor recommendations for service group \<service-group>? | none |
 | advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
 | advisor_recommendation_summary | Which Security Advisor recommendations should I address first in service group \<service-group>? | none |
