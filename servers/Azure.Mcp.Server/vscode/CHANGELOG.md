@@ -27,26 +27,6 @@ We're excited to announce the third major release of the Azure MCP Server! Versi
 - **More Flexible Server Options**: Added `--disable-proxy-tools`, learn-mode discovery for `azmcp` commands, an `operationPlane` field in `tools list` output, and Azure Pipelines workload identity federation authentication
 - **Improved Reliability and Diagnostics**: More accurate HTTP status codes and actionable error messages, clearer credential errors, additional telemetry, and startup, concurrency, and resource usage benchmarks
 
-### Getting Started
-
-Install the Azure MCP Server from your preferred platform:
-
-- **VS Code**: Install the [Azure MCP Server extension in VS Code](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server)
-- **VS Code Insiders**: Install the [Azure MCP Server extension in VS Code Insiders](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server)
-- **Visual Studio 2022**: Install [GitHub Copilot for Azure](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)
-- **Visual Studio 2026**: Install the [Azure and AI Development workload](https://learn.microsoft.com/azure/developer/github-copilot-azure/get-started?pivots=visual-studio-2026#install-github-copilot-for-azure)
-- **Claude and GitHub Copilot CLI**: Install the [Azure Skills Plugin](https://github.com/microsoft/azure-skills?tab=readme-ov-file#install-in-60-seconds)
-- **IntelliJ IDEA**: Install the [Azure Toolkit for IntelliJ](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij)
-- **Eclipse IDE**: Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
-- **NuGet**: Run `dotnet tool install -g Azure.Mcp --version 3.0.0`
-- **npm**: Run `npx @azure/mcp@3.0.0`
-- **Docker**: Run `docker pull mcr.microsoft.com/azure-mcp:3.0.0`
-- **PyPI**: Run `pip install msmcp-azure==3.0.0`
-- **MCP Bundles**: Download the `.mcpb` file for your platform/architecture and open it with your client, like Claude Desktop:
-    - Linux: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-linux-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-linux-arm64.mcpb)
-    - macOS: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-osx-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-osx-arm64.mcpb)
-    - Windows: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-win-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-win-arm64.mcpb)
-
 ### Documentation
 
 - [Complete Command Reference](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
