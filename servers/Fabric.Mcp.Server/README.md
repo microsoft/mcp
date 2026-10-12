@@ -7,7 +7,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 
 A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Documentation tools use bundled specifications without connecting to live Fabric environments; operational tools call Fabric APIs using the configured identity.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
-[![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-fabric.vscode-fabric-mcp-server)
+[![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/fabric.vscode-fabric-mcp-server)
 
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=6e3fa3)](https://github.com/microsoft/mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Fabric.Mcp.*&style=flat-square&color=6e3fa3)](https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-)
@@ -16,34 +16,36 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
 <!-- remove-section: end remove_install_links -->
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)
-  - [IDE](#ide)
-    - [VS Code (Recommended)](#vs-code-recommended)
-    - [Manual Setup](#manual-setup)
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_ide_toc -->
+    - [IDE](#ide)
+        - [VS Code (Recommended)](#vs-code-recommended)
+        - [Manual Setup](#manual-setup)<!-- remove-section: end remove_ide_toc -->
+    - [Docker](#docker)
 - [Usage](#usage)
-  - [Getting Started](#getting-started)
-  - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
-    - [Catalog Discovery](#catalog-discovery)
-    - [Fabric Item Types & APIs](#fabric-item-types--apis)
-    - [Resource Definitions & Schemas](#resource-definitions--schemas)
-    - [Best Practices & Examples](#best-practices--examples)
-    - [Development Workflows](#development-workflows)
-  - [Workspace Metadata](#workspace-metadata)
-  - [Available Tools](#available-tools)
-    - [API Documentation & Best Practices](#api-documentation--best-practices)
-    - [OneLake Data Operations](#onelake-data-operations)
-    - [OneLake Security — Data Access Roles](#onelake-security--data-access-roles)
-    - [OneLake Shortcuts](#onelake-shortcuts)
-    - [OneLake Settings](#onelake-settings)
-    - [Core Fabric Operations](#core-fabric-operations)
-    - [Data Factory Operations](#data-factory-operations)
+    - [Getting Started](#getting-started)
+    - [What can you do with the Fabric MCP Server?](#what-can-you-do-with-the-fabric-mcp-server)
+        - [Capacity Discovery](#capacity-discovery)
+        - [Catalog Discovery](#catalog-discovery)
+        - [Fabric Item Types & APIs](#fabric-item-types--apis)
+        - [Resource Definitions & Schemas](#resource-definitions--schemas)
+        - [Best Practices & Examples](#best-practices--examples)
+        - [Development Workflows](#development-workflows)
+    - [Workspace Metadata](#workspace-metadata)
+    - [Available Tools](#available-tools)
+        - [API Documentation & Best Practices](#api-documentation--best-practices)
+        - [OneLake Data Operations](#onelake-data-operations)
+        - [OneLake Security — Data Access Roles](#onelake-security--data-access-roles)
+        - [OneLake Shortcuts](#onelake-shortcuts)
+        - [OneLake Settings](#onelake-settings)
+        - [Core Fabric Operations](#core-fabric-operations)
+        - [Data Factory Operations](#data-factory-operations)
 - [Support and Reference](#support-and-reference)
-  - [Documentation](#documentation)
-  - [Feedback and Support](#feedback-and-support)
-  - [Security](#security)
-  - [Data Collection](#data-collection)
-  - [Contributing](#contributing)
-  - [Code of Conduct](#code-of-conduct)
+    - [Documentation](#documentation)
+    - [Feedback and Support](#feedback-and-support)
+    - [Security](#security)
+    - [Data Collection](#data-collection)
+    - [Contributing](#contributing)
+    - [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
 # Overview
@@ -59,6 +61,9 @@ Key capabilities:
 - **Data Factory Integration**: Pipeline and Dataflow Gen2 management with M query execution
 
 # Installation
+
+The manual configuration examples use `mcpServers` as the root object. In Visual Studio and Visual Studio Code, use `servers` instead.
+
 <!-- insert-section: vsix {{- Install the [Fabric MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
 <!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can configure MCP servers to start automatically using the `chat.mcp.autostart` setting.}} -->
@@ -80,6 +85,9 @@ Key capabilities:
 <!-- insert-section: vsix {{- (Optional) Configure server behavior in VS Code settings (search for "Fabric MCP")}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You're all set! Fabric MCP Server is now ready to help you work smarter with Microsoft Fabric in VS Code.}} -->
+
+When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
+
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 
@@ -103,27 +111,26 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: end remove_ide_sub_section -->
 <!-- remove-section: start npm remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
-#### Option 1: Configure using .NET (build from source)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- You must have the latest [.NET 10 SDK LTS](https://dotnet.microsoft.com/download/dotnet) installed.
-  To verify the .NET version, run: `dotnet --version`
-- Clone and build the repository:
+#### Option 1: Configure using the .NET tool (NuGet)<!-- remove-section: end remove_dotnet_config_sub_header -->
+- Install the [.NET 10 SDK or later](https://dotnet.microsoft.com/download/dotnet). Verify it with `dotnet --version`.
+- Install the published [Microsoft.Fabric.Mcp](https://www.nuget.org/packages/Microsoft.Fabric.Mcp) tool:
 
-    ```bash
-    git clone https://github.com/microsoft/mcp.git
-    cd mcp
-    dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
+    ```powershell
+    dotnet tool install --global Microsoft.Fabric.Mcp --source https://api.nuget.org/v3/index.json
     ```
 
-- Configure the `mcp.json` file with the following:
+- Ensure the .NET global tools directory is on the `PATH` available to your MCP client, then configure `mcp.json`:
 
     ```json
     {
         "mcpServers": {
             "Fabric MCP Server": {
-                "command": "/path/to/repo/servers/Fabric.Mcp.Server/src/bin/Release/fabmcp",
+                "command": "fabmcp",
                 "args": [
                     "server",
-                    "start"
+                    "start",
+                    "--mode",
+                    "all"
                 ],
                 "type": "stdio"
             }
@@ -131,36 +138,52 @@ Use one of the following options to configure your `mcp.json`:
     }
     ```
 
-> **Platform Notes:**
-> - **macOS/Linux**: Use the path as-is
-> - **Windows**: Use backslashes and add `.exe` extension: `C:\path\to\repo\servers\Fabric.Mcp.Server\src\bin\Release\fabmcp.exe`
+Alternatively, .NET 10 supports running the published package on demand with [`dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec), without a permanent tool installation:
+
+```powershell
+dnx Microsoft.Fabric.Mcp --source https://api.nuget.org/v3/index.json -- server start --mode all
+```
+
+Both commands use the latest published stable package unless you specify a version. To pin a released version, use `--version <version>` with `dotnet tool install`, or `Microsoft.Fabric.Mcp@<version>` with `dnx`.
 <!-- remove-section: end remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Fabric MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend the latest Node.js LTS version. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
--  Configure the `mcp.json` file with the following:
+- Install a supported Node.js LTS version **22.0.0 or later**, with `npm` and `npx` available on your system `PATH`. Verify your installation with `node --version`, `npm --version`, and `npx --version`.
+- Configure the `mcp.json` file with the following:
 
     ```json
     {
         "mcpServers": {
             "fabric-mcp-server": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@microsoft/fabric-mcp@latest",
-                "server",
-                "start",
-                "--mode",
-                "all"
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@microsoft/fabric-mcp@latest",
+                    "server",
+                    "start",
+                    "--mode",
+                    "all"
                 ]
             }
         }
     }
     ```
 <!-- remove-section: end remove_node_config_sub_section -->
-<!-- remove-section: start nuget remove_custom_client_config_table -->
-**Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
+<!-- remove-section: start nuget;npm remove_source_build_sub_section -->
+
+#### Build from source (contributors)
+
+Building the repository is a separate development workflow, not required to use the published packages:
+
+```bash
+git clone https://github.com/microsoft/mcp.git
+cd mcp
+dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
+```
+
+Use the built `servers/Fabric.Mcp.Server/src/bin/Release/fabmcp` executable as your MCP client's `command`, with `["server", "start", "--mode", "all"]` as its arguments. On Windows, use backslashes and the `.exe` extension.
+<!-- remove-section: end remove_source_build_sub_section -->
 
 **Client-Specific Configuration**
 | IDE | File Location | Documentation Link |
@@ -170,11 +193,49 @@ Use one of the following options to configure your `mcp.json`:
 | **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
 | **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
-<!-- remove-section: end remove_custom_client_config_table -->
 <!-- remove-section: start nuget;npm remove_closing_details -->
 </details>
 <!-- remove-section: end remove_closing_details -->
 <!-- remove-section: end remove_entire_installation_sub_section -->
+
+## Docker
+
+The published container image is available from [Microsoft Container Registry](https://mcr.microsoft.com/artifact/mar/fabric/fabric-mcp) as `mcr.microsoft.com/fabric/fabric-mcp`. Use Docker with Linux containers. The `latest` tag selects the most recently published image; when pinning a version, choose a tag that already exists in the registry.
+
+The container does **not** inherit your host's `az login` session. For operational tools, configure an identity supported by the Fabric APIs you intend to call and grant it the required Fabric permissions. For example, supply a service principal using a local environment file stored outside your repository:
+
+```text
+AZURE_TENANT_ID=<tenant-id>
+AZURE_CLIENT_ID=<client-id>
+AZURE_CLIENT_SECRET=<client-secret>
+AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
+```
+
+Never commit this file or put its secret values in `mcp.json`. See [environment credential options](https://learn.microsoft.com/dotnet/api/azure.identity.environmentcredential) for other supported credential settings.
+
+Configure your MCP client, replacing the environment-file placeholder with an absolute path:
+
+```json
+{
+    "mcpServers": {
+        "fabric-mcp-server": {
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "--env-file",
+                "<absolute-path-to-env-file>",
+                "mcr.microsoft.com/fabric/fabric-mcp:latest",
+                "--mode",
+                "all"
+            ]
+        }
+    }
+}
+```
+
+Keep stdin open with `-i`, without allocating a TTY. The image entrypoint already runs `server start`; do not repeat those arguments after the image name.
 
 # Usage
 
@@ -277,10 +338,9 @@ The tool does not list workspaces or items, read item data or definitions, modif
 
 By default, the MCP text response contains the command envelope with `results.workspace`. With `--structured-output-mode compact` or `--structured-output-mode duplicated`, the server also advertises the typed output schema and returns `structuredContent.workspace`.
 
-<!-- remove-section: start vsix remove_available_tools_section -->
 ## Available Tools
 
-The Fabric MCP Server exposes tools organized into three categories:
+The Fabric MCP Server exposes four toolsets: `core`, `docs`, `onelake`, and `datafactory`.
 
 ### API Documentation & Best Practices
 
@@ -760,7 +820,6 @@ Failures preserve the service's HTTP status and return sanitized guidance. On th
 | `datafactory_execute-query` | Executes an M (Power Query) query against a dataflow. |
 
 > Always verify available commands via `--help`. Command names and availability may change between releases.
-<!-- remove-section: end remove_available_tools_section -->
 
 # Support and Reference
 
