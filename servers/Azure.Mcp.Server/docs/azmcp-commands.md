@@ -459,10 +459,19 @@ azmcp adme storage record version list --endpoint <endpoint> \
 ### Azure Advisor Operations
 
 ```bash
-# List individual Azure Advisor recommendation records and their affected-resource details.
-# Use summary --group-by recommendation-type for broad top/important recommendation requests
-# and grouped overviews. To inspect a selected group, use --recommendation-type-id with its
-# group key, preserving scope, category, and other filters.
+# List individual Azure Advisor recommendations and their affected-resource details.
+# Supports filters for category, subcategory, impact, recommendation status such as New, Postponed,
+# Dismissed, or Completed, recommendation type ID,
+# affected resource, resource type, free text, tracking ID, retirement date, and scope.
+# For status-filtered requests, use list to retrieve individual recommendations; use summary only
+# for status counts or grouped analysis.
+# Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization
+# language must use summary --group-by recommendation-type. For other requests for individual
+# recommendations, use list directly with any supported filters; no prior summary call is required.
+# Use summary for counts, totals, rankings, distributions, or grouped analysis, not aggregates of
+# limited list results. After a summary, use list with --recommendation-type-id to retrieve individual
+# recommendations or affected resources for a selected group, preserving the applicable filters.
+# For a selected recommendation type, list can also order the matching individual recommendations.
 #
 # Choose subscription or Service Group scope. --resource-group applies only to subscriptions.
 # If neither scope is supplied, the configured default subscription is used.
@@ -507,6 +516,7 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 - Tracking IDs and retirement-date filters can be combined. They imply `ServiceUpgradeAndRetirement`; an explicitly supplied subcategory must match it.
 - Retirement-date filtering uses the metadata date, not the effective date used for ordering.
 - Results are individual recommendation records, not distinct resources. Each record's `name` is its recommendation ID.
+- `--prioritized` orders matching list records only for a subsequent specific recommendation-type drill-down. Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must route only to summary first.
 
 ```bash
 # Update the customer-provided state of an Advisor recommendation in a subscription or service group.
@@ -527,8 +537,10 @@ azmcp advisor recommendation update [--subscription <subscription>] \
                                     [--tenant <tenant>]
 
 # Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group.
-# Start here with --group-by recommendation-type for broad top, prioritized, important, most critical,
-# highest-impact, top recommendation actions, or "what should I fix first" requests, including Cost and Security.
+# Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization
+# language must start here with --group-by recommendation-type as the only initial tool call.
+# For non-prioritized requests to retrieve individual recommendations, use list directly with all applicable filters
+# and without a prior summary call.
 # Follow up with advisor recommendation list --recommendation-type-id <summary-group-key> to show affected resources
 # or records for a selected group, preserving the scope, category, and other filters.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
@@ -539,6 +551,8 @@ azmcp advisor recommendation update [--subscription <subscription>] \
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
 # properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
 # retirement data prefer metadata values with recommendation-instance fallback.
+# Counts represent recommendation records, not distinct affected resources. Recommendation-type groups
+# are ordered by record count descending, then key; this is not two-layer criticality or savings ranking.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

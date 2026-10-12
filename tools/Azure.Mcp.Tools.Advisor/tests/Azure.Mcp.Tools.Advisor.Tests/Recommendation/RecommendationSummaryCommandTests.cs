@@ -33,11 +33,18 @@ public class RecommendationSummaryCommandTests
     }
 
     [Theory]
-    [InlineData("Start with this tool and --group-by recommendation-type")]
-    [InlineData("broad top, prioritized, important, most critical")]
-    [InlineData("highest-impact, top recommendation actions")]
-    [InlineData("'what should I fix first'")]
-    [InlineData("including Cost and Security")]
+    [InlineData("Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language")]
+    [InlineData("route to this tool with --group-by recommendation-type")]
+    [InlineData("When the user specifies a result count, pass it as --top")]
+    [InlineData("Do not start with recommendation list for these requests")]
+    [InlineData("For non-prioritized requests to retrieve individual recommendations")]
+    [InlineData("use recommendation list directly with all applicable filters")]
+    [InlineData("across all categories and subcategories")]
+    [InlineData("without a prior summary call")]
+    [InlineData("A lifecycle status such as New, Postponed, Dismissed, or Completed does not by itself require summary")]
+    [InlineData("use recommendation list unless the request asks for status counts, grouping, or another aggregate")]
+    [InlineData("After a summary, use recommendation list to retrieve individual recommendations or affected resources")]
+    [InlineData("optionally filtering by status, ordering them, and including available signals behind their scores")]
     [InlineData("show or view affected resources or records for a selected group")]
     [InlineData("--recommendation-type-id set to the summary group key")]
     [InlineData("preserving the scope, category, and other filters")]
@@ -53,6 +60,9 @@ public class RecommendationSummaryCommandTests
 
         Assert.Contains("Defaults to 'category' when omitted", groupBy.Description);
         Assert.Contains("recommendation type ID GUID keys and English labels", groupBy.Description);
+        Assert.Contains("Any intent containing top, critical, important, prioritized, priority", groupBy.Description);
+        Assert.Contains("route only to this summary tool initially", groupBy.Description);
+        Assert.Contains("recommendation-record counts rather than distinct-resource counts", groupBy.Description);
     }
 
     [Theory]
