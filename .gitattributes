@@ -8,3 +8,8 @@
 *.sh text=auto eol=lf
 
 .github/workflows/*.lock.yml linguist-generated=true
+
+# Preserve the pinned source bytes and transformed article line endings on every checkout.
+tools/Fabric.Mcp.Tools.Docs/src/Resources/fabric-rest-api-specs/** -text
+tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions/** -text
+tools/Fabric.Mcp.Tools.Docs/src/Resources/fabric-rest-apis-docs/** -text

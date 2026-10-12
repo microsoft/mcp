@@ -4,7 +4,8 @@
     "itemId": "70bcc992-a346-4f21-afe5-8b9ed1596a2b",
     "updateAuditSettingsRequest": {
       "state": "Enabled",
-      "retentionDays": 10
+      "retentionDays": 10,
+      "predicateExpression": "NOT statement LIKE 'SELECT %'"
     }
   },
   "responses": {
@@ -14,7 +15,8 @@
         "retentionDays": 10,
         "auditActionsAndGroups": [
           "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP"
-        ]
+        ],
+        "predicateExpression": "NOT statement LIKE 'SELECT %'"
       }
     }
   }

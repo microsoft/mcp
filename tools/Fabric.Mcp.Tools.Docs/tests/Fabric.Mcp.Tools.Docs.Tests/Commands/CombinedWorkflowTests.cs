@@ -128,11 +128,20 @@ public class CombinedWorkflowTests : IDisposable
         // Every reachable definition should have been successfully retrieved
         Assert.Equal(matchedDefinitions.Count, successCount);
 
+        // Ontology's legacy JSON format has its own article, not a separate API item type.
+        const string legacyOntologyResource = "Resources/item-definitions/ontology-old-definition.md";
+        Assert.Contains("ontology", itemTypes);
+        Assert.Contains(legacyOntologyResource, allDefinitionResources);
+        var legacyOntologyResult = await ExecuteCommandAsync(_getItemDefinitionCommand, "--item-type", "ontology-old");
+        Assert.Equal(HttpStatusCode.OK, legacyOntologyResult.Status);
+        Assert.NotNull(legacyOntologyResult.Results);
+
         // Flag any orphaned definition files that no item type can reach.
-        // dbtjob, hlscohort, orgapp, and orgappaudience have no corresponding item type API spec directories.
-        var knownOrphans = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dbtjob-definition.md", "hlscohort-definition.md", "orgapp-definition.md", "orgappaudience-definition.md" };
+        // dbtjob, orgapp, and orgappaudience have no corresponding item type API spec directories.
+        var knownOrphans = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dbtjob-definition.md", "orgapp-definition.md", "orgappaudience-definition.md" };
         var orphaned = allDefinitionResources
             .Except(matchedDefinitions)
+            .Except([legacyOntologyResource])
             .Where(r => !knownOrphans.Contains(Path.GetFileName(r)!))
             .ToArray();
         Assert.True(orphaned.Length == 0,
