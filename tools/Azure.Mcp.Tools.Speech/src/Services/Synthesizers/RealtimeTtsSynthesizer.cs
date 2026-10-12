@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Speech.Models;
 using Microsoft.CognitiveServices.Speech;
@@ -31,6 +32,9 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(text), text), (nameof(outputFilePath), outputFilePath));
+        Uri wssEndpoint = SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(
+            endpoint,
+            AzureService.CloudConfiguration.ArmEnvironment);
 
         // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
         outputFilePath = FilePathValidator.ValidateAndCanonicalize(outputFilePath);
@@ -47,7 +51,7 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
         {
             // Use the reusable streaming synthesis method
             var (audioData, actualVoice) = await SynthesizeSpeechToStreamAsync(
-                endpoint, text, language, voice, format, endpointId, cancellationToken);
+                wssEndpoint, text, language, voice, format, endpointId, cancellationToken);
 
             // Write the complete audio data to file
             await File.WriteAllBytesAsync(outputFilePath, audioData, cancellationToken);
@@ -93,7 +97,7 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
     /// This method uses push stream to collect audio data during synthesis for efficient memory management.
     /// </summary>
     private async Task<(byte[] AudioData, string Voice)> SynthesizeSpeechToStreamAsync(
-        string endpoint,
+        Uri wssEndpoint,
         string text,
         string? language = null,
         string? voice = null,
@@ -102,18 +106,13 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
         CancellationToken cancellationToken = default)
     {
         // Get Azure AD credential and token
-        var credential = await GetCredential(null, cancellationToken);
+        TokenCredential credential = await GetCredential(null, cancellationToken);
 
         // Get access token for Cognitive Services with proper scope
-        var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
-
-        // Convert https endpoint to wss for WebSocket-based TTS
-        var wssEndpoint = endpoint
-            .Replace("https://", "wss://", StringComparison.OrdinalIgnoreCase)
-            .TrimEnd('/') + "/tts/cognitiveservices/websocket/v1?traffictype=localmcp";
+        AccessToken accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
         // Configure Speech SDK with endpoint
-        var config = SpeechConfig.FromEndpoint(new(wssEndpoint));
+        SpeechConfig config = SpeechConfig.FromEndpoint(wssEndpoint);
 
         // Set the authorization token
         config.AuthorizationToken = accessToken.Token;

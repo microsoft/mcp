@@ -16,17 +16,29 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Tests;
 /// </summary>
 public class FoundryExtensionsServiceEndpointValidationTests
 {
-    private readonly IAzureService _azureService;
     private readonly FoundryExtensionsService _service;
 
     public FoundryExtensionsServiceEndpointValidationTests()
     {
-        _azureService = Substitute.For<IAzureService>();
-        var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
-        cloudConfig.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
-        _azureService.CloudConfiguration.Returns(cloudConfig);
-        _service = new FoundryExtensionsService(_azureService);
+        _service = CreateService(ArmEnvironment.AzurePublicCloud);
     }
+
+    private static FoundryExtensionsService CreateService(ArmEnvironment armEnvironment)
+    {
+        var azureService = Substitute.For<IAzureService>();
+        var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfig.ArmEnvironment.Returns(armEnvironment);
+        azureService.CloudConfiguration.Returns(cloudConfig);
+        return new FoundryExtensionsService(azureService);
+    }
+
+    private static ArmEnvironment GetArmEnvironment(string cloud) => cloud switch
+    {
+        "china" => ArmEnvironment.AzureChina,
+        "government" => ArmEnvironment.AzureGovernment,
+        "germany" => ArmEnvironment.AzureGermany,
+        _ => ArmEnvironment.AzurePublicCloud
+    };
 
     #region Test Data
 
@@ -38,6 +50,8 @@ public class FoundryExtensionsServiceEndpointValidationTests
         ["https://167.128.3.12"], // An arbitrary endpoint
         ["https://evil.com/api/projects/steal-data"], // Malicious domain
         ["https://my-foundry.services.ai.azure.com.evil.com/api/projects/my-project"], // Domain spoofing attempt
+        ["https://my-foundry.services.ai.azure.com"], // Missing project path
+        ["https://my-foundry.services.ai.azure.com/api/models/my-project"], // Wrong project path
     ];
 
     public static IEnumerable<object[]> InvalidAzureOpenAiEndpoints =>
@@ -80,12 +94,26 @@ public class FoundryExtensionsServiceEndpointValidationTests
     }
 
     [Theory]
-    [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project")]
-    [InlineData("https://my-foundry.services.ai.azure.com")]
-    public void ValidateProjectEndpoint_AcceptsValidEndpoints(string validEndpoint)
+    [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "public")]
+    [InlineData("https://my-foundry.services.ai.azure.us/api/projects/my-project", "government")]
+    public void ValidateProjectEndpoint_AcceptsValidCloudEndpoints(string validEndpoint, string cloud)
     {
-        var exception = Record.Exception(() => _service.ValidateProjectEndpoint(validEndpoint));
+        var service = CreateService(GetArmEnvironment(cloud));
+
+        var exception = Record.Exception(() => service.ValidateProjectEndpoint(validEndpoint));
         Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("https://my-foundry.services.ai.azure.cn/api/projects/my-project", "china")]
+    [InlineData("https://my-foundry.services.ai.azure.de/api/projects/my-project", "germany")]
+    public void ValidateProjectEndpoint_UnsupportedCloudEndpoint_ThrowsArgumentException(string endpoint, string cloud)
+    {
+        var service = CreateService(GetArmEnvironment(cloud));
+
+        var exception = Assert.Throws<ArgumentException>(() => service.ValidateProjectEndpoint(endpoint));
+
+        Assert.Contains("Invalid Foundry project endpoint", exception.Message);
     }
 
     #endregion
@@ -109,6 +137,19 @@ public class FoundryExtensionsServiceEndpointValidationTests
     public void ValidateAzureOpenAiEndpoint_AcceptsValidEndpoints(string validEndpoint)
     {
         var exception = Record.Exception(() => _service.ValidateAzureOpenAiEndpoint(validEndpoint));
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("https://my-resource.openai.azure.cn", "china")]
+    [InlineData("https://my-resource.openai.azure.us", "government")]
+    [InlineData("https://my-resource.openai.azure.de", "germany")]
+    public void ValidateAzureOpenAiEndpoint_AcceptsValidSovereignCloudEndpoints(string endpoint, string cloud)
+    {
+        var service = CreateService(GetArmEnvironment(cloud));
+
+        var exception = Record.Exception(() => service.ValidateAzureOpenAiEndpoint(endpoint));
+
         Assert.Null(exception);
     }
 

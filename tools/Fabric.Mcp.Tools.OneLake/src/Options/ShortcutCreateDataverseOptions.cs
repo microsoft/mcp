@@ -31,8 +31,4 @@ public sealed class ShortcutCreateDataverseOptions
 
     [Option(Description = "The Delta Lake folder path in Dataverse.")]
     public required string TargetDeltalakeFolder { get; set; }
-
-    // TODO (alzimmer): Option isn't used, command probably needs to be updated.
-    [Option(Description = "The Dataverse table name.")]
-    public string? TargetTableName { get; set; }
 }

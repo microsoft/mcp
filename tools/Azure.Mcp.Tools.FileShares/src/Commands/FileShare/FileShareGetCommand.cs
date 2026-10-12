@@ -15,7 +15,11 @@ namespace Azure.Mcp.Tools.FileShares.Commands.FileShare;
     Id = "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f",
     Name = "get",
     Title = "Get File Share",
-    Description = "Get details of a specific file share or list all file shares. If --name is provided, returns a specific file share; otherwise, lists all file shares in the subscription or resource group.",
+    Description = """
+        Get details of a specific Azure File Share or list Azure File Shares in a subscription or resource group.
+        Use this command instead of generic Azure resource listing when the user asks to list file shares.
+        Provide --name and --resource-group to get one file share; omit --name to list file shares.
+        """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,

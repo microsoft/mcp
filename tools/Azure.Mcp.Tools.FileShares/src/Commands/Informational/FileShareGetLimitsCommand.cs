@@ -15,7 +15,11 @@ namespace Azure.Mcp.Tools.FileShares.Commands.Informational;
     Id = "a9e1f0b2-c3d4-4e5f-a6b7-c8d9e0f1a2b3",
     Name = "limits",
     Title = "Get File Share Limits",
-    Description = "Get file share limits for a subscription and location",
+    Description = """
+        Get Azure File Shares service limits and provisioning constants for a subscription and location,
+        including supported file share counts, storage, IOPS, and throughput ranges.
+        Use this command for Azure File Shares service limits, not Azure resource quota usage.
+        """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,

@@ -49,7 +49,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     Description = "Starts Azure MCP Server.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
-    ReadOnly = true)]
+    Idempotent = false,
+    OpenWorld = true,
+    ReadOnly = true,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 {
     private static readonly string[] s_stdioHostBuilderArgs =
@@ -118,7 +122,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         }
         catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
         {
-            validationResult.Errors.Add($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{options.DangerouslyWriteSupportLogsToDir}': {ex.Message}");
+            validationResult.AddError($"The --dangerously-write-support-logs-to-dir option contains an invalid folder path '{options.DangerouslyWriteSupportLogsToDir}': {ex.Message}",
+                "Invalid logging directory.");
         }
     }
 
@@ -132,6 +137,12 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     {
         try
         {
+            // This initialization only runs for `server start`. Direct CLI command execution
+            // bypasses ServerStartCommand and will require separate wiring if this option is
+            // later intended to apply outside MCP server mode.
+            EndpointValidator.SetDangerouslyDisabledSsrfProtectionNamespaces(
+                options.DangerouslyDisableSsrfProtectionsByNamespace);
+
             using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
 
             using var host = CreateHost(options);
@@ -213,7 +224,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             return; // Success
         }
 
-        validationResult.Errors.Add($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
+        validationResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.",
+            "Invalid server mode.");
     }
 
     /// <summary>
@@ -238,7 +250,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             return;
         }
 
-        validationResult.Errors.Add($"Invalid transport '{options.Transport}'. Valid transports are: {TransportTypes.StdIo}, {TransportTypes.Http}.");
+        validationResult.AddError($"Invalid transport '{options.Transport}'. Valid transports are: {TransportTypes.StdIo}, {TransportTypes.Http}.",
+            "Invalid server transport.");
     }
 
     /// <summary>

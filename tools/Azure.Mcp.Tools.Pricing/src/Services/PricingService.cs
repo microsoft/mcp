@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using Azure.Mcp.Tools.Pricing.Models;
+using Azure.ResourceManager;
 using AzureRetailPrices;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -10,9 +12,30 @@ namespace Azure.Mcp.Tools.Pricing.Services;
 /// <summary>
 /// Service implementation for Azure Retail Pricing operations.
 /// </summary>
-public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPricingService
+public class PricingService(
+    IAzureCloudConfiguration cloudConfiguration) : IPricingService
 {
     private const int MaxResults = 5000;
+    private readonly PipelineTransport? _transportForTestInjection;
+
+    /// <summary>
+    /// Initializes a test-only instance with an injectable pipeline transport.
+    /// </summary>
+    /// <param name="cloudConfiguration">The Azure cloud configuration.</param>
+    /// <param name="transportForTestInjection">
+    /// The pipeline transport used by endpoint-validation tests to observe requests and supply controlled responses.
+    /// </param>
+    /// <remarks>
+    /// Production dependency injection uses the public primary constructor and preserves the generated client's
+    /// default transport. This overload must only be used by tests.
+    /// </remarks>
+    internal PricingService(
+        IAzureCloudConfiguration cloudConfiguration,
+        PipelineTransport transportForTestInjection) : this(cloudConfiguration)
+    {
+        ArgumentNullException.ThrowIfNull(transportForTestInjection);
+        _transportForTestInjection = transportForTestInjection;
+    }
 
     /// <inheritdoc/>
     public async Task<List<PriceItem>> GetPricesAsync(
@@ -43,10 +66,21 @@ public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPric
             ? AzureRetailPricesClientOptions.ServiceVersion.V2023_01_01_Preview
             : AzureRetailPricesClientOptions.ServiceVersion.Default;
 
+        ArmEnvironment armEnvironment = cloudConfiguration.ArmEnvironment;
         var clientOptions = new AzureRetailPricesClientOptions(serviceVersion);
+        if (_transportForTestInjection is not null)
+        {
+            // Only tests using the internal constructor replace the transport; production retains the generated
+            // client's default transport and its associated behavior, including its User-Agent handling.
+            clientOptions.Transport = _transportForTestInjection;
+        }
 
-        var client = new AzureRetailPricesClient(GetPricingEndpoint(), clientOptions);
+        clientOptions.AddPolicy(
+            new RetailPricingEndpointValidationPolicy(armEnvironment),
+            PipelinePosition.BeforeTransport);
 
+        Uri pricingEndpoint = GetPricingEndpoint(armEnvironment);
+        var client = new AzureRetailPricesClient(pricingEndpoint, clientOptions);
         var retailPrices = client.GetRetailPricesClient();
 
         // Get prices with auto-pagination up to MaxResults
@@ -121,13 +155,25 @@ public class PricingService(IAzureCloudConfiguration cloudConfiguration) : IPric
         return value.Replace("'", "''");
     }
 
-    private Uri GetPricingEndpoint() => cloudConfiguration.CloudType switch
+    /// <summary>
+    /// Gets the Azure Retail Prices endpoint for the configured Azure cloud.
+    /// </summary>
+    /// <param name="armEnvironment">The configured Azure cloud.</param>
+    /// <returns>The cloud-specific Azure Retail Prices endpoint.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the configured Azure cloud is not supported by the Azure Retail Prices API.
+    /// </exception>
+    private static Uri GetPricingEndpoint(ArmEnvironment armEnvironment)
     {
-        AzureCloudConfiguration.AzureCloud.AzurePublicCloud => new("https://prices.azure.com"),
-        AzureCloudConfiguration.AzureCloud.AzureChinaCloud => new("https://prices.azure.cn"),
-        AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => new("https://prices.azure.us"),
-        _ => new("https://prices.azure.com")
-    };
+        // EndpointValidator.AllowLists.cs contains the same exact hosts so the request policy can authorize
+        // the final initial or paginated URI. Keep both copies and their tests synchronized.
+        return ArmEnvironment.AzurePublicCloud.Equals(armEnvironment) ? new Uri("https://prices.azure.com") :
+            ArmEnvironment.AzureChina.Equals(armEnvironment) ? new Uri("https://prices.azure.cn") :
+            ArmEnvironment.AzureGovernment.Equals(armEnvironment) ? new Uri("https://prices.azure.us") :
+            throw new ArgumentException(
+                "The configured Azure cloud is not supported by the Azure Retail Prices API.",
+                nameof(armEnvironment));
+    }
 
     private static PriceItem MapToPriceItem(RetailPriceItem item)
     {

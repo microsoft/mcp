@@ -40,6 +40,8 @@ public interface IDppBackupOperations
         string? softDeleteRetentionDays,
         string? immutabilityState,
         string? identityType,
+        string? userAssignedIdentity,
+        string? publicNetworkAccess,
         string? tags,
         string? tenant,
         CancellationToken cancellationToken);
@@ -74,8 +76,6 @@ public interface IDppBackupOperations
         string datasourceId,
         string policyName,
         string? datasourceType,
-        string? aksIncludedNamespaces,
-        string? aksExcludedNamespaces,
         string? aksLabelSelectors,
         string? aksIncludeClusterScopeResources,
         string? aksSnapshotResourceGroup,

@@ -8,6 +8,9 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
@@ -23,23 +26,20 @@ public class ResourceHealthService(IAzureService azureService)
         ValidateRequiredParameters((nameof(resourceId), resourceId));
 
         // Parse and validate resource ID format using Azure SDK
-        var parsedResourceId = ResourceIdentifier.Parse(resourceId);
+        ResourceIdentifier parsedResourceId = ResourceIdentifier.Parse(resourceId);
+        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
+        string relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
+        Uri requestUri = CreateAndValidateRequestUri(armEnvironment, relativePath);
 
-        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint ?? throw new InvalidOperationException("Management endpoint is not configured.");
+        AccessToken token = await GetArmAccessTokenAsync(null, cancellationToken);
 
-        var token = await GetArmAccessTokenAsync(null, cancellationToken);
-
-        var client = AzureService.GetClient();
+        HttpClient client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
-        // Construct URL safely using Uri to ensure path is relative to base
-        var relativePath = $"{parsedResourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
-        var requestUri = new Uri(managementEndpoint, relativePath);
-
-        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using HttpResponseMessage response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         await EnsureResourceHealthSuccessAsync(response, cancellationToken, resourceId, parsedResourceId.ResourceType.ToString());
 
-        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusResponse, cancellationToken)
+        AvailabilityStatusResponse apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusResponse, cancellationToken)
             ?? throw new InvalidOperationException($"Failed to deserialize availability status response for resource '{resourceId}'");
 
         return apiResponse.ToAvailabilityStatus();
@@ -53,25 +53,25 @@ public class ResourceHealthService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
-        var subscriptionId = subscriptionResource.Id.SubscriptionId;
+        SubscriptionResource subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
+        string subscriptionId = subscriptionResource.Id.SubscriptionId
+            ?? throw new InvalidOperationException("The resolved subscription does not have a subscription ID.");
+        string escapedSubscriptionId = Uri.EscapeDataString(subscriptionId);
+        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
+        string relativePath = resourceGroup != null
+            ? $"/subscriptions/{escapedSubscriptionId}/resourceGroups/{Uri.EscapeDataString(resourceGroup)}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}"
+            : $"/subscriptions/{escapedSubscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
+        Uri requestUri = CreateAndValidateRequestUri(armEnvironment, relativePath);
 
-        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
-        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
+        AccessToken token = await GetArmAccessTokenAsync(tenant, cancellationToken);
 
-        var client = AzureService.GetClient();
+        HttpClient client = AzureService.GetClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
 
-        // Construct URL safely using Uri to ensure path is relative to base
-        var relativePath = resourceGroup != null
-            ? $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}"
-            : $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
-        var requestUri = new Uri(managementEndpoint, relativePath);
-
-        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using HttpResponseMessage response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         await EnsureResourceHealthSuccessAsync(response, cancellationToken);
 
-        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusListResponse, cancellationToken);
+        AvailabilityStatusListResponse? apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.AvailabilityStatusListResponse, cancellationToken);
 
         if (apiResponse?.Value == null)
         {
@@ -94,35 +94,31 @@ public class ResourceHealthService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
-        var subscriptionId = subscriptionResource.Id.SubscriptionId;
+        SubscriptionResource subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
+        string subscriptionId = subscriptionResource.Id.SubscriptionId
+            ?? throw new InvalidOperationException("The resolved subscription does not have a subscription ID.");
+        string escapedSubscriptionId = Uri.EscapeDataString(subscriptionId);
 
-        var managementEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint;
+        // OData string literals escape apostrophes by doubling them. The completed expression is URI-encoded
+        // separately below because OData grammar escaping and URI transport encoding protect different layers.
+        static string EscapeODataStringLiteral(string value) =>
+            value.Replace("'", "''", StringComparison.Ordinal);
 
-        var token = await GetArmAccessTokenAsync(tenant, cancellationToken);
-
-        var client = AzureService.GetClient();
-        client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
-
-        // Build OData filter - using correct property paths for Azure Resource Health API
-        var filterParts = new List<string>();
+        List<string> filterParts = [];
 
         if (!string.IsNullOrWhiteSpace(eventType))
         {
-            // Use correct property path for event type
-            filterParts.Add($"properties/eventType eq '{eventType}'");
+            filterParts.Add($"properties/eventType eq '{EscapeODataStringLiteral(eventType)}'");
         }
 
         if (!string.IsNullOrWhiteSpace(status))
         {
-            // Use correct property path for status
-            filterParts.Add($"properties/status eq '{status}'");
+            filterParts.Add($"properties/status eq '{EscapeODataStringLiteral(status)}'");
         }
 
         if (!string.IsNullOrWhiteSpace(trackingId))
         {
-            // Use correct property path for tracking ID
-            filterParts.Add($"properties/trackingId eq '{trackingId}'");
+            filterParts.Add($"properties/trackingId eq '{EscapeODataStringLiteral(trackingId)}'");
         }
 
         if (!string.IsNullOrWhiteSpace(filter))
@@ -131,7 +127,7 @@ public class ResourceHealthService(IAzureService azureService)
         }
 
         // Use Service Health Events API with 2025-05-01 version
-        var relativePath = $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/events?api-version=2025-05-01";
+        string relativePath = $"/subscriptions/{escapedSubscriptionId}/providers/Microsoft.ResourceHealth/events?api-version={ResourceHealthApiVersion}";
 
         // Add time range query parameters if provided (not as OData filters)
         if (!string.IsNullOrWhiteSpace(queryStartTime))
@@ -147,17 +143,22 @@ public class ResourceHealthService(IAzureService azureService)
         // Add OData filters if provided
         if (filterParts.Count > 0)
         {
-            var combinedFilter = string.Join(" and ", filterParts);
+            string combinedFilter = string.Join(" and ", filterParts);
             relativePath += $"&$filter={Uri.EscapeDataString(combinedFilter)}";
         }
 
-        // Construct URL safely using Uri to ensure path is relative to base
-        var requestUri = new Uri(managementEndpoint, relativePath);
+        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
+        Uri requestUri = CreateAndValidateRequestUri(armEnvironment, relativePath);
 
-        using var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        AccessToken token = await GetArmAccessTokenAsync(tenant, cancellationToken);
+
+        HttpClient client = AzureService.GetClient();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
+
+        using HttpResponseMessage response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         await EnsureResourceHealthSuccessAsync(response, cancellationToken);
 
-        var apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.ServiceHealthEventListResponse, cancellationToken);
+        ServiceHealthEventListResponse? apiResponse = await response.Content.ReadFromJsonAsync(ResourceHealthJsonContext.Default.ServiceHealthEventListResponse, cancellationToken);
 
         if (apiResponse?.Value == null)
         {
@@ -168,6 +169,38 @@ public class ResourceHealthService(IAzureService azureService)
             .Select(item => item.ToServiceHealthEvent(subscriptionId))
             .Where(evt => !string.IsNullOrEmpty(evt.Id)) // Filter out any invalid entries
             .ToList();
+    }
+
+    /// <summary>
+    /// Creates and authorizes a Resource Health request URI under the configured Azure Resource Manager endpoint.
+    /// </summary>
+    /// <param name="armEnvironment">The configured Azure cloud environment.</param>
+    /// <param name="relativePath">
+    /// The rooted or relative ARM request path. Absolute and network-path values are rejected unless they resolve
+    /// to the configured cloud's exact ARM host.
+    /// </param>
+    /// <returns>The completed and authorized request URI.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="relativePath"/> is empty or the ARM endpoint allow-list is unavailable.
+    /// </exception>
+    /// <exception cref="System.Security.SecurityException">
+    /// Thrown when the completed request URI is not an HTTPS Azure Resource Manager endpoint for the configured cloud.
+    /// </exception>
+    internal static Uri CreateAndValidateRequestUri(ArmEnvironment armEnvironment, string relativePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
+
+        Uri requestUri = new(armEnvironment.Endpoint, relativePath);
+
+        // Uri resolution accepts absolute and network-path inputs that can replace the configured ARM authority.
+        // Validate the completed URI before acquiring the raw request's token so input cannot redirect that token.
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: requestUri.AbsoluteUri,
+            serviceType: "arm",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "resourcehealth");
+
+        return requestUri;
     }
 
     private static async Task EnsureResourceHealthSuccessAsync(

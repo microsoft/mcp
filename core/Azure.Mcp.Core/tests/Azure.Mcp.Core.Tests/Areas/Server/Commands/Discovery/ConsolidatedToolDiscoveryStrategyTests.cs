@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Configuration;
 using NSubstitute;
 using Xunit;
@@ -14,9 +13,7 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
 
 public class ConsolidatedToolDiscoveryStrategyTests
 {
-    private static ConsolidatedToolDiscoveryStrategy CreateStrategy(
-        ServerRuntimeConfiguration? configuration = null,
-        string? entryPoint = null)
+    private static ConsolidatedToolDiscoveryStrategy CreateStrategy(ServerRuntimeConfiguration? configuration = null)
     {
         var factory = CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
@@ -37,12 +34,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
 
         ResourceConsolidatedToolDefinitionProvider definitionProvider = new(providerLogger, serverAssembly, "consolidated-tools.json");
 
-        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, definitionProvider, runtimeConfiguration, configurationOptions, logger);
-        if (entryPoint != null)
-        {
-            strategy.EntryPoint = entryPoint;
-        }
-        return strategy;
+        return new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, definitionProvider, runtimeConfiguration, configurationOptions, logger);
     }
 
     [Fact]

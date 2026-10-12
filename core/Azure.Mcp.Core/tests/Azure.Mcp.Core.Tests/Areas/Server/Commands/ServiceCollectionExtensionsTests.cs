@@ -60,7 +60,6 @@ public class ServiceCollectionExtensionsTests
         var provider = services.BuildServiceProvider();
 
         // Verify base discovery strategies
-        Assert.Null(provider.GetService<CommandGroupDiscoveryStrategy>());
         Assert.NotNull(provider.GetService<RegistryDiscoveryStrategy>());
 
         // Verify base tool loaders
@@ -94,7 +93,7 @@ public class ServiceCollectionExtensionsTests
 
         // Verify discovery strategy is registered
         Assert.NotNull(provider.GetService<IMcpDiscoveryStrategy>());
-        Assert.IsType<CompositeDiscoveryStrategy>(provider.GetService<IMcpDiscoveryStrategy>());
+        Assert.IsType<RegistryDiscoveryStrategy>(provider.GetService<IMcpDiscoveryStrategy>());
     }
 
     [Fact]

@@ -91,6 +91,14 @@ public sealed class SubscriptionListCommand(
                             aggregate.AddRange(found);
                         }
                     }
+                    catch (ArgumentException)
+                    {
+                        throw;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
                     catch (Exception ex)
                     {
                         _logger.LogWarning(ex, "Failed searching topic '{Topic}' in subscription '{Sub}'. Continuing.", options.Topic, sub.SubscriptionId);

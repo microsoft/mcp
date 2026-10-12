@@ -444,7 +444,7 @@ The Azure Identity SDK supports fine-grained control over which authentication m
 
 #### Exclude Credential Categories
 
-To use only **production credentials** (Environment, Workload Identity, Managed Identity), set:
+To use only **production credentials** (Environment, Azure Pipelines when configured, Workload Identity, Managed Identity), set:
 ```bash
 AZURE_TOKEN_CREDENTIALS=prod
 ```
@@ -456,7 +456,7 @@ AZURE_TOKEN_CREDENTIALS=dev
 
 When `prod` is used, the credential chain becomes:
 ```
-Environment → Workload Identity → Managed Identity
+Environment → Azure Pipelines (when configured) → Workload Identity → Managed Identity
 ```
 **Note:** `InteractiveBrowserCredential` is NOT added as fallback. Authentication will fail fast if none of these credentials are available.
 
@@ -480,6 +480,9 @@ AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 # Use only Environment credential (for CI/CD scenarios)
 AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
 
+# Use an Azure Pipelines workload identity service connection
+AZURE_TOKEN_CREDENTIALS=AzurePipelinesCredential
+
 # Use only Interactive Browser credential
 AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
 
@@ -493,6 +496,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 - `AzureCliCredential`
 - `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
+- `AzurePipelinesCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
 - `ManagedIdentityCredential`

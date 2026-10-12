@@ -27,7 +27,8 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger) : BaseCommand<EmptyOptions, List<string>>
+public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger)
+    : BaseCommand<EmptyOptions, AIAppBestPracticesCommand.AIAppBestPracticesCommandResult>
 {
     private readonly ILogger<AIAppBestPracticesCommand> _logger = logger;
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
@@ -58,7 +59,9 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         {
             var bestPractices = GetBestPracticesText();
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(
+                new([bestPractices]),
+                AzureBestPracticesJsonContext.Default.AIAppBestPracticesCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -69,4 +72,6 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record AIAppBestPracticesCommandResult(List<string> BestPractices);
 }

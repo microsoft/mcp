@@ -63,6 +63,7 @@ Azure.Mcp.Tools.AzureBackup/
 │   │   ├── AzureBackupOptionDefinitions.cs
 │   │   ├── BaseAzureBackupOptions.cs
 │   │   ├── BaseProtectedItemOptions.cs
+│   │   ├── ProtectedItem/ProtectedItemGetOptions.cs
 │   │   └── [per-command Options classes]
 │   └── Services/                                 # Core service layer
 │       ├── IAzureBackupService.cs                # Unified facade interface

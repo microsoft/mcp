@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 
 namespace Azure.Mcp.Tools.Adme.Services;
@@ -14,17 +15,18 @@ public interface ISchemaService
     /// <summary>
     /// Gets the JSON definition for a schema kind.
     /// </summary>
-    Task<JsonElement> GetSchemaAsync(
+    Task<AdmeResponse<JsonElement>> GetSchemaAsync(
         string endpoint,
         string dataPartition,
         string kind,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists schema descriptors matching the requested filters.
     /// </summary>
-    Task<SchemaListResponse> ListSchemasAsync(
+    Task<AdmeResponse<SchemaListResponse>> ListSchemasAsync(
         string endpoint,
         string dataPartition,
         string? tenant,
@@ -39,5 +41,6 @@ public interface ISchemaService
         bool latestVersion,
         int? offset,
         int? limit,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 }

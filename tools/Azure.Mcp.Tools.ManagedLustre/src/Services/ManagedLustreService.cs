@@ -4,10 +4,12 @@
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ManagedLustre.Models;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
@@ -430,7 +432,10 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             {
                 throw new Exception("Both key-url and source-vault must be provided when custom-encryption is enabled.");
             }
-            data.KeyEncryptionKey = new(new(keyUrl), new() { Id = new(sourceVaultId!) });
+            var keyUri = CreateValidatedKeyUri(
+                keyUrl,
+                AzureService.CloudConfiguration.ArmEnvironment);
+            data.KeyEncryptionKey = new(keyUri, new() { Id = new(sourceVaultId!) });
 
             // Assign user-assigned managed identity for Key Vault access
             if (!string.IsNullOrWhiteSpace(userAssignedIdentityId))
@@ -451,6 +456,27 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
         await WaitForLroCompletionAsync(createOperationResult, cancellationToken);
         var fileSystemResource = createOperationResult.Value;
         return Map(fileSystemResource);
+    }
+
+    /// <summary>
+    /// Validates that the given Key Vault endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="keyUrl">The URI of the Key Vault endpoint to validate.</param>
+    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <returns>The validated URI of the Key Vault endpoint.</returns>
+    internal static Uri CreateValidatedKeyUri(string keyUrl, ArmEnvironment armEnvironment)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(keyUrl);
+
+        // At this time ManagedLustre only supports Azure Key Vault URIs as the key URL.
+        // https://learn.microsoft.com/azure/security/fundamentals/encryption-customer-managed-keys-support#storage
+        var keyUri = new Uri(keyUrl, UriKind.Absolute);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: keyUri.AbsoluteUri,
+            serviceType: "keyvault",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "managedlustre");
+        return keyUri;
     }
 
     public async Task<LustreFileSystem> UpdateFileSystemAsync(

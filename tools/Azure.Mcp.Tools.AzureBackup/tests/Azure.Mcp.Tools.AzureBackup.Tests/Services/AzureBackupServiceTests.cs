@@ -29,6 +29,26 @@ public class AzureBackupServiceTests
         _service = new AzureBackupService(_rsvOps, _dppOps, _azureService, _logger);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CreateVaultAsync_ForwardsPublicAccessChoiceToRsv(bool publicAccess)
+    {
+        await _service.CreateVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", "rsv", "eastus", null, null, null, publicAccess, CancellationToken.None);
+
+        await _rsvOps.Received(1).CreateVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", "eastus", null, null, null, publicAccess, CancellationToken.None);
+        Assert.Empty(_dppOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task CreateVaultAsync_RejectsPublicAccessForDppBeforeNetworkCalls()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateVaultAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", "dpp", "eastus", null, null, null, true, CancellationToken.None));
+        Assert.Empty(_azureService.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
+        Assert.Empty(_rsvOps.ReceivedCalls());
+    }
+
     #region ResolveVaultType - Auto-detection fallback
 
     [Fact]
@@ -326,7 +346,7 @@ public class AzureBackupServiceTests
     public async Task ListProtectableItemsAsync_DppVaultType_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: "dpp", tenant: null, cancellationToken: CancellationToken.None));
+            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, vaultType: "dpp", tenant: null, cancellationToken: CancellationToken.None));
 
         Assert.Contains("RSV", ex.Message);
     }
@@ -335,10 +355,10 @@ public class AzureBackupServiceTests
     public async Task ListProtectableItemsAsync_RsvVaultType_DelegatesToRsv()
     {
         var expected = new List<ProtectableItemInfo> { new("item1", "SQL", null, null, null, null, null, null, null) };
-        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: "rsv", tenant: null, cancellationToken: CancellationToken.None);
+        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, vaultType: "rsv", tenant: null, cancellationToken: CancellationToken.None);
 
         Assert.Single(result);
     }
@@ -351,10 +371,10 @@ public class AzureBackupServiceTests
             .Returns(new BackupVaultInfo(null, "vault", "RSV", "eastus", "rg", null, null, null, null, null, null, null, null, null));
 
         var expected = new List<ProtectableItemInfo> { new("item1", "SQL", null, null, null, null, null, null, null) };
-        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+        _rsvOps.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None);
+        var result = await _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None);
 
         Assert.Single(result);
     }
@@ -369,7 +389,7 @@ public class AzureBackupServiceTests
             .Returns(new BackupVaultInfo(null, "vault", "DPP", "eastus", "rg", null, null, null, null, null, null, null, null, null));
 
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, containerName: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+            _service.ListProtectableItemsAsync("vault", "rg", "22222222-2222-2222-2222-222222222222", workloadType: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
 
         Assert.Contains("DPP", ex.Message);
         Assert.Contains("Protectable item discovery is only supported", ex.Message);
@@ -647,7 +667,6 @@ public class AzureBackupServiceTests
                 "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
                 vaultType: "DPP",
                 containerName: null, datasourceType: "AzureDisk",
-                aksIncludedNamespaces: null, aksExcludedNamespaces: null,
                 aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
                 aksSnapshotResourceGroup: null,
                 diskExclusion: spec, tenant: null, cancellationToken: CancellationToken.None));
@@ -657,7 +676,7 @@ public class AzureBackupServiceTests
         await _rsvOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
             default!, default!, default!, default!, default!, default, default, default, default, Arg.Any<CancellationToken>());
         await _dppOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
-            default!, default!, default!, default!, default!, default, default, default, default, default, default, default, Arg.Any<CancellationToken>());
+            default!, default!, default!, default!, default!, default, default, default, default, default, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -668,7 +687,7 @@ public class AzureBackupServiceTests
         var expected = new ProtectResult("Succeeded", "vm1", null, "Protected", "ProtectionConfigured", null);
         _dppOps.ProtectItemAsync(
             "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
-            "AzureDisk", null, null, null, null, null, null,
+            "AzureDisk", null, null, null, null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -676,7 +695,6 @@ public class AzureBackupServiceTests
             "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
             vaultType: "DPP",
             containerName: null, datasourceType: "AzureDisk",
-            aksIncludedNamespaces: null, aksExcludedNamespaces: null,
             aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
             aksSnapshotResourceGroup: null,
             diskExclusion: null, tenant: null, cancellationToken: CancellationToken.None);
@@ -708,7 +726,6 @@ public class AzureBackupServiceTests
             "vault", "rg", SelectiveSub, SelectiveVmId, "policy",
             vaultType: "RSV",
             containerName: null, datasourceType: "AzureVM",
-            aksIncludedNamespaces: null, aksExcludedNamespaces: null,
             aksLabelSelectors: null, aksIncludeClusterScopeResources: null,
             aksSnapshotResourceGroup: null,
             diskExclusion: spec, tenant: null, cancellationToken: CancellationToken.None);
@@ -719,7 +736,7 @@ public class AzureBackupServiceTests
         Assert.Equal("0,1", capturedSpec.DiskLunsCsv);
         Assert.False(capturedSpec.ExcludeAllDataDisks);
         await _dppOps.DidNotReceiveWithAnyArgs().ProtectItemAsync(
-            default!, default!, default!, default!, default!, default, default, default, default, default, default, default, Arg.Any<CancellationToken>());
+            default!, default!, default!, default!, default!, default, default, default, default, default, Arg.Any<CancellationToken>());
     }
 
     [Fact]

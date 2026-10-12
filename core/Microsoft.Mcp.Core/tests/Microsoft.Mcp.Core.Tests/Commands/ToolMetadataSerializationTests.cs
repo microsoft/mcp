@@ -11,6 +11,20 @@ namespace Microsoft.Mcp.Core.Tests.Commands;
 public sealed class ToolMetadataSerializationTests
 {
     [Fact]
+    public void OperationPlane_DefinesOnlySupportedValues()
+    {
+        Assert.Equal(
+            [ToolOperationPlane.Data, ToolOperationPlane.Control, ToolOperationPlane.Both, ToolOperationPlane.NotApplicable],
+            Enum.GetValues<ToolOperationPlane>());
+    }
+
+    [Fact]
+    public void OperationPlane_DefaultsToNotApplicable()
+    {
+        Assert.Equal(ToolOperationPlane.NotApplicable, new ToolMetadata().OperationPlane);
+    }
+
+    [Fact]
     public void Serialize_IncludesOperationPlane()
     {
         var metadata = new ToolMetadata { OperationPlane = ToolOperationPlane.Control };
@@ -22,7 +36,6 @@ public sealed class ToolMetadataSerializationTests
     }
 
     [Theory]
-    [InlineData(ToolOperationPlane.Unspecified, "unspecified")]
     [InlineData(ToolOperationPlane.Data, "data")]
     [InlineData(ToolOperationPlane.Control, "control")]
     [InlineData(ToolOperationPlane.Both, "both")]
@@ -35,27 +48,31 @@ public sealed class ToolMetadataSerializationTests
         Assert.Equal(expected, document.RootElement.GetProperty("operationPlane").GetString());
     }
 
-    [Fact]
-    public void Serialize_UndefinedOperationPlane_Throws()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(int.MaxValue)]
+    public void Serialize_UndefinedOperationPlane_Throws(int operationPlane)
     {
-        var metadata = new ToolMetadata { OperationPlane = (ToolOperationPlane)int.MaxValue };
+        var metadata = new ToolMetadata { OperationPlane = (ToolOperationPlane)operationPlane };
 
         Assert.Throws<JsonException>(() => JsonSerializer.Serialize(metadata, ModelsJsonContext.Default.ToolMetadata));
     }
 
-    [Fact]
-    public void Deserialize_UnknownOperationPlane_FallsBackToUnspecified()
+    [Theory]
+    [InlineData("""{ "operationPlane": "unspecified" }""")]
+    [InlineData("""{ "operationPlane": "someFuturePlane" }""")]
+    [InlineData("""{ "operationPlane": null }""")]
+    [InlineData("""{ "operationPlane": 1 }""")]
+    public void Deserialize_UnknownOperationPlane_FallsBackToNotApplicable(string json)
     {
-        const string Json = """{ "operationPlane": "someFuturePlane" }""";
-
-        var metadata = JsonSerializer.Deserialize(Json, ModelsJsonContext.Default.ToolMetadata);
+        var metadata = JsonSerializer.Deserialize(json, ModelsJsonContext.Default.ToolMetadata);
 
         Assert.NotNull(metadata);
-        Assert.Equal(ToolOperationPlane.Unspecified, metadata.OperationPlane);
+        Assert.Equal(ToolOperationPlane.NotApplicable, metadata.OperationPlane);
     }
 
     [Fact]
-    public void Deserialize_MissingOperationPlane_DefaultsToUnspecified()
+    public void Deserialize_MissingOperationPlane_DefaultsToNotApplicable()
     {
         const string Json = """
             {
@@ -71,13 +88,17 @@ public sealed class ToolMetadataSerializationTests
         var metadata = JsonSerializer.Deserialize(Json, ModelsJsonContext.Default.ToolMetadata);
 
         Assert.NotNull(metadata);
-        Assert.Equal(ToolOperationPlane.Unspecified, metadata.OperationPlane);
+        Assert.Equal(ToolOperationPlane.NotApplicable, metadata.OperationPlane);
     }
 
-    [Fact]
-    public void SerializeAndDeserialize_PreservesOperationPlane()
+    [Theory]
+    [InlineData(ToolOperationPlane.Data)]
+    [InlineData(ToolOperationPlane.Control)]
+    [InlineData(ToolOperationPlane.Both)]
+    [InlineData(ToolOperationPlane.NotApplicable)]
+    public void SerializeAndDeserialize_PreservesOperationPlane(ToolOperationPlane operationPlane)
     {
-        var expected = new ToolMetadata { OperationPlane = ToolOperationPlane.Both };
+        var expected = new ToolMetadata { OperationPlane = operationPlane };
 
         var json = JsonSerializer.Serialize(expected, ModelsJsonContext.Default.ToolMetadata);
         var actual = JsonSerializer.Deserialize(json, ModelsJsonContext.Default.ToolMetadata);

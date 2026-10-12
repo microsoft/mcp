@@ -41,6 +41,12 @@ public sealed class CloudEndpointCreateOptions : ISubscriptionOption
     [Option(Description = "The name of the Azure file share")]
     public required string AzureFileShareName { get; set; }
 
+    /// <summary>
+    /// Gets or sets the interval in days between Azure file share change enumeration runs.
+    /// </summary>
+    [Option(Description = StorageSyncOptionDescriptions.CloudEndpoint.ChangeEnumerationIntervalDaysDescription)]
+    public int? ChangeEnumerationIntervalDays { get; set; }
+
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 

@@ -195,7 +195,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
             });
 
         Assert.NotNull(queryResult);
-        Assert.Equal(JsonValueKind.Array, queryResult.Value.ValueKind);
+        Assert.Equal(JsonValueKind.Array, queryResult.Value.AssertProperty("results").ValueKind);
     }
 
     [Fact]
@@ -992,10 +992,10 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
                 { "resource-group", Settings.ResourceGroupName }
             });
 
-        Assert.NotNull(result);
-        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+        var healthModels = result.AssertProperty("healthModels");
+        Assert.Equal(JsonValueKind.Array, healthModels.ValueKind);
 
-        var models = result.Value.EnumerateArray().ToList();
+        var models = healthModels.EnumerateArray().ToList();
         Assert.NotEmpty(models);
 
         Assert.All(models, model =>

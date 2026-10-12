@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Required all command metadata properties to be explicitly declared while preserving existing tool metadata values."

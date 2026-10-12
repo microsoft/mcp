@@ -2,17 +2,145 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
+using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
+using Azure.ResourceManager;
+using Azure.ResourceManager.EventHubs;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using NSubstitute.Extensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests.Namespace;
 
 public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<NamespaceUpdateCommand, IEventHubsService>
 {
+    [Theory]
+    [InlineData(true, null, true)]
+    [InlineData(true, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(false, null, false)]
+    [InlineData(false, false, false)]
+    [InlineData(false, true, true)]
+    public void NamespaceSecurity_DefaultsAndUpdates(bool isNew, bool? disableLocalAuth, bool expectedDisableLocalAuth)
+    {
+        var data = new EventHubsNamespaceData("eastus") { DisableLocalAuth = false };
+        EventHubsService.ConfigureNamespaceSecurity(data, isNew, disableLocalAuth);
+        Assert.Equal(expectedDisableLocalAuth, data.DisableLocalAuth);
+    }
+
+    [Fact]
+    public static async Task CreateOrUpdateNamespaceAsync_MergesExistingTags()
+    {
+        const string subscription = "00000000-0000-0000-0000-000000000000";
+        const string resourceGroupId = $"/subscriptions/{subscription}/resourceGroups/test-rg";
+        const string resourceGroupResponse = $$"""
+            {"id":"{{resourceGroupId}}","name":"test-rg","location":"eastus"}
+            """;
+        const string namespaceResponse = $$"""
+            {
+              "id": "{{resourceGroupId}}/providers/Microsoft.EventHub/namespaces/test-namespace",
+              "name": "test-namespace",
+              "type": "Microsoft.EventHub/namespaces",
+              "location": "eastus",
+              "tags": {"environment":"test","owner":"existing-owner"},
+              "sku": {"name":"Standard","tier":"Standard","capacity":1},
+              "properties": {"provisioningState":"Succeeded","publicNetworkAccess":"Enabled","disableLocalAuth":false}
+            }
+            """;
+
+        JsonElement? requestBody = null;
+        HttpMethod? updateMethod = null;
+        using var handler = Substitute.For<HttpMessageHandler>();
+        handler.ReturnsForAll(async callInfo =>
+        {
+            var request = callInfo.Arg<HttpRequestMessage>();
+            if (request.Method == HttpMethod.Put || request.Method == HttpMethod.Patch)
+            {
+                updateMethod = request.Method;
+                using var document = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(TestContext.Current.CancellationToken));
+                requestBody = document.RootElement.Clone();
+            }
+
+            var responseBody = request.RequestUri!.AbsolutePath.EndsWith("/resourceGroups/test-rg", StringComparison.Ordinal)
+                ? resourceGroupResponse
+                : namespaceResponse;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(responseBody, null, "application/json")
+            };
+        });
+        using var httpClient = new HttpClient(handler);
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1)));
+        var azureService = Substitute.For<IAzureService>();
+        azureService.IsSubscriptionId(subscription).Returns(true);
+        azureService.GetClient().Returns(httpClient);
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
+        azureService.CloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        var service = new EventHubsService(azureService, NullLogger<EventHubsService>.Instance);
+
+        await service.CreateOrUpdateNamespaceAsync(
+            "test-namespace", "test-rg", subscription,
+            tags: new() { ["environment"] = "production", ["project"] = "mcp" },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpMethod.Patch, updateMethod);
+        var body = Assert.IsType<JsonElement>(requestBody);
+        Assert.False(body.TryGetProperty("sku", out _));
+        if (body.TryGetProperty("properties", out var properties))
+        {
+            Assert.False(properties.TryGetProperty("publicNetworkAccess", out _));
+            Assert.False(properties.TryGetProperty("disableLocalAuth", out _));
+        }
+        var tags = body.GetProperty("tags");
+        Assert.Equal("production", tags.GetProperty("environment").GetString());
+        Assert.Equal("existing-owner", tags.GetProperty("owner").GetString());
+        Assert.Equal("mcp", tags.GetProperty("project").GetString());
+        Assert.Equal(3, tags.EnumerateObject().Count());
+
+        requestBody = null;
+        updateMethod = null;
+        await service.CreateOrUpdateNamespaceAsync(
+            "test-namespace", "test-rg", subscription,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpMethod.Patch, updateMethod);
+        body = Assert.IsType<JsonElement>(requestBody);
+        Assert.False(body.TryGetProperty("tags", out _));
+        Assert.False(body.TryGetProperty("sku", out _));
+        properties = body.GetProperty("properties");
+        Assert.False(properties.TryGetProperty("disableLocalAuth", out _));
+    }
+
+    [Theory]
+    [InlineData("--location eastus", null)]
+    [InlineData("--disable-local-auth true", true)]
+    [InlineData("--disable-local-auth false", false)]
+    public async Task ExecuteAsync_ForwardsExplicitSecuritySettings(string options, bool? disableLocalAuth)
+    {
+        var response = await ExecuteCommandAsync($"--subscription test-sub --resource-group test-rg --namespace test-ns {options}");
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var call = Assert.Single(Service.ReceivedCalls());
+        Assert.Equal(disableLocalAuth, call.GetArguments()[13]);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoChangesListsSecurityOptions()
+    {
+        var response = await ExecuteCommandAsync("--subscription test-sub --resource-group test-rg --namespace test-ns");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("disable-local-auth", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -55,7 +183,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
                 Arg.Any<bool?>(),
                 Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(updatedNamespace);
         }
 
@@ -98,7 +226,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null, // zoneRedundant
             null, // tags
             null, // tenant
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -127,7 +255,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null,
             null,
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -149,7 +277,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -195,7 +323,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
                 tags.ContainsKey("team") &&
                 tags["team"] == "platform"),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -245,7 +373,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -278,7 +406,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -299,7 +427,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Update failed"));
 
         // Act
@@ -332,7 +460,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
@@ -366,7 +494,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -393,7 +521,7 @@ public class NamespaceUpdateCommandTests : SubscriptionCommandUnitTestsBase<Name
             null,
             null,
             "test-tenant-123",
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]

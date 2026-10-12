@@ -7,13 +7,18 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorWebTestService(IAzureService azureService)
+public class MonitorWebTestService(
+    IAzureService azureService,
+    ILogger<MonitorWebTestService> logger)
     : BaseAzureService(azureService), IMonitorWebTestService
 {
+    private readonly ILogger<MonitorWebTestService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
     public async Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,
         string? tenant = null,
@@ -157,6 +162,7 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(appInsightsComponentId), appInsightsComponentId),
             (nameof(location), location),
             (nameof(requestUrl), requestUrl));
+        var requestUri = MonitorWebTestValidateRequestUri(new Uri(requestUrl, UriKind.Absolute), _logger);
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
             throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
@@ -183,7 +189,7 @@ public class MonitorWebTestService(IAzureService azureService)
             Description = description,
             Request = new()
             {
-                RequestUri = new(requestUrl),
+                RequestUri = requestUri,
                 HttpVerb = (httpVerb ?? HttpMethod.Get.ToString()).ToUpperInvariant(),
                 RequestBody = requestBody,
                 FollowRedirects = followRedirects,
@@ -309,6 +315,10 @@ public class MonitorWebTestService(IAzureService azureService)
         {
             throw new NotSupportedException($"Web test '{resourceName}' is of type '{currentData.WebTestKind}', which has been deprecated and is not supported by this command.");
         }
+        var requestUri = ResolveValidatedRequestUri(
+            requestUrl,
+            currentData.Request.RequestUri,
+            _logger);
 
         // Create updated web test data using existing values as defaults
         var webTestData = new ApplicationInsightsWebTestData(new(location ?? currentData.Location))
@@ -323,7 +333,7 @@ public class MonitorWebTestService(IAzureService azureService)
             Description = description ?? currentData.Description,
             Request = new()
             {
-                RequestUri = requestUrl != null ? new(requestUrl) : currentData.Request?.RequestUri,
+                RequestUri = requestUri,
                 HttpVerb = httpVerb?.ToUpperInvariant() ?? currentData.Request?.HttpVerb,
                 RequestBody = requestBody ?? currentData.Request?.RequestBody,
                 FollowRedirects = followRedirects ?? currentData.Request?.FollowRedirects,
@@ -428,6 +438,43 @@ public class MonitorWebTestService(IAzureService azureService)
             ValidationRules = updatedWebTest.ValidationRules,
             AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(updatedWebTest)
         };
+    }
+
+    /// <summary>
+    /// Validates that the given URI points to a public target and returns the same URI if valid.
+    /// </summary>
+    /// <param name="uri">The URI to validate.</param>
+    /// <param name="logger">A logger instance for logging validation details.</param>
+    /// <returns>The validated URI if it points to a public target.</returns>
+    internal static Uri MonitorWebTestValidateRequestUri(Uri uri, ILogger? logger)
+    {
+        EndpointValidator.ValidatePublicTargetUrl(
+            url: uri.AbsoluteUri,
+            logger: logger,
+            executingToolNamespaceName: "monitor");
+        return uri;
+    }
+
+    /// <summary>
+    /// Resolves the request URL to a validated public target URI. If a new request URL is provided, it validates and
+    /// returns it. If not, it falls back to the existing request URI and validates it.
+    /// </summary>
+    /// <param name="newWebTestUri">The new request URI to validate.</param>
+    /// <param name="existingRequestUri">The existing URI to fall back to if no new request URL is provided.</param>
+    /// <param name="logger">A logger instance for logging validation details.</param>
+    /// <returns>The validated URI if it points to a public target, or null if no request URL is provided and the existing URI is null.</returns>
+    internal static Uri? ResolveValidatedRequestUri(
+        string? newWebTestUri,
+        Uri existingRequestUri,
+        ILogger? logger)
+    {
+        if (newWebTestUri is not null)
+        {
+            var uri = new Uri(newWebTestUri, UriKind.Absolute);
+            return MonitorWebTestValidateRequestUri(uri, logger);
+        }
+
+        return MonitorWebTestValidateRequestUri(existingRequestUri, logger);
     }
 
     private List<WebTestRequestHeaderField> ParseHeadersFromRawResponse(Response response)

@@ -1,3 +1,4 @@
+# cSpell:ignore cooldown
 version: 2
 updates:
   # Enable version updates for NuGet packages
@@ -27,3 +28,14 @@ updates:
       npm-security-updates:
         applies-to: "security-updates"
         group-by: "dependency-name"
+
+  # Group GitHub Actions version updates after a security-observation period
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7

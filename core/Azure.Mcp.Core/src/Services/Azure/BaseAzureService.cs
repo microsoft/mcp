@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
@@ -111,6 +112,15 @@ public abstract class BaseAzureService(IAzureService azureService)
         ArmClientOptions? armClientOptions = null,
         CancellationToken cancellationToken = default) =>
         await AzureHelper.CreateArmClientAsync(AzureService, tenantIdOrName, armClientOptions: armClientOptions, cancellationToken: cancellationToken);
+
+    /// <summary>
+    /// Validates that the provided parameter is not null or empty.
+    /// </summary>
+    /// <param name="name">The parameter name.</param>
+    /// <param name="value">The parameter value.</param>
+    /// <exception cref="ArgumentException">Thrown when the parameter is null or empty.</exception>
+    public static void ValidateRequiredParameter(string name, [NotNull] string? value) =>
+        AzureHelper.ValidateRequiredParameter(name, value);
 
     /// <summary>
     /// Validates that the provided named parameters are not null or empty

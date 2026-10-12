@@ -12,6 +12,72 @@ namespace Microsoft.Mcp.Core.Tests.Helpers;
 
 public class EndpointValidatorTests
 {
+    // The tests below exercise validation with no namespace-scoped emergency bypass in effect.
+    // A null executing namespace can never match a configured bypass, so the full SSRF checks
+    // always run. This helper keeps that intent explicit and avoids repeating the argument.
+    private static void ValidatePublicTargetUrl(string url)
+        => EndpointValidator.ValidatePublicTargetUrl(url, logger: null, executingToolNamespaceName: null);
+
+    [Fact]
+    public void SetDangerouslyDisabledSsrfProtectionNamespaces_StoresOnceAndRejectsSubsequentCalls()
+    {
+        string[] namespaces = ["aCr"];
+
+        EndpointValidator.SetDangerouslyDisabledSsrfProtectionNamespaces(namespaces);
+        namespaces[0] = "changed";
+
+        Assert.Equal(["aCr"], EndpointValidator.DangerouslyDisabledSsrfProtectionNamespaces);
+
+        Assert.Null(Record.Exception(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "http://127.0.0.1",
+                serviceType: "unknown-service",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: "ACR")));
+        Assert.Null(Record.Exception(() =>
+            EndpointValidator.ValidatePublicTargetUrl(
+                url: "http://127.0.0.1",
+                logger: null,
+                executingToolNamespaceName: "Acr")));
+
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "http://127.0.0.1",
+                serviceType: "acr",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
+        Assert.Throws<SecurityException>(() =>
+            ValidatePublicTargetUrl("http://127.0.0.1"));
+
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "http://127.0.0.1",
+                serviceType: "unknown-service",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: "storage"));
+
+        var exception = Assert.Throws<SecurityException>(
+            () => EndpointValidator.SetDangerouslyDisabledSsrfProtectionNamespaces(["storage"]));
+        Assert.Contains("can only be configured once", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("acr", "ACR", true)]
+    [InlineData(EndpointValidator.AllNamespaces, "storage", true)]
+    [InlineData("acr", "storage", false)]
+    [InlineData(EndpointValidator.AllNamespaces, null, false)]
+    public void AreSsrfProtectionsDangerouslyDisabled_MatchesConfiguredNamespaces(
+        string configuredNamespace,
+        string? executingToolNamespaceName,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            EndpointValidator.AreSsrfProtectionsDangerouslyDisabled(
+                [configuredNamespace],
+                executingToolNamespaceName));
+    }
+
     #region ValidateAzureServiceEndpoint Tests
 
     [Theory]
@@ -19,18 +85,82 @@ public class EndpointValidatorTests
     [InlineData("https://my-instance.energy.azure.com", "adme")]
     [InlineData("https://my-instance.oep.ppe.azure-int.net", "adme")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://my-foundry.services.ai.azure.com", "foundry")]
     [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]
     [InlineData("https://my-resource.openai.azure.com", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.com", "azure-openai")]
+    [InlineData("https://topic.westus2-1.eventgrid.azure.net/api/events", "eventgrid")]
+    [InlineData("https://hub.azure-devices.net/devices", "iothub")]
+    [InlineData("https://vault.vault.azure.net/secrets", "keyvault")]
+    [InlineData("https://00000000-0000-0000-0000-000000000000.eastus.cnt-prod.loadtesting.azure.com", "loadtesting")]
+    [InlineData("https://hsm.managedhsm.azure.net/settings", "managedhsm")]
+    [InlineData("https://eastus.metrics.monitor.azure.com", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.azure.com", "mysql")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
+    [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://agent1.azuresre.ai", "sreagent")]
+    [InlineData("https://mystorage.blob.core.windows.net", "storage-blob")]
+    [InlineData("https://mystorage.table.core.windows.net", "storage-table")]
     [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
     [InlineData("https://my-ns.servicebus.windows.net", "servicebus")]
+    [InlineData("https://servicebus.windows.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
-        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+        var exception = Record.Exception(() => EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: serviceType,
+            armEnvironment: ArmEnvironment.AzurePublicCloud,
+            executingToolNamespaceName: null));
         Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("eventgrid")]
+    [InlineData("foundry")]
+    [InlineData("iothub")]
+    [InlineData("keyvault")]
+    [InlineData("loadtesting")]
+    [InlineData("managedhsm")]
+    [InlineData("monitor-metrics")]
+    [InlineData("mysql")]
+    [InlineData("sreagent")]
+    [InlineData("storage-table")]
+    public void ValidateAzureServiceEndpoint_ReviewedToolServices_AreRegistered(string serviceType)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: "https://invalid.example",
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
+    }
+
+    [Theory]
+    [InlineData("https://topic.eventgrid.azure.net.evil.example", "eventgrid")]
+    [InlineData("https://my-foundry.services.ai.azure.com.evil.example", "foundry")]
+    [InlineData("https://hub.azure-devices.net.evil.example", "iothub")]
+    [InlineData("https://vault.vault.azure.net.evil.example", "keyvault")]
+    [InlineData("https://resource.eastus.cnt-prod.loadtesting.azure.com.evil.example", "loadtesting")]
+    [InlineData("https://hsm.managedhsm.azure.net.evil.example", "managedhsm")]
+    [InlineData("https://eastus.metrics.monitor.azure.com.evil.example", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
+    [InlineData("https://agent1.azuresre.ai.evil.example", "sreagent")]
+    [InlineData("https://mystorage.table.core.windows.net.evil.example", "storage-table")]
+    public void ValidateAzureServiceEndpoint_ReviewedServiceSuffixes_RejectSpoofedHosts(
+        string endpoint,
+        string serviceType)
+    {
+        Assert.Throws<SecurityException>(() =>
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Theory]
@@ -41,16 +171,35 @@ public class EndpointValidatorTests
     [InlineData("https://evil.com/.communication.azure.com", "communication", "not a valid communication domain")]
     [InlineData("http://mycomm.communication.azure.com", "communication", "must use HTTPS")]
     [InlineData("ftp://myconfig.azconfig.io", "appconfig", "must use HTTPS")]
+    [InlineData("https://evil.com", "arm", "not a valid arm domain")]
+    [InlineData("http://management.azure.com", "arm", "must use HTTPS")]
+    [InlineData("https://management.azure.com.evil.com", "arm", "not a valid arm domain")]
+    [InlineData("https://sub.management.azure.com", "arm", "not a valid arm domain")]
     [InlineData("https://evil.com", "foundry", "not a valid foundry domain")]
     [InlineData("http://my-foundry.services.ai.azure.com", "foundry", "must use HTTPS")]
     [InlineData("https://my-foundry.services.ai.azure.com.evil.com", "foundry", "not a valid foundry domain")]
     [InlineData("https://evil.com", "azure-openai", "not a valid azure-openai domain")]
     [InlineData("http://my-resource.openai.azure.com", "azure-openai", "must use HTTPS")]
     [InlineData("https://my-resource.openai.azure.com.evil.com", "azure-openai", "not a valid azure-openai domain")]
+    [InlineData("http://resource.eastus.cnt-prod.loadtesting.azure.com", "loadtesting", "must use HTTPS")]
+    [InlineData("http://eastus.metrics.monitor.azure.com", "monitor-metrics", "must use HTTPS")]
+    [InlineData("https://evil.com", "postgres", "not a valid postgres domain")]
+    [InlineData("http://myserver.postgres.database.azure.com", "postgres", "must use HTTPS")]
+    [InlineData("https://myserver.postgres.database.azure.com.evil.com", "postgres", "not a valid postgres domain")]
+    [InlineData("https://evil.com", "pricing", "not a valid pricing domain")]
+    [InlineData("http://prices.azure.com", "pricing", "must use HTTPS")]
+    [InlineData("https://prices.azure.com.evil.com", "pricing", "not a valid pricing domain")]
+    [InlineData("https://sub.prices.azure.com", "pricing", "not a valid pricing domain")]
+    [InlineData("https://evil.com", "search", "not a valid search domain")]
+    [InlineData("http://my-search.search.windows.net", "search", "must use HTTPS")]
+    [InlineData("https://my-search.search.windows.net.evil.com", "search", "not a valid search domain")]
     [InlineData("https://attacker.dssldrf.net", "servicebus", "not a valid servicebus domain")]
     [InlineData("http://mynamespace.servicebus.windows.net", "servicebus", "must use HTTPS")]
     [InlineData("https://mynamespace.servicebus.windows.net.evil.com", "servicebus", "not a valid servicebus domain")]
     [InlineData("https://evil.com/.servicebus.windows.net", "servicebus", "not a valid servicebus domain")]
+    [InlineData("https://evil.com", "speech", "not a valid speech domain")]
+    [InlineData("http://my-speech.cognitiveservices.azure.com", "speech", "must use HTTPS")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com.evil.com", "speech", "not a valid speech domain")]
     public void ValidateAzureServiceEndpoint_InvalidEndpoints_ThrowsSecurityException(
         string endpoint,
         string serviceType,
@@ -58,7 +207,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains(expectedMessagePart, exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -71,7 +224,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Fact]
@@ -79,7 +236,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(null!, "communication", ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: null!,
+                serviceType: "communication",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Fact]
@@ -90,7 +251,11 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(invalidEndpoint, "communication", ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: invalidEndpoint,
+                serviceType: "communication",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains("Invalid endpoint format", exception.Message);
     }
 
@@ -103,7 +268,11 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, unknownServiceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: unknownServiceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains("Unknown service type", exception.Message);
     }
 
@@ -115,16 +284,32 @@ public class EndpointValidatorTests
     // Azure China Cloud
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://management.chinacloudapi.cn/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://mycomm.communication.azure.cn", "communication")]
-    [InlineData("https://my-foundry.services.ai.azure.cn", "foundry")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
+    [InlineData("https://topic.chinanorth3-1.eventgrid.azure.cn", "eventgrid")]
+    [InlineData("https://hub.azure-devices.cn", "iothub")]
+    [InlineData("https://vault.vault.azure.cn", "keyvault")]
+    [InlineData("https://hsm.managedhsm.azure.cn", "managedhsm")]
+    [InlineData("https://chinanorth3.metrics.monitor.azure.cn", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.chinacloudapi.cn", "mysql")]
+    [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
+    [InlineData("https://prices.azure.cn", "pricing")]
+    [InlineData("https://my-search.search.azure.cn", "search")]
+    [InlineData("https://mystorage.blob.core.chinacloudapi.cn", "storage-blob")]
+    [InlineData("https://mystorage.table.core.chinacloudapi.cn", "storage-table")]
     [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.cn", "speech")]
     public void ValidateAzureServiceEndpoint_AzureChinaCloud_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
         var exception = Record.Exception(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureChina));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureChina,
+                executingToolNamespaceName: null));
         Assert.Null(exception);
     }
 
@@ -132,16 +317,34 @@ public class EndpointValidatorTests
     // Azure US Government
     [InlineData("https://myregistry.azurecr.us", "acr")]
     [InlineData("https://myconfig.azconfig.azure.us", "appconfig")]
+    [InlineData("https://management.usgovcloudapi.net/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://mycomm.communication.azure.us", "communication")]
     [InlineData("https://my-foundry.services.ai.azure.us", "foundry")]
     [InlineData("https://my-resource.openai.azure.us", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.us", "azure-openai")]
+    [InlineData("https://topic.usgovvirginia-1.eventgrid.azure.us", "eventgrid")]
+    [InlineData("https://hub.azure-devices.us", "iothub")]
+    [InlineData("https://vault.vault.usgovcloudapi.net", "keyvault")]
+    [InlineData("https://00000000-0000-0000-0000-000000000000.usgovvirginia.cnt-prod.loadtesting.azure.us", "loadtesting")]
+    [InlineData("https://hsm.managedhsm.usgovcloudapi.net", "managedhsm")]
+    [InlineData("https://usgovvirginia.metrics.monitor.azure.us", "monitor-metrics")]
+    [InlineData("https://server.mysql.database.usgovcloudapi.net", "mysql")]
+    [InlineData("https://myserver.postgres.database.usgovcloudapi.net", "postgres")]
+    [InlineData("https://prices.azure.us", "pricing")]
+    [InlineData("https://my-search.search.azure.us", "search")]
+    [InlineData("https://mystorage.blob.core.usgovcloudapi.net", "storage-blob")]
+    [InlineData("https://mystorage.table.core.usgovcloudapi.net", "storage-table")]
     [InlineData("https://mynamespace.servicebus.usgovcloudapi.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.us", "speech")]
     public void ValidateAzureServiceEndpoint_AzureGovernment_ValidEndpoints_DoesNotThrow(string endpoint, string serviceType)
     {
         // Act & Assert
         var exception = Record.Exception(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureGovernment));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureGovernment,
+                executingToolNamespaceName: null));
         Assert.Null(exception);
     }
 
@@ -149,11 +352,21 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in China cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com", "arm")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
+    [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InChinaCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureChina));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureChina,
+                executingToolNamespaceName: null));
         Assert.Contains("Azure China Cloud", exception.Message);
         Assert.Contains("not a valid", exception.Message);
     }
@@ -162,11 +375,21 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in Gov cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://management.azure.com", "arm")]
+    [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
+    [InlineData("https://prices.azure.com", "pricing")]
+    [InlineData("https://my-search.search.windows.net", "search")]
+    [InlineData("https://mynamespace.servicebus.windows.net", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com", "speech")]
     public void ValidateAzureServiceEndpoint_PublicCloudEndpoint_InGovCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzureGovernment));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzureGovernment,
+                executingToolNamespaceName: null));
         Assert.Contains("Azure US Government Cloud", exception.Message);
         Assert.Contains("not a valid", exception.Message);
     }
@@ -175,11 +398,21 @@ public class EndpointValidatorTests
     // China cloud endpoint should fail in public cloud
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
+    [InlineData("https://management.chinacloudapi.cn", "arm")]
+    [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
+    [InlineData("https://prices.azure.cn", "pricing")]
+    [InlineData("https://my-search.search.azure.cn", "search")]
+    [InlineData("https://mynamespace.servicebus.chinacloudapi.cn", "servicebus")]
+    [InlineData("https://my-speech.cognitiveservices.azure.cn", "speech")]
     public void ValidateAzureServiceEndpoint_ChinaCloudEndpoint_InPublicCloud_Throws(string endpoint, string serviceType)
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Contains("Azure Public Cloud", exception.Message);
         Assert.Contains("not a valid", exception.Message);
     }
@@ -242,7 +475,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_PublicEndpoints_DoesNotThrow(string url)
     {
         // Act & Assert
-        var exception = Record.Exception(() => EndpointValidator.ValidatePublicTargetUrl(url));
+        var exception = Record.Exception(() => ValidatePublicTargetUrl(url));
         Assert.Null(exception);
     }
 
@@ -293,7 +526,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         // The error message varies: "private or reserved" for IPs, "reserved" for hostnames
         Assert.True(
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
@@ -307,14 +540,14 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_NullOrEmptyUrl_ThrowsArgumentException(string url)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => EndpointValidator.ValidatePublicTargetUrl(url));
+        Assert.Throws<ArgumentException>(() => ValidatePublicTargetUrl(url));
     }
 
     [Fact]
     public void ValidatePublicTargetUrl_NullUrl_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => EndpointValidator.ValidatePublicTargetUrl(null!));
+        Assert.Throws<ArgumentException>(() => ValidatePublicTargetUrl(null!));
     }
 
     [Fact]
@@ -325,7 +558,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(invalidUrl));
+            ValidatePublicTargetUrl(invalidUrl));
         Assert.Contains("Invalid URL format", exception.Message);
     }
 
@@ -340,7 +573,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -358,7 +591,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
 
         // The error should mention either:
         // 1. "resolves to a private or reserved IP" (if DNS succeeded)
@@ -379,7 +612,7 @@ public class EndpointValidatorTests
 
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("Unable to resolve hostname", exception.Message);
     }
 
@@ -395,7 +628,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.True(
             exception.Message.Contains("reserved", StringComparison.OrdinalIgnoreCase) ||
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
@@ -415,7 +648,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Record.Exception(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
         Assert.Null(exception);
     }
 
@@ -429,7 +666,11 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         Assert.Throws<SecurityException>(
-            () => EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, ArmEnvironment.AzurePublicCloud));
+            () => EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint,
+                serviceType: serviceType,
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: null));
     }
 
     [Fact]
@@ -452,7 +693,7 @@ public class EndpointValidatorTests
     {
         // Act & Assert
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.True(
             exception.Message.Contains("private or reserved", StringComparison.OrdinalIgnoreCase) ||
             exception.Message.Contains("reserved", StringComparison.OrdinalIgnoreCase),
@@ -610,7 +851,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_WildcardDnsServices_ThrowsSecurityException(string url)
     {
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -713,7 +954,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_TrailingDotReservedHost_ThrowsSecurityException(string url)
     {
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("reserved", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -765,7 +1006,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_NonHttpScheme_ThrowsSecurityException(string url)
     {
         var exception = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
         Assert.Contains("HTTP or HTTPS", exception.Message);
     }
 
@@ -775,7 +1016,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_HttpSchemes_Allowed(string url)
     {
         // Should not throw for HTTP/HTTPS with public IPs
-        EndpointValidator.ValidatePublicTargetUrl(url);
+        ValidatePublicTargetUrl(url);
     }
 
     #endregion
@@ -861,7 +1102,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_TrailingDotReservedHosts_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Theory]
@@ -872,7 +1113,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_IPv6TransitionInUrl_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Theory]
@@ -882,7 +1123,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_SubdomainOfReservedHost_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Fact]
@@ -890,7 +1131,7 @@ public class EndpointValidatorTests
     {
         // Verify that error messages for literal private IPs don't leak the address value
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl("http://127.0.0.1/test"));
+            ValidatePublicTargetUrl("http://127.0.0.1/test"));
         Assert.DoesNotContain("127.0.0.1", ex.Message);
     }
 
@@ -899,7 +1140,7 @@ public class EndpointValidatorTests
     {
         // Verify DNS error messages don't leak internal resolver details
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl("http://this-host-does-not-exist-12345.invalid/test"));
+            ValidatePublicTargetUrl("http://this-host-does-not-exist-12345.invalid/test"));
         Assert.DoesNotContain("Details:", ex.Message);
     }
 
@@ -964,7 +1205,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_LoopbackAlternateRepresentations_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion
@@ -981,7 +1222,7 @@ public class EndpointValidatorTests
         // .NET's Uri parser handles %25 as literal % in zone IDs.
         // The underlying IP (::1 or fe80::1) is still private/reserved.
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion
@@ -999,7 +1240,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_IPv4MappedPrivateInUrl_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Theory]
@@ -1008,7 +1249,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_IPv6UniqueLocalAddresses_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion
@@ -1025,7 +1266,7 @@ public class EndpointValidatorTests
         {
             // If .NET parses it, the host should be ::1 (loopback) → blocked
             Assert.Throws<SecurityException>(() =>
-                EndpointValidator.ValidatePublicTargetUrl(url));
+                ValidatePublicTargetUrl(url));
         }
         // If .NET rejects the URI entirely, that's also safe (no request possible)
     }
@@ -1039,7 +1280,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_LoopbackNonStandardPorts_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     [Fact]
@@ -1052,13 +1293,13 @@ public class EndpointValidatorTests
         {
             // If somehow parsed, it must still be blocked
             Assert.Throws<SecurityException>(() =>
-                EndpointValidator.ValidatePublicTargetUrl(url));
+                ValidatePublicTargetUrl(url));
         }
         else
         {
             // Invalid URI → safe (ValidatePublicTargetUrl would throw SecurityException)
             Assert.Throws<SecurityException>(() =>
-                EndpointValidator.ValidatePublicTargetUrl(url));
+                ValidatePublicTargetUrl(url));
         }
     }
 
@@ -1104,7 +1345,7 @@ public class EndpointValidatorTests
     public void ValidatePublicTargetUrl_CloudMetadataIPv6InUrl_Blocked(string url)
     {
         Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidatePublicTargetUrl(url));
+            ValidatePublicTargetUrl(url));
     }
 
     #endregion

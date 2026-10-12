@@ -13,6 +13,11 @@ namespace Azure.Mcp.Tools.StorageSync.Tests;
 public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override CustomDefaultMatcher? TestMatcher => new()
+    {
+        IgnoredQueryParameters = "api-version"
+    };
+
     public override List<UriRegexSanitizer> UriRegexSanitizers => [
         .. base.UriRegexSanitizers,
         new(new()
@@ -53,6 +58,15 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         new(new() {
           Regex = Settings.TenantId,
           Value = "00000000-0000-0000-0000-000000000000",
+        })
+    ];
+
+    // This response header contains the recording tenant and caller object IDs.
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => [
+        .. base.HeaderRegexSanitizers,
+        new(new("x-ms-operation-identifier")
+        {
+            Value = "sanitized"
         })
     ];
 

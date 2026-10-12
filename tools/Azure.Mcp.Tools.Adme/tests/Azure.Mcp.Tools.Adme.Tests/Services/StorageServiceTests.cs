@@ -30,9 +30,9 @@ public sealed class StorageServiceTests
 
         var result = await service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null,
-            TestConstants.Tenant, TestContext.Current.CancellationToken);
+            TestConstants.Tenant, cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal(RecordId, result.Id);
+        Assert.Equal(RecordId, result.Result.Id);
         Assert.Equal($"/api/storage/v2/records/{EscapedRecordId}", handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.Equal(HttpMethod.Get, handler.LastRequest.Method);
         Assert.Equal("token-abc", handler.LastRequest.Headers.Authorization!.Parameter);
@@ -48,7 +48,7 @@ public sealed class StorageServiceTests
 
         await service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null,
-            ["data.Name", "data.WellID"], null, TestContext.Current.CancellationToken);
+            ["data.Name", "data.WellID"], null, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(
             $"/api/storage/v2/records/{EscapedRecordId}?attribute=data.Name&attribute=data.WellID",
@@ -64,9 +64,9 @@ public sealed class StorageServiceTests
 
         var result = await service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, version, null, null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal(version, result.Version);
+        Assert.Equal(version, result.Result.Version);
         Assert.Equal($"/api/storage/v2/records/{EscapedRecordId}/{version}", handler.LastRequest!.RequestUri!.PathAndQuery);
     }
 
@@ -81,7 +81,7 @@ public sealed class StorageServiceTests
 
         await Assert.ThrowsAnyAsync<ArgumentException>(() => service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, id!, null, null, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
@@ -95,7 +95,7 @@ public sealed class StorageServiceTests
 
         await service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, version,
-            ["data.Name", "data.WellID"], null, TestContext.Current.CancellationToken);
+            ["data.Name", "data.WellID"], null, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(
             $"/api/storage/v2/records/{EscapedRecordId}/{version}?attribute=data.Name&attribute=data.WellID",
@@ -110,9 +110,9 @@ public sealed class StorageServiceTests
 
         var result = await service.ListRecordVersionsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal([1L, 2L, 3L], result.Versions);
+        Assert.Equal([1L, 2L, 3L], result.Result.Versions);
         Assert.Equal($"/api/storage/v2/records/versions/{EscapedRecordId}", handler.LastRequest!.RequestUri!.PathAndQuery);
     }
 
@@ -127,7 +127,7 @@ public sealed class StorageServiceTests
 
         await Assert.ThrowsAnyAsync<ArgumentException>(() => service.ListRecordVersionsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, id!, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
@@ -140,10 +140,10 @@ public sealed class StorageServiceTests
 
         var result = await service.QueryRecordsByKindAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 25,
-            "prev-cursor", null, TestContext.Current.CancellationToken);
+            "prev-cursor", null, cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal("next", result.Cursor);
-        Assert.Equal(RecordId, Assert.Single(result.Results));
+        Assert.Equal("next", result.Result.Cursor);
+        Assert.Equal(RecordId, Assert.Single(result.Result.Results));
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
         Assert.Equal(TestConstants.WellKind, query["kind"]);
         Assert.Equal("25", query["limit"]);
@@ -160,7 +160,7 @@ public sealed class StorageServiceTests
 
         await service.QueryRecordsByKindAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 10,
-            null, null, TestContext.Current.CancellationToken);
+            null, null, cancellationToken: TestContext.Current.CancellationToken);
 
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
         Assert.Equal(2, query.Count);
@@ -178,7 +178,7 @@ public sealed class StorageServiceTests
 
         await Assert.ThrowsAnyAsync<ArgumentException>(() => service.QueryRecordsByKindAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, kind!, 10, null, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
@@ -191,7 +191,7 @@ public sealed class StorageServiceTests
 
         await service.FetchRecordsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, [RecordId], null, false, null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpMethod.Post, handler.LastRequest!.Method);
         Assert.Equal("/api/storage/v2/query/records:batch", handler.LastRequest.RequestUri!.PathAndQuery);
@@ -207,7 +207,7 @@ public sealed class StorageServiceTests
 
         await service.FetchRecordsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, [RecordId], null, true, null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(
             "units=SI;crs=wgs84;elevation=msl;azimuth=true north;dates=utc;",
@@ -222,7 +222,7 @@ public sealed class StorageServiceTests
 
         await service.FetchRecordsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, [RecordId], ["data.Name"], false,
-            null, TestContext.Current.CancellationToken);
+            null, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("/api/storage/v2/query/records", handler.LastRequest!.RequestUri!.PathAndQuery);
         Assert.False(handler.LastRequest.Headers.Contains("frame-of-reference"));
@@ -237,7 +237,7 @@ public sealed class StorageServiceTests
 
         await Assert.ThrowsAsync<ArgumentException>(() => service.FetchRecordsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, [], null, false, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
@@ -250,13 +250,13 @@ public sealed class StorageServiceTests
 
         var result = await service.UpsertRecordsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, [CreateRecord()],
-            TestConstants.Tenant, TestContext.Current.CancellationToken);
+            TestConstants.Tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpMethod.Put, handler.LastRequest!.Method);
         Assert.Equal("/api/storage/v2/records", handler.LastRequest.RequestUri!.PathAndQuery);
         Assert.Contains(RecordId, handler.LastRequestBody);
-        Assert.Equal(RecordId, Assert.Single(result.RecordIds!));
-        Assert.Equal(1, result.RecordCount);
+        Assert.Equal(RecordId, Assert.Single(result.Result.RecordIds!));
+        Assert.Equal(1, result.Result.RecordCount);
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public sealed class StorageServiceTests
 
         await Assert.ThrowsAsync<ArgumentException>(() => service.UpsertRecordsAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, [], null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
@@ -280,7 +280,7 @@ public sealed class StorageServiceTests
 
         await service.DeleteRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId,
-            TestConstants.Tenant, TestContext.Current.CancellationToken);
+            TestConstants.Tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpMethod.Delete, handler.LastRequest!.Method);
         Assert.Equal($"/api/storage/v2/records/{EscapedRecordId}", handler.LastRequest.RequestUri!.PathAndQuery);
@@ -297,23 +297,44 @@ public sealed class StorageServiceTests
 
         await Assert.ThrowsAnyAsync<ArgumentException>(() => service.DeleteRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, id!, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
 
     [Fact]
-    public async Task GetRecordAsync_DoesNotExposeBackendResponseBodyOnFailure()
+    public async Task GetRecordAsync_PreservesAdmeResponseBodyOnFailure()
     {
         var handler = JsonHandler(HttpStatusCode.NotFound, "sensitive backend details");
         var service = CreateService(handler);
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.NotFound, exception.Status);
-        Assert.DoesNotContain("sensitive backend details", exception.Message);
+        Assert.Equal("sensitive backend details", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetRecordAsync_IncludesCorrelationIdOnFailure()
+    {
+        var handler = new StubHttpMessageHandler(_ =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("record not found", Encoding.UTF8, "application/json"),
+            };
+            response.Headers.Add("correlation-id", "corr-42");
+            return response;
+        });
+        var service = CreateService(handler);
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.GetRecordAsync(
+            TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null, null,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal("record not found (correlation-id: corr-42)", exception.Message);
     }
 
     [Theory]
@@ -327,7 +348,7 @@ public sealed class StorageServiceTests
 
         await Assert.ThrowsAsync<System.Security.SecurityException>(() => service.GetRecordAsync(
             endpoint, TestConstants.DataPartition, RecordId, null, null, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 
     private static StorageService CreateService(StubHttpMessageHandler handler) =>

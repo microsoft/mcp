@@ -4,7 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
+using Azure.Mcp.Tools.AzureBackup.Options.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -37,12 +37,12 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
     Secret = false,
     LocalRequired = false)]
 public sealed class ProtectedItemGetCommand(ILogger<ProtectedItemGetCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
-    : BaseAzureBackupCommand<BaseProtectedItemOptions, ProtectedItemGetCommand.ProtectedItemGetCommandResult>(subscriptionResolver)
+    : BaseAzureBackupCommand<ProtectedItemGetOptions, ProtectedItemGetCommand.ProtectedItemGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ProtectedItemGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseProtectedItemOptions options, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProtectedItemGetOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);

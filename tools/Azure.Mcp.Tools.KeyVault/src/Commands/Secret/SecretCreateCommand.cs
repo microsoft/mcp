@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -16,7 +14,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     Id = "fb1322cd-05b0-4264-9e96-6a9b3d9291a0",
     Name = "create",
     Title = "Create Key Vault Secret",
-    Description = "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
+    Description = "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
@@ -24,8 +22,8 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     ReadOnly = false,
     Secret = true,
     LocalRequired = false)]
-public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<SecretCreateOptions, SecretDetails>(subscriptionResolver)
+public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<SecretCreateOptions, SecretDetails>
 {
     private readonly ILogger<SecretCreateCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
@@ -38,7 +36,6 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger, IKe
                 options.Vault!,
                 options.Secret!,
                 options.Value!,
-                options.Subscription!,
                 options.Tenant,
                 cancellationToken);
 

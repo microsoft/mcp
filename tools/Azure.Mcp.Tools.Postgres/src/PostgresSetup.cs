@@ -35,7 +35,11 @@ public class PostgresSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
+        var pg = new CommandGroup(Name,
+            "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server " +
+            "resources. Includes operations for listing servers and databases, executing SQL queries, managing " +
+            "table schemas, and configuring server parameters.",
+            Title);
 
         // Consolidated hierarchical list command
         pg.AddCommand<PostgresListCommand>(serviceProvider);

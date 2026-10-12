@@ -1069,7 +1069,11 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
 
         // Act & Assert
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: "compute"));
         Assert.Contains("HTTPS", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -1088,7 +1092,11 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     {
         // Act & Assert
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: "compute"));
         Assert.Contains("storage-blob", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -1101,7 +1109,11 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     public void CreateDiskFromValidPublicCloudBlobUri_DoesNotThrow(string source)
     {
         // Act & Assert - should not throw for public cloud
-        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: source,
+            serviceType: "storage-blob",
+            armEnvironment: ArmEnvironment.AzurePublicCloud,
+            executingToolNamespaceName: "compute");
     }
 
     [Theory]
@@ -1109,7 +1121,11 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     public void CreateDiskFromValidChinaCloudBlobUri_DoesNotThrow(string source)
     {
         // Act & Assert - should not throw for China cloud
-        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzureChina);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: source,
+            serviceType: "storage-blob",
+            armEnvironment: ArmEnvironment.AzureChina,
+            executingToolNamespaceName: "compute");
     }
 
     [Theory]
@@ -1117,7 +1133,11 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     public void CreateDiskFromValidGovCloudBlobUri_DoesNotThrow(string source)
     {
         // Act & Assert - should not throw for US Government cloud
-        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzureGovernment);
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: source,
+            serviceType: "storage-blob",
+            armEnvironment: ArmEnvironment.AzureGovernment,
+            executingToolNamespaceName: "compute");
     }
 
     [Fact]
@@ -1128,7 +1148,11 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
 
         // Act & Assert
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: ArmEnvironment.AzurePublicCloud,
+                executingToolNamespaceName: "compute"));
         Assert.Contains("storage-blob", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 

@@ -8,9 +8,6 @@ namespace Azure.Mcp.Tools.Postgres.Options.Server;
 
 public class BaseServerOptions : ISubscriptionOption
 {
-    [Option(Description = PostgresOptionDefinitions.UserDescription)]
-    public required string User { get; set; }
-
     [Option(Description = PostgresOptionDefinitions.ServerDescription)]
     public required string Server { get; set; }
 

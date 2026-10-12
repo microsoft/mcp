@@ -7,11 +7,11 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options.Storage;
 
 /// <summary>
-/// Specifies the OSDU record whose versions are listed.
+/// Specifies the record whose versions are listed.
 /// </summary>
 public sealed class RecordVersionListOptions
 {
-    [Option(Description = "The fully-qualified OSDU record id '{partition}:{group-type}--{EntityType}:{unique-id}', for example 'opendes:master-data--Well:W-99'.")]
+    [Option(Description = "The fully-qualified record id '{partition}:{object-type}:{unique-id}', for example 'opendes:well:W-99'.")]
     public required string Id { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]
@@ -22,4 +22,7 @@ public sealed class RecordVersionListOptions
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
+
+    [Option(Description = "The ADME resource application ID or App ID URI used as the token audience. Omit to use the standard Azure Energy resource.")]
+    public string? AuthAppId { get; set; }
 }

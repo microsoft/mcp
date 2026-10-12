@@ -16,12 +16,11 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
 {
     /// <summary>
     /// Stable serialized values for <see cref="ToolOperationPlane"/>. Writing is strict so an enum
-    /// value added without a serialized form fails loudly instead of silently emitting
-    /// <c>unspecified</c>; reading is lenient so newer metadata remains readable by older binaries.
+    /// value added without a serialized form fails loudly; reading is lenient so newer metadata
+    /// remains readable by older binaries.
     /// </summary>
     private static string ToJsonValue(ToolOperationPlane operationPlane) => operationPlane switch
     {
-        ToolOperationPlane.Unspecified => "unspecified",
         ToolOperationPlane.Data => "data",
         ToolOperationPlane.Control => "control",
         ToolOperationPlane.Both => "both",
@@ -35,7 +34,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
         "control" => ToolOperationPlane.Control,
         "both" => ToolOperationPlane.Both,
         "notApplicable" => ToolOperationPlane.NotApplicable,
-        _ => ToolOperationPlane.Unspecified
+        _ => ToolOperationPlane.NotApplicable
     };
 
     public override ToolMetadata Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -56,7 +55,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
         ToolOperationPlane GetOperationPlane()
             => root.TryGetProperty("operationPlane", out var property) && property.ValueKind == JsonValueKind.String
                 ? FromJsonValue(property.GetString())
-                : ToolOperationPlane.Unspecified;
+                : ToolOperationPlane.NotApplicable;
 
         return new ToolMetadata(
             GetOperationPlane(),

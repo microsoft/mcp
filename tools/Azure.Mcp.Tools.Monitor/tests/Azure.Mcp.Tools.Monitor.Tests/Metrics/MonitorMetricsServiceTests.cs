@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.ResourceManager;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -282,6 +284,43 @@ public class MonitorMetricsServiceTests
                 TestResourceType,
                 resourceName!,
                 cancellationToken: TestContext.Current.CancellationToken));
+    }
+
+    #endregion
+
+    #region Metrics Endpoint Validation Tests
+
+    [Theory]
+    [InlineData("https://eastus.metrics.monitor.azure.com", "public")]
+    [InlineData("https://chinanorth3.metrics.monitor.azure.cn", "china")]
+    [InlineData("https://usgovvirginia.metrics.monitor.azure.us", "government")]
+    public void ValidateMetricsEndpoint_ValidCloudHost_ReturnsEndpoint(string endpoint, string cloud)
+    {
+        var armEnvironment = cloud switch
+        {
+            "china" => ArmEnvironment.AzureChina,
+            "government" => ArmEnvironment.AzureGovernment,
+            _ => ArmEnvironment.AzurePublicCloud
+        };
+        var endpointUri = new Uri(endpoint);
+
+        var result = MonitorMetricsService.ValidateMetricsEndpoint(endpointUri, armEnvironment);
+
+        Assert.Same(endpointUri, result);
+    }
+
+    [Theory]
+    [InlineData("https://evil.example")]
+    [InlineData("https://eastus.metrics.monitor.azure.com.evil.example")]
+    [InlineData("https://chinanorth3.metrics.monitor.azure.cn")]
+    [InlineData("https://127.0.0.1")]
+    [InlineData("http://eastus.metrics.monitor.azure.com")]
+    public void ValidateMetricsEndpoint_InvalidPublicCloudHost_ThrowsSecurityException(string endpoint)
+    {
+        Assert.Throws<SecurityException>(() =>
+            MonitorMetricsService.ValidateMetricsEndpoint(
+                new Uri(endpoint),
+                ArmEnvironment.AzurePublicCloud));
     }
 
     #endregion

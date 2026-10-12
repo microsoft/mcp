@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added `core_list-items` to list one page of Fabric item metadata within a workspace or folder, with item-type filtering, recursive listing, and continuation information.

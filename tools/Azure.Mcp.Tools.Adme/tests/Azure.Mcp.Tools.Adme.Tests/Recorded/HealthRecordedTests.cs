@@ -16,7 +16,7 @@ public sealed class HealthRecordedTests(
 {
     private const string HealthCheckTool = "adme_health_check";
 
-    /// <summary>Verifies that ADME authentication and connectivity are healthy.</summary>
+    /// <summary>Verifies that the ADME storage info endpoint responds successfully.</summary>
     [Fact]
     public async Task Should_check_adme_health()
     {
@@ -24,7 +24,6 @@ public sealed class HealthRecordedTests(
 
         var result = await CallToolResultsAsync(HealthCheckTool, arguments);
 
-        Assert.True(result.GetProperty("authOk").GetBoolean());
-        Assert.True(result.GetProperty("connectivityOk").GetBoolean());
+        Assert.Equal(200, result.GetProperty("statusCode").GetInt32());
     }
 }

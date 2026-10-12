@@ -24,8 +24,11 @@ public class MySqlServerOptions : ISubscriptionOption
 /// <summary>
 /// Options for MySQL commands that need database access.
 /// </summary>
-public class MySqlDatabaseOptions : MySqlServerOptions
+public class MySqlDatabaseOptions
 {
+    [Option(Description = "The MySQL server to be accessed.")]
+    public required string Server { get; set; }
+
     [Option(Description = "The MySQL database to be accessed.")]
     public required string Database { get; set; }
 

@@ -7,11 +7,11 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options.Schema;
 
 /// <summary>
-/// Specifies the ADME schema kind to retrieve.
+/// Specifies the schema kind to retrieve.
 /// </summary>
 public sealed class SchemaGetOptions
 {
-    [Option(Description = "The fully-qualified OSDU kind 'authority:source:type:version', for example 'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use 'azmcp adme schema list' to discover valid kinds and versions.")]
+    [Option(Description = "The fully-qualified kind 'authority:source:type:version', for example 'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use the schema list operation to discover valid kinds and versions.")]
     public required string Kind { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]
@@ -22,4 +22,7 @@ public sealed class SchemaGetOptions
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
+
+    [Option(Description = "The ADME resource application ID or App ID URI used as the token audience. Omit to use the standard Azure Energy resource.")]
+    public string? AuthAppId { get; set; }
 }

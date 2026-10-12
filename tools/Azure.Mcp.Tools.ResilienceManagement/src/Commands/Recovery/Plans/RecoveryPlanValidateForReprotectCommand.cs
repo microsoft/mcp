@@ -15,7 +15,13 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "a58a9d25-b69a-4a8e-9ad0-04fb693352de",
     Name = "validateforreprotect",
     Title = "Validate Resilience Recoveryplan for Reprotect",
-    Description = "Validates whether a resilience recoveryplan and its resources are qualified for reprotect after failover. Optionally validates customer-selected recovery-resource IDs; when no IDs are provided, validates all qualified resources in the plan. Use this validation-only tool to identify per-resource reprotect eligibility and blocking reasons. It does not execute reprotect or update recovery resources.",
+    Description = """
+        Validates whether an Azure Resilience Management recoveryplan and its resources are qualified for
+        reprotect after failover. Use this command for recoveryplan reprotect eligibility instead of Azure
+        Backup, generic Site Recovery discovery, or CLI generation. Optionally provide selected recovery-resource
+        IDs; when omitted, the command validates all qualified resources in the plan. It reports per-resource
+        eligibility and blocking reasons without executing reprotect or updating resources.
+        """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,

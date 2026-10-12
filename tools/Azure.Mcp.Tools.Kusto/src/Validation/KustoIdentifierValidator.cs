@@ -34,26 +34,38 @@ internal static class KustoIdentifierValidator
     {
         if (string.IsNullOrWhiteSpace(identifier))
         {
-            throw new CommandValidationException($"{parameterName} cannot be empty.");
+            throw new CommandValidationException($"{parameterName} cannot be empty.")
+            {
+                TelemetrySafeMessage = $"{parameterName} cannot be empty."
+            };
         }
 
         if (identifier.Length > MaxIdentifierLength)
         {
             throw new CommandValidationException(
-                $"{parameterName} length exceeds maximum of {MaxIdentifierLength} characters.");
+                $"{parameterName} length exceeds maximum of {MaxIdentifierLength} characters.")
+            {
+                TelemetrySafeMessage = $"{parameterName} length exceeds maximum of {MaxIdentifierLength} characters."
+            };
         }
 
         // Reject any KQL operators or injection characters
         if (identifier.IndexOfAny(['|', ';', '(', ')', '{', '}', '[', ']', '<', '>', '\'', '"', '`', '/', '\\', '\n', '\r']) != -1)
         {
             throw new CommandValidationException(
-                $"{parameterName} contains invalid characters. Only letters, digits, underscores, spaces, hyphens, and periods are allowed.");
+                $"{parameterName} contains invalid characters. Only letters, digits, underscores, spaces, hyphens, and periods are allowed.")
+            {
+                TelemetrySafeMessage = $"{parameterName} contains invalid characters. Only letters, digits, underscores, spaces, hyphens, and periods are allowed."
+            };
         }
 
         if (!ValidIdentifierPattern.IsMatch(identifier))
         {
             throw new CommandValidationException(
-                $"{parameterName} is not a valid Kusto identifier. Must start with a letter or underscore and contain only letters, digits, underscores, spaces, hyphens, and periods.");
+                $"{parameterName} is not a valid Kusto identifier. Must start with a letter or underscore and contain only letters, digits, underscores, spaces, hyphens, and periods.")
+            {
+                TelemetrySafeMessage = $"{parameterName} is not a valid Kusto identifier. Must start with a letter or underscore and contain only letters, digits, underscores, spaces, hyphens, and periods."
+            };
         }
     }
 }

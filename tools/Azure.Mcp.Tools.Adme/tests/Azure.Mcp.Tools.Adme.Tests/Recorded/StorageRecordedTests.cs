@@ -228,6 +228,24 @@ public sealed class StorageRecordedTests(
         var status = result.GetProperty("conversionStatuses").EnumerateArray().Single();
         Assert.Equal(seeder.FirstId, status.GetProperty("id").GetString());
         Assert.Equal("NO_FRAME_OF_REFERENCE", status.GetProperty("status").GetString());
+        Assert.NotEmpty(status.GetProperty("errors").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task RecordFetch_with_missing_id_returns_record_and_not_found_id()
+    {
+        var missingId = $"{seeder.DataPartition}:master-data--Well:does-not-exist";
+        var arguments = CreateArguments();
+        arguments["ids"] = new[] { seeder.FirstId, missingId };
+
+        var result = await CallToolResultsAsync(RecordFetchTool, arguments);
+
+        Assert.Equal(
+            seeder.FirstId,
+            result.GetProperty("records").EnumerateArray().Single().GetProperty("id").GetString());
+        Assert.Equal(
+            missingId,
+            result.GetProperty("notFound").EnumerateArray().Single().GetString());
     }
 
     [Fact]

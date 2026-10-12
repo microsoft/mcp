@@ -4,11 +4,6 @@
 namespace Azure.Mcp.Tools.Adme.Models;
 
 /// <summary>
-/// Represents the outcome of ADME authentication and connectivity checks.
+/// Represents the response from the ADME storage info endpoint.
 /// </summary>
-public sealed record HealthCheckResult(
-    bool AuthOk,
-    string? AuthError,
-    bool ConnectivityOk,
-    string? ConnectivityError,
-    int? ConnectivityStatusCode);
+public sealed record HealthCheckResult(int StatusCode);

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.Docs.Models;
 using Fabric.Mcp.Tools.Docs.Options.PublicApis;
 using Fabric.Mcp.Tools.Docs.Services;
@@ -24,7 +25,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.PublicApis;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetItemApisCommand(IFabricPublicApiService service, ILogger<GetItemApisCommand> logger)
-    : AuthenticatedCommand<ItemTypeOptions, FabricPublicApi>
+    : AuthenticatedCommand<ItemTypeOptions, GetItemApisCommand.GetItemApisCommandResult>
 {
     private readonly ILogger<GetItemApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -42,7 +43,9 @@ public sealed class GetItemApisCommand(IFabricPublicApiService service, ILogger<
 
             var apis = await _service.GetPublicApis(options.ItemType, cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricPublicApi);
+            context.Response.Results = ResponseResult.Create(
+                new(apis),
+                FabricJsonContext.Default.GetItemApisCommandResult);
         }
         catch (HttpRequestException httpEx)
         {
@@ -66,4 +69,7 @@ public sealed class GetItemApisCommand(IFabricPublicApiService service, ILogger<
 
         return context.Response;
     }
+
+    public sealed record GetItemApisCommandResult(
+        [property: JsonPropertyName("publicApi")] FabricPublicApi PublicApi);
 }

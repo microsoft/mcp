@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the core_delete-item tool with explicit permanent-deletion opt-in, validated workspace and item UUIDs, and minimal deletion confirmation."

@@ -462,9 +462,9 @@
     "Show secrets names in the key vault <key_vault_account_name>"
   ],
   "aks_cluster_get": [
-    "Get the configuration of AKS cluster <cluster-name>",
+    "Get the configuration of AKS cluster <cluster-name> in resource group <resource-group>",
     "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
-    "Show me the network configuration for AKS cluster <cluster-name>",
+    "Show me the network configuration for AKS cluster <cluster-name> in resource group <resource-group>",
     "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
     "List all AKS clusters in my subscription",
     "Show me my Azure Kubernetes Service clusters",

@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure;
 
@@ -44,6 +46,20 @@ public static class AzureHelper
         // Initialize the default user agent policy without transport type
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
         s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
+    }
+
+    /// <summary>
+    /// Validates that the provided parameter is not null or empty.
+    /// </summary>
+    /// <param name="name">The parameter name.</param>
+    /// <param name="value">The parameter value.</param>
+    /// <exception cref="ArgumentException">Thrown when the parameter is null or empty.</exception>
+    internal static void ValidateRequiredParameter(string name, [NotNull] string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            throw new ArgumentException($"Required parameter is null or empty: {name}");
+        }
     }
 
     /// <summary>
@@ -173,6 +189,14 @@ public static class AzureHelper
             options.Transport = new HttpClientTransport(azureService.GetClient());
             options.Environment = azureService.CloudConfiguration.ArmEnvironment;
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+            // Give the playback SDK timeout time to expire before the HTTP client times out.
+            // Playback tests expect an exact sequence of requests and returns recorded responses.
+            // The default timeout is not long enough to eliminate the possibility of retries.
+            // When that happens, the playback system returns an error due to request mismatch and will very likely fail the test, leading to transient failures.
+            if (EnvironmentHelpers.IsPlaybackTesting())
+            {
+                options.Retry.NetworkTimeout = TimeSpan.FromMinutes(10);
+            }
 
             return new(credential, defaultSubscriptionId: default, options);
         }

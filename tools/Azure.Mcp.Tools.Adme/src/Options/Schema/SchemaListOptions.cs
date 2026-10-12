@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options.Schema;
 
 /// <summary>
-/// Specifies filters and paging for listing ADME schemas.
+/// Specifies filters and paging for listing schemas.
 /// </summary>
 public sealed class SchemaListOptions
 {
@@ -24,7 +24,7 @@ public sealed class SchemaListOptions
     [Option(Description = "Filter by lifecycle status: PUBLISHED, DEVELOPMENT, or OBSOLETE. Omit to return schemas in all lifecycle statuses.")]
     public SchemaStatus? Status { get; set; }
 
-    [Option(Description = "Filter by scope: SHARED for system-defined OSDU schemas, INTERNAL for schemas defined in this data partition. Omit to return both.")]
+    [Option(Description = "Filter by scope: SHARED for system-defined schemas, INTERNAL for schemas defined in this data partition. Omit to return both.")]
     public SchemaScope? Scope { get; set; }
 
     [Option(Description = "Filter by schema major version, for example 1. When combined with --latest-version, supply version filters in order (major, then minor).")]
@@ -36,7 +36,7 @@ public sealed class SchemaListOptions
     [Option(Description = "Filter by schema patch version, for example 0. When --latest-version is true, requires --schema-version-major and --schema-version-minor.")]
     public int? SchemaVersionPatch { get; set; }
 
-    [Option(Description = "Return only the newest version of each schema entity, collapsing duplicates across scopes. When filtering by version, supply components in order: major, then minor, then patch.")]
+    [Option(Description = "Return only the newest version of each schema entity per authority. When filtering by version, supply components in order: major, then minor, then patch.")]
     public bool LatestVersion { get; set; }
 
     [Option(Description = "The starting offset for paging; compare with the response's totalCount to decide whether to fetch further pages.")]
@@ -53,4 +53,7 @@ public sealed class SchemaListOptions
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
+
+    [Option(Description = "The ADME resource application ID or App ID URI used as the token audience. Omit to use the standard Azure Energy resource.")]
+    public string? AuthAppId { get; set; }
 }

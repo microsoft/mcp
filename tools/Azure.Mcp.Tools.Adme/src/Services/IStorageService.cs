@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 
 namespace Azure.Mcp.Tools.Adme.Services;
@@ -10,54 +11,60 @@ namespace Azure.Mcp.Tools.Adme.Services;
 /// </summary>
 public interface IStorageService
 {
-    Task<StorageRecord> GetRecordAsync(
+    Task<AdmeResponse<StorageRecord>> GetRecordAsync(
         string endpoint,
         string dataPartition,
         string id,
         long? version,
         IReadOnlyList<string>? attributes,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists the numeric versions of a record.
     /// </summary>
-    Task<RecordVersionsResponse> ListRecordVersionsAsync(
+    Task<AdmeResponse<RecordVersionsResponse>> ListRecordVersionsAsync(
         string endpoint,
         string dataPartition,
         string id,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
-    Task<QueryRecordsResponse> QueryRecordsByKindAsync(
+    Task<AdmeResponse<QueryRecordsResponse>> QueryRecordsByKindAsync(
         string endpoint,
         string dataPartition,
         string kind,
         int limit,
         string? cursor,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
-    Task<FetchRecordsResponse> FetchRecordsAsync(
+    Task<AdmeResponse<FetchRecordsResponse>> FetchRecordsAsync(
         string endpoint,
         string dataPartition,
         IReadOnlyList<string> ids,
         IReadOnlyList<string>? attributes,
         bool frameOfReference,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
-    Task<UpsertRecordsResponse> UpsertRecordsAsync(
+    Task<AdmeResponse<UpsertRecordsResponse>> UpsertRecordsAsync(
         string endpoint,
         string dataPartition,
         IReadOnlyList<StorageRecord> records,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     Task DeleteRecordAsync(
         string endpoint,
         string dataPartition,
         string id,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 }

@@ -66,13 +66,31 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 ### Safe Downstream Interactions
 - **Never concatenate user input directly without prior validation** into URLs, shell commands, resource identifiers, query strings, etc.
 - Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers` to guard all endpoint usage — choose the method that matches your scenario:
-  - **Azure service data-plane endpoint** (endpoint derived from a resource name, e.g. storage account, ACR, App Config): call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, AzureService.CloudConfiguration.ArmEnvironment)` before constructing the client. This enforces the correct per-cloud domain suffix (e.g. `.blob.core.windows.net` / `.blob.core.chinacloudapi.cn`) and HTTPS.
+    - **Azure service data-plane endpoint** (endpoint derived from a resource name, e.g. storage account, ACR, App Config): call `EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, AzureService.CloudConfiguration.ArmEnvironment, executingToolNamespaceName)` before constructing the client. Pass the command's top-level tool namespace (which may differ from `serviceType`) so the namespace-scoped emergency override can be applied. This enforces the correct per-cloud domain suffix (e.g. `.blob.core.windows.net` / `.blob.core.chinacloudapi.cn`) and HTTPS.
   - **User-supplied URL to a known external service** (e.g. a GitHub URL the user provides): call `EndpointValidator.ValidateExternalUrl(url, allowedHosts)` with an explicit allowlist of permitted hosts.
-  - **User-supplied target URL with no known domain** (e.g. a load-test target the user controls): call `EndpointValidator.ValidatePublicTargetUrl(url)`, which enforces HTTPS/HTTP-only schemes, rejects private/reserved IP ranges, rejects reserved hostnames, and resolves DNS to catch hostnames that map to internal IPs.
+  - **User-supplied target URL with no known domain** (e.g. a load-test target the user controls): call `EndpointValidator.ValidatePublicTargetUrl(url, logger, executingToolNamespaceName)`, which enforces HTTPS/HTTP-only schemes, rejects private/reserved IP ranges, rejects reserved hostnames, and resolves DNS to catch hostnames that map to internal IPs. Pass the command's top-level tool namespace so the namespace-scoped emergency override can be applied.
 - For services that *construct* the endpoint internally (not from user input), use the cloud-type switch pattern (see [Phase 1c: Service Implementation](#1c-service-interface-and-implementation)) — `EndpointValidator` is not required in that case but `ValidateAzureServiceEndpoint` can be added as a defense-in-depth layer.
 - **Control-plane operations** (ARM resource creation, RBAC assignments, policy etc.) do not need `EndpointValidator` because they go through the typed Azure SDK ARM client. Construct ARM resource IDs using `ResourceIdentifier` or collection helpers — never by string-interpolating subscription/resource-group/resource-name directly into a raw ARM path.
 - For new commands and services, always pass `CancellationToken` as the final parameter to all async downstream calls and propagate it throughout — never substitute `CancellationToken.None` or `default` at call sites.
 - Fail closed: if tenant, subscription, or resource context is ambiguous, return an explicit validation error and require the caller to specify the value. Do not silently pick a default.
+
+### Secure Resource Provisioning Defaults
+
+Tools that create or create-or-update Azure resources must produce a secure configuration when the caller omits security-related options. Do not rely on an Azure service's current defaults. Explicitly set every supported security property in the typed SDK request model so a service-side default change cannot make the tool less secure.
+
+- Disable public network access, public endpoints or IPs, and anonymous access by default where the service supports it. Do not add public connectivity merely to make a newly created resource immediately reachable.
+- Require encrypted transport by default: enable HTTPS-only access, disable non-TLS endpoints or ports, and set the minimum TLS version to the service's current secure recommendation (at least TLS 1.2). A weaker transport setting requires an explicit opt-in.
+- Prefer Managed Identity and RBAC for authentication. Enable a system-assigned identity or accept a user-assigned identity where supported, and disable local or key-based authentication when possible. For service-to-service access, do not make connection strings, account keys, or API keys the default path.
+- For create-or-update operations, omitted security options must never weaken an existing resource. Apply secure defaults when creating a resource; when updating one, preserve its current security settings unless the caller explicitly requests a supported downgrade.
+
+A tool may expose a less secure behavior for a legitimate compatibility or development scenario, but only as a deliberate caller choice:
+
+- Use a narrowly scoped option whose name states the behavior, such as `--allow-public-network-access`, `--allow-http`, `--minimum-tls-version`, or `--enable-local-auth`. Avoid ambiguous options such as `--secure false`.
+- Keep the secure behavior as the effective default when the option is omitted. Never infer consent to a downgrade from another option, selected SKU, or pre-existing dependency.
+- State the secure default and the security consequence in the `[Option]` description and command documentation. Validate allowed values and incompatible combinations before sending the request.
+- Do not accept, log, persist, or return connection strings or keys merely because local authentication was enabled. Follow the existing secret-handling requirements for any command that must handle them.
+
+Add tests proving that an invocation without security options sends or creates the secure configuration. Add focused tests for each downgrade option and for create-or-update omission behavior; use a recorded live test to verify the resulting Azure resource state when practical.
 
 ### MCP-Specific Threat Patterns
 
@@ -82,7 +100,7 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 | Injection into downstream systems | For user-supplied queries: use a validator class that enforces a single read-only statement, caps length, strips/blocks dangerous tokens, and detects tautology patterns. Do not interpolate user input into query strings directly — prefer parameterized APIs where available. For blob/resource URIs: call `EndpointValidator.ValidateAzureServiceEndpoint` before constructing any client (see `tools/Azure.Mcp.Tools.Compute/src/Services/ComputeService.cs` blob URI handling as a reference). |
 | Secret leakage via logs or error responses | Log only individually named, non-sensitive fields: `options.Subscription`, `options.ResourceGroup`, `Name`. Never use `{@Options}` or log connection strings, keys, or endpoint values. Override `GetErrorMessage` to return actionable but non-revealing messages — strip raw `RequestFailedException` bodies that may contain tokens or account metadata. |
 | Cross-tenant/resource confusion | `SubscriptionCommand` base class enforces that `--subscription` is always present and resolved via `ISubscriptionResolver` before `ExecuteAsync` is called. Pass `options.Tenant` to all service calls so `IAzureService` can validate tenant context per-request. Fail explicitly if tenant context is ambiguous — do not fall back silently. |
-| SSRF-like endpoint misuse | Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers`: `ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment)` for Azure data-plane endpoints, `ValidateExternalUrl(url, allowedHosts)` for user-supplied URLs to known hosts, `ValidatePublicTargetUrl(url)` for arbitrary user-controlled targets (DNS-resolves and blocks private/reserved IPs). |
+| SSRF-like endpoint misuse | Use `EndpointValidator` from `Microsoft.Mcp.Core.Helpers`: `ValidateAzureServiceEndpoint(endpoint, serviceType, armEnvironment, executingToolNamespaceName)` for Azure data-plane endpoints, `ValidateExternalUrl(url, allowedHosts)` for user-supplied URLs to known hosts, `ValidatePublicTargetUrl(url, logger, executingToolNamespaceName)` for arbitrary user-controlled targets (DNS-resolves and blocks private/reserved IPs). Pass the command's top-level tool namespace to namespace-aware overloads. |
 
 ### Using AI to Generate Tool Code
 
@@ -94,6 +112,7 @@ Requirements:
 - Prefer SDK/runtime validators and deterministic checks for user input validation.
 - Log only individually named, known-safe parameters; never log option objects, credentials, keys, connection strings, or other secret-bearing fields.
 - For endpoint/URL inputs, use `EndpointValidator` methods appropriate to the scenario (`ValidateAzureServiceEndpoint`, `ValidateExternalUrl`, or `ValidatePublicTargetUrl`). Avoid direct interpolation of unvalidated input into URLs or downstream queries.
+- For create or create-or-update tools, explicitly configure secure resource defaults (private access, HTTPS and strong TLS, and Managed Identity/RBAC where supported). Any weaker behavior must require a narrowly named, documented opt-in option, and omission during an update must not weaken the resource.
 - Add negative tests for relevant security cases introduced by the command (for example malformed names, invalid endpoint hosts, or unsafe query text) rather than a one-size-fits-all set of tests.
 - Keep error messages actionable but non-revealing: avoid exposing stack traces, raw backend payloads, or sensitive values to callers.
 ```
@@ -394,6 +413,7 @@ using Microsoft.Mcp.Core.Models.Command;
     Description = """
         What this command does. Include required options and return format.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -440,6 +460,7 @@ public sealed class {Resource}{Operation}Command(
 ```
 
 **Key points (two-generic pattern from `docs/option-conversion.md`):**
+- All `CommandMetadata` properties are required; choose `OperationPlane` to match the APIs the tool acts against
 - Two generic parameters: `SubscriptionCommand<TOptions, TResult>` — `TResult` is the command's result record
 - `ISubscriptionResolver` injected via primary constructor and passed to base
 - `ExecuteAsync` receives **pre-bound `TOptions options`** — no `ParseResult` parameter
@@ -1197,6 +1218,9 @@ Before creating the PR, verify all of these:
 - [ ] Data-plane endpoints validated with `EndpointValidator.ValidateAzureServiceEndpoint` (Azure services), `ValidateExternalUrl` (known external hosts), or `ValidatePublicTargetUrl` (arbitrary user-supplied targets) — never derived from raw user input without validation
 - [ ] Error messages are actionable but do not expose internal state, stack traces, or sensitive field values to callers
 - [ ] Sensitive fields (keys, secrets, connection strings) are not returned in standard list/get responses unless the command is explicitly marked `Secret = true`
+- [ ] Create and create-or-update requests explicitly set supported secure defaults: public access disabled, HTTPS and strong TLS required, and Managed Identity/RBAC preferred over local keys
+- [ ] Any less secure behavior requires a narrowly named, documented opt-in option; omitting security options during an update cannot weaken the existing resource
+- [ ] Tests verify the no-option secure configuration, each supported downgrade option, and create-or-update omission behavior
 - [ ] Negative unit tests included for malformed, oversized, or hostile inputs
 - [ ] If AI was used to generate any code in this PR, the AI prompt included security requirements and the output was reviewed for compliance with the Security Requirements section
 

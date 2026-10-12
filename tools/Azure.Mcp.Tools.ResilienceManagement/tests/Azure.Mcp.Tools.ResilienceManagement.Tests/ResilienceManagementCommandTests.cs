@@ -106,7 +106,7 @@ public class ResilienceManagementCommandTests(
         var usagePlanName = RegisterOrRetrieveDeploymentOutputVariable("usagePlanName", "USAGEPLANNAME");
 
         var result = await CallToolAsync(
-            "resilience_usageplan_get",
+            "resiliency_usageplan_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -127,7 +127,7 @@ public class ResilienceManagementCommandTests(
         var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("enrollmentName", "ENROLLMENTNAME");
 
         var result = await CallToolAsync(
-            "resilience_usageplan_enrollment_get",
+            "resiliency_usageplan_enrollment_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -142,32 +142,13 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_get_goal_template()
-    {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var goalTemplate = RegisterOrRetrieveDeploymentOutputVariable("goalTemplateName", "GOALTEMPLATENAME");
-
-        var result = await CallToolAsync(
-            "resilience_goal_template_get",
-            new()
-            {
-                { "tenant", Settings.TenantId },
-                { "service-group", serviceGroup },
-                { "name", goalTemplate }
-            });
-
-        var template = result.AssertProperty("goalTemplate");
-        Assert.False(string.IsNullOrEmpty(template.AssertProperty("name").GetString()));
-    }
-
-    [Fact]
     public async Task Should_get_goal_assignment()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var goalAssignment = RegisterOrRetrieveDeploymentOutputVariable("goalAssignmentName", "GOALASSIGNMENTNAME");
 
         var result = await CallToolAsync(
-            "resilience_goal_assignment_get",
+            "resiliency_goal_assignment_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -186,7 +167,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_get",
+            "resiliency_drill_get",
             new()
             {
                 { "service-group", serviceGroup }
@@ -206,7 +187,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_update",
+            "resiliency_drill_update",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -231,7 +212,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_create",
+            "resiliency_drill_create",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -255,13 +236,50 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_create_drill_without_recovery_plan()
+    {
+        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        const string drillName = "mcp-drill-no-plan";
+
+        var result = await CallToolAsync(
+            "resiliency_drill_create",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "subscription", Settings.SubscriptionId },
+                { "region", "westus2" },
+                { "resource-group", resourceGroupName },
+                { "drill-type", "Zonal" },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
+            });
+
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+
+        var recoveryPlanProperties = properties.AssertProperty("recoveryPlanProperties");
+        Assert.Equal("SystemAssigned", recoveryPlanProperties.AssertProperty("identity").AssertProperty("type").GetString());
+        Assert.True(
+            !recoveryPlanProperties.TryGetProperty("recoveryPlanId", out var recoveryPlanId) ||
+            recoveryPlanId.ValueKind == JsonValueKind.Null);
+
+        var monitoringProperties = properties.AssertProperty("monitoringProperties");
+        Assert.Equal("SystemAssigned", monitoringProperties.AssertProperty("identity").AssertProperty("type").GetString());
+    }
+
+    [Fact]
     public async Task Should_delete_drill()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_delete",
+            "resiliency_drill_delete",
             new()
             {
                 { "service-group", serviceGroup },
@@ -278,7 +296,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_check-resync-readiness",
+            "resiliency_drill_check-resync-readiness",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -297,7 +315,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_validate-for-execution",
+            "resiliency_drill_validate-for-execution",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -318,7 +336,7 @@ public class ResilienceManagementCommandTests(
         var drillRun = RegisterOrRetrieveDeploymentOutputVariable("markCompleteDrillRun", "MARKCOMPLETEDRILLRUN");
 
         var result = await CallToolAsync(
-            "resilience_drill_run_mark-complete",
+            "resiliency_drill_run_mark-complete",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -339,7 +357,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_resource_get",
+            "resiliency_drill_resource_get",
             new()
             {
                 { "service-group", serviceGroup },
@@ -356,7 +374,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var listResult = await CallToolAsync(
-            "resilience_drill_resource_get",
+            "resiliency_drill_resource_get",
             new()
             {
                 { "service-group", serviceGroup },
@@ -370,7 +388,7 @@ public class ResilienceManagementCommandTests(
             drillResources.EnumerateArray().First().AssertProperty("name").GetString()!);
 
         var result = await CallToolAsync(
-            "resilience_drill_resource_get",
+            "resiliency_drill_resource_get",
             new()
             {
                 { "service-group", serviceGroup },
@@ -419,7 +437,7 @@ public class ResilienceManagementCommandTests(
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             JsonElement? response = await CallToolAsync(
-                "resilience_drill_start",
+                "resiliency_drill_start",
                 new()
                 {
                     { "service-group", serviceGroup },
@@ -450,7 +468,7 @@ public class ResilienceManagementCommandTests(
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             JsonElement? response = await CallToolAsync(
-                "resilience_drill_end",
+                "resiliency_drill_end",
                 new()
                 {
                     { "service-group", serviceGroup },
@@ -483,7 +501,7 @@ public class ResilienceManagementCommandTests(
         var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_run_get",
+            "resiliency_drill_run_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -506,7 +524,7 @@ public class ResilienceManagementCommandTests(
         var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_run_get",
+            "resiliency_drill_run_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -528,7 +546,7 @@ public class ResilienceManagementCommandTests(
         var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_run_add-notes",
+            "resiliency_drill_run_add-notes",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -553,7 +571,7 @@ public class ResilienceManagementCommandTests(
         var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("drillRunSourceLocation", "DRILLRUNSOURCELOCATION");
 
         var result = await CallToolAsync(
-            "resilience_drill_run_failover",
+            "resiliency_drill_run_failover",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -573,7 +591,7 @@ public class ResilienceManagementCommandTests(
         await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "FaultInjection", "MarkAsComplete");
 
         result = await CallToolWithConflictRetryAsync(
-            "resilience_drill_run_mark-complete",
+            "resiliency_drill_run_mark-complete",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -588,7 +606,7 @@ public class ResilienceManagementCommandTests(
         await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Failover", "Start");
 
         result = await CallToolAsync(
-            "resilience_drill_run_resume",
+            "resiliency_drill_run_resume",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -605,7 +623,7 @@ public class ResilienceManagementCommandTests(
         await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Failover", "MarkAsComplete");
 
         result = await CallToolWithConflictRetryAsync(
-            "resilience_drill_run_mark-complete",
+            "resiliency_drill_run_mark-complete",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -620,7 +638,7 @@ public class ResilienceManagementCommandTests(
         await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Reprotect", "Start", "Retry");
 
         result = await CallToolAsync(
-            "resilience_drill_run_reprotect",
+            "resiliency_drill_run_reprotect",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -635,7 +653,7 @@ public class ResilienceManagementCommandTests(
     }
 
     /// <summary>
-    /// Polls resilience_drill_run_get until the given drill run stage advertises one of the expected verbs,
+    /// Polls resiliency_drill_run_get until the given drill run stage advertises one of the expected verbs,
     /// failing the test if it never does within the timeout.
     /// </summary>
     private async Task WaitForStageVerbAsync(string serviceGroup, string drill, string drillRun, string stageName, params string[] expectedVerbs)
@@ -644,7 +662,7 @@ public class ResilienceManagementCommandTests(
         for (int attempt = 0; attempt < 60 && !reachedExpectedVerb; attempt++)
         {
             var getResult = await CallToolAsync(
-                "resilience_drill_run_get",
+                "resiliency_drill_run_get",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -678,7 +696,7 @@ public class ResilienceManagementCommandTests(
         for (int attempt = 0; attempt < 60 && !notePersisted; attempt++)
         {
             var getResult = await CallToolAsync(
-                "resilience_drill_run_get",
+                "resiliency_drill_run_get",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -739,7 +757,7 @@ public class ResilienceManagementCommandTests(
         var drillRunResource = RegisterOrRetrieveDeploymentOutputVariable("drillRunResourceName", "DRILLRUNRESOURCENAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_run_resource_get",
+            "resiliency_drill_run_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -764,7 +782,7 @@ public class ResilienceManagementCommandTests(
         var drillRunResource = RegisterOrRetrieveDeploymentOutputVariable("drillRunResourceName", "DRILLRUNRESOURCENAME");
 
         var result = await CallToolAsync(
-            "resilience_drill_run_resource_get",
+            "resiliency_drill_run_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -785,7 +803,7 @@ public class ResilienceManagementCommandTests(
         var goalAssignment = RegisterOrRetrieveDeploymentOutputVariable("goalAssignmentName", "GOALASSIGNMENTNAME");
 
         var result = await CallToolAsync(
-            "resilience_goal_resource_get",
+            "resiliency_goal_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -803,7 +821,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_get",
+            "resiliency_recoveryplan_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -821,7 +839,7 @@ public class ResilienceManagementCommandTests(
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
         var existingResult = await CallToolAsync(
-            "resilience_recoveryplan_get",
+            "resiliency_recoveryplan_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -850,7 +868,7 @@ public class ResilienceManagementCommandTests(
         Assert.False(string.IsNullOrEmpty(defaultGroupDescription));
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_create",
+            "resiliency_recoveryplan_create",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -883,7 +901,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_checkreadiness",
+            "resiliency_recoveryplan_checkreadiness",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -908,7 +926,7 @@ public class ResilienceManagementCommandTests(
         try
         {
             var createResult = await CallToolAsync(
-                "resilience_recoveryplan_create",
+                "resiliency_recoveryplan_create",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -930,7 +948,7 @@ public class ResilienceManagementCommandTests(
             Assert.Equal("Lifecycle default group", createdDefaultGroup.AssertProperty("description").GetString());
 
             var getResult = await CallToolAsync(
-                "resilience_recoveryplan_get",
+                "resiliency_recoveryplan_get",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -942,7 +960,7 @@ public class ResilienceManagementCommandTests(
                 getResult.AssertProperty("recoveryPlan").AssertProperty("id").GetString());
 
             var updateResult = await CallToolAsync(
-                "resilience_recoveryplan_create",
+                "resiliency_recoveryplan_create",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -961,7 +979,7 @@ public class ResilienceManagementCommandTests(
             Assert.Equal("Lifecycle default group", updatedDefaultGroup.AssertProperty("description").GetString());
 
             var deleteResult = await CallToolAsync(
-                "resilience_recoveryplan_delete",
+                "resiliency_recoveryplan_delete",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -973,7 +991,7 @@ public class ResilienceManagementCommandTests(
             Assert.Equal(recoveryPlan, deleteResult.AssertProperty("recoveryPlan").GetString());
 
             var repeatedDeleteResult = await CallToolAsync(
-                "resilience_recoveryplan_delete",
+                "resiliency_recoveryplan_delete",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -987,7 +1005,7 @@ public class ResilienceManagementCommandTests(
             if (recoveryPlanExists)
             {
                 await CallToolAsync(
-                    "resilience_recoveryplan_delete",
+                    "resiliency_recoveryplan_delete",
                     new()
                     {
                         { "tenant", Settings.TenantId },
@@ -1009,7 +1027,7 @@ public class ResilienceManagementCommandTests(
         try
         {
             await CallToolAsync(
-                "resilience_recoveryplan_create",
+                "resiliency_recoveryplan_create",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -1023,7 +1041,7 @@ public class ResilienceManagementCommandTests(
             recoveryPlanExists = true;
 
             var listedResources = await CallToolAsync(
-                "resilience_recoveryplan_resource_get",
+                "resiliency_recoveryplan_resource_get",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -1038,7 +1056,7 @@ public class ResilienceManagementCommandTests(
                 Assert.False(string.IsNullOrEmpty(resourceName));
 
                 var resourceResult = await CallToolAsync(
-                    "resilience_recoveryplan_resource_get",
+                    "resiliency_recoveryplan_resource_get",
                     new()
                     {
                         { "tenant", Settings.TenantId },
@@ -1064,7 +1082,7 @@ public class ResilienceManagementCommandTests(
             if (resourcesToExclude.Count > 0)
             {
                 var updateResult = await CallToolAsync(
-                    "resilience_recoveryplan_resource_update",
+                    "resiliency_recoveryplan_resource_update",
                     new()
                     {
                         { "tenant", Settings.TenantId },
@@ -1079,7 +1097,7 @@ public class ResilienceManagementCommandTests(
             }
 
             var finalizeResult = await CallToolAsync(
-                "resilience_recoveryplan_finalize",
+                "resiliency_recoveryplan_finalize",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -1090,7 +1108,7 @@ public class ResilienceManagementCommandTests(
             Assert.True(Guid.TryParse(finalizeResult.AssertProperty("operationId").GetString(), out _));
 
             var getResult = await CallToolAsync(
-                "resilience_recoveryplan_get",
+                "resiliency_recoveryplan_get",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -1109,7 +1127,7 @@ public class ResilienceManagementCommandTests(
             if (recoveryPlanExists)
             {
                 await CallToolAsync(
-                    "resilience_recoveryplan_delete",
+                    "resiliency_recoveryplan_delete",
                     new()
                     {
                         { "tenant", Settings.TenantId },
@@ -1127,7 +1145,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_resource_get",
+            "resiliency_recoveryplan_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1145,7 +1163,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var listedResources = await CallToolAsync(
-            "resilience_recoveryplan_resource_get",
+            "resiliency_recoveryplan_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1158,7 +1176,7 @@ public class ResilienceManagementCommandTests(
         Assert.False(string.IsNullOrEmpty(resourceName));
 
         var resourceResult = await CallToolAsync(
-            "resilience_recoveryplan_resource_get",
+            "resiliency_recoveryplan_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1181,7 +1199,7 @@ public class ResilienceManagementCommandTests(
         };
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_resource_update",
+            "resiliency_recoveryplan_resource_update",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1195,7 +1213,7 @@ public class ResilienceManagementCommandTests(
         Assert.Empty(failedResources.EnumerateArray());
 
         var updatedResourceResult = await CallToolAsync(
-            "resilience_recoveryplan_resource_get",
+            "resiliency_recoveryplan_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1218,7 +1236,7 @@ public class ResilienceManagementCommandTests(
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
 
         var listedResources = await CallToolAsync(
-            "resilience_drill_resource_get",
+            "resiliency_drill_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1230,7 +1248,7 @@ public class ResilienceManagementCommandTests(
         Assert.False(string.IsNullOrEmpty(targetName));
 
         var resourceResult = await CallToolAsync(
-            "resilience_drill_resource_get",
+            "resiliency_drill_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1251,7 +1269,7 @@ public class ResilienceManagementCommandTests(
         };
 
         var result = await CallToolAsync(
-            "resilience_drill_resource_add-or-update",
+            "resiliency_drill_resource_add-or-update",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1271,7 +1289,7 @@ public class ResilienceManagementCommandTests(
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
         var listedResources = await CallToolAsync(
-            "resilience_recoveryplan_resource_get",
+            "resiliency_recoveryplan_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1284,7 +1302,7 @@ public class ResilienceManagementCommandTests(
         {
             string candidateResourceId = resource.AssertProperty("id").GetString()!;
             var resourceResult = await CallToolAsync(
-                "resilience_recoveryplan_resource_get",
+                "resiliency_recoveryplan_resource_get",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -1310,7 +1328,7 @@ public class ResilienceManagementCommandTests(
         Assert.False(string.IsNullOrEmpty(sourceLocation), "A physical source zone is required for Zonal failover validation.");
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_validateforfailover",
+            "resiliency_recoveryplan_validateforfailover",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1333,7 +1351,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_validateforreprotect",
+            "resiliency_recoveryplan_validateforreprotect",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1354,7 +1372,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var result = await CallToolAsync(
-            "resilience_recoveryplan_validateforoperation",
+            "resiliency_recoveryplan_validateforoperation",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1369,9 +1387,9 @@ public class ResilienceManagementCommandTests(
     }
 
     [Theory]
-    [InlineData("resilience_recoveryplan_failover")]
-    [InlineData("resilience_recoveryplan_finalize")]
-    [InlineData("resilience_recoveryplan_reprotect")]
+    [InlineData("resiliency_recoveryplan_failover")]
+    [InlineData("resiliency_recoveryplan_finalize")]
+    [InlineData("resiliency_recoveryplan_reprotect")]
     public async Task Should_reject_recovery_plan_action_when_plan_does_not_exist(string toolName)
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
@@ -1382,7 +1400,7 @@ public class ResilienceManagementCommandTests(
             { "service-group", serviceGroup },
             { "recoveryplan", missingRecoveryPlan }
         };
-        if (toolName == "resilience_recoveryplan_failover")
+        if (toolName == "resiliency_recoveryplan_failover")
         {
             parameters["source-locations"] = new[] { "eastus" };
         }
@@ -1398,8 +1416,8 @@ public class ResilienceManagementCommandTests(
     }
 
     [Theory]
-    [InlineData("resilience_recoveryjob_retry")]
-    [InlineData("resilience_recoveryjob_resume")]
+    [InlineData("resiliency_recoveryjob_retry")]
+    [InlineData("resiliency_recoveryjob_resume")]
     public async Task Should_reject_recovery_job_action_when_job_does_not_exist(string toolName)
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
@@ -1411,7 +1429,7 @@ public class ResilienceManagementCommandTests(
             { "recoveryplan", recoveryPlan },
             { "recoveryjob", "22222222-2222-2222-2222-222222222222" }
         };
-        if (toolName == "resilience_recoveryjob_resume")
+        if (toolName == "resiliency_recoveryjob_resume")
         {
             parameters["description"] = "Approve recovery action";
         }
@@ -1439,7 +1457,7 @@ public class ResilienceManagementCommandTests(
         string? initialLastModifiedAt = failedJob.AssertProperty("systemData").AssertProperty("lastModifiedAt").GetString();
 
         var retryResult = await CallToolAsync(
-            "resilience_recoveryjob_retry",
+            "resiliency_recoveryjob_retry",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1465,7 +1483,7 @@ public class ResilienceManagementCommandTests(
         HashSet<string> existingJobs = await GetRecoveryJobNamesAsync(serviceGroup, recoveryPlan);
 
         var failoverResult = await CallToolAsync(
-            "resilience_recoveryplan_failover",
+            "resiliency_recoveryplan_failover",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1486,7 +1504,7 @@ public class ResilienceManagementCommandTests(
         Assert.Equal("Paused", pausedJob.AssertProperty("properties").AssertProperty("status").GetString());
 
         var resumeResult = await CallToolAsync(
-            "resilience_recoveryjob_resume",
+            "resiliency_recoveryjob_resume",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1505,7 +1523,7 @@ public class ResilienceManagementCommandTests(
         existingJobs.Add(failoverJob);
 
         var reprotectResult = await CallToolAsync(
-            "resilience_recoveryplan_reprotect",
+            "resiliency_recoveryplan_reprotect",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1534,7 +1552,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var listResult = await CallToolAsync(
-            "resilience_recoveryjob_get",
+            "resiliency_recoveryjob_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1549,7 +1567,7 @@ public class ResilienceManagementCommandTests(
             recoveryJobs.EnumerateArray().First().AssertProperty("name").GetString()!);
 
         var result = await CallToolAsync(
-            "resilience_recoveryjob_get",
+            "resiliency_recoveryjob_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1581,7 +1599,7 @@ public class ResilienceManagementCommandTests(
     private async Task<JsonElement> GetRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob)
     {
         var result = await CallToolAsync(
-            "resilience_recoveryjob_get",
+            "resiliency_recoveryjob_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1596,7 +1614,7 @@ public class ResilienceManagementCommandTests(
     private async Task<HashSet<string>> GetRecoveryJobNamesAsync(string serviceGroup, string recoveryPlan)
     {
         var result = await CallToolAsync(
-            "resilience_recoveryjob_get",
+            "resiliency_recoveryjob_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1723,7 +1741,7 @@ public class ResilienceManagementCommandTests(
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
 
         var listResult = await CallToolAsync(
-            "resilience_recoveryjob_get",
+            "resiliency_recoveryjob_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1738,7 +1756,7 @@ public class ResilienceManagementCommandTests(
             recoveryJobs.EnumerateArray().First().AssertProperty("name").GetString()!);
 
         var result = await CallToolAsync(
-            "resilience_recoveryjob_resource_get",
+            "resiliency_recoveryjob_resource_get",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1757,7 +1775,7 @@ public class ResilienceManagementCommandTests(
         const string usagePlanName = "mcp-usage-plan";
 
         var result = await CallToolAsync(
-            "resilience_usageplan_create",
+            "resiliency_usageplan_create",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1778,7 +1796,7 @@ public class ResilienceManagementCommandTests(
         const string usagePlanName = "mcp-delete-plan";
 
         await CallToolAsync(
-            "resilience_usageplan_create",
+            "resiliency_usageplan_create",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1789,7 +1807,7 @@ public class ResilienceManagementCommandTests(
             });
 
         var result = await CallToolAsync(
-            "resilience_usageplan_delete",
+            "resiliency_usageplan_delete",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1802,7 +1820,7 @@ public class ResilienceManagementCommandTests(
         Assert.Equal(usagePlanName, result.AssertProperty("usagePlan").GetString());
 
         var repeatedResult = await CallToolAsync(
-            "resilience_usageplan_delete",
+            "resiliency_usageplan_delete",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1823,7 +1841,7 @@ public class ResilienceManagementCommandTests(
         var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("enrollmentName", "ENROLLMENTNAME");
 
         var result = await CallToolAsync(
-            "resilience_usageplan_enrollment_create",
+            "resiliency_usageplan_enrollment_create",
             new()
             {
                 { "tenant", Settings.TenantId },
@@ -1849,7 +1867,7 @@ public class ResilienceManagementCommandTests(
         try
         {
             var result = await CallToolAsync(
-                "resilience_usageplan_enrollment_delete",
+                "resiliency_usageplan_enrollment_delete",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -1864,7 +1882,7 @@ public class ResilienceManagementCommandTests(
             Assert.Equal(enrollmentName, result.AssertProperty("enrollment").GetString());
 
             var repeatedResult = await CallToolAsync(
-                "resilience_usageplan_enrollment_delete",
+                "resiliency_usageplan_enrollment_delete",
                 new()
                 {
                     { "tenant", Settings.TenantId },
@@ -1879,7 +1897,7 @@ public class ResilienceManagementCommandTests(
         finally
         {
             await CallToolAsync(
-                "resilience_usageplan_enrollment_create",
+                "resiliency_usageplan_enrollment_create",
                 new()
                 {
                     { "tenant", Settings.TenantId },

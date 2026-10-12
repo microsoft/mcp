@@ -67,7 +67,9 @@ public sealed record ServerEndpointSyncStatusSchema(
     [property: JsonPropertyName("combinedHealth")] string? CombinedHealth = null,
     [property: JsonPropertyName("syncActivity")] string? SyncActivity = null,
     [property: JsonPropertyName("totalPersistentFilesNotSyncingCount")] long? TotalPersistentFilesNotSyncingCount = null,
-    [property: JsonPropertyName("lastUpdatedOn")] DateTimeOffset? LastUpdatedOn = null)
+    [property: JsonPropertyName("lastUpdatedOn")] DateTimeOffset? LastUpdatedOn = null,
+    [property: JsonPropertyName("uploadActivity")] ServerEndpointSyncActivityStatusSchema? UploadActivity = null,
+    [property: JsonPropertyName("downloadActivity")] ServerEndpointSyncActivityStatusSchema? DownloadActivity = null)
 {
     public static ServerEndpointSyncStatusSchema? FromSdkObject(Azure.ResourceManager.StorageSync.Models.ServerEndpointSyncStatus? sdkStatus)
     {
@@ -81,7 +83,9 @@ public sealed record ServerEndpointSyncStatusSchema(
             sdkStatus.CombinedHealth?.ToString(),
             sdkStatus.SyncActivity?.ToString(),
             sdkStatus.TotalPersistentFilesNotSyncingCount,
-            sdkStatus.LastUpdatedOn
+            sdkStatus.LastUpdatedOn,
+            ServerEndpointSyncActivityStatusSchema.FromSdkObject(sdkStatus.UploadActivity),
+            ServerEndpointSyncActivityStatusSchema.FromSdkObject(sdkStatus.DownloadActivity)
         );
     }
 };

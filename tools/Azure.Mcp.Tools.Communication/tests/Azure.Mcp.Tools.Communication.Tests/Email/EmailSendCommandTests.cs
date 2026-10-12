@@ -55,7 +55,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
             Service.SendEmailAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -111,7 +110,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
         Service.SendEmailAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -133,7 +131,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
         await Service.Received(1).SendEmailAsync(
             "https://example.communication.azure.com",
             "sender@example.com",
-            null,
             Arg.Is<string[]>(arr => arr.Length == 1 && arr[0] == "recipient@example.com"),
             "Test Subject",
             "Test Message",
@@ -168,7 +165,6 @@ public class EmailSendCommandTests : CommandUnitTestsBase<EmailSendCommand, ICom
 
         var expectedException = new RequestFailedException("Test error message");
         Service.SendEmailAsync(
-            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),

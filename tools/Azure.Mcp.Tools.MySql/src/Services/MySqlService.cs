@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.MySql.Commands;
+using Azure.ResourceManager;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Azure.ResourceManager.MySql.FlexibleServers.Models;
 using Microsoft.Mcp.Core.Helpers;
@@ -21,62 +23,9 @@ public sealed class MySqlService(IAzureService azureService)
     // Maximum allowed query length in characters to prevent oversized inputs
     private const int MaxQueryLengthChars = 10_000;
 
-    // Static arrays for security validation - initialized once per class
-    private static readonly string[] DangerousKeywords =
-    [
-        // Data manipulation that could be harmful
-        "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
-        // Set operations that can be used for data exfiltration
-        "UNION", "INTERSECT", "EXCEPT",
-        // Administrative operations
-        "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
-        // Information disclosure
-        "SHOW MASTER", "SHOW SLAVE", "SHOW BINARY", "SHOW BINLOG",
-        // System operations
-        "LOAD DATA", "OUTFILE", "DUMPFILE", "LOAD_FILE", "INTO OUTFILE",
-        // User/privilege management
-        "CREATE USER", "DROP USER", "ALTER USER", "RENAME USER",
-        // Database structure changes
-        "CREATE DATABASE", "DROP DATABASE", "CREATE SCHEMA", "DROP SCHEMA",
-        // Stored procedures and functions
-        "CREATE PROCEDURE", "DROP PROCEDURE", "CREATE FUNCTION", "DROP FUNCTION",
-        // Triggers and events
-        "CREATE TRIGGER", "DROP TRIGGER", "CREATE EVENT", "DROP EVENT",
-        // Views that could modify data
-        "CREATE VIEW", "DROP VIEW",
-        // Index operations
-        "CREATE INDEX", "DROP INDEX",
-        // Table operations
-        "CREATE TABLE", "DROP TABLE", "RENAME TABLE",
-        // Lock operations
-        "LOCK TABLES", "UNLOCK TABLES",
-        // Transaction control in unsafe contexts
-        "START TRANSACTION", "BEGIN", "COMMIT", "ROLLBACK",
-        // System variables
-        "SET GLOBAL", "SET SESSION", "SET SQL_MODE"
-    ];
-
-    private static readonly string[] ObfuscationFunctions =
-    [
-        "CHAR", "CHR", "ASCII", "ORD", "HEX", "UNHEX", "CONV",
-        "CONVERT", "CAST", "BINARY", "CONCAT_WS", "MAKE_SET",
-        "ELT", "FIELD", "FIND_IN_SET", "EXPORT_SET", "LOAD_FILE",
-        "FROM_BASE64", "TO_BASE64", "COMPRESS", "UNCOMPRESS",
-        "AES_ENCRYPT", "AES_DECRYPT", "DES_ENCRYPT", "DES_DECRYPT",
-        "ENCODE", "DECODE", "PASSWORD", "OLD_PASSWORD"
-    ];
-
-    // Pre-compiled regex patterns for word-boundary keyword matching
+    // Pre-compiled regex used to detect multiple / stacked statements
     private static readonly Regex s_multipleStatementsPattern =
         RegexHelper.CreateRegex(@";\s*\w", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex DangerousKeywordsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", DangerousKeywords.Select(Regex.Escape)) + @")\b",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex ObfuscationFunctionsPattern = RegexHelper.CreateRegex(
-        @"\b(" + string.Join("|", ObfuscationFunctions.Select(Regex.Escape)) + @")\s*\(",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
@@ -95,48 +44,119 @@ public sealed class MySqlService(IAzureService azureService)
                 "https://ossrdbms-aad.database.usgovcloudapi.net/.default",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
                 "https://ossrdbms-aad.database.chinacloudapi.cn/.default",
-            _ =>
-                "https://ossrdbms-aad.database.windows.net/.default"
+            _ => throw new ArgumentException(
+                $"The configured Azure cloud is not supported for MySql connections. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
+                nameof(AzureService.CloudConfiguration.CloudType))
         };
     }
 
-    private static readonly string[] AllowedMySqlSuffixes =
-    [
-        ".mysql.database.azure.com",
-        ".mysql.database.usgovcloudapi.net",
-        ".mysql.database.chinacloudapi.cn",
-    ];
+    /// <summary>
+    /// Gets the appropriate DNS suffix for a MySql endpoint in the given Azure cloud.
+    /// </summary>
+    /// <param name="armEnvironment">The Azure cloud of interest.</param>
+    /// <returns>The DNS suffix for the MySql endpoint in the specified Azure cloud.</returns>
+    /// <exception cref="ArgumentException">
+    /// Given cloud is not valid or supported.
+    /// </exception>
+    private static string GetMySqlDnsSuffix(ArmEnvironment armEnvironment) =>
+        //EndpointValidator.AllowLists.cs also has a copy of this list. Keep them in sync.
+        ArmEnvironment.AzurePublicCloud.Equals(armEnvironment) ? ".mysql.database.azure.com" :
+        ArmEnvironment.AzureChina.Equals(armEnvironment) ? ".mysql.database.chinacloudapi.cn" :
+        ArmEnvironment.AzureGovernment.Equals(armEnvironment) ? ".mysql.database.usgovcloudapi.net" :
+        throw new ArgumentException(
+            $"The configured Azure cloud is not supported for MySql connections. Value given: '{armEnvironment}'.",
+            nameof(armEnvironment));
 
-    private string NormalizeServerName(string server)
+    /// <summary>
+    /// Returns the full hostname to a MySql server to be used for
+    /// connection string construction.
+    /// </summary>
+    /// <param name="serverNameOrFullHostname">
+    /// A <see cref="string"/> that is either (1) a server name, e.g., mydb or (2) a full DNS
+    /// hostname to a server, e.g., mydb.mysql.database.azure.com in the public cloud.
+    /// </param>
+    /// <returns>
+    /// A server hostname to be used for connection string construction based on the current
+    /// cloud configuration of the application's runtime.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="serverNameOrFullHostname"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="serverNameOrFullHostname"/> is empty or whitespace; is not a bare
+    /// DNS server name or hostname; identifies only the MySql domain suffix without a server
+    /// label; the configured Azure cloud is not supported for MySql connections; or the
+    /// MySql endpoint allow-list is not configured or does not allow the hostname.
+    /// </exception>
+    private string CreateAndValidateServerHostname(string serverNameOrFullHostname)
     {
-        if (!server.Contains('.'))
-        {
-            return AzureService.CloudConfiguration.CloudType switch
-            {
-                AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
-                    server + ".mysql.database.azure.com",
-                AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
-                    server + ".mysql.database.usgovcloudapi.net",
-                AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
-                    server + ".mysql.database.chinacloudapi.cn",
-                _ =>
-                    server + ".mysql.database.azure.com"
-            };
-        }
+        // GENERAL REMARKS:
+        // This method is building the hostname used in a connection string, NOT an HTTPS URI
+        // to be used by an HttpClient or the like. As such, there are different tests within
+        // this method that EndpointValidator.ValidateAzureServiceEndpoint isn't presently
+        // prepared to handle as it's focused on HTTPS URI validation. To authors: you must
+        // document each step that is unique in this method for knowledge sharing, historical
+        // archiving, and evaluation of correctness.
+        ArgumentException.ThrowIfNullOrWhiteSpace(serverNameOrFullHostname);
 
-        if (!Array.Exists(AllowedMySqlSuffixes, suffix => server.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new ArgumentException(
-                $"The server name '{server}' is not a valid Azure Database for MySQL hostname. " +
-                $"Fully qualified server names must end with one of: {string.Join(", ", AllowedMySqlSuffixes)}.");
-        }
+        ArmEnvironment armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
+        string mysqlDnsSuffix = GetMySqlDnsSuffix(armEnvironment);
 
-        return server;
+        // Short Azure MySql server names have no domain component, so a dot signals that the
+        // caller supplied a URI-ready, fully qualified host candidate. Preserve that candidate so
+        // validation evaluates the supplied authority; complete only short names with the cloud suffix.
+        string host = serverNameOrFullHostname.Contains('.')
+            ? serverNameOrFullHostname
+            : serverNameOrFullHostname + mysqlDnsSuffix;
+
+        return ValidateServerHostname(host, armEnvironment);
     }
+
+    internal static string ValidateServerHostname(string hostname, ArmEnvironment armEnvironment)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(hostname);
+
+        // EndpointValidator authorizes the parsed URI host, while MySql receives this raw host string.
+        // Require DNS-only syntax so user-info, ports, paths, or multi-host values cannot make those differ.
+        if (Uri.CheckHostName(hostname) != UriHostNameType.Dns)
+        {
+            throw CreateInvalidServerException(hostname);
+        }
+
+        var endpoint = new Uri($"https://{hostname}", UriKind.Absolute);
+        try
+        {
+            EndpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: endpoint.AbsoluteUri,
+                serviceType: "mysql",
+                armEnvironment: armEnvironment,
+                executingToolNamespaceName: "mysql");
+        }
+        catch (SecurityException ex)
+        {
+            throw CreateInvalidServerException(hostname, ex);
+        }
+
+        // EndpointValidator permits the allow-listed suffix root, but MySql connection endpoints
+        // require a resource-specific server label before that suffix.
+        var mysqlDnsSuffix = GetMySqlDnsSuffix(armEnvironment);
+        if (endpoint.IdnHost.Equals(mysqlDnsSuffix.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
+        {
+            throw CreateInvalidServerException(hostname);
+        }
+
+        return endpoint.IdnHost;
+    }
+
+    private static ArgumentException CreateInvalidServerException(string hostname, Exception? innerException = null) =>
+        new(
+            $"The server name '{hostname}' is not a valid Azure Database for MySQL hostname for the configured cloud.",
+            nameof(hostname),
+            innerException);
 
     private async Task<string> BuildConnectionStringAsync(string server, string user, string database, CancellationToken cancellationToken)
     {
-        var host = NormalizeServerName(server);
+        var host = CreateAndValidateServerHostname(server);
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync(cancellationToken);
         return BuildConnectionString(host, database, user, entraIdAccessToken);
     }
@@ -154,6 +174,11 @@ public sealed class MySqlService(IAzureService azureService)
         return builder.ConnectionString;
     }
 
+    /// <summary>
+    /// Performs lightweight structural validation of a query. This does not restrict which SQL verbs may be
+    /// executed; the caller's database permissions are the authority on what is allowed. Validation is limited
+    /// to rejecting empty or oversized input, SQL comments, and multiple / stacked statements.
+    /// </summary>
     internal static void ValidateQuerySafety(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -191,35 +216,7 @@ public sealed class MySqlService(IAzureService azureService)
 
         if (s_multipleStatementsPattern.IsMatch(cleanedQuery))
         {
-            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
-        }
-
-        // List of dangerous SQL keywords that should be blocked (word-boundary matching)
-        var keywordMatch = DangerousKeywordsPattern.Match(cleanedQuery);
-        if (keywordMatch.Success)
-        {
-            throw new InvalidOperationException($"Query contains dangerous keyword '{keywordMatch.Value.ToUpperInvariant()}' which is not allowed for security reasons.");
-        }
-
-        // Check for character conversion functions that may be used for obfuscation
-        var funcMatch = ObfuscationFunctionsPattern.Match(cleanedQuery);
-        if (funcMatch.Success)
-        {
-            throw new InvalidOperationException($"Character conversion and obfuscation functions like '{funcMatch.Groups[1].Value.ToUpperInvariant()}' are not allowed for security reasons.");
-        }
-
-        // Additional validation: Only allow SELECT statements
-        var trimmedQuery = cleanedQuery.Trim();
-        var allowedStartPatterns = new[]
-        {
-            "SELECT"
-        };
-
-        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern, StringComparison.OrdinalIgnoreCase));
-
-        if (!isAllowed)
-        {
-            throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
+            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single statement.");
         }
     }
 
@@ -255,7 +252,7 @@ public sealed class MySqlService(IAzureService azureService)
         return dbs;
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query, CancellationToken cancellationToken)
+    public async Task<List<string>> ExecuteQueryAsync(string user, string server, string database, string query, CancellationToken cancellationToken)
     {
         ValidateQuerySafety(query);
 
@@ -301,7 +298,7 @@ public sealed class MySqlService(IAzureService azureService)
         return rows;
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table, CancellationToken cancellationToken)
+    public async Task<List<string>> GetTableSchemaAsync(string user, string server, string database, string table, CancellationToken cancellationToken)
     {
         var connectionString = await BuildConnectionStringAsync(server, user, database, cancellationToken);
 

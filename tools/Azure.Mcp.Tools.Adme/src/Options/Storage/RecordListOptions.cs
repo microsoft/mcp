@@ -7,11 +7,11 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Adme.Options.Storage;
 
 /// <summary>
-/// Specifies the kind and paging for listing OSDU record ids.
+/// Specifies the kind and paging for listing record ids.
 /// </summary>
 public sealed class RecordListOptions
 {
-    [Option(Description = "The fully-qualified OSDU kind '{authority}:{source}:{entityType}:{version}', for example 'osdu:wks:master-data--Well:1.0.0'. Use 'azmcp adme schema list' to discover valid kinds.")]
+    [Option(Description = "The fully-qualified kind '{authority}:{source}:{entityType}:{version}', for example 'osdu:wks:master-data--Well:1.0.0'. Use the schema list operation to discover valid kinds.")]
     public required string Kind { get; set; }
 
     [Option(Description = "The number of record ids to return in one page, from 1 through 100. Defaults to 10.")]
@@ -28,4 +28,7 @@ public sealed class RecordListOptions
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
+
+    [Option(Description = "The ADME resource application ID or App ID URI used as the token audience. Omit to use the standard Azure Energy resource.")]
+    public string? AuthAppId { get; set; }
 }
