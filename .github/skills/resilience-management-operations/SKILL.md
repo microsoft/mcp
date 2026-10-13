@@ -62,14 +62,8 @@ For operational Azure Resilience Management requests, use the Azure Resilience M
 
 ### Create or update requests
 
-Goals use the GA nested `zonalResiliency` schema, not goal templates or flat HA/DR
-payloads. All Goals commands are service-group-scoped, with optional `tenant` and
-no `subscription` option. Assignment create does not replace existing assignments; update only
-replaces or explicitly clears same-group SLI associations and preserves the zonal
-requirement via GET and SDK `UpdateAsync`. PATCH cannot change that requirement.
-Follow the
-[Goals workflows](./references/workflows.md#manage-goal-assignments) for bounded
-completion, asynchronous results, and verified manual attestation.
+For Goals, follow the [assignment workflow](./references/workflows.md#manage-goal-assignments)
+and [nested GA resource payload](./references/payloads.md#goal-resource-updates-ga); do not use templates or flat HA/DR fields.
 
 1. Get the existing resource when update semantics depend on omitted values.
 2. Collect conditionally required choices.

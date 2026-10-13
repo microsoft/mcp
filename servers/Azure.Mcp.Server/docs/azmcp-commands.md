@@ -4230,7 +4230,7 @@ command groups with underscores and retain verb hyphens, for example
   Create/update then GET the hydrated assignment. Delete returns `deleted: true`
   when removed or `false` when already absent; underlying Azure resources and the
   service group are not deleted.
-- Create replaces configuration; omitted service-level targets become an empty
+- Create cannot replace an existing assignment; omitted service-level targets become an empty
   list. GA PATCH cannot change `requireZonalResiliency`. Update requires exactly
   one of a non-empty `--service-level-resource-ids` array or
   `--clear-service-level-resources true`. It GETs the assignment and preserves its
@@ -4335,43 +4335,6 @@ solution name and confirmation status. Attest manually only after verifying actu
 resilience. Unknown or duplicate fields, flat HA/DR payloads, and empty zonal
 changes are rejected. See the [payload reference](https://github.com/microsoft/mcp/blob/main/.github/skills/resilience-management-operations/references/payloads.md#goal-resource-updates-ga)
 for a user-confirmation example.
-
-##### Goals validation status and dedicated fixtures
-
-Default-route SDK PATCH probes with `requireZonalResiliency: true` plus an empty SLI list,
-and with `requireZonalResiliency: false`, both returned HTTP 400
-`RHUBUserErrorInvalidRequestParameter`. An explicit ECY diagnostic retry through
-`https://eastus2euap.management.azure.com` with
-`x-ms-rhub-routing-location: eastus2euap` accepted the unchanged true-plus-empty-list
-body, reached `Succeeded`, and returned the expected properties on independent GET.
-That empty-before/empty-after result does not prove nonempty SLI replacement.
-The MCP default route is unchanged; it does not silently target Canary.
-The opt-in Debug ECY recording also passes the real MCP assignment lifecycle,
-including terminal PATCH success and independent GET. See the
-[recording procedure](https://github.com/microsoft/mcp/blob/main/.github/skills/resilience-management-operations/references/development.md#goals-canary-recording-and-playback);
-the storage-only fixture does not test nonempty SLI replacement.
-Resource updates retain the nested GA schema and have live exclusion/re-inclusion
-persistence evidence; do not substitute a legacy flat payload.
-Tool-selection evaluation is blocked while `AOAI_ENDPOINT` is absent.
-Report blockers and failures, never convert them into skipped or passing checks.
-
-Use the dedicated
-[Goals lifecycle fixture](https://github.com/microsoft/mcp/blob/10fb1b37f926f511f72c43ea2f6c796f8b1a6550/tools/Azure.Mcp.Tools.ResilienceManagement/tests/goal-lifecycle-resources.bicep)
-in a dedicated resource group tagged `purpose=mcp-goals-ga-lifecycle`, with an
-explicitly approved service group and a unique storage account name. The template
-creates one storage account and resource-group membership; it does not create
-SLIs or the service group. If a parent service group exceeds the 500-member limit,
-use a separately approved, small child service group rather than the oversized
-parent. Provision valid same-group SLIs separately only through a supported,
-approved process; the storage fixture is not an SLI fixture.
-
-Retain fixtures while live validation or investigation is active and track cleanup
-as pending. After approval, use
-[the dedicated cleanup script](https://github.com/microsoft/mcp/blob/10fb1b37f926f511f72c43ea2f6c796f8b1a6550/tools/Azure.Mcp.Tools.ResilienceManagement/tests/remove-goal-lifecycle-resources.ps1)
-with `-SubscriptionId`, `-ResourceGroupName`, and `-ApprovedCleanup`. It checks the
-resource-group tag and deletes that dedicated group, not the service group.
-Remove any separately created service group only through separately approved
-cleanup. Do not check in personal fixture IDs or absolute local paths.
 
 #### Usage plans, drills, and recovery
 

@@ -19,6 +19,20 @@ public sealed class GoalAssignmentServiceTests
         "/providers/Microsoft.AzureResilienceManagement/locations/eastus/operationStatuses/" + OperationId + "?api-version=2026-10-01";
 
     [Theory]
+    [InlineData("*C3775EF2AC0E1E4AA241CB87BEE5AA96EBB7B61E6391AE2CEABF0BAB8702AA1E", true)]
+    [InlineData("%2AC3775EF2AC0E1E4AA241CB87BEE5AA96EBB7B61E6391AE2CEABF0BAB8702AA1E", true)]
+    [InlineData("*invalid", false)]
+    [InlineData("extra", false)]
+    public void PollingUrl_ExtractsExactGuidBeforeRoutingHash(string suffix, bool valid)
+    {
+        const string id = "10b982d0-4c82-484a-942b-cf694cdcac58";
+        string? result = ResilienceManagementService.ExtractGoalOperationId(
+            $"https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/CENTRALUS/operationStatuses/{id}{suffix}?api-version=2026-10-01");
+
+        Assert.Equal(valid ? id : null, result);
+    }
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void CreateGoalAssignmentData_UsesExactGaWireContract(bool required)

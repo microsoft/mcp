@@ -50,31 +50,8 @@ Update GETs the assignment and calls
 SDK `UpdateAsync`, preserving its zonal requirement; GA PATCH cannot change that
 flag. Clear removes associations, not SLI resources. Never invent SLI fixture IDs.
 
-The GA API is `2026-10-01`; SDK package `1.0.0-alpha.20261012.1` remains a NuGet
-alpha and requires Azure.Core `1.63.0` and System.ClientModel `1.16.0`. Public-feed
-checking confirmed this exact package is absent, blocking clean CI restore.
-Live SDK PATCH probes with a true zonal flag plus empty SLI list and with a false
-flag both returned 400 `RHUBUserErrorInvalidRequestParameter`. A controlled probe
-also sent only `{"properties":{"serviceLevelResources":[]}}` directly to the GA
-endpoint, bypassing SDK serialization. Both the minimal request and SDK request
-returned the same 400 immediately and after a 120-second settling interval.
-Independent GETs before and after PATCH returned `Succeeded`, the unchanged
-true zonal requirement, and an empty SLI list; this is not proof of an update.
-The service source accepts explicit empty SLI arrays, but the deployed rejection's
-exact validation gate is unconfirmed. Do not add a payload-stripping policy,
-blind retry, PUT fallback, or success-shaped clear result based on these probes.
-Those probes used the default ARM route. A subsequent explicit Canary retry used
-`https://eastus2euap.management.azure.com` with
-`x-ms-rhub-routing-location: eastus2euap`, as documented by the service API toolkit.
-The unchanged true-plus-empty-list PATCH returned 202, reached `Succeeded`, and
-an independent GET confirmed the true requirement and empty list. This establishes
-ECY acceptance of `[]`, not `null`, and not substantive nonempty SLI replacement.
-The MCP default route remains unchanged. Debug-only, opt-in ECY recording now
-exercises the real MCP assignment lifecycle, including terminal PATCH success and
-independent GET; the old default-route failure is archived outside the active recordings.
-Do not silently route production tools to Canary. A real SLI fixture is still required
-for the complete replacement/persistence lifecycle. Evaluation is blocked without
-`AOAI_ENDPOINT`; do not treat blockers as skipped or passing checks.
+Goals target API `2026-10-01`. See [development](./development.md#goals-canary-recording-and-playback)
+for isolated ECY recording; production tools retain their normal ARM endpoint.
 
 ## Drills
 

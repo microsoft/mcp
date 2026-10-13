@@ -44,18 +44,8 @@ option. GET selects an assignment with `name`; mutations use `goal-assignment`.
 1. Resolve the exact service group and assignment. Do not use goal templates.
 2. For creation, explicitly set `require-zonal-resiliency` to `true` (required by the service) and choose any service-level indicator ARM IDs, then call `mcp_azure_mcp_ser_resiliency_goal_assignment_create`. Omitted targets mean no targets. Create cannot replace an existing assignment; do not use PUT as a fallback for a rejected PATCH.
 3. To update, inspect the assignment and choose exactly one: replace associations with a non-empty `service-level-resource-ids` array, or clear associations with `clear-service-level-resources: true`. IDs must be existing `Microsoft.Monitor/slis` resources in the same service group, readable by the caller, with at most one SLI per category according to service-source validation. Do not invent fixtures. The implementation GETs the assignment and preserves its zonal flag through SDK `UpdateAsync`; GA PATCH cannot change that flag. Clear does not delete SLI resources.
-4. On success, create/update wait up to ten minutes and return a hydrated GET result. Verify persisted associations and the unchanged zonal flag; report actual provisioning state. Timeout or cancellation leaves completion unknown. Default-route PATCH probes returned 400 `RHUBUserErrorInvalidRequestParameter`. The unchanged true-plus-empty-list request succeeded with explicit ECY routing; this does not prove a nonempty replacement or change the MCP default route.
+4. On success, create/update wait up to ten minutes and return a hydrated GET result. Verify persisted associations and the unchanged zonal flag; report actual provisioning state. Timeout or cancellation leaves completion unknown.
 5. For explicit deletion, inspect the exact assignment and call `mcp_azure_mcp_ser_resiliency_goal_assignment_delete`. It waits for deletion and returns `deleted: true` or `false` when already absent. It removes tracked goal members, not underlying Azure resources or the service group.
-
-For live validation, use the dedicated `goal-lifecycle-resources.bicep` under the
-Resilience Management `tests` directory with an approved small service group and
-a dedicated tagged resource group. If a parent exceeds 500 members, use an
-approved child group. The fixture creates one storage account, not SLIs. Retain
-fixtures during investigation; use `remove-goal-lifecycle-resources.ps1` only after
-explicit cleanup approval. See the
-[fixture process and validation blockers](../../../../servers/Azure.Mcp.Server/docs/azmcp-commands.md#goals-validation-status-and-dedicated-fixtures).
-The exact SDK package is absent from the public feed, blocking clean CI;
-`AOAI_ENDPOINT` is absent for evaluation. Neither is a skip/pass exception.
 
 ## Refresh Goal Resources and Recommend Capacity
 

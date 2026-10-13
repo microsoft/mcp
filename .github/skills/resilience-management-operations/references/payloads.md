@@ -48,9 +48,6 @@ solution name and status; solution names cannot repeat. Unknown or duplicate
 properties, empty changes, duplicate resource IDs, and legacy flat HA/DR fields
 are rejected. Manual attestation requires verified resilience.
 
-Resource updates keep this nested GA contract pending live verification; do not
-replace it with an old flat payload or claim persistence from acceptance alone.
-
 ## Goal Assignment SLI Associations
 
 Assignment create/update `service-level-resource-ids` is an ordinary string array,
@@ -64,10 +61,6 @@ Update takes exactly one of a non-empty `service-level-resource-ids` array or
 `clear-service-level-resources: true`. The latter removes associations only, not
 the indicators. Update GETs the assignment and preserves its zonal requirement
 through SDK `UpdateAsync`; GA PATCH cannot change `requireZonalResiliency`.
-Default-route SDK true-plus-empty-list and false-flag PATCH probes returned HTTP 400
-`RHUBUserErrorInvalidRequestParameter`. The unchanged true-plus-empty-list request
-succeeded through explicit ECY routing (see [tools](./tools.md#goals)).
-An unchanged empty list on subsequent GET does not prove replacement of real SLI associations.
 
 Recommend-capacity `resource-ids` is also an ordinary ARM ID array, but identifies
 underlying Azure resources, not SLIs. Resource IDs may contain subscription

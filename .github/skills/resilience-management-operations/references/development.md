@@ -311,15 +311,10 @@ Commit the updated `assets.json`. Never commit `.proxy/` or `.assets/`.
 
 ### Goals canary recording and playback
 
-For an explicitly approved ECY run, use a Debug server build and set
-`$env:MCP_GOALS_TEST_ECY = 'true'` in the test-runner process. This opt-in adds the
-service's `x-ms-rhub-routing-location: eastus2euap` header and routes only Goals
-clients (including their polling requests) to `https://eastus2euap.management.azure.com`.
-It requires `TEST_PROXY_URL`, supplied by the recorded-test fixture, and never replaces
-the proxy transport. Release builds have no routing override; other toolsets and
-Resilience Management clients retain their normal endpoint.
-
-Set the ignored local test settings to `Record`, then run locally without publishing:
+For an approved ECY run, use a Debug server and local `TestMode: Record`.
+The opt-in below routes only Goals clients to `https://eastus2euap.management.azure.com`
+with `x-ms-rhub-routing-location: eastus2euap`. It requires the fixture's `TEST_PROXY_URL`,
+preserves proxy capture, and is absent from Release builds.
 
 ```powershell
 $env:MCP_GOALS_TEST_ECY = 'true'
@@ -327,33 +322,16 @@ $env:MCP_TEST_TRANSPORT = 'stdio'
 dotnet test --project tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj --no-build --filter-method '*_ga*'
 ```
 
-After sanitizing, restore `TestMode` to `Playback`. Run the same command with
-`MCP_TEST_TRANSPORT` set first to `stdio`, then to `http`, retaining the ECY opt-in
-so the captured endpoint and header match. Remove the process-local variables afterward.
-Do not rewrite API versions or weaken body matching. Archive diagnostic failures
-outside the active asset tree before replacing them with successful recordings.
+Use the [storage-only fixture](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/goal-lifecycle-resources.bicep)
+with an explicitly approved small service group and a dedicated resource group tagged
+`purpose=mcp-goals-ga-lifecycle`. It does not provision SLIs or prove nonempty SLI replacement.
+The [cleanup script](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/remove-goal-lifecycle-resources.ps1)
+requires `-ApprovedCleanup` and verifies dedicated fixture identity; never remove a reused parent group.
 
-The storage-only fixture covers empty-list assignment PATCH, preserved zonal requirement,
-resource discovery, exclusion/re-inclusion, and deletion, with independent GETs.
-It does not prove nonempty SLI replacement. Capacity recommendation returns its real
-accepted operation ID; there is currently no Goals operation-status MCP tool, so do not
-infer terminal recommendation completion from acceptance or later assignment deletion.
-
-For Goals GA recordings, also run `tools/Azure.Mcp.Tools.ResilienceManagement/tests/Sanitize-GoalRecordings.ps1`
-against the exact `SessionRecords` directory, supplying the fixture's subscription, tenant, service group,
-resource group, and storage account. The proxy sanitizes HTTP entries but can retain identifiers in recording
-variables; this script applies the same substitutions throughout only the new GA recordings. Return to Playback
-and verify the sanitized recordings before any publication. Preserve the complete upstream asset baseline.
-
-Goal resource updates require a discovered goal-resource ID which the supplied SDK omits from its wire model.
-The service resolves each underlying ARM ID within the selected assignment and installs `GoalResourceIdPolicy`
-only for `updateGoalResources`. It adds the discovered IDs without flattening or changing `zonalResiliency`.
-Keep the ID policy and the nested GA payload covered by unit tests and persisted exclusion/re-inclusion tests.
-
-Preserve the original response properties for drill resources. The GA SDK drops legacy `haStatus`,
-`activePhysicalZones`, and `recoveryPhysicalZones` and supplies an `unknown` drill-type discriminator when
-reading legacy payloads. The raw-response mapper must retain the returned fields without inventing that
-discriminator; keep this covered alongside the equivalent Goals legacy-field and boolean-presence tests.
+Run [Sanitize-GoalRecordings.ps1](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/Sanitize-GoalRecordings.ps1)
+on the exact `SessionRecords` directory to sanitize recording variables as well as HTTP entries.
+Restore `TestMode: Playback` and replay with both `MCP_TEST_TRANSPORT=stdio` and `http`,
+retaining the ECY opt-in. Keep all existing recordings and do not publish before approval.
 
 - Preserve LRO polling paths by disabling the default `AZSDK2003` sanitizer in `ResilienceManagementCommandTests`; replacing the entire `Location` header breaks playback.
 - Sanitize only signed `t`, `c`, `s`, and `h` query values in LRO locations while retaining the path and operation identifier used for request matching.
