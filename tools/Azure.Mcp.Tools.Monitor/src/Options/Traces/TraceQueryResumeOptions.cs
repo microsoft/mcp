@@ -11,7 +11,7 @@ public sealed class TraceQueryResumeOptions : ISubscriptionOption
     [Option(Description = "Operation id returned by 'monitor traces query run'.")]
     public required string OperationId { get; set; }
 
-    [Option(Description = "Rows in the first results page. Default 100; clamped to 1-1000. Does not change the submitted query's row limit.")]
+    [Option(Description = "Rows requested per results page. Default 100; clamped to 1-1000. Does not change the submitted query's total row limit.")]
     public int? PageSize { get; set; }
 
     [Option(Description = "Include span-level detail in the response. Default true.")]

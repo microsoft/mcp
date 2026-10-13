@@ -187,7 +187,7 @@ public class MonitorSetup : IAreaSetup
         instrumentation.AddCommand<SendBrownfieldAnalysisCommand>(serviceProvider);
         instrumentation.AddCommand<SendEnhancementSelectCommand>(serviceProvider);
 
-        // Distributed tracing (Trace Store) - a Monitor sub-feature backed by
+        // Distributed tracing - a Monitor sub-feature backed by
         // Microsoft.Monitor/accounts/traceContainers on an Azure Monitor Workspace.
         var traces = new CommandGroup("traces", "Azure Monitor distributed-trace operations - Commands for listing distributed-trace accounts (Azure Monitor Workspaces enabled for Trace Store) and querying trace data using the caller's Azure identity.");
         monitor.AddSubGroup(traces);

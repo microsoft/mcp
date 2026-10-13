@@ -80,7 +80,7 @@ public sealed class TraceQueryResumeCommandTests : SubscriptionCommandUnitTestsB
             });
 
         var response = await ExecuteCommandAsync($"{Target} --operation-id {OperationId} {extraArgs}");
-        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceQueryResumeCommandResult);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceQueryCommandResult);
 
         Assert.Equal(OperationId, result.Result.OperationId);
         Assert.Equal(status, result.Result.Status);
@@ -110,5 +110,24 @@ public sealed class TraceQueryResumeCommandTests : SubscriptionCommandUnitTestsB
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
         Assert.Contains("Operation unavailable", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsErrorWithCollectedData()
+    {
+        using var payload = JsonDocument.Parse("""{"value":[{"trace_id":"received"}]}""");
+        var partial = new TraceQueryResult { OperationId = OperationId, Status = "Failed", Payload = payload.RootElement.Clone() };
+        Service.ResumeQueryAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TraceQueryException(partial, new HttpRequestException("failed", null, HttpStatusCode.BadGateway)));
+
+        var response = await ExecuteCommandAsync($"{Target} --operation-id {OperationId}");
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceQueryCommandResult, HttpStatusCode.BadGateway);
+
+        Assert.Equal("Failed", result.Result.Status);
+        Assert.Equal(OperationId, result.Result.OperationId);
+        Assert.Equal("received", result.Result.Payload!.Value.GetProperty("value")[0].GetProperty("trace_id").GetString());
+        Assert.Contains("incomplete", response.Message);
     }
 }

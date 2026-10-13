@@ -22,7 +22,7 @@ public interface IMonitorTracesService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Submits a new query and polls for its first results page.
+    /// Submits a new query and collects results within the polling and row budgets.
     /// </summary>
     Task<TraceQueryResult> RunQueryAsync(
         string subscription,

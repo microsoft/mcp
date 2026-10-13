@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
     Name = "list",
     Title = "List Distributed Trace Field Names",
     Description = """
-        List the field names exposed by a distributed-trace (Trace Store) account. Returns two
+        List the field names exposed by a distributed-trace account. Returns two
         buckets: `traceFields` (attributes on the trace row, e.g. trace_id, duration_nano,
         span_count) and `spanFields` (attributes on individual spans, e.g. name,
         service.name, http.request.method, and the nested `attributes` struct). Use this to

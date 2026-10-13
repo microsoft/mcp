@@ -3760,7 +3760,7 @@ azmcp monitor webtests get --subscription <subscription> \
 
 ```
 
-#### Traces (Trace Store)
+#### Traces
 
 > [!NOTE]
 > Azure Monitor Trace Store is in **private preview**. These commands only work against an Azure
@@ -3782,6 +3782,9 @@ and environment fallback behavior.
 and only polls the existing operation. Both require `--resource-group` and `--workspace`.
 Run's `--max-results` and resume's `--page-size` default to 100 and are clamped to 1–1000.
 Resuming does not change the query or its submitted time range and row limit.
+Queries poll for up to 180 seconds and return the results collected so far.
+If the status is `Running`, use `query resume` with the returned operation ID.
+Requested row limits are approximate; responses preserve truncation and partial-result indicators.
 
 ```bash
 # List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription
@@ -3796,7 +3799,7 @@ azmcp monitor traces field list --subscription <subscription> \
                                 --workspace <workspace>
 
 # Resume polling an existing query without submitting a new one
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor traces query resume --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --workspace <workspace> \

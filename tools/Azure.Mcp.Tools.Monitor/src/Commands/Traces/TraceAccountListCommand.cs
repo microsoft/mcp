@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
     Name = "list",
     Title = "List Distributed Trace Accounts",
     Description = """
-        List distributed-trace accounts (Trace Store) available in a subscription. A trace
+        List distributed-trace accounts available in a subscription. A trace
         account is an Azure Monitor Workspace with a Microsoft.Monitor/accounts/traceContainers
         sub-resource — i.e. one where Trace Store has been enabled. Returns each account's
         name, resource id, resource group, region, and trace-retention window. Use the

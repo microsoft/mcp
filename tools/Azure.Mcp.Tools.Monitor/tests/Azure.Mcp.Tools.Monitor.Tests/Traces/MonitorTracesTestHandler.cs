@@ -11,13 +11,16 @@ internal sealed class MonitorTracesTestHandler(
     int workspaceCount,
     bool areResultsTruncated,
     string endpoint = "https://amw.data.monitor.azure.com",
-    string cancelBody = """{"status":"Cancelled"}""") : HttpMessageHandler
+    string cancelBody = """{"status":"Cancelled"}""",
+    IEnumerable<HttpResponseMessage>? resultPages = null) : HttpMessageHandler
 {
+    private readonly Queue<HttpResponseMessage> _resultPages = new(resultPages ?? []);
     internal const string Subscription = "00000000-0000-0000-0000-000000000001";
     internal const string AccountPrefix = $"/subscriptions/{Subscription}/resourceGroups/rg/providers/Microsoft.Monitor/accounts";
 
     public int DataPlaneCalls { get; private set; }
     public int SubmitCalls { get; private set; }
+    public int PollCalls { get; private set; }
     public string? LastSubmitBody { get; private set; }
     public string? LastGraphQuery { get; private set; }
     public Uri? LastDataPlaneUri { get; private set; }
@@ -34,6 +37,15 @@ internal sealed class MonitorTracesTestHandler(
                 SubmitCalls++;
                 LastSubmitBody = await request.Content!.ReadAsStringAsync(cancellationToken);
                 return new(HttpStatusCode.Accepted) { Content = new StringContent("""{"operationId":"op-1234"}""") };
+            }
+
+            if (request.RequestUri.AbsolutePath.EndsWith("/results", StringComparison.Ordinal))
+            {
+                PollCalls++;
+                if (_resultPages.TryDequeue(out var page))
+                {
+                    return page;
+                }
             }
 
             return new(HttpStatusCode.OK)

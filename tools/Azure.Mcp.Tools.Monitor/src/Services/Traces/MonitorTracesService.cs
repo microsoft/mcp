@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.Time;
 
 namespace Azure.Mcp.Tools.Monitor.Services.Traces;
 
@@ -23,7 +24,8 @@ namespace Azure.Mcp.Tools.Monitor.Services.Traces;
 public sealed class MonitorTracesService(
     IAzureService azureService,
     ICacheService cacheService,
-    ILogger<MonitorTracesService> logger)
+    ILogger<MonitorTracesService> logger,
+    IDateTimeProvider dateTimeProvider)
     : BaseAzureResourceService(azureService), IMonitorTracesService
 {
     internal const string TraceContainerResourceType = "Microsoft.Monitor/accounts/traceContainers";
@@ -35,13 +37,13 @@ public sealed class MonitorTracesService(
     internal const string MonitorAccountApiVersion = "2025-10-03-preview";
 
     internal const string TraceDataPlaneScope = "https://data.monitor.azure.com/.default";
-    // EndpointValidator.AllowLists.cs has the shared monitor-traces suffix; keep both synchronized.
     internal const string TraceDataPlaneHostSuffix = ".data.monitor.azure.com";
     internal const string TraceDataPlaneApiVersion = "2026-01-10-preview";
 
     // Bounded so a slow query hands back an operationId instead of blocking the MCP transport.
     private static readonly TimeSpan PollDelay = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan MaxPollBudget = TimeSpan.FromSeconds(180);
+    private const int MaxResumeRows = 1000;
 
     // account list probes ARM once per workspace; an unbounded burst is what provokes the
     // throttling that would otherwise make the list come back short.
@@ -204,8 +206,8 @@ public sealed class MonitorTracesService(
         string operationId = await SendSubmitAsync(
             session, query, startTime, endTime, maxResults, cancellationToken).ConfigureAwait(false);
 
-        return await PollUntilCompleteAsync(
-            session, operationId, maxResults, includeSpans, cancellationToken).ConfigureAwait(false);
+        return await PollForResultsAsync(
+            session, operationId, maxResults, maxResults, includeSpans, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TraceQueryResult> ResumeQueryAsync(
@@ -225,8 +227,8 @@ public sealed class MonitorTracesService(
             (nameof(operationId), operationId));
 
         TraceSession session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
-        return await PollUntilCompleteAsync(
-            session, operationId, pageSize, includeSpans, cancellationToken).ConfigureAwait(false);
+        return await PollForResultsAsync(
+            session, operationId, pageSize, MaxResumeRows, includeSpans, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TraceQueryCancelResult> CancelQueryAsync(
@@ -429,53 +431,87 @@ public sealed class MonitorTracesService(
         return opId.GetString()!;
     }
 
-    private async Task<TraceQueryResult> PollUntilCompleteAsync(
+    private async Task<TraceQueryResult> PollForResultsAsync(
         TraceSession session,
         string operationId,
-        int maxResults,
+        int pageSize,
+        int maxRows,
         bool includeSpans,
         CancellationToken cancellationToken)
     {
-        var pageSize = Math.Max(1, maxResults);
-        var pollUrl = $"{session.EndpointBase}/operations/{Uri.EscapeDataString(operationId)}/results?api-version={TraceDataPlaneApiVersion}&pageSize={pageSize}&addEnrichmentFields=false&preserveQueryFieldNames=true&includeSpans={includeSpans}";
-
-        var deadline = DateTime.UtcNow + MaxPollBudget;
-        while (DateTime.UtcNow < deadline)
+        pageSize = Math.Max(1, pageSize);
+        var pollUrl = $"{session.EndpointBase}/operations/{Uri.EscapeDataString(operationId)}/results?api-version={TraceDataPlaneApiVersion}&top={pageSize}&addEnrichmentFields=false&preserveQueryFieldNames=true&includeSpans={includeSpans}";
+        var rows = new List<JsonElement>();
+        TraceQueryPage? payload = null;
+        var deadline = dateTimeProvider.UtcNow + MaxPollBudget;
+        using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        budget.CancelAfter(MaxPollBudget);
+        try
         {
-            using var response = await SendDataPlaneAsync(session, RequestMethod.Get, pollUrl, null, cancellationToken).ConfigureAwait(false);
-
-            if (response.Status == 202)
+            while (dateTimeProvider.UtcNow < deadline)
             {
-                response.Headers.TryGetValue("Retry-After", out var retryAfter);
-                var delay = ClampPollDelay(retryAfter, deadline - DateTime.UtcNow, PollDelay);
-                if (delay > TimeSpan.Zero)
+                using var response = await SendDataPlaneAsync(session, RequestMethod.Get, pollUrl, null, budget.Token).ConfigureAwait(false);
+                if (response.Status == 202)
                 {
-                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                    response.Headers.TryGetValue("Retry-After", out var retryAfter);
+                    var delay = ClampPollDelay(retryAfter, deadline - dateTimeProvider.UtcNow, PollDelay);
+                    if (delay > TimeSpan.Zero)
+                    {
+                        await Task.Delay(delay, budget.Token).ConfigureAwait(false);
+                    }
+                    continue;
                 }
 
-                continue;
-            }
-
-            if (response.Status == 200)
-            {
-                using var doc = JsonDocument.Parse(response.Content.ToString());
-                return new TraceQueryResult
+                if (response.Status != 200)
                 {
-                    OperationId = operationId,
-                    Status = "Succeeded",
-                    Payload = doc.RootElement.Clone(),
-                };
+                    throw DataPlaneFailure("query poll", response);
+                }
+                var page = JsonSerializer.Deserialize(response.Content.ToString(), MonitorJsonContext.Default.TraceQueryPage);
+                if (page is not { Value: { } pageRows })
+                {
+                    throw new HttpRequestException("Trace query results must contain a 'value' array.", null, System.Net.HttpStatusCode.BadGateway);
+                }
+                var pageRowCount = pageRows.Count;
+                rows.AddRange(pageRows);
+                page.MergePropertiesFrom(payload);
+                page.Value = rows;
+                payload = page;
+                var hasMoreResults = page.HasMoreResults;
+                logger.LogDebug("Trace query {OperationId} received {Rows} rows; continuation: {HasMoreResults}.",
+                    operationId, pageRowCount, hasMoreResults);
+                if (!hasMoreResults)
+                {
+                    return CreateResult("Succeeded");
+                }
+                // Retain whole received pages: discarding an overshoot would lose consumed rows.
+                if (rows.Count >= maxRows)
+                {
+                    return CreateResult("Running", outputLimitReached: true);
+                }
             }
-
-            throw DataPlaneFailure("query poll", response);
+        }
+        catch (OperationCanceledException) when (budget.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            // The shared deadline also bounds an in-flight request or Retry-After wait.
+        }
+        catch (Exception ex) when (payload is not null && ex is HttpRequestException or RequestFailedException or JsonException or OperationCanceledException)
+        {
+            throw new TraceQueryException(CreateResult("Failed"), ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new HttpRequestException("Trace query results contain invalid JSON.", ex, System.Net.HttpStatusCode.BadGateway);
         }
 
-        logger.LogWarning("Trace query {OperationId} still running after {Budget}s poll budget.", operationId, MaxPollBudget.TotalSeconds);
-        return new TraceQueryResult
+        logger.LogWarning("Trace query {OperationId} results incomplete after {Budget}s poll budget.", operationId, MaxPollBudget.TotalSeconds);
+        return CreateResult("Running");
+
+        TraceQueryResult CreateResult(string status, bool outputLimitReached = false) => new()
         {
             OperationId = operationId,
-            Status = "Running",
-            Payload = null,
+            Status = status,
+            Payload = payload is null ? null : JsonSerializer.SerializeToElement(payload, MonitorJsonContext.Default.TraceQueryPage),
+            OutputLimitReached = outputLimitReached,
         };
     }
 
@@ -540,9 +576,6 @@ public sealed class MonitorTracesService(
         return result;
     }
 
-    // Retry-After is the service's number, not ours: honour it only up to the budget we promised,
-    // otherwise one header parks the transport far longer. A non-positive or non-numeric value
-    // (the header also permits an HTTP-date) falls back rather than throwing out of Task.Delay.
     internal static TimeSpan ClampPollDelay(string? retryAfter, TimeSpan remaining, TimeSpan fallback)
     {
         var delay = int.TryParse(retryAfter, out var seconds) && seconds > 0

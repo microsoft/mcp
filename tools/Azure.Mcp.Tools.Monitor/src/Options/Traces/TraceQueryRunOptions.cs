@@ -77,7 +77,7 @@ public sealed class TraceQueryRunOptions : ISubscriptionOption
     [Option(Description = "Query end time in UTC ISO 8601. Defaults to the current UTC time.")]
     public string? EndTime { get; set; }
 
-    [Option(Description = "Maximum rows requested for the new query and its first results page. Client default 100 and request cap 1000.")]
+    [Option(Description = "Total rows requested for the new query and collected per call. Default 100; clamped to 1-1000. Whole backend pages may exceed the request.")]
     public int? MaxResults { get; set; }
 
     [Option(Description = "Include span-level detail in the response. Default true.")]

@@ -942,7 +942,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Query Analytics logs or search Basic and Auxiliary tables in a Log Analytics workspace. Find matching records in a named table over a time range, with a result limit. Run distributed-trace queries and resume polling existing trace operations. Get Azure resource and application health, metrics, availability, and service health events. List Log Analytics workspaces, tables, activity logs, Grafana instances, and Datadog monitored resources. Diagnose applications with App Lens, get Application Insights recommendations, manage web tests, and inspect Azure Monitor health models.",
+      "description": "Query Analytics logs or search Basic and Auxiliary tables in a Log Analytics workspace. Find matching records in a named table over a time range, with a result limit. Run distributed-trace queries. Get Azure resource and application health, metrics, availability, and service health events. List Log Analytics workspaces, tables, activity logs, Grafana instances, and Datadog monitored resources. Diagnose applications with App Lens, get Application Insights recommendations, manage web tests, and inspect Azure Monitor health models.",
       "toolMetadata": {
         "destructive": {
           "value": false,

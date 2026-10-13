@@ -75,7 +75,7 @@ public sealed class TraceQueryRunCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(succeeded);
 
         var response = await ExecuteCommandAsync($"{Target} --query \"{KnownQuery}\"");
-        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceQueryRunCommandResult);
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceQueryCommandResult);
 
         Assert.Equal("Succeeded", result.Result.Status);
         Assert.Equal(KnownOperationId, result.Result.OperationId);
@@ -136,5 +136,25 @@ public sealed class TraceQueryRunCommandTests : SubscriptionCommandUnitTestsBase
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("query failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsErrorWithCollectedData()
+    {
+        using var payload = JsonDocument.Parse("""{"value":[{"trace_id":"received"}]}""");
+        var partial = new TraceQueryResult { OperationId = KnownOperationId, Status = "Failed", Payload = payload.RootElement.Clone() };
+        Service.RunQueryAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(), Arg.Any<int>(), Arg.Any<bool>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new TraceQueryException(partial, new HttpRequestException("failed", null, HttpStatusCode.BadGateway)));
+
+        var response = await ExecuteCommandAsync($"{Target} --query {KnownQuery}");
+        var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceQueryCommandResult, HttpStatusCode.BadGateway);
+
+        Assert.Equal("Failed", result.Result.Status);
+        Assert.Equal(KnownOperationId, result.Result.OperationId);
+        Assert.Equal("received", result.Result.Payload!.Value.GetProperty("value")[0].GetProperty("trace_id").GetString());
+        Assert.Contains("incomplete", response.Message);
     }
 }

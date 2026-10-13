@@ -16,15 +16,18 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
     Name = "resume",
     Title = "Resume Distributed Trace Query",
     Description = """
-        Resume polling an existing distributed-trace (Trace Store) query by operation id,
+        Resume polling an existing distributed-trace query by operation id,
         without submitting a new query. Requires the Azure Monitor Workspace and resource group.
-        Polls up to 180 seconds; returns Succeeded with the first results page, or Running
-        with the same operationId. Use `monitor traces query run` for a new query, or
+        Collects further results pages within a 180-second and 1000-row budget per call.
+        Whole pages are retained and may exceed the requested row budget.
+        Returns Succeeded on the final page, or Running with collected rows when a budget
+        is exhausted. Read results sequentially, not with parallel callers or replay retries.
+        Use `monitor traces query run` for a new query, or
         `monitor traces query cancel` to stop one.
         """,
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
@@ -33,7 +36,7 @@ public sealed class TraceQueryResumeCommand(
     ILogger<TraceQueryResumeCommand> logger,
     IMonitorTracesService tracesService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseTraceCommand<TraceQueryResumeOptions, TraceQueryResumeCommand.TraceQueryResumeCommandResult>(subscriptionResolver)
+    : BaseTraceCommand<TraceQueryResumeOptions, TraceQueryCommandResult>(subscriptionResolver)
 {
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
@@ -48,8 +51,8 @@ public sealed class TraceQueryResumeCommand(
                 options.Tenant, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new TraceQueryResumeCommandResult(result),
-                MonitorJsonContext.Default.TraceQueryResumeCommandResult);
+                new TraceQueryCommandResult(result),
+                MonitorJsonContext.Default.TraceQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -60,6 +63,4 @@ public sealed class TraceQueryResumeCommand(
 
         return context.Response;
     }
-
-    public sealed record TraceQueryResumeCommandResult(TraceQueryResult Result);
 }

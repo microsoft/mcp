@@ -18,16 +18,16 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
     Name = "run",
     Title = "Run Distributed Trace Query",
     Description = """
-        Run a KQL query on a distributed-trace (Trace Store) account to find, filter, and
+        Run a KQL query on a distributed-trace account to find, filter, and
         analyze spans, traces, service latency, request errors, top-slowest operations, and
         per-service telemetry from OpenTelemetry-instrumented applications. The trace
         account is an Azure Monitor Workspace enabled for Trace Store. Typical prompts:
         "show traces from service X over the last N minutes", "top slowest traces for
         service X", "find traces with errors in the last hour", "trace by trace-id /
         span-id". The command submits the
-        query, polls until it completes (~180s budget), and returns the first page of rows.
-        If the poll budget is exhausted it returns `status: "Running"` with an operationId
-        — use `monitor traces query resume --operation-id <id>` to continue polling.
+        query and collects results pages within a 180-second and requested-row budget.
+        If a budget is exhausted, returns collected rows with `status: "Running"` and an operationId
+        — use `monitor traces query resume --operation-id <id>` to continue the existing query.
         Queries run with the caller's Azure identity — the caller must have read
         access on the Azure Monitor Workspace.
         """,
@@ -42,7 +42,7 @@ public sealed class TraceQueryRunCommand(
     ILogger<TraceQueryRunCommand> logger,
     IMonitorTracesService tracesService,
     ISubscriptionResolver subscriptionResolver)
-    : BaseTraceCommand<TraceQueryRunOptions, TraceQueryRunCommand.TraceQueryRunCommandResult>(subscriptionResolver)
+    : BaseTraceCommand<TraceQueryRunOptions, TraceQueryCommandResult>(subscriptionResolver)
 {
     private const int DefaultMaxResults = 100;
     private const int MaxAllowedResults = 1000;
@@ -83,8 +83,8 @@ public sealed class TraceQueryRunCommand(
                 startTime, endTime, maxResults, includeSpans, options.Tenant, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new TraceQueryRunCommandResult(result),
-                MonitorJsonContext.Default.TraceQueryRunCommandResult);
+                new TraceQueryCommandResult(result),
+                MonitorJsonContext.Default.TraceQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -119,6 +119,4 @@ public sealed class TraceQueryRunCommand(
         string.IsNullOrWhiteSpace(value) ? null :
         DateTimeOffset.Parse(value, CultureInfo.InvariantCulture,
             DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
-
-    public sealed record TraceQueryRunCommandResult(TraceQueryResult Result);
 }
