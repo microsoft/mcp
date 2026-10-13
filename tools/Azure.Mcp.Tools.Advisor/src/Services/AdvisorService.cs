@@ -144,8 +144,10 @@ public class AdvisorService(IAzureService azureService)
         var ranking = string.Equals(filters?.Category?.Trim(), "Cost", StringComparison.OrdinalIgnoreCase)
             ? " | extend dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))," +
                 " annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))" +
-                " | extend instanceScore = coalesce(iff(isfinite(dailySavings), dailySavings, real(null))," +
-                " iff(isfinite(annualSavings), annualSavings, real(null)))"
+                " | extend annualizedDailySavings = dailySavings * 12.0 * 30.4" +
+                " | extend annualSavingsScore = coalesce(iff(isfinite(annualizedDailySavings), annualizedDailySavings, real(null))," +
+                " iff(isfinite(annualSavings), annualSavings, real(null)))" +
+                " | extend instanceScore = round(annualSavingsScore, 2)"
             : " | extend instanceScore = coalesce(todouble(properties.criticalityScore), 0.0)";
 
         return BuildRecommendationScopeQuery(scope, predicates) +
