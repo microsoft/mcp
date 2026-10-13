@@ -323,23 +323,16 @@ public class PrioritizedRecommendationSummaryTests
     {
         var signals = Filter(new Dictionary<string, string> { [key] = value });
 
-        Assert.Equal(new RecommendationPrioritizationSignals(), signals with { AdditionalSignals = null });
-        Assert.Null(signals.AdditionalSignals);
+        Assert.Equal(new RecommendationPrioritizationSignals(), signals);
     }
 
     [Fact]
-    public void Filter_PassesThroughUnlistedSignalsButNotReservedNames()
+    public void Filter_IgnoresUnlistedSignals()
     {
         using var document = JsonDocument.Parse(
-            """{ "newSignal": "valueA", "category": "Injected", "impact": "Injected", "blankSignal": "Unknown", "numeric": 3 }""");
+            """{ "newSignal": "valueA", "category": "Injected", "impact": "Injected", "numeric": 3 }""");
 
-        var signals = PrioritizationSignalFilter.Filter(document.RootElement);
-
-        Assert.NotNull(signals.AdditionalSignals);
-        Assert.Equal(["newSignal", "numeric"], signals.AdditionalSignals!.Keys.Order(StringComparer.Ordinal));
-        Assert.Equal("valueA", signals.AdditionalSignals["newSignal"].GetString());
-        Assert.Null(signals.Category);
-        Assert.Null(signals.Impact);
+        Assert.Equal(new RecommendationPrioritizationSignals(), PrioritizationSignalFilter.Filter(document.RootElement));
     }
 
     [Fact]

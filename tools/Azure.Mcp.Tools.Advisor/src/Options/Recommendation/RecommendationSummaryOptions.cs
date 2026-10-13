@@ -20,7 +20,7 @@ public sealed class RecommendationSummaryOptions : IRecommendationScopeOptions
     public string? GroupBy { get; set; }
 
     [Option(Description = "Rank active recommendation types by priority instead of counting them. " +
-        "Set to true for top, most critical, most important, highest priority, prioritized, or what-should-I-fix-first requests, in all categories or a filtered category such as Cost; pass a user-specified result count as --top. " +
+        "Set to true for top recommendations, top actions to take, most critical, most important, highest priority, prioritized, or what-should-I-fix-first requests, in all categories or a filtered category such as Cost; pass a user-specified result count as --top. " +
         "Do not set it for frequency questions such as how many, most common, or which type occurs most. " +
         "Types are ranked by metadata priority score, then annual savings, summed contextual criticality score, earliest service-retirement date, and affected-resource count. " +
         "Groups by recommendation-type, includes only New recommendations, and defaults --top to 10. Defaults to false. " +
