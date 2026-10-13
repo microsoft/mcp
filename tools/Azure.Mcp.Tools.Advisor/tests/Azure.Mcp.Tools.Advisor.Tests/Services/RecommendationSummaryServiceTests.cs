@@ -27,6 +27,24 @@ public class RecommendationSummaryServiceTests
         Assert.Contains("properties.language) =~ 'en'", query);
         Assert.EndsWith("summarize count() by key, label", query);
     }
+    [Theory]
+    [InlineData("true")]
+    [InlineData("True")]
+    public void EnsureFullTenantCoverage_SubscriptionLimitHit_Throws(string headerValue)
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AdvisorResourceGraphQueryExecutor.EnsureFullTenantCoverage(headerValue));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("false")]
+    [InlineData("")]
+    public void EnsureFullTenantCoverage_FullCoverage_DoesNotThrow(string? headerValue)
+    {
+        AdvisorResourceGraphQueryExecutor.EnsureFullTenantCoverage(headerValue);
+    }
+
     [Fact]
     public void BuildSummaryQuery_Category_UsesMetadataOnly()
     {
