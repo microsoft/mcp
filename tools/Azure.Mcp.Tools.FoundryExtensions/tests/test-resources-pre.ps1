@@ -32,7 +32,11 @@ $candidateRegions = @(
     'westus3',
     'southcentralus',
     'northcentralus',
-    'eastus'
+    'eastus',
+    'westus2',
+    'centralus',
+    'westcentralus',
+    'westus'
 )
 
 $explicitLocation = if ($templateFileParameters.ContainsKey('location')) {
@@ -126,4 +130,3 @@ if (!$bestRegion) {
 
 $templateFileParameters['location'] = $bestRegion
 $templateFileParameters['modelCapacity'] = [int]$bestCapacity
-
