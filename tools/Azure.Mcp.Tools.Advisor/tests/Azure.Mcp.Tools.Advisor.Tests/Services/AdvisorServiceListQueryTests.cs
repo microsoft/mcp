@@ -292,7 +292,9 @@ public class AdvisorServiceListQueryTests
             {
                 Assert.Contains("dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))", query);
                 Assert.Contains("annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))", query);
-                Assert.Contains("coalesce(iff(isfinite(dailySavings), dailySavings, real(null)), iff(isfinite(annualSavings), annualSavings, real(null)))", query);
+                Assert.Contains("annualizedDailySavings = dailySavings * 12.0 * 30.4", query);
+                Assert.Contains("annualSavingsScore = coalesce(iff(isfinite(annualizedDailySavings), annualizedDailySavings, real(null)), iff(isfinite(annualSavings), annualSavings, real(null)))", query);
+                Assert.Contains("instanceScore = round(annualSavingsScore, 2)", query);
                 Assert.DoesNotContain("dailySavings > 0", query);
             }
             Assert.EndsWith("| take 101 | project id, name, type, properties", query);

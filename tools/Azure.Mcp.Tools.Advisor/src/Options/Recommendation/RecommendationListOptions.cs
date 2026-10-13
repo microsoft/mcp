@@ -70,8 +70,9 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     [Option(Description = "Apply ordering to individual matching records, not recommendation groups. Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must use summary --group-by recommendation-type as the only initial tool call. " +
         "Use this option only for a subsequent specific recommendation-type drill-down. " +
         "Sort individual records by criticalityScore descending, treating missing scores as zero. " +
-        "Only an explicit --category Cost selects savings ordering: savings.retail.dailyPotentialSavings descending, " +
-        "falling back to extendedProperties.annualSavingsAmount. Missing, invalid, or non-finite savings sort last; zero is valid. " +
+        "Only an explicit --category Cost selects savings ordering: savings.retail.dailyPotentialSavings is annualized by multiplying by 12 and 30.4, " +
+        "with extendedProperties.annualSavingsAmount as fallback; the selected annual savings score is rounded to two decimal places before ordering descending. " +
+        "Missing, invalid, or non-finite savings sort last; zero is valid. " +
         "Ties sort by effective retirement date ascending (instance date with metadata fallback, missing dates last), " +
         "then resource name A-Z (case-insensitive). " +
         "Defaults to false; when false, no explicit ordering is applied. Applies to both subscription and Service Group scopes.")]
