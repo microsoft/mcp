@@ -95,9 +95,7 @@ jobs:
 - template: /eng/pipelines/templates/jobs/export-tool-metadata.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
-    DependsOn:
-    - TagRepository
-    - PublishNugetPackage
+    DependsOn: PublishNugetPackage
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
