@@ -279,9 +279,8 @@ public sealed class KeyVaultService(IAzureService azureService)
     // Create clients with injected HttpClient, this will enable record/playback during testing.
     private KeyClient CreateKeyClient(string vaultName, TokenCredential credential)
     {
-        var vaultUri = ValidateVaultEndpoint(
-            new Uri(BuildVaultUri(vaultName)),
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri vaultUri = ValidateVaultEndpoint(AzureService,
+            new Uri(BuildVaultUri(vaultName)));
         var options = AddDefaultPolicies(new KeyClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(vaultUri, credential, options);
@@ -289,9 +288,8 @@ public sealed class KeyVaultService(IAzureService azureService)
 
     private SecretClient CreateSecretClient(string vaultName, TokenCredential credential)
     {
-        var vaultUri = ValidateVaultEndpoint(
-            new Uri(BuildVaultUri(vaultName)),
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri vaultUri = ValidateVaultEndpoint(AzureService,
+            new Uri(BuildVaultUri(vaultName)));
         var options = AddDefaultPolicies(new SecretClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(vaultUri, credential, options);
@@ -299,9 +297,8 @@ public sealed class KeyVaultService(IAzureService azureService)
 
     private CertificateClient CreateCertificateClient(string vaultName, TokenCredential credential)
     {
-        var vaultUri = ValidateVaultEndpoint(
-            new Uri(BuildVaultUri(vaultName)),
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri vaultUri = ValidateVaultEndpoint(AzureService,
+            new Uri(BuildVaultUri(vaultName)));
         var options = AddDefaultPolicies(new CertificateClientOptions());
         options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(vaultUri, credential, options);
@@ -314,9 +311,8 @@ public sealed class KeyVaultService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName));
         var credential = await GetCredential(tenantId, cancellationToken);
-        var hsmUri = ValidateManagedHsmEndpoint(
-            new Uri(GetHsmUri(vaultName)),
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri hsmUri = ValidateManagedHsmEndpoint(AzureService,
+            new Uri(GetHsmUri(vaultName)));
 
         var hsmClient = CreateSettingsClient(hsmUri, credential);
         var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
@@ -326,34 +322,30 @@ public sealed class KeyVaultService(IAzureService azureService)
     /// <summary>
     /// Validates that the given Key Vault endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
-    /// <param name="requestUri">The URI of the Key Vault endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="endpoint">The URI of the Key Vault endpoint to validate.</param>
     /// <returns>The validated URI of the Key Vault endpoint.</returns>
-    internal static Uri ValidateVaultEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    internal static Uri ValidateVaultEndpoint(IAzureService azureService, Uri endpoint)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "keyvault",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "keyvault");
+            serviceType: "keyvault");
         return endpoint;
     }
 
     /// <summary>
     /// Validates that the given Managed HSM endpoint satisfies the expected Azure service endpoint pattern.
     /// </summary>
-    /// <param name="requestUri">The URI of the Managed HSM endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="endpoint">The URI of the Managed HSM endpoint to validate.</param>
     /// <returns>The validated URI of the Managed HSM endpoint.</returns>
-    internal static Uri ValidateManagedHsmEndpoint(Uri endpoint, ArmEnvironment armEnvironment)
+    internal static Uri ValidateManagedHsmEndpoint(IAzureService azureService, Uri endpoint)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "managedhsm",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "keyvault");
+            serviceType: "managedhsm");
         return endpoint;
     }
 

@@ -103,9 +103,9 @@ public class CommandFactory : ICommandFactory
     private readonly ModelsJsonContext _srcGenWithOptions;
 
     /// <summary>
-    /// Mapping of tokenized command names to their <see cref="IBaseCommand" />
+    /// Mapping of tokenized command names to their executable commands and original setup identities.
     /// </summary>
-    private readonly Dictionary<string, IBaseCommand> _commandMap;
+    private readonly Dictionary<string, CommandRegistration> _commandMap;
     private readonly Dictionary<string, IAreaSetup> _commandNamesToArea = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITelemetryService _telemetryService;
     private readonly IOptions<McpServerConfiguration> _configurationOptions;
@@ -153,15 +153,17 @@ public class CommandFactory : ICommandFactory
 
     public CommandGroup RootGroup => _rootGroup;
 
-    public IReadOnlyDictionary<string, IBaseCommand> AllCommands => _commandMap;
+    /// <inheritdoc/>
+    public IReadOnlyDictionary<string, CommandRegistration> AllCommands => _commandMap;
 
-    public IReadOnlyDictionary<string, IBaseCommand> GroupCommands(string[] groupNames)
+    /// <inheritdoc/>
+    public IReadOnlyDictionary<string, CommandRegistration> GroupCommands(string[] groupNames)
     {
         if (groupNames is null)
         {
             throw new ArgumentException("groupNames cannot be null.");
         }
-        Dictionary<string, IBaseCommand> commandsFromGroups = [];
+        Dictionary<string, CommandRegistration> commandsFromGroups = [];
         foreach (string groupName in groupNames)
         {
             foreach (CommandGroup group in _rootGroup.SubGroup)
@@ -214,6 +216,7 @@ public class CommandFactory : ICommandFactory
 
             // Get the commands for the IAreaSetup and register it to the root node.
             var commandTree = area.RegisterCommands(_serviceProvider);
+            BindCommandNamespace(commandTree, area.Name);
             _rootGroup.AddSubGroup(commandTree);
 
             // Create a temporary root node to register all the area's subgroups and commands to.
@@ -236,6 +239,33 @@ public class CommandFactory : ICommandFactory
         }
     }
 
+    /// <summary>
+    /// Finalizes new setup commands while retaining the provenance of existing registrations.
+    /// </summary>
+    /// <param name="group">The group declared by the setup, including nested subgroups.</param>
+    /// <param name="namespaceName">The registering setup area's name.</param>
+    /// <remarks>
+    /// Consolidated groups contain already-finalized registrations. Their original namespaces,
+    /// including unresolved values, must not be replaced by the displayed consolidated group.
+    /// </remarks>
+    private void BindCommandNamespace(CommandGroup group, string namespaceName)
+    {
+        foreach (string name in group.Commands.Keys.ToArray())
+        {
+            CommandRegistration registration = group.Commands[name].BindNamespace(namespaceName);
+            group.Commands[name] = registration;
+            if (string.IsNullOrWhiteSpace(registration.ToolNamespaceName))
+            {
+                _logger.LogWarning("No original setup namespace is registered for command {CommandId}. Namespace-scoped endpoint validation bypasses will not apply.", registration.Command.Id);
+            }
+        }
+
+        foreach (CommandGroup subgroup in group.SubGroup)
+        {
+            BindCommandNamespace(subgroup, namespaceName);
+        }
+    }
+
     private void ConfigureCommands(CommandGroup group, string parentTokenizedPrefix = "")
     {
         var groupTokenizedPath = GetPrefix(parentTokenizedPrefix, group.Name);
@@ -252,8 +282,9 @@ public class CommandFactory : ICommandFactory
         }
 
         // Configure direct commands in this group
-        foreach (var command in group.Commands.Values)
+        foreach (CommandRegistration registration in group.Commands.Values)
         {
+            IBaseCommand command = registration.Command;
             var cmd = command.GetCommand();
 
             // Build the full tokenized key for this leaf command (e.g. "storage_account_list").
@@ -437,7 +468,7 @@ public class CommandFactory : ICommandFactory
         // Case 1: Exact match in AllCommands → this is a leaf command.
         if (!string.IsNullOrEmpty(tokenizedKey) && _commandMap.TryGetValue(tokenizedKey, out var leafCommand))
         {
-            var info = BuildLearnCommandInfo(tokenizedKey, leafCommand);
+            var info = BuildLearnCommandInfo(tokenizedKey, leafCommand.Command);
             var leafResponse = new CommandResponse
             {
                 Status = HttpStatusCode.OK,
@@ -454,7 +485,7 @@ public class CommandFactory : ICommandFactory
             .ToList();
 
         var commandInfos = GetVisibleCommands(commandsInGroup)
-            .Select(kvp => BuildLearnCommandInfo(kvp.Key, kvp.Value))
+            .Select(kvp => BuildLearnCommandInfo(kvp.Key, kvp.Value.Command))
             .ToList();
 
         var groupResponse = new CommandResponse
@@ -477,7 +508,7 @@ public class CommandFactory : ICommandFactory
         if (nameParts.Count == 1)
         {
             var commandName = nameParts.Dequeue();
-            return group.Commands.GetValueOrDefault(commandName);
+            return group.Commands.GetValueOrDefault(commandName)?.Command;
         }
 
         // Find the next subgroup
@@ -487,20 +518,17 @@ public class CommandFactory : ICommandFactory
         return nextGroup != null ? FindCommandInGroup(nextGroup, nameParts) : null;
     }
 
-    /// <summary>
-    /// Finds the BaseCommand given its full command name (i.e. storage_account_list).
-    /// </summary>
-    /// <param name="fullCommandName">Name of the command with prefixes.</param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public IBaseCommand? FindCommandByName(string fullCommandName)
     {
-        return _commandMap.GetValueOrDefault(fullCommandName);
+        return FindCommandRegistration(fullCommandName)?.Command;
     }
 
-    /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' would return 'storage').
-    /// </summary>
-    /// <param name="fullCommandName">Name of the command.</param>
+    /// <inheritdoc/>
+    public CommandRegistration? FindCommandRegistration(string fullCommandName)
+        => _commandMap.GetValueOrDefault(fullCommandName);
+
+    /// <inheritdoc/>
     public string? GetServiceArea(string fullCommandName)
     {
         if (string.IsNullOrEmpty(fullCommandName))
@@ -557,10 +585,10 @@ public class CommandFactory : ICommandFactory
     /// - B2
     /// </summary>
     /// <param name="rootNode">Node to begin traversal.</param>
-    private static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
+    private static Dictionary<string, CommandRegistration> CreateCommandDictionary(CommandGroup rootNode)
     {
         const string rootPrefix = "";
-        var aggregated = new Dictionary<string, IBaseCommand>();
+        var aggregated = new Dictionary<string, CommandRegistration>();
 
         // Add any immediate commands from root group.
         foreach (var kvp in rootNode.Commands)
@@ -604,9 +632,10 @@ public class CommandFactory : ICommandFactory
     /// </summary>
     /// <param name="node">Node to begin traversal.</param>
     /// <param name="prefix">Prefix. If prefix is an empty string, the name of the current node is used.</param>
-    internal static Dictionary<string, IBaseCommand> CreateCommandDictionaryInner(CommandGroup node, string prefix)
+    /// <returns>Flattened routing names referencing the same registrations held in the command tree.</returns>
+    internal static Dictionary<string, CommandRegistration> CreateCommandDictionaryInner(CommandGroup node, string prefix)
     {
-        var aggregated = new Dictionary<string, IBaseCommand>();
+        var aggregated = new Dictionary<string, CommandRegistration>();
         var updatedPrefix = GetPrefix(prefix, node.Name);
 
         if (node.Commands != null)
@@ -639,10 +668,16 @@ public class CommandFactory : ICommandFactory
         ? additional
         : currentPrefix + Separator + additional;
 
-    internal static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IEnumerable<KeyValuePair<string, IBaseCommand>> commands)
+    /// <summary>
+    /// Orders registrations by routing name and excludes commands marked as hidden.
+    /// </summary>
+    /// <param name="commands">The registrations to expose through discovery or learn responses.</param>
+    /// <returns>The visible registrations without changing their original namespace identities.</returns>
+    /// <remarks>Visibility is determined by the executable command's type, not the registration type.</remarks>
+    internal static IEnumerable<KeyValuePair<string, CommandRegistration>> GetVisibleCommands(IEnumerable<KeyValuePair<string, CommandRegistration>> commands)
     {
         return commands
-            .Where(kvp => kvp.Value.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)
+            .Where(kvp => kvp.Value.Command.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)
             .OrderBy(kvp => kvp.Key);
     }
 }

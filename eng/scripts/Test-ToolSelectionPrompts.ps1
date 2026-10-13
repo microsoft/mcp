@@ -5,6 +5,8 @@ Validates that tool names used in prompt documentation exist in built MCP server
 .DESCRIPTION
 Builds one or more servers, reads end-to-end prompt markdown, and compares documented
 tool names against the server's runtime tool list from `tools list --name-only`.
+Only stdout is parsed as JSON; stderr diagnostics remain visible. Non-JSON text
+in stdout is not filtered and causes validation to fail.
 
 For each server, this script:
 - Locates the prompts file (default: servers/<ServerName>/docs/e2eTestPrompts.md)
@@ -260,7 +262,7 @@ foreach ($serverInfo in $serversToTest) {
     #     ]
     #   }
     # }
-    $toolsJson = & $executablePath tools list --name-only 2>&1 | Out-String
+    $toolsJson = & $executablePath tools list --name-only | Out-String
 
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"

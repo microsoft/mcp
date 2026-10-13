@@ -28,12 +28,24 @@ public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogg
     private readonly IPostgresService _postgresService = postgresService;
     private readonly ILogger<DatabaseQueryCommand> _logger = logger;
 
+    public override void ValidateOptions(DatabaseQueryOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        try
+        {
+            SqlQueryValidator.ValidateQuery(options.Query);
+        }
+        catch (CommandValidationException ex)
+        {
+            validationResult.AddError(ex.Message, ex.TelemetrySafeMessage);
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DatabaseQueryOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            // Validate the query early to reject malformed or stacked statements.
-            SqlQueryValidator.ValidateQuery(options.Query);
             List<string> queryResult = await _postgresService.ExecuteQueryAsync(
                 options.AuthType,
                 options.User,

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.ResourceManager;
 using Xunit;
@@ -24,7 +25,7 @@ public class KeyVaultServiceEndpointValidationTests
         };
         var uri = new Uri(endpoint);
 
-        Assert.Same(uri, KeyVaultService.ValidateVaultEndpoint(uri, armEnvironment));
+        Assert.Same(uri, KeyVaultService.ValidateVaultEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), uri));
     }
 
     [Theory]
@@ -36,9 +37,8 @@ public class KeyVaultServiceEndpointValidationTests
     public void ValidateVaultEndpoint_InvalidPublicCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            KeyVaultService.ValidateVaultEndpoint(
-                new Uri(endpoint),
-                ArmEnvironment.AzurePublicCloud));
+            KeyVaultService.ValidateVaultEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+                new Uri(endpoint)));
     }
 
     [Theory]
@@ -55,7 +55,7 @@ public class KeyVaultServiceEndpointValidationTests
         };
         var uri = new Uri(endpoint);
 
-        Assert.Same(uri, KeyVaultService.ValidateManagedHsmEndpoint(uri, armEnvironment));
+        Assert.Same(uri, KeyVaultService.ValidateManagedHsmEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), uri));
     }
 
     [Theory]
@@ -67,8 +67,7 @@ public class KeyVaultServiceEndpointValidationTests
     public void ValidateManagedHsmEndpoint_InvalidPublicCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            KeyVaultService.ValidateManagedHsmEndpoint(
-                new Uri(endpoint),
-                ArmEnvironment.AzurePublicCloud));
+            KeyVaultService.ValidateManagedHsmEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+                new Uri(endpoint)));
     }
 }
