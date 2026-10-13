@@ -32,7 +32,7 @@ public class PrioritizedRecommendationSummaryTests
             "extend resourceKey =",
             "by recommendationTypeId, resourceKey",
             "summarize resourceCount = count()",
-            "join kind=leftouter",
+            "join kind=inner",
             "| order by ",
             "| project key =",
         ];
@@ -115,7 +115,7 @@ public class PrioritizedRecommendationSummaryTests
 
         Assert.Contains(
             "summarize criticalityScore = max(criticalityScore), criticalityScoreCount = countif(isnotnull(criticalityScore)), " +
-            "annualSavings = max(annualSavings), annualSavingsCount = countif(isnotnull(annualSavings)), problem = min(problem) " +
+            "annualSavings = max(annualSavings), annualSavingsCount = countif(isnotnull(annualSavings)) " +
             "by recommendationTypeId, resourceKey",
             query);
         Assert.Contains("resourceKey = iff(isempty(resourceKey), tolower(name), resourceKey)", query);
@@ -156,7 +156,7 @@ public class PrioritizedRecommendationSummaryTests
         var projection = query[query.LastIndexOf("| project ", StringComparison.Ordinal)..];
 
         Assert.Equal(
-            "| project key = iff(isempty(recommendationTypeId), 'Unknown', recommendationTypeId), label, count_ = resourceCount, " +
+            "| project key = recommendationTypeId, label, count_ = resourceCount, " +
             "category, impact, subCategory, retirementDate, annualSavings, signalValues = metadataSignalValues",
             projection);
     }
@@ -171,7 +171,7 @@ public class PrioritizedRecommendationSummaryTests
             RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d",
             Prioritized: true));
 
-        var join = query.IndexOf("join kind=leftouter", StringComparison.Ordinal);
+        var join = query.IndexOf("join kind=inner", StringComparison.Ordinal);
         Assert.True(query.IndexOf("where category =~ 'Cost'", StringComparison.Ordinal) > join);
         Assert.True(query.IndexOf("where impact =~ 'High'", StringComparison.Ordinal) > join);
         Assert.True(query.IndexOf("contains 'it''sx'", StringComparison.Ordinal) is > 0 and var search && search < join);
@@ -210,14 +210,14 @@ public class PrioritizedRecommendationSummaryTests
               { "key": "type-b", "label": "B", "count_": 1, "category": "HighAvailability" },
               { "key": "type-a", "label": "A", "count_": 5, "category": "Security" },
               { "key": "TYPE-B", "label": "B duplicate", "count_": 9 },
-              { "key": "Unknown", "label": "Problem text", "count_": 2 }
+              { "key": "type-c", "label": "C", "count_": 2 }
             ]
             """);
 
         var summary = RecommendationSummaryService.ParsePrioritizedSummary(document.RootElement);
 
         Assert.Equal("recommendation-type", summary.GroupBy);
-        Assert.Equal(["type-b", "type-a", "Unknown"], summary.Groups.Select(group => group.Key));
+        Assert.Equal(["type-b", "type-a", "type-c"], summary.Groups.Select(group => group.Key));
         Assert.Equal(8, summary.TotalRecommendations);
         Assert.Equal("B", summary.Groups[0].Label);
     }

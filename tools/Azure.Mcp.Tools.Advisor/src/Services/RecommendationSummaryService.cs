@@ -102,19 +102,13 @@ public class RecommendationSummaryService(IAzureService azureService)
         CancellationToken cancellationToken)
     {
         var prioritized = IsPrioritized(filters);
-        var usesMetadata = prioritized || RequiresMetadata(normalizedGroupBy, filters);
-        var query = BuildSummaryQuery(
-            scope,
-            normalizedGroupBy,
-            filters,
-            usesMetadata);
+        var query = BuildSummaryQuery(scope, normalizedGroupBy, filters);
 
+        // Every summary joins tenant-wide recommendation-type metadata, so the query always runs at tenant scope; the
+        // subscription or service group is selected by the KQL predicates.
         var result = await AdvisorResourceGraphQueryExecutor.ExecuteAsync(
             tenantResource,
-            scope,
             query,
-            useSubscriptionRequestScope:
-                !usesMetadata && scope.Kind == RecommendationQueryScopeKind.Subscription,
             cancellationToken);
         EnsureCompleteResult(
             result.ResultTruncated == ResultTruncated.True,
@@ -134,45 +128,29 @@ public class RecommendationSummaryService(IAzureService azureService)
     internal static bool IsPrioritized(RecommendationFilters? filters) =>
         filters?.Prioritized == true;
 
-    internal static bool RequiresMetadata(string groupBy, RecommendationFilters? filters) =>
-        groupBy is GroupByRecommendationType
-            or GroupByCategory
-            or GroupByImpact
-            or GroupBySubCategory
-            or GroupByRetirementDate ||
-        !string.IsNullOrWhiteSpace(filters?.Category) ||
-        !string.IsNullOrWhiteSpace(filters?.Impact) ||
-        !string.IsNullOrWhiteSpace(filters?.SubCategory) ||
-        filters?.RetirementDate is not null;
-
     internal static string BuildSummaryQuery(
         string subscriptionId,
         string? resourceGroup,
         string groupBy,
-        RecommendationFilters? filters,
-        bool? useMetadata = null)
+        RecommendationFilters? filters)
         => BuildSummaryQuery(
             RecommendationQueryScope.ForSubscription(subscriptionId, resourceGroup),
             groupBy,
-            filters,
-            useMetadata);
+            filters);
 
     internal static string BuildServiceGroupSummaryQuery(
         string serviceGroup,
         string groupBy,
-        RecommendationFilters? filters,
-        bool? useMetadata = null)
+        RecommendationFilters? filters)
         => BuildSummaryQuery(
             RecommendationQueryScope.ForServiceGroup(serviceGroup),
             groupBy,
-            filters,
-            useMetadata);
+            filters);
 
     internal static string BuildSummaryQuery(
         RecommendationQueryScope scope,
         string groupBy,
-        RecommendationFilters? filters,
-        bool? useMetadata = null)
+        RecommendationFilters? filters)
     {
         ArgumentNullException.ThrowIfNull(scope);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
@@ -193,9 +171,7 @@ public class RecommendationSummaryService(IAzureService azureService)
             return PrioritizedRecommendationSummaryQuery.Build(scope, filters);
         }
 
-        return useMetadata ?? RequiresMetadata(normalizedGroupBy, filters)
-            ? BuildMetadataSummaryQuery(scope, normalizedGroupBy, filters)
-            : BuildInstanceSummaryQuery(scope, normalizedGroupBy, filters);
+        return BuildMetadataSummaryQuery(scope, normalizedGroupBy, filters);
     }
 
     internal static void EnsureCompleteResult(bool isTruncated, string? skipToken)
@@ -339,43 +315,6 @@ public class RecommendationSummaryService(IAzureService azureService)
         return checked((int)count64);
     }
 
-    private static string BuildInstanceSummaryQuery(
-        RecommendationQueryScope scope,
-        string groupBy,
-        RecommendationFilters? filters)
-    {
-        var query = BuildRecommendationScope(scope);
-        var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
-            filters,
-            includeStatus: groupBy != GroupByStatus,
-            useRequestedStatus: false,
-            includeCategoryAndImpact: true,
-            resourceTypeUsesImpactedField: true,
-            scope: scope);
-        if (predicates.Length > 0)
-        {
-            query += $" | where {predicates}";
-        }
-
-        query += groupBy switch
-        {
-            GroupByStatus =>
-                " | extend groupValue = tostring(properties.recommendationStatus)",
-            GroupByResourceType =>
-                " | extend impactedResourceType = tolower(tostring(properties.impactedField))" +
-                " | extend resourceIdType = tolower(extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId)))" +
-                " | extend groupValue = iff(isnotempty(impactedResourceType), impactedResourceType, resourceIdType)",
-            _ => throw new ArgumentException(
-                $"Group-by value '{groupBy}' requires recommendation metadata.",
-                nameof(groupBy)),
-        };
-
-        return query +
-            " | extend key = iff(isempty(groupValue), 'Unknown', groupValue)" +
-            " | extend label = key" +
-            " | summarize count() by key, label";
-    }
-
     private static string BuildMetadataSummaryQuery(
         RecommendationQueryScope scope,
         string groupBy,
@@ -399,8 +338,7 @@ public class RecommendationSummaryService(IAzureService azureService)
             " | project recommendationTypeId," +
             " impactedField=tostring(properties.impactedField)," +
             " resourceId=tostring(properties.resourceMetadata.resourceId)," +
-            " recommendationStatus=tostring(properties.recommendationStatus)," +
-            " problem=tostring(properties.shortDescription.problem)" +
+            " recommendationStatus=tostring(properties.recommendationStatus)" +
             JoinRecommendationTypeMetadata +
             " | extend category = metadataCategory," +
             " impact = metadataImpact," +
@@ -410,26 +348,31 @@ public class RecommendationSummaryService(IAzureService azureService)
             " | extend resourceIdType = tolower(extract(@'/providers/([^/]+/[^/]+)', 1, resourceId))" +
             " | extend resourceType = iff(isnotempty(impactedResourceType), impactedResourceType, resourceIdType)" +
             " | extend typeLabel = iff(isnotempty(metadataDisplayName), metadataDisplayName," +
-            " iff(isnotempty(metadataLabel), metadataLabel, problem))";
+            " iff(isnotempty(metadataLabel), metadataLabel, recommendationTypeId))";
 
         query = AddMetadataFilters(query, groupBy, filters);
         query += BuildMetadataGrouping(groupBy);
-
-        // min(label) keeps one deterministic label per key when a type without metadata has differing problem texts.
-        return query + " | summarize count_ = count(), label = min(label) by key";
+        return query + " | summarize count() by key, label";
     }
 
     /// <summary>
-    /// Left outer join to English recommendation-type metadata, shared by normal and prioritized summaries.
+    /// Inner join to English recommendation-type metadata, shared by every summary query.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Category, impact, subcategory, retirement date, priority score, and published signals are taken only from this
     /// metadata. Recommendation records are not used as a fallback: metadata is the catalog of record for type-level
-    /// properties, and where the two disagree the metadata is authoritative. A type without a metadata row is kept and
-    /// reports these properties as missing (normal summaries group it under <c>Unknown</c>).
+    /// properties, and where the two disagree the metadata is authoritative.
+    /// </para>
+    /// <para>
+    /// The join is inner, as in the Azure portal Advisor experience: recommendations whose type has no English
+    /// metadata row are excluded from every summary, so all groupings and prioritized summaries share one population
+    /// and their totals agree. A type can still have an empty metadata field, which normal summaries group under
+    /// <c>Unknown</c>.
+    /// </para>
     /// </remarks>
     internal const string JoinRecommendationTypeMetadata =
-        " | join kind=leftouter (" +
+        " | join kind=inner (" +
         " advisorresources" +
         " | where type =~ 'microsoft.advisor/metadata'" +
         " | where tostring(properties.language) =~ 'en'" +

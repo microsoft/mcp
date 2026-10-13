@@ -173,7 +173,7 @@ internal static class PrioritizedRecommendationSummaryQuery
     }
 
     /// <summary>
-    /// Stage 3: per-record resource key, criticality score, annual savings, and fallback label.
+    /// Stage 3: per-record resource key, criticality score, and annual savings.
     /// </summary>
     /// <remarks>
     /// <list type="bullet">
@@ -183,7 +183,6 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// <item><c>annualSavings</c> is <c>savings.retail.dailyPotentialSavings × 12 × 30.4</c> when that value is a finite
     /// number. Otherwise it is the legacy <c>extendedProperties.annualSavingsAmount</c> when that is a finite number.
     /// Otherwise it is missing (null). Missing is never turned into 0, so "no data" cannot be read as "no savings".</item>
-    /// <item><c>problem</c> is used only as a label when the type has no metadata name.</item>
     /// </list>
     /// </remarks>
     private static string ComputePerRecordValues()
@@ -197,8 +196,7 @@ internal static class PrioritizedRecommendationSummaryQuery
             " | extend dailySavings = todouble(properties.savings.retail.dailyPotentialSavings)" +
             " | extend legacyAnnualSavings = todouble(properties.extendedProperties.annualSavingsAmount)" +
             $" | extend annualSavings = iff(isfinite(dailySavings), dailySavings * {monthsPerYear} * {daysPerMonth}," +
-            " iff(isfinite(legacyAnnualSavings), legacyAnnualSavings, real(null)))" +
-            " | extend problem = tostring(properties.shortDescription.problem)";
+            " iff(isfinite(legacyAnnualSavings), legacyAnnualSavings, real(null)))";
     }
 
     /// <summary>
@@ -222,8 +220,7 @@ internal static class PrioritizedRecommendationSummaryQuery
         " | summarize criticalityScore = max(criticalityScore)," +
         " criticalityScoreCount = countif(isnotnull(criticalityScore))," +
         " annualSavings = max(annualSavings)," +
-        " annualSavingsCount = countif(isnotnull(annualSavings))," +
-        " problem = min(problem)" +
+        " annualSavingsCount = countif(isnotnull(annualSavings))" +
         " by recommendationTypeId, resourceKey" +
         " | extend criticalityScore = iff(criticalityScoreCount > 0, criticalityScore, real(null))," +
         " annualSavings = iff(annualSavingsCount > 0, annualSavings, real(null))";
@@ -238,7 +235,6 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// <item><c>summedCriticality</c>: sum of per-resource criticality scores. Used only for ordering and never
     /// returned. Missing when no resource has a score.</item>
     /// <item><c>annualSavings</c>: sum of per-resource annual savings. Missing when no resource reports savings.</item>
-    /// <item><c>problem</c>: the alphabetically first problem text, so the fallback label is deterministic.</item>
     /// </list>
     /// </remarks>
     private static string AggregatePerType() =>
@@ -246,8 +242,7 @@ internal static class PrioritizedRecommendationSummaryQuery
         " summedCriticality = sum(criticalityScore)," +
         " criticalityScoreCount = countif(isnotnull(criticalityScore))," +
         " annualSavings = sum(annualSavings)," +
-        " annualSavingsCount = countif(isnotnull(annualSavings))," +
-        " problem = min(problem)" +
+        " annualSavingsCount = countif(isnotnull(annualSavings))" +
         " by recommendationTypeId" +
         " | extend summedCriticality = iff(criticalityScoreCount > 0, summedCriticality, real(null))," +
         " annualSavings = iff(annualSavingsCount > 0, annualSavings, real(null))";
@@ -258,11 +253,11 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// <remarks>
     /// <para>
     /// Category, impact, subcategory, retirement date, priority score, and published signals come only from metadata;
-    /// recommendation records are not used as a fallback. A left outer join keeps types without metadata. Those types have
-    /// no category, impact, subcategory, priority score, or signals, and therefore rank after types that have them.
+    /// recommendation records are not used as a fallback. The join is inner, as in the Azure portal Advisor experience, so
+    /// recommendation types without an English metadata row are excluded.
     /// </para>
     /// <para>
-    /// The label is the metadata display name, then the metadata label, then the record's problem text, then the type ID.
+    /// The label is the metadata display name, then the metadata label, then the type ID.
     /// </para>
     /// </remarks>
     private static string JoinTypeMetadata() =>
@@ -272,8 +267,7 @@ internal static class PrioritizedRecommendationSummaryQuery
         " subCategory = metadataSubCategory," +
         " retirementDate = format_datetime(startofday(todatetime(metadataRetirementDate)), 'yyyy-MM-dd')" +
         " | extend label = iff(isnotempty(metadataDisplayName), metadataDisplayName," +
-        " iff(isnotempty(metadataLabel), metadataLabel," +
-        " iff(isnotempty(problem), problem, recommendationTypeId)))";
+        " iff(isnotempty(metadataLabel), metadataLabel, recommendationTypeId))";
 
     /// <summary>
     /// Stage 8: the ranking. This single <c>order by</c> is the only place the order is defined.
@@ -312,7 +306,7 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// order of the rows carries the ranking.
     /// </summary>
     private static string ProjectResultRows() =>
-        " | project key = iff(isempty(recommendationTypeId), 'Unknown', recommendationTypeId)," +
+        " | project key = recommendationTypeId," +
         " label," +
         " count_ = resourceCount," +
         " category," +
