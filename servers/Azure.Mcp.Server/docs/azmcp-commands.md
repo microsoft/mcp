@@ -4201,12 +4201,9 @@ azmcp redis list --subscription <subscription>
 #### Goals: GA API contract
 
 Goals use API version `2026-10-01` through `Azure.ResourceManager.ResilienceManagement`
-`1.0.0-alpha.20261012.1`, requiring `Azure.Core` `1.63.0` and
-`System.ClientModel` `1.16.0`. The API is GA, but this NuGet package is still an
-alpha. The public-feed check confirmed this exact package version is absent:
-**clean CI restore is blocked**. Local restore with the supplied package is not
-proof of public availability. No package binaries or local feed configuration are
-included in the repository.
+`1.0.0`, requiring `Azure.Core` `1.63.0` and `System.ClientModel` `1.16.0`.
+The released SDK is available from the repository's configured `azure-sdk-for-net`
+feed; no local package or additional feed is required.
 
 Assignment names must match `^[a-zA-Z0-9-]{3,24}$`: 3-24 ASCII letters, digits, or
 hyphens. The six mutation commands reject invalid names before calling Azure.

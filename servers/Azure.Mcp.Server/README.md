@@ -1344,9 +1344,9 @@ goal templates or flat HA/DR payloads. Commands are service-group-scoped and do
 not take a subscription option. Assignment names use 3-24 ASCII letters, digits,
 or hyphens. Assignment PATCH only replaces or clears SLI
 associations; it cannot change the zonal requirement. See the
-[Goals command reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md#goals-ga-api-contract) for payloads,
-completion semantics, failed live PATCH evidence, and the confirmed absence of
-SDK `1.0.0-alpha.20261012.1` from the public feed, which blocks clean CI.
+[Goals command reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md#goals-ga-api-contract)
+for payloads and completion semantics. The tools use the released
+`Azure.ResourceManager.ResilienceManagement` SDK `1.0.0`.
 
 * "List all resilience goal assignments in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
