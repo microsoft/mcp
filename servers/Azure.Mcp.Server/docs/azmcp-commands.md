@@ -2621,6 +2621,9 @@ azmcp cosmos database container item vector-search --subscription <subscription>
 azmcp optimization recommendation list [--subscription <subscription>] \
                                        [--top <top>] \
                                        [--tenant <tenant>]
+# Unattached-disk recommendations are not returned as individual rows. When any exist, the
+# response includes a single 'diskRecommendationSummary' object (message, unattachedDiskCount,
+# subscriptionIds, actionUrl) with a link to take action on them in Azure Advisor.
 
 # Get alternative compute resize/SKU options for a VM or VM scale set
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
