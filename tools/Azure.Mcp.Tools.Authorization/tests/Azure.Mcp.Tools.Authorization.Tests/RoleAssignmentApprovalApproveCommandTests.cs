@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -40,7 +39,6 @@ public class RoleAssignmentApprovalApproveCommandTests : SubscriptionCommandUnit
             Arg.Is(stage),
             Arg.Is(justification),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedStage);
 
@@ -69,7 +67,7 @@ public class RoleAssignmentApprovalApproveCommandTests : SubscriptionCommandUnit
         var stage = "stage1";
         var justification = "Approved for DRI response.";
 
-        Service.ApproveRoleAssignmentApprovalAsync(subscriptionId, scope, approval, stage, justification, null, null, TestContext.Current.CancellationToken)
+        Service.ApproveRoleAssignmentApprovalAsync(subscriptionId, scope, approval, stage, justification, null, TestContext.Current.CancellationToken)
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync(

@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -48,7 +47,6 @@ public class RoleAssignmentApprovalListCommandTests : SubscriptionCommandUnitTes
             Arg.Is(subscriptionId),
             Arg.Is(scope),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedApprovals);
 
@@ -70,7 +68,7 @@ public class RoleAssignmentApprovalListCommandTests : SubscriptionCommandUnitTes
     {
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}";
-        Service.ListPendingRoleAssignmentApprovalsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListPendingRoleAssignmentApprovalsAsync(subscriptionId, scope, null, TestContext.Current.CancellationToken)
             .Returns([]);
 
         var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);
@@ -86,7 +84,7 @@ public class RoleAssignmentApprovalListCommandTests : SubscriptionCommandUnitTes
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}";
 
-        Service.ListPendingRoleAssignmentApprovalsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
+        Service.ListPendingRoleAssignmentApprovalsAsync(subscriptionId, scope, null, TestContext.Current.CancellationToken)
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--subscription", subscriptionId, "--scope", scope);

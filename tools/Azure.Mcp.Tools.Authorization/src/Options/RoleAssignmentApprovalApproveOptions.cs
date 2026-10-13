@@ -25,7 +25,4 @@ public sealed class RoleAssignmentApprovalApproveOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

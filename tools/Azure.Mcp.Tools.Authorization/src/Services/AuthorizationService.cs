@@ -6,7 +6,6 @@ using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
@@ -96,7 +95,6 @@ public class AuthorizationService(IAzureService azureService)
         string subscription,
         string scope,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(scope), scope));
@@ -109,7 +107,6 @@ public class AuthorizationService(IAzureService azureService)
             HttpMethod.Get,
             requestUri,
             resolvedTenantId,
-            retryPolicy,
             cancellationToken: cancellationToken);
 
         var approvals = new List<RoleAssignmentApproval>();
@@ -135,7 +132,6 @@ public class AuthorizationService(IAzureService azureService)
         string stage,
         string justification,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -154,7 +150,6 @@ public class AuthorizationService(IAzureService azureService)
             HttpMethod.Patch,
             requestUri,
             resolvedTenantId,
-            retryPolicy,
             content,
             cancellationToken);
 
@@ -165,16 +160,10 @@ public class AuthorizationService(IAzureService azureService)
         HttpMethod method,
         Uri requestUri,
         string? tenantId,
-        RetryPolicyOptions? retryPolicy,
         HttpContent? content = null,
         CancellationToken cancellationToken = default)
     {
         using var httpClient = AzureService.GetClient();
-        if (retryPolicy?.NetworkTimeoutSeconds is { } networkTimeoutSeconds)
-        {
-            httpClient.Timeout = TimeSpan.FromSeconds(networkTimeoutSeconds);
-        }
-
         using var request = new HttpRequestMessage(method, requestUri)
         {
             Content = content

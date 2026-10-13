@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Authorization.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
@@ -32,14 +31,12 @@ public interface IAuthorizationService
     /// <param name="subscription">The subscription ID or name to use for authentication context.</param>
     /// <param name="scope">The scope where pending approvals should be queried.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation.</param>
     /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
     /// <returns>Pending role assignment approvals assigned to the current approver.</returns>
     Task<List<RoleAssignmentApproval>> ListPendingRoleAssignmentApprovalsAsync(
         string subscription,
         string scope,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -51,7 +48,6 @@ public interface IAuthorizationService
     /// <param name="stage">The approval stage name or full stage resource ID.</param>
     /// <param name="justification">The business justification for approval.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
-    /// <param name="retryPolicy">Optional retry policy for the operation.</param>
     /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
     /// <returns>The updated approval stage.</returns>
     Task<RoleAssignmentApprovalStage> ApproveRoleAssignmentApprovalAsync(
@@ -61,6 +57,5 @@ public interface IAuthorizationService
         string stage,
         string justification,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

@@ -46,7 +46,6 @@ public sealed class RoleAssignmentApprovalApproveCommand(
                 options.Stage!,
                 options.Justification!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
