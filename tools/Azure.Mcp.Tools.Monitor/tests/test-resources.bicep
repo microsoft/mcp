@@ -388,7 +388,7 @@ module healthModelsModule 'test-resources.healthmodels.module.bicep' = {
   }
 }
 
-// Traces (Azure Monitor Workspace + traceContainers/default)
+// Trace Store uses a separate preview-supported region; keep it independent of the logs/metrics location.
 module tracesModule 'test-resources.traces.module.bicep' = {
   name: 'traces-module'
   params: {

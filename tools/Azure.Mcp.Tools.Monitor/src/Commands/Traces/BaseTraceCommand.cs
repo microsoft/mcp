@@ -26,7 +26,7 @@ public abstract class BaseTraceCommand<
         HttpRequestException { StatusCode: HttpStatusCode.Forbidden } =>
             "Authorization failed on the trace account. The caller needs read access on the Azure Monitor Workspace.",
         HttpRequestException { StatusCode: HttpStatusCode.NotFound } =>
-            "Trace account or operation not found. Verify --account with 'monitor traces account list'.",
+            "Workspace or operation not found. Verify --resource-group and --workspace with 'monitor traces account list'.",
         HttpRequestException { StatusCode: HttpStatusCode.TooManyRequests } =>
             "Trace Store throttled the request. Narrow --start-time/--end-time, add filters, or lower --max-results.",
         // The service already explained what it disliked (usually a KQL syntax error); the base

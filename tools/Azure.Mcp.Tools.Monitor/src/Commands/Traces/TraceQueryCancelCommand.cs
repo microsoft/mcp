@@ -44,22 +44,13 @@ public sealed class TraceQueryCancelCommand(
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(options.Account))
-            {
-                throw new ArgumentException("--account is required.", nameof(options));
-            }
-
-            if (string.IsNullOrWhiteSpace(options.OperationId))
-            {
-                throw new ArgumentException("--operation-id is required.", nameof(options));
-            }
-
             var result = await tracesService.CancelQueryAsync(
                 options.Subscription!,
-                options.Account!,
-                options.OperationId!,
+                options.ResourceGroup,
+                options.Workspace,
+                options.OperationId,
                 options.Tenant,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new TraceQueryCancelCommandResult(result),

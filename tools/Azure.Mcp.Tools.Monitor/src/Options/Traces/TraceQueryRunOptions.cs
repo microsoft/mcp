@@ -62,8 +62,11 @@ public sealed class TraceQueryRunOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(Description = "Trace account name or full Azure Monitor Workspace resource id.")]
-    public string? Account { get; set; }
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = "The name of the Azure Monitor Workspace enabled for Trace Store.")]
+    public required string Workspace { get; set; }
 
     [Option(Description = "Provide EITHER --query (new query) OR --operation-id (resume). " + KqlQueryGuidance)]
     public string? Query { get; set; }
@@ -71,13 +74,13 @@ public sealed class TraceQueryRunOptions : ISubscriptionOption
     [Option(Description = "Operation id from a previous 'monitor traces query run' that returned status=Running. Resumes polling. Mutually exclusive with --query; supply exactly one.")]
     public string? OperationId { get; set; }
 
-    [Option(Description = "Query start time in UTC ISO 8601 (e.g. 2026-07-24T20:00:00Z). Defaults to 30 minutes before end-time.")]
+    [Option(Description = "Query start time in UTC ISO 8601 (e.g. 2026-07-24T20:00:00Z). Defaults to 30 minutes before end-time. Ignored when resuming an operation.")]
     public string? StartTime { get; set; }
 
-    [Option(Description = "Query end time in UTC ISO 8601. Defaults to the current UTC time.")]
+    [Option(Description = "Query end time in UTC ISO 8601. Defaults to the current UTC time. Ignored when resuming an operation.")]
     public string? EndTime { get; set; }
 
-    [Option(Description = "Maximum rows to return. Default 100. Hard cap 1000.")]
+    [Option(Description = "Submitted row limit for a new query, or first-page size when resuming an operation. Resuming sends pageSize only; it does not resubmit query options. Client default 100 and request cap 1000. Returns only the first results page.")]
     public int? MaxResults { get; set; }
 
     [Option(Description = "Include span-level detail in the response. Default true.")]

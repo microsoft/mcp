@@ -18,35 +18,44 @@ namespace Azure.Mcp.Tools.Monitor.Tests.Traces;
 public sealed class TraceQueryCancelCommandTests : SubscriptionCommandUnitTestsBase<TraceQueryCancelCommand, IMonitorTracesService>
 {
     private const string KnownSubscription = "knownSubscription";
-    private const string KnownAccount = "trace-account";
+    private const string KnownWorkspace = "trace-workspace";
+    private const string KnownResourceGroup = "trace-rg";
+    private const string Target = $"--subscription {KnownSubscription} --resource-group {KnownResourceGroup} --workspace {KnownWorkspace}";
     private const string KnownOperationId = "op-abcd";
 
     [Theory]
-    [InlineData($"--subscription {KnownSubscription} --account {KnownAccount} --operation-id {KnownOperationId}", true)]
-    [InlineData($"--subscription {KnownSubscription} --account {KnownAccount}", false)]
-    [InlineData($"--subscription {KnownSubscription} --operation-id {KnownOperationId}", false)]
-    [InlineData($"--account {KnownAccount} --operation-id {KnownOperationId}", false)]
+    [InlineData($"{Target} --operation-id {KnownOperationId}", true)]
+    [InlineData(Target, false)]
+    [InlineData($"--subscription {KnownSubscription} --resource-group {KnownResourceGroup} --operation-id {KnownOperationId}", false)]
+    [InlineData($"--subscription {KnownSubscription} --workspace {KnownWorkspace} --operation-id {KnownOperationId}", false)]
+    [InlineData($"--subscription {KnownSubscription} --resource-group {KnownResourceGroup} --workspace \" \" --operation-id {KnownOperationId}", false)]
+    [InlineData($"{Target} --operation-id \" \"", false)]
+    [InlineData($"--resource-group {KnownResourceGroup} --workspace {KnownWorkspace} --operation-id {KnownOperationId}", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            Service.CancelQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Service.CancelQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new TraceQueryCancelResult { OperationId = KnownOperationId, Status = "Cancelled" });
         }
 
         var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (!shouldSucceed)
+        {
+            Assert.Empty(Service.ReceivedCalls());
+        }
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsCancelledStatus()
     {
-        Service.CancelQueryAsync(Arg.Any<string>(), Arg.Any<string>(), KnownOperationId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        Service.CancelQueryAsync(Arg.Any<string>(), KnownResourceGroup, KnownWorkspace, KnownOperationId, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new TraceQueryCancelResult { OperationId = KnownOperationId, Status = "Cancelled" });
 
-        var response = await ExecuteCommandAsync($"--subscription {KnownSubscription} --account {KnownAccount} --operation-id {KnownOperationId}");
+        var response = await ExecuteCommandAsync($"{Target} --operation-id {KnownOperationId}");
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceQueryCancelCommandResult);
 
         Assert.Equal("Cancelled", result.Result.Status);
@@ -56,10 +65,10 @@ public sealed class TraceQueryCancelCommandTests : SubscriptionCommandUnitTestsB
     [Fact]
     public async Task ExecuteAsync_HandlesNotFound()
     {
-        Service.CancelQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        Service.CancelQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException($"Operation '{KnownOperationId}' not found or has expired."));
 
-        var response = await ExecuteCommandAsync($"--subscription {KnownSubscription} --account {KnownAccount} --operation-id {KnownOperationId}");
+        var response = await ExecuteCommandAsync($"{Target} --operation-id {KnownOperationId}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);

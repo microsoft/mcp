@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -29,12 +30,12 @@ public sealed class MonitorTracesService(
     internal const string TraceContainerApiVersion = "2024-10-03-preview";
     internal const string TraceContainerRelativePath = "traceContainers/default";
 
-    // 2025-05-03-preview is the first api-version that publishes properties.endpoints.query.
+    // These ARM versions target distinct resources: the workspace endpoint and its trace container.
     internal const string MonitorAccountResourceType = "Microsoft.Monitor/accounts";
-    internal const string MonitorAccountApiVersion = "2025-05-03-preview";
+    internal const string MonitorAccountApiVersion = "2025-10-03-preview";
 
-    // Kept per-cloud so no public-cloud hostname is baked into code running in a sovereign cloud.
     internal const string TraceDataPlaneScope = "https://data.monitor.azure.com/.default";
+    // EndpointValidator.AllowLists.cs has the shared monitor-traces suffix; keep both synchronized.
     internal const string TraceDataPlaneHostSuffix = ".data.monitor.azure.com";
     internal const string TraceDataPlaneApiVersion = "2026-01-10-preview";
 
@@ -55,29 +56,42 @@ public sealed class MonitorTracesService(
 
     private async Task<TraceSession> OpenSessionAsync(
         string subscription,
-        string account,
+        string resourceGroup,
+        string workspace,
         string? tenant,
         CancellationToken cancellationToken)
     {
+        // Reject unsupported clouds before ARM discovery or data-plane token acquisition.
+        string scope = AzureService.CloudConfiguration.CloudType switch
+        {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => TraceDataPlaneScope,
+            var cloud => throw new NotSupportedException(
+                $"Azure Monitor Trace Store has no published data-plane audience for {cloud}. "
+                + "The 'monitor traces' commands are Azure public cloud only."),
+        };
         var (amwResourceId, endpointBase) = await ResolveTraceEndpointAsync(
-            subscription, account, tenant, cancellationToken).ConfigureAwait(false);
-        var token = await GetDataPlaneTokenAsync(tenant, cancellationToken).ConfigureAwait(false);
+            subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
+        ValidateTraceEndpoint(AzureService, endpointBase);
+        TokenCredential credential = await GetCredential(tenant, cancellationToken).ConfigureAwait(false);
+        AccessToken token = await credential.GetTokenAsync(
+            new TokenRequestContext([scope]), cancellationToken).ConfigureAwait(false);
 
         var options = AddDefaultPolicies(new MonitorTracesClientOptions());
         // Per-attempt cap for a slow submit or poll.
         options.Retry.NetworkTimeout = MaxPollBudget;
         options.Transport = new HttpClientTransport(AzureService.GetClient());
 
-        return new TraceSession(amwResourceId, endpointBase, token, HttpPipelineBuilder.Build(options));
+        return new TraceSession(amwResourceId, endpointBase, token.Token, HttpPipelineBuilder.Build(options));
     }
 
-    private static async Task<Response> SendDataPlaneAsync(
+    private async Task<Response> SendDataPlaneAsync(
         TraceSession session,
         RequestMethod method,
         string url,
         RequestContent? content,
         CancellationToken cancellationToken)
     {
+        AzureService.ValidateAzureServiceEndpoint(endpoint: url, serviceType: "monitor-traces");
         using var request = session.Pipeline.CreateRequest();
         request.Method = method;
         request.Uri.Reset(new Uri(url));
@@ -139,15 +153,17 @@ public sealed class MonitorTracesService(
 
     public async Task<TraceFieldNames> ListFieldNamesAsync(
         string subscription,
-        string account,
+        string resourceGroup,
+        string workspace,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
-            (nameof(account), account));
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(workspace), workspace));
 
-        var session = await OpenSessionAsync(subscription, account, tenant, cancellationToken).ConfigureAwait(false);
+        var session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
         var url = $"{session.EndpointBase}/field-names?api-version={TraceDataPlaneApiVersion}";
 
         using var response = await SendDataPlaneAsync(session, RequestMethod.Get, url, null, cancellationToken).ConfigureAwait(false);
@@ -167,9 +183,9 @@ public sealed class MonitorTracesService(
 
     public async Task<TraceQueryResult> RunQueryAsync(
         string subscription,
-        string account,
-        string? query,
-        string? operationId,
+        string resourceGroup,
+        string workspace,
+        string query,
         DateTimeOffset startTime,
         DateTimeOffset endTime,
         int maxResults,
@@ -179,35 +195,55 @@ public sealed class MonitorTracesService(
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
-            (nameof(account), account));
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(workspace), workspace),
+            (nameof(query), query));
 
-        if (string.IsNullOrWhiteSpace(query) == string.IsNullOrWhiteSpace(operationId))
-        {
-            throw new ArgumentException($"Supply exactly one of {nameof(query)} or {nameof(operationId)}.", nameof(query));
-        }
+        var session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
 
-        var session = await OpenSessionAsync(subscription, account, tenant, cancellationToken).ConfigureAwait(false);
-
-        operationId ??= await SendSubmitAsync(
-            session, query!, startTime, endTime, maxResults, cancellationToken).ConfigureAwait(false);
+        string operationId = await SendSubmitAsync(
+            session, query, startTime, endTime, maxResults, cancellationToken).ConfigureAwait(false);
 
         return await PollUntilCompleteAsync(
             session, operationId, maxResults, includeSpans, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<TraceQueryResult> ResumeQueryAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string operationId,
+        int pageSize = 100,
+        bool includeSpans = true,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(workspace), workspace),
+            (nameof(operationId), operationId));
+
+        TraceSession session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
+        return await PollUntilCompleteAsync(
+            session, operationId, pageSize, includeSpans, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<TraceQueryCancelResult> CancelQueryAsync(
         string subscription,
-        string account,
+        string resourceGroup,
+        string workspace,
         string operationId,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
-            (nameof(account), account),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(workspace), workspace),
             (nameof(operationId), operationId));
 
-        var session = await OpenSessionAsync(subscription, account, tenant, cancellationToken).ConfigureAwait(false);
+        var session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
         var url = $"{session.EndpointBase}/operations/{Uri.EscapeDataString(operationId)}:cancel?api-version={TraceDataPlaneApiVersion}";
 
         using var response = await SendDataPlaneAsync(session, RequestMethod.Post, url, null, cancellationToken).ConfigureAwait(false);
@@ -226,17 +262,21 @@ public sealed class MonitorTracesService(
         var status = "unknown";
         try
         {
-            using var doc = JsonDocument.Parse(content);
-            if (doc.RootElement.ValueKind == JsonValueKind.Object &&
-                doc.RootElement.TryGetProperty("status", out var s) &&
-                s.ValueKind == JsonValueKind.String)
+            if (!string.IsNullOrWhiteSpace(content))
             {
-                status = s.GetString() ?? "unknown";
+                using JsonDocument doc = JsonDocument.Parse(content);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                    doc.RootElement.TryGetProperty("status", out var s) &&
+                    s.ValueKind == JsonValueKind.String)
+                {
+                    status = s.GetString() ?? "unknown";
+                }
             }
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            // Cancel doesn't guarantee a JSON body.
+            throw new HttpRequestException(
+                "Trace query cancel returned malformed JSON.", ex, System.Net.HttpStatusCode.BadGateway);
         }
 
         return new TraceQueryCancelResult { OperationId = operationId, Status = status };
@@ -244,11 +284,18 @@ public sealed class MonitorTracesService(
 
     private async Task<(string AmwResourceId, string EndpointBase)> ResolveTraceEndpointAsync(
         string subscription,
-        string account,
+        string resourceGroup,
+        string workspace,
         string? tenant,
         CancellationToken cancellationToken)
     {
-        var cacheKey = BuildEndpointCacheKey(subscription, account, tenant);
+        // This is a resource name, not an ARM ID or URL; separators must not add resource layers.
+        if (workspace.IndexOfAny(['/', '\\', '?', '#']) >= 0)
+        {
+            throw new ArgumentException("--workspace must be an Azure Monitor Workspace resource name.", nameof(workspace));
+        }
+
+        var cacheKey = BuildEndpointCacheKey(subscription, resourceGroup, workspace, tenant);
         var cached = await cacheService
             .GetAsync<CachedTraceEndpoint>(CacheGroup, cacheKey, EndpointCacheDuration, cancellationToken)
             .ConfigureAwait(false);
@@ -257,23 +304,21 @@ public sealed class MonitorTracesService(
             return (cached.AmwResourceId, cached.Endpoint);
         }
 
-        var amwResourceId = await ResolveAmwResourceIdAsync(subscription, account, tenant, cancellationToken).ConfigureAwait(false);
+        ResourceGroupResource resourceGroupResource = await AzureService.GetResourceGroupResource(
+            subscription, resourceGroup, tenant, cancellationToken).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
+        ResourceIdentifier workspaceId = new($"{resourceGroupResource.Id}/providers/{MonitorAccountResourceType}/{workspace}");
+        string amwResourceId = workspaceId.ToString();
         var armClient = await CreateArmClientWithApiVersionAsync(
             MonitorAccountResourceType, MonitorAccountApiVersion, tenant, cancellationToken).ConfigureAwait(false);
 
-        var amw = await GetGenericResourceAsync(armClient, new ResourceIdentifier(amwResourceId), cancellationToken).ConfigureAwait(false);
+        var amw = await GetGenericResourceAsync(armClient, workspaceId, cancellationToken).ConfigureAwait(false);
         var endpoint = ExtractQueryEndpoint(amw.Data.Properties)
             ?? throw new InvalidOperationException(
-                $"Trace account '{account}' does not publish a data-plane query endpoint. The Azure Monitor Workspace "
+                $"Azure Monitor Workspace '{workspace}' does not publish a data-plane query endpoint. The workspace "
                 + $"may need an endpoints refresh (GET + PUT at api-version {MonitorAccountApiVersion}).");
 
-        var expectedHostSuffix = GetTraceCloudSettings().HostSuffix;
-        if (!IsAcceptableTraceHost(endpoint, expectedHostSuffix))
-        {
-            throw new InvalidOperationException(
-                $"Trace account '{account}' returned query endpoint '{endpoint}', which is not an HTTPS "
-                + $"'*{expectedHostSuffix}' host — refusing to send a data-plane token to an unexpected host.");
-        }
+        ValidateTraceEndpoint(AzureService, endpoint);
 
         var endpointBase = endpoint.TrimEnd('/');
         await cacheService
@@ -287,126 +332,25 @@ public sealed class MonitorTracesService(
 
     // Every field that selects a workspace must be in the key; CacheKeyBuilder length-prefixes each
     // part so adjacent values can't run together into a collision.
-    internal static string BuildEndpointCacheKey(string subscription, string account, string? tenant)
-        => CacheKeyBuilder.Build(TraceEndpointCacheKey, subscription, account, tenant);
+    internal static string BuildEndpointCacheKey(string subscription, string resourceGroup, string workspace, string? tenant)
+        => CacheKeyBuilder.Build(TraceEndpointCacheKey, subscription, resourceGroup, workspace, tenant);
 
-    private async Task<string> ResolveAmwResourceIdAsync(
-        string subscription,
-        string account,
-        string? tenant,
-        CancellationToken cancellationToken)
+    /// <summary>Authorizes an ARM-advertised workspace base URL before acquiring a data-plane token.</summary>
+    /// <exception cref="System.Security.SecurityException">The configured-cloud endpoint policy rejects the URL.</exception>
+    /// <exception cref="InvalidOperationException">The URL is not a workspace base endpoint.</exception>
+    internal static void ValidateTraceEndpoint(IAzureService azureService, string endpoint)
     {
-        // An ARM id is validated for shape, then looked up through the SAME subscription-scoped ARG
-        // query, constrained to its own resource group. An id belonging to another subscription simply
-        // isn't found, so --account can't be used to reach past the resolved --subscription — and
-        // keeping the resource group means two workspaces sharing a name stay distinguishable.
-        var accountName = account;
-        string? accountResourceGroup = null;
-        if (account.StartsWith('/'))
+        azureService.ValidateAzureServiceEndpoint(endpoint: endpoint, serviceType: "monitor-traces");
+        // The shared policy permits the root domain; workspace URLs also need a resource host
+        // and no authority/path modifiers that would change the appended request routes.
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri)
+            || !uri.Host.EndsWith(TraceDataPlaneHostSuffix, StringComparison.OrdinalIgnoreCase)
+            || uri.UserInfo.Length != 0 || !uri.IsDefaultPort
+            || uri.Query.Length != 0 || uri.Fragment.Length != 0)
         {
-            if (!TryParseAmwArmId(account, out var parsed))
-            {
-                throw new ArgumentException(
-                    "--account must be an Azure Monitor Workspace name, or an ARM id of the form "
-                    + "'/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Monitor/accounts/{name}'.",
-                    nameof(account));
-            }
-
-            accountName = parsed.Name;
-            accountResourceGroup = parsed.ResourceGroupName;
+            throw new InvalidOperationException("Trace query endpoint must be a workspace base URL without user info, a custom port, query, or fragment.");
         }
-
-        var matches = await ExecuteResourceQueryAsync(
-            MonitorAccountResourceType,
-            accountResourceGroup,
-            subscription,
-            item => item.TryGetProperty("id", out var i) ? i.GetString() ?? string.Empty : string.Empty,
-            additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'",
-            tenant: tenant,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
-
-        var ids = matches.Results.Where(id => !string.IsNullOrEmpty(id)).ToList();
-        return SelectSingleAccountId(ids, accountName, subscription);
     }
-
-    // A bare name isn't unique across resource groups; returning the first match would silently
-    // query the wrong workspace.
-    internal static string SelectSingleAccountId(IReadOnlyList<string> ids, string accountName, string subscription)
-    {
-        if (ids.Count == 0)
-        {
-            throw new KeyNotFoundException($"No Azure Monitor Workspace named '{accountName}' in subscription '{subscription}'.");
-        }
-
-        if (ids.Count > 1)
-        {
-            throw new ArgumentException(
-                $"Subscription '{subscription}' has {ids.Count} Azure Monitor Workspaces named '{accountName}' "
-                + $"({string.Join(", ", ids)}). Pass the full resource id to --account to choose one.",
-                nameof(accountName));
-        }
-
-        return ids[0];
-    }
-
-    // Canonical Microsoft.Monitor/accounts ids only, so a caller can't smuggle an extra
-    // ?api-version= or a fake provider segment past the check.
-    internal static bool TryParseAmwArmId(string value, out ResourceIdentifier parsed)
-    {
-        parsed = null!;
-
-        if (value.Contains('?', StringComparison.Ordinal) || value.Contains('#', StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        if (!ResourceIdentifier.TryParse(value, out var id) || id is null)
-        {
-            return false;
-        }
-
-        // An AMW id has exactly one resource layer under a resource group.
-        if (id.Parent is null
-            || !id.Parent.ResourceType.ToString().Equals("Microsoft.Resources/resourceGroups", StringComparison.OrdinalIgnoreCase)
-            || !id.ResourceType.Namespace.Equals("Microsoft.Monitor", StringComparison.OrdinalIgnoreCase)
-            || !id.ResourceType.Type.Equals("accounts", StringComparison.OrdinalIgnoreCase)
-            || string.IsNullOrWhiteSpace(id.SubscriptionId)
-            || string.IsNullOrWhiteSpace(id.ResourceGroupName)
-            || string.IsNullOrWhiteSpace(id.Name))
-        {
-            return false;
-        }
-
-        parsed = id;
-        return true;
-    }
-
-    private async Task<string> GetDataPlaneTokenAsync(string? tenant, CancellationToken cancellationToken)
-    {
-        var credential = await GetCredential(tenant, cancellationToken).ConfigureAwait(false);
-        var token = await credential.GetTokenAsync(
-            new TokenRequestContext([GetTraceCloudSettings().Scope]),
-            cancellationToken).ConfigureAwait(false);
-        return token.Token;
-    }
-
-    // Only public cloud publishes these; failing loudly beats minting a public-cloud audience
-    // against a sovereign endpoint, which surfaces as an opaque 401.
-    private (string Scope, string HostSuffix) GetTraceCloudSettings() =>
-        AzureService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud =>
-                (TraceDataPlaneScope, TraceDataPlaneHostSuffix),
-            var cloud => throw new NotSupportedException(
-                $"Azure Monitor Trace Store has no published data-plane audience for {cloud}. "
-                + "The 'monitor traces' commands are Azure public cloud only."),
-        };
-
-    // A data-plane token is about to be sent to whatever host ARM named, so verify it first.
-    internal static bool IsAcceptableTraceHost(string endpoint, string expectedHostSuffix) =>
-        Uri.TryCreate(endpoint, UriKind.Absolute, out var uri)
-        && uri.Scheme == Uri.UriSchemeHttps
-        && uri.Host.EndsWith(expectedHostSuffix, StringComparison.OrdinalIgnoreCase);
 
     private async Task<TraceAccountInfo?> TryLoadContainerAsync(
         ArmClient armClient,
@@ -442,7 +386,7 @@ public sealed class MonitorTracesService(
         }
     }
 
-    private static async Task<string> SendSubmitAsync(
+    private async Task<string> SendSubmitAsync(
         TraceSession session,
         string query,
         DateTimeOffset startTime,

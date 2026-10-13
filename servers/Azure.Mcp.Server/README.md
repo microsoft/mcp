@@ -1243,10 +1243,11 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
 * "List the distributed trace accounts in my subscription"
-* "Show me the trace and span schema fields for trace account 'my-trace-account'"
-* "Query the last 30 minutes of distributed traces in 'my-trace-account' where duration exceeds 100ms"
-* "Cancel the running distributed trace query with operation id '<operation-id>'"
-* _Distributed trace commands require an Azure Monitor Workspace onboarded to Trace Store, which is in private preview._
+* "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
+* "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
+* "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
+
+_Distributed trace commands require an Azure Monitor Workspace onboarded to Trace Store, which is in private preview._
 
 ### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 

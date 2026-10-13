@@ -16,19 +16,19 @@ public interface IMonitorTracesService
 
     Task<TraceFieldNames> ListFieldNamesAsync(
         string subscription,
-        string account,
+        string resourceGroup,
+        string workspace,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Submits <paramref name="query"/>, or resumes polling an existing
-    /// <paramref name="operationId"/>. Exactly one of the two must be supplied.
+    /// Submits a new query and polls for its first results page.
     /// </summary>
     Task<TraceQueryResult> RunQueryAsync(
         string subscription,
-        string account,
-        string? query,
-        string? operationId,
+        string resourceGroup,
+        string workspace,
+        string query,
         DateTimeOffset startTime,
         DateTimeOffset endTime,
         int maxResults,
@@ -36,9 +36,23 @@ public interface IMonitorTracesService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Polls an existing operation without resubmitting its query or time range.
+    /// </summary>
+    Task<TraceQueryResult> ResumeQueryAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string operationId,
+        int pageSize = 100,
+        bool includeSpans = true,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
     Task<TraceQueryCancelResult> CancelQueryAsync(
         string subscription,
-        string account,
+        string resourceGroup,
+        string workspace,
         string operationId,
         string? tenant = null,
         CancellationToken cancellationToken = default);

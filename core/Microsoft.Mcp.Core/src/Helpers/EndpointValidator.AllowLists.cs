@@ -187,6 +187,14 @@ public sealed partial class EndpointValidator
             UsGov: [".metrics.monitor.azure.us"],
             Germany: [],
             UseLegacyCheck: false),
+        ["monitor-traces"] = new AllowedSuffixManager(
+            // MonitorTracesService.TraceDataPlaneHostSuffix requires a workspace subdomain.
+            // Keep that narrower check and this allow-list synchronized.
+            Public: [".data.monitor.azure.com"],
+            China: [],
+            UsGov: [],
+            Germany: [],
+            UseLegacyCheck: false),
         ["mysql"] = new AllowedSuffixManager(
             Public: [".mysql.database.azure.com"],
             China: [".mysql.database.chinacloudapi.cn"],

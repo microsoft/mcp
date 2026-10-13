@@ -30,6 +30,13 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
         }),
     ];
 
+    // Subscription display names are not covered by the default GUID sanitizers.
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
+        new(new BodyKeySanitizerBody("$..displayName")),
+    ];
+
     [Fact]
     public async Task Should_list_trace_accounts()
     {
@@ -61,7 +68,8 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "account", traceAccountName }
+                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", traceAccountName }
             });
 
         var fields = result.AssertProperty("fields");
@@ -87,7 +95,8 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "account", traceAccountName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", traceAccountName },
                 // Existence probe on a freshly deployed AMW with no ingested spans: expect
                 // Succeeded with an empty result set, not Running or failed. Trace Store rejects
                 // `take` ("'TakeOperator' is not supported in a query pipeline"), so bare `Traces`
@@ -99,6 +108,7 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
         var resultObj = result.AssertProperty("result");
         var status = resultObj.AssertProperty("status").GetString();
         Assert.Equal("Succeeded", status);
+        Assert.Empty(resultObj.AssertProperty("payload").AssertProperty("value").EnumerateArray());
     }
 
     [Fact]
@@ -115,12 +125,16 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "account", traceAccountName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", traceAccountName },
                 { "operation-id", "00000000-0000-0000-0000-000000000000" }
             },
             resultProcessor: envelope => envelope);
 
         Assert.Equal(404, response.AssertProperty("status").GetInt32());
-        Assert.Contains("not found", response.AssertProperty("message").GetString(), StringComparison.OrdinalIgnoreCase);
+        Assert.StartsWith(
+            "Operation '00000000-0000-0000-0000-000000000000' not found or has expired.",
+            response.AssertProperty("message").GetString(),
+            StringComparison.Ordinal);
     }
 }

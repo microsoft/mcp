@@ -3770,9 +3770,20 @@ azmcp monitor webtests get --subscription <subscription> \
 
 Account list returns `accounts` and `areResultsTruncated`. If the workspace discovery query is
 truncated, the trace-enabled accounts may be incomplete; narrow the scope with `--resource-group`.
+The field, query, and cancel commands require
+`--resource-group` and `--workspace` (the Azure Monitor Workspace resource name). Names are scoped
+to a resource group; these commands look up that workspace directly rather than searching the
+subscription or accepting a Log Analytics customer-ID GUID or full ARM resource ID.
+Like `monitor workspace list`, account listing uses an optional `--resource-group` filter.
+All commands use the shared `--subscription` ID/name resolver, including its default CLI-profile
+and environment fallback behavior.
 
 For query run, supply exactly one of `--query` (new query) or `--operation-id` (resume polling).
-Both modes require `--account`; the two options are mutually exclusive.
+Both modes require `--resource-group` and `--workspace`; the two options are mutually exclusive.
+Resuming ignores `--start-time` and `--end-time`: it polls the existing operation rather than
+submitting a new query. `--max-results` defaults to 100 and is clamped to 1–1000 by this client.
+For a new query it sets submit `options.maxResults` and poll `pageSize`; for a resumed query it
+sets only the current poll's `pageSize`, so repeat the value to request the same page size.
 
 ```bash
 # List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription
@@ -3783,13 +3794,15 @@ azmcp monitor traces account list --subscription <subscription> \
 # List the trace and span schema field names for a distributed-trace account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor traces field list --subscription <subscription> \
-                                --account <account-name-or-resource-id>
+                                --resource-group <resource-group> \
+                                --workspace <workspace>
 
 # Run a KQL query against a distributed-trace account; polls up to 180s then returns
 # `status: "Running"` with an operationId — pass `--operation-id <id>` to resume
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor traces query run --subscription <subscription> \
-                               --account <account-name-or-resource-id> \
+                               --resource-group <resource-group> \
+                               --workspace <workspace> \
                                [--query <kql-query>] \
                                [--operation-id <operation-id>] \
                                [--start-time <iso-8601>] \
@@ -3800,7 +3813,8 @@ azmcp monitor traces query run --subscription <subscription> \
 # Cancel an in-flight distributed-trace query operation
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor traces query cancel --subscription <subscription> \
-                                  --account <account-name-or-resource-id> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
                                   --operation-id <operation-id>
 
 ```

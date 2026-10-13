@@ -43,16 +43,12 @@ public sealed class TraceFieldListCommand(
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(options.Account))
-            {
-                throw new ArgumentException("--account is required.", nameof(options));
-            }
-
             var fields = await tracesService.ListFieldNamesAsync(
                 options.Subscription!,
-                options.Account!,
+                options.ResourceGroup,
+                options.Workspace,
                 options.Tenant,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new TraceFieldListCommandResult(fields),
@@ -60,8 +56,8 @@ public sealed class TraceFieldListCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error listing trace field names. Subscription: {Subscription}, Account: {Account}",
-                options.Subscription, options.Account);
+            logger.LogError(ex, "Error listing trace field names. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Workspace: {Workspace}",
+                options.Subscription, options.ResourceGroup, options.Workspace);
             HandleException(context, ex);
         }
 

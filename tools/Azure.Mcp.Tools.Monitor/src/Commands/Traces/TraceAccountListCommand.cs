@@ -21,8 +21,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
         account is an Azure Monitor Workspace with a Microsoft.Monitor/accounts/traceContainers
         sub-resource — i.e. one where Trace Store has been enabled. Returns each account's
         name, resource id, resource group, region, and trace-retention window. Use the
-        returned name (or resource id) as the input to `monitor traces query run` and
-        `monitor traces field list`.
+        returned name and resource group as --workspace and --resource-group for
+        `monitor traces query run` and `monitor traces field list`.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
@@ -48,7 +48,7 @@ public sealed class TraceAccountListCommand(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new TraceAccountListCommandResult(accounts.Results, accounts.AreResultsTruncated),

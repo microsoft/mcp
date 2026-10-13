@@ -18,24 +18,32 @@ namespace Azure.Mcp.Tools.Monitor.Tests.Traces;
 public sealed class TraceFieldListCommandTests : SubscriptionCommandUnitTestsBase<TraceFieldListCommand, IMonitorTracesService>
 {
     private const string KnownSubscription = "knownSubscription";
-    private const string KnownAccount = "trace-account";
+    private const string KnownWorkspace = "trace-workspace";
+    private const string KnownResourceGroup = "trace-rg";
+    private const string Target = $"--subscription {KnownSubscription} --resource-group {KnownResourceGroup} --workspace {KnownWorkspace}";
 
     [Theory]
-    [InlineData($"--subscription {KnownSubscription} --account {KnownAccount}", true)]
+    [InlineData(Target, true)]
     [InlineData($"--subscription {KnownSubscription}", false)]
-    [InlineData($"--account {KnownAccount}", false)]
+    [InlineData($"--subscription {KnownSubscription} --resource-group {KnownResourceGroup} --workspace \" \"", false)]
+    [InlineData($"--subscription {KnownSubscription} --workspace {KnownWorkspace}", false)]
+    [InlineData($"--resource-group {KnownResourceGroup} --workspace {KnownWorkspace}", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
-            Service.ListFieldNamesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Service.ListFieldNamesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new TraceFieldNames { TraceFields = [], SpanFields = [] });
         }
 
         var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (!shouldSucceed)
+        {
+            Assert.Empty(Service.ReceivedCalls());
+        }
     }
 
     [Fact]
@@ -46,24 +54,40 @@ public sealed class TraceFieldListCommandTests : SubscriptionCommandUnitTestsBas
             TraceFields = [new() { Name = "trace_id", DataType = "Utf8" }],
             SpanFields = [new() { Name = "span_id", DataType = "Utf8" }, new() { Name = "duration_nano", DataType = "Int64" }]
         };
-        Service.ListFieldNamesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        Service.ListFieldNamesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(fields);
 
-        var response = await ExecuteCommandAsync($"--subscription {KnownSubscription} --account {KnownAccount}");
+        var response = await ExecuteCommandAsync(Target);
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.TraceFieldListCommandResult);
 
         Assert.Single(result.Fields.TraceFields);
         Assert.Equal(2, result.Fields.SpanFields.Count);
         Assert.Equal("span_id", result.Fields.SpanFields[0].Name);
+        await Service.Received(1).ListFieldNamesAsync(
+            KnownSubscription, KnownResourceGroup, KnownWorkspace, Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UsesSharedDefaultSubscriptionResolution()
+    {
+        SubscriptionResolver.ResolveSubscription(null).Returns(KnownSubscription);
+        Service.ListFieldNamesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new TraceFieldNames { TraceFields = [], SpanFields = [] });
+
+        var response = await ExecuteCommandAsync($"--resource-group {KnownResourceGroup} --workspace {KnownWorkspace}");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListFieldNamesAsync(
+            KnownSubscription, KnownResourceGroup, KnownWorkspace, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        Service.ListFieldNamesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        Service.ListFieldNamesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("field-list failed"));
 
-        var response = await ExecuteCommandAsync($"--subscription {KnownSubscription} --account {KnownAccount}");
+        var response = await ExecuteCommandAsync(Target);
 
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("field-list failed", response.Message);

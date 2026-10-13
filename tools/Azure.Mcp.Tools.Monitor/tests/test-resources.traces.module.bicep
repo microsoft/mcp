@@ -5,14 +5,14 @@ targetScope = 'resourceGroup'
 @description('The base resource name.')
 param baseName string
 
-@description('The location for the Azure Monitor Workspace. Trace Store preview is region-limited, and the Azure SDK test subscription does not enable the eastus2euap canary, so newzealandnorth is the default.')
+@description('The location for the Azure Monitor Workspace. Trace Store preview supports a limited set of regions; this fixture defaults to newzealandnorth.')
 param location string = 'newzealandnorth'
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
 // Azure Monitor Workspace (Trace Store account)
-resource monitorWorkspace 'Microsoft.Monitor/accounts@2025-05-03-preview' = {
+resource monitorWorkspace 'Microsoft.Monitor/accounts@2025-10-03-preview' = {
   name: '${baseName}-traces'
   location: location
   properties: {

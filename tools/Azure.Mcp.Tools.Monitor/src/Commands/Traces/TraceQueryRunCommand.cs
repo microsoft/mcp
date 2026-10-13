@@ -48,6 +48,37 @@ public sealed class TraceQueryRunCommand(
     private const int MaxAllowedResults = 1000;
     private static readonly TimeSpan DefaultTimeRange = TimeSpan.FromMinutes(30);
 
+    public override void ValidateOptions(TraceQueryRunOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        bool hasQuery = !string.IsNullOrWhiteSpace(options.Query);
+        bool hasOperationId = !string.IsNullOrWhiteSpace(options.OperationId);
+        if (hasQuery == hasOperationId)
+        {
+            validationResult.AddError(
+                "Exactly one of --query (new query) or --operation-id (resume) is required.",
+                "Invalid trace query operation selection.");
+        }
+
+        if (hasQuery)
+        {
+            bool validStart = ValidateTimestamp(options.StartTime, "--start-time", validationResult);
+            bool validEnd = ValidateTimestamp(options.EndTime, "--end-time", validationResult);
+            if (validStart && validEnd)
+            {
+                DateTimeOffset endTime = ParseUtc(options.EndTime) ?? DateTimeOffset.UtcNow;
+                DateTimeOffset startTime = ParseUtc(options.StartTime) ?? endTime - DefaultTimeRange;
+                if (startTime >= endTime || endTime - startTime > TimeSpan.FromDays(1))
+                {
+                    validationResult.AddError(
+                        "The query time range must be positive and no longer than one day.",
+                        "Invalid trace query time range.");
+                }
+            }
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
         TraceQueryRunOptions options,
@@ -55,35 +86,23 @@ public sealed class TraceQueryRunCommand(
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(options.Account))
-            {
-                throw new ArgumentException("--account is required.", nameof(options));
-            }
-
-            var hasQuery = !string.IsNullOrWhiteSpace(options.Query);
-            var hasOperationId = !string.IsNullOrWhiteSpace(options.OperationId);
-            if (hasQuery == hasOperationId)
-            {
-                throw new ArgumentException(
-                    "Exactly one of --query (new query) or --operation-id (resume) is required.",
-                    nameof(options));
-            }
             var maxResults = Math.Clamp(options.MaxResults ?? DefaultMaxResults, 1, MaxAllowedResults);
             var includeSpans = options.IncludeSpans ?? true;
-            var endTime = ParseUtc(options.EndTime, "--end-time") ?? DateTimeOffset.UtcNow;
-            var startTime = ParseUtc(options.StartTime, "--start-time") ?? endTime - DefaultTimeRange;
-
-            var result = await tracesService.RunQueryAsync(
-                options.Subscription!,
-                options.Account!,
-                options.Query,
-                options.OperationId,
-                startTime,
-                endTime,
-                maxResults,
-                includeSpans,
-                options.Tenant,
-                cancellationToken).ConfigureAwait(false);
+            TraceQueryResult result;
+            if (!string.IsNullOrWhiteSpace(options.OperationId))
+            {
+                result = await tracesService.ResumeQueryAsync(
+                    options.Subscription!, options.ResourceGroup, options.Workspace, options.OperationId,
+                    maxResults, includeSpans, options.Tenant, cancellationToken);
+            }
+            else
+            {
+                DateTimeOffset endTime = ParseUtc(options.EndTime) ?? DateTimeOffset.UtcNow;
+                DateTimeOffset startTime = ParseUtc(options.StartTime) ?? endTime - DefaultTimeRange;
+                result = await tracesService.RunQueryAsync(
+                    options.Subscription!, options.ResourceGroup, options.Workspace, options.Query!,
+                    startTime, endTime, maxResults, includeSpans, options.Tenant, cancellationToken);
+            }
 
             context.Response.Results = ResponseResult.Create(
                 new TraceQueryRunCommandResult(result),
@@ -91,33 +110,37 @@ public sealed class TraceQueryRunCommand(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error running trace query. Subscription: {Subscription}, Account: {Account}",
-                options.Subscription, options.Account);
+            logger.LogError(ex, "Error running trace query. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, Workspace: {Workspace}",
+                options.Subscription, options.ResourceGroup, options.Workspace);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    private static DateTimeOffset? ParseUtc(string? value, string optionName)
+    private static bool ValidateTimestamp(string? value, string optionName, ValidationResult validationResult)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return null;
+            return true;
         }
 
-        // Bad input is the caller's mistake, not a server fault — Parse would throw FormatException
-        // and surface as a 500.
         if (!DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed))
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out _))
         {
-            throw new ArgumentException(
+            validationResult.AddError(
                 $"{optionName} must be a UTC ISO 8601 timestamp (for example 2026-07-24T20:00:00Z). Got '{value}'.",
-                optionName);
+                $"Invalid trace query {optionName}.");
+            return false;
         }
 
-        return parsed;
+        return true;
     }
+
+    private static DateTimeOffset? ParseUtc(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null :
+        DateTimeOffset.Parse(value, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
 
     public sealed record TraceQueryRunCommandResult(TraceQueryResult Result);
 }

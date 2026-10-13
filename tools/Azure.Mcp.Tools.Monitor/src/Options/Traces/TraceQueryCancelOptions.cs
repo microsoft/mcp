@@ -14,9 +14,12 @@ public sealed class TraceQueryCancelOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
-    [Option(Description = "Trace account name or full Azure Monitor Workspace resource id.")]
-    public string? Account { get; set; }
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public required string ResourceGroup { get; set; }
+
+    [Option(Description = "The name of the Azure Monitor Workspace enabled for Trace Store.")]
+    public required string Workspace { get; set; }
 
     [Option(Description = "Operation id returned by 'monitor traces query run'.")]
-    public string? OperationId { get; set; }
+    public required string OperationId { get; set; }
 }
