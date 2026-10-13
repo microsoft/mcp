@@ -1251,6 +1251,13 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### 💰 Azure Optimization
+
+* "Show me the top cost-saving recommendations for my subscription"
+* "Do I have any unattached disks I could delete to save costs?"
+* "Show me alternative resize options for my VM"
+* "Why is my VM recommended for resizing to a smaller SKU?"
+
 ### 📊 Azure Quota
 
 * "Check resource usage and quota for 'Microsoft.App/containerApps' in region 'eastus'"
@@ -1454,6 +1461,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 💰 **Azure Optimization** - Cost-saving recommendations, VM resize alternatives, and utilization-based recommendation explanations
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
