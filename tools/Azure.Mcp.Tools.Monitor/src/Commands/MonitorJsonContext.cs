@@ -65,6 +65,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(TraceAccountListCommand.TraceAccountListCommandResult))]
 [JsonSerializable(typeof(TraceFieldListCommand.TraceFieldListCommandResult))]
 [JsonSerializable(typeof(TraceQueryRunCommand.TraceQueryRunCommandResult))]
+[JsonSerializable(typeof(TraceQueryResumeCommand.TraceQueryResumeCommandResult))]
 [JsonSerializable(typeof(TraceQueryCancelCommand.TraceQueryCancelCommandResult))]
 [JsonSerializable(typeof(TraceAccountInfo))]
 [JsonSerializable(typeof(List<TraceAccountInfo>))]

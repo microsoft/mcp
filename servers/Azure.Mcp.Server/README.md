@@ -1245,6 +1245,7 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "List the distributed trace accounts in my subscription"
 * "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
+* "Resume polling trace query operation '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 
 _Distributed trace commands require an Azure Monitor Workspace onboarded to Trace Store, which is in private preview._

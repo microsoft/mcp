@@ -68,19 +68,16 @@ public sealed class TraceQueryRunOptions : ISubscriptionOption
     [Option(Description = "The name of the Azure Monitor Workspace enabled for Trace Store.")]
     public required string Workspace { get; set; }
 
-    [Option(Description = "Provide EITHER --query (new query) OR --operation-id (resume). " + KqlQueryGuidance)]
-    public string? Query { get; set; }
+    [Option(Description = KqlQueryGuidance)]
+    public required string Query { get; set; }
 
-    [Option(Description = "Operation id from a previous 'monitor traces query run' that returned status=Running. Resumes polling. Mutually exclusive with --query; supply exactly one.")]
-    public string? OperationId { get; set; }
-
-    [Option(Description = "Query start time in UTC ISO 8601 (e.g. 2026-07-24T20:00:00Z). Defaults to 30 minutes before end-time. Ignored when resuming an operation.")]
+    [Option(Description = "Query start time in UTC ISO 8601 (e.g. 2026-07-24T20:00:00Z). Defaults to 30 minutes before end-time.")]
     public string? StartTime { get; set; }
 
-    [Option(Description = "Query end time in UTC ISO 8601. Defaults to the current UTC time. Ignored when resuming an operation.")]
+    [Option(Description = "Query end time in UTC ISO 8601. Defaults to the current UTC time.")]
     public string? EndTime { get; set; }
 
-    [Option(Description = "Submitted row limit for a new query, or first-page size when resuming an operation. Resuming sends pageSize only; it does not resubmit query options. Client default 100 and request cap 1000. Returns only the first results page.")]
+    [Option(Description = "Maximum rows requested for the new query and its first results page. Client default 100 and request cap 1000.")]
     public int? MaxResults { get; set; }
 
     [Option(Description = "Include span-level detail in the response. Default true.")]

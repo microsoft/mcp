@@ -104,6 +104,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<TraceAccountListCommand>();
         services.AddSingleton<TraceFieldListCommand>();
         services.AddSingleton<TraceQueryRunCommand>();
+        services.AddSingleton<TraceQueryResumeCommand>();
         services.AddSingleton<TraceQueryCancelCommand>();
     }
 
@@ -199,9 +200,10 @@ public class MonitorSetup : IAreaSetup
         traces.AddSubGroup(traceFields);
         traceFields.AddCommand<TraceFieldListCommand>(serviceProvider);
 
-        var traceQuery = new CommandGroup("query", "Distributed-trace query operations - Commands for running KQL queries against Trace Store.");
+        var traceQuery = new CommandGroup("query", "Distributed-trace query operations - Commands for running, resuming, and cancelling queries against Trace Store.");
         traces.AddSubGroup(traceQuery);
         traceQuery.AddCommand<TraceQueryRunCommand>(serviceProvider);
+        traceQuery.AddCommand<TraceQueryResumeCommand>(serviceProvider);
         traceQuery.AddCommand<TraceQueryCancelCommand>(serviceProvider);
 
         return monitor;

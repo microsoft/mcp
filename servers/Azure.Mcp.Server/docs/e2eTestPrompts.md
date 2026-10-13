@@ -1019,10 +1019,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_traces_field_list | Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_field_list | What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>? | none |
 | monitor_traces_query_cancel | Cancel the running distributed trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query | none |
+| monitor_traces_query_resume | Fetch the results of the running distributed trace query operation <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_run | Get the top slowest distributed traces for <service_name> in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_run | Query the last <time_period> of distributed traces in workspace <workspace_name> in resource group <resource_group> where duration exceeds <duration> | none |
-| monitor_traces_query_run | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_run | Show me traces from service <service_name> over the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |

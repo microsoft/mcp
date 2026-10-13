@@ -3778,12 +3778,10 @@ Like `monitor workspace list`, account listing uses an optional `--resource-grou
 All commands use the shared `--subscription` ID/name resolver, including its default CLI-profile
 and environment fallback behavior.
 
-For query run, supply exactly one of `--query` (new query) or `--operation-id` (resume polling).
-Both modes require `--resource-group` and `--workspace`; the two options are mutually exclusive.
-Resuming ignores `--start-time` and `--end-time`: it polls the existing operation rather than
-submitting a new query. `--max-results` defaults to 100 and is clamped to 1–1000 by this client.
-For a new query it sets submit `options.maxResults` and poll `pageSize`; for a resumed query it
-sets only the current poll's `pageSize`, so repeat the value to request the same page size.
+`query run` requires `--query` and submits a new query. `query resume` requires `--operation-id`
+and only polls the existing operation. Both require `--resource-group` and `--workspace`.
+Run's `--max-results` and resume's `--page-size` default to 100 and are clamped to 1–1000.
+Resuming does not change the query or its submitted time range and row limit.
 
 ```bash
 # List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription
@@ -3797,14 +3795,22 @@ azmcp monitor traces field list --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --workspace <workspace>
 
-# Run a KQL query against a distributed-trace account; polls up to 180s then returns
-# `status: "Running"` with an operationId — pass `--operation-id <id>` to resume
+# Resume polling an existing query without submitting a new one
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query resume --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
+                                  --operation-id <operation-id> \
+                                  [--page-size <n>] \
+                                  [--include-spans <true|false>]
+
+# Run a KQL query; polls up to 180s, then returns `status: "Running"` and an operationId
+# Use `monitor traces query resume` with that operationId to continue polling
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor traces query run --subscription <subscription> \
                                --resource-group <resource-group> \
                                --workspace <workspace> \
-                               [--query <kql-query>] \
-                               [--operation-id <operation-id>] \
+                               --query <kql-query> \
                                [--start-time <iso-8601>] \
                                [--end-time <iso-8601>] \
                                [--max-results <n>] \

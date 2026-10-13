@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
         Cancel (abort, stop, terminate) an in-flight distributed-trace query operation on a
         Trace Store account. Only use this when the user explicitly asks to cancel, stop,
         abort, or terminate a query — do NOT use this to check status or to resume polling
-        a still-running query (for that, call `monitor traces query run` again with
+        a still-running query (for that, call `monitor traces query resume` with
         `--operation-id <id>`). Requires the operationId returned by
         `monitor traces query run` when it exited with status=Running.
         """,

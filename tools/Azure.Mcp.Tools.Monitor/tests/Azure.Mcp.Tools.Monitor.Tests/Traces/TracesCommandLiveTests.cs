@@ -112,6 +112,40 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
     }
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
+    public async Task Should_resume_trace_query_without_resubmitting()
+    {
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("traceAccountName", $"{Settings.ResourceBaseName}-traces");
+        var started = await CallToolAsync(
+            "monitor_traces_query_run",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", workspace },
+                { "query", "Traces" },
+                { "max-results", "1" }
+            });
+        var operationId = started.AssertProperty("result").AssertProperty("operationId").GetString();
+
+        var resumed = await CallToolAsync(
+            "monitor_traces_query_resume",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", workspace },
+                { "operation-id", operationId! },
+                { "page-size", "1" }
+            });
+
+        var result = resumed.AssertProperty("result");
+        Assert.Equal(operationId, result.AssertProperty("operationId").GetString());
+        Assert.Equal("Succeeded", result.AssertProperty("status").GetString());
+        Assert.Empty(result.AssertProperty("payload").AssertProperty("value").EnumerateArray());
+    }
+
+    [Fact]
     public async Task Should_report_not_found_when_cancelling_an_unknown_operation()
     {
         var traceAccountName = Settings.DeploymentOutputs.GetValueOrDefault("traceAccountName", $"{Settings.ResourceBaseName}-traces");

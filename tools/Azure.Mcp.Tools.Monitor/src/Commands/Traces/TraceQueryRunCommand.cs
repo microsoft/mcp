@@ -27,8 +27,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
         span-id". The command submits the
         query, polls until it completes (~180s budget), and returns the first page of rows.
         If the poll budget is exhausted it returns `status: "Running"` with an operationId
-        — pass `--operation-id <id>` to this same command to resume polling and fetch the
-        results. Queries run with the caller's Azure identity — the caller must have read
+        — use `monitor traces query resume --operation-id <id>` to continue polling.
+        Queries run with the caller's Azure identity — the caller must have read
         access on the Azure Monitor Workspace.
         """,
     OperationPlane = ToolOperationPlane.Data,
@@ -52,29 +52,17 @@ public sealed class TraceQueryRunCommand(
     {
         base.ValidateOptions(options, validationResult);
 
-        bool hasQuery = !string.IsNullOrWhiteSpace(options.Query);
-        bool hasOperationId = !string.IsNullOrWhiteSpace(options.OperationId);
-        if (hasQuery == hasOperationId)
+        bool validStart = ValidateTimestamp(options.StartTime, "--start-time", validationResult);
+        bool validEnd = ValidateTimestamp(options.EndTime, "--end-time", validationResult);
+        if (validStart && validEnd)
         {
-            validationResult.AddError(
-                "Exactly one of --query (new query) or --operation-id (resume) is required.",
-                "Invalid trace query operation selection.");
-        }
-
-        if (hasQuery)
-        {
-            bool validStart = ValidateTimestamp(options.StartTime, "--start-time", validationResult);
-            bool validEnd = ValidateTimestamp(options.EndTime, "--end-time", validationResult);
-            if (validStart && validEnd)
+            DateTimeOffset endTime = ParseUtc(options.EndTime) ?? DateTimeOffset.UtcNow;
+            DateTimeOffset startTime = ParseUtc(options.StartTime) ?? endTime - DefaultTimeRange;
+            if (startTime >= endTime || endTime - startTime > TimeSpan.FromDays(1))
             {
-                DateTimeOffset endTime = ParseUtc(options.EndTime) ?? DateTimeOffset.UtcNow;
-                DateTimeOffset startTime = ParseUtc(options.StartTime) ?? endTime - DefaultTimeRange;
-                if (startTime >= endTime || endTime - startTime > TimeSpan.FromDays(1))
-                {
-                    validationResult.AddError(
-                        "The query time range must be positive and no longer than one day.",
-                        "Invalid trace query time range.");
-                }
+                validationResult.AddError(
+                    "The query time range must be positive and no longer than one day.",
+                    "Invalid trace query time range.");
             }
         }
     }
@@ -88,21 +76,11 @@ public sealed class TraceQueryRunCommand(
         {
             var maxResults = Math.Clamp(options.MaxResults ?? DefaultMaxResults, 1, MaxAllowedResults);
             var includeSpans = options.IncludeSpans ?? true;
-            TraceQueryResult result;
-            if (!string.IsNullOrWhiteSpace(options.OperationId))
-            {
-                result = await tracesService.ResumeQueryAsync(
-                    options.Subscription!, options.ResourceGroup, options.Workspace, options.OperationId,
-                    maxResults, includeSpans, options.Tenant, cancellationToken);
-            }
-            else
-            {
-                DateTimeOffset endTime = ParseUtc(options.EndTime) ?? DateTimeOffset.UtcNow;
-                DateTimeOffset startTime = ParseUtc(options.StartTime) ?? endTime - DefaultTimeRange;
-                result = await tracesService.RunQueryAsync(
-                    options.Subscription!, options.ResourceGroup, options.Workspace, options.Query!,
-                    startTime, endTime, maxResults, includeSpans, options.Tenant, cancellationToken);
-            }
+            DateTimeOffset endTime = ParseUtc(options.EndTime) ?? DateTimeOffset.UtcNow;
+            DateTimeOffset startTime = ParseUtc(options.StartTime) ?? endTime - DefaultTimeRange;
+            var result = await tracesService.RunQueryAsync(
+                options.Subscription!, options.ResourceGroup, options.Workspace, options.Query,
+                startTime, endTime, maxResults, includeSpans, options.Tenant, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new TraceQueryRunCommandResult(result),
