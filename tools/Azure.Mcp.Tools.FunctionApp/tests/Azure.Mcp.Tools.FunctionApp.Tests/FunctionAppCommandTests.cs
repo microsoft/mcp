@@ -111,9 +111,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyF
     [LiveTestOnly]
     public async Task Should_validate_required_resource_group_parameter()
     {
-        // Live test so Live runs always execute something (see Should_handle_empty_subscription_gracefully).
-        // When function-app is provided without a resource group, the service requires
-        // resource-group alongside function-app, so this should fail validation.
+        // These live tests are intentional: without them, no tests run in Live mode and the runner exits 
+        // with code 8 (a failure). We don't want to treat 8 as success, since that could hide a real bug
+        // where tests were never added.
         var result = await CallToolAsync(
             "functionapp_get",
             new()
