@@ -12,9 +12,9 @@ jobs:
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   pool:
-    name: $(WINDOWSPOOL)
-    image: $(WINDOWSVMIMAGE)
-    os: windows
+    name: $(LINUXPOOL)
+    image: $(LINUXVMIMAGE)
+    os: linux
   steps:
   - checkout: self
 
@@ -23,8 +23,8 @@ jobs:
     artifact: build_info
 
   - download: current
-    displayName: Download binaries_windows_x64
-    artifact: binaries_windows_x64
+    displayName: "Download binaries_linux_x64"
+    artifact: binaries_linux_x64
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
@@ -41,10 +41,10 @@ jobs:
       scriptPath: $(Build.SourcesDirectory)/eng/scripts/Invoke-ReleaseToolMetadataExport.ps1
       arguments: >
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
-        -BinariesDirectory '$(Pipeline.Workspace)/binaries_windows_x64'
+        -BinariesDirectory '$(Pipeline.Workspace)/binaries_linux_x64'
         -ServerName '${{ parameters.ServerName }}'
         -ArtifactDirectory '$(Build.ArtifactStagingDirectory)/tool-metadata-changes'
-        -RuntimeIdentifier 'windows-x64'
+        -RuntimeIdentifier 'linux-x64'
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
