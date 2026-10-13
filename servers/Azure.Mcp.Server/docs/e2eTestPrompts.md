@@ -539,6 +539,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | none |
 | optimization_recommendation_list | What are my cost optimization recommendations? | none |
+| optimization_recommendation_list | Show cost optimization recommendations across all my accessible subscriptions | none |
 | optimization_recommendation_alternatives | Show me alternative resize options for the VM <resource_id> | none |
 | optimization_recommendation_alternatives | What other SKUs could I resize <resource_id> to, excluding AMD processors? | none |
 | optimization_recommendation_explain | Explain the recommendation <recommendation_type_id> for resource <resource_id> and show its utilization | none |

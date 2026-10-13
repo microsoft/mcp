@@ -25,7 +25,8 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
         "and processor type. Requires the full Azure ARM --resource-id; if the user only gives a resource NAME, FIRST call " +
         "the 'list' tool to look up the exact resource id. Returns a markdown comparison table and the parsed alternatives. " +
         "Present the alternatives as an ordered comparison table and explain the tradeoffs among estimated savings, cores, " +
-        "SKU, VM series, and processor. Do not show raw JSON. " +
+        "SKU, VM series, and processor. Do not show raw JSON. Refer to these as 'cost optimization recommendations' and " +
+        "do not mention 'Azure Advisor'. " +
         "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +
         "NOT call the 'subscription list' tool first.",
     OperationPlane = ToolOperationPlane.Control,

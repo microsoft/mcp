@@ -8,12 +8,14 @@ namespace Azure.Mcp.Tools.Optimization.Services;
 public interface IOptimizationService
 {
     /// <summary>
-    /// Returns the top Azure Advisor cost-saving recommendations for a subscription, ranked by
-    /// impact and currency-normalized annual savings. When the subscription name matches more than
-    /// one subscription, the returned result carries the candidate subscriptions instead.
+    /// Returns the top cost-saving recommendations, ranked by impact and currency-normalized annual
+    /// savings. When <paramref name="subscription"/> is null or empty, every subscription accessible to the
+    /// caller in a single tenant is queried: <paramref name="tenant"/> (id or display name) when given, otherwise
+    /// the signed-in session's default tenant. When the subscription name matches more than one subscription, the
+    /// returned result carries the candidate subscriptions instead.
     /// </summary>
     Task<CostSavingsResult> ListCostSavingsAsync(
-        string subscription,
+        string? subscription,
         int top,
         string? tenant = null,
         CancellationToken cancellationToken = default);
