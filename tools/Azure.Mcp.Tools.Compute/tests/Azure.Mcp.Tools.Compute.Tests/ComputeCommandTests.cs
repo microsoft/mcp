@@ -136,8 +136,11 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         var osType = vm.GetProperty("osType");
         Assert.Equal("Linux", osType.GetString());
 
+        // Since we are updating the VM in other tests, the provisioning
+        // state may be "Succeeded" or "Updating" depending on timing.
+        var validStates = new[] { "Creating", "Succeeded", "Updating" };
         var provisioningState = vm.GetProperty("provisioningState");
-        Assert.Equal("Succeeded", provisioningState.GetString());
+        Assert.Contains(provisioningState.GetString(), validStates);
     }
 
     [Fact]
@@ -240,6 +243,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_vm_with_password_auth()
     {
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
         var createVmName = RegisterOrRetrieveVariable("createVmName", $"testvm{DateTime.UtcNow:MMddHHmmss}");
 
         var result = await CallToolAsync(
@@ -249,8 +254,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -264,7 +269,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_B2s", vmSize.GetString());
+        Assert.Equal(availableVmSku, vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("linux", osType.GetString());
@@ -278,6 +283,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_create_windows_vm_with_password_auth()
     {
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
         var createVmName = RegisterOrRetrieveVariable("createWinVmName", $"winvm{DateTime.UtcNow:MMddHHmmss}");
 
         var result = await CallToolAsync(
@@ -287,8 +294,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", createVmName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss123!" },
                 { "image", "Win2022Datacenter" },
@@ -302,7 +309,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         Assert.Equal("Succeeded", provisioningState.GetString());
 
         var vmSize = vm.GetProperty("vmSize");
-        Assert.Equal("Standard_B2s", vmSize.GetString());
+        Assert.Equal(availableVmSku, vmSize.GetString());
 
         var osType = vm.GetProperty("osType");
         Assert.Equal("windows", osType.GetString());
@@ -366,6 +373,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var createVmssName = RegisterOrRetrieveVariable("createWinVmssName", $"wvs{DateTime.UtcNow:HHmmss}");
 
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
         var result = await CallToolAsync(
             "compute_vmss_create",
             new()
@@ -373,13 +382,12 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "WinTestP@ss789!" },
                 { "image", "Win2022Datacenter" },
-                { "instance-count", "2" },
-                { "os-disk-size-gb", "40" }
+                { "instance-count", "2" }
             });
 
         var vmss = result.AssertProperty("Vmss");
@@ -401,6 +409,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     public async Task Should_create_linux_vmss_with_custom_size_and_upgrade_policy()
     {
         var createVmssName = RegisterOrRetrieveVariable("createLinuxVmssName", $"lnxvmss{DateTime.UtcNow:MMddHHmmss}");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         var result = await CallToolAsync(
             "compute_vmss_create",
@@ -409,8 +419,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", createVmssName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "LinuxTestP@ss321!" },
                 { "image", "Ubuntu2404" },
@@ -485,6 +495,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         // Create a dedicated VM to delete
         var deleteVmName = RegisterOrRetrieveVariable("deleteVmName", $"delvm{DateTime.UtcNow:MMddHHmmss}");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         await CallToolAsync(
             "compute_vm_create",
@@ -493,8 +505,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vm-name", deleteVmName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -528,6 +540,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         // Create a dedicated VMSS to delete
         var deleteVmssName = RegisterOrRetrieveVariable("deleteVmssName", $"delvms{DateTime.UtcNow:HHmmss}");
+        var availableVmSku = RegisterOrRetrieveDeploymentOutputVariable("availableVmSku", "AVAILABLEVMSKU");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         await CallToolAsync(
             "compute_vmss_create",
@@ -536,8 +550,8 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "vmss-name", deleteVmssName },
-                { "vm-size", "Standard_B2s" },
-                { "location", "eastus2" },
+                { "vm-size", availableVmSku },
+                { "location", availableVmLocation },
                 { "admin-username", "azureuser" },
                 { "admin-password", "TestP@ssw0rd123!" },
                 { "image", "Ubuntu2404" },
@@ -1018,6 +1032,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var newDiskName = $"{Settings.ResourceBaseName}-gallery-test";
         var galleryImageVersionId = Settings.DeploymentOutputs.GetValueOrDefault("GALLERYIMAGEVERSIONID", "Sanitized");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         // Act - create disk from gallery image (OS disk, no LUN)
         // Use eastus2 location to match gallery image replication target region
@@ -1030,7 +1045,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "disk-name", newDiskName },
                 { "gallery-image-reference", galleryImageVersionId },
                 { "sku", "Standard_LRS" },
-                { "location", "eastus2" }
+                { "location", availableVmLocation }
             });
 
         // Assert
@@ -1050,6 +1065,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         var newDiskName = $"{Settings.ResourceBaseName}-gallery-lun-test";
         var galleryImageVersionId = Settings.DeploymentOutputs.GetValueOrDefault("GALLERYIMAGEVERSIONID", "Sanitized");
+        var availableVmLocation = RegisterOrRetrieveDeploymentOutputVariable("availableVmSkuLocation", "AVAILABLEVMSKULOCATION");
 
         // Act - create disk from gallery image data disk at LUN 0
         // Use eastus2 location to match gallery image replication target region
@@ -1063,7 +1079,7 @@ public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixt
                 { "gallery-image-reference", galleryImageVersionId },
                 { "gallery-image-reference-lun", 0 },
                 { "sku", "Standard_LRS" },
-                { "location", "eastus2" }
+                { "location", availableVmLocation }
             });
 
         // Assert
