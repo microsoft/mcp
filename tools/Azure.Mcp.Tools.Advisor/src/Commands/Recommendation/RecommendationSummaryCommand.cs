@@ -17,8 +17,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Name = "summary",
     Title = "Summarize Advisor Recommendations",
     Description = "Summarize the key themes from Azure Advisor recommendation instances in a subscription or Azure service group using server-side counts, totals, rankings, and distributions. " +
-        "This is the aggregate-only tool for questions such as how many, count, breakdown, distribution, top, most common, which has the most, or how many overdue service-retirement Advisor recommendations are still active. " +
-        "Use it for an executive summary or main themes, counts by category or business impact, top recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
+        "This is the aggregate-only tool for questions such as how many, count, breakdown, distribution, most common, which has the most, or how many overdue service-retirement Advisor recommendations are still active. " +
+        "Use it for an executive summary or main themes, counts by category or business impact, the most common recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
+        "Set --prioritized true for top, most critical, most important, highest-priority, or what-should-I-fix-first requests; it ranks active recommendation types by priority and returns each type's distinct affected-resource count with a prioritizationSignals object that explains why the type is ranked there. " +
+        "Explain a ranking in plain business language from prioritizationSignals, without exposing field names, raw values, or scores. " +
+        "After a prioritized summary, list the records or affected resources of a selected type with recommendation list --recommendation-type-id set to its key and --prioritized true, adding --category Cost for a Cost type. " +
         "Count active service-retirement Advisor recommendations with retirement dates on, before, or after a specified date, including overdue recommendations that are still active, or group them by retirement date. " +
         "Use this tool to answer how many overdue service-retirement Advisor recommendations are still active. " +
         "Retirement filters are one-sided: le:<end-date> includes every active recommendation retiring on or before the end date, including overdue retirements, and is not a bounded next-N window. " +
@@ -47,6 +50,9 @@ public sealed class RecommendationSummaryCommand(
     private const int MinTop = 1;
     private const int MaxTop = 100;
 
+    // Prioritized summaries show a short ranked list unless the caller asks for a different number.
+    private const int DefaultPrioritizedTop = 10;
+
     private readonly IRecommendationSummaryService _recommendationSummaryService = recommendationSummaryService;
     private readonly ILogger<RecommendationSummaryCommand> _logger = logger;
 
@@ -71,6 +77,16 @@ public sealed class RecommendationSummaryCommand(
                 $"Invalid --group-by value '{options.GroupBy}'. Allowed values: {string.Join(", ", RecommendationSummaryService.AllowedGroupBy)}.");
         }
 
+        if (options.Prioritized == true &&
+            !string.IsNullOrEmpty(normalizedGroupBy) &&
+            !normalizedGroupBy.Equals(
+                RecommendationSummaryService.GroupByRecommendationType,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add(
+                $"--prioritized true always groups by '{RecommendationSummaryService.GroupByRecommendationType}'. Omit --group-by or set it to '{RecommendationSummaryService.GroupByRecommendationType}'.");
+        }
+
         if (options.Top is < MinTop or > MaxTop)
         {
             validationResult.Errors.Add($"--top must be between {MinTop} and {MaxTop}.");
@@ -93,9 +109,13 @@ public sealed class RecommendationSummaryCommand(
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationSummaryOptions options, CancellationToken cancellationToken)
     {
-        var groupBy = string.IsNullOrWhiteSpace(options.GroupBy)
-            ? RecommendationSummaryService.GroupByCategory
-            : options.GroupBy.Trim().ToLowerInvariant();
+        var prioritized = options.Prioritized == true;
+        var groupBy = prioritized
+            ? RecommendationSummaryService.GroupByRecommendationType
+            : string.IsNullOrWhiteSpace(options.GroupBy)
+                ? RecommendationSummaryService.GroupByCategory
+                : options.GroupBy.Trim().ToLowerInvariant();
+        var top = options.Top ?? (prioritized ? DefaultPrioritizedTop : null);
 
         try
         {
@@ -119,7 +139,8 @@ public sealed class RecommendationSummaryCommand(
                 Search: NormalizeOptionalFilter(options.Search),
                 SubCategory: NormalizeOptionalFilter(options.SubCategory),
                 RetirementDateOperator: retirementDateOperator,
-                RetirementDate: retirementDate);
+                RetirementDate: retirementDate,
+                Prioritized: prioritized ? true : null);
 
             var summary = !string.IsNullOrEmpty(options.ServiceGroup)
                 ? await _recommendationSummaryService.SummarizeServiceGroupRecommendationsAsync(
@@ -136,16 +157,9 @@ public sealed class RecommendationSummaryCommand(
                     options.Tenant,
                     cancellationToken);
 
-            if (options.Top is int top && summary.Groups.Count > top)
+            if (top is int limit && summary.Groups.Count > limit)
             {
-                var unknown = summary.Groups.FirstOrDefault(g => string.Equals(g.Key, "Unknown", StringComparison.OrdinalIgnoreCase));
-                var nonUnknown = summary.Groups.Where(g => !string.Equals(g.Key, "Unknown", StringComparison.OrdinalIgnoreCase));
-                var sliced = nonUnknown.Take(top).ToList();
-                if (unknown is not null)
-                {
-                    sliced.Add(unknown);
-                }
-                summary = summary with { Groups = sliced };
+                summary = summary with { Groups = SliceGroups(summary.Groups, limit, prioritized) };
             }
 
             context.Response.Results = ResponseResult.Create(
@@ -156,14 +170,15 @@ public sealed class RecommendationSummaryCommand(
         {
             _logger.LogError(ex,
                 "Error summarizing Advisor recommendations. Subscription: {Subscription}, ServiceGroup: {ServiceGroup}, ResourceGroup: {ResourceGroup}, " +
-                "GroupBy: {GroupBy}, Top: {Top}, Category: {Category}, Impact: {Impact}, " +
+                "GroupBy: {GroupBy}, Prioritized: {Prioritized}, Top: {Top}, Category: {Category}, Impact: {Impact}, " +
                 "RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
                 "SubCategory: {SubCategory}, RetirementDate: {RetirementDate}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ServiceGroup,
                 options.ResourceGroup,
                 groupBy,
-                options.Top,
+                prioritized,
+                top,
                 options.Category,
                 options.Impact,
                 options.RecommendationTypeId,
@@ -191,6 +206,33 @@ public sealed class RecommendationSummaryCommand(
 
     private static string? NormalizeOptionalFilter(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>
+    /// Applies --top. Prioritized groups keep their ranked order and are cut at the limit. In other groupings an
+    /// Unknown bucket is not ranked, so it is preserved after the selected buckets.
+    /// </summary>
+    private static List<Models.RecommendationGroup> SliceGroups(
+        List<Models.RecommendationGroup> groups,
+        int top,
+        bool prioritized)
+    {
+        if (prioritized)
+        {
+            return [.. groups.Take(top)];
+        }
+
+        var unknown = groups.FirstOrDefault(g => string.Equals(g.Key, "Unknown", StringComparison.OrdinalIgnoreCase));
+        var sliced = groups
+            .Where(g => !string.Equals(g.Key, "Unknown", StringComparison.OrdinalIgnoreCase))
+            .Take(top)
+            .ToList();
+        if (unknown is not null)
+        {
+            sliced.Add(unknown);
+        }
+
+        return sliced;
+    }
 
     public sealed record RecommendationSummaryResult(Models.RecommendationSummary Summary);
 }

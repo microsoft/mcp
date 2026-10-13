@@ -66,7 +66,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List individual active Azure Advisor recommendation records in resource group \<resource-group> in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me low-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List completed Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List Azure Advisor recommendations with postponed status in subscription \<subscription> | none |
@@ -76,7 +75,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription \<subscription> | none |
-| advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription \<subscription> | none |
 | advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription \<subscription> | none |
@@ -102,9 +100,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | Show the top 5 Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | Show the prioritized Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | List prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | List prioritized Advisor recommendations in subscription \<subscription> ranked by metadata priority score, then contextual criticality score | none |
 | advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
@@ -126,6 +121,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
 | advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show the top 5 Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Which Advisor recommendations should I fix first in subscription \<subscription>? | none |
+| advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
+| advisor_recommendation_summary | Which service-retirement Advisor recommendations should I prioritize in service group \<service-group>? | none |
 | advisor_recommendation_summary | Summarize the key themes from Advisor recommendations in service group \<service-group> | none |
 | advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
 | advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |

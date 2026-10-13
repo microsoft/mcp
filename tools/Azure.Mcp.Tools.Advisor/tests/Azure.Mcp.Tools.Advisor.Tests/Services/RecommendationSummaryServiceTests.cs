@@ -32,7 +32,7 @@ public class RecommendationSummaryServiceTests
     }
 
     [Fact]
-    public void BuildSummaryQuery_Category_UsesMetadataWithInstanceFallback()
+    public void BuildSummaryQuery_Category_UsesMetadataOnly()
     {
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
@@ -44,13 +44,15 @@ public class RecommendationSummaryServiceTests
         Assert.Contains("resourceGroup =~ 'rg-name'", query);
         Assert.Contains("join kind=leftouter", query);
         Assert.Contains("properties.language) =~ 'en'", query);
-        Assert.Contains(
-            "category = iff(isnotempty(metadataCategory), metadataCategory, instanceCategory)",
-            query);
+        Assert.Contains("category = metadataCategory", query);
+        Assert.DoesNotContain("instanceCategory", query);
+        Assert.DoesNotContain("instanceImpact", query);
+        Assert.DoesNotContain("instanceSubCategory", query);
+        Assert.DoesNotContain("instanceRetirementDate", query);
         Assert.Contains(RecommendationQueryBuilder.CurrentRecommendationNameClause, query);
         Assert.Contains(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
         Assert.Contains(RecommendationQueryBuilder.ActiveRecommendationClause, query);
-        Assert.EndsWith("summarize count() by key, label", query);
+        Assert.EndsWith("summarize count_ = count(), label = min(label) by key", query);
     }
 
     [Fact]
@@ -138,6 +140,7 @@ public class RecommendationSummaryServiceTests
         Assert.Contains("tolower(tostring(properties.recommendationTypeId))", query);
         Assert.Contains("metadataDisplayName", query);
         Assert.Contains("metadataLabel", query);
+        Assert.Contains("iff(isnotempty(metadataLabel), metadataLabel, problem)", query);
         Assert.Contains("recommendationTypeId", query);
         Assert.DoesNotContain("key = tostring(properties.shortDescription.problem)", query);
     }
@@ -200,7 +203,7 @@ public class RecommendationSummaryServiceTests
 
         Assert.Contains("subCategory =~ 'ServiceUpgradeAndRetirement'", query);
         Assert.Contains(
-            "format_datetime(startofday(todatetime(retirementDateRaw)), 'yyyy-MM-dd')",
+            "format_datetime(startofday(todatetime(metadataRetirementDate)), 'yyyy-MM-dd')",
             query);
         Assert.Contains("iff(isempty(retirementDate), 'Unknown', retirementDate)", query);
     }

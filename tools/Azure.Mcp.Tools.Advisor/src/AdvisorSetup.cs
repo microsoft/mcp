@@ -39,13 +39,15 @@ public class AdvisorSetup : IAreaSetup
             "(ARM, Terraform). Use when you need visibility into Advisor recommendations, want to manage their " +
             "customer-provided state, or want to apply Advisor recommendations to your IaaC files. Requires Azure " +
             "subscription context for querying recommendations and subscription-scoped updates; service-group updates " +
-            "use service-group context.",
+            "use service-group context. For top, most critical, most important, prioritized, or what-should-I-fix-first " +
+            "requests, start with advisor_recommendation_summary with --prioritized true, then use " +
+            "advisor_recommendation_list for the records of a selected recommendation type.",
             Title);
 
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; update subscription- or service-group-scoped customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
+            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates, or rank recommendation types by priority; update subscription- or service-group-scoped customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(

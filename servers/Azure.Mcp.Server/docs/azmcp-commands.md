@@ -503,7 +503,8 @@ azmcp advisor recommendation update [--subscription <subscription>] \
                                     [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>] \
                                     [--tenant <tenant>]
 
-# Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group.
+# Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group,
+# or rank recommendation types by priority with --prioritized true.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
 # or omit both to use the configured default subscription. Do not specify both.
 # --resource-group can only be used with subscription scope.
@@ -511,13 +512,25 @@ azmcp advisor recommendation update [--subscription <subscription>] \
 # --group-by defaults to category. All groupings except status include only active New recommendations.
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
 # properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
-# retirement data prefer metadata values with recommendation-instance fallback.
+# retirement date come from recommendation-type metadata only.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
+# --prioritized true (for top, most critical, most important, or what-should-I-fix-first requests) groups by
+# recommendation type, includes only active New recommendations, and defaults --top to 10. Types are ordered by
+# metadata priority score, then annual savings (daily potential savings x 12 x 30.4, else the legacy annual
+# savings amount), summed contextual criticality score, earliest service-retirement date, and affected-resource
+# count (fewest first for Cost, most first otherwise), then label. Missing scores, savings, and dates sort last
+# and are never treated as zero. Each group's count is its number of distinct affected resources, and each group
+# carries a prioritizationSignals object (category, impact, subCategory, retirementDate, retirementWindow,
+# annualSavings with annualSavingsCurrency, and published signals such as resourceTypeCriticality, criticalService,
+# effort, actionability, and costImplication); absent fields are omitted. Reserved-instance recommendations keep
+# only the three-year term with a seven-day lookback. Drill into a prioritized type with
+# advisor recommendation list --recommendation-type-id <group-key> --prioritized true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation summary [--subscription <subscription>] \
                                      [--service-group <service-group>] \
                                      [--group-by <group-by>] \
+                                     [--prioritized <true|false>] \
                                      [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
                                      [--impact <High|Medium|Low>] \
                                      [--recommendation-type-id <recommendation-type-id>] \

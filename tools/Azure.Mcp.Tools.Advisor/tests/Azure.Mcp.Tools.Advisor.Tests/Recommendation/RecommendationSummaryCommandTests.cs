@@ -43,6 +43,14 @@ public class RecommendationSummaryCommandTests
     [InlineData("--subscription sub1 --retirement-date le:2026-12-31", true)]
     [InlineData("--service-group sg1", true)]
     [InlineData("--service-group sg1 --tenant tenant1 --group-by status", true)]
+    [InlineData("--subscription sub1 --prioritized true", true)]
+    [InlineData("--subscription sub1 --prioritized true --group-by recommendation-type --top 5", true)]
+    [InlineData("--subscription sub1 --prioritized true --category Cost", true)]
+    [InlineData("--service-group sg1 --prioritized true", true)]
+    [InlineData("--subscription sub1 --prioritized false --group-by impact", true)]
+    [InlineData("--subscription sub1 --prioritized true --group-by category", false)]
+    [InlineData("--subscription sub1 --prioritized true --group-by status", false)]
+    [InlineData("--subscription sub1 --prioritized true --top 101", false)]
     [InlineData("--subscription sub1 --group-by nonsense", false)]
     [InlineData("--subscription sub1 --category nonsense", false)]
     [InlineData("--subscription sub1 --category \" \"", false)]
@@ -329,5 +337,161 @@ public class RecommendationSummaryCommandTests
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("boom", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Prioritized_ImpliesRecommendationTypeAndDefaultTopTen()
+    {
+        string? capturedGroupBy = null;
+        RecommendationFilters? capturedFilters = null;
+        var groups = Enumerable.Range(1, 12)
+            .Select(index => new RecommendationGroup($"type-{index:D2}", $"Type {index}", 1))
+            .ToList();
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<string>(value => capturedGroupBy = value),
+            Arg.Do<RecommendationFilters?>(value => capturedFilters = value),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new RecommendationSummary("recommendation-type", 12, groups));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--prioritized", "true");
+        var result = ValidateAndDeserializeResponse(
+            response,
+            AdvisorJsonContext.Default.RecommendationSummaryResult);
+
+        Assert.Equal("recommendation-type", capturedGroupBy);
+        Assert.True(capturedFilters?.Prioritized);
+        Assert.Equal(10, result.Summary.Groups.Count);
+        Assert.Equal(12, result.Summary.TotalRecommendations);
+        Assert.Equal("type-01", result.Summary.Groups[0].Key);
+        Assert.Equal("type-10", result.Summary.Groups[^1].Key);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PrioritizedFalse_KeepsExistingDefaults()
+    {
+        string? capturedGroupBy = null;
+        RecommendationFilters? capturedFilters = null;
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<string>(value => capturedGroupBy = value),
+            Arg.Do<RecommendationFilters?>(value => capturedFilters = value),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(EmptySummary());
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--prioritized", "false");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("category", capturedGroupBy);
+        Assert.Null(capturedFilters?.Prioritized);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PrioritizedTop_KeepsRankedOrderWithoutMovingUnknown()
+    {
+        Service.SummarizeServiceGroupRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new RecommendationSummary(
+                "recommendation-type",
+                9,
+                [
+                    new("type-a", "A", 4),
+                    new("Unknown", "Unknown", 3),
+                    new("type-b", "B", 2),
+                ]));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--prioritized", "true",
+            "--top", "2");
+        var result = ValidateAndDeserializeResponse(
+            response,
+            AdvisorJsonContext.Default.RecommendationSummaryResult);
+
+        Assert.Equal(["type-a", "Unknown"], result.Summary.Groups.Select(group => group.Key));
+        Assert.Equal(9, result.Summary.TotalRecommendations);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Prioritized_SerializesSignalsAndOmitsAbsentFields()
+    {
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new RecommendationSummary(
+                "recommendation-type",
+                5,
+                [
+                    new(
+                        "type-a",
+                        "Retiring feature",
+                        3,
+                        new RecommendationPrioritizationSignals
+                        {
+                            Category = "HighAvailability",
+                            Impact = "High",
+                            SubCategory = "ServiceUpgradeAndRetirement",
+                            RetirementDate = "2025-02-28",
+                            RetirementWindow = "retirementPastDue",
+                            CriticalService = "qcs",
+                        }),
+                    new(
+                        "type-b",
+                        "Idle plan",
+                        2,
+                        new RecommendationPrioritizationSignals
+                        {
+                            Category = "Cost",
+                            Impact = "Medium",
+                            AnnualSavings = 1200.5,
+                            AnnualSavingsCurrency = "USD",
+                        }),
+                ]));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--prioritized", "true");
+        var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
+        var result = ValidateAndDeserializeResponse(
+            response,
+            AdvisorJsonContext.Default.RecommendationSummaryResult);
+
+        Assert.Contains("\"prioritizationSignals\"", json);
+        Assert.Contains("\"retirementWindow\":\"retirementPastDue\"", json);
+        Assert.DoesNotContain("\"effort\"", json);
+        Assert.DoesNotContain("priorityScore", json, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("qcs", result.Summary.Groups[0].PrioritizationSignals?.CriticalService);
+        Assert.Null(result.Summary.Groups[0].PrioritizationSignals?.AnnualSavings);
+        Assert.Equal(1200.5, result.Summary.Groups[1].PrioritizationSignals?.AnnualSavings);
+        Assert.Equal("USD", result.Summary.Groups[1].PrioritizationSignals?.AnnualSavingsCurrency);
+        Assert.Null(result.Summary.Groups[1].PrioritizationSignals?.SubCategory);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NotPrioritized_OmitsPrioritizationSignals()
+    {
+        Service.SummarizeRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<RecommendationFilters?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new RecommendationSummary("category", 2, [new("Cost", "Cost", 2)]));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1");
+        var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
+
+        Assert.DoesNotContain("prioritizationSignals", json);
     }
 }
