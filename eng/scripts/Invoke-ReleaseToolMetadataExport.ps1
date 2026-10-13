@@ -102,6 +102,10 @@ if ($LASTEXITCODE -ne 0) {
 $env:AppConfig__WorkDirectory = [System.IO.Path]::GetFullPath($ArtifactDirectory)
 Write-Host "Exporter output directory: '$env:AppConfig__WorkDirectory'."
 
+if (!(Test-Path $ArtifactDirectory)) {
+    New-Item -ItemType Directory -Path $ArtifactDirectory | Out-Null
+}
+
 $exporterArguments = @('--AzmcpExe', $executablePath)
 if ($ServerName -eq 'Template.Mcp.Server') {
     Write-Host "Template server release: running exporter in dry-run mode."
