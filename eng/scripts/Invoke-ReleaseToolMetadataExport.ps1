@@ -2,18 +2,18 @@
 
 <#
 .SYNOPSIS
-Builds ToolMetadataExporter and runs it against an executable from a signed NuGet package.
+Builds ToolMetadataExporter and runs it against a server executable from the build output.
 
 .DESCRIPTION
-Resolves a server from build_info.json, extracts its platform NuGet package, locates the packaged
-executable through DotnetToolSettings.xml, and runs ToolMetadataExporter against it. The server must
+Resolves a server and platform from build_info.json, locates the server executable under the
+platform's artifact path in the binaries directory, and runs ToolMetadataExporter against it. The server must
 implement `server info` and `tools list`. Template.Mcp.Server releases run in dry-run mode (no Kusto ingestion).
 
 .PARAMETER BuildInfoPath
 Path to the pipeline build_info.json artifact.
 
 .PARAMETER BinariesDirectory
-Root directory of the downloaded binaries_signed artifact.
+Root directory of the downloaded binaries artifact (for example, binaries_windows_x64).
 
 .PARAMETER ServerName
 Server name in build_info.json.
@@ -22,7 +22,7 @@ Server name in build_info.json.
 Directory where generated tool-change files are staged for pipeline artifact publishing.
 
 .PARAMETER RuntimeIdentifier
-Runtime-specific package and tools directory to use.
+Platform name in build_info.json (for example, windows-x64).
 #>
 param(
     [Parameter(Mandatory)]
@@ -64,14 +64,14 @@ if (-not $platformInformation) {
 }
 
 $packageDirectory = Join-Path $BinariesDirectory $platformInformation.artifactPath
-Write-Host "Locating the signed binary '$($server.cliName)' in '$packageDirectory'."
+Write-Host "Locating the binary '$($server.cliName)' in '$packageDirectory'."
 $matching = Get-ChildItem -LiteralPath $packageDirectory -Filter "$($server.cliName)$($platformInformation.extension)" -File
 
 if ($matching.Count -eq 0) {
-    throw "No signed binary '$($server.cliName)' was found in '$packageDirectory'."
+    throw "No binary '$($server.cliName)' was found in '$packageDirectory'."
 }
 if ($matching.Count -gt 1) {
-    throw "Expected one $RuntimeIdentifier signed binary '$($server.cliName)' in '$packageDirectory', but found $($matching.Count)."
+    throw "Expected one $RuntimeIdentifier binary '$($server.cliName)' in '$packageDirectory', but found $($matching.Count)."
 }
 
 $executablePath = $matching[0].FullName
