@@ -101,42 +101,16 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
                 $"No accessible tenant found for tenant ID '{tenantId}'.");
     }
 
-    internal static ResourceQueryContent CreateQueryContent(
-        RecommendationQueryScope scope,
-        string query,
-        bool useSubscriptionRequestScope)
-    {
-        ArgumentNullException.ThrowIfNull(scope);
-        ArgumentException.ThrowIfNullOrWhiteSpace(query);
-
-        var queryContent = new ResourceQueryContent(query);
-        if (useSubscriptionRequestScope)
-        {
-            if (scope.SubscriptionId is null)
-            {
-                throw new ArgumentException(
-                    "Subscription request scope cannot be used for a service-group query.",
-                    nameof(useSubscriptionRequestScope));
-            }
-
-            queryContent.Subscriptions.Add(scope.SubscriptionId);
-        }
-
-        return queryContent;
-    }
-
+    /// <summary>Runs <paramref name="query"/> at tenant scope; the query's own predicates select the subscription or service group.</summary>
     internal static async Task<ResourceQueryResult> ExecuteAsync(
         TenantResource tenantResource,
-        RecommendationQueryScope scope,
         string query,
-        bool useSubscriptionRequestScope,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(tenantResource);
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
-        var response = await tenantResource.GetResourcesAsync(
-            CreateQueryContent(scope, query, useSubscriptionRequestScope),
-            cancellationToken);
+        var response = await tenantResource.GetResourcesAsync(new ResourceQueryContent(query), cancellationToken);
         return response.Value;
     }
 }

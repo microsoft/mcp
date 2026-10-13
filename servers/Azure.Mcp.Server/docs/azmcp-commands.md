@@ -512,7 +512,8 @@ azmcp advisor recommendation update [--subscription <subscription>] \
 # --group-by defaults to category. All groupings except status include only active New recommendations.
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
 # properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
-# retirement date come from recommendation-type metadata only.
+# retirement date come from recommendation-type metadata only; recommendations whose type has no English metadata are
+# excluded from every summary.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
 # --prioritized true (for top recommendations, top actions to take, most critical, most important, or
