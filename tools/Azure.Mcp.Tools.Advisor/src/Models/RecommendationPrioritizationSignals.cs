@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Advisor.Models;
@@ -78,12 +77,4 @@ public sealed record RecommendationPrioritizationSignals
     /// <summary>Published cost implication, such as noCostImpact, lowCost, or otherCost (medium or high).</summary>
     [JsonPropertyName("costImplication")]
     public string? CostImplication { get; init; }
-
-    /// <summary>
-    /// Signals published after this tool was written, passed through unchanged so that a new signal reaches the caller
-    /// without a code change.
-    /// </summary>
-    /// <remarks>Settable rather than init-only because JSON extension data cannot bind to an init-only property.</remarks>
-    [JsonExtensionData]
-    public Dictionary<string, JsonElement>? AdditionalSignals { get; set; }
 }

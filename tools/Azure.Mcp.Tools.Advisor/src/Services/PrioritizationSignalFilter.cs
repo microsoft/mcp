@@ -34,8 +34,8 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 /// <item><term>effort</term><description>Any remaining value (Low, Medium, or High today).</description></item>
 /// <item><term>actionability</term><description>Only OneClickOrFullyExecutable; Guidance is not surfaced.</description></item>
 /// <item><term>costImplication</term><description>Any remaining value (noCostImpact, lowCost, or otherCost today).</description></item>
-/// <item><term>unlisted key</term><description>Passed through unchanged so new signals reach the caller without a code
-/// change, unless the key collides with a field the response already defines.</description></item>
+/// <item><term>unlisted key</term><description>Ignored. Exposing a newly published signal is a deliberate change: add a
+/// property to RecommendationPrioritizationSignals and a case here.</description></item>
 /// </list>
 /// </remarks>
 internal static class PrioritizationSignalFilter
@@ -64,25 +64,6 @@ internal static class PrioritizationSignalFilter
         "none",
     };
 
-    // Response field names an unlisted signal must not overwrite.
-    private static readonly HashSet<string> s_reservedNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "category",
-        "impact",
-        "subCategory",
-        "retirementDate",
-        "retirementWindow",
-        "annualSavings",
-        "annualSavingsCurrency",
-        RecommendationImpactKey,
-        RecommendationSubcategoryKey,
-        ResourceTypeCriticalityKey,
-        CriticalServiceKey,
-        EffortKey,
-        ActionabilityKey,
-        CostImplicationKey,
-    };
-
     /// <summary>Returns the emitted signals; every property is unset when <paramref name="signalValues"/> is not an object.</summary>
     internal static RecommendationPrioritizationSignals Filter(JsonElement signalValues)
     {
@@ -97,9 +78,9 @@ internal static class PrioritizationSignalFilter
         string? effort = null;
         string? actionability = null;
         string? costImplication = null;
-        Dictionary<string, JsonElement>? additionalSignals = null;
 
         // When a key is published more than once with different casing, the first meaningful value is kept.
+        // Keys not handled below are ignored on purpose; see the remarks on this class.
         foreach (var signal in signalValues.EnumerateObject())
         {
             if (IsAbsent(signal.Value))
@@ -146,14 +127,6 @@ internal static class PrioritizationSignalFilter
                 case var key when Is(key, CostImplicationKey):
                     costImplication ??= text;
                     break;
-                default:
-                    if (!s_reservedNames.Contains(signal.Name))
-                    {
-                        additionalSignals ??= new(StringComparer.OrdinalIgnoreCase);
-                        additionalSignals.TryAdd(signal.Name, signal.Value.Clone());
-                    }
-
-                    break;
             }
         }
 
@@ -165,7 +138,6 @@ internal static class PrioritizationSignalFilter
             Effort = effort,
             Actionability = actionability,
             CostImplication = costImplication,
-            AdditionalSignals = additionalSignals,
         };
     }
 

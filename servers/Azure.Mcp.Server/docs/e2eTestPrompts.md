@@ -130,6 +130,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
 | advisor_recommendation_summary | Which service-retirement Advisor recommendations should I prioritize in service group \<service-group>? | none |
+| advisor_recommendation_summary | Show me the top actions I can take for my Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | What are the top Advisor actions I can take for service group \<service-group>? | none |
 | advisor_recommendation_summary | Summarize the key themes from Advisor recommendations in service group \<service-group> | none |
 | advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
 | advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
@@ -39,7 +39,7 @@ public class AdvisorSetup : IAreaSetup
             "(ARM, Terraform). Use when you need visibility into Advisor recommendations, want to manage their " +
             "customer-provided state, or want to apply Advisor recommendations to your IaaC files. Requires Azure " +
             "subscription context for querying recommendations and subscription-scoped updates; service-group updates " +
-            "use service-group context. For top, most critical, most important, prioritized, or what-should-I-fix-first " +
+            "use service-group context. For top recommendations, top actions to take, most critical, most important, prioritized, or what-should-I-fix-first " +
             "requests, start with advisor_recommendation_summary with --prioritized true, then use " +
             "advisor_recommendation_list for the records of a selected recommendation type.",
             Title);
