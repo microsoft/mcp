@@ -8,6 +8,7 @@ param(
     [string] $ArtifactPrefix,
     [string] $OutputPath,
     [switch] $PrepareForVsix,
+    [switch] $ChangedServersOnly,
     [switch] $CI
 )
 
@@ -66,8 +67,19 @@ if($isPipelineRun) {
 }
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+$servers = @($buildInfo.servers)
+if ($ChangedServersOnly) {
+    if ($buildInfo.Keys -notcontains 'serversToBuild') {
+        LogError "Build info does not contain the required 'serversToBuild' property."
+        exit 1
+    }
 
-foreach ($server in $buildInfo.servers) {
+    $serversToBuild = @($buildInfo.serversToBuild)
+    $servers = @($servers | Where-Object { $serversToBuild -contains $_.name })
+    Write-Host "Processing changed servers only: $($servers.name -join ', ')"
+}
+
+foreach ($server in $servers) {
     Write-Host "Processing $($server.name)" -ForegroundColor Yellow
     foreach($platform in $server.platforms) {
         $artifactPath = $platform.artifactPath
@@ -127,12 +139,12 @@ foreach ($server in $buildInfo.servers) {
 }
 
 if($isPipelineRun -and !$PrepareForVsix) {
-    if ($buildInfo.servers.Count -ne 1) {
+    if ($servers.Count -ne 1) {
         LogError "Compress-ForSigning.ps1 only supports single-server builds in a pipeline context."
         exit 1
     }
 
-    $cliName = $buildInfo.servers[0].cliName
+    $cliName = $servers[0].cliName
 
     Write-Host "Setting CliName variable to:`n$cliName"
     Write-Host "##vso[task.setvariable variable=CliName]$CliName"
