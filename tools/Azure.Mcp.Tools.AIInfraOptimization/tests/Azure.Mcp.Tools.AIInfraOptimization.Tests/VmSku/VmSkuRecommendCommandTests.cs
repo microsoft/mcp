@@ -134,7 +134,7 @@ public class VmSkuRecommendCommandTests : SubscriptionCommandUnitTestsBase<VmSku
         Assert.Equal("vmsku", vmSku.Name);
         var recommend = Assert.Single(vmSku.Commands);
         Assert.Equal("recommend", recommend.Key);
-        Assert.IsType<VmSkuRecommendCommand>(recommend.Value);
+        Assert.IsType<VmSkuRecommendCommand>(recommend.Value.Command);
     }
 
     [Fact]

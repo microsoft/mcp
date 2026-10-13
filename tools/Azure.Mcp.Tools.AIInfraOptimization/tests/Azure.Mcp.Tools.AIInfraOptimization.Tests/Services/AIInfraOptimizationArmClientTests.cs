@@ -497,7 +497,7 @@ public class AIInfraOptimizationArmClientTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_CallsGlobalArmOnlyWhenItSucceeds(string? origin)
+    public async Task RecommendVmSkuAsync_DefaultOrigin_CallsGlobalArmOnlyWhenItSucceeds(string? origin)
     {
         var handler = Sequence((HttpStatusCode.OK, MinimalPayload));
         var client = CreateClient(handler, origin);
@@ -514,7 +514,7 @@ public class AIInfraOptimizationArmClientTests
     [InlineData(HttpStatusCode.BadRequest, "InvalidResourceType")]
     [InlineData(HttpStatusCode.NotFound, "InvalidResourceType")]
     [InlineData(HttpStatusCode.BadRequest, "NoRegisteredProviderFound")]
-    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_FallsBackToCanaryWhenGlobalEndpointUnavailable(
+    public async Task RecommendVmSkuAsync_DefaultOrigin_FallsBackToCanaryWhenGlobalEndpointUnavailable(
         HttpStatusCode status,
         string code)
     {
@@ -543,7 +543,7 @@ public class AIInfraOptimizationArmClientTests
     [InlineData(HttpStatusCode.Forbidden, "AuthorizationFailed")]
     [InlineData(HttpStatusCode.NotFound, "SubscriptionNotFound")]
     [InlineData(HttpStatusCode.Conflict, "NoResourceTypeEndpointAvailable")]
-    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_DoesNotFallBackForOtherErrors(HttpStatusCode status, string code)
+    public async Task RecommendVmSkuAsync_DefaultOrigin_DoesNotFallBackForOtherErrors(HttpStatusCode status, string code)
     {
         var handler = Sequence((status, ArmError(code)), (HttpStatusCode.OK, MinimalPayload));
         var client = CreateClient(handler, origin: null);
@@ -556,7 +556,7 @@ public class AIInfraOptimizationArmClientTests
     }
 
     [Fact]
-    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_ReturnsSanitizedCanaryErrorWhenFallbackFails()
+    public async Task RecommendVmSkuAsync_DefaultOrigin_ReturnsSanitizedCanaryErrorWhenFallbackFails()
     {
         var handler = Sequence(
             (HttpStatusCode.BadRequest, ArmError("NoResourceTypeEndpointAvailable")),
@@ -586,7 +586,7 @@ public class AIInfraOptimizationArmClientTests
     }
 
     [Fact]
-    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_RemembersUnavailableGlobalRouteUntilExpiry()
+    public async Task RecommendVmSkuAsync_DefaultOrigin_RemembersUnavailableGlobalRouteUntilExpiry()
     {
         var handler = Sequence(
             (HttpStatusCode.BadRequest, ArmError("NoResourceTypeEndpointAvailable")),
@@ -611,7 +611,7 @@ public class AIInfraOptimizationArmClientTests
     }
 
     [Fact]
-    public async Task RecommendVmSkuAsync_UnconfiguredOrigin_RejectsSovereignCloudBeforeTokenOrTransport()
+    public async Task RecommendVmSkuAsync_DefaultOrigin_RejectsSovereignCloudBeforeTokenOrTransport()
     {
         var handler = Sequence((HttpStatusCode.OK, MinimalPayload));
         var client = CreateClient(handler, origin: null, ArmEnvironment.AzureChina);
