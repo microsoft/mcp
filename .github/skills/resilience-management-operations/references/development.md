@@ -355,12 +355,6 @@ Preserve the original response properties for drill resources. The GA SDK drops 
 reading legacy payloads. The raw-response mapper must retain the returned fields without inventing that
 discriminator; keep this covered alongside the equivalent Goals legacy-field and boolean-presence tests.
 
-Correlate lifecycle failures with the operation and HTTP exchange, not the first error printed in a test log.
-The fresh-assignment GET intentionally returns 404 before create. A later PATCH 400 after successful create
-and GET 200 responses is an update failure, not a missing assignment or a client conversion of 404 into 400.
-Similarly, a preview-to-GA URI mismatch prevents playback from validating later requests and response handling;
-do not claim full SDK compatibility from the mismatch classification alone or rewrite recorded API versions.
-
 - Preserve LRO polling paths by disabling the default `AZSDK2003` sanitizer in `ResilienceManagementCommandTests`; replacing the entire `Location` header breaks playback.
 - Sanitize only signed `t`, `c`, `s`, and `h` query values in LRO locations while retaining the path and operation identifier used for request matching.
 - Sanitize `operation-id` and `x-ms-operation-identifier` headers because they can contain per-run or identity data.
