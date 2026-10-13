@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Azure.Mcp.Tools.Advisor.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
@@ -26,8 +27,8 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 /// costUnavailable means cost impact was not determined; it never means free.</description></item>
 /// <item><term>recommendationImpact</term><description>Never. It is a high/other bucket of the metadata impact,
 /// which is returned instead.</description></item>
-/// <item><term>recommendationSubcategory</term><description>Only for retirement bands (values starting with
-/// "retirement", such as retirementPastDue, retirementInDays25, retirementWithin180Days), returned as
+/// <item><term>recommendationSubcategory</term><description>Only for the published retirement bands retirementPastDue,
+/// retirementInDays&lt;N&gt; (N digits), retirementWithin30Days, and retirementWithin180Days, returned as
 /// retirementWindow. Other values equal the metadata subcategory or are the scoring bucket "other".</description></item>
 /// <item><term>resourceTypeCriticality</term><description>Any value except Other.</description></item>
 /// <item><term>criticalService</term><description>Only qcs (a critical service); nonQcs is never surfaced.</description></item>
@@ -38,7 +39,7 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 /// property to RecommendationPrioritizationSignals and a case here.</description></item>
 /// </list>
 /// </remarks>
-internal static class PrioritizationSignalFilter
+internal static partial class PrioritizationSignalFilter
 {
     // Signal keys as published on recommendation-type metadata.
     internal const string RecommendationImpactKey = "recommendationImpact";
@@ -49,7 +50,6 @@ internal static class PrioritizationSignalFilter
     internal const string ActionabilityKey = "actionability";
     internal const string CostImplicationKey = "costImplication";
 
-    private const string RetirementBandPrefix = "retirement";
     private const string OtherResourceTypeCriticality = "Other";
     private const string CriticalServiceValue = "qcs";
     private const string FullyExecutableActionability = "OneClickOrFullyExecutable";
@@ -94,7 +94,7 @@ internal static class PrioritizationSignalFilter
                 case var key when Is(key, RecommendationImpactKey):
                     break;
                 case var key when Is(key, RecommendationSubcategoryKey):
-                    if (text?.StartsWith(RetirementBandPrefix, StringComparison.OrdinalIgnoreCase) == true)
+                    if (text is not null && RetirementBand().IsMatch(text))
                     {
                         retirementWindow ??= text;
                     }
@@ -151,6 +151,10 @@ internal static class PrioritizationSignalFilter
 
     internal static bool IsAbsent(string? value) =>
         value is null || s_absentValues.Contains(value.Trim());
+
+    // The exact retirement bands the publisher emits; any other value starting with "retirement" is not surfaced.
+    [GeneratedRegex(@"^retirement(PastDue|InDays[0-9]+|Within30Days|Within180Days)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex RetirementBand();
 
     private static bool Is(string value, string expected) =>
         string.Equals(value, expected, StringComparison.OrdinalIgnoreCase);

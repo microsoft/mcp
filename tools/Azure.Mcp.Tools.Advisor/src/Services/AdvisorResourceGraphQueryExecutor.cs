@@ -111,6 +111,29 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
         ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
         var response = await tenantResource.GetResourcesAsync(new ResourceQueryContent(query), cancellationToken);
+        var limitHit = response.GetRawResponse().Headers.TryGetValue(TenantSubscriptionLimitHitHeader, out var value)
+            ? value
+            : null;
+        EnsureFullTenantCoverage(limitHit);
         return response.Value;
+    }
+
+    /// <summary>
+    /// Response header Azure Resource Graph sets to <c>true</c> when a tenant-scope query covered only the first 10,000
+    /// accessible subscriptions.
+    /// </summary>
+    internal const string TenantSubscriptionLimitHitHeader = "x-ms-tenant-subscription-limit-hit";
+
+    /// <summary>
+    /// Rejects a tenant-scope result that did not cover every accessible subscription. The KQL predicates cannot recover a
+    /// subscription that was left out of the query scope, so a partial result would be reported as a complete total.
+    /// </summary>
+    internal static void EnsureFullTenantCoverage(string? tenantSubscriptionLimitHit)
+    {
+        if (bool.TryParse(tenantSubscriptionLimitHit, out var limitHit) && limitHit)
+        {
+            throw new InvalidOperationException(
+                "Azure Resource Graph evaluated only the first 10,000 accessible subscriptions in the tenant, so the summary would be incomplete. Retry with an identity that has access to fewer subscriptions.");
+        }
     }
 }
