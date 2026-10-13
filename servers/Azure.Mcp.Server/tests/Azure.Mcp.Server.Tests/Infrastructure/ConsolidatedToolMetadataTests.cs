@@ -26,7 +26,7 @@ public sealed class ConsolidatedToolMetadataTests()
 
         var commandFactory = services.GetRequiredService<ICommandFactory>();
         var definitionProvider = services.GetRequiredService<IConsolidatedToolDefinitionProvider>();
-        Assert.True(commandFactory.AllCommands.TryGetValue(commandName, out var command));
+        var command = commandFactory.FindCommandByName(commandName);
         Assert.NotNull(command);
 
         var definition = Assert.Single(definitionProvider.GetToolDefinitions(),
