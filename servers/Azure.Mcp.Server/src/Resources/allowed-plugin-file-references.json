@@ -357,6 +357,8 @@
       "azure-diagnostics\\references\\azure-resource-graph.md",
       "azure-diagnostics\\references\\container-apps\\README.md",
       "azure-diagnostics\\references\\functions\\README.md",
+      "azure-diagnostics\\references\\functions\\durable.md",
+      "azure-diagnostics\\references\\functions\\triggers.md",
       "azure-diagnostics\\references\\kql-queries.md",
       "azure-diagnostics\\scripts\\aks-baseline.ps1",
       "azure-diagnostics\\scripts\\aks-baseline.sh",
